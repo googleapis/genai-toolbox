@@ -30,7 +30,7 @@ branchProtectionRules:
       - "conventionalcommits.org"
       - "header-check"
     # - Add required status checks like presubmit tests
-      - integration tests (ubuntu-latest)
+      - "integration tests (ubuntu-latest)"
     requiredApprovingReviewCount: 1
     requiresCodeOwnerReviews: true
     requiresStrictStatusChecks: true
