@@ -31,8 +31,8 @@ jobs:
       cancel-in-progress: true
     permissions:
       contents: 'read'
-      issues: write
-      pull-requests: write
+      issues: 'write'
+      pull-requests: 'write'
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
