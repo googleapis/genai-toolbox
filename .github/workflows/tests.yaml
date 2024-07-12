@@ -37,9 +37,8 @@ jobs:
       fail-fast: false
     permissions:
       contents: 'read'
-      id-token: 'write'
-      issues: write
-      pull-requests: write
+      issues: 'write'
+      pull-requests: 'write'
     steps:
       - name: Remove PR label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
