@@ -26,6 +26,9 @@ jobs:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     name: run lint
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: 'read'
       id-token: 'write'
