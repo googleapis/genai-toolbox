@@ -27,6 +27,8 @@ jobs:
     name: run lint
     runs-on: ubuntu-latest
     permissions:
+      contents: 'read'
+      id-token: 'write'
       issues: write
       pull-requests: write
     steps:
