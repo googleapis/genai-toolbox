@@ -55,6 +55,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: >
           Verify go mod tidy. If you're reading this and the check has
           failed, run `goimports -w . && go mod tidy && golangci-lint run`
