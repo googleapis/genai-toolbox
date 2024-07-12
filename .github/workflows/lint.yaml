@@ -24,7 +24,7 @@ permissions: read-all
 jobs:
   lint:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
-    name: run lint
+    name: lint
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
