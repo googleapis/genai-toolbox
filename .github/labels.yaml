@@ -1,0 +1,70 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: duplicate
+  color: ededed
+  description: ""
+
+- name: 'type: bug'
+  color: db4437
+  description: Error or flaw in code with unintended results or allowing sub-optimal
+    usage patterns.
+- name: 'type: cleanup'
+  color: c5def5
+  description: An internal cleanup or hygiene concern.
+- name: 'type: docs'
+  color: 0000A0
+  description: Improvement to the documentation for an API.
+- name: 'type: feature request'
+  color: c5def5
+  description: ‘Nice-to-have’ improvement, new feature or different behavior or design.
+- name: 'type: process'
+  color: c5def5
+  description: A process-related concern. May include testing, release, or the like.
+- name: 'type: question'
+  color: c5def5
+  description: Request for information or clarification.
+
+- name: 'priority: p0'
+  color: b60205
+  description: Highest priority. Critical issue. P0 implies highest priority.
+- name: 'priority: p1'
+  color: ffa03e
+  description: Important issue which blocks shipping the next release. Will be fixed
+    prior to next release.
+- name: 'priority: p2'
+  color: fef2c0
+  description: Moderately-important priority. Fix may not be included in next release.
+- name: 'priority: p3'
+  color: ffffc7
+  description: Desirable enhancement or fix. May not be included in next release.
+
+- name: do not merge
+  color: d93f0b
+  description: Indicates a pull request not ready for merge, due to either quality
+    or timing.
+
+- name: 'autorelease: pending'
+  color: ededed
+  description: Release please needs to do its work on this.
+- name: 'autorelease: triggered'
+  color: ededed
+  description: Release please has triggered a release for this.
+- name: 'autorelease: tagged'
+  color: ededed
+  description: Release please has completed a release for this.
+
+- name: 'tests: run'
+  color: 3DED97
+  description: Label to trigger Github Action tests.
