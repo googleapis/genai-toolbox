@@ -52,5 +52,4 @@ func TestVersion(t *testing.T) {
 	if !strings.Contains(got, want) {
 		t.Errorf("cli did not return correct version: want %q, got %q", want, got)
 	}
-
 }

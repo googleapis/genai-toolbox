@@ -15,10 +15,13 @@
 package cmd
 
 import (
+	"context"
 	_ "embed"
+	"fmt"
 	"os"
 	"strings"
 
+	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/spf13/cobra"
 )
 
@@ -55,6 +58,7 @@ func Execute() {
 // Command represents an invocation of the CLI.
 type Command struct {
 	*cobra.Command
+	cfg server.Config
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
@@ -62,17 +66,27 @@ func NewCommand() *Command {
 	rootCmd := &cobra.Command{
 		Use:     "toolbox",
 		Version: versionString,
-		RunE:    root,
 	}
 
 	c := &Command{
 		Command: rootCmd,
+		cfg: server.Config{},
 	}
+	// wrap RunE command so that we have access to original Command object
+	rootCmd.RunE = func(*cobra.Command, []string) error { return run(c) }
 
 	return c
 }
 
-func root(cmd *cobra.Command, args []string) error {
-	cmd.Printf("Toolbox running v%s!", versionString)
+func run(cmd *Command) error {
+	ctx := context.Background()
+
+	// run server
+	s := server.NewServer(cmd.cfg)
+	err := s.ListenAndServe(ctx)
+	if err != nil {
+		return fmt.Errorf("Error while serving: %w", err)
+	}
+
 	return nil
 }
