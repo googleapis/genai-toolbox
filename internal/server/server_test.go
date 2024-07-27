@@ -17,6 +17,7 @@ package server_test
 import (
 	"context"
 	"net"
+	"strconv"
 	"testing"
 	"time"
 
@@ -37,12 +38,15 @@ func tryDial(addr string, attempts int) bool {
 	return false
 }
 
-func TestListenAndServe(t *testing.T) {
+func TestServe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	host, port := "127.0.0.1", "5000"
-	cfg := server.NewConfig()
+	addr, port := "127.0.0.1", 5000
+	cfg := server.Config{
+		Address: addr,
+		Port:    port,
+	}
 	s := server.NewServer(cfg)
 
 	// start server in background
@@ -55,7 +59,7 @@ func TestListenAndServe(t *testing.T) {
 		}
 	}()
 
-	if !tryDial(net.JoinHostPort(host, port), 10) {
+	if !tryDial(net.JoinHostPort(addr, strconv.Itoa(port)), 10) {
 		t.Fatalf("Unable to dial server!")
 	}
 

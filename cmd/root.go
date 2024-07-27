@@ -58,34 +58,38 @@ func Execute() {
 // Command represents an invocation of the CLI.
 type Command struct {
 	*cobra.Command
+
 	cfg server.Config
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
 func NewCommand() *Command {
-	rootCmd := &cobra.Command{
-		Use:     "toolbox",
-		Version: versionString,
+	c := &Command{
+		Command: &cobra.Command{
+			Use:     "toolbox",
+			Version: versionString,
+		},
 	}
 
-	c := &Command{
-		Command: rootCmd,
-		cfg: server.Config{},
-	}
+	flags := c.Flags()
+	flags.StringVarP(&c.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
+	flags.IntVarP(&c.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
+
 	// wrap RunE command so that we have access to original Command object
-	rootCmd.RunE = func(*cobra.Command, []string) error { return run(c) }
+	c.RunE = func(*cobra.Command, []string) error { return run(c) }
 
 	return c
 }
 
 func run(cmd *Command) error {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
 
 	// run server
 	s := server.NewServer(cmd.cfg)
 	err := s.ListenAndServe(ctx)
 	if err != nil {
-		return fmt.Errorf("Error while serving: %w", err)
+		return fmt.Errorf("Toolbox crashed with the following error: %w", err)
 	}
 
 	return nil

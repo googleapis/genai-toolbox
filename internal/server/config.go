@@ -14,16 +14,8 @@
 package server
 
 type Config struct {
-	// Address is the address of the interface the server will listen on.
+	// address is the address of the interface the server will listen on.
 	Address string
-	// Port is the port the server will listen on.
-	Port string
-}
-
-func NewConfig() Config {
-	c := Config{
-		Address: "127.0.0.1",
-		Port:    "5000",
-	}
-	return c
+	// port is the port the server will listen on.
+	Port int
 }

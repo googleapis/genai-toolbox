@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -32,7 +33,7 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(conf Config) *Server {
+func NewServer(cfg Config) *Server {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -41,7 +42,7 @@ func NewServer(conf Config) *Server {
 	})
 
 	s := &Server{
-		conf:   conf,
+		conf:   cfg,
 		router: r,
 	}
 	return s
@@ -52,7 +53,7 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	addr := net.JoinHostPort(s.conf.Address, s.conf.Port)
+	addr := net.JoinHostPort(s.conf.Address, strconv.Itoa(s.conf.Port))
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
 	l, err := lc.Listen(ctx, "tcp", addr)
 	if err != nil {
