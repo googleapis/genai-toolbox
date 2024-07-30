@@ -21,7 +21,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/spf13/cobra"
 )
 
@@ -65,7 +69,7 @@ func TestVersion(t *testing.T) {
 	}
 }
 
-func TestFlags(t *testing.T) {
+func TestAddrPort(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
@@ -119,9 +123,115 @@ func TestFlags(t *testing.T) {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
 
-			if c.cfg != tc.want {
+			if !cmp.Equal(c.cfg, tc.want) {
 				t.Fatalf("got %v, want %v", c.cfg, tc.want)
 			}
 		})
 	}
+}
+
+func TestToolFileFlag(t *testing.T) {
+	tcs := []struct {
+		desc string
+		args []string
+		want string
+	}{
+		{
+			desc: "default value",
+			args: []string{},
+			want: "tools.yaml",
+		},
+		{
+			desc: "foo file",
+			args: []string{"--tools_file", "foo.yaml"},
+			want: "foo.yaml",
+		},
+		{
+			desc: "address long",
+			args: []string{"--tools_file", "bar.yaml"},
+			want: "bar.yaml",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			c, _, err := invokeCommand(tc.args)
+			if err != nil {
+				t.Fatalf("unexpected error invoking command: %s", err)
+			}
+			if c.tools_file != tc.want {
+				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			}
+		})
+	}
+}
+
+func TestParseToolFile(t *testing.T) {
+	tcs := []struct {
+		description string
+		in          string
+		wantSources sources.Configs
+		wantTools   tools.Configs
+	}{
+		{
+			description: "basic example",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+			tools:
+				example_tool:
+					kind: cloud-sql-postgres-generic
+					source: my-pg-instance
+					description: some description
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					parameters:
+						country:
+							type: string
+							description: some description
+			`,
+			wantSources: sources.Configs{
+				"my-pg-instance": sources.CloudSQLPgConfig{
+					Kind:     sources.CloudSQLPgKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					Database: "my_db",
+				},
+			},
+			wantTools: tools.Configs{
+				"example_tool": tools.CloudSQLPgGenericConfig{
+					Kind:        tools.CloudSQLPgSQLGenericKind,
+					Source:      "my-pg-instance",
+					Description: "some description",
+					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+					Parameters: map[string]tools.Parameter{
+						"country": {
+							Type:        "string",
+							Description: "some description",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			gotSources, gotTools, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			if diff := cmp.Diff(tc.wantSources, gotSources); diff != "" {
+				t.Fatalf("incorrect sources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantTools, gotTools); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+		})
+	}
+
 }

@@ -22,7 +22,10 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -59,35 +62,62 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg server.Config
+	cfg        server.Config
+	tools_file string
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
 func NewCommand() *Command {
-	c := &Command{
+	cmd := &Command{
 		Command: &cobra.Command{
 			Use:     "toolbox",
 			Version: versionString,
 		},
 	}
 
-	flags := c.Flags()
-	flags.StringVarP(&c.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
-	flags.IntVarP(&c.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
+	flags := cmd.Flags()
+	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
+	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
+
+	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration")
 
 	// wrap RunE command so that we have access to original Command object
-	c.RunE = func(*cobra.Command, []string) error { return run(c) }
+	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
 
-	return c
+	return cmd
+}
+
+// parseToolsFile parses the provided yaml into appropriate configs.
+func parseToolsFile(raw []byte) (sources.Configs, tools.Configs, error) {
+	tools_file := &struct {
+		Sources sources.Configs `yaml:"sources"`
+		Tools   tools.Configs   `yaml:"tools"`
+	}{}
+	// Parse contents
+	err := yaml.Unmarshal(raw, tools_file)
+	if err != nil {
+		return nil, nil, err
+	}
+	return tools_file.Sources, tools_file.Tools, nil
 }
 
 func run(cmd *Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
+	// Read tool file contents
+	buf, err := os.ReadFile(cmd.tools_file)
+	if err != nil {
+		return fmt.Errorf("Unable to read tool file at %q: %w", cmd.tools_file, err)
+	}
+	cmd.cfg.SourceConfigs, cmd.cfg.ToolConfigs, err = parseToolsFile(buf)
+	if err != nil {
+		return fmt.Errorf("Unable to parse tool file at %q: %w", cmd.tools_file, err)
+	}
+
 	// run server
 	s := server.NewServer(cmd.cfg)
-	err := s.ListenAndServe(ctx)
+	err = s.ListenAndServe(ctx)
 	if err != nil {
 		return fmt.Errorf("Toolbox crashed with the following error: %w", err)
 	}

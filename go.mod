@@ -4,7 +4,9 @@ go 1.22.2
 
 require (
 	github.com/go-chi/chi/v5 v5.1.0
+	github.com/google/go-cmp v0.6.0
 	github.com/spf13/cobra v1.8.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
