@@ -116,7 +116,10 @@ func run(cmd *Command) error {
 	}
 
 	// run server
-	s := server.NewServer(cmd.cfg)
+	s, err := server.NewServer(cmd.cfg)
+	if err != nil {
+		return fmt.Errorf("Toolbox failed to start with the following error: %w", err)
+	}
 	err = s.ListenAndServe(ctx)
 	if err != nil {
 		return fmt.Errorf("Toolbox crashed with the following error: %w", err)

@@ -24,16 +24,21 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
 	conf Config
 	root chi.Router
+
+	sources map[string]sources.Source
+	tools   map[string]tools.Tool
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(cfg Config) *Server {
+func NewServer(cfg Config) (*Server, error) {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -42,14 +47,37 @@ func NewServer(cfg Config) *Server {
 		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
 	})
 
-	s := &Server{
-		conf: cfg,
-		root: r,
+	// initalize and validate the sources
+	sources := make(map[string]sources.Source)
+	for name, sc := range cfg.SourceConfigs {
+		s, err := sc.Initialize()
+		if err != nil {
+			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
+		}
+		sources[name] = s
 	}
+	fmt.Printf("Initalized %d sources.\n", len(sources))
 
+	// initalize and validate the tools
+	tools := make(map[string]tools.Tool)
+	for name, tc := range cfg.ToolConfigs {
+		t, err := tc.Initialize(sources)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
+		}
+		tools[name] = t
+	}
+	fmt.Printf("Initalized %d tools.\n", len(tools))
+
+	s := &Server{
+		conf:    cfg,
+		root:    r,
+		sources: sources,
+		tools:   tools,
+	}
 	r.Mount("/api", apiRouter(s))
 
-	return s
+	return s, nil
 }
 
 // ListenAndServe starts an HTTP server for the given Server instance.

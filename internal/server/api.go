@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -43,6 +44,18 @@ func toolsetHandler(s *Server) http.HandlerFunc {
 func toolHandler(s *Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		toolName := chi.URLParam(r, "toolName")
-		w.Write([]byte(fmt.Sprintf("Stub for %s tool call!", toolName)))
+		tool, ok := s.tools[toolName]
+		if !ok {
+			render.Status(r, http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Tool %q does not exist", toolName)))
+			return
+		}
+
+		res, err := tool.Invoke()
+		if err != nil {
+			render.Status(r, http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(fmt.Sprintf("Tool Result: %s", res)))
 	}
 }

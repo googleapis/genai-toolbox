@@ -47,7 +47,10 @@ func TestServe(t *testing.T) {
 		Address: addr,
 		Port:    port,
 	}
-	s := server.NewServer(cfg)
+	s, err := server.NewServer(cfg)
+	if err != nil {
+		t.Fatalf("Unable initialize server!")
+	}
 
 	// start server in background
 	errCh := make(chan error)

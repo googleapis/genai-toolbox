@@ -17,15 +17,17 @@ package tools
 import (
 	"fmt"
 
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"gopkg.in/yaml.v3"
 )
 
-// SourceConfigs is a type used to allow unmarshal of the data source config map
-type Configs map[string]Config
-
 type Config interface {
 	toolKind() string
+	Initialize(map[string]sources.Source) (Tool, error)
 }
+
+// SourceConfigs is a type used to allow unmarshal of the data source config map
+type Configs map[string]Config
 
 // validate interface
 var _ yaml.Unmarshaler = &Configs{}
@@ -48,7 +50,7 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 		}
 		switch k.Kind {
 		case CloudSQLPgSQLGenericKind:
-			actual := CloudSQLPgGenericConfig{}
+			actual := CloudSQLPgGenericConfig{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
@@ -66,4 +68,8 @@ type Parameter struct {
 	Type        string `yaml:"type"`
 	Description string `yaml:"description"`
 	Required    bool   `yaml:"required"`
+}
+
+type Tool interface {
+	Invoke() (string, error)
 }

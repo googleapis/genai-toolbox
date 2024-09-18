@@ -22,6 +22,7 @@ import (
 
 type Config interface {
 	sourceKind() string
+	Initialize() (Source, error)
 }
 
 // validate interface
@@ -48,7 +49,7 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 		}
 		switch k.Kind {
 		case CloudSQLPgKind:
-			actual := CloudSQLPgConfig{}
+			actual := CloudSQLPgConfig{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
@@ -59,4 +60,7 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 
 	}
 	return nil
+}
+
+type Source interface {
 }

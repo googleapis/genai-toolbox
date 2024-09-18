@@ -20,6 +20,7 @@ const CloudSQLPgKind string = "cloud-sql-postgres"
 var _ Config = CloudSQLPgConfig{}
 
 type CloudSQLPgConfig struct {
+	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
 	Project  string `yaml:"project"`
 	Region   string `yaml:"region"`
@@ -29,4 +30,19 @@ type CloudSQLPgConfig struct {
 
 func (r CloudSQLPgConfig) sourceKind() string {
 	return CloudSQLPgKind
+}
+
+func (r CloudSQLPgConfig) Initialize() (Source, error) {
+	s := CloudSQLPgSource{
+		Name: r.Name,
+		Kind: CloudSQLPgKind,
+	}
+	return s, nil
+}
+
+var _ Source = CloudSQLPgSource{}
+
+type CloudSQLPgSource struct {
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
 }
