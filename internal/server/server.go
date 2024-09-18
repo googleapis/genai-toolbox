@@ -28,8 +28,8 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf   Config
-	router chi.Router
+	conf Config
+	root chi.Router
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -37,14 +37,18 @@ func NewServer(cfg Config) *Server {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
 	})
 
 	s := &Server{
-		conf:   cfg,
-		router: r,
+		conf: cfg,
+		root: r,
 	}
+
+	r.Mount("/api", apiRouter(s))
+
 	return s
 }
 
@@ -60,5 +64,5 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 		return fmt.Errorf("failed to open listener for %q: %w", addr, err)
 	}
 
-	return http.Serve(l, s.router)
+	return http.Serve(l, s.root)
 }
