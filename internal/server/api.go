@@ -37,7 +37,7 @@ func apiRouter(s *Server) chi.Router {
 func toolsetHandler(s *Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		toolsetName := chi.URLParam(r, "toolsetName")
-		w.Write([]byte(fmt.Sprintf("Stub for toolset %s manifest!", toolsetName)))
+		_, _ = w.Write([]byte(fmt.Sprintf("Stub for toolset %s manifest!", toolsetName)))
 	}
 }
 
@@ -47,7 +47,7 @@ func toolHandler(s *Server) http.HandlerFunc {
 		tool, ok := s.tools[toolName]
 		if !ok {
 			render.Status(r, http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Tool %q does not exist", toolName)))
+			_, _ = w.Write([]byte(fmt.Sprintf("Tool %q does not exist", toolName)))
 			return
 		}
 
@@ -56,6 +56,6 @@ func toolHandler(s *Server) http.HandlerFunc {
 			render.Status(r, http.StatusInternalServerError)
 			return
 		}
-		w.Write([]byte(fmt.Sprintf("Tool Result: %s", res)))
+		_, _ = w.Write([]byte(fmt.Sprintf("Tool Result: %s", res)))
 	}
 }
