@@ -46,6 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: tools.Configs{
 				"example_tool": tools.CloudSQLPgGenericConfig{
+					Name:        "example_tool",
 					Kind:        tools.CloudSQLPgSQLGenericKind,
 					Source:      "my-pg-instance",
 					Description: "some description",

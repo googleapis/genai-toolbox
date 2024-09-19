@@ -196,6 +196,7 @@ func TestParseToolFile(t *testing.T) {
 			`,
 			wantSources: sources.Configs{
 				"my-pg-instance": sources.CloudSQLPgConfig{
+					Name:     "my-pg-instance",
 					Kind:     sources.CloudSQLPgKind,
 					Project:  "my-project",
 					Region:   "my-region",
@@ -205,6 +206,7 @@ func TestParseToolFile(t *testing.T) {
 			},
 			wantTools: tools.Configs{
 				"example_tool": tools.CloudSQLPgGenericConfig{
+					Name:        "example_tool",
 					Kind:        tools.CloudSQLPgSQLGenericKind,
 					Source:      "my-pg-instance",
 					Description: "some description",

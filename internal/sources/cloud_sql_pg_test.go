@@ -42,6 +42,7 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: sources.Configs{
 				"my-pg-instance": sources.CloudSQLPgConfig{
+					Name:     "my-pg-instance",
 					Kind:     sources.CloudSQLPgKind,
 					Project:  "my-project",
 					Region:   "my-region",
