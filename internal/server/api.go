@@ -28,7 +28,7 @@ func apiRouter(s *Server) chi.Router {
 
 	r.Get("/toolset/{toolsetName}", toolsetHandler(s))
 
-	// TOOD: make this POST
+	// TODO: make this POST
 	r.Get("/tool/{toolName}", toolHandler(s))
 
 	return r
