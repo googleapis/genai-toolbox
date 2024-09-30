@@ -24,7 +24,7 @@ type Config interface {
 }
 
 // SourceConfigs is a type used to allow unmarshal of the data source config map
-type Configs map[string]Config
+type Configs map[string][]string
 
 // validate interface
 var _ yaml.Unmarshaler = &Configs{}
@@ -32,10 +32,16 @@ var _ yaml.Unmarshaler = &Configs{}
 func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 	*c = make(Configs)
 
-	var rawToolsets map[string][]string
-	if err := node.Decode(&rawToolsets); err != nil {
+	var raw map[string][]string
+	if err := node.Decode(&raw); err != nil {
 		return err
 	}
+
+	// Iterate through the map and assign the list of tools to each toolset
+	for name, tools := range raw {
+		(*c)[name] = tools
+	}
+
 	return nil
 }
 
@@ -44,5 +50,4 @@ type ToolsetManifest struct {
 	Tools         map[string]tools.ToolManifest `json:"tools"`
 }
 type Toolset interface {
-	Describe() (ToolsetManifest, error)
 }

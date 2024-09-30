@@ -29,7 +29,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/toolsets"
 )
 
-const serverVersion = "1.0.0"
+const ServerVersion = "1.0.0"
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
@@ -88,7 +88,7 @@ func NewServer(cfg Config) (*Server, error) {
 	s := &Server{
 		conf:     cfg,
 		root:     r,
-		version:  serverVersion,
+		version:  ServerVersion,
 		sources:  initialized_sources,
 		tools:    initialized_tools,
 		toolsets: initilized_toolsets,

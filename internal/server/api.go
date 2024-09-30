@@ -45,13 +45,8 @@ func toolsetHandler(s *Server) http.HandlerFunc {
 			var toolsetManifest toolsets.ToolsetManifest
 			toolsetManifest.Tools = make(map[string]tools.ToolManifest)
 			toolsetManifest.ServerVersion = s.version
-			for name, tool := range s.tools {
-				toolManifest, err := tool.Describe()
-				if err != nil {
-					fmt.Errorf("Error describing tool %s", err)
-					return
-				}
-				toolsetManifest.Tools[name] = toolManifest
+			for name, toolConfig := range s.conf.ToolConfigs {
+				toolsetManifest.Tools[name] = toolConfig.DescribeTool()
 			}
 			json.NewEncoder(w).Encode(toolsetManifest)
 		} else {
@@ -59,11 +54,14 @@ func toolsetHandler(s *Server) http.HandlerFunc {
 			var toolsetManifest toolsets.ToolsetManifest
 			toolsetManifest.Tools = make(map[string]tools.ToolManifest)
 			toolsetManifest.ServerVersion = s.version
-			if toolset, ok := s.toolsets[toolsetName]; ok {
-				toolset.Describe()
+			if toolset, ok := s.conf.ToolsetConfigs[toolsetName]; ok {
+				for _, toolName := range toolset {
+					toolsetManifest.Tools[toolName] = s.conf.ToolConfigs[toolName].DescribeTool()
+				}
 				json.NewEncoder(w).Encode(toolsetManifest)
 			}
 			fmt.Errorf("toolset not found: %s", toolsetName)
+
 		}
 	}
 }

@@ -24,6 +24,7 @@ import (
 type Config interface {
 	toolKind() string
 	Initialize(map[string]sources.Source) (Tool, error)
+	DescribeTool() ToolManifest
 }
 
 // SourceConfigs is a type used to allow unmarshal of the data source config map
@@ -71,11 +72,10 @@ type Parameter struct {
 }
 
 type ToolManifest struct {
-	Description string    `json:"description"`
-	Parameters  Parameter `json:"parameters"`
+	Description string               `json:"description"`
+	Parameters  map[string]Parameter `json:"parameters"`
 }
 
 type Tool interface {
 	Invoke() (string, error)
-	Describe() (ToolManifest, error)
 }
