@@ -72,3 +72,7 @@ type CloudSQLPgGenericTool struct {
 func (t CloudSQLPgGenericTool) Invoke() (string, error) {
 	return fmt.Sprintf("Stub tool call for %q!", t.Name), nil
 }
+
+func (t CloudSQLPgGenericTool) Describe() (string, error) {
+	toolManifest := tools.ToolManifest{}
+}

@@ -16,6 +16,7 @@ package server
 import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/toolsets"
 )
 
 type Config struct {
@@ -27,4 +28,6 @@ type Config struct {
 	SourceConfigs sources.Configs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs tools.Configs
+	// ToolSetConfigs defines what toolsets are available.
+	ToolsetConfigs toolsets.Configs
 }

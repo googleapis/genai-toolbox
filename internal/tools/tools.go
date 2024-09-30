@@ -70,6 +70,12 @@ type Parameter struct {
 	Required    bool   `yaml:"required"`
 }
 
+type ToolManifest struct {
+	Description string    `json:"description"`
+	Parameters  Parameter `json:"parameters"`
+}
+
 type Tool interface {
 	Invoke() (string, error)
+	Describe() (ToolManifest, error)
 }

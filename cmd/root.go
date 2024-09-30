@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/toolsets"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -88,17 +89,18 @@ func NewCommand() *Command {
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
-func parseToolsFile(raw []byte) (sources.Configs, tools.Configs, error) {
+func parseToolsFile(raw []byte) (sources.Configs, tools.Configs, toolsets.Configs, error) {
 	tools_file := &struct {
-		Sources sources.Configs `yaml:"sources"`
-		Tools   tools.Configs   `yaml:"tools"`
+		Sources  sources.Configs  `yaml:"sources"`
+		Tools    tools.Configs    `yaml:"tools"`
+		Toolsets toolsets.Configs `yaml:"toolsets"`
 	}{}
 	// Parse contents
 	err := yaml.Unmarshal(raw, tools_file)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return tools_file.Sources, tools_file.Tools, nil
+	return tools_file.Sources, tools_file.Tools, tools_file.Toolsets, nil
 }
 
 func run(cmd *Command) error {
@@ -110,7 +112,7 @@ func run(cmd *Command) error {
 	if err != nil {
 		return fmt.Errorf("Unable to read tool file at %q: %w", cmd.tools_file, err)
 	}
-	cmd.cfg.SourceConfigs, cmd.cfg.ToolConfigs, err = parseToolsFile(buf)
+	cmd.cfg.SourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, err = parseToolsFile(buf)
 	if err != nil {
 		return fmt.Errorf("Unable to parse tool file at %q: %w", cmd.tools_file, err)
 	}

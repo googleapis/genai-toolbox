@@ -15,11 +15,14 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/toolsets"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -37,7 +40,31 @@ func apiRouter(s *Server) chi.Router {
 func toolsetHandler(s *Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		toolsetName := chi.URLParam(r, "toolsetName")
-		_, _ = w.Write([]byte(fmt.Sprintf("Stub for toolset %s manifest!", toolsetName)))
+		if toolsetName == "" {
+			// return all the tools if no toolset name is provided
+			var toolsetManifest toolsets.ToolsetManifest
+			toolsetManifest.Tools = make(map[string]tools.ToolManifest)
+			toolsetManifest.ServerVersion = s.version
+			for name, tool := range s.tools {
+				toolManifest, err := tool.Describe()
+				if err != nil {
+					fmt.Errorf("Error describing tool %s", err)
+					return
+				}
+				toolsetManifest.Tools[name] = toolManifest
+			}
+			json.NewEncoder(w).Encode(toolsetManifest)
+		} else {
+			// Describe the tools of the request toolset
+			var toolsetManifest toolsets.ToolsetManifest
+			toolsetManifest.Tools = make(map[string]tools.ToolManifest)
+			toolsetManifest.ServerVersion = s.version
+			if toolset, ok := s.toolsets[toolsetName]; ok {
+				toolset.Describe()
+				json.NewEncoder(w).Encode(toolsetManifest)
+			}
+			fmt.Errorf("toolset not found: %s", toolsetName)
+		}
 	}
 }
 

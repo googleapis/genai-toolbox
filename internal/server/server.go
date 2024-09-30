@@ -26,15 +26,20 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/toolsets"
 )
+
+const serverVersion = "1.0.0"
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf Config
-	root chi.Router
+	conf    Config
+	root    chi.Router
+	version string
 
-	sources map[string]sources.Source
-	tools   map[string]tools.Tool
+	sources  map[string]sources.Source
+	tools    map[string]tools.Tool
+	toolsets map[string]toolsets.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -48,32 +53,45 @@ func NewServer(cfg Config) (*Server, error) {
 	})
 
 	// initalize and validate the sources
-	sources := make(map[string]sources.Source)
+	initialized_sources := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
 		if err != nil {
 			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
 		}
-		sources[name] = s
+		initialized_sources[name] = s
 	}
-	fmt.Printf("Initalized %d sources.\n", len(sources))
+	fmt.Printf("Initalized %d sources.\n", len(initialized_sources))
 
 	// initalize and validate the tools
-	tools := make(map[string]tools.Tool)
+	initialized_tools := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
-		t, err := tc.Initialize(sources)
+		t, err := tc.Initialize(initialized_sources)
 		if err != nil {
 			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
 		}
-		tools[name] = t
+		initialized_tools[name] = t
 	}
-	fmt.Printf("Initalized %d tools.\n", len(tools))
+	fmt.Printf("Initalized %d tools.\n", len(initialized_tools))
+
+	// initalize and validate the toolsets
+	initilized_toolsets := make(map[string]toolsets.Toolset)
+	for name, tc := range cfg.ToolsetConfigs {
+		t, err := tc.Initialize()
+		if err != nil {
+			return nil, fmt.Errorf("Unable to initialize toolset %s: %w", name, err)
+		}
+		initilized_toolsets[name] = t
+	}
+	fmt.Printf("Initalized %d toolsets.\n", len(initilized_toolsets))
 
 	s := &Server{
-		conf:    cfg,
-		root:    r,
-		sources: sources,
-		tools:   tools,
+		conf:     cfg,
+		root:     r,
+		version:  serverVersion,
+		sources:  initialized_sources,
+		tools:    initialized_tools,
+		toolsets: initilized_toolsets,
 	}
 	r.Mount("/api", apiRouter(s))
 
