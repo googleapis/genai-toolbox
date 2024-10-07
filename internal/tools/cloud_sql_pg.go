@@ -26,12 +26,12 @@ const CloudSQLPgSQLGenericKind string = "cloud-sql-postgres-generic"
 var _ Config = CloudSQLPgGenericConfig{}
 
 type CloudSQLPgGenericConfig struct {
-	Name        string               `yaml:"name"`
-	Kind        string               `yaml:"kind"`
-	Source      string               `yaml:"source"`
-	Description string               `yaml:"description"`
-	Statement   string               `yaml:"statement"`
-	Parameters  map[string]Parameter `yaml:"parameters"`
+	Name        string      `yaml:"name"`
+	Kind        string      `yaml:"kind"`
+	Source      string      `yaml:"source"`
+	Description string      `yaml:"description"`
+	Statement   string      `yaml:"statement"`
+	Parameters  []Parameter `yaml:"parameters"`
 }
 
 func (r CloudSQLPgGenericConfig) toolKind() string {
@@ -53,9 +53,10 @@ func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 
 	// finish tool setup
 	t := CloudSQLPgGenericTool{
-		Name:   r.Name,
-		Kind:   CloudSQLPgSQLGenericKind,
-		Source: s,
+		Name:       r.Name,
+		Kind:       CloudSQLPgSQLGenericKind,
+		Source:     s,
+		Parameters: r.Parameters,
 	}
 	return t, nil
 }
@@ -64,11 +65,16 @@ func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 var _ Tool = CloudSQLPgGenericTool{}
 
 type CloudSQLPgGenericTool struct {
-	Name   string `yaml:"name"`
-	Kind   string `yaml:"kind"`
-	Source sources.CloudSQLPgSource
+	Name       string `yaml:"name"`
+	Kind       string `yaml:"kind"`
+	Source     sources.CloudSQLPgSource
+	Parameters []Parameter `yaml:"parameters"`
 }
 
-func (t CloudSQLPgGenericTool) Invoke() (string, error) {
-	return fmt.Sprintf("Stub tool call for %q!", t.Name), nil
+func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
+	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q", t.Name, params), nil
+}
+
+func (t CloudSQLPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
+	return parseParams(t.Parameters, data)
 }

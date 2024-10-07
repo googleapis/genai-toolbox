@@ -190,9 +190,9 @@ func TestParseToolFile(t *testing.T) {
 					statement: |
 						SELECT * FROM SQL_STATEMENT;
 					parameters:
-						country:
-							type: string
-							description: some description
+						- name: country
+						  type: string
+						  description: some description
 			`,
 			wantSources: sources.Configs{
 				"my-pg-instance": sources.CloudSQLPgConfig{
@@ -211,8 +211,9 @@ func TestParseToolFile(t *testing.T) {
 					Source:      "my-pg-instance",
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-					Parameters: map[string]tools.Parameter{
-						"country": {
+					Parameters: []tools.Parameter{
+						{
+							Name:        "country",
 							Type:        "string",
 							Description: "some description",
 						},

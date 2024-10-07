@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 )
 
@@ -28,8 +29,10 @@ func apiRouter(s *Server) chi.Router {
 
 	r.Get("/toolset/{toolsetName}", toolsetHandler(s))
 
-	// TODO: make this POST
-	r.Get("/tool/{toolName}", toolHandler(s))
+	r.Route("/tool/{toolName}", func(r chi.Router) {
+		r.Use(middleware.AllowContentType("application/json"))
+		r.Post("/", toolHandler(s))
+	})
 
 	return r
 }
@@ -51,7 +54,21 @@ func toolHandler(s *Server) http.HandlerFunc {
 			return
 		}
 
-		res, err := tool.Invoke()
+		var data map[string]interface{}
+		if err := render.DecodeJSON(r.Body, &data); err != nil {
+			render.Status(r, http.StatusBadRequest)
+			return
+		}
+
+		params, err := tool.ParseParams(data)
+		if err != nil {
+			render.Status(r, http.StatusBadRequest)
+			// TODO: More robust error formatting (probably JSON)
+			render.PlainText(w, r, err.Error())
+			return
+		}
+
+		res, err := tool.Invoke(params)
 		if err != nil {
 			render.Status(r, http.StatusInternalServerError)
 			return

@@ -63,13 +63,50 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+type Tool interface {
+	Invoke([]any) (string, error)
+	ParseParams(data map[string]any) ([]any, error)
+}
+
 type Parameter struct {
 	Name        string `yaml:"name"`
 	Type        string `yaml:"type"`
 	Description string `yaml:"description"`
-	Required    bool   `yaml:"required"`
 }
 
-type Tool interface {
-	Invoke() (string, error)
+// ParseTypeError is a customer error for incorrectly typed Parameters.
+type ParseTypeError struct {
+	Name  string
+	Type  string
+	Value any
+}
+
+func (e ParseTypeError) Error() string {
+	return fmt.Sprintf("Error parsing parameter %q: %q not type %q", e.Name, e.Value, e.Type)
+}
+
+// ParseParams is a helper function for parsing Parameters from an arbitratyJSON object.
+func parseParams(ps []Parameter, data map[string]any) ([]any, error) {
+	params := []any{}
+	for _, p := range ps {
+		v, ok := data[p.Name]
+		if !ok {
+			return nil, fmt.Errorf("Parameter %q is required!", p.Name)
+		}
+		switch p.Type {
+		case "string":
+			v, ok = v.(string)
+		case "integer":
+			v, ok = v.(int)
+		case "float":
+			v, ok = v.(float32)
+		case "boolean":
+			v, ok = v.(bool)
+		}
+		if !ok {
+			return nil, &ParseTypeError{p.Name, p.Type, v}
+		}
+		params = append(params, v)
+	}
+	return params, nil
 }
