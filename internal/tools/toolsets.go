@@ -34,17 +34,13 @@ var _ yaml.Unmarshaler = &ToolsetConfigs{}
 func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
 	*c = make(ToolsetConfigs)
 
-	var raw map[string]yaml.Node
+	var raw map[string][]string
 	if err := node.Decode(&raw); err != nil {
 		return err
 	}
 
-	for name, n := range raw {
-		actual := Toolset{Name: name}
-		if err := n.Decode(&actual); err != nil {
-			return fmt.Errorf("unable to toolset: %w", err)
-		}
-		(*c)[name] = actual
+	for name, tools := range raw {
+		(*c)[name] = Toolset{Name: name, Tools: tools}
 	}
 
 	return nil
