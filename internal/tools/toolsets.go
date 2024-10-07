@@ -23,7 +23,7 @@ import (
 
 type Toolset struct {
 	Name  string   `yaml:"name"`
-	Tools []string `yaml:"toolsets"`
+	Tools []string `yaml:",inline"`
 }
 
 type ToolsetConfigs map[string]Toolset
