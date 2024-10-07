@@ -167,10 +167,11 @@ func TestToolFileFlag(t *testing.T) {
 
 func TestParseToolFile(t *testing.T) {
 	tcs := []struct {
-		description string
-		in          string
-		wantSources sources.Configs
-		wantTools   tools.Configs
+		description  string
+		in           string
+		wantSources  sources.Configs
+		wantTools    tools.Configs
+		wantToolsets tools.ToolsetConfigs
 	}{
 		{
 			description: "basic example",
@@ -193,6 +194,9 @@ func TestParseToolFile(t *testing.T) {
 						- name: country
 						  type: string
 						  description: some description
+			toolsets:
+				example_toolset:
+					- example_tool
 			`,
 			wantSources: sources.Configs{
 				"my-pg-instance": sources.CloudSQLPgConfig{
@@ -220,11 +224,17 @@ func TestParseToolFile(t *testing.T) {
 					},
 				},
 			},
+			wantToolsets: tools.ToolsetConfigs{
+				"example_toolset": tools.Toolset{
+					Name:  "example_toolset",
+					Tools: []string{"example_tool"},
+				},
+			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			gotSources, gotTools, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			gotSources, gotTools, gotToolsets, err := parseToolsFile(testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -232,6 +242,9 @@ func TestParseToolFile(t *testing.T) {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantTools, gotTools); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsets, gotToolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 		})

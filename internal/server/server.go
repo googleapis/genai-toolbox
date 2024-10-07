@@ -33,8 +33,9 @@ type Server struct {
 	conf Config
 	root chi.Router
 
-	sources map[string]sources.Source
-	tools   map[string]tools.Tool
+	sources  map[string]sources.Source
+	tools    map[string]tools.Tool
+	toolsets map[string]tools.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -48,32 +49,44 @@ func NewServer(cfg Config) (*Server, error) {
 	})
 
 	// initalize and validate the sources
-	sources := make(map[string]sources.Source)
+	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
 		if err != nil {
 			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
 		}
-		sources[name] = s
+		sourcesMap[name] = s
 	}
-	fmt.Printf("Initalized %d sources.\n", len(sources))
+	fmt.Printf("Initalized %d sources.\n", len(sourcesMap))
 
 	// initalize and validate the tools
-	tools := make(map[string]tools.Tool)
+	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
-		t, err := tc.Initialize(sources)
+		t, err := tc.Initialize(sourcesMap)
 		if err != nil {
 			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
 		}
-		tools[name] = t
+		toolsMap[name] = t
 	}
-	fmt.Printf("Initalized %d tools.\n", len(tools))
+	fmt.Printf("Initalized %d tools.\n", len(toolsMap))
+
+	// initalize and validate the tools
+	toolsetsMap := make(map[string]tools.Toolset)
+	for name, tc := range cfg.ToolsetConfigs {
+		t, err := tc.Initialize(toolsMap)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to initialize toolset %s: %w", name, err)
+		}
+		toolsetsMap[name] = t
+	}
+	fmt.Printf("Initalized %d tools.\n", len(toolsetsMap))
 
 	s := &Server{
-		conf:    cfg,
-		root:    r,
-		sources: sources,
-		tools:   tools,
+		conf:     cfg,
+		root:     r,
+		sources:  sourcesMap,
+		tools:    toolsMap,
+		toolsets: toolsetsMap,
 	}
 	r.Mount("/api", apiRouter(s))
 

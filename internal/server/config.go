@@ -27,4 +27,6 @@ type Config struct {
 	SourceConfigs sources.Configs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs tools.Configs
+	// ToolsetConfigs defines what tools are available.
+	ToolsetConfigs tools.ToolsetConfigs
 }
