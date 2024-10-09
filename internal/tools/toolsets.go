@@ -16,7 +16,7 @@ package tools
 
 import (
 	"fmt"
-	"slices"
+	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
@@ -34,30 +34,39 @@ var _ yaml.Unmarshaler = &ToolsetConfigs{}
 func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
 	*c = make(ToolsetConfigs)
 
-	var raw map[string][]string
-	if err := node.Decode(&raw); err != nil {
-		return err
-	}
+	for i := 0; i < len(node.Content); i += 2 {
+		nameNode := node.Content[i]
+		toolsNode := node.Content[i+1]
 
-	for name, tools := range raw {
+		name := nameNode.Value
+
+		// Validat Toolset name
+		var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+		if !validName.MatchString(name) {
+			return fmt.Errorf("toolset name '%s' contains invalid characters for a URL component. Naming allows alphanumeric characters, hyphens, and periods, no spaces or special characters", name)
+		}
+		if name[0] == '-' || name[len(name)-1] == '-' {
+			return fmt.Errorf("toolset name '%s' cannot start or end with a hyphen", name)
+		}
+
+		// Create Toolset
+		var tools []string
+		for _, tNode := range toolsNode.Content {
+			tools = append(tools, tNode.Value)
+		}
 		(*c)[name] = Toolset{Name: name, Tools: tools}
 	}
-
 	return nil
 }
 
 func (t Toolset) Initialize(toolsMap map[string]Tool) (Toolset, error) {
 	// finish toolset setup
-	// fetch existing tool names
-	toolNames := make([]string, 0, len(toolsMap))
-	for n := range toolsMap {
-		toolNames = append(toolNames, n)
-	}
-	// Validate each declared tool name exists
-	for _, name := range t.Tools {
-		exists := slices.Contains(toolNames, name) // exists will be true
-		if !exists {
-			return t, fmt.Errorf("invalide tool name: %s", t)
+	// Check each declared tool name exists
+	for _, toolName := range t.Tools {
+		_, ok := toolsMap[toolName]
+		if !ok {
+			return t, fmt.Errorf("tool does not exist: %s", t)
 		}
 
 	}
