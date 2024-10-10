@@ -16,7 +16,6 @@ package tools
 
 import (
 	"fmt"
-	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
@@ -44,16 +43,6 @@ func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
 
 		name := nameNode.Value
 
-		// Validat Toolset name
-		var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-
-		if !validName.MatchString(name) {
-			return fmt.Errorf("toolset name '%s' contains invalid characters for a URL component. Naming allows alphanumeric characters, hyphens, and periods, no spaces or special characters", name)
-		}
-		if name[0] == '-' || name[len(name)-1] == '-' {
-			return fmt.Errorf("toolset name '%s' cannot start or end with a hyphen", name)
-		}
-
 		// Create ToolsetConfig
 		var tools []string
 		for _, tNode := range toolsNode.Content {
@@ -69,6 +58,9 @@ func (t ToolsetConfig) Initialize(toolsMap map[string]Tool) (Toolset, error) {
 	// Check each declared tool name exists
 	var toolset Toolset
 	toolset.Name = t.Name
+	if !IsValidName(toolset.Name) {
+		return toolset, fmt.Errorf("invalid toolset name: %s", t)
+	}
 	toolset.Tools = make([]*Tool, len(t.ToolNames))
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
