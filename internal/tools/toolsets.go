@@ -22,11 +22,15 @@ import (
 )
 
 type Toolset struct {
-	Name  string   `yaml:"name"`
-	Tools []string `yaml:",inline"`
+	Name  string  `yaml:"name"`
+	Tools []*Tool `yaml:",inline"`
 }
 
-type ToolsetConfigs map[string]Toolset
+type ToolsetConfig struct {
+	Name      string   `yaml:"name"`
+	ToolNames []string `yaml:",inline"`
+}
+type ToolsetConfigs map[string]ToolsetConfig
 
 // validate interface
 var _ yaml.Unmarshaler = &ToolsetConfigs{}
@@ -50,25 +54,29 @@ func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("toolset name '%s' cannot start or end with a hyphen", name)
 		}
 
-		// Create Toolset
+		// Create ToolsetConfig
 		var tools []string
 		for _, tNode := range toolsNode.Content {
 			tools = append(tools, tNode.Value)
 		}
-		(*c)[name] = Toolset{Name: name, Tools: tools}
+		(*c)[name] = ToolsetConfig{Name: name, ToolNames: tools}
 	}
 	return nil
 }
 
-func (t Toolset) Initialize(toolsMap map[string]Tool) (Toolset, error) {
+func (t ToolsetConfig) Initialize(toolsMap map[string]Tool) (Toolset, error) {
 	// finish toolset setup
 	// Check each declared tool name exists
-	for _, toolName := range t.Tools {
-		_, ok := toolsMap[toolName]
+	var toolset Toolset
+	toolset.Name = t.Name
+	toolset.Tools = make([]*Tool, len(t.ToolNames))
+	for _, toolName := range t.ToolNames {
+		tool, ok := toolsMap[toolName]
 		if !ok {
-			return t, fmt.Errorf("tool does not exist: %s", t)
+			return toolset, fmt.Errorf("tool does not exist: %s", t)
 		}
+		toolset.Tools = append(toolset.Tools, &tool)
 
 	}
-	return t, nil
+	return toolset, nil
 }

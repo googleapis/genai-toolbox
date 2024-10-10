@@ -225,9 +225,9 @@ func TestParseToolFile(t *testing.T) {
 				},
 			},
 			wantToolsets: tools.ToolsetConfigs{
-				"example_toolset": tools.Toolset{
-					Name:  "example_toolset",
-					Tools: []string{"example_tool"},
+				"example_toolset": tools.ToolsetConfig{
+					Name:      "example_toolset",
+					ToolNames: []string{"example_tool"},
 				},
 			},
 		},
