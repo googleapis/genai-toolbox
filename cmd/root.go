@@ -76,6 +76,7 @@ func NewCommand() *Command {
 	}
 
 	flags := cmd.Flags()
+	flags.StringVarP(&cmd.cfg.Version, "version", "v", "1.0.0", "Server version.")
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
@@ -115,6 +116,13 @@ func run(cmd *Command) error {
 	if err != nil {
 		return fmt.Errorf("Unable to parse tool file at %q: %w", cmd.tools_file, err)
 	}
+
+	// Create default ToolsetConfig that contains all tools
+	allToolNames := make([]string, len(cmd.cfg.ToolConfigs))
+	for _, t := range cmd.cfg.ToolConfigs {
+		allToolNames = append(allToolNames, &t)
+	}
+	cmd.cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
 
 	// run server
 	s, err := server.NewServer(cmd.cfg)

@@ -33,9 +33,10 @@ type Server struct {
 	conf Config
 	root chi.Router
 
-	sources  map[string]sources.Source
-	tools    map[string]tools.Tool
-	toolsets map[string]tools.Toolset
+	sources   map[string]sources.Source
+	tools     map[string]tools.Tool
+	toolsets  map[string]tools.Toolset
+	manifests map[string][]byte
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -53,7 +54,7 @@ func NewServer(cfg Config) (*Server, error) {
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
 		if err != nil {
-			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
+			return nil, fmt.Errorf("unable to initialize tool %s: %w", name, err)
 		}
 		sourcesMap[name] = s
 	}
@@ -64,7 +65,7 @@ func NewServer(cfg Config) (*Server, error) {
 	for name, tc := range cfg.ToolConfigs {
 		t, err := tc.Initialize(sourcesMap)
 		if err != nil {
-			return nil, fmt.Errorf("Unable to initialize tool %s: %w", name, err)
+			return nil, fmt.Errorf("unable to initialize tool %s: %w", name, err)
 		}
 		toolsMap[name] = t
 	}
@@ -75,20 +76,36 @@ func NewServer(cfg Config) (*Server, error) {
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := tc.Initialize(toolsMap)
 		if err != nil {
-			return nil, fmt.Errorf("Unable to initialize toolset %s: %w", name, err)
+			return nil, fmt.Errorf("unable to initialize toolset %s: %w", name, err)
 		}
 		toolsetsMap[name] = t
 	}
-	fmt.Printf("Initalized %d tools.\n", len(toolsetsMap))
+
+	// For toolset manifest: create default ToolsetConfig that contains all tools
+	allToolNames := make([]string, len(toolsMap))
+	for name := range toolsMap {
+		allToolNames = append(allToolNames, name)
+	}
+	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+
+	fmt.Printf("Initalized %d toolsets.\n", len(toolsetsMap))
+
+	manifestsMap := make(map[string][]byte)
 
 	s := &Server{
-		conf:     cfg,
-		root:     r,
-		sources:  sourcesMap,
-		tools:    toolsMap,
-		toolsets: toolsetsMap,
+		conf:      cfg,
+		root:      r,
+		sources:   sourcesMap,
+		tools:     toolsMap,
+		toolsets:  toolsetsMap,
+		manifests: manifestsMap,
 	}
-	r.Mount("/api", apiRouter(s))
+
+	if router, err := apiRouter(s); err != nil {
+		return nil, err
+	} else {
+		r.Mount("/api", router)
+	}
 
 	return s, nil
 }

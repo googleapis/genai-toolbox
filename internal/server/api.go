@@ -15,16 +15,29 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
+func createToolsetMarshalJSON(s *Server) func(*tools.ToolsetConfig) ([]byte, error) {
+	return func(t *tools.ToolsetConfig) ([]byte, error) {
+		toolsManifest := make([]*tools.ToolManifest, len(t.ToolNames))
+		for _, name := range t.ToolNames {
+			manifest := s.conf.ToolConfigs[name].Describe()
+			toolsManifest = append(toolsManifest, &manifest)
+		}
+		return json.Marshal(&tools.ToolsetManifest{ServerVersion: s.conf.Version, ToolsManifest: toolsManifest})
+	}
+}
+
 // apiRouter creates a router that represents the routes under /api
-func apiRouter(s *Server) chi.Router {
+func apiRouter(s *Server) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Get("/toolset/{toolsetName}", toolsetHandler(s))
@@ -34,13 +47,20 @@ func apiRouter(s *Server) chi.Router {
 		r.Post("/", toolHandler(s))
 	})
 
-	return r
+	// Convert tool configs to JSON for manifest
+	defaultToolsetConfig := s.conf.ToolsetConfigs[""]
+	allToolsManifest, err := createToolsetMarshalJSON(s)(&defaultToolsetConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal tools: %w", err)
+	}
+	s.manifests[""] = allToolsManifest
+	return r, nil
 }
 
 func toolsetHandler(s *Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		toolsetName := chi.URLParam(r, "toolsetName")
-		_, _ = w.Write([]byte(fmt.Sprintf("Stub for toolset %s manifest!", toolsetName)))
+		// toolsetName := chi.URLParam(r, "toolsetName")
+		_, _ = w.Write(s.manifests[""])
 	}
 }
 

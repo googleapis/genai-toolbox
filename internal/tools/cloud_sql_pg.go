@@ -38,6 +38,10 @@ func (r CloudSQLPgGenericConfig) toolKind() string {
 	return CloudSQLPgSQLGenericKind
 }
 
+func (t CloudSQLPgGenericConfig) Describe() ToolManifest {
+	return ToolManifest{Description: t.Description, Parameters: t.Parameters}
+}
+
 func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Tool, error) {
 	// verify source exists
 	rawS, ok := srcs[r.Source]

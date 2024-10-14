@@ -19,6 +19,8 @@ import (
 )
 
 type Config struct {
+	// Server version
+	Version string
 	// Address is the address of the interface the server will listen on.
 	Address string
 	// Port is the port the server will listen on.
