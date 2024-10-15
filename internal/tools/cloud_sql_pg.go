@@ -38,7 +38,7 @@ func (r CloudSQLPgGenericConfig) toolKind() string {
 	return CloudSQLPgSQLGenericKind
 }
 
-func (t CloudSQLPgGenericConfig) Describe() ToolManifest {
+func (t CloudSQLPgGenericConfig) Manifest() ToolManifest {
 	return ToolManifest{Description: t.Description, Parameters: t.Parameters}
 }
 
@@ -46,13 +46,13 @@ func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 	// verify source exists
 	rawS, ok := srcs[r.Source]
 	if !ok {
-		return nil, fmt.Errorf("No source named %q configured!", r.Source)
+		return nil, fmt.Errorf("no source named %q configured", r.Source)
 	}
 
 	// verify the source is the right kind
 	s, ok := rawS.(sources.CloudSQLPgSource)
 	if !ok {
-		return nil, fmt.Errorf("Sources for %q tools must be of kind %q!", CloudSQLPgSQLGenericKind, sources.CloudSQLPgKind)
+		return nil, fmt.Errorf("sources for %q tools must be of kind %q", CloudSQLPgSQLGenericKind, sources.CloudSQLPgKind)
 	}
 
 	// finish tool setup
