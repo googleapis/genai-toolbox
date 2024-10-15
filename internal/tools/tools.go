@@ -23,7 +23,7 @@ import (
 
 type Config interface {
 	toolKind() string
-	Describe() ToolManifest
+	Manifest() ToolManifest
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 

@@ -25,15 +25,13 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-func createToolsetMarshalJSON(s *Server) func(*tools.ToolsetConfig) ([]byte, error) {
-	return func(t *tools.ToolsetConfig) ([]byte, error) {
-		toolsManifest := make([]*tools.ToolManifest, len(t.ToolNames))
-		for _, name := range t.ToolNames {
-			manifest := s.conf.ToolConfigs[name].Describe()
-			toolsManifest = append(toolsManifest, &manifest)
-		}
-		return json.Marshal(&tools.ToolsetManifest{ServerVersion: s.conf.Version, ToolsManifest: toolsManifest})
+func createToolsetManifest(s *Server, c tools.ToolsetConfig) tools.ToolsetManifest {
+	toolsManifest := make([]tools.ToolManifest, 0, len(c.ToolNames))
+	for _, name := range c.ToolNames {
+		manifest := s.conf.ToolConfigs[name].Manifest()
+		toolsManifest = append(toolsManifest, manifest)
 	}
+	return tools.ToolsetManifest{ServerVersion: s.conf.Version, ToolsManifest: toolsManifest}
 }
 
 // apiRouter creates a router that represents the routes under /api
@@ -48,19 +46,27 @@ func apiRouter(s *Server) (chi.Router, error) {
 	})
 
 	// Convert tool configs to JSON for manifest
-	defaultToolsetConfig := s.conf.ToolsetConfigs[""]
-	allToolsManifest, err := createToolsetMarshalJSON(s)(&defaultToolsetConfig)
-	if err != nil {
-		return nil, fmt.Errorf("unable to marshal tools: %w", err)
+	for name, c := range s.conf.ToolsetConfigs {
+		manifest, err := json.Marshal(createToolsetManifest(s, c))
+		if err != nil {
+			return nil, fmt.Errorf("unable to marshal toolset: %w", err)
+		}
+		s.manifests[name] = manifest
 	}
-	s.manifests[""] = allToolsManifest
 	return r, nil
 }
 
 func toolsetHandler(s *Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// toolsetName := chi.URLParam(r, "toolsetName")
-		_, _ = w.Write(s.manifests[""])
+		toolsetName := chi.URLParam(r, "toolsetName")
+		manifest, ok := s.manifests[toolsetName]
+		if !ok {
+			render.Status(r, http.StatusNotFound)
+			_, _ = w.Write([]byte(fmt.Sprintf("Toolset %q does not exist", toolsetName)))
+			return
+		}
+		_, _ = w.Write([]byte(manifest))
+
 	}
 }
 

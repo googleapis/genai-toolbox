@@ -54,7 +54,7 @@ func NewServer(cfg Config) (*Server, error) {
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize tool %s: %w", name, err)
+			return nil, fmt.Errorf("unable to initialize source %s: %w", name, err)
 		}
 		sourcesMap[name] = s
 	}
@@ -82,7 +82,7 @@ func NewServer(cfg Config) (*Server, error) {
 	}
 
 	// For toolset manifest: create default ToolsetConfig that contains all tools
-	allToolNames := make([]string, len(toolsMap))
+	allToolNames := make([]string, 0, len(toolsMap))
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
 	}
