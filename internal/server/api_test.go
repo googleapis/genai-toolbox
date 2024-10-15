@@ -32,7 +32,7 @@ func TestToolsetManifest(t *testing.T) {
 		toolsetConfigs    tools.ToolsetConfigs
 		wantStatusCode    int
 		wantServerVersion string
-		wantManifests     []tools.ToolManifest
+		wantManifests     map[string]tools.ToolManifest
 		wantErr           bool
 	}{
 		{
@@ -62,7 +62,7 @@ func TestToolsetManifest(t *testing.T) {
 			},
 			wantStatusCode:    http.StatusOK,
 			wantServerVersion: "1.0.0",
-			wantManifests:     []tools.ToolManifest{tool1Manifest, tool2Manifest},
+			wantManifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest, "tool2": tool2Manifest},
 			wantErr:           false,
 		},
 		{
@@ -106,7 +106,7 @@ func TestToolsetManifest(t *testing.T) {
 			},
 			wantServerVersion: "1.0.0",
 			wantStatusCode:    http.StatusOK,
-			wantManifests:     []tools.ToolManifest{tool1Manifest},
+			wantManifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest},
 			wantErr:           false,
 		},
 	}
