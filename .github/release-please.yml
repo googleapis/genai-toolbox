@@ -16,6 +16,3 @@ handleGHRelease: true
 packageName: genai-toolbox
 releaseType: simple
 versionFile: "cmd/version.txt"
-extraFiles:
-  - README.md
-  - cmd/root.go
