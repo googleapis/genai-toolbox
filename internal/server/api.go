@@ -61,8 +61,7 @@ func toolsetHandler(s *Server) http.HandlerFunc {
 		toolsetName := chi.URLParam(r, "toolsetName")
 		manifest, ok := s.manifests[toolsetName]
 		if !ok {
-			render.Status(r, http.StatusNotFound)
-			_, _ = w.Write([]byte(fmt.Sprintf("Toolset %q does not exist", toolsetName)))
+			http.Error(w, fmt.Sprintf("Toolset %q does not exist", toolsetName), http.StatusNotFound)
 			return
 		}
 		_, _ = w.Write([]byte(manifest))
