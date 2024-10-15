@@ -86,7 +86,9 @@ func NewServer(cfg Config) (*Server, error) {
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
 	}
-	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+	if cfg.ToolsetConfigs != nil {
+		cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+	}
 
 	fmt.Printf("Initalized %d toolsets.\n", len(toolsetsMap))
 
