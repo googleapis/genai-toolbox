@@ -26,10 +26,10 @@ import (
 )
 
 func createToolsetManifest(s *Server, c tools.ToolsetConfig) tools.ToolsetManifest {
-	toolsManifest := make([]tools.ToolManifest, 0, len(c.ToolNames))
+	toolsManifest := make(map[string]tools.ToolManifest)
 	for _, name := range c.ToolNames {
 		manifest := s.conf.ToolConfigs[name].Manifest()
-		toolsManifest = append(toolsManifest, manifest)
+		toolsManifest[name] = manifest
 	}
 	return tools.ToolsetManifest{ServerVersion: s.conf.Version, ToolsManifest: toolsManifest}
 }
