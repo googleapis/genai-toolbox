@@ -69,6 +69,6 @@ func (t ToolsetConfig) Initialize(toolsMap map[string]Tool) (Toolset, error) {
 }
 
 type ToolsetManifest struct {
-	ServerVersion string         `json:"serverVersion"`
-	ToolsManifest []ToolManifest `json:",inline"`
+	ServerVersion string                  `json:"serverVersion"`
+	ToolsManifest map[string]ToolManifest `json:"tools"`
 }
