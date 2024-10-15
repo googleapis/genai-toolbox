@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-func createToolsetManifest(s *Server, c tools.ToolsetConfig) tools.ToolsetManifest {
+func newToolsetManifest(s *Server, c tools.ToolsetConfig) tools.ToolsetManifest {
 	toolsManifest := make(map[string]tools.ToolManifest)
 	for _, name := range c.ToolNames {
 		manifest := s.conf.ToolConfigs[name].Manifest()
@@ -47,7 +47,7 @@ func apiRouter(s *Server) (chi.Router, error) {
 
 	// Convert tool configs to JSON for manifest
 	for name, c := range s.conf.ToolsetConfigs {
-		manifest, err := json.Marshal(createToolsetManifest(s, c))
+		manifest, err := json.Marshal(newToolsetManifest(s, c))
 		if err != nil {
 			return nil, fmt.Errorf("unable to marshal toolset: %w", err)
 		}

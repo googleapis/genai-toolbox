@@ -24,16 +24,20 @@ func TestToolsetManifest(t *testing.T) {
 		Parameters:  []tools.Parameter{{Name: "param2", Type: "type", Description: "description2"}},
 	}
 
+	type want struct {
+		statusCode    int
+		serverVersion string
+		manifests     map[string]tools.ToolManifest
+		err           bool
+	}
+
 	tests := []struct {
-		name              string
-		toolsetName       string
-		sourceConfigs     sources.Configs
-		toolConfigs       tools.Configs
-		toolsetConfigs    tools.ToolsetConfigs
-		wantStatusCode    int
-		wantServerVersion string
-		wantManifests     map[string]tools.ToolManifest
-		wantErr           bool
+		name           string
+		toolsetName    string
+		sourceConfigs  sources.Configs
+		toolConfigs    tools.Configs
+		toolsetConfigs tools.ToolsetConfigs
+		want           want
 	}{
 		{
 			name:        "test all tool manifest",
@@ -60,10 +64,12 @@ func TestToolsetManifest(t *testing.T) {
 			toolsetConfigs: tools.ToolsetConfigs{
 				"toolset1": tools.ToolsetConfig{Name: "toolset1", ToolNames: []string{"tool1", "tool2"}},
 			},
-			wantStatusCode:    http.StatusOK,
-			wantServerVersion: "1.0.0",
-			wantManifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest, "tool2": tool2Manifest},
-			wantErr:           false,
+			want: want{
+				statusCode:    http.StatusOK,
+				serverVersion: "1.0.0",
+				manifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest, "tool2": tool2Manifest},
+				err:           false,
+			},
 		},
 		{
 			name:        "test invalid toolset name",
@@ -83,8 +89,10 @@ func TestToolsetManifest(t *testing.T) {
 			toolsetConfigs: tools.ToolsetConfigs{
 				"toolset1": tools.ToolsetConfig{Name: "toolset1", ToolNames: []string{"tool1"}},
 			},
-			wantStatusCode: http.StatusNotFound,
-			wantErr:        true,
+			want: want{
+				statusCode: http.StatusNotFound,
+				err:        true,
+			},
 		},
 		{
 			name:        "test one toolset",
@@ -104,10 +112,12 @@ func TestToolsetManifest(t *testing.T) {
 			toolsetConfigs: tools.ToolsetConfigs{
 				"toolset1": tools.ToolsetConfig{Name: "toolset1", ToolNames: []string{"tool1"}},
 			},
-			wantServerVersion: "1.0.0",
-			wantStatusCode:    http.StatusOK,
-			wantManifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest},
-			wantErr:           false,
+			want: want{
+				statusCode:    http.StatusOK,
+				serverVersion: "1.0.0",
+				manifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest},
+				err:           false,
+			},
 		},
 	}
 
@@ -135,15 +145,15 @@ func TestToolsetManifest(t *testing.T) {
 			handler(w, r)
 
 			// Check for error cases
-			if tt.wantErr {
-				if w.Code != tt.wantStatusCode {
-					t.Fatalf("Expected status code %d for error case, got %d", tt.wantStatusCode, w.Code)
+			if tt.want.err {
+				if w.Code != tt.want.statusCode {
+					t.Fatalf("Expected status code %d for error case, got %d", tt.want.statusCode, w.Code)
 				}
 				return
 			}
 
-			if w.Code != tt.wantStatusCode {
-				t.Fatalf("Expected status code %d, got %d", tt.wantStatusCode, w.Code)
+			if w.Code != tt.want.statusCode {
+				t.Fatalf("Expected status code %d, got %d", tt.want.statusCode, w.Code)
 			}
 
 			var response tools.ToolsetManifest
@@ -152,12 +162,12 @@ func TestToolsetManifest(t *testing.T) {
 				t.Fatalf("Error decoding response body: %v", err)
 			}
 
-			if response.ServerVersion != tt.wantServerVersion {
-				t.Fatalf("Expected ServerVersion '%s', got '%s'", tt.wantServerVersion, response.ServerVersion)
+			if response.ServerVersion != tt.want.serverVersion {
+				t.Fatalf("Expected ServerVersion '%s', got '%s'", tt.want.serverVersion, response.ServerVersion)
 			}
 
-			if diff := cmp.Diff(response.ToolsManifest, tt.wantManifests); diff != "" {
-				t.Fatalf("Expected ToolsManifests '%+v', got '%+v'", tt.wantManifests, response.ToolsManifest)
+			if diff := cmp.Diff(response.ToolsManifest, tt.want.manifests); diff != "" {
+				t.Fatalf("Expected ToolsManifests '%+v', got '%+v'", tt.want.manifests, response.ToolsManifest)
 			}
 		})
 	}
