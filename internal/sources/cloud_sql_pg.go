@@ -14,6 +14,15 @@
 
 package sources
 
+import (
+	"context"
+	"fmt"
+	"net"
+
+	"cloud.google.com/go/cloudsqlconn"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
 const CloudSQLPgKind string = "cloud-sql-postgres"
 
 // validate interface
@@ -25,6 +34,8 @@ type CloudSQLPgConfig struct {
 	Project  string `yaml:"project"`
 	Region   string `yaml:"region"`
 	Instance string `yaml:"instance"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 }
 
@@ -33,9 +44,20 @@ func (r CloudSQLPgConfig) sourceKind() string {
 }
 
 func (r CloudSQLPgConfig) Initialize() (Source, error) {
+	pool, err := initConnectionPool(r.Project, r.Region, r.Instance, r.User, r.Password, r.Database)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create pool: %w", err)
+	}
+
+	err = pool.Ping(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
+	}
+
 	s := CloudSQLPgSource{
 		Name: r.Name,
 		Kind: CloudSQLPgKind,
+		Pool: pool,
 	}
 	return s, nil
 }
@@ -45,4 +67,33 @@ var _ Source = CloudSQLPgSource{}
 type CloudSQLPgSource struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
+	Pool *pgxpool.Pool
+}
+
+func initConnectionPool(project, region, instance, user, pass, dbname string) (*pgxpool.Pool, error) {
+	// Configure the driver to connect to the database
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse connection uri: %w", err)
+	}
+
+	// Create a new dialer with any options
+	d, err := cloudsqlconn.NewDialer(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse connection uri: %w", err)
+	}
+
+	// Tell the driver to use the Cloud SQL Go Connector to create connections
+	i := fmt.Sprintf("%s:%s:%s", project, region, instance)
+	config.ConnConfig.DialFunc = func(ctx context.Context, _ string, instance string) (net.Conn, error) {
+		return d.Dial(ctx, i)
+	}
+
+	// Interact with the driver directly as you normally would
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		return nil, err
+	}
+	return pool, nil
 }

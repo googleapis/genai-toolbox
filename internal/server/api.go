@@ -31,7 +31,7 @@ func apiRouter(s *Server) chi.Router {
 
 	r.Route("/tool/{toolName}", func(r chi.Router) {
 		r.Use(middleware.AllowContentType("application/json"))
-		r.Post("/", toolHandler(s))
+		r.Post("/invoke", newToolHandler(s))
 	})
 
 	return r
@@ -44,35 +44,73 @@ func toolsetHandler(s *Server) http.HandlerFunc {
 	}
 }
 
-func toolHandler(s *Server) http.HandlerFunc {
+// resultResponse is the response sent back when the tool was invocated succesffully.
+type resultResponse struct {
+	Result string `json:"result"` // result of tool invocation
+}
+
+func (rr resultResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, http.StatusOK)
+	return nil
+}
+
+// newErrResponse is a helper function initalizing an ErrResponse
+func newErrResponse(err error, code int) *errResponse {
+	return &errResponse{
+		Err:            err,
+		HTTPStatusCode: code,
+
+		StatusText: http.StatusText(code),
+		ErrorText:  err.Error(),
+	}
+}
+
+// errResponse is the response sent back when an error has been encountered.
+type errResponse struct {
+	Err            error `json:"-"` // low-level runtime error
+	HTTPStatusCode int   `json:"-"` // http response status code
+
+	StatusText string `json:"status"`          // user-level status message
+	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+}
+
+func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPStatusCode)
+	return nil
+}
+
+func newToolHandler(s *Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		toolName := chi.URLParam(r, "toolName")
 		tool, ok := s.tools[toolName]
 		if !ok {
-			render.Status(r, http.StatusInternalServerError)
-			_, _ = w.Write([]byte(fmt.Sprintf("Tool %q does not exist", toolName)))
+			err := fmt.Errorf("Invalid tool name. Tool with name %q does not exist", toolName)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 			return
 		}
 
 		var data map[string]interface{}
 		if err := render.DecodeJSON(r.Body, &data); err != nil {
 			render.Status(r, http.StatusBadRequest)
+			err := fmt.Errorf("Request body was invalid JSON: %w", err)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
 
 		params, err := tool.ParseParams(data)
 		if err != nil {
-			render.Status(r, http.StatusBadRequest)
-			// TODO: More robust error formatting (probably JSON)
-			render.PlainText(w, r, err.Error())
+			err := fmt.Errorf("Provided parameters were invalid: %w", err)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
 
 		res, err := tool.Invoke(params)
 		if err != nil {
-			render.Status(r, http.StatusInternalServerError)
+			err := fmt.Errorf("Error while invoking tool: %w", err)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 			return
 		}
-		_, _ = w.Write([]byte(fmt.Sprintf("Tool Result: %s", res)))
+
+		_ = render.Render(w, r, &resultResponse{Result: res})
 	}
 }

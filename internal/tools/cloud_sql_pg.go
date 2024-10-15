@@ -15,7 +15,9 @@
 package tools
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
@@ -56,6 +58,7 @@ func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 		Name:       r.Name,
 		Kind:       CloudSQLPgSQLGenericKind,
 		Source:     s,
+		Statement:  r.Statement,
 		Parameters: r.Parameters,
 	}
 	return t, nil
@@ -68,11 +71,27 @@ type CloudSQLPgGenericTool struct {
 	Name       string `yaml:"name"`
 	Kind       string `yaml:"kind"`
 	Source     sources.CloudSQLPgSource
+	Statement  string
 	Parameters []Parameter `yaml:"parameters"`
 }
 
 func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q", t.Name, params), nil
+	fmt.Printf("Invoked tool %s\n", t.Name)
+	results, err := t.Source.Pool.Query(context.Background(), t.Statement, params...)
+	if err != nil {
+		return "", fmt.Errorf("Unable to execute query: %w", err)
+	}
+
+	var out strings.Builder
+	for results.Next() {
+		v, err := results.Values()
+		if err != nil {
+			return "", fmt.Errorf("Unable to parse row: %w", err)
+		}
+		out.WriteString(fmt.Sprintf("%s", v))
+	}
+
+	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
 }
 
 func (t CloudSQLPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
