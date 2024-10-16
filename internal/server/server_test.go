@@ -49,7 +49,7 @@ func TestServe(t *testing.T) {
 	}
 	s, err := server.NewServer(cfg)
 	if err != nil {
-		t.Fatalf("Unable to initialize server!")
+		t.Fatalf("Unable to initialize server! %v", err)
 	}
 
 	// start server in background

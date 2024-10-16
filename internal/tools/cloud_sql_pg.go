@@ -83,14 +83,14 @@ func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 	results, err := t.Source.Pool.Query(context.Background(), t.Statement, params...)
 	if err != nil {
-		return "", fmt.Errorf("Unable to execute query: %w", err)
+		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
 
 	var out strings.Builder
 	for results.Next() {
 		v, err := results.Values()
 		if err != nil {
-			return "", fmt.Errorf("Unable to parse row: %w", err)
+			return "", fmt.Errorf("unable to parse row: %w", err)
 		}
 		out.WriteString(fmt.Sprintf("%s", v))
 	}
