@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -15,6 +16,7 @@ import (
 )
 
 func TestToolsetManifest(t *testing.T) {
+	sourceConfigs := sources.Configs{"my-pg-instance": sources.CloudSQLPgConfig{Name: "my-pg-instance", Kind: sources.CloudSQLPgKind, Project: os.Getenv("PROJECT"), Region: os.Getenv("REGION"), Instance: os.Getenv("CLOUD_SQL_PG_INSTANCE"), User: os.Getenv("USER"), Password: os.Getenv("Password"), Database: os.Getenv("DATABASE")}}
 	tool1Manifest := tools.ToolManifest{
 		Description: "description1",
 		Parameters:  []tools.Parameter{{Name: "param1", Type: "type", Description: "description1"}},
@@ -40,11 +42,9 @@ func TestToolsetManifest(t *testing.T) {
 		want           want
 	}{
 		{
-			name:        "test all tool manifest",
-			toolsetName: "",
-			sourceConfigs: sources.Configs{
-				"my-pg-instance": sources.CloudSQLPgConfig{Name: "my-pg-instance", Kind: sources.CloudSQLPgKind},
-			},
+			name:          "test all tool manifest",
+			toolsetName:   "",
+			sourceConfigs: sourceConfigs,
 			toolConfigs: tools.Configs{
 				"tool1": tools.CloudSQLPgGenericConfig{
 					Name:        "tool1",
@@ -72,11 +72,9 @@ func TestToolsetManifest(t *testing.T) {
 			},
 		},
 		{
-			name:        "test invalid toolset name",
-			toolsetName: "nonExistentToolset",
-			sourceConfigs: sources.Configs{
-				"my-pg-instance": sources.CloudSQLPgConfig{Name: "my-pg-instance", Kind: sources.CloudSQLPgKind},
-			},
+			name:          "test invalid toolset name",
+			toolsetName:   "nonExistentToolset",
+			sourceConfigs: sourceConfigs,
 			toolConfigs: tools.Configs{
 				"tool1": tools.CloudSQLPgGenericConfig{
 					Name:        "tool1",
@@ -95,11 +93,9 @@ func TestToolsetManifest(t *testing.T) {
 			},
 		},
 		{
-			name:        "test one toolset",
-			toolsetName: "toolset1",
-			sourceConfigs: sources.Configs{
-				"my-pg-instance": sources.CloudSQLPgConfig{Name: "my-pg-instance", Kind: sources.CloudSQLPgKind},
-			},
+			name:          "test one toolset",
+			toolsetName:   "toolset1",
+			sourceConfigs: sourceConfigs,
 			toolConfigs: tools.Configs{
 				"tool1": tools.CloudSQLPgGenericConfig{
 					Name:        "tool1",
@@ -133,7 +129,7 @@ func TestToolsetManifest(t *testing.T) {
 			}
 			s, err := NewServer(cfg)
 			if err != nil {
-				t.Fatalf("Unable to initialize server!")
+				t.Fatalf("Unable to initialize server! %v", err)
 			}
 			w := httptest.NewRecorder()
 			chiCtx := chi.NewRouteContext()
