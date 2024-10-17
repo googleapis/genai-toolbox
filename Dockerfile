@@ -20,11 +20,10 @@ COPY . .
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG VERSION="0.1.0"
 
 RUN go get ./...
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -ldflags "-X main.versionString=$VERSION -X main.metadataString=container"
+    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=$(git rev-parse HEAD).container"
 
 # Final Stage
 FROM gcr.io/distroless/static:nonroot
