@@ -23,7 +23,7 @@ ARG TARGETARCH
 
 RUN go get ./...
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=$(git rev-parse HEAD).container"
+    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=container.$(git rev-parse HEAD)"
 
 # Final Stage
 FROM gcr.io/distroless/static:nonroot
