@@ -17,67 +17,95 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 )
-
-func newToolsetManifest(s *Server, c tools.ToolsetConfig) tools.ToolsetManifest {
-	toolsManifest := make(map[string]tools.ToolManifest)
-	for _, name := range c.ToolNames {
-		manifest := s.conf.ToolConfigs[name].Manifest()
-		toolsManifest[name] = manifest
-	}
-	return tools.ToolsetManifest{ServerVersion: s.conf.Version, ToolsManifest: toolsManifest}
-}
 
 // apiRouter creates a router that represents the routes under /api
 func apiRouter(s *Server) (chi.Router, error) {
 	r := chi.NewRouter()
 
-	r.Get("/toolset/{toolsetName}", toolsetHandler(s))
+	r.Get("/toolset/", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
+	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 
 	r.Route("/tool/{toolName}", func(r chi.Router) {
 		r.Use(middleware.AllowContentType("application/json"))
-		r.Post("/invoke", newToolHandler(s))
+		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) { toolInvokeHandler(s, w, r) })
 	})
 
-	// Convert tool configs to JSON for manifest
-	for name, c := range s.conf.ToolsetConfigs {
-		manifest, err := json.Marshal(newToolsetManifest(s, c))
-		if err != nil {
-			return nil, fmt.Errorf("unable to marshal toolset: %w", err)
-		}
-		s.manifests[name] = manifest
-	}
 	return r, nil
 }
 
-func toolsetHandler(s *Server) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		toolsetName := chi.URLParam(r, "toolsetName")
-		manifest, ok := s.manifests[toolsetName]
-		if !ok {
-			http.Error(w, fmt.Sprintf("Toolset %q does not exist", toolsetName), http.StatusNotFound)
-			return
-		}
-		_, _ = w.Write([]byte(manifest))
-
+// toolInvokeHandler handles the request for information about a Toolset.
+func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	toolsetName := chi.URLParam(r, "toolsetName")
+	toolset, ok := s.toolsets[toolsetName]
+	if !ok {
+		http.Error(w, fmt.Sprintf("Toolset %q does not exist", toolsetName), http.StatusNotFound)
+		return
 	}
+	b, err := json.Marshal(toolset.Manifest)
+	if err != nil {
+		log.Printf("unable to JSON the toolset manifest: %s", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	_, _ = w.Write(b)
 }
+
+// toolInvokeHandler handles the API request to invoke a specific Tool.
+func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	toolName := chi.URLParam(r, "toolName")
+	tool, ok := s.tools[toolName]
+	if !ok {
+		err := fmt.Errorf("Invalid tool name. Tool with name %q does not exist", toolName)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+		return
+	}
+
+	var data map[string]interface{}
+	if err := render.DecodeJSON(r.Body, &data); err != nil {
+		render.Status(r, http.StatusBadRequest)
+		err := fmt.Errorf("Request body was invalid JSON: %w", err)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		return
+	}
+
+	params, err := tool.ParseParams(data)
+	if err != nil {
+		err := fmt.Errorf("Provided parameters were invalid: %w", err)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		return
+	}
+
+	res, err := tool.Invoke(params)
+	if err != nil {
+		err := fmt.Errorf("Error while invoking tool: %w", err)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	_ = render.Render(w, r, &resultResponse{Result: res})
+}
+
+var _ render.Renderer = &resultResponse{} // Renderer interface for managing response payloads.
 
 // resultResponse is the response sent back when the tool was invocated succesffully.
 type resultResponse struct {
 	Result string `json:"result"` // result of tool invocation
 }
 
+// Render renders a single payload and respond to the client request.
 func (rr resultResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, http.StatusOK)
 	return nil
 }
+
+var _ render.Renderer = &errResponse{} // Renderer interface for managing response payloads.
 
 // newErrResponse is a helper function initalizing an ErrResponse
 func newErrResponse(err error, code int) *errResponse {
@@ -102,40 +130,4 @@ type errResponse struct {
 func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
-}
-
-func newToolHandler(s *Server) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		toolName := chi.URLParam(r, "toolName")
-		tool, ok := s.tools[toolName]
-		if !ok {
-			err := fmt.Errorf("Invalid tool name. Tool with name %q does not exist", toolName)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
-			return
-		}
-
-		var data map[string]interface{}
-		if err := render.DecodeJSON(r.Body, &data); err != nil {
-			render.Status(r, http.StatusBadRequest)
-			err := fmt.Errorf("Request body was invalid JSON: %w", err)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
-			return
-		}
-
-		params, err := tool.ParseParams(data)
-		if err != nil {
-			err := fmt.Errorf("Provided parameters were invalid: %w", err)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
-			return
-		}
-
-		res, err := tool.Invoke(params)
-		if err != nil {
-			err := fmt.Errorf("Error while invoking tool: %w", err)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
-			return
-		}
-
-		_ = render.Render(w, r, &resultResponse{Result: res})
-	}
 }

@@ -1,170 +1,181 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-func TestToolsetManifest(t *testing.T) {
-	sourceConfigs := sources.Configs{"my-pg-instance": sources.CloudSQLPgConfig{Name: "my-pg-instance", Kind: sources.CloudSQLPgKind, Project: os.Getenv("PROJECT"), Region: os.Getenv("REGION"), Instance: os.Getenv("CLOUD_SQL_PG_INSTANCE"), User: os.Getenv("USER"), Password: os.Getenv("Password"), Database: os.Getenv("DATABASE")}}
-	tool1Manifest := tools.ToolManifest{
-		Description: "description1",
-		Parameters:  []tools.Parameter{{Name: "param1", Type: "type", Description: "description1"}},
+var _ tools.Tool = &MockTool{}
+
+type MockTool struct {
+	Name        string
+	Description string
+	Params      []tools.Parameter
+}
+
+func (t MockTool) Invoke([]any) (string, error) {
+	return "", nil
+}
+
+func (t MockTool) ParseParams(data map[string]any) ([]any, error) {
+	return tools.ParseParams(t.Params, data)
+}
+
+func (t MockTool) Manifest() tools.Manifest {
+	return tools.Manifest{Description: t.Description, Parameters: t.Params}
+}
+
+func TestToolsetEndpoint(t *testing.T) {
+	// Set up resources to test against
+	tool1 := MockTool{
+		Name:   "no_params",
+		Params: []tools.Parameter{},
 	}
-	tool2Manifest := tools.ToolManifest{
-		Description: "description2",
-		Parameters:  []tools.Parameter{{Name: "param2", Type: "type", Description: "description2"}},
+	tool2 := MockTool{
+		Name: "some_params",
+		Params: []tools.Parameter{
+			{
+				Name:        "param1",
+				Type:        "int",
+				Description: "This is the first parameter.",
+			},
+			{
+				Name:        "param2",
+				Type:        "string",
+				Description: "This is the second parameter.",
+			},
+		},
+	}
+	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
+
+	toolsets := make(map[string]tools.Toolset)
+	for name, l := range map[string][]string{
+		"":           {tool1.Name, tool2.Name},
+		"tool1_only": {tool1.Name},
+		"tool2_only": {tool2.Name},
+	} {
+		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
+		m, err := tc.Initialize("0.0.0", toolsMap)
+		if err != nil {
+			t.Fatalf("unable to initialize toolset %q: %s", name, err)
+		}
+		toolsets[name] = m
 	}
 
-	type want struct {
-		statusCode    int
-		serverVersion string
-		manifests     map[string]tools.ToolManifest
-		err           bool
+	server := Server{tools: toolsMap, toolsets: toolsets}
+	r, err := apiRouter(&server)
+	if err != nil {
+		t.Fatalf("unable to initalize router: %s", err)
+	}
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	// wantRepsonse is a struct for checks against test cases
+	type wantResponse struct {
+		statusCode int
+		isErr      bool
+		version    string
+		tools      []string
 	}
 
-	tests := []struct {
-		name           string
-		toolsetName    string
-		sourceConfigs  sources.Configs
-		toolConfigs    tools.Configs
-		toolsetConfigs tools.ToolsetConfigs
-		want           want
+	testCases := []struct {
+		name        string
+		toolsetName string
+		want        wantResponse
 	}{
 		{
-			name:          "test all tool manifest",
-			toolsetName:   "",
-			sourceConfigs: sourceConfigs,
-			toolConfigs: tools.Configs{
-				"tool1": tools.CloudSQLPgGenericConfig{
-					Name:        "tool1",
-					Kind:        tools.CloudSQLPgSQLGenericKind,
-					Source:      "my-pg-instance",
-					Description: "description1",
-					Parameters:  []tools.Parameter{{Name: "param1", Type: "type", Description: "description1"}},
-				},
-				"tool2": tools.CloudSQLPgGenericConfig{
-					Name:        "tool2",
-					Kind:        tools.CloudSQLPgSQLGenericKind,
-					Source:      "my-pg-instance",
-					Description: "description2",
-					Parameters:  []tools.Parameter{{Name: "param2", Type: "type", Description: "description2"}},
-				},
-			},
-			toolsetConfigs: tools.ToolsetConfigs{
-				"toolset1": tools.ToolsetConfig{Name: "toolset1", ToolNames: []string{"tool1", "tool2"}},
-			},
-			want: want{
-				statusCode:    http.StatusOK,
-				serverVersion: "1.0.0",
-				manifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest, "tool2": tool2Manifest},
-				err:           false,
+			name:        "'default' manifest",
+			toolsetName: "",
+			want: wantResponse{
+				statusCode: http.StatusOK,
+				version:    "0.0.0",
+				tools:      []string{tool1.Name, tool2.Name},
 			},
 		},
 		{
-			name:          "test invalid toolset name",
-			toolsetName:   "nonExistentToolset",
-			sourceConfigs: sourceConfigs,
-			toolConfigs: tools.Configs{
-				"tool1": tools.CloudSQLPgGenericConfig{
-					Name:        "tool1",
-					Kind:        tools.CloudSQLPgSQLGenericKind,
-					Source:      "my-pg-instance",
-					Description: "description1",
-					Parameters:  []tools.Parameter{{Name: "param1", Type: "type", Description: "description1"}},
-				},
-			},
-			toolsetConfigs: tools.ToolsetConfigs{
-				"toolset1": tools.ToolsetConfig{Name: "toolset1", ToolNames: []string{"tool1"}},
-			},
-			want: want{
+			name:        "invalid toolset name",
+			toolsetName: "some_imaginary_toolset",
+			want: wantResponse{
 				statusCode: http.StatusNotFound,
-				err:        true,
+				isErr:      true,
 			},
 		},
 		{
-			name:          "test one toolset",
-			toolsetName:   "toolset1",
-			sourceConfigs: sourceConfigs,
-			toolConfigs: tools.Configs{
-				"tool1": tools.CloudSQLPgGenericConfig{
-					Name:        "tool1",
-					Kind:        tools.CloudSQLPgSQLGenericKind,
-					Source:      "my-pg-instance",
-					Description: "description1",
-					Parameters:  []tools.Parameter{{Name: "param1", Type: "type", Description: "description1"}},
-				},
+			name:        "single toolset 1",
+			toolsetName: "tool1_only",
+			want: wantResponse{
+				statusCode: http.StatusOK,
+				version:    "0.0.0",
+				tools:      []string{tool1.Name},
 			},
-			toolsetConfigs: tools.ToolsetConfigs{
-				"toolset1": tools.ToolsetConfig{Name: "toolset1", ToolNames: []string{"tool1"}},
-			},
-			want: want{
-				statusCode:    http.StatusOK,
-				serverVersion: "1.0.0",
-				manifests:     map[string]tools.ToolManifest{"tool1": tool1Manifest},
-				err:           false,
+		},
+		{
+			name:        "single toolset 2",
+			toolsetName: "tool2_only",
+			want: wantResponse{
+				statusCode: http.StatusOK,
+				version:    "0.0.0",
+				tools:      []string{tool2.Name},
 			},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := Config{
-				Version:        "1.0.0",
-				Address:        "127.0.0.1",
-				Port:           5000,
-				SourceConfigs:  tt.sourceConfigs,
-				ToolConfigs:    tt.toolConfigs,
-				ToolsetConfigs: tt.toolsetConfigs,
-			}
-			s, err := NewServer(cfg)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, body, err := testRequest(ts, http.MethodGet, fmt.Sprintf("/toolset/%s", tc.toolsetName), nil)
 			if err != nil {
-				t.Fatalf("Unable to initialize server! %v", err)
+				t.Fatalf("unexpected error during request: %s", err)
 			}
-			w := httptest.NewRecorder()
-			chiCtx := chi.NewRouteContext()
-			r := httptest.NewRequest("GET", "/toolset/"+tt.toolsetName, nil)
-			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
-			chiCtx.URLParams.Add("toolsetName", fmt.Sprintf("%v", tt.toolsetName))
 
-			handler := toolsetHandler(s)
-			handler(w, r)
-
-			// Check for error cases
-			if tt.want.err {
-				if w.Code != tt.want.statusCode {
-					t.Fatalf("Expected status code %d for error case, got %d", tt.want.statusCode, w.Code)
-				}
+			if resp.StatusCode != tc.want.statusCode {
+				t.Logf("response body: %s", body)
+				t.Fatalf("unexpected status code: want %d, got %d", tc.want.statusCode, resp.StatusCode)
+			}
+			if tc.want.isErr {
+				// skip the rest of the checks if this is an error case
 				return
 			}
-
-			if w.Code != tt.want.statusCode {
-				t.Fatalf("Expected status code %d, got %d", tt.want.statusCode, w.Code)
-			}
-
-			var response tools.ToolsetManifest
-			err = json.NewDecoder(w.Body).Decode(&response)
+			var m tools.ToolsetManifest
+			err = json.Unmarshal(body, &m)
 			if err != nil {
-				t.Fatalf("Error decoding response body: %v", err)
+				t.Fatalf("unable to parse ToolsetManifest: %s", err)
 			}
-
-			if response.ServerVersion != tt.want.serverVersion {
-				t.Fatalf("Expected ServerVersion '%s', got '%s'", tt.want.serverVersion, response.ServerVersion)
+			// Check the version is correct
+			if m.ServerVersion != tc.want.version {
+				t.Fatalf("unexpected ServerVersion: want %q, got %q", tc.want.version, m.ServerVersion)
 			}
-
-			if diff := cmp.Diff(response.ToolsManifest, tt.want.manifests); diff != "" {
-				t.Fatalf("Expected ToolsManifests '%+v', got '%+v'", tt.want.manifests, response.ToolsManifest)
+			// validate that the tools in the toolset are correct
+			for _, name := range tc.want.tools {
+				_, ok := m.ToolsManifest[name]
+				if !ok {
+					t.Errorf("%q tool not found in manfiest", name)
+				}
 			}
 		})
 	}
+}
+
+func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, []byte, error) {
+	req, err := http.NewRequest(method, ts.URL+path, body)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to create request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to send request: %w", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to read request body: %w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp, respBody, nil
 }

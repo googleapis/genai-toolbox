@@ -33,10 +33,9 @@ type Server struct {
 	conf Config
 	root chi.Router
 
-	sources   map[string]sources.Source
-	tools     map[string]tools.Tool
-	toolsets  map[string]tools.Toolset
-	manifests map[string][]byte
+	sources  map[string]sources.Source
+	tools    map[string]tools.Tool
+	toolsets map[string]tools.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -54,7 +53,7 @@ func NewServer(cfg Config) (*Server, error) {
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize source %s: %w", name, err)
+			return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 		}
 		sourcesMap[name] = s
 	}
@@ -65,42 +64,38 @@ func NewServer(cfg Config) (*Server, error) {
 	for name, tc := range cfg.ToolConfigs {
 		t, err := tc.Initialize(sourcesMap)
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize tool %s: %w", name, err)
+			return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 		}
 		toolsMap[name] = t
 	}
 	fmt.Printf("Initalized %d tools.\n", len(toolsMap))
 
-	// initalize and validate the tools
-	toolsetsMap := make(map[string]tools.Toolset)
-	for name, tc := range cfg.ToolsetConfigs {
-		t, err := tc.Initialize(toolsMap)
-		if err != nil {
-			return nil, fmt.Errorf("unable to initialize toolset %s: %w", name, err)
-		}
-		toolsetsMap[name] = t
-	}
-
-	// For toolset manifest: create default ToolsetConfig that contains all tools
+	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
 	}
-	if cfg.ToolsetConfigs != nil {
-		cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+	if cfg.ToolsetConfigs == nil {
+		cfg.ToolsetConfigs = make(tools.ToolsetConfigs)
 	}
-
+	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+	// initalize and validate the toolsets
+	toolsetsMap := make(map[string]tools.Toolset)
+	for name, tc := range cfg.ToolsetConfigs {
+		t, err := tc.Initialize(cfg.Version, toolsMap)
+		if err != nil {
+			return nil, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+		}
+		toolsetsMap[name] = t
+	}
 	fmt.Printf("Initalized %d toolsets.\n", len(toolsetsMap))
 
-	manifestsMap := make(map[string][]byte)
-
 	s := &Server{
-		conf:      cfg,
-		root:      r,
-		sources:   sourcesMap,
-		tools:     toolsMap,
-		toolsets:  toolsetsMap,
-		manifests: manifestsMap,
+		conf:     cfg,
+		root:     r,
+		sources:  sourcesMap,
+		tools:    toolsMap,
+		toolsets: toolsetsMap,
 	}
 
 	if router, err := apiRouter(s); err != nil {
