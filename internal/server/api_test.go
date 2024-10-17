@@ -95,6 +95,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			want: wantResponse{
 				statusCode: http.StatusOK,
 				version:    "0.0.0",
+				tools:      []string{tool1.Name, tool2.Name},
 			},
 		},
 		{
@@ -106,11 +107,21 @@ func TestToolsetEndpoint(t *testing.T) {
 			},
 		},
 		{
-			name:        "single toolset",
+			name:        "single toolset 1",
 			toolsetName: "tool1_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
 				version:    "0.0.0",
+				tools:      []string{tool1.Name},
+			},
+		},
+		{
+			name:        "single toolset 2",
+			toolsetName: "tool2_only",
+			want: wantResponse{
+				statusCode: http.StatusOK,
+				version:    "0.0.0",
+				tools:      []string{tool2.Name},
 			},
 		},
 	}
