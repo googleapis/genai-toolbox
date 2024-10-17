@@ -23,7 +23,6 @@ import (
 
 type Config interface {
 	toolKind() string
-	Manifest() ToolManifest
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 
@@ -67,6 +66,7 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 type Tool interface {
 	Invoke([]any) (string, error)
 	ParseParams(data map[string]any) ([]any, error)
+	Manifest() Manifest
 }
 
 type Parameter struct {
@@ -87,7 +87,7 @@ func (e ParseTypeError) Error() string {
 }
 
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
-func parseParams(ps []Parameter, data map[string]any) ([]any, error) {
+func ParseParams(ps []Parameter, data map[string]any) ([]any, error) {
 	params := []any{}
 	for _, p := range ps {
 		v, ok := data[p.Name]
@@ -112,7 +112,7 @@ func parseParams(ps []Parameter, data map[string]any) ([]any, error) {
 	return params, nil
 }
 
-type ToolManifest struct {
+type Manifest struct {
 	Description string      `json:"description"`
 	Parameters  []Parameter `json:"parameters"`
 }

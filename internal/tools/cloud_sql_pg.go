@@ -36,19 +36,15 @@ type CloudSQLPgGenericConfig struct {
 	Parameters  []Parameter `yaml:"parameters"`
 }
 
-func (r CloudSQLPgGenericConfig) toolKind() string {
+func (cfg CloudSQLPgGenericConfig) toolKind() string {
 	return CloudSQLPgSQLGenericKind
 }
 
-func (t CloudSQLPgGenericConfig) Manifest() ToolManifest {
-	return ToolManifest{Description: t.Description, Parameters: t.Parameters}
-}
-
-func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Tool, error) {
+func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Tool, error) {
 	// verify source exists
-	rawS, ok := srcs[r.Source]
+	rawS, ok := srcs[cfg.Source]
 	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", r.Source)
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
 	// verify the source is the right kind
@@ -59,11 +55,12 @@ func (r CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 
 	// finish tool setup
 	t := CloudSQLPgGenericTool{
-		Name:       r.Name,
+		Name:       cfg.Name,
 		Kind:       CloudSQLPgSQLGenericKind,
 		Source:     s,
-		Statement:  r.Statement,
-		Parameters: r.Parameters,
+		Statement:  cfg.Statement,
+		Parameters: cfg.Parameters,
+		manifest:   Manifest{cfg.Description, cfg.Parameters},
 	}
 	return t, nil
 }
@@ -77,6 +74,7 @@ type CloudSQLPgGenericTool struct {
 	Source     sources.CloudSQLPgSource
 	Statement  string
 	Parameters []Parameter `yaml:"parameters"`
+	manifest   Manifest
 }
 
 func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
@@ -99,5 +97,9 @@ func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
 }
 
 func (t CloudSQLPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
-	return parseParams(t.Parameters, data)
+	return ParseParams(t.Parameters, data)
+}
+
+func (t CloudSQLPgGenericTool) Manifest() Manifest {
+	return t.manifest
 }
