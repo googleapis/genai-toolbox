@@ -37,6 +37,7 @@ images:
 options:
   automapSubstitutions: true
   dynamic_substitutions: true
+  logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
 
 substitutions:
   _REGION: us-central1
