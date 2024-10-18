@@ -21,14 +21,14 @@ steps:
     name: golang:1
     script: |
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.linux.amd64.$(git rev-parse HEAD)" -o genai-toolbox.linux.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.linux.amd64.$(git rev-parse HEAD)" -o genai-toolbox.linux.amd64.$SHORT_SHA
 
 # Save binary to Google Cloud Storage
 artifacts:
   objects:
     location: gs://$_BUCKET_NAME/
     paths:
-      - genai-toolbox.linux.amd64
+      - genai-toolbox.linux.amd64.$SHORT_SHA
 
 # Store images in Google Artifact Registry
 images:
