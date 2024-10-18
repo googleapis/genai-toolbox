@@ -23,7 +23,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestParseFromYaml(t *testing.T) {
+func TestParseFromYamlCloudSQLPg(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string

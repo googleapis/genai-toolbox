@@ -23,7 +23,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestParseFromYamlCloudSQLPg(t *testing.T) {
+func TestParseFromYamlAlloyDBPg(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -34,18 +34,20 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 			in: `
 			sources:
 				my-pg-instance:
-					kind: cloud-sql-postgres
+					kind: alloydb-postgres
 					project: my-project
 					region: my-region
+                    cluster: my-cluster
 					instance: my-instance
 					database: my_db
 			`,
 			want: sources.Configs{
-				"my-pg-instance": sources.CloudSQLPgConfig{
+				"my-pg-instance": sources.AlloyDBPgConfig{
 					Name:     "my-pg-instance",
-					Kind:     sources.CloudSQLPgKind,
+					Kind:     sources.AlloyDBPgKind,
 					Project:  "my-project",
 					Region:   "my-region",
+                    Cluster:  "my-cluster",
 					Instance: "my-instance",
 					Database: "my_db",
 				},
