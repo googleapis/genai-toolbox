@@ -77,11 +77,3 @@ jobs:
 
       - name: Run tests
         run: go test -race -v ./...
-        env:
-          PROJECT: ${{ secrets.PROJECT }}
-          CLOUD_SQL_PG_INSTANCE: ${{ secrets.CLOUD_SQL_PG_INSTANCE }}
-          REGION: ${{ secrets.REGION }}
-          DATABASE: ${{ secrets.DATABASE }}
-          USER: ${{ secrets.USER }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-
