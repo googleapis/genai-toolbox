@@ -1,4 +1,4 @@
-from typing import List, Optional, Type
+from typing import Optional, Type
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class ToolboxClient:
         """
         self._url: str = url
         self._manifest: dict = {}
-        self._tools: List[StructuredTool] = []
+        self._tools: list[StructuredTool] = []
 
     def _load_tool_manifest(self, tool_name: str) -> None:
         """
@@ -92,7 +92,7 @@ class ToolboxClient:
         self._generate_tool(tool_name)
         return self._tools[-1]
 
-    def load_toolset(self, toolset_name: Optional[str] = None) -> List[StructuredTool]:
+    def load_toolset(self, toolset_name: Optional[str] = None) -> list[StructuredTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset name.
 

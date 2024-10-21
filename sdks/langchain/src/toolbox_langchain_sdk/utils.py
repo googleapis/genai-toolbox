@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type
+from typing import Any, Type
 
 import requests
 import yaml
@@ -20,7 +20,7 @@ def _load_yaml(url) -> dict:
     return yaml.safe_load(response.text)
 
 
-def _schema_to_model(model_name: str, schema: Dict[str, Any]) -> Type[BaseModel]:
+def _schema_to_model(model_name: str, schema: dict[str, Any]) -> Type[BaseModel]:
     """
     Converts a schema (from the YAML manifest) to a Pydantic BaseModel class.
 
@@ -61,9 +61,9 @@ def _parse_type(type_: str) -> Any:
     elif type_ == "boolean":
         return bool
     elif type_ == "array":
-        return List
+        return list
     elif type_ == "object":
-        return Dict
+        return dict
     else:
         raise ValueError(f"Unsupported schema type: {type_}")
 
