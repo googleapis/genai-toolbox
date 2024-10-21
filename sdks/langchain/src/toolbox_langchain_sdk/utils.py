@@ -5,7 +5,7 @@ import yaml
 from pydantic import BaseModel, Field, create_model
 
 
-def load_yaml(url) -> dict:
+def _load_yaml(url) -> dict:
     """
     Fetches and parses the YAML data from the given URL.
 
@@ -20,7 +20,7 @@ def load_yaml(url) -> dict:
     return yaml.safe_load(response.text)
 
 
-def schema_to_model(model_name: str, schema: Dict[str, Any]) -> Type[BaseModel]:
+def _schema_to_model(model_name: str, schema: Dict[str, Any]) -> Type[BaseModel]:
     """
     Converts a schema (from the YAML manifest) to a Pydantic BaseModel class.
 
@@ -34,14 +34,14 @@ def schema_to_model(model_name: str, schema: Dict[str, Any]) -> Type[BaseModel]:
     field_definitions = {}
     for name, property_ in schema.items():
         field_definitions[name] = (
-            parse_type(property_["type"]),
+            _parse_type(property_["type"]),
             Field(description=property_.get("description")),
         )
 
     return create_model(model_name, **field_definitions)
 
 
-def parse_type(type_: str) -> Any:
+def _parse_type(type_: str) -> Any:
     """
     Converts a schema type to a JSON type.
 
@@ -70,7 +70,7 @@ def parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
-def call_tool_api(url: str, tool_name: str, data: dict) -> dict:
+def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
     """
     Makes an API call to the Toolbox service to execute a tool.
 

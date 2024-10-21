@@ -3,7 +3,7 @@ from typing import List, Optional, Type
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from .utils import call_tool_api, load_yaml, schema_to_model
+from .utils import _call_tool_api, _load_yaml, _schema_to_model
 
 
 class ToolboxClient:
@@ -27,7 +27,7 @@ class ToolboxClient:
         """
         url = f"{self._url}/api/tool/{tool_name}"
 
-        yaml = load_yaml(url)
+        yaml = _load_yaml(url)
 
         if "tools" in self._manifest and "tools" in yaml and tool_name in yaml["tools"]:
             self._manifest["tools"][tool_name] = yaml["tools"][tool_name]
@@ -46,7 +46,7 @@ class ToolboxClient:
             url = f"{self._url}/api/toolset/{toolset_name}"
         else:
             url = f"{self._url}/api/toolset"
-        self._manifest = load_yaml(url)
+        self._manifest = _load_yaml(url)
 
     def _generate_tool(self, tool_name: str) -> None:
         """
@@ -64,12 +64,12 @@ class ToolboxClient:
 
         ToolSchema(**tool_schema)
 
-        tool_model: Type[BaseModel] = schema_to_model(
+        tool_model: Type[BaseModel] = _schema_to_model(
             model_name=tool_name, schema=tool_schema["parameters"]
         )
 
         tool: StructuredTool = StructuredTool.from_function(
-            func=lambda **kwargs: call_tool_api(self._url, tool_name, kwargs),
+            func=lambda **kwargs: _call_tool_api(self._url, tool_name, kwargs),
             name=tool_schema["summary"],
             description=tool_schema["description"],
             args_schema=tool_model,
