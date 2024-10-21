@@ -2,11 +2,11 @@ from unittest.mock import patch, Mock
 from langchain_core.tools import StructuredTool
 import pytest
 import requests
-from toolbox_sdk import ToolboxClient
+from toolbox_langchain_sdk import ToolboxClient
 from pydantic import ValidationError
 
 
-@patch("toolbox_sdk.toolbox.requests.get")
+@patch("toolbox_langchain_sdk.client.requests.get")
 def test_load_manifest(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
@@ -29,7 +29,7 @@ def test_load_manifest(mock_get):
     assert "test_tool" in client._manifest["tools"]
 
 
-@patch("toolbox_sdk.toolbox.requests.get")
+@patch("toolbox_langchain_sdk.client.requests.get")
 def test_load_manifest_single_toolset(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
@@ -52,7 +52,7 @@ def test_load_manifest_single_toolset(mock_get):
     assert "test_tool" in client._manifest["tools"]
 
 
-@patch("toolbox_sdk.toolbox.requests.get")
+@patch("toolbox_langchain_sdk.client.requests.get")
 def test_load_manifest_all_toolsets(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
@@ -83,7 +83,7 @@ def test_load_manifest_all_toolsets(mock_get):
     assert "test_tool2" in client._manifest["tools"]
 
 
-@patch("toolbox_sdk.toolbox.requests.get")
+@patch("toolbox_langchain_sdk.client.requests.get")
 def test_load_manifest_invalid_yaml(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
@@ -95,7 +95,7 @@ def test_load_manifest_invalid_yaml(mock_get):
     assert client._manifest == "invalid yaml"
 
 
-@patch("toolbox_sdk.toolbox.requests.get")
+@patch("toolbox_langchain_sdk.client.requests.get")
 def test_load_manifest_api_error(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
@@ -106,7 +106,7 @@ def test_load_manifest_api_error(mock_get):
         client._load_manifest("test_toolset")
 
 
-@patch("toolbox_sdk.utils.requests.post")
+@patch("toolbox_langchain_sdk.utils.requests.post")
 def test_generate_tool_success(mock_post):
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {
@@ -148,7 +148,7 @@ def test_generate_tool_success(mock_post):
     assert result == mock_response.json.return_value
 
 
-@patch("toolbox_sdk.utils.requests.post")
+@patch("toolbox_langchain_sdk.utils.requests.post")
 def test_generate_tool_api_error(mock_post):
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {
@@ -219,7 +219,7 @@ def test_generate_tool_invalid_schema_types():
     assert exc_info.value.errors()[0]["msg"] == "Input should be a valid string"
 
 
-@patch("toolbox_sdk.utils.requests.post")
+@patch("toolbox_langchain_sdk.utils.requests.post")
 def test_generate_tool_invalid_parameter_types(mock_post):
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {
