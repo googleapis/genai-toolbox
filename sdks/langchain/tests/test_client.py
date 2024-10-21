@@ -486,11 +486,18 @@ def test_generate_tool_api_error(mock_post):
 def test_generate_tool_missing_schema_fields():
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {"tools": {"test_tool": {"summary": "Test Tool"}}}
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValidationError) as exc_info:
         client._generate_tool("test_tool")
-    assert "Missing required fields in tool schema: parameters, description" == str(
-        exc_info.value
-    )
+    errors = exc_info.value.errors()
+    assert len(errors) == 2
+    assert errors[0]["input"] == client._manifest["tools"]["test_tool"]
+    assert errors[0]["loc"] == ("description",)
+    assert errors[0]["msg"] == "Field required"
+    assert errors[0]["type"] == "missing"
+    assert errors[1]["input"] == client._manifest["tools"]["test_tool"]
+    assert errors[1]["loc"] == ("parameters",)
+    assert errors[1]["msg"] == "Field required"
+    assert errors[1]["type"] == "missing"
 
 
 def test_generate_tool_invalid_schema_types():
@@ -509,11 +516,11 @@ def test_generate_tool_invalid_schema_types():
     }
     with pytest.raises(ValidationError) as exc_info:
         client._generate_tool("test_tool")
-    assert len(exc_info.value.errors()) == 1
-    assert len(exc_info.value.errors()[0]["loc"]) == 1
-    assert exc_info.value.errors()[0]["loc"][0] == "name"
-    assert exc_info.value.errors()[0]["input"] == 123
-    assert exc_info.value.errors()[0]["msg"] == "Input should be a valid string"
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ("summary",)
+    assert errors[0]["input"] == 123
+    assert errors[0]["msg"] == "Input should be a valid string"
 
 
 @patch("toolbox_langchain_sdk.utils.requests.post")
@@ -548,12 +555,12 @@ def test_generate_tool_invalid_parameter_types(mock_post):
     with pytest.raises(ValidationError) as exc_info:
         tool.run({"param1": "test", "param2": "abc"})
     mock_post.assert_not_called()
-    assert len(exc_info.value.errors()) == 1
-    assert len(exc_info.value.errors()[0]["loc"]) == 1
-    assert exc_info.value.errors()[0]["loc"][0] == "param2"
-    assert exc_info.value.errors()[0]["input"] == "abc"
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ("param2",)
+    assert errors[0]["input"] == "abc"
     assert (
-        exc_info.value.errors()[0]["msg"]
+        errors[0]["msg"]
         == "Input should be a valid integer, unable to parse string as an integer"
     )
 

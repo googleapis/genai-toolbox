@@ -56,16 +56,13 @@ class ToolboxClient:
             tool_name: The name of the tool.
         """
         tool_schema: dict = self._manifest["tools"][tool_name]
-        required_keys = ["parameters", "summary", "description"]
-        missing_keys: List[str] = []
-        for key in required_keys:
-            if key not in tool_schema:
-                missing_keys.append(key)
 
-        if missing_keys:
-            raise ValueError(
-                f"Missing required fields in tool schema: {', '.join(missing_keys)}"
-            )
+        class ToolSchema(BaseModel):
+            summary: str
+            description: str
+            parameters: dict
+
+        ToolSchema(**tool_schema)
 
         tool_model: Type[BaseModel] = schema_to_model(
             model_name=tool_name, schema=tool_schema["parameters"]
