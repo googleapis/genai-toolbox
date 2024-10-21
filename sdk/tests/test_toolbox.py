@@ -2,12 +2,13 @@ from unittest.mock import patch, Mock
 from langchain_core.tools import StructuredTool
 import pytest
 import requests
-from toolbox_sdk import load_manifest, generate_tool
+from toolbox_sdk import ToolboxClient
 from pydantic import ValidationError
 
 
 @patch("toolbox_sdk.toolbox.requests.get")
 def test_load_manifest(mock_get):
+    client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
     mock_response.text = """
         serverVersion: 0.0.1
@@ -22,14 +23,15 @@ def test_load_manifest(mock_get):
     mock_response.raise_for_status = Mock()
     mock_get.return_value = mock_response
 
-    manifest = load_manifest(url="https://my-toolbox.com", toolset_name="test_toolset")
+    client._load_manifest("test_toolset")
 
-    assert manifest["serverVersion"] == "0.0.1"
-    assert "test_tool" in manifest["tools"]
+    assert client._manifest["serverVersion"] == "0.0.1"
+    assert "test_tool" in client._manifest["tools"]
 
 
 @patch("toolbox_sdk.toolbox.requests.get")
 def test_load_manifest_single_toolset(mock_get):
+    client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
     mock_response.text = """
         serverVersion: 0.0.1
@@ -44,16 +46,16 @@ def test_load_manifest_single_toolset(mock_get):
     mock_response.raise_for_status = Mock()
     mock_get.return_value = mock_response
 
-    manifest = load_manifest(url="https://my-toolbox.com", toolset_name="test_toolset")
+    client._load_manifest("test_toolset")
 
-    assert manifest["serverVersion"] == "0.0.1"
-    assert "test_tool" in manifest["tools"]
+    assert client._manifest["serverVersion"] == "0.0.1"
+    assert "test_tool" in client._manifest["tools"]
 
 
 @patch("toolbox_sdk.toolbox.requests.get")
 def test_load_manifest_all_toolsets(mock_get):
+    client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
-    # Simulate the API returning a list of YAML manifests
     mock_response.text = """
         serverVersion: 0.0.1
         tools:
@@ -73,69 +75,59 @@ def test_load_manifest_all_toolsets(mock_get):
     mock_response.raise_for_status = Mock()
     mock_get.return_value = mock_response
 
-    manifests = load_manifest(url="https://my-toolbox.com")  # No toolset_name provided
+    client._load_manifest()
 
-    assert len(manifests) == 2
-    assert manifests["serverVersion"] == "0.0.1"
-    assert "test_tool1" in manifests["tools"]
-    assert "test_tool2" in manifests["tools"]
+    assert len(client._manifest) == 2
+    assert client._manifest["serverVersion"] == "0.0.1"
+    assert "test_tool1" in client._manifest["tools"]
+    assert "test_tool2" in client._manifest["tools"]
 
 
 @patch("toolbox_sdk.toolbox.requests.get")
 def test_load_manifest_invalid_yaml(mock_get):
+    client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
     mock_response.text = "invalid yaml"
     mock_response.raise_for_status = Mock()
     mock_get.return_value = mock_response
 
-    manifest = load_manifest(url="https://my-toolbox.com", toolset_name="test_toolset")
-    assert "invalid yaml" == manifest
+    client._load_manifest("test_toolset")
+    assert client._manifest == "invalid yaml"
 
 
 @patch("toolbox_sdk.toolbox.requests.get")
 def test_load_manifest_api_error(mock_get):
+    client = ToolboxClient("https://my-toolbox.com")
     mock_response = Mock()
     mock_response.raise_for_status = Mock(side_effect=requests.exceptions.HTTPError)
     mock_get.return_value = mock_response
 
     with pytest.raises(requests.exceptions.HTTPError):
-        load_manifest(url="https://my-toolbox.com", toolset_name="test_toolset")
-
-
-import pytest
-import requests
-from unittest.mock import Mock, patch
-
-# Assuming these are defined in your toolbox_sdk.toolbox module
-from toolbox_sdk.toolbox import (
-    generate_tool,
-    call_tool_api,
-    StructuredTool,
-)
+        client._load_manifest("test_toolset")
 
 
 @patch("toolbox_sdk.utils.requests.post")
 def test_generate_tool_success(mock_post):
-    tool_schema = {
-        "summary": "Test Tool",
-        "description": "This is a test tool.",
-        "parameters": {
-            "param1": {"type": "string", "description": "Parameter 1"},
-            "param2": {"type": "integer", "description": "Parameter 2"},
-        },
+    client = ToolboxClient("https://my-toolbox.com")
+    client._manifest = {
+        "test_tool": {
+            "summary": "Test Tool",
+            "description": "This is a test tool.",
+            "parameters": {
+                "param1": {"type": "string", "description": "Parameter 1"},
+                "param2": {"type": "integer", "description": "Parameter 2"},
+            },
+        }
     }
 
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"result": "some_result"}
-
     mock_post.return_value = mock_response
 
-    tool = generate_tool(
-        tool_name="test_tool",
-        tool_schema=tool_schema,
-        url="https://my-toolbox.com",
-    )
+    client._generate_tool("test_tool")
+    assert len(client._tools) == 1
+    tool = client._tools[0]
 
     assert isinstance(tool, StructuredTool)
     assert tool.name == "Test Tool"
@@ -158,22 +150,23 @@ def test_generate_tool_success(mock_post):
 
 @patch("toolbox_sdk.utils.requests.post")
 def test_generate_tool_api_error(mock_post):
-    tool_schema = {
-        "summary": "Test Tool",
-        "description": "This is a test tool.",
-        "parameters": {
-            "param1": {"type": "string", "description": "Parameter 1"},
-            "param2": {"type": "integer", "description": "Parameter 2"},
-        },
+    client = ToolboxClient("https://my-toolbox.com")
+    client._manifest = {
+        "test_tool": {
+            "summary": "Test Tool",
+            "description": "This is a test tool.",
+            "parameters": {
+                "param1": {"type": "string", "description": "Parameter 1"},
+                "param2": {"type": "integer", "description": "Parameter 2"},
+            },
+        }
     }
 
     mock_post.side_effect = requests.exceptions.HTTPError("Simulated HTTP Error")
 
-    tool = generate_tool(
-        tool_name="test_tool",
-        tool_schema=tool_schema,
-        url="https://my-toolbox.com",
-    )
+    client._generate_tool("test_tool")
+    assert len(client._tools) == 1
+    tool = client._tools[0]
 
     assert isinstance(tool, StructuredTool)
     assert tool.name == "Test Tool"
@@ -196,31 +189,29 @@ def test_generate_tool_api_error(mock_post):
 
 
 def test_generate_tool_missing_schema_fields():
+    client = ToolboxClient("https://my-toolbox.com")
+    client._manifest = {"test_tool": {"summary": "Test Tool"}}
     with pytest.raises(ValueError) as exc_info:
-        generate_tool(
-            tool_name="test_tool",
-            tool_schema={"summary": "Test Tool"},
-            url="https://my-toolbox.com",
-        )
+        client._generate_tool("test_tool")
     assert "Missing required fields in tool schema: parameters, description" == str(
         exc_info.value
     )
 
 
 def test_generate_tool_invalid_schema_types():
-    with pytest.raises(ValidationError) as exc_info:
-        generate_tool(
-            tool_name="test_tool",
-            tool_schema={
-                "summary": 123,
-                "description": "This is a test tool.",
-                "parameters": {
-                    "param1": {"type": "string", "description": "Parameter 1"},
-                    "param2": {"type": "integer", "description": "Parameter 2"},
-                },
+    client = ToolboxClient("https://my-toolbox.com")
+    client._manifest = {
+        "test_tool": {
+            "summary": 123,
+            "description": "This is a test tool.",
+            "parameters": {
+                "param1": {"type": "string", "description": "Parameter 1"},
+                "param2": {"type": "integer", "description": "Parameter 2"},
             },
-            url="https://my-toolbox.com",
-        )
+        }
+    }
+    with pytest.raises(ValidationError) as exc_info:
+        client._generate_tool("test_tool")
     assert len(exc_info.value.errors()) == 1
     assert len(exc_info.value.errors()[0]["loc"]) == 1
     assert exc_info.value.errors()[0]["loc"][0] == "name"
@@ -230,20 +221,21 @@ def test_generate_tool_invalid_schema_types():
 
 @patch("toolbox_sdk.utils.requests.post")
 def test_generate_tool_invalid_parameter_types(mock_post):
-    tool_schema = {
-        "summary": "Test Tool",
-        "description": "This is a test tool.",
-        "parameters": {
-            "param1": {"type": "string", "description": "Parameter 1"},
-            "param2": {"type": "integer", "description": "Parameter 2"},
-        },
+    client = ToolboxClient("https://my-toolbox.com")
+    client._manifest = {
+        "test_tool": {
+            "summary": "Test Tool",
+            "description": "This is a test tool.",
+            "parameters": {
+                "param1": {"type": "string", "description": "Parameter 1"},
+                "param2": {"type": "integer", "description": "Parameter 2"},
+            },
+        }
     }
 
-    tool = generate_tool(
-        tool_name="test_tool",
-        tool_schema=tool_schema,
-        url="https://my-toolbox.com",
-    )
+    client._generate_tool("test_tool")
+    assert len(client._tools) == 1
+    tool = client._tools[0]
 
     assert isinstance(tool, StructuredTool)
     assert tool.name == "Test Tool"

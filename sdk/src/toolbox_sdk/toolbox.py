@@ -10,82 +10,85 @@ from .utils import (
 )
 
 
-def load_manifest(url: str, toolset_name: Optional[str] = None) -> dict:
-    """
-    Fetches and parses the YAML manifest from the Toolbox service.
+class ToolboxClient:
+    def __init__(self, url: str):
+        """
+        Initializes the ToolboxClient for the Toolbox service at the given URL.
 
-    Args:
-        url: The base URL of the Toolbox service.
-        toolset_name: The name of the toolset to load.
-          Default: None. If not provided, then all the tools are loaded.
+        Args:
+            url: The base URL of the Toolbox service.
+        """
+        self._url = url
+        self._manifest = None
+        self._tools = []
 
-    Returns:
-        A dictionary representing the parsed YAML manifest.
-    """
-    if toolset_name:
-        url = f"{url}/api/toolset/{toolset_name}"
-    else:
-        url = f"{url}/api/toolset"
+    def _load_manifest(self, toolset_name: Optional[str] = None):
+        """
+        Fetches and parses the YAML manifest from the Toolbox service.
 
-    response = requests.get(url)
-    response.raise_for_status()
-    manifest = yaml.safe_load(response.text)
-    return manifest
+        Args:
+            toolset_name: The name of the toolset to load.
+                Default: None. If not provided, then all the tools are loaded.
 
+        Returns:
+            A dictionary representing the parsed YAML manifest.
+        """
+        if toolset_name:
+            url = f"{self._url}/api/toolset/{toolset_name}"
+        else:
+            url = f"{self._url}/api/toolset"
 
-def generate_tool(tool_name: str, tool_schema: dict, url: str) -> StructuredTool:
-    """
-    Creates a StructuredTool object and a dynamically generated BaseModel based on the tool's schema from the manifest.
+        response = requests.get(url)
+        response.raise_for_status()
+        self._manifest = yaml.safe_load(response.text)
 
-    Args:
-        tool_name: The name of the tool.
-        tool_schema: The schema definition of the tool.
-        url: The base URL of the Toolbox service.
+    def _generate_tool(self, tool_name: str):
+        """
+        Creates a StructuredTool object and a dynamically generated BaseModel for the given tool.
 
-    Returns:
-        A StructuredTool object.
-    """
-    if not isinstance(tool_schema, dict):
-        raise ValueError("tool_schema must be a dictionary")
+        Args:
+            tool_name: The name of the tool.
 
-    required_keys = ["parameters", "summary", "description"]
-    missing_keys: List[str] = []
-    for key in required_keys:
-        if key not in tool_schema:
-            missing_keys.append(key)
+        Returns:
+            A StructuredTool object.
+        """
+        tool_schema: dict = self._manifest[tool_name]
+        required_keys = ["parameters", "summary", "description"]
+        missing_keys: List[str] = []
+        for key in required_keys:
+            if key not in tool_schema:
+                missing_keys.append(key)
 
-    if missing_keys:
-        raise ValueError(
-            f"Missing required fields in tool schema: {', '.join(missing_keys)}"
+        if missing_keys:
+            raise ValueError(
+                f"Missing required fields in tool schema: {', '.join(missing_keys)}"
+            )
+
+        tool_model: Type[BaseModel] = schema_to_model(
+            model_name=tool_name, schema=tool_schema["parameters"]
         )
 
-    tool_model: Type[BaseModel] = schema_to_model(
-        model_name=tool_name, schema=tool_schema["parameters"]
-    )
+        tool: StructuredTool = StructuredTool.from_function(
+            func=lambda **kwargs: call_tool_api(self._url, tool_name, kwargs),
+            name=tool_schema["summary"],
+            description=tool_schema["description"],
+            args_schema=tool_model,
+        )
 
-    tool = StructuredTool.from_function(
-        func=lambda **kwargs: call_tool_api(url, tool_name, kwargs),
-        name=tool_schema["summary"],
-        description=tool_schema["description"],
-        args_schema=tool_model,
-    )
-    return tool
+        self._tools.append(tool)
 
+    def load_toolbox(self, toolset_name: Optional[str] = None) -> List[StructuredTool]:
+        """
+        Loads tools from the Toolbox service, optionally filtered by toolset name.
 
-def load_toolbox(url: str, toolset_name: str) -> List[StructuredTool]:
-    """
-    Loads all tools from the specified toolset in the Toolbox service.
+        Args:
+            toolset_name: The name of the toolset to load.
+                Default: None. If not provided, then all the tools are loaded.
 
-    Args:
-        url: The base URL of the Toolbox service.
-        toolset_name: The name of the toolset to load.
-
-    Returns:
-        A list of StructuredTool objects.
-    """
-    manifest = load_manifest(url, toolset_name)
-    tools = []
-    for tool_name, tool_schema in manifest["tools"].items():
-        tool = generate_tool(tool_name, tool_schema, url)
-        tools.append(tool)
-    return tools
+        Returns:
+            A list of StructuredTool objects.
+        """
+        self._load_manifest(toolset_name)
+        for tool_name in self._manifest["tools"]:
+            self._generate_tool(tool_name)
+        return self._tools
