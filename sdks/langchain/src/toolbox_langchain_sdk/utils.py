@@ -1,7 +1,23 @@
 from typing import Any, Dict, List, Type
 
 import requests
-from pydantic import create_model, Field, BaseModel
+import yaml
+from pydantic import BaseModel, Field, create_model
+
+
+def load_yaml(url) -> dict:
+    """
+    Fetches and parses the YAML data from the given URL.
+
+    Args:
+        url: The base URL to fetch the YAML from.
+
+    Returns:
+        A dictionary representing the parsed YAML data.
+    """
+    response = requests.get(url)
+    response.raise_for_status()
+    return yaml.safe_load(response.text)
 
 
 def schema_to_model(model_name: str, schema: Dict[str, Any]) -> Type[BaseModel]:
