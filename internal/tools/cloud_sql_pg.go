@@ -28,12 +28,12 @@ const CloudSQLPgSQLGenericKind string = "cloud-sql-postgres-generic"
 var _ Config = CloudSQLPgGenericConfig{}
 
 type CloudSQLPgGenericConfig struct {
-	Name        string      `yaml:"name"`
-	Kind        string      `yaml:"kind"`
-	Source      string      `yaml:"source"`
-	Description string      `yaml:"description"`
-	Statement   string      `yaml:"statement"`
-	Parameters  []Parameter `yaml:"parameters"`
+	Name        string     `yaml:"name"`
+	Kind        string     `yaml:"kind"`
+	Source      string     `yaml:"source"`
+	Description string     `yaml:"description"`
+	Statement   string     `yaml:"statement"`
+	Parameters  Parameters `yaml:"parameters"`
 }
 
 func (cfg CloudSQLPgGenericConfig) toolKind() string {
@@ -60,7 +60,7 @@ func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (T
 		Source:     s,
 		Statement:  cfg.Statement,
 		Parameters: cfg.Parameters,
-		manifest:   Manifest{cfg.Description, cfg.Parameters},
+		manifest:   ToolManifest{cfg.Description, cfg.Parameters},
 	}
 	return t, nil
 }
@@ -73,8 +73,8 @@ type CloudSQLPgGenericTool struct {
 	Kind       string `yaml:"kind"`
 	Source     sources.CloudSQLPgSource
 	Statement  string
-	Parameters []Parameter `yaml:"parameters"`
-	manifest   Manifest
+	Parameters Parameters `yaml:"parameters"`
+	manifest   ToolManifest
 }
 
 func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
@@ -100,6 +100,6 @@ func (t CloudSQLPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
 	return ParseParams(t.Parameters, data)
 }
 
-func (t CloudSQLPgGenericTool) Manifest() Manifest {
+func (t CloudSQLPgGenericTool) Manifest() ToolManifest {
 	return t.manifest
 }

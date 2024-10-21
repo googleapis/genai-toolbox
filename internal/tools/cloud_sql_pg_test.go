@@ -52,11 +52,7 @@ func TestParseFromYaml(t *testing.T) {
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []tools.Parameter{
-						{
-							Name:        "country",
-							Type:        "string",
-							Description: "some description",
-						},
+						tools.NewStringParameter("country", "some description"),
 					},
 				},
 			},

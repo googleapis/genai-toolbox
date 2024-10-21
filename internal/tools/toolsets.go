@@ -34,8 +34,8 @@ type Toolset struct {
 }
 
 type ToolsetManifest struct {
-	ServerVersion string              `json:"serverVersion"`
-	ToolsManifest map[string]Manifest `json:"tools"`
+	ServerVersion string                  `json:"serverVersion"`
+	ToolsManifest map[string]ToolManifest `json:"tools"`
 }
 
 // validate interface
@@ -66,7 +66,7 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 	toolset.Tools = make([]*Tool, len(t.ToolNames))
 	toolset.Manifest = ToolsetManifest{
 		ServerVersion: serverVersion,
-		ToolsManifest: make(map[string]Manifest),
+		ToolsManifest: make(map[string]ToolManifest),
 	}
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
