@@ -1,0 +1,58 @@
+[project]
+name = "toolbox_sdk"
+version="0.1.0"
+description = "Python SDK for interacting with the Toolbox service"
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Google LLC", email = "googleapis-packages@google.com"}
+]
+dependencies = [
+    "requests",
+    "PyYAML",
+    "langchain-core",
+    "pydantic",
+]
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/googleapis/genai-toolbox"
+Repository = "https://github.com/googleapis/genai-toolbox.git"
+"Bug Tracker" = "https://github.com/googleapis/genai-toolbox/issues"
+
+[project.optional-dependencies]
+test = [
+    "black[jupyter]",
+    "isort",
+    "mypy",
+    "pytest-asyncio",
+    "pytest",
+    "pytest-cov",
+    "Pillow"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.9"
+warn_unused_configs = true
+disallow_incomplete_defs = true
