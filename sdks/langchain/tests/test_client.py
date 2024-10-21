@@ -17,39 +17,41 @@ def test_load_manifest(mock_get):
             summary: Test Tool
             description: This is a test tool.
             parameters:
-              param1:
-                type: string
+                param1:
+                    type: string
+                    description: Parameter 1
+                param2:
+                    type: integer
+                    description: Parameter 2
     """
     mock_response.raise_for_status = Mock()
     mock_get.return_value = mock_response
 
     client._load_manifest("test_toolset")
-
     assert client._manifest["serverVersion"] == "0.0.1"
+    assert "tools" in client._manifest
+    assert len(client._manifest["tools"].keys()) == 1
     assert "test_tool" in client._manifest["tools"]
 
+    tool = client._manifest["tools"]["test_tool"]
+    assert "summary" in tool
+    assert "description" in tool
+    assert "parameters" in tool
+    assert tool["summary"] == "Test Tool"
+    assert tool["description"] == "This is a test tool."
+    assert len(tool["parameters"].keys()) == 2
 
-@patch("toolbox_langchain_sdk.client.requests.get")
-def test_load_manifest_single_toolset(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool:
-            summary: Test Tool
-            description: This is a test tool.
-            parameters:
-              param1:
-                type: string
-    """
-    mock_response.raise_for_status = Mock()
-    mock_get.return_value = mock_response
+    assert "param1" in tool["parameters"]
+    assert "type" in tool["parameters"]["param1"]
+    assert "description" in tool["parameters"]["param1"]
+    assert tool["parameters"]["param1"]["type"] == "string"
+    assert tool["parameters"]["param1"]["description"] == "Parameter 1"
 
-    client._load_manifest("test_toolset")
-
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "test_tool" in client._manifest["tools"]
+    assert "param2" in tool["parameters"]
+    assert "type" in tool["parameters"]["param2"]
+    assert "description" in tool["parameters"]["param2"]
+    assert tool["parameters"]["param2"]["type"] == "integer"
+    assert tool["parameters"]["param2"]["description"] == "Parameter 2"
 
 
 @patch("toolbox_langchain_sdk.client.requests.get")
@@ -64,23 +66,51 @@ def test_load_manifest_all_toolsets(mock_get):
             description: This is a test tool 1.
             parameters:
                 param1:
-                type: string
+                    type: string
+                    description: Parameter 1
           test_tool2:
             summary: Test Tool 2
             description: This is a test tool 2.
             parameters:
                 param2:
-                type: integer
+                    type: integer
+                    description: Parameter 2
     """
     mock_response.raise_for_status = Mock()
     mock_get.return_value = mock_response
 
-    client._load_manifest()
-
-    assert len(client._manifest) == 2
+    client._load_manifest("test_toolset")
     assert client._manifest["serverVersion"] == "0.0.1"
+    assert "tools" in client._manifest
+    assert len(client._manifest["tools"].keys()) == 2
     assert "test_tool1" in client._manifest["tools"]
     assert "test_tool2" in client._manifest["tools"]
+
+    tool1 = client._manifest["tools"]["test_tool1"]
+    assert "summary" in tool1
+    assert "description" in tool1
+    assert "parameters" in tool1
+    assert tool1["summary"] == "Test Tool 1"
+    assert tool1["description"] == "This is a test tool 1."
+    assert len(tool1["parameters"].keys()) == 1
+    assert "param1" in tool1["parameters"]
+    assert "type" in tool1["parameters"]["param1"]
+    assert "description" in tool1["parameters"]["param1"]
+    assert tool1["parameters"]["param1"]["type"] == "string"
+    assert tool1["parameters"]["param1"]["description"] == "Parameter 1"
+
+    tool2 = client._manifest["tools"]["test_tool2"]
+    assert "summary" in tool2
+    assert "description" in tool2
+    assert "parameters" in tool2
+    assert tool2["summary"] == "Test Tool 2"
+    assert tool2["description"] == "This is a test tool 2."
+    assert len(tool2["parameters"].keys()) == 1
+    assert "param2" in tool2["parameters"]
+    assert "type" in tool2["parameters"]["param2"]
+    assert "description" in tool2["parameters"]["param2"]
+    assert tool2["parameters"]["param2"]["type"] == "integer"
+    assert tool2["parameters"]["param2"]["description"] == "Parameter 2"
 
 
 @patch("toolbox_langchain_sdk.client.requests.get")
