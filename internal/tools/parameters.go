@@ -85,7 +85,7 @@ func (c *Parameters) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func generateManfiests(ps []Parameter) []ParameterManifest {
+func generateManifests(ps []Parameter) []ParameterManifest {
 	rtn := make([]ParameterManifest, 0, len(ps))
 	for _, p := range ps {
 		rtn = append(rtn, p.Manifest())
@@ -93,7 +93,7 @@ func generateManfiests(ps []Parameter) []ParameterManifest {
 	return rtn
 }
 
-// ParameterManfiest represents parameters when served as part of a ToolManifest.
+// ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
