@@ -70,6 +70,6 @@ type Tool interface {
 }
 
 type ToolManifest struct {
-	Description string     `json:"description"`
-	Parameters  Parameters `json:"parameters"`
+	Description string              `json:"description"`
+	Parameters  []ParameterManifest `json:"parameters"`
 }

@@ -60,7 +60,7 @@ func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (T
 		Source:     s,
 		Statement:  cfg.Statement,
 		Parameters: cfg.Parameters,
-		manifest:   ToolManifest{cfg.Description, cfg.Parameters},
+		manifest:   ToolManifest{cfg.Description, generateManfiests(cfg.Parameters)},
 	}
 	return t, nil
 }

@@ -33,6 +33,7 @@ type Parameter interface {
 	GetName() string
 	GetType() string
 	Parse(any) (any, error)
+	Manifest() ParameterManifest
 }
 
 // Parameters is a type used to allow unmarshal a list of parameters
@@ -84,6 +85,22 @@ func (c *Parameters) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+func generateManfiests(ps []Parameter) []ParameterManifest {
+	rtn := make([]ParameterManifest, 0, len(ps))
+	for _, p := range ps {
+		rtn = append(rtn, p.Manifest())
+	}
+	return rtn
+}
+
+// ParameterManfiest represents parameters when served as part of a ToolManifest.
+type ParameterManifest struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	// Parameter   *ParameterManifest `json:"parameter,omitempty"`
+}
+
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
 	// These fields are prefixed with "P" for parameter to differntiate between the methods
@@ -100,6 +117,15 @@ func (p *CommonParameter) GetName() string {
 // GetType returns the type specified for the Parameter.
 func (p *CommonParameter) GetType() string {
 	return p.Type
+}
+
+// GetType returns the type specified for the Parameter.
+func (p *CommonParameter) Manifest() ParameterManifest {
+	return ParameterManifest{
+		Name:        p.Name,
+		Type:        p.Type,
+		Description: p.Desc,
+	}
 }
 
 // ParseTypeError is a custom error for incorrectly typed Parameters.
