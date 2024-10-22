@@ -37,7 +37,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					kind: alloydb-postgres
 					project: my-project
 					region: my-region
-                    cluster: my-cluster
+					cluster: my-cluster
 					instance: my-instance
 					database: my_db
 			`,
@@ -47,7 +47,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					Kind:     sources.AlloyDBPgKind,
 					Project:  "my-project",
 					Region:   "my-region",
-                    Cluster:  "my-cluster",
+					Cluster:   "my-cluster",
 					Instance: "my-instance",
 					Database: "my_db",
 				},
