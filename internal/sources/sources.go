@@ -60,6 +60,12 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
+		case PostgresKind:
+			actual := PostgresConfig{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
 		}
