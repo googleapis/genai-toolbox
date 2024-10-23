@@ -22,10 +22,28 @@ import (
 
 const (
 	typeString = "string"
-	typeInt    = "int"
+	typeInt    = "integer"
 	typeFloat  = "float"
-	typeBool   = "bool"
+	typeBool   = "boolean"
+	typeArray  = "array"
 )
+
+// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
+func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
+	params := []any{}
+	for _, p := range ps {
+		v, ok := data[p.GetName()]
+		if !ok {
+			return nil, fmt.Errorf("Parameter %q is required!", p.GetName())
+		}
+		v, err := p.Parse(v)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
+		}
+		params = append(params, v)
+	}
+	return params, nil
+}
 
 type Parameter interface {
 	// Note: It's typically not idiomatic to include "Get" in the function name,
@@ -47,42 +65,54 @@ func (c *Parameters) UnmarshalYAML(node *yaml.Node) error {
 		return err
 	}
 	for _, n := range nodeList {
-		var p CommonParameter
-		err := n.Decode(&p)
+		p, err := parseFromYamlNode(&n)
 		if err != nil {
-			return fmt.Errorf("parameter missing required fields")
+			return err
 		}
-		switch p.Type {
-		case typeString:
-			a := &StringParameter{}
-			if err := n.Decode(a); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", p.Type, err)
-			}
-			*c = append(*c, a)
-		case typeInt:
-			a := &IntParameter{}
-			if err := n.Decode(a); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", p.Type, err)
-			}
-			*c = append(*c, a)
-		case typeFloat:
-			a := &FloatParameter{}
-			if err := n.Decode(a); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", p.Type, err)
-			}
-			*c = append(*c, a)
-		case typeBool:
-			a := &BooleanParameter{}
-			if err := n.Decode(a); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", p.Type, err)
-			}
-			*c = append(*c, a)
-		default:
-			return fmt.Errorf("%q is not valid type for a parameter!", p.GetName())
-		}
+		(*c) = append((*c), p)
 	}
-
 	return nil
+}
+
+func parseFromYamlNode(node *yaml.Node) (Parameter, error) {
+	var p CommonParameter
+	err := node.Decode(&p)
+	if err != nil {
+		return nil, fmt.Errorf("parameter missing required fields")
+	}
+	switch p.Type {
+	case typeString:
+		a := &StringParameter{}
+		if err := node.Decode(a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+		}
+		return a, nil
+	case typeInt:
+		a := &IntParameter{}
+		if err := node.Decode(a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+		}
+		return a, nil
+	case typeFloat:
+		a := &FloatParameter{}
+		if err := node.Decode(a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+		}
+		return a, nil
+	case typeBool:
+		a := &BooleanParameter{}
+		if err := node.Decode(a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+		}
+		return a, nil
+	case typeArray:
+		a := &ArrayParameter{}
+		if err := node.Decode(a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+		}
+		return a, nil
+	}
+	return nil, fmt.Errorf("%q is not valid type for a parameter!", p.Type)
 }
 
 func generateManifests(ps []Parameter) []ParameterManifest {
@@ -243,19 +273,67 @@ func (p *BooleanParameter) Parse(v any) (any, error) {
 	return v, nil
 }
 
-// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
-func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
-	params := []any{}
-	for _, p := range ps {
-		v, ok := data[p.GetName()]
-		if !ok {
-			return nil, fmt.Errorf("Parameter %q is required!", p.GetName())
-		}
-		v, err := p.Parse(v)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
-		}
-		params = append(params, v)
+// NewArrayParameter is a convenience function for initializing a ArrayParameter.
+func NewArrayParameter(name, desc string, items Parameter) *ArrayParameter {
+	return &ArrayParameter{
+		CommonParameter: CommonParameter{
+			Name: name,
+			Type: typeArray,
+			Desc: desc,
+		},
+		Items: items,
 	}
-	return params, nil
+}
+
+var _ Parameter = &ArrayParameter{}
+
+// ArrayParameter is a parameter representing the "array" type.
+type ArrayParameter struct {
+	CommonParameter `yaml:",inline"`
+	Items           Parameter `yaml:"items"`
+}
+
+func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
+	//	(*p) = ArrayParameter{}
+	if err := node.Decode(&p.CommonParameter); err != nil {
+		return err
+	}
+	// Find the node that reprends the "items" field name
+	idx, ok := findIdxByValue(node.Content, "items")
+	if !ok {
+		return fmt.Errorf("array parameter missing 'items' field!")
+	}
+	// Parse items from the "value" of "items" field
+	i, err := parseFromYamlNode(node.Content[idx+1])
+	if err != nil {
+		return fmt.Errorf("unable to parse 'items' field: %w", err)
+	}
+	p.Items = i
+	return nil
+}
+
+// findIdxByValue returns the index of the first node where value matches
+func findIdxByValue(nodes []*yaml.Node, value string) (int, bool) {
+	for idx, n := range nodes {
+		if n.Value == value {
+			return idx, true
+		}
+	}
+	return 0, false
+}
+
+func (p *ArrayParameter) Parse(v any) (any, error) {
+	arrVal, ok := v.([]any)
+	if !ok {
+		return nil, &ParseTypeError{p.Name, p.Type, arrVal}
+	}
+	rtn := make([]any, 0, len(arrVal))
+	for idx, val := range arrVal {
+		val, err := p.Items.Parse(val)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse element #%d: %w", idx, err)
+		}
+		rtn = append(rtn, val)
+	}
+	return rtn, nil
 }

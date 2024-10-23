@@ -25,12 +25,12 @@ import (
 func TestParameters(t *testing.T) {
 	tcs := []struct {
 		name string
-		in   []map[string]string
+		in   []map[string]any
 		want tools.Parameters
 	}{
 		{
 			name: "string",
-			in: []map[string]string{
+			in: []map[string]any{
 				{
 					"name":        "my_string",
 					"type":        "string",
@@ -43,10 +43,10 @@ func TestParameters(t *testing.T) {
 		},
 		{
 			name: "int",
-			in: []map[string]string{
+			in: []map[string]any{
 				{
 					"name":        "my_integer",
-					"type":        "int",
+					"type":        "integer",
 					"description": "this param is an int",
 				},
 			},
@@ -56,7 +56,7 @@ func TestParameters(t *testing.T) {
 		},
 		{
 			name: "float",
-			in: []map[string]string{
+			in: []map[string]any{
 				{
 					"name":        "my_float",
 					"type":        "float",
@@ -69,15 +69,47 @@ func TestParameters(t *testing.T) {
 		},
 		{
 			name: "bool",
-			in: []map[string]string{
+			in: []map[string]any{
 				{
 					"name":        "my_bool",
-					"type":        "bool",
+					"type":        "boolean",
 					"description": "this param is a boolean",
 				},
 			},
 			want: tools.Parameters{
 				tools.NewBooleanParameter("my_bool", "this param is a boolean"),
+			},
+		},
+		{
+			name: "string array",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"description": "this param is an array of strings",
+					"items": map[string]string{
+						"type": "string",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "")),
+			},
+		},
+		{
+			name: "float array",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"description": "this param is an array of floats",
+					"items": map[string]string{
+						"type": "float",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "")),
 			},
 		},
 	}
