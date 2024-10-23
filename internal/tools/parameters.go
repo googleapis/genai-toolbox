@@ -103,7 +103,6 @@ type ParameterManifest struct {
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
-	// These fields are prefixed with "P" for parameter to differntiate between the methods
 	Name string `yaml:"name"`
 	Type string `yaml:"type"`
 	Desc string `yaml:"description"`
@@ -139,7 +138,7 @@ func (e ParseTypeError) Error() string {
 	return fmt.Sprintf("Error parsing parameter %q: %q not type %q", e.Name, e.Value, e.Type)
 }
 
-// NewStringParameter is a convience function for initalizing a StringParameter.
+// NewStringParameter is a convenience function for initializing a StringParameter.
 func NewStringParameter(name, desc string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
@@ -166,7 +165,7 @@ func (p *StringParameter) Parse(v any) (any, error) {
 	return v, nil
 }
 
-// NewIntParameter is a convience function for initalizing a IntParameter.
+// NewIntParameter is a convenience function for initializing a IntParameter.
 func NewIntParameter(name, desc string) *IntParameter {
 	return &IntParameter{
 		CommonParameter: CommonParameter{
@@ -192,7 +191,7 @@ func (p *IntParameter) Parse(v any) (any, error) {
 	return v, nil
 }
 
-// NewFloatParameter is a convience function for initalizing a FloatParameter.
+// NewFloatParameter is a convenience function for initializing a FloatParameter.
 func NewFloatParameter(name, desc string) *FloatParameter {
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
@@ -218,7 +217,7 @@ func (p *FloatParameter) Parse(v any) (any, error) {
 	return v, nil
 }
 
-// NewBooleanParameter is a convience function for initalizing a BooleanParameter.
+// NewBooleanParameter is a convenience function for initializing a BooleanParameter.
 func NewBooleanParameter(name, desc string) *BooleanParameter {
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
