@@ -1,34 +1,48 @@
-from unittest.mock import Mock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
+import aiohttp
 import pytest
+import asyncio
 import requests
 from langchain_core.tools import StructuredTool
 from pydantic import ValidationError
 from toolbox_langchain_sdk import ToolboxClient
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_tool_manifest(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_tool_manifest(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool:
-            summary: Test Tool
-            description: This is a test tool.
-            parameters:
-                param1:
-                    type: string
-                    description: Parameter 1
-                param2:
-                    type: integer
-                    description: Parameter 2
-    """
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(
+        return_value="""
+            serverVersion: 0.0.1
+            tools:
+                test_tool:
+                    summary: Test Tool
+                    description: This is a test tool.
+                    parameters:
+                        param1:
+                            type: string
+                            description: Parameter 1
+                        param2:
+                            type: integer
+                            description: Parameter 2
+        """
+    )
     mock_get.return_value = mock_response
 
-    client._load_tool_manifest("test_tool")
+    await client._load_tool_manifest("test_tool")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool")
     assert client._manifest["serverVersion"] == "0.0.1"
     assert "tools" in client._manifest
@@ -56,28 +70,40 @@ def test_load_tool_manifest(mock_get):
     assert tool["parameters"]["param2"]["description"] == "Parameter 2"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_multiple_tool_manifest(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_multiple_tool_manifest(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool1:
-            summary: Test Tool 1
-            description: This is a test tool 1.
-            parameters:
-                param1:
-                    type: string
-                    description: Parameter 1
-                param2:
-                    type: integer
-                    description: Parameter 2
-    """
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool1"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(
+        return_value="""
+            serverVersion: 0.0.1
+            tools:
+                test_tool1:
+                    summary: Test Tool 1
+                    description: This is a test tool 1.
+                    parameters:
+                        param1:
+                            type: string
+                            description: Parameter 1
+                        param2:
+                            type: integer
+                            description: Parameter 2
+        """
+    )
     mock_get.return_value = mock_response
 
-    client._load_tool_manifest("test_tool1")
+    await client._load_tool_manifest("test_tool1")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool1")
     assert client._manifest["serverVersion"] == "0.0.1"
     assert "tools" in client._manifest
@@ -104,32 +130,41 @@ def test_load_multiple_tool_manifest(mock_get):
     assert tool1["parameters"]["param2"]["type"] == "integer"
     assert tool1["parameters"]["param2"]["description"] == "Parameter 2"
 
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool2:
-            summary: Test Tool 2
-            description: This is a test tool 2.
-            parameters:
-                param1:
-                    type: integer
-                    description: Parameter 1
-                param2:
-                    type: string
-                    description: Parameter 2
-    """
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool2"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(
+        return_value="""
+            serverVersion: 0.0.1
+            tools:
+                test_tool2:
+                    summary: Test Tool 2
+                    description: This is a test tool 2.
+                    parameters:
+                        param1:
+                            type: integer
+                            description: Parameter 1
+                        param2:
+                            type: string
+                            description: Parameter 2
+        """
+    )
     mock_get.return_value = mock_response
 
-    client._load_tool_manifest("test_tool2")
+    await client._load_tool_manifest("test_tool2")
     assert mock_get.call_count == 2
     mock_get.assert_has_calls(
         [
             call("https://my-toolbox.com/api/tool/test_tool1"),
-            call().raise_for_status(),
             call("https://my-toolbox.com/api/tool/test_tool2"),
-            call().raise_for_status(),
         ]
     )
     assert client._manifest["serverVersion"] == "0.0.1"
@@ -175,53 +210,88 @@ def test_load_multiple_tool_manifest(mock_get):
     assert tool2["parameters"]["param2"]["description"] == "Parameter 2"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_tool_manifest_invalid_yaml(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_tool_manifest_invalid_yaml(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = "invalid yaml"
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(return_value="invalid yaml")
     mock_get.return_value = mock_response
 
-    client._load_tool_manifest("test_tool")
+    await client._load_tool_manifest("test_tool")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool")
     assert client._manifest == "invalid yaml"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_tool_manifest_api_error(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_tool_manifest_api_error(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.raise_for_status = Mock(side_effect=requests.exceptions.HTTPError)
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    error = aiohttp.ClientError("Simulated HTTP Error")
+    mock_response.text = AsyncMock(side_effect=error)
     mock_get.return_value = mock_response
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        client._load_tool_manifest("test_tool")
+    with pytest.raises(aiohttp.ClientError) as exc_info:
+        await client._load_tool_manifest("test_tool")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool")
+    assert exc_info.value == error
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_tool_manifest_valid_then_invalid_yaml(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_tool_manifest_valid_then_invalid_yaml(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool1:
-            summary: Test Tool 1
-            description: This is a test tool 1.
-            parameters:
-                param1:
-                    type: integer
-                    description: Parameter 1
-                param2:
-                    type: string
-                    description: Parameter 2
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool1"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(
+        return_value="""
+            serverVersion: 0.0.1
+            tools:
+                test_tool1:
+                    summary: Test Tool 1
+                    description: This is a test tool 1.
+                    parameters:
+                        param1:
+                            type: integer
+                            description: Parameter 1
+                        param2:
+                            type: string
+                            description: Parameter 2
     """
-    mock_response.raise_for_status = Mock()
+    )
     mock_get.return_value = mock_response
 
-    client._load_tool_manifest("test_tool1")
+    await client._load_tool_manifest("test_tool1")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool1")
     assert client._manifest["serverVersion"] == "0.0.1"
     assert "tools" in client._manifest
@@ -248,46 +318,65 @@ def test_load_tool_manifest_valid_then_invalid_yaml(mock_get):
     assert tool1["parameters"]["param2"]["type"] == "string"
     assert tool1["parameters"]["param2"]["description"] == "Parameter 2"
 
-    mock_response = Mock()
-    mock_response.text = "invalid yaml"
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool2"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(return_value="invalid yaml")
     mock_get.return_value = mock_response
 
-    client._load_tool_manifest("test_tool2")
+    await client._load_tool_manifest("test_tool2")
     assert mock_get.call_count == 2
     mock_get.assert_has_calls(
         [
             call("https://my-toolbox.com/api/tool/test_tool1"),
-            call().raise_for_status(),
             call("https://my-toolbox.com/api/tool/test_tool2"),
-            call().raise_for_status(),
         ]
     )
     assert client._manifest == "invalid yaml"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_toolset_manifest(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_toolset_manifest(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool:
-            summary: Test Tool
-            description: This is a test tool.
-            parameters:
-                param1:
-                    type: string
-                    description: Parameter 1
-                param2:
-                    type: integer
-                    description: Parameter 2
-    """
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset/test_toolset"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(
+        return_value="""
+            serverVersion: 0.0.1
+            tools:
+                test_tool:
+                    summary: Test Tool
+                    description: This is a test tool.
+                    parameters:
+                        param1:
+                            type: string
+                            description: Parameter 1
+                        param2:
+                            type: integer
+                            description: Parameter 2
+        """
+    )
     mock_get.return_value = mock_response
 
-    client._load_toolset_manifest("test_toolset")
+    await client._load_toolset_manifest("test_toolset")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset/test_toolset")
     assert client._manifest["serverVersion"] == "0.0.1"
     assert "tools" in client._manifest
@@ -315,32 +404,44 @@ def test_load_toolset_manifest(mock_get):
     assert tool["parameters"]["param2"]["description"] == "Parameter 2"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_toolset_manifest_all_toolsets(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_toolset_manifest_all_toolsets(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = """
-        serverVersion: 0.0.1
-        tools:
-          test_tool1:
-            summary: Test Tool 1
-            description: This is a test tool 1.
-            parameters:
-                param1:
-                    type: string
-                    description: Parameter 1
-          test_tool2:
-            summary: Test Tool 2
-            description: This is a test tool 2.
-            parameters:
-                param2:
-                    type: integer
-                    description: Parameter 2
-    """
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(
+        return_value="""
+            serverVersion: 0.0.1
+            tools:
+                test_tool1:
+                    summary: Test Tool 1
+                    description: This is a test tool 1.
+                    parameters:
+                        param1:
+                            type: string
+                            description: Parameter 1
+                test_tool2:
+                    summary: Test Tool 2
+                    description: This is a test tool 2.
+                    parameters:
+                        param2:
+                            type: integer
+                            description: Parameter 2
+        """
+    )
     mock_get.return_value = mock_response
 
-    client._load_toolset_manifest()
+    await client._load_toolset_manifest()
     mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset")
     assert client._manifest["serverVersion"] == "0.0.1"
     assert "tools" in client._manifest
@@ -375,33 +476,57 @@ def test_load_toolset_manifest_all_toolsets(mock_get):
     assert tool2["parameters"]["param2"]["description"] == "Parameter 2"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_toolset_manifest_invalid_yaml(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_toolset_manifest_invalid_yaml(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.text = "invalid yaml"
-    mock_response.raise_for_status = Mock()
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset/test_toolset"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.text = AsyncMock(return_value="invalid yaml")
     mock_get.return_value = mock_response
 
-    client._load_toolset_manifest("test_toolset")
+    await client._load_toolset_manifest("test_toolset")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset/test_toolset")
     assert client._manifest == "invalid yaml"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.get")
-def test_load_toolset_manifest_api_error(mock_get):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
+async def test_load_toolset_manifest_api_error(mock_get):
     client = ToolboxClient("https://my-toolbox.com")
-    mock_response = Mock()
-    mock_response.raise_for_status = Mock(side_effect=requests.exceptions.HTTPError)
+    mock_response = aiohttp.ClientResponse(
+        method="GET",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset/test_toolset"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    error = aiohttp.ClientError("Simulated HTTP Error")
+    mock_response.text = AsyncMock(side_effect=error)
     mock_get.return_value = mock_response
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        client._load_toolset_manifest("test_toolset")
+    with pytest.raises(aiohttp.ClientError) as exc_info:
+        await client._load_toolset_manifest("test_toolset")
     mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset/test_toolset")
+    assert exc_info.value == error
 
 
-@patch("toolbox_langchain_sdk.utils.requests.post")
-def test_generate_tool_success(mock_post):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.post")
+async def test_generate_tool_success(mock_post):
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {
         "tools": {
@@ -416,9 +541,19 @@ def test_generate_tool_success(mock_post):
         },
     }
 
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"result": "some_result"}
+    mock_response = aiohttp.ClientResponse(
+        method="POST",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"result": "mocked_result"})
     mock_post.return_value = mock_response
 
     client._generate_tool("test_tool")
@@ -434,16 +569,17 @@ def test_generate_tool_success(mock_post):
     assert tool.args_schema.model_fields["param1"].description == "Parameter 1"
     assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
 
-    result = tool.func(param1="test", param2=123)
+    params = {"param1": "value1", "param2": 123}
+    result = await tool.run(params)
     mock_post.assert_called_once_with(
-        "https://my-toolbox.com/api/tool/test_tool",
-        json={"param1": "test", "param2": 123},
+        "https://my-toolbox.com/api/tool/test_tool", json=params
     )
     assert result == mock_response.json.return_value
 
 
-@patch("toolbox_langchain_sdk.utils.requests.post")
-def test_generate_tool_api_error(mock_post):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.post")
+async def test_generate_tool_api_error(mock_post):
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {
         "tools": {
@@ -458,7 +594,21 @@ def test_generate_tool_api_error(mock_post):
         },
     }
 
-    mock_post.side_effect = requests.exceptions.HTTPError("Simulated HTTP Error")
+    mock_response = aiohttp.ClientResponse(
+        method="POST",
+        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=None,
+        traces=None,
+        session=None,
+        loop=asyncio.get_event_loop(),
+    )
+    mock_response.status = 200
+    error = aiohttp.ClientError("Simulated HTTP Error")
+    mock_response.json = AsyncMock(side_effect=error)
+    mock_post.return_value = mock_response
 
     client._generate_tool("test_tool")
     assert len(client._tools) == 1
@@ -473,14 +623,14 @@ def test_generate_tool_api_error(mock_post):
     assert tool.args_schema.model_fields["param1"].description == "Parameter 1"
     assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
 
-    with pytest.raises(requests.exceptions.HTTPError) as exc_info:
-        tool.func(param1="test", param2=123)
-
+    with pytest.raises(aiohttp.ClientError) as exc_info:
+        params = {"param1": "test", "param2": 123}
+        await tool.run(params)
         mock_post.assert_called_once_with(
             "https://my-toolbox.com/api/tool/test_tool",
-            json={"param1": "test", "param2": 123},
+            json=params,
         )
-    assert exc_info.value == mock_post.side_effect
+    assert exc_info.value == error
 
 
 def test_generate_tool_missing_schema_fields():
@@ -523,8 +673,9 @@ def test_generate_tool_invalid_schema_types():
     assert errors[0]["msg"] == "Input should be a valid string"
 
 
-@patch("toolbox_langchain_sdk.utils.requests.post")
-def test_generate_tool_invalid_parameter_types(mock_post):
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.post")
+async def test_generate_tool_invalid_parameter_types(mock_post):
     client = ToolboxClient("https://my-toolbox.com")
     client._manifest = {
         "tools": {
@@ -553,7 +704,7 @@ def test_generate_tool_invalid_parameter_types(mock_post):
     assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
 
     with pytest.raises(ValidationError) as exc_info:
-        tool.run({"param1": "test", "param2": "abc"})
+        await tool.run({"param1": "test", "param2": "abc"})
     mock_post.assert_not_called()
     errors = exc_info.value.errors()
     assert len(errors) == 1
@@ -565,8 +716,9 @@ def test_generate_tool_invalid_parameter_types(mock_post):
     )
 
 
+@pytest.mark.asyncio
 @patch.object(ToolboxClient, "_load_tool_manifest")
-def test_load_tool(mock_load_tool_manifest):
+async def test_load_tool(mock_load_tool_manifest):
     client = ToolboxClient("https://my-toolbox.com")
 
     mock_load_tool_manifest.side_effect = lambda _: setattr(
@@ -587,7 +739,7 @@ def test_load_tool(mock_load_tool_manifest):
         },
     )
 
-    tool = client.load_tool("test_tool")
+    tool = await client.load_tool("test_tool")
     mock_load_tool_manifest.assert_called_once_with("test_tool")
     assert isinstance(tool, StructuredTool)
     assert tool.name == "Test Tool"
@@ -598,8 +750,9 @@ def test_load_tool(mock_load_tool_manifest):
     }
 
 
+@pytest.mark.asyncio
 @patch.object(ToolboxClient, "_load_tool_manifest")
-def test_load_multiple_tools(mock_load_tool_manifest):
+async def test_load_multiple_tools(mock_load_tool_manifest):
     client = ToolboxClient("https://my-toolbox.com")
 
     mock_load_tool_manifest.side_effect = lambda _: setattr(
@@ -620,7 +773,7 @@ def test_load_multiple_tools(mock_load_tool_manifest):
         },
     )
 
-    tool1 = client.load_tool("test_tool1")
+    tool1 = await client.load_tool("test_tool1")
     mock_load_tool_manifest.assert_called_once_with("test_tool1")
     assert isinstance(tool1, StructuredTool)
     assert tool1.name == "Test Tool 1"
@@ -656,7 +809,7 @@ def test_load_multiple_tools(mock_load_tool_manifest):
         },
     )
 
-    tool2 = client.load_tool("test_tool2")
+    tool2 = await client.load_tool("test_tool2")
     mock_load_tool_manifest.assert_called_with("test_tool2")
     assert isinstance(tool2, StructuredTool)
     assert tool2.name == "Test Tool 2"
@@ -669,8 +822,9 @@ def test_load_multiple_tools(mock_load_tool_manifest):
     assert client._tools == [tool1, tool2]
 
 
+@pytest.mark.asyncio
 @patch.object(ToolboxClient, "_load_toolset_manifest")
-def test_load_toolset(mock_load_toolset_manifest):
+async def test_load_toolset(mock_load_toolset_manifest):
     client = ToolboxClient("https://my-toolbox.com")
 
     mock_load_toolset_manifest.side_effect = lambda _: setattr(
@@ -699,7 +853,7 @@ def test_load_toolset(mock_load_toolset_manifest):
         },
     )
 
-    [tool1, tool2] = client.load_toolset("test_toolset")
+    [tool1, tool2] = await client.load_toolset("test_toolset")
     mock_load_toolset_manifest.assert_called_once_with("test_toolset")
     assert isinstance(tool1, StructuredTool)
     assert isinstance(tool2, StructuredTool)
@@ -717,8 +871,9 @@ def test_load_toolset(mock_load_toolset_manifest):
     }
 
 
+@pytest.mark.asyncio
 @patch.object(ToolboxClient, "_load_toolset_manifest")
-def test_load_default_toolset(mock_load_toolset_manifest):
+async def test_load_default_toolset(mock_load_toolset_manifest):
     client = ToolboxClient("https://my-toolbox.com")
 
     mock_load_toolset_manifest.side_effect = lambda _: setattr(
@@ -747,7 +902,7 @@ def test_load_default_toolset(mock_load_toolset_manifest):
         },
     )
 
-    [tool1, tool2] = client.load_toolset()
+    [tool1, tool2] = await client.load_toolset()
     mock_load_toolset_manifest.assert_called_once_with(None)
     assert isinstance(tool1, StructuredTool)
     assert isinstance(tool2, StructuredTool)

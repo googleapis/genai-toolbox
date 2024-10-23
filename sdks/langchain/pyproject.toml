@@ -8,7 +8,7 @@ authors = [
     {name = "Google LLC", email = "googleapis-packages@google.com"}
 ]
 dependencies = [
-    "requests",
+    "aiohttp",
     "PyYAML",
     "langchain-core",
     "pydantic",

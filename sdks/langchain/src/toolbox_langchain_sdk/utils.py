@@ -1,13 +1,13 @@
 from typing import Any, Type
 
-import requests
+import aiohttp
 import yaml
 from pydantic import BaseModel, Field, create_model
 
 
-def _load_yaml(url) -> dict:
+async def _load_yaml(url) -> dict:
     """
-    Fetches and parses the YAML data from the given URL.
+    Asynchronously fetches and parses the YAML data from the given URL.
 
     Args:
         url: The base URL to fetch the YAML from.
@@ -15,9 +15,9 @@ def _load_yaml(url) -> dict:
     Returns:
         A dictionary representing the parsed YAML data.
     """
-    response = requests.get(url)
-    response.raise_for_status()
-    return yaml.safe_load(response.text)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return yaml.safe_load(await response.text())
 
 
 def _schema_to_model(model_name: str, schema: dict[str, Any]) -> Type[BaseModel]:
@@ -68,9 +68,9 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
-def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
+async def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
     """
-    Makes an API call to the Toolbox service to execute a tool.
+    Asynchronously makes an API call to the Toolbox service to execute a tool.
 
     Args:
         url: The base URL of the Toolbox service.
@@ -81,9 +81,9 @@ def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
         A dictionary containing the response from the Toolbox service.
     """
     url = f"{url}/api/tool/{tool_name}"
-    response = requests.post(url, json=_filter_none_values(data))
-    response.raise_for_status()
-    return response.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=_filter_none_values(data)) as response:
+            return await response.json()
 
 
 def _filter_none_values(params: dict) -> dict:
