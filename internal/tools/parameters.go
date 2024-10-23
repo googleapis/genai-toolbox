@@ -36,11 +36,11 @@ func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
 		if !ok {
 			return nil, fmt.Errorf("Parameter %q is required!", p.GetName())
 		}
-		v, err := p.Parse(v)
+		newV, err := p.Parse(v)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
 		}
-		params = append(params, v)
+		params = append(params, newV)
 	}
 	return params, nil
 }
@@ -165,7 +165,7 @@ type ParseTypeError struct {
 }
 
 func (e ParseTypeError) Error() string {
-	return fmt.Sprintf("Error parsing parameter %q: %q not type %q", e.Name, e.Value, e.Type)
+	return fmt.Sprintf("%q not type %q", e.Value, e.Type)
 }
 
 // NewStringParameter is a convenience function for initializing a StringParameter.
@@ -188,11 +188,11 @@ type StringParameter struct {
 
 // Parse casts the value "v" as a "string".
 func (p *StringParameter) Parse(v any) (any, error) {
-	v, ok := v.(string)
+	newV, ok := v.(string)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
-	return v, nil
+	return newV, nil
 }
 
 // NewIntParameter is a convenience function for initializing a IntParameter.
@@ -214,7 +214,7 @@ type IntParameter struct {
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
-	v, ok := v.(int64)
+	v, ok := v.(int)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
