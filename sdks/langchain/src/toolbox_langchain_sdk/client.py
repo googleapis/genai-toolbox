@@ -6,6 +6,13 @@ from pydantic import BaseModel
 from .utils import _call_tool_api, _load_yaml, _schema_to_model
 
 
+# Helps validate the schema of the tool manifest.
+class ToolSchema(BaseModel):
+    summary: str
+    description: str
+    parameters: dict
+
+
 class ToolboxClient:
     def __init__(self, url: str):
         """
@@ -57,11 +64,6 @@ class ToolboxClient:
             tool_name: The name of the tool.
         """
         tool_schema: dict = self._manifest["tools"][tool_name]
-
-        class ToolSchema(BaseModel):
-            summary: str
-            description: str
-            parameters: dict
 
         ToolSchema(**tool_schema)
 
