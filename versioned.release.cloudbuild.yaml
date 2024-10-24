@@ -1,0 +1,64 @@
+# Copyright 2024 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+  - id: "Build Docker"
+    name: 'gcr.io/cloud-builders/docker'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        docker buildx build -t ${_AR_HOSTNAME}/$PROJECT_ID/${_AR_REPO_NAME}/toolbox:$VERSION \
+            -t ${_AR_HOSTNAME}/$PROJECT_ID/${_AR_REPO_NAME}/toolbox:latest .
+
+  - id: "Push Docker to Google Artifact Registry"
+    name: 'gcr.io/cloud-builders/docker'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        docker push ${_AR_HOSTNAME}/$PROJECT_ID/${_AR_REPO_NAME}/toolbox:$VERSION
+        docker push ${_AR_HOSTNAME}/$PROJECT_ID/${_AR_REPO_NAME}/toolbox:latest
+
+  - id: "Build Go binary"
+    name: golang:1
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.linux.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.linux.amd64
+        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.arm64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.arm64
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.amd64
+        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.windows.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.windows.amd64
+
+  - id: "Store binary to Google Cloud Storage"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=v$(cat ./cmd/version.txt)
+        gcloud storage cp toolbox.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+        gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+        gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
+        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox
+
+options:
+  automapSubstitutions: true
+  dynamic_substitutions: true
+  logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
+
+substitutions:
+  _REGION: us-central1
+  _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
+  _AR_REPO_NAME: toolbox
+  _BUCKET_NAME: genai-toolbox
