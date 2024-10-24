@@ -28,12 +28,12 @@ const AlloyDBPgSQLGenericKind string = "alloydb-postgres-generic"
 var _ Config = AlloyDBPgGenericConfig{}
 
 type AlloyDBPgGenericConfig struct {
-	Name        string      `yaml:"name"`
-	Kind        string      `yaml:"kind"`
-	Source      string      `yaml:"source"`
-	Description string      `yaml:"description"`
-	Statement   string      `yaml:"statement"`
-	Parameters  []Parameter `yaml:"parameters"`
+	Name        string     `yaml:"name"`
+	Kind        string     `yaml:"kind"`
+	Source      string     `yaml:"source"`
+	Description string     `yaml:"description"`
+	Statement   string     `yaml:"statement"`
+	Parameters  Parameters `yaml:"parameters"`
 }
 
 func (cfg AlloyDBPgGenericConfig) toolKind() string {
@@ -60,7 +60,7 @@ func (cfg AlloyDBPgGenericConfig) Initialize(srcs map[string]sources.Source) (To
 		Source:     s,
 		Statement:  cfg.Statement,
 		Parameters: cfg.Parameters,
-		manifest:   Manifest{cfg.Description, cfg.Parameters},
+		manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
 	}
 	return t, nil
 }
@@ -73,8 +73,8 @@ type AlloyDBPgGenericTool struct {
 	Kind       string `yaml:"kind"`
 	Source     sources.AlloyDBPgSource
 	Statement  string
-	Parameters []Parameter `yaml:"parameters"`
-	manifest   Manifest
+	Parameters Parameters `yaml:"parameters"`
+	manifest   ToolManifest
 }
 
 func (t AlloyDBPgGenericTool) Invoke(params []any) (string, error) {
@@ -100,6 +100,6 @@ func (t AlloyDBPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
 	return ParseParams(t.Parameters, data)
 }
 
-func (t AlloyDBPgGenericTool) Manifest() Manifest {
+func (t AlloyDBPgGenericTool) Manifest() ToolManifest {
 	return t.manifest
 }
