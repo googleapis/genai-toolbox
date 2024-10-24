@@ -28,12 +28,12 @@ const PostgresSQLGenericKind string = "postgres-generic"
 var _ Config = PostgresGenericConfig{}
 
 type PostgresGenericConfig struct {
-	Name        string      `yaml:"name"`
-	Kind        string      `yaml:"kind"`
-	Source      string      `yaml:"source"`
-	Description string      `yaml:"description"`
-	Statement   string      `yaml:"statement"`
-	Parameters  []Parameter `yaml:"parameters"`
+	Name        string     `yaml:"name"`
+	Kind        string     `yaml:"kind"`
+	Source      string     `yaml:"source"`
+	Description string     `yaml:"description"`
+	Statement   string     `yaml:"statement"`
+	Parameters  Parameters `yaml:"parameters"`
 }
 
 func (cfg PostgresGenericConfig) toolKind() string {
@@ -60,7 +60,7 @@ func (cfg PostgresGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 		Source:     s,
 		Statement:  cfg.Statement,
 		Parameters: cfg.Parameters,
-		manifest:   Manifest{cfg.Description, cfg.Parameters},
+		manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
 	}
 	return t, nil
 }
@@ -73,8 +73,8 @@ type PostgresGenericTool struct {
 	Kind       string `yaml:"kind"`
 	Source     sources.PostgresSource
 	Statement  string
-	Parameters []Parameter `yaml:"parameters"`
-	manifest   Manifest
+	Parameters Parameters `yaml:"parameters"`
+	manifest   ToolManifest
 }
 
 func (t PostgresGenericTool) Invoke(params []any) (string, error) {
@@ -100,6 +100,6 @@ func (t PostgresGenericTool) ParseParams(data map[string]any) ([]any, error) {
 	return ParseParams(t.Parameters, data)
 }
 
-func (t PostgresGenericTool) Manifest() Manifest {
+func (t PostgresGenericTool) Manifest() ToolManifest {
 	return t.manifest
 }
