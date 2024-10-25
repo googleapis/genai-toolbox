@@ -1,15 +1,10 @@
 from typing import Optional
 
+from aiohttp import ClientSession
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
-from aiohttp import ClientSession
 
-from .utils import (
-    _call_tool_api,
-    _load_yaml,
-    _schema_to_model,
-    ToolSchema,
-)
+from .utils import ToolSchema, _call_tool_api, _load_yaml, _schema_to_model
 
 
 class ToolboxClient:

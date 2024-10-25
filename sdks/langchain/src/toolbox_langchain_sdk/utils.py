@@ -1,7 +1,7 @@
 from typing import Any, Type
 
-from aiohttp import ClientSession
 import yaml
+from aiohttp import ClientSession
 from pydantic import BaseModel, Field, create_model
 
 
