@@ -45,9 +45,9 @@ def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[Bas
     """
     field_definitions = {}
     for field in schema:
-        field_definitions[field["name"]] = (
-            _parse_type(field["type"]),
-            Field(description=field["description"]),
+        field_definitions[field.name] = (
+            _parse_type(field.type),
+            Field(description=field.description),
         )
 
     return create_model(model_name, **field_definitions)

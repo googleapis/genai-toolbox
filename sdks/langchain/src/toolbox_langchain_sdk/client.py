@@ -59,12 +59,9 @@ class ToolboxClient:
         Returns:
             The generated tool.
         """
-        tool_schema: dict = manifest["tools"][tool_name]
-
-        ToolSchema(**tool_schema)
-
+        tool_schema = ToolSchema(**manifest["tools"][tool_name])
         tool_model: BaseModel = _schema_to_model(
-            model_name=tool_name, schema=tool_schema["parameters"]
+            model_name=tool_name, schema=tool_schema.parameters
         )
 
         async def _tool_func(**kwargs) -> dict:
@@ -73,7 +70,7 @@ class ToolboxClient:
         return StructuredTool.from_function(
             coroutine=_tool_func,
             name=tool_name,
-            description=tool_schema["description"],
+            description=tool_schema.description,
             args_schema=tool_model,
         )
 
