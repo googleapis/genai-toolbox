@@ -2,9 +2,9 @@
 # 🧰 Project Toolbox
 
 > [!CAUTION]
-> Project Toolbox is experiemental and not an official Google product. This is 
-> an early access project, intended to be shared under NDA to gather feedabck
-> validate direction. You should not share or dicuss this project with anyone 
+> Project Toolbox is experimental and not an official Google product. This is 
+> an early access project, intended to be shared under NDA to gather feedback
+> validate direction. You should not share or discuss this project with anyone 
 > not under NDA. 
 
 Project Toolbox is an open source server that enables developers to build
@@ -18,8 +18,8 @@ control plane for loading and invoking agentic applications tools.
 <!-- TOC -->
 
 - [Getting Started](#getting-started)
-    - [Installing](#installing)
-    - [Running](#running)
+    - [Installing the server](#installing-the-server)
+    - [Running the server](#running-the-server)
     - [Using with Client SDKs](#using-with-client-sdks)
 - [Configuring](#configuring)
     - [Sources](#sources)
@@ -32,13 +32,14 @@ control plane for loading and invoking agentic applications tools.
 
 ## Getting Started
 
-### Installing
+### Installing the server
 <!-- {x-release-please-start-version} -->
+For the latest version, check the [releases page][releases] and use the
+following instructions for your OS and CPU architecture.
+
 <details open>
 <summary>Binary</summary>
 
-Check for the latest version on the [releases page][releases] and use the
-following instructions for your OS and CPU architecture.
 
 [releases]: https://github.com/googleapis/genai-toolbox/releases
 
@@ -72,7 +73,7 @@ go install github.com/googleapis/genai-toolbox@v0.0.1
 </details>
 <!-- {x-release-please-end} -->
 
-### Running
+### Running the server
 Configure a `tools.yaml` to define your tools, and then execute `toolbox` to
 start the server:
 
@@ -84,7 +85,7 @@ You can use `toolbox help` for a full list of flags!
 
 ### Using with Client SDKs
 
-Once your server is up and running, you can build the tools into your
+Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
@@ -105,15 +106,16 @@ tools = await client.load_toolset()
 
 ## Configuring
 
-You can configure what tools are avaible by updating the `tools.yaml` file. If
+You can configure what tools are available by updating the `tools.yaml` file. If
 you have multiple files, you can tell toolbox which to load with the
 `--tools_file tools.yaml` flag. 
 
 ### Sources
 
-The `sources` section of your tools.yaml define what data sources your Toolbox
-should have access to. Most tools will have at least once source that they
+The `sources` section of your `tools.yaml` defines what data sources your
+Toolbox should have access to. Most tools will have at least one source to
 execute against.
+
 ```yaml
 sources:
     my-cloud-sql-source:
@@ -129,9 +131,8 @@ sources:
 
 ### Tools
 
-The `tools` section of your `tools.yaml` define groups of tools, which can be
-used to allow group them based on what tools you want your agent to have access
-too.
+The `tools` section of your `tools.yaml` define your tools: what kind of tool it
+is, which source it affects, what parameters it takes, etc. 
 
 ```yaml
 tools:
@@ -169,8 +170,11 @@ toolsets:
 
 You can load toolsets by name:
 ```python
+# This will load all tools
+all_tools = await client.load_toolset()
+
 # This will only load the tools listed in 'my_second_toolset'
-tools = await client.load_toolset("my_second_toolset")
+my_second_toolset = await client.load_toolset("my_second_toolset")
 ```
 
 
