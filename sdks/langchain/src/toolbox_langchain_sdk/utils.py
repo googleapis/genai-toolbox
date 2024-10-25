@@ -90,7 +90,7 @@ async def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
     Returns:
         A dictionary containing the response from the Toolbox service.
     """
-    url = f"{url}/api/tool/{tool_name}"
+    url = f"{url}/api/tool/{tool_name}/invoke"
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=_filter_none_values(data)) as response:
             response.raise_for_status()
