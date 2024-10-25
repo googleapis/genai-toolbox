@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Optional
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
@@ -20,62 +20,62 @@ class ToolboxClient:
             url: The base URL of the Toolbox service.
         """
         self._url: str = url
-        self._manifest: dict = {}
-        self._tools: list[StructuredTool] = []
 
-    async def _load_tool_manifest(self, tool_name: str) -> None:
+    async def _load_tool_manifest(self, tool_name: str) -> dict:
         """
         Fetches and parses the YAML manifest for the given tool from the Toolbox service.
 
         Args:
             tool_name: The name of the tool to load.
+
+        Returns:
+            The parsed YAML manifest.
         """
         url = f"{self._url}/api/tool/{tool_name}"
+        return await _load_yaml(url)
 
-        yaml = await _load_yaml(url)
-
-        if "tools" in self._manifest and "tools" in yaml and tool_name in yaml["tools"]:
-            self._manifest["tools"][tool_name] = yaml["tools"][tool_name]
-        else:
-            self._manifest = yaml
-
-    async def _load_toolset_manifest(self, toolset_name: Optional[str] = None) -> None:
+    async def _load_toolset_manifest(self, toolset_name: Optional[str] = None) -> dict:
         """
         Fetches and parses the YAML manifest from the Toolbox service.
 
         Args:
             toolset_name: The name of the toolset to load.
                 Default: None. If not provided, then all the available tools are loaded.
+
+        Returns:
+            The parsed YAML manifest.
         """
         url = f"{self._url}/api/toolset/{toolset_name or ''}"
-        self._manifest = await _load_yaml(url)
+        return await _load_yaml(url)
 
-    def _generate_tool(self, tool_name: str) -> None:
+    def _generate_tool(self, tool_name: str, manifest: dict) -> StructuredTool:
         """
         Creates a StructuredTool object and a dynamically generated BaseModel for the given tool.
 
         Args:
-            tool_name: The name of the tool.
+            tool_name: The name of the tool to generate.
+            manifest: The parsed Toolbox manifest.
+
+        Returns:
+            The generated tool.
         """
-        tool_schema: dict = self._manifest["tools"][tool_name]
+        tool_schema: dict = manifest["tools"][tool_name]
 
         ToolSchema(**tool_schema)
 
-        tool_model: Type[BaseModel] = _schema_to_model(
+        tool_model: BaseModel = _schema_to_model(
             model_name=tool_name, schema=tool_schema["parameters"]
         )
 
         async def _tool_func(**kwargs) -> dict:
             return await _call_tool_api(self._url, tool_name, kwargs)
 
-        tool: StructuredTool = StructuredTool.from_function(
+        return StructuredTool.from_function(
             coroutine=_tool_func,
             name=tool_name,
             description=tool_schema["description"],
             args_schema=tool_model,
         )
-
-        self._tools.append(tool)
 
     async def load_tool(self, tool_name: str) -> StructuredTool:
         """
@@ -88,9 +88,8 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox
         """
-        await self._load_tool_manifest(tool_name)
-        self._generate_tool(tool_name)
-        return self._tools[-1]
+        manifest: dict = await self._load_tool_manifest(tool_name)
+        return self._generate_tool(tool_name, manifest)
 
     async def load_toolset(
         self, toolset_name: Optional[str] = None
@@ -105,9 +104,8 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        self._manifest = {}
-        self._tools = []
-        await self._load_toolset_manifest(toolset_name)
-        for tool_name in self._manifest["tools"]:
-            self._generate_tool(tool_name)
-        return self._tools
+        tools: list[StructuredTool] = []
+        manifest: dict = await self._load_toolset_manifest(toolset_name)
+        for tool_name in manifest["tools"]:
+            tools.append(self._generate_tool(tool_name, manifest))
+        return tools
