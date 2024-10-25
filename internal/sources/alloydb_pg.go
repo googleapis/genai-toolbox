@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"net"
 
-    "cloud.google.com/go/alloydbconn"
-    "github.com/jackc/pgx/v5/pgxpool"
+	"cloud.google.com/go/alloydbconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const AlloyDBPgKind string = "alloydb-postgres"
@@ -33,7 +33,7 @@ type AlloyDBPgConfig struct {
 	Kind     string `yaml:"kind"`
 	Project  string `yaml:"project"`
 	Region   string `yaml:"region"`
-    Cluster  string `yaml:"cluster"`
+	Cluster  string `yaml:"cluster"`
 	Instance string `yaml:"instance"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
@@ -47,12 +47,12 @@ func (r AlloyDBPgConfig) sourceKind() string {
 func (r AlloyDBPgConfig) Initialize() (Source, error) {
 	pool, err := initAlloyDBPgConnectionPool(r.Project, r.Region, r.Cluster, r.Instance, r.User, r.Password, r.Database)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create pool: %w", err)
+		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
 	err = pool.Ping(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
+		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
 	s := AlloyDBPgSource{
@@ -76,13 +76,13 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, user, pass,
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse connection uri: %w", err)
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
 	// Create a new dialer with any options
 	d, err := alloydbconn.NewDialer(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse connection uri: %w", err)
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
 	// Tell the driver to use the AlloyDB Go Connector to create connections

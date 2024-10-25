@@ -47,7 +47,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					Kind:     sources.AlloyDBPgKind,
 					Project:  "my-project",
 					Region:   "my-region",
-					Cluster:   "my-cluster",
+					Cluster:  "my-cluster",
 					Instance: "my-instance",
 					Database: "my_db",
 				},
