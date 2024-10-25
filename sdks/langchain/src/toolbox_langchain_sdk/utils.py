@@ -63,8 +63,6 @@ def _parse_type(type_: str) -> Any:
         return bool
     elif type_ == "array":
         return list
-    elif type_ == "object":
-        return dict
     else:
         raise ValueError(f"Unsupported schema type: {type_}")
 
