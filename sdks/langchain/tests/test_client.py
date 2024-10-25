@@ -26,18 +26,26 @@ async def test_load_tool_manifest(mock_get):
     mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
-            serverVersion: 0.0.1
-            tools:
-                test_tool:
-                    summary: Test Tool
-                    description: This is a test tool.
-                    parameters:
-                        param1:
-                            type: string
-                            description: Parameter 1
-                        param2:
-                            type: integer
-                            description: Parameter 2
+            {
+                "serverVersion": "0.0.1",
+                "tools": {
+                    "search_airport": {
+                        "description": "Use this tool to list all airports matching search criteria.\nTakes a country and a city and returns all matching airports.\nThe agent can decide to return the results directly to the user.\nInput of this tool must be in JSON format and include both inputs - country and city.\nExample:\n{{\n    \"country\": \"United States\",\n    \"city\": \"San Francisco\",\n}}\n",
+                        "parameters": [
+                            {
+                                "name": "country",
+                                "type": "string",
+                                "description": "Country"
+                            },
+                            {
+                                "name": "city",
+                                "type": "string",
+                                "description": "City"
+                            }
+                        ]
+                    }
+                }
+            }
         """
     )
     mock_get.return_value = mock_response
