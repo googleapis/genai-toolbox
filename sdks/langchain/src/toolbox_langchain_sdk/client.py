@@ -3,14 +3,12 @@ from typing import Optional, Type
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from .utils import _call_tool_api, _load_yaml, _schema_to_model
-
-
-# Helps validate the schema of the tool manifest.
-class ToolSchema(BaseModel):
-    summary: str
-    description: str
-    parameters: dict
+from .utils import (
+    _call_tool_api,
+    _load_yaml,
+    _schema_to_model,
+    ToolSchema,
+)
 
 
 class ToolboxClient:
@@ -72,7 +70,7 @@ class ToolboxClient:
 
         tool: StructuredTool = StructuredTool.from_function(
             coroutine=_tool_func,
-            name=tool_schema["summary"],
+            name=tool_name,
             description=tool_schema["description"],
             args_schema=tool_model,
         )

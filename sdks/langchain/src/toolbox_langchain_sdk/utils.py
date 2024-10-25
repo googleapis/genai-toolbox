@@ -5,6 +5,17 @@ import yaml
 from pydantic import BaseModel, Field, create_model
 
 
+class ParameterSchema(BaseModel):
+    name: str
+    type: str
+    description: str
+
+
+class ToolSchema(BaseModel):
+    description: str
+    parameters: list[ParameterSchema]
+
+
 async def _load_yaml(url) -> dict:
     """
     Asynchronously fetches and parses the YAML data from the given URL.
@@ -21,7 +32,7 @@ async def _load_yaml(url) -> dict:
             return yaml.safe_load(await response.text())
 
 
-def _schema_to_model(model_name: str, schema: dict[str, Any]) -> Type[BaseModel]:
+def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[BaseModel]:
     """
     Converts a schema (from the YAML manifest) to a Pydantic BaseModel class.
 
@@ -33,10 +44,10 @@ def _schema_to_model(model_name: str, schema: dict[str, Any]) -> Type[BaseModel]
         A Pydantic BaseModel class.
     """
     field_definitions = {}
-    for name, property_ in schema.items():
-        field_definitions[name] = (
-            _parse_type(property_["type"]),
-            Field(description=property_.get("description")),
+    for field in schema:
+        field_definitions[field["name"]] = (
+            _parse_type(field["type"]),
+            Field(description=field["description"]),
         )
 
     return create_model(model_name, **field_definitions)
