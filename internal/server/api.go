@@ -62,7 +62,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolName := chi.URLParam(r, "toolName")
 	tool, ok := s.tools[toolName]
 	if !ok {
-		err := fmt.Errorf("Invalid tool name. Tool with name %q does not exist", toolName)
+		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -70,21 +70,21 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var data map[string]interface{}
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
-		err := fmt.Errorf("Request body was invalid JSON: %w", err)
+		err := fmt.Errorf("request body was invalid JSON: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	params, err := tool.ParseParams(data)
 	if err != nil {
-		err := fmt.Errorf("Provided parameters were invalid: %w", err)
+		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	res, err := tool.Invoke(params)
 	if err != nil {
-		err := fmt.Errorf("Error while invoking tool: %w", err)
+		err := fmt.Errorf("error while invoking tool: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}

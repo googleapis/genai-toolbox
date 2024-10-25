@@ -34,7 +34,7 @@ func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
 	for _, p := range ps {
 		v, ok := data[p.GetName()]
 		if !ok {
-			return nil, fmt.Errorf("Parameter %q is required!", p.GetName())
+			return nil, fmt.Errorf("parameter %q is required!", p.GetName())
 		}
 		newV, err := p.Parse(v)
 		if err != nil {
@@ -273,7 +273,7 @@ func (p *BooleanParameter) Parse(v any) (any, error) {
 	return v, nil
 }
 
-// NewArrayParameter is a convenience function for initializing a ArrayParameter.
+// NewArrayParameter is a convenience function for initializing an ArrayParameter.
 func NewArrayParameter(name, desc string, items Parameter) *ArrayParameter {
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
@@ -294,11 +294,10 @@ type ArrayParameter struct {
 }
 
 func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
-	//	(*p) = ArrayParameter{}
 	if err := node.Decode(&p.CommonParameter); err != nil {
 		return err
 	}
-	// Find the node that reprends the "items" field name
+	// Find the node that represents the "items" field name
 	idx, ok := findIdxByValue(node.Content, "items")
 	if !ok {
 		return fmt.Errorf("array parameter missing 'items' field!")
@@ -331,7 +330,7 @@ func (p *ArrayParameter) Parse(v any) (any, error) {
 	for idx, val := range arrVal {
 		val, err := p.Items.Parse(val)
 		if err != nil {
-			return nil, fmt.Errorf("Unable to parse element #%d: %w", idx, err)
+			return nil, fmt.Errorf("unable to parse element #%d: %w", idx, err)
 		}
 		rtn = append(rtn, val)
 	}

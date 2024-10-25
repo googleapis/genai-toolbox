@@ -46,12 +46,12 @@ func (r CloudSQLPgConfig) sourceKind() string {
 func (r CloudSQLPgConfig) Initialize() (Source, error) {
 	pool, err := initConnectionPool(r.Project, r.Region, r.Instance, r.User, r.Password, r.Database)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create pool: %w", err)
+		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
 	err = pool.Ping(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
+		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
 	s := CloudSQLPgSource{
@@ -72,16 +72,16 @@ type CloudSQLPgSource struct {
 
 func initConnectionPool(project, region, instance, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	dsn := fmt.Sprintf("user=%s passwgit sord=%s dbname=%s sslmode=disable", user, pass, dbname)
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse connection uri: %w", err)
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
 	// Create a new dialer with any options
 	d, err := cloudsqlconn.NewDialer(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse connection uri: %w", err)
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
