@@ -43,8 +43,8 @@ func TestParseFromYamlPostgres(t *testing.T) {
 				"my-pg-instance": sources.PostgresConfig{
 					Name:     "my-pg-instance",
 					Kind:     sources.PostgresKind,
-					Host:  "my-host",
-					Port:   "0000",
+					Host:     "my-host",
+					Port:     "0000",
 					Database: "my_db",
 				},
 			},

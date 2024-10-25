@@ -68,9 +68,9 @@ type PostgresSource struct {
 }
 
 func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
-    // urlExample := "postgres:dd//username:password@localhost:5432/database_name"
+	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)
-    pool, err := pgxpool.New(context.Background(), i)
+	pool, err := pgxpool.New(context.Background(), i)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create connection pool: %w", err)
 	}
