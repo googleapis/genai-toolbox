@@ -21,7 +21,7 @@ control plane for loading and invoking agentic applications tools.
     - [Installing the server](#installing-the-server)
     - [Running the server](#running-the-server)
     - [Using with Client SDKs](#using-with-client-sdks)
-- [Configuring](#configuring)
+- [Configuration](#configuration)
     - [Sources](#sources)
     - [Tools](#tools)
     - [Toolsets](#toolsets)
@@ -74,7 +74,7 @@ go install github.com/googleapis/genai-toolbox@v0.0.1
 <!-- {x-release-please-end} -->
 
 ### Running the server
-Configure a `tools.yaml` to define your tools, and then execute `toolbox` to
+[Configure](#configuration) a `tools.yaml` to define your tools, and then execute `toolbox` to
 start the server:
 
 ```sh
@@ -104,7 +104,7 @@ tools = await client.load_toolset()
 
 </details>
 
-## Configuring
+## Configuration
 
 You can configure what tools are available by updating the `tools.yaml` file. If
 you have multiple files, you can tell toolbox which to load with the
@@ -190,5 +190,5 @@ to get started.
 
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms. See
-[Contributor Code of Conduct][CODE_OF_CONDUCT.md] for more information.
+[Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
 
