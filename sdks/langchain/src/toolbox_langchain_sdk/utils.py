@@ -1,6 +1,6 @@
 from typing import Any, Type
 
-import aiohttp
+from aiohttp import ClientSession
 import yaml
 from pydantic import BaseModel, Field, create_model
 
@@ -16,20 +16,20 @@ class ToolSchema(BaseModel):
     parameters: list[ParameterSchema]
 
 
-async def _load_yaml(url) -> dict:
+async def _load_yaml(url: str, session: ClientSession) -> dict:
     """
     Asynchronously fetches and parses the YAML data from the given URL.
 
     Args:
         url: The base URL to fetch the YAML from.
+        session: The HTTP client session
 
     Returns:
         A dictionary representing the parsed YAML data.
     """
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            response.raise_for_status()
-            return yaml.safe_load(await response.text())
+    async with session.get(url) as response:
+        response.raise_for_status()
+        return yaml.safe_load(await response.text())
 
 
 def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[BaseModel]:
@@ -78,12 +78,15 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
-async def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
+async def _call_tool_api(
+    url: str, session: ClientSession, tool_name: str, data: dict
+) -> dict:
     """
     Asynchronously makes an API call to the Toolbox service to execute a tool.
 
     Args:
         url: The base URL of the Toolbox service.
+        session: The HTTP client session.
         tool_name: The name of the tool to execute.
         data: The input data for the tool.
 
@@ -91,10 +94,9 @@ async def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
         A dictionary containing the response from the Toolbox service.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=_filter_none_values(data)) as response:
-            response.raise_for_status()
-            return await response.json()
+    async with session.post(url, json=_filter_none_values(data)) as response:
+        response.raise_for_status()
+        return await response.json()
 
 
 def _filter_none_values(params: dict) -> dict:

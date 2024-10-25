@@ -2,6 +2,7 @@ from typing import Optional
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
+from aiohttp import ClientSession
 
 from .utils import (
     _call_tool_api,
@@ -12,14 +13,16 @@ from .utils import (
 
 
 class ToolboxClient:
-    def __init__(self, url: str):
+    def __init__(self, url: str, session: ClientSession):
         """
         Initializes the ToolboxClient for the Toolbox service at the given URL.
 
         Args:
             url: The base URL of the Toolbox service.
+            session: The HTTP client session.
         """
         self._url: str = url
+        self._session = session
 
     async def _load_tool_manifest(self, tool_name: str) -> dict:
         """
@@ -32,7 +35,7 @@ class ToolboxClient:
             The parsed YAML manifest.
         """
         url = f"{self._url}/api/tool/{tool_name}"
-        return await _load_yaml(url)
+        return await _load_yaml(url, self._session)
 
     async def _load_toolset_manifest(self, toolset_name: Optional[str] = None) -> dict:
         """
@@ -46,7 +49,7 @@ class ToolboxClient:
             The parsed YAML manifest.
         """
         url = f"{self._url}/api/toolset/{toolset_name or ''}"
-        return await _load_yaml(url)
+        return await _load_yaml(url, self._session)
 
     def _generate_tool(self, tool_name: str, manifest: dict) -> StructuredTool:
         """
@@ -65,7 +68,7 @@ class ToolboxClient:
         )
 
         async def _tool_func(**kwargs) -> dict:
-            return await _call_tool_api(self._url, tool_name, kwargs)
+            return await _call_tool_api(self._url, self._session, tool_name, kwargs)
 
         return StructuredTool.from_function(
             coroutine=_tool_func,
