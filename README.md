@@ -9,8 +9,13 @@
 
 Project Toolbox is an open source server that enables developers to build
 production-grade, agent-based generative AI applications that connect to
-databases via tools. It facilitates tool creation and management by providing a
-control plane for loading and invoking agentic applications tools.
+databases via tools. 
+
+Project Toolbox sits between your application's orchestration framework and your
+database, providing a control plane for both managing and invoking tools. It
+enables you to create database-focused tools easier, faster, and more securely. 
+
+![architecture](architecture.png)
 
 <!-- TOC ignore:true -->
 ## Table of Contents
