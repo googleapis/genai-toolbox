@@ -16,7 +16,12 @@ class ToolSchema(BaseModel):
     parameters: list[ParameterSchema]
 
 
-async def _load_yaml(url: str, session: ClientSession) -> dict:
+class ManifestSchema(BaseModel):
+    serverVersion: str
+    tools: dict[str, ToolSchema]
+
+
+async def _load_yaml(url: str, session: ClientSession) -> ManifestSchema:
     """
     Asynchronously fetches and parses the YAML data from the given URL.
 
@@ -25,11 +30,12 @@ async def _load_yaml(url: str, session: ClientSession) -> dict:
         session: The HTTP client session
 
     Returns:
-        A dictionary representing the parsed YAML data.
+        The parsed Toolbox manifest.
     """
     async with session.get(url) as response:
         response.raise_for_status()
-        return yaml.safe_load(await response.text())
+        parsed_yaml = yaml.safe_load(await response.text())
+        return ManifestSchema(**parsed_yaml)
 
 
 def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[BaseModel]:
@@ -91,7 +97,7 @@ async def _invoke_tool(
         data: The input data for the tool.
 
     Returns:
-        A dictionary containing the response from the Toolbox service.
+        A dictionary containing the parsed JSON response from the tool invocation.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
     async with session.post(url, json=data) as response:
