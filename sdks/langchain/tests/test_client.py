@@ -24,6 +24,7 @@ async def test_load_tool_manifest(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
             serverVersion: 0.0.1
@@ -85,6 +86,7 @@ async def test_load_multiple_tool_manifest(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
             serverVersion: 0.0.1
@@ -141,6 +143,7 @@ async def test_load_multiple_tool_manifest(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
             serverVersion: 0.0.1
@@ -225,6 +228,7 @@ async def test_load_tool_manifest_invalid_yaml(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(return_value="invalid yaml")
     mock_get.return_value = mock_response
 
@@ -249,6 +253,7 @@ async def test_load_tool_manifest_api_error(mock_get):
         loop=asyncio.get_event_loop(),
     )
     error = aiohttp.ClientError("Simulated HTTP Error")
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(side_effect=error)
     mock_get.return_value = mock_response
 
@@ -273,6 +278,7 @@ async def test_load_tool_manifest_valid_then_invalid_yaml(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
             serverVersion: 0.0.1
@@ -329,6 +335,7 @@ async def test_load_tool_manifest_valid_then_invalid_yaml(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(return_value="invalid yaml")
     mock_get.return_value = mock_response
 
@@ -358,6 +365,7 @@ async def test_load_toolset_manifest(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
             serverVersion: 0.0.1
@@ -419,6 +427,7 @@ async def test_load_toolset_manifest_all_toolsets(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(
         return_value="""
             serverVersion: 0.0.1
@@ -491,6 +500,7 @@ async def test_load_toolset_manifest_invalid_yaml(mock_get):
         session=None,
         loop=asyncio.get_event_loop(),
     )
+    mock_response.raise_for_status = Mock()
     mock_response.text = AsyncMock(return_value="invalid yaml")
     mock_get.return_value = mock_response
 
@@ -515,7 +525,7 @@ async def test_load_toolset_manifest_api_error(mock_get):
         loop=asyncio.get_event_loop(),
     )
     error = aiohttp.ClientError("Simulated HTTP Error")
-    mock_response.text = AsyncMock(side_effect=error)
+    mock_response.raise_for_status = Mock(side_effect=error)
     mock_get.return_value = mock_response
 
     with pytest.raises(aiohttp.ClientError) as exc_info:

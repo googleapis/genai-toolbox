@@ -17,6 +17,7 @@ async def _load_yaml(url) -> dict:
     """
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
+            response.raise_for_status()
             return yaml.safe_load(await response.text())
 
 
@@ -83,6 +84,7 @@ async def _call_tool_api(url: str, tool_name: str, data: dict) -> dict:
     url = f"{url}/api/tool/{tool_name}"
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=_filter_none_values(data)) as response:
+            response.raise_for_status()
             return await response.json()
 
 
