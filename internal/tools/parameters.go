@@ -214,11 +214,11 @@ type IntParameter struct {
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
-	v, ok := v.(int)
+	newV, ok := v.(int)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
-	return v, nil
+	return newV, nil
 }
 
 // NewFloatParameter is a convenience function for initializing a FloatParameter.
@@ -240,11 +240,11 @@ type FloatParameter struct {
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
-	v, ok := v.(float64)
+	newV, ok := v.(float64)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
-	return v, nil
+	return newV, nil
 }
 
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
@@ -266,11 +266,11 @@ type BooleanParameter struct {
 }
 
 func (p *BooleanParameter) Parse(v any) (any, error) {
-	v, ok := v.(bool)
+	newV, ok := v.(bool)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
-	return v, nil
+	return newV, nil
 }
 
 // NewArrayParameter is a convenience function for initializing an ArrayParameter.
