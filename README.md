@@ -12,9 +12,27 @@ production-grade, agent-based generative AI applications that connect to
 databases via tools. It facilitates tool creation and management by providing a
 control plane for loading and invoking agentic applications tools.
 
+<!-- TOC ignore:true -->
+## Table of Contents
+
+<!-- TOC -->
+
+- [Getting Started](#getting-started)
+    - [Installing](#installing)
+    - [Running](#running)
+    - [Using with Client SDKs](#using-with-client-sdks)
+- [Configuring](#configuring)
+    - [Sources](#sources)
+    - [Tools](#tools)
+    - [Toolsets](#toolsets)
+- [Versioning](#versioning)
+- [Contributing](#contributing)
+
+<!-- /TOC -->
+
 ## Getting Started
 
-### Install
+### Installing
 <!-- {x-release-please-start-version} -->
 <details open>
 <summary>Binary</summary>
@@ -51,7 +69,7 @@ go install github.com/googleapis/genai-toolbox@v0.0.1
 </details>
 <!-- {x-release-please-end} -->
 
-### Usage
+### Running
 Configure a `tools.yaml` to define your tools, and then execute `toolbox` to
 start the server:
 
@@ -61,7 +79,7 @@ start the server:
 
 You can use `toolbox help` for a full list of flags! 
 
-### SDKs
+### Using with Client SDKs
 
 Once your server is up and running, you can build the tools into your
 application. See below the list of Client SDKs for using various frameworks:
@@ -82,7 +100,7 @@ tools = await client.load_toolset()
 
 </details>
 
-## Configuration
+## Configuring
 
 You can configure what tools are avaible by updating the `tools.yaml` file. If
 you have multiple files, you can tell toolbox which to load with the
