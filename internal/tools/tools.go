@@ -55,6 +55,12 @@ func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
+		case AlloyDBPgSQLGenericKind:
+			actual := AlloyDBPgGenericConfig{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of tool", k.Kind)
 		}
