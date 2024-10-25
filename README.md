@@ -40,6 +40,8 @@ control plane for loading and invoking agentic applications tools.
 Check for the latest version on the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
+[releases](https://github.com/googleapis/genai-toolbox/releases)
+
 ```sh
 # see releases page for other versions
 curl https://storage.googleapis.com/genai-toolbox/v0.0.1/linux/amd64/toolbox
@@ -126,7 +128,7 @@ sources:
 
 ### Tools
 
-The `toolsets` section of your `tools.yaml` define groups of tools, which can be
+The `tools` section of your `tools.yaml` define groups of tools, which can be
 used to allow group them based on what tools you want your agent to have access
 too.
 
@@ -165,7 +167,7 @@ toolsets:
 
 You can load toolsets by name:
 ```python
-# This will only load my_second_tool and my_third_tool
+# This will only load the tools listed in 'my_second_toolset'
 tools = await client.load_toolset("my_second_toolset")
 ```
 
@@ -182,5 +184,5 @@ to get started.
 
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms. See
-[Contributor Code of Conduct][code-of-conduct] for more information.
+[Contributor Code of Conduct][CODE_OF_CONDUCT.md] for more information.
 
