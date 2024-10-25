@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import aiohttp
 import pytest
 import asyncio
-import requests
 from langchain_core.tools import StructuredTool
 from pydantic import ValidationError
 from toolbox_langchain_sdk import ToolboxClient
@@ -580,7 +579,7 @@ async def test_generate_tool_success(mock_post):
     assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
 
     params = {"param1": "value1", "param2": 123}
-    result = await tool.run(params)
+    result = await tool.arun(params)
     mock_post.assert_called_once_with(
         "https://my-toolbox.com/api/tool/test_tool", json=params
     )
@@ -635,7 +634,7 @@ async def test_generate_tool_api_error(mock_post):
 
     with pytest.raises(aiohttp.ClientError) as exc_info:
         params = {"param1": "test", "param2": 123}
-        await tool.run(params)
+        await tool.arun(params)
         mock_post.assert_called_once_with(
             "https://my-toolbox.com/api/tool/test_tool",
             json=params,
@@ -714,7 +713,7 @@ async def test_generate_tool_invalid_parameter_types(mock_post):
     assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
 
     with pytest.raises(ValidationError) as exc_info:
-        await tool.run({"param1": "test", "param2": "abc"})
+        await tool.arun({"param1": "test", "param2": "abc"})
     mock_post.assert_not_called()
     errors = exc_info.value.errors()
     assert len(errors) == 1

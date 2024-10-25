@@ -75,7 +75,7 @@ class ToolboxClient:
             return await _call_tool_api(self._url, tool_name, kwargs)
 
         tool: StructuredTool = StructuredTool.from_function(
-            func=_tool_func,
+            coroutine=_tool_func,
             name=tool_schema["summary"],
             description=tool_schema["description"],
             args_schema=tool_model,
