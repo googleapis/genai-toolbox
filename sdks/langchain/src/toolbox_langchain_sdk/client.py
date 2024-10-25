@@ -78,7 +78,7 @@ class ToolboxClient:
 
     async def load_tool(self, tool_name: str) -> StructuredTool:
         """
-        Loads tools from the Toolbox service, optionally filtered by toolset name.
+        Loads the tool, with the given tool name, from the Toolbox service.
 
         Args:
             toolset_name: The name of the toolset to load.
