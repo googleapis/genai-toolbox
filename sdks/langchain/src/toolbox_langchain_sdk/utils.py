@@ -78,16 +78,16 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
-async def _call_tool_api(
+async def _invoke_tool(
     url: str, session: ClientSession, tool_name: str, data: dict
 ) -> dict:
     """
-    Asynchronously makes an API call to the Toolbox service to execute a tool.
+    Asynchronously makes an API call to the Toolbox service to invoke a tool.
 
     Args:
         url: The base URL of the Toolbox service.
         session: The HTTP client session.
-        tool_name: The name of the tool to execute.
+        tool_name: The name of the tool to invoke.
         data: The input data for the tool.
 
     Returns:

@@ -4,7 +4,7 @@ from aiohttp import ClientSession
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from .utils import ToolSchema, _call_tool_api, _load_yaml, _schema_to_model
+from .utils import ToolSchema, _invoke_tool, _load_yaml, _schema_to_model
 
 
 class ToolboxClient:
@@ -63,7 +63,7 @@ class ToolboxClient:
         )
 
         async def _tool_func(**kwargs) -> dict:
-            return await _call_tool_api(self._url, self._session, tool_name, kwargs)
+            return await _invoke_tool(self._url, self._session, tool_name, kwargs)
 
         return StructuredTool.from_function(
             coroutine=_tool_func,
