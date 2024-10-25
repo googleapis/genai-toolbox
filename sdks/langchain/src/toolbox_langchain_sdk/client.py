@@ -47,7 +47,7 @@ class ToolboxClient:
 
         Args:
             toolset_name: The name of the toolset to load.
-                Default: None. If not provided, then all the tools are loaded.
+                Default: None. If not provided, then all the available tools are loaded.
         """
         url = f"{self._url}/api/toolset/{toolset_name or ''}"
         self._manifest = await _load_yaml(url)
