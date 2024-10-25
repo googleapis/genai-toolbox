@@ -94,10 +94,6 @@ async def _invoke_tool(
         A dictionary containing the response from the Toolbox service.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
-    async with session.post(url, json=_filter_none_values(data)) as response:
+    async with session.post(url, json=data) as response:
         response.raise_for_status()
         return await response.json()
-
-
-def _filter_none_values(params: dict) -> dict:
-    return {key: value for key, value in params.items() if value is not None}
