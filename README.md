@@ -40,7 +40,7 @@ control plane for loading and invoking agentic applications tools.
 Check for the latest version on the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
-[releases](https://github.com/googleapis/genai-toolbox/releases)
+[releases]: https://github.com/googleapis/genai-toolbox/releases
 
 ```sh
 # see releases page for other versions
@@ -53,6 +53,7 @@ chmod +x toolbox
 <details>
 <summary>Container Images</summary>
 You can also install Toolbox as a container: 
+
 ```sh
 # see releases page for other versions
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
@@ -61,10 +62,10 @@ docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 
 <details>
 <summary>Compile from source</summary>
+
 To install from source, ensure you have the latest version of 
 [Go installed](https://go.dev/doc/install).
 
-Then, simply run:
 ```sh
 go install github.com/googleapis/genai-toolbox@v0.0.1
 ```
@@ -138,9 +139,10 @@ tools:
         kind: cloud-sql-postgres-generic
         source: my-pg-instance
         description: >
-            Use this tool to list all airports matching search criteria. Takes at
-            least one of country, city, name, or all and returns all matching
-            airports. The agent can decide to return the results directly to the user.
+            Use this tool to list all airports matching search criteria. Takes 
+            at least one of country, city, name, or all and returns all matching
+            airports. The agent can decide to return the results directly to 
+            the user.
         statement: "SELECT * FROM flights WHERE id = $1"
         parameters:
         - name: id
