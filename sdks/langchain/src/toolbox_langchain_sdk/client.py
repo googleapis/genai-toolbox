@@ -49,11 +49,7 @@ class ToolboxClient:
             toolset_name: The name of the toolset to load.
                 Default: None. If not provided, then all the tools are loaded.
         """
-        url = (
-            f"{self._url}/api/toolset/{toolset_name}"
-            if toolset_name
-            else f"{self._url}/api/toolset"
-        )
+        url = f"{self._url}/api/toolset/{toolset_name or ''}"
         self._manifest = await _load_yaml(url)
 
     def _generate_tool(self, tool_name: str) -> None:
