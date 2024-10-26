@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Type, Optional
 
 import yaml
 from aiohttp import ClientSession
@@ -52,7 +52,8 @@ def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[Bas
     field_definitions = {}
     for field in schema:
         field_definitions[field.name] = (
-            _parse_type(field.type),
+            # TODO: Remove the hardcoded optional types once optional fields are supported by Toolbox.
+            Optional[_parse_type(field.type)],
             Field(description=field.description),
         )
 
@@ -100,6 +101,17 @@ async def _invoke_tool(
         A dictionary containing the parsed JSON response from the tool invocation.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
-    async with session.post(url, json=data) as response:
+    async with session.post(url, json=_convert_none_to_empty_string(data)) as response:
         response.raise_for_status()
         return await response.json()
+
+
+# TODO: Remove this temporary fix once optional fields are supported by Toolbox.
+def _convert_none_to_empty_string(input_dict):
+    new_dict = {}
+    for key, value in input_dict.items():
+        if value is None:
+            new_dict[key] = ""
+        else:
+            new_dict[key] = value
+    return new_dict
