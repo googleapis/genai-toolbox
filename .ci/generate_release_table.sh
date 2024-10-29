@@ -1,6 +1,6 @@
-#!/bin/bash
-FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64")
+#! /bin/bash
 
+FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64")
 output_string=""
 
 # Write the table header
