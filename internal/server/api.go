@@ -15,9 +15,7 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -29,11 +27,13 @@ import (
 func apiRouter(s *Server) (chi.Router, error) {
 	r := chi.NewRouter()
 
+	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(render.SetContentType(render.ContentTypeJSON))
+
 	r.Get("/toolset/", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 
 	r.Route("/tool/{toolName}", func(r chi.Router) {
-		r.Use(middleware.AllowContentType("application/json"))
 		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) { toolInvokeHandler(s, w, r) })
 	})
 
@@ -45,16 +45,10 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
-		http.Error(w, fmt.Sprintf("Toolset %q does not exist", toolsetName), http.StatusNotFound)
+		_ = render.Render(w, r, newErrResponse(fmt.Errorf("Toolset %q does not exist", toolsetName), http.StatusNotFound))
 		return
 	}
-	b, err := json.Marshal(toolset.Manifest)
-	if err != nil {
-		log.Printf("unable to JSON the toolset manifest: %s", err)
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-	_, _ = w.Write(b)
+	render.JSON(w, r, toolset.Manifest)
 }
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
@@ -94,7 +88,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 var _ render.Renderer = &resultResponse{} // Renderer interface for managing response payloads.
 
-// resultResponse is the response sent back when the tool was invocated succesffully.
+// resultResponse is the response sent back when the tool was invocated successfully.
 type resultResponse struct {
 	Result string `json:"result"` // result of tool invocation
 }
