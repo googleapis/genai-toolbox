@@ -15,9 +15,7 @@
 package tools
 
 import (
-	"context"
 	"fmt"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
@@ -55,12 +53,14 @@ func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (T
 
 	// finish tool setup
 	t := CloudSQLPgGenericTool{
-		Name:       cfg.Name,
-		Kind:       CloudSQLPgSQLGenericKind,
-		Source:     s,
-		Statement:  cfg.Statement,
-		Parameters: cfg.Parameters,
-		manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
+		PostgresGenericTool: PostgresGenericTool{
+			Name:       cfg.Name,
+			Kind:       CloudSQLPgSQLGenericKind,
+			Pool:       s.GetPgConnectionPool(),
+			Statement:  cfg.Statement,
+			Parameters: cfg.Parameters,
+			manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
+		},
 	}
 	return t, nil
 }
@@ -69,37 +69,5 @@ func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (T
 var _ Tool = CloudSQLPgGenericTool{}
 
 type CloudSQLPgGenericTool struct {
-	Name       string `yaml:"name"`
-	Kind       string `yaml:"kind"`
-	Source     sources.CloudSQLPgSource
-	Statement  string
-	Parameters Parameters `yaml:"parameters"`
-	manifest   ToolManifest
-}
-
-func (t CloudSQLPgGenericTool) Invoke(params []any) (string, error) {
-	fmt.Printf("Invoked tool %s\n", t.Name)
-	results, err := t.Source.Pool.Query(context.Background(), t.Statement, params...)
-	if err != nil {
-		return "", fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	var out strings.Builder
-	for results.Next() {
-		v, err := results.Values()
-		if err != nil {
-			return "", fmt.Errorf("unable to parse row: %w", err)
-		}
-		out.WriteString(fmt.Sprintf("%s", v))
-	}
-
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
-}
-
-func (t CloudSQLPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
-	return ParseParams(t.Parameters, data)
-}
-
-func (t CloudSQLPgGenericTool) Manifest() ToolManifest {
-	return t.manifest
+	PostgresGenericTool
 }

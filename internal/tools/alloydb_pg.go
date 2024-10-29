@@ -15,9 +15,7 @@
 package tools
 
 import (
-	"context"
 	"fmt"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
@@ -55,12 +53,14 @@ func (cfg AlloyDBPgGenericConfig) Initialize(srcs map[string]sources.Source) (To
 
 	// finish tool setup
 	t := AlloyDBPgGenericTool{
-		Name:       cfg.Name,
-		Kind:       AlloyDBPgSQLGenericKind,
-		Source:     s,
-		Statement:  cfg.Statement,
-		Parameters: cfg.Parameters,
-		manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
+		PostgresGenericTool: PostgresGenericTool{
+			Name:       cfg.Name,
+			Kind:       AlloyDBPgSQLGenericKind,
+			Pool:       s.GetPgConnectionPool(),
+			Statement:  cfg.Statement,
+			Parameters: cfg.Parameters,
+			manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
+		},
 	}
 	return t, nil
 }
@@ -69,37 +69,5 @@ func (cfg AlloyDBPgGenericConfig) Initialize(srcs map[string]sources.Source) (To
 var _ Tool = AlloyDBPgGenericTool{}
 
 type AlloyDBPgGenericTool struct {
-	Name       string `yaml:"name"`
-	Kind       string `yaml:"kind"`
-	Source     sources.AlloyDBPgSource
-	Statement  string
-	Parameters Parameters `yaml:"parameters"`
-	manifest   ToolManifest
-}
-
-func (t AlloyDBPgGenericTool) Invoke(params []any) (string, error) {
-	fmt.Printf("Invoked tool %s\n", t.Name)
-	results, err := t.Source.Pool.Query(context.Background(), t.Statement, params...)
-	if err != nil {
-		return "", fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	var out strings.Builder
-	for results.Next() {
-		v, err := results.Values()
-		if err != nil {
-			return "", fmt.Errorf("unable to parse row: %w", err)
-		}
-		out.WriteString(fmt.Sprintf("%s", v))
-	}
-
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
-}
-
-func (t AlloyDBPgGenericTool) ParseParams(data map[string]any) ([]any, error) {
-	return ParseParams(t.Parameters, data)
-}
-
-func (t AlloyDBPgGenericTool) Manifest() ToolManifest {
-	return t.manifest
+	PostgresGenericTool
 }

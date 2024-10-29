@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const PostgresSQLGenericKind string = "postgres-generic"
@@ -57,7 +58,7 @@ func (cfg PostgresGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 	t := PostgresGenericTool{
 		Name:       cfg.Name,
 		Kind:       PostgresSQLGenericKind,
-		Source:     s,
+		Pool:       s.GetPgConnectionPool(),
 		Statement:  cfg.Statement,
 		Parameters: cfg.Parameters,
 		manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
@@ -71,7 +72,7 @@ var _ Tool = PostgresGenericTool{}
 type PostgresGenericTool struct {
 	Name       string `yaml:"name"`
 	Kind       string `yaml:"kind"`
-	Source     sources.PostgresSource
+	Pool       *pgxpool.Pool
 	Statement  string
 	Parameters Parameters `yaml:"parameters"`
 	manifest   ToolManifest
@@ -79,7 +80,7 @@ type PostgresGenericTool struct {
 
 func (t PostgresGenericTool) Invoke(params []any) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
-	results, err := t.Source.Pool.Query(context.Background(), t.Statement, params...)
+	results, err := t.Pool.Query(context.Background(), t.Statement, params...)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
