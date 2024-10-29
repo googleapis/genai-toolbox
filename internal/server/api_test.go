@@ -129,6 +129,10 @@ func TestToolsetEndpoint(t *testing.T) {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
 
+			if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+				t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+			}
+
 			if resp.StatusCode != tc.want.statusCode {
 				t.Logf("response body: %s", body)
 				t.Fatalf("unexpected status code: want %d, got %d", tc.want.statusCode, resp.StatusCode)
