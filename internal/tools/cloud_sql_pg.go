@@ -56,7 +56,7 @@ func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (T
 		PostgresGenericTool: PostgresGenericTool{
 			Name:       cfg.Name,
 			Kind:       CloudSQLPgSQLGenericKind,
-			Pool:       s.GetPgConnectionPool(),
+			Pool:       s.Pool,
 			Statement:  cfg.Statement,
 			Parameters: cfg.Parameters,
 			manifest:   ToolManifest{cfg.Description, generateManifests(cfg.Parameters)},
