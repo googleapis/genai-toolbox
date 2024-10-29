@@ -4,39 +4,50 @@
 
 1. Make sure you've setup your databases.
 
-1. Install [Go](go-getting-started).
-
-## Run the app locally
-
-### Running toolbox
+1. Install the latest version of [Go](https://go.dev/doc/install).
 
 1. Locate and download dependencies:
 
     ```bash
+    go get
     go mod tidy
     ```
+
+## Developing Toolbox
+
+### Run Toolbox from local source
 
 1. Open a local connection to your database by starting the [Cloud SQL Auth Proxy][cloudsql-proxy].
 
 1. You should already have a `tools.yaml` created with your [sources and tools configurations](./README.md#Configuration).
 
-1. To run the server, execute the following:
+1. You can specify flags for the Toolbox server. Execute the following to list the possible CLI flags:
+
+    ```bash
+    go run . --help
+    ```
+
+1. To run the server, execute the following (with any flags, if applicable):
 
     ```bash
     go run .
     ```
 
-    The server will listen on port 5000.
+    The server will listen on port 5000 (by default).
 
 1. Test endpoint using the following:
 
     ```bash
-    curl http://127.0.0.1:5000`
+    curl http://127.0.0.1:5000
     ```
 
-## Testing
-
 ### Run tests locally
+
+1. Run lint with the following:
+
+    ```bash
+    golangci-lint run --fix
+    ```
 
 1. Run all tests with the following:
 
@@ -44,11 +55,88 @@
     go test -race -v ./...
     ```
 
-### CI Platform Setup
+## Compile the app locally
+
+### Compile Toolbox binary
+
+1. Run build to compile binary:
+
+    ```bash
+    go build -o toolbox
+    ```
+
+1. You can specify flags for the Toolbox server. Execute the following to list the possible CLI flags:
+
+    ```bash
+    ./toolbox --help
+    ```
+
+1. To run the binary, execute the following (with any flags, if applicable):
+
+    ```bash
+    ./toolbox
+    ```
+
+    The server will listen on port 5000 (by default).
+
+1. Test endpoint using the following:
+
+    ```bash
+    curl http://127.0.0.1:5000
+    ```
+
+### Compile Toolbox container images
+
+1. Run build to compile container image:
+
+    ```bash
+    docker build -t toolbox:dev .
+    ```
+
+1. Execute the following to view image:
+
+    ```bash
+    docker images
+    ```
+
+1. Run container image with Docker:
+
+    ```bash
+    docker run -d toolbox:dev
+    ```
+
+## CI/CD Details
 
 Cloud Build is used to run tests against Google Cloud resources in test project.
 
+### Releasing
+
+There are two types of release for Toolbox, including a versioned release and continuous release.
+
+- Versioned release: Official supported distributions with the `latest` tag. The release process for versioned release is in [versioned.release.cloudbuild.yaml](https://github.com/googleapis/genai-toolbox/blob/main/versioned.release.cloudbuild.yaml).
+- Continuous release: Used for early testing features between official supported releases and end-to-end testings.
+
+#### Supported OS and Architecture binaries
+
+The following OS and computer architecture is supported within the binary releases.
+
+- linux/amd64
+- darwin/arm64
+- darwin/amd64
+- windows/amd64
+
+#### Supported container images
+
+The following base container images is supported within the container image releases.
+
+- distroless
+
+### Automated tests
+
+Integration and unit tests are automatically triggered via CloudBuild during each PR creation.
+
 #### Trigger Setup
+
 Create a Cloud Build trigger via the UI or `gcloud` with the following specs:
 
 * Event: Pull request
@@ -64,16 +152,8 @@ Create a Cloud Build trigger via the UI or `gcloud` with the following specs:
   * Location: Repository (add path to file)
 * Service account: set for demo service to enable ID token creation to use to authenticated services
 
-#### Trigger
+### Trigger
 
 To run Cloud Build tests on GitHub from external contributors, ie RenovateBot, comment: `/gcbrun`.
-
-## Versioning
-
-This app will be released based on version number MAJOR.MINOR.PATCH:
-
-- MAJOR: Breaking change is made, requiring user to redeploy all or some of the app.
-- MINOR: Backward compatible feature change or addition that doesn't require redeploying.
-- PATCH: Backward compatible bug fixes and minor updates
 
 [cloudsql-proxy]: https://cloud.google.com/sql/docs/mysql/sql-proxy
