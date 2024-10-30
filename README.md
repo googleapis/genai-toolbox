@@ -133,6 +133,9 @@ sources:
         database: my_db
 ```
 
+For more details on configuring different types of sources, see the [Source
+documentation.](docs/sources/README.md)
+
 
 ### Tools
 
