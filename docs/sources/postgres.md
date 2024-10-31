@@ -1,4 +1,4 @@
-# Cloud SQL for PostgreSQL Source 
+# PostgreSQL Source 
 
 [PostgreSQL][pg-docs] is a powerful, open source object-relational database
 system with over 35 years of active development that has earned it a strong
