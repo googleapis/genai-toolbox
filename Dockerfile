@@ -15,6 +15,10 @@
 # Use the latest stable golang 1.x to compile to a binary
 FROM --platform=$BUILDPLATFORM golang:1 as build
 
+# Create a non-root user
+RUN useradd -m -s /bin/bash nonroot
+USER nonroot
+
 WORKDIR /go/src/genai-toolbox
 COPY . .
 
