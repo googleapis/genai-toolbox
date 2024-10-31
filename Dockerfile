@@ -27,5 +27,9 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
 
 # Final Stage
 FROM gcr.io/distroless/static:nonroot
-COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /genai-toolbox
+
+WORKDIR /app
+COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
 USER nonroot
+
+ENTRYPOINT ["/toolbox"] 
