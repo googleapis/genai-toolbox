@@ -106,11 +106,11 @@ requires another Parameter to be specified under the `items` field:
             description: Name of the airline. 
 ```
 
-| **field**   | **type** | **required** | **description**                                                            |
-|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
-| name        |  string  |     true     | Name of the parameter.                                                     |
-| type        |  string  |     true     | Must be "array"                                                            |
-| description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
-| items       |  string  |     true     | Specify a Parameter object for the type of the values in the array.        |
+| **field**   |     **type**     | **required** | **description**                                                            |
+|-------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| name        |      string      |     true     | Name of the parameter.                                                     |
+| type        |      string      |     true     | Must be "array"                                                            |
+| description |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
+| items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
 

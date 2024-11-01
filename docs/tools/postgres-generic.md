@@ -12,7 +12,7 @@ PostgreSQL Generic Tools require one of the following sources:
 ```yaml
 tools:
  search_flights_by_number:
-    kind: cloud-sql-postgres-generic
+    kind: postgres-generic
     source: my-pg-instance
     statement: |
       SELECT * FROM flights
@@ -49,12 +49,12 @@ tools:
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                                                          |
-|-------------|:--------:|:------------:|------------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-generic".                                                              |
-| source      |  string  |     true     | Name of the source the SQL should execute on.                                            |
-| description |  string  |     true     | Port to connect to (e.g. "5432")                                                         |
-| statement   |  string  |     true     | SQL statement to execute on.                                                             |
-| parameters  |  string  |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**   |                   **type**                   | **required** | **description**                                                                                     |
+|-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
+| kind        |                    string                    |     true     | Must be "postgres-generic".                                                                         |
+| source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
+| description |                    string                    |     true     | Port to connect to (e.g. "5432")                                                                    |
+| statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |
+| parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
 
 
