@@ -1,18 +1,25 @@
-# PostgreSQL Generic Tool 
+# Postgres SQL Tool 
 
-The "postgres-generic" tool executes a pre-defined SQL statement. 
-
-## Requirements 
-
-PostgreSQL Generic Tools require one of the following sources:
+A "postgres-sql" tool executes a pre-defined SQL statement against a postgres
+database. It's compatible with any of the following sources:
+- [alloydb-postgres](../sources/alloydb-pg.md)
+- [cloud-sql-postgres](../sources/cloud-sql-pg.md)
 - [postgres](../sources/postgres.md)
+
+The specified SQL statement is executed as a [prepared statement][pg-prepare],
+and specified parameters will inserted according to their position: e.g. "$1"
+will be the first parameter specified, "$@" will be the second parameter, and so
+on.
+
+
+[pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ## Example
 
 ```yaml
 tools:
  search_flights_by_number:
-    kind: postgres-generic
+    kind: postgres-sql
     source: my-pg-instance
     statement: |
       SELECT * FROM flights
