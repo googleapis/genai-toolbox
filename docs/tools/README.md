@@ -46,7 +46,7 @@ tools:
 
 We currently support the following types of kinds of tools:
 
-* [postgres-sql](./sql.md) - Run a PostgreSQL statement against a
+* [postgres-sql](./postgres-sql.md) - Run a PostgreSQL statement against a
   PostgreSQL-compatible database.
 
 
