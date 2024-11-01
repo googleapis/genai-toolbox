@@ -23,9 +23,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	cloudsqlpgtool "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg"
 	"github.com/spf13/cobra"
 )
 
@@ -170,8 +171,8 @@ func TestParseToolFile(t *testing.T) {
 		description  string
 		in           string
 		wantSources  server.SourceConfigs
-		wantTools    tools.Configs
-		wantToolsets tools.ToolsetConfigs
+		wantTools    server.ToolConfigs
+		wantToolsets server.ToolsetConfigs
 	}{
 		{
 			description: "basic example",
@@ -199,19 +200,19 @@ func TestParseToolFile(t *testing.T) {
 					- example_tool
 			`,
 			wantSources: server.SourceConfigs{
-				"my-pg-instance": cloudsqlpg.Config{
+				"my-pg-instance": cloudsqlpgsrc.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Kind:     cloudsqlpgsrc.SourceKind,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
 					Database: "my_db",
 				},
 			},
-			wantTools: tools.Configs{
-				"example_tool": tools.CloudSQLPgGenericConfig{
+			wantTools: server.ToolConfigs{
+				"example_tool": cloudsqlpgtool.GenericConfig{
 					Name:        "example_tool",
-					Kind:        tools.CloudSQLPgSQLGenericKind,
+					Kind:        cloudsqlpgtool.ToolKind,
 					Source:      "my-pg-instance",
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
@@ -220,7 +221,7 @@ func TestParseToolFile(t *testing.T) {
 					},
 				},
 			},
-			wantToolsets: tools.ToolsetConfigs{
+			wantToolsets: server.ToolsetConfigs{
 				"example_toolset": tools.ToolsetConfig{
 					Name:      "example_toolset",
 					ToolNames: []string{"example_tool"},

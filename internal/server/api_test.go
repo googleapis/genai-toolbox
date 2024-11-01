@@ -27,12 +27,12 @@ func (t MockTool) ParseParams(data map[string]any) ([]any, error) {
 	return tools.ParseParams(t.Params, data)
 }
 
-func (t MockTool) Manifest() tools.ToolManifest {
+func (t MockTool) Manifest() tools.Manifest {
 	pMs := make([]tools.ParameterManifest, 0, len(t.Params))
 	for _, p := range t.Params {
 		pMs = append(pMs, p.Manifest())
 	}
-	return tools.ToolManifest{Description: t.Description, Parameters: pMs}
+	return tools.Manifest{Description: t.Description, Parameters: pMs}
 }
 
 func TestToolsetEndpoint(t *testing.T) {

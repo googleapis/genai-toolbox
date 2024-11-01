@@ -17,10 +17,13 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
-	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	alloydbpgtool "github.com/googleapis/genai-toolbox/internal/tools/alloydbpg"
+	cloudsqlpgtool "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg"
+	postgrestool "github.com/googleapis/genai-toolbox/internal/tools/postgres"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,9 +37,9 @@ type ServerConfig struct {
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
 	// ToolConfigs defines what tools are available.
-	ToolConfigs tools.Configs
+	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
-	ToolsetConfigs tools.ToolsetConfigs
+	ToolsetConfigs ToolsetConfigs
 }
 
 // SourceConfigs is a type used to allow unmarshal of the data source config map
@@ -62,20 +65,20 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("missing 'kind' field for %q", k)
 		}
 		switch k.Kind {
-		case alloydbpg.SourceKind:
-			actual := alloydbpg.Config{Name: name}
+		case alloydbpgsrc.SourceKind:
+			actual := alloydbpgsrc.Config{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
-		case cloudsqlpg.SourceKind:
-			actual := cloudsqlpg.Config{Name: name}
+		case cloudsqlpgsrc.SourceKind:
+			actual := cloudsqlpgsrc.Config{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
-		case postgres.SourceKind:
-			actual := postgres.Config{Name: name}
+		case postgressrc.SourceKind:
+			actual := postgressrc.Config{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
@@ -84,6 +87,74 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
 		}
 
+	}
+	return nil
+}
+
+// ToolConfigs is a type used to allow unmarshal of the tool configs
+type ToolConfigs map[string]tools.Config
+
+// validate interface
+var _ yaml.Unmarshaler = &ToolConfigs{}
+
+func (c *ToolConfigs) UnmarshalYAML(node *yaml.Node) error {
+	*c = make(ToolConfigs)
+	// Parse the 'kind' fields for each source
+	var raw map[string]yaml.Node
+	if err := node.Decode(&raw); err != nil {
+		return err
+	}
+
+	for name, n := range raw {
+		var k struct {
+			Kind string `yaml:"kind"`
+		}
+		err := n.Decode(&k)
+		if err != nil {
+			return fmt.Errorf("missing 'kind' field for %q", name)
+		}
+		switch k.Kind {
+		case alloydbpgtool.ToolKind:
+			actual := alloydbpgtool.GenericConfig{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case cloudsqlpgtool.ToolKind:
+			actual := cloudsqlpgtool.GenericConfig{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case postgrestool.ToolKind:
+			actual := postgrestool.GenericConfig{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		default:
+			return fmt.Errorf("%q is not a valid kind of tool", k.Kind)
+		}
+
+	}
+	return nil
+}
+
+type ToolsetConfigs map[string]tools.ToolsetConfig
+
+// validate interface
+var _ yaml.Unmarshaler = &ToolsetConfigs{}
+
+func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
+	*c = make(ToolsetConfigs)
+
+	var raw map[string][]string
+	if err := node.Decode(&raw); err != nil {
+		return err
+	}
+
+	for name, toolList := range raw {
+		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
 	}
 	return nil
 }

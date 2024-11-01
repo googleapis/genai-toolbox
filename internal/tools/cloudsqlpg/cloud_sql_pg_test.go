@@ -12,29 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools_test
+package cloudsqlpg_test
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg"
 	"gopkg.in/yaml.v3"
 )
 
-func TestParseFromYamlAlloyDBPg(t *testing.T) {
+func TestParseFromYamlCloudSQLPg(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
-		want tools.Configs
+		want server.ToolConfigs
 	}{
 		{
 			desc: "basic example",
 			in: `
 			tools:
 				example_tool:
-					kind: alloydb-postgres-generic
+					kind: cloud-sql-postgres-generic
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -44,10 +46,10 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 						  type: string
 						  description: some description
 			`,
-			want: tools.Configs{
-				"example_tool": tools.AlloyDBPgGenericConfig{
+			want: server.ToolConfigs{
+				"example_tool": cloudsqlpg.GenericConfig{
 					Name:        "example_tool",
-					Kind:        tools.AlloyDBPgSQLGenericKind,
+					Kind:        cloudsqlpg.ToolKind,
 					Source:      "my-pg-instance",
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
@@ -61,7 +63,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			got := struct {
-				Tools tools.Configs `yaml:"tools"`
+				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
 			// Parse contents
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)

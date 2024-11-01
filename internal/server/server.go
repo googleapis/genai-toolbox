@@ -76,7 +76,7 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		allToolNames = append(allToolNames, name)
 	}
 	if cfg.ToolsetConfigs == nil {
-		cfg.ToolsetConfigs = make(tools.ToolsetConfigs)
+		cfg.ToolsetConfigs = make(ToolsetConfigs)
 	}
 	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
 	// initalize and validate the toolsets

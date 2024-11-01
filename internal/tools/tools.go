@@ -15,73 +15,22 @@
 package tools
 
 import (
-	"fmt"
-
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"gopkg.in/yaml.v3"
 )
 
 type Config interface {
-	toolKind() string
+	ToolKind() string
 	Initialize(map[string]sources.Source) (Tool, error)
-}
-
-// SourceConfigs is a type used to allow unmarshal of the data source config map
-type Configs map[string]Config
-
-// validate interface
-var _ yaml.Unmarshaler = &Configs{}
-
-func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
-	*c = make(Configs)
-	// Parse the 'kind' fields for each source
-	var raw map[string]yaml.Node
-	if err := node.Decode(&raw); err != nil {
-		return err
-	}
-
-	for name, n := range raw {
-		var k struct {
-			Kind string `yaml:"kind"`
-		}
-		err := n.Decode(&k)
-		if err != nil {
-			return fmt.Errorf("missing 'kind' field for %q", name)
-		}
-		switch k.Kind {
-		case CloudSQLPgSQLGenericKind:
-			actual := CloudSQLPgGenericConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		case AlloyDBPgSQLGenericKind:
-			actual := AlloyDBPgGenericConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		case PostgresSQLGenericKind:
-			actual := PostgresGenericConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		default:
-			return fmt.Errorf("%q is not a valid kind of tool", k.Kind)
-		}
-
-	}
-	return nil
 }
 
 type Tool interface {
 	Invoke([]any) (string, error)
 	ParseParams(data map[string]any) ([]any, error)
-	Manifest() ToolManifest
+	Manifest() Manifest
 }
 
-type ToolManifest struct {
+// Manifest is the representation of tools sent to Client SDKs.
+type Manifest struct {
 	Description string              `json:"description"`
 	Parameters  []ParameterManifest `json:"parameters"`
 }

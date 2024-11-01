@@ -115,7 +115,7 @@ func parseFromYamlNode(node *yaml.Node) (Parameter, error) {
 	return nil, fmt.Errorf("%q is not valid type for a parameter!", p.Type)
 }
 
-func generateManifests(ps []Parameter) []ParameterManifest {
+func (ps Parameters) Manifest() []ParameterManifest {
 	rtn := make([]ParameterManifest, 0, len(ps))
 	for _, p := range ps {
 		rtn = append(rtn, p.Manifest())

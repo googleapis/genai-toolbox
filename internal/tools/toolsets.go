@@ -16,16 +16,12 @@ package tools
 
 import (
 	"fmt"
-
-	"gopkg.in/yaml.v3"
 )
 
 type ToolsetConfig struct {
 	Name      string   `yaml:"name"`
 	ToolNames []string `yaml:",inline"`
 }
-
-type ToolsetConfigs map[string]ToolsetConfig
 
 type Toolset struct {
 	Name     string          `yaml:"name"`
@@ -34,25 +30,8 @@ type Toolset struct {
 }
 
 type ToolsetManifest struct {
-	ServerVersion string                  `json:"serverVersion"`
-	ToolsManifest map[string]ToolManifest `json:"tools"`
-}
-
-// validate interface
-var _ yaml.Unmarshaler = &ToolsetConfigs{}
-
-func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
-	*c = make(ToolsetConfigs)
-
-	var raw map[string][]string
-	if err := node.Decode(&raw); err != nil {
-		return err
-	}
-
-	for name, toolList := range raw {
-		(*c)[name] = ToolsetConfig{Name: name, ToolNames: toolList}
-	}
-	return nil
+	ServerVersion string              `json:"serverVersion"`
+	ToolsManifest map[string]Manifest `json:"tools"`
 }
 
 func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool) (Toolset, error) {
@@ -66,7 +45,7 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 	toolset.Tools = make([]*Tool, len(t.ToolNames))
 	toolset.Manifest = ToolsetManifest{
 		ServerVersion: serverVersion,
-		ToolsManifest: make(map[string]ToolManifest),
+		ToolsManifest: make(map[string]Manifest),
 	}
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
