@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -49,9 +50,9 @@ func (cfg PostgresGenericConfig) Initialize(srcs map[string]sources.Source) (Too
 	}
 
 	// verify the source is the right kind
-	s, ok := rawS.(sources.PostgresSource)
+	s, ok := rawS.(postgres.Source)
 	if !ok {
-		return nil, fmt.Errorf("sources for %q tools must be of kind %q", PostgresSQLGenericKind, sources.PostgresKind)
+		return nil, fmt.Errorf("sources for %q tools must be of kind %q", PostgresSQLGenericKind, postgres.SourceKind)
 	}
 
 	// finish tool setup

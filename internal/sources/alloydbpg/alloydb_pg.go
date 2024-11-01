@@ -12,39 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sources
+package alloydbpg
 
 import (
 	"context"
 	"fmt"
 	"net"
 
-	"cloud.google.com/go/cloudsqlconn"
+	"cloud.google.com/go/alloydbconn"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const CloudSQLPgKind string = "cloud-sql-postgres"
+const SourceKind string = "alloydb-postgres"
 
 // validate interface
-var _ Config = CloudSQLPgConfig{}
+var _ sources.SourceConfig = Config{}
 
-type CloudSQLPgConfig struct {
+type Config struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
 	Project  string `yaml:"project"`
 	Region   string `yaml:"region"`
+	Cluster  string `yaml:"cluster"`
 	Instance string `yaml:"instance"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 }
 
-func (r CloudSQLPgConfig) sourceKind() string {
-	return CloudSQLPgKind
+func (r Config) SourceConfigKind() string {
+	return SourceKind
 }
 
-func (r CloudSQLPgConfig) Initialize() (Source, error) {
-	pool, err := initCloudSQLPgConnectionPool(r.Project, r.Region, r.Instance, r.User, r.Password, r.Database)
+func (r Config) Initialize() (sources.Source, error) {
+	pool, err := initAlloyDBPgConnectionPool(r.Project, r.Region, r.Cluster, r.Instance, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -54,23 +56,27 @@ func (r CloudSQLPgConfig) Initialize() (Source, error) {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
-	s := CloudSQLPgSource{
+	s := Source{
 		Name: r.Name,
-		Kind: CloudSQLPgKind,
+		Kind: SourceKind,
 		Pool: pool,
 	}
 	return s, nil
 }
 
-var _ Source = CloudSQLPgSource{}
+var _ sources.Source = Source{}
 
-type CloudSQLPgSource struct {
+type Source struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
 	Pool *pgxpool.Pool
 }
 
-func initCloudSQLPgConnectionPool(project, region, instance, user, pass, dbname string) (*pgxpool.Pool, error) {
+func (s Source) SourceKind() string {
+	return SourceKind
+}
+
+func initAlloyDBPgConnectionPool(project, region, cluster, instance, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
 	config, err := pgxpool.ParseConfig(dsn)
@@ -79,13 +85,13 @@ func initCloudSQLPgConnectionPool(project, region, instance, user, pass, dbname 
 	}
 
 	// Create a new dialer with any options
-	d, err := cloudsqlconn.NewDialer(context.Background())
+	d, err := alloydbconn.NewDialer(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
-	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	i := fmt.Sprintf("%s:%s:%s", project, region, instance)
+	// Tell the driver to use the AlloyDB Go Connector to create connections
+	i := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, region, cluster, instance)
 	config.ConnConfig.DialFunc = func(ctx context.Context, _ string, instance string) (net.Conn, error) {
 		return d.Dial(ctx, i)
 	}

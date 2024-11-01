@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 )
 
 const AlloyDBPgSQLGenericKind string = "alloydb-postgres-generic"
@@ -46,9 +47,9 @@ func (cfg AlloyDBPgGenericConfig) Initialize(srcs map[string]sources.Source) (To
 	}
 
 	// verify the source is the right kind
-	s, ok := rawS.(sources.AlloyDBPgSource)
+	s, ok := rawS.(alloydbpg.Source)
 	if !ok {
-		return nil, fmt.Errorf("sources for %q tools must be of kind %q", AlloyDBPgSQLGenericKind, sources.AlloyDBPgKind)
+		return nil, fmt.Errorf("sources for %q tools must be of kind %q", AlloyDBPgSQLGenericKind, alloydbpg.SourceKind)
 	}
 
 	// finish tool setup

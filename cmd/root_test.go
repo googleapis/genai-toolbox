@@ -23,7 +23,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/spf13/cobra"
@@ -73,12 +73,12 @@ func TestAddrPort(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
-		want server.Config
+		want server.ServerConfig
 	}{
 		{
 			desc: "default values",
 			args: []string{},
-			want: server.Config{
+			want: server.ServerConfig{
 				Address: "127.0.0.1",
 				Port:    5000,
 			},
@@ -86,7 +86,7 @@ func TestAddrPort(t *testing.T) {
 		{
 			desc: "address short",
 			args: []string{"-a", "127.0.1.1"},
-			want: server.Config{
+			want: server.ServerConfig{
 				Address: "127.0.1.1",
 				Port:    5000,
 			},
@@ -94,7 +94,7 @@ func TestAddrPort(t *testing.T) {
 		{
 			desc: "address long",
 			args: []string{"--address", "0.0.0.0"},
-			want: server.Config{
+			want: server.ServerConfig{
 				Address: "0.0.0.0",
 				Port:    5000,
 			},
@@ -102,7 +102,7 @@ func TestAddrPort(t *testing.T) {
 		{
 			desc: "port short",
 			args: []string{"-p", "5052"},
-			want: server.Config{
+			want: server.ServerConfig{
 				Address: "127.0.0.1",
 				Port:    5052,
 			},
@@ -110,7 +110,7 @@ func TestAddrPort(t *testing.T) {
 		{
 			desc: "port long",
 			args: []string{"--port", "5050"},
-			want: server.Config{
+			want: server.ServerConfig{
 				Address: "127.0.0.1",
 				Port:    5050,
 			},
@@ -169,7 +169,7 @@ func TestParseToolFile(t *testing.T) {
 	tcs := []struct {
 		description  string
 		in           string
-		wantSources  sources.Configs
+		wantSources  server.SourceConfigs
 		wantTools    tools.Configs
 		wantToolsets tools.ToolsetConfigs
 	}{
@@ -198,10 +198,10 @@ func TestParseToolFile(t *testing.T) {
 				example_toolset:
 					- example_tool
 			`,
-			wantSources: sources.Configs{
-				"my-pg-instance": sources.CloudSQLPgConfig{
+			wantSources: server.SourceConfigs{
+				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     sources.CloudSQLPgKind,
+					Kind:     cloudsqlpg.SourceKind,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",

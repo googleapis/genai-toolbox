@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -62,7 +61,7 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg        server.Config
+	cfg        server.ServerConfig
 	tools_file string
 }
 
@@ -88,9 +87,9 @@ func NewCommand() *Command {
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
-func parseToolsFile(raw []byte) (sources.Configs, tools.Configs, tools.ToolsetConfigs, error) {
+func parseToolsFile(raw []byte) (server.SourceConfigs, tools.Configs, tools.ToolsetConfigs, error) {
 	tools_file := &struct {
-		Sources  sources.Configs      `yaml:"sources"`
+		Sources  server.SourceConfigs `yaml:"sources"`
 		Tools    tools.Configs        `yaml:"tools"`
 		Toolsets tools.ToolsetConfigs `yaml:"toolsets"`
 	}{}

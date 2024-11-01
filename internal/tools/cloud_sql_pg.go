@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 )
 
 const CloudSQLPgSQLGenericKind string = "cloud-sql-postgres-generic"
@@ -46,9 +47,9 @@ func (cfg CloudSQLPgGenericConfig) Initialize(srcs map[string]sources.Source) (T
 	}
 
 	// verify the source is the right kind
-	s, ok := rawS.(sources.CloudSQLPgSource)
+	s, ok := rawS.(cloudsqlpg.Source)
 	if !ok {
-		return nil, fmt.Errorf("sources for %q tools must be of kind %q", CloudSQLPgSQLGenericKind, sources.CloudSQLPgKind)
+		return nil, fmt.Errorf("sources for %q tools must be of kind %q", CloudSQLPgSQLGenericKind, cloudsqlpg.SourceKind)
 	}
 
 	// finish tool setup

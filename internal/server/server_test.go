@@ -43,7 +43,7 @@ func TestServe(t *testing.T) {
 	defer cancel()
 
 	addr, port := "127.0.0.1", 5000
-	cfg := server.Config{
+	cfg := server.ServerConfig{
 		Address: addr,
 		Port:    port,
 	}

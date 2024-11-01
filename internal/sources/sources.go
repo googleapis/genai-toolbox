@@ -14,65 +14,13 @@
 
 package sources
 
-import (
-	"fmt"
-
-	"gopkg.in/yaml.v3"
-)
-
-type Config interface {
-	sourceKind() string
+// SourceConfig is the interface for configuring a source.
+type SourceConfig interface {
+	SourceConfigKind() string
 	Initialize() (Source, error)
 }
 
-// validate interface
-var _ yaml.Unmarshaler = &Configs{}
-
-// Configs is a type used to allow unmarshal of the data source config map
-type Configs map[string]Config
-
-func (c *Configs) UnmarshalYAML(node *yaml.Node) error {
-	*c = make(Configs)
-	// Parse the 'kind' fields for each source
-	var raw map[string]yaml.Node
-	if err := node.Decode(&raw); err != nil {
-		return err
-	}
-
-	for name, n := range raw {
-		var k struct {
-			Kind string `yaml:"kind"`
-		}
-		err := n.Decode(&k)
-		if err != nil {
-			return fmt.Errorf("missing 'kind' field for %q", k)
-		}
-		switch k.Kind {
-		case CloudSQLPgKind:
-			actual := CloudSQLPgConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		case AlloyDBPgKind:
-			actual := AlloyDBPgConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		case PostgresKind:
-			actual := PostgresConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		default:
-			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
-		}
-
-	}
-	return nil
-}
-
+// Source is the interface for the source itself.
 type Source interface {
+	SourceKind() string
 }

@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sources_test
+package alloydbpg_test
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"gopkg.in/yaml.v3"
 )
@@ -27,7 +29,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
-		want sources.Configs
+		want server.SourceConfigs
 	}{
 		{
 			desc: "basic example",
@@ -41,10 +43,10 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					instance: my-instance
 					database: my_db
 			`,
-			want: sources.Configs{
-				"my-pg-instance": sources.AlloyDBPgConfig{
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": alloydbpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     sources.AlloyDBPgKind,
+					Kind:     alloydbpg.SourceKind,
 					Project:  "my-project",
 					Region:   "my-region",
 					Cluster:  "my-cluster",
@@ -57,7 +59,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			got := struct {
-				Sources sources.Configs `yaml:"sources"`
+				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
 			// Parse contents
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)

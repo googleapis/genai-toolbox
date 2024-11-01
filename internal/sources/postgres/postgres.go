@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sources
+package postgres
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const PostgresKind string = "postgres"
+const SourceKind string = "postgres"
 
 // validate interface
-var _ Config = PostgresConfig{}
+var _ sources.SourceConfig = Config{}
 
-type PostgresConfig struct {
+type Config struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
 	Host     string `yaml:"host"`
@@ -36,11 +37,11 @@ type PostgresConfig struct {
 	Database string `yaml:"database"`
 }
 
-func (r PostgresConfig) sourceKind() string {
-	return PostgresKind
+func (r Config) SourceConfigKind() string {
+	return SourceKind
 }
 
-func (r PostgresConfig) Initialize() (Source, error) {
+func (r Config) Initialize() (sources.Source, error) {
 	pool, err := initPostgresConnectionPool(r.Host, r.Port, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create pool: %w", err)
@@ -51,20 +52,24 @@ func (r PostgresConfig) Initialize() (Source, error) {
 		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
 	}
 
-	s := PostgresSource{
+	s := Source{
 		Name: r.Name,
-		Kind: PostgresKind,
+		Kind: SourceKind,
 		Pool: pool,
 	}
 	return s, nil
 }
 
-var _ Source = PostgresSource{}
+var _ sources.Source = Source{}
 
-type PostgresSource struct {
+type Source struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
 	Pool *pgxpool.Pool
+}
+
+func (s Source) SourceKind() string {
+	return SourceKind
 }
 
 func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
