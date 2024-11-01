@@ -19,7 +19,7 @@ import (
 )
 
 type ToolConfig interface {
-	ToolKind() string
+	ToolConfigKind() string
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 

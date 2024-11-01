@@ -52,7 +52,7 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolKind() string {
+func (cfg Config) ToolConfigKind() string {
 	return ToolKind
 }
 
