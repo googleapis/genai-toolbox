@@ -46,11 +46,7 @@ tools:
 
 We currently support the following types of kinds of tools:
 
-* [alloydb-postgres](./alloydb-pg.md) - Run a SQL statement against an AlloyDB
-  for PostgreSQL instance.
-* [cloud-sql-postgres](./cloud-sql-pg.md) - Run a SQL statement against a Cloud
-  SQL for PostgreSQL instance.
-* [postgres-generic](./postgres.md) - Run a PostgreSQL statement against a
+* [postgres-sql](./sql.md) - Run a PostgreSQL statement against a
   PostgreSQL-compatible database.
 
 
