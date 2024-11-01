@@ -90,7 +90,7 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 }
 
 // ToolConfigs is a type used to allow unmarshal of the tool configs
-type ToolConfigs map[string]tools.Config
+type ToolConfigs map[string]tools.ToolConfig
 
 // validate interface
 var _ yaml.Unmarshaler = &ToolConfigs{}

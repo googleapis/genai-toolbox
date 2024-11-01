@@ -50,7 +50,7 @@ type Config struct {
 }
 
 // validate interface
-var _ tools.Config = Config{}
+var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolKind() string {
 	return ToolKind
