@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpg_test
+package postgressql_test
 
 import (
 	"testing"
@@ -21,11 +21,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"gopkg.in/yaml.v3"
 )
 
-func TestParseFromYamlCloudSQLPg(t *testing.T) {
+func TestParseFromYamlPostgres(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -36,7 +36,7 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: cloud-sql-postgres-generic
+					kind: postgres-sql
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -47,9 +47,9 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 						  description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": cloudsqlpg.GenericConfig{
+				"example_tool": postgressql.Config{
 					Name:        "example_tool",
-					Kind:        cloudsqlpg.ToolKind,
+					Kind:        postgressql.ToolKind,
 					Source:      "my-pg-instance",
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",

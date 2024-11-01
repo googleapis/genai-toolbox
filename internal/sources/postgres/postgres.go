@@ -72,6 +72,10 @@ func (s Source) SourceKind() string {
 	return SourceKind
 }
 
+func (s *Source) PostgresPool() *pgxpool.Pool {
+	return s.Pool
+}
+
 func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)

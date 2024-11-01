@@ -26,7 +26,7 @@ import (
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	cloudsqlpgtool "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/spf13/cobra"
 )
 
@@ -186,7 +186,7 @@ func TestParseToolFile(t *testing.T) {
 					database: my_db
 			tools:
 				example_tool:
-					kind: cloud-sql-postgres-generic
+					kind: postgres-sql
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -210,9 +210,9 @@ func TestParseToolFile(t *testing.T) {
 				},
 			},
 			wantTools: server.ToolConfigs{
-				"example_tool": cloudsqlpgtool.GenericConfig{
+				"example_tool": postgressql.Config{
 					Name:        "example_tool",
-					Kind:        cloudsqlpgtool.ToolKind,
+					Kind:        postgressql.ToolKind,
 					Source:      "my-pg-instance",
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",

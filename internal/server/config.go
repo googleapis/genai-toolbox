@@ -21,9 +21,7 @@ import (
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	alloydbpgtool "github.com/googleapis/genai-toolbox/internal/tools/alloydbpg"
-	cloudsqlpgtool "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg"
-	postgrestool "github.com/googleapis/genai-toolbox/internal/tools/postgres"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"gopkg.in/yaml.v3"
 )
 
@@ -114,20 +112,8 @@ func (c *ToolConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("missing 'kind' field for %q", name)
 		}
 		switch k.Kind {
-		case alloydbpgtool.ToolKind:
-			actual := alloydbpgtool.GenericConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		case cloudsqlpgtool.ToolKind:
-			actual := cloudsqlpgtool.GenericConfig{Name: name}
-			if err := n.Decode(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
-			}
-			(*c)[name] = actual
-		case postgrestool.ToolKind:
-			actual := postgrestool.GenericConfig{Name: name}
+		case postgressql.ToolKind:
+			actual := postgressql.Config{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
@@ -140,6 +126,7 @@ func (c *ToolConfigs) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+// ToolConfigs is a type used to allow unmarshal of the toolset configs
 type ToolsetConfigs map[string]tools.ToolsetConfig
 
 // validate interface

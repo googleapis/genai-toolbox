@@ -76,6 +76,10 @@ func (s Source) SourceKind() string {
 	return SourceKind
 }
 
+func (s *Source) PostgresPool() *pgxpool.Pool {
+	return s.Pool
+}
+
 func initAlloyDBPgConnectionPool(project, region, cluster, instance, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)

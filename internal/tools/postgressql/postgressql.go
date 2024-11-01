@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgres
+package postgressql
 
 import (
 	"context"
@@ -20,17 +20,27 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const ToolKind string = "postgres-generic"
+const ToolKind string = "postgres-sql"
 
-// validate interface
-var _ tools.Config = GenericConfig{}
+type compatibleSource interface {
+	PostgresPool() *pgxpool.Pool
+}
 
-type GenericConfig struct {
+// validate compatible sources are still compatible
+var _ compatibleSource = &alloydbpg.Source{}
+var _ compatibleSource = &cloudsqlpg.Source{}
+var _ compatibleSource = &postgres.Source{}
+
+var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
+
+type Config struct {
 	Name        string           `yaml:"name"`
 	Kind        string           `yaml:"kind"`
 	Source      string           `yaml:"source"`
@@ -39,30 +49,40 @@ type GenericConfig struct {
 	Parameters  tools.Parameters `yaml:"parameters"`
 }
 
-func (cfg GenericConfig) ToolKind() string {
+// validate interface
+var _ tools.Config = Config{}
+
+func (cfg Config) ToolKind() string {
 	return ToolKind
 }
 
-func (cfg GenericConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	// verify the source is the right kind
-	s, ok := rawS.(postgres.Source)
+	// verify the source is compatible
+	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("sources for %q tools must be of kind %q", ToolKind, postgres.SourceKind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
 	// finish tool setup
-	t := NewGenericTool(cfg.Name, cfg.Statement, cfg.Description, s.Pool, cfg.Parameters)
+	t := Tool{
+		Name:       cfg.Name,
+		Kind:       ToolKind,
+		Parameters: cfg.Parameters,
+		Statement:  cfg.Statement,
+		Pool:       s.PostgresPool(),
+		manifest:   tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+	}
 	return t, nil
 }
 
-func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tools.Parameters) GenericTool {
-	return GenericTool{
+func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tools.Parameters) Tool {
+	return Tool{
 		Name:       name,
 		Kind:       ToolKind,
 		Statement:  stmt,
@@ -73,9 +93,9 @@ func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tool
 }
 
 // validate interface
-var _ tools.Tool = GenericTool{}
+var _ tools.Tool = Tool{}
 
-type GenericTool struct {
+type Tool struct {
 	Name       string           `yaml:"name"`
 	Kind       string           `yaml:"kind"`
 	Parameters tools.Parameters `yaml:"parameters"`
@@ -85,7 +105,7 @@ type GenericTool struct {
 	manifest  tools.Manifest
 }
 
-func (t GenericTool) Invoke(params []any) (string, error) {
+func (t Tool) Invoke(params []any) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 	results, err := t.Pool.Query(context.Background(), t.Statement, params...)
 	if err != nil {
@@ -104,10 +124,10 @@ func (t GenericTool) Invoke(params []any) (string, error) {
 	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
 }
 
-func (t GenericTool) ParseParams(data map[string]any) ([]any, error) {
+func (t Tool) ParseParams(data map[string]any) ([]any, error) {
 	return tools.ParseParams(t.Parameters, data)
 }
 
-func (t GenericTool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
