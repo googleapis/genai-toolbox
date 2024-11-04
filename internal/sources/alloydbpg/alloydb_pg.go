@@ -56,7 +56,7 @@ func (r Config) Initialize() (sources.Source, error) {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
-	s := Source{
+	s := &Source{
 		Name: r.Name,
 		Kind: SourceKind,
 		Pool: pool,
@@ -64,7 +64,7 @@ func (r Config) Initialize() (sources.Source, error) {
 	return s, nil
 }
 
-var _ sources.Source = Source{}
+var _ sources.Source = &Source{}
 
 type Source struct {
 	Name string `yaml:"name"`
@@ -72,7 +72,7 @@ type Source struct {
 	Pool *pgxpool.Pool
 }
 
-func (s Source) SourceKind() string {
+func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
