@@ -8,7 +8,6 @@
 
     ```bash
     export PROJECT_ID="my-project-id"
-    export PROJECT_NUMBER="my-project-number"
     ```
 
 1. Initialize gcloud CLI:
@@ -33,15 +32,9 @@
    roles):
     - Create Service Account role (roles/iam.serviceAccountCreator)
 
-1. To deploy from source, you must have ONE of the following IAM permission:
-    - Owner role
-    - Editor role
-    - The following set of roles:
-        - Cloud Build Editor role (roles/cloudbuild.builds.editor)
-        - Artifact Registry Admin role (roles/artifactregistry.admin)
-        - Storage Admin role  (roles/storage.admin)
-        - Cloud Run Admin role (roles/run.admin)
-        - Service Account User role (roles/iam.serviceAccountUser)
+1. To deploy from source, you must have the following set of roles:
+    - Cloud Run Developer (roles/run.developer)
+    - Service Account User role (roles/iam.serviceAccountUser)
 
 Notes:
 * If you are under a domain restriction organization policy
@@ -49,7 +42,7 @@ Notes:
   unauthenticated invocations for your project, you will need to access your
   deployed service as described under [Testing private
   services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
-* If you are using VPC based datastore, make sure your Cloud Run service and datastore are in the same VPC network.
+* If you are using VPC-based sources (such as AlloyDB), make sure your Cloud Run service and the database are in the same VPC network.
 
 ## Create a service account
 
@@ -58,16 +51,6 @@ Notes:
     ```bash
     gcloud iam service-accounts create toolbox-identity
     ```
-
-1.  If you're using AlloyDB Omni database, grant permissions to access your database:
-
-    * For AlloyDB Omni:
-
-        ```bash
-        gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:toolbox-identity@$PROJECT_ID.iam.gserviceaccount.com \
-            --role roles/alloydb.client
-        ```
 
 1.  Grant permissions to use secret manager:
 
@@ -110,7 +93,6 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
 
     ```bash
     gcloud run deploy toolbox \
-        --no-allow-unauthenticated \
         --image $IMAGE \
         --service-account toolbox-identity \
         --region us-central1 \
@@ -121,8 +103,7 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
     If you are using a VPC network, use the command below:
 
     ```bash
-    gcloud alpha run deploy toolbox \
-        --no-allow-unauthenticated \
+    gcloud run deploy toolbox \
         --image $IMAGE \
         --service-account toolbox-identity \
         --region us-central1 \
@@ -149,3 +130,22 @@ Next, we will use gcloud to authenticate requests to our Cloud Run instance:
     ```bash
     curl http://127.0.0.1:8080
     ``` 
+
+## Connecting with client SDK
+
+Next, we will use Toolbox with client SDK:
+
+1. Run the following to retrieve a non-deterministic URL for the cloud run service:
+
+    ```bash
+    gcloud run services describe toolbox --format 'value(status.url)'
+    ```
+
+1. Import and initialize the toolbox client with url retrieved above:
+
+    ```bash
+    from toolbox_langchain_sdk import ToolboxClient
+
+    # Replace with the cloud run service URL generated above
+    toolbox = ToolboxClient("http://URL")
+    ```
