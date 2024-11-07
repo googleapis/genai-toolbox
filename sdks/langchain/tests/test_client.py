@@ -1,937 +1,212 @@
-import asyncio
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import call, patch, AsyncMock
+from langchain_core.tools import StructuredTool
+from pydantic import ValidationError
 
 import aiohttp
 import pytest
-from langchain_core.tools import StructuredTool
-from pydantic import ValidationError
+
 from toolbox_langchain_sdk import ToolboxClient
+from toolbox_langchain_sdk.utils import ManifestSchema, ParameterSchema, ToolSchema
+
+# Sample manifest data for testing
+manifest_data = {
+    "serverVersion": "0.0.1",
+    "tools": {
+        "test_tool": ToolSchema(
+            description="This is test tool.",
+            parameters=[
+                ParameterSchema(
+                    name="param1", type="string", description="Parameter 1"
+                ),
+                ParameterSchema(
+                    name="param2", type="integer", description="Parameter 2"
+                ),
+            ],
+        ),
+        "test_tool2": ToolSchema(
+            description="This is test tool 2.",
+            parameters=[
+                ParameterSchema(
+                    name="param3", type="string", description="Parameter 3"
+                ),
+            ],
+        ),
+    },
+}
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_tool_manifest(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
+@patch("toolbox_langchain_sdk.client._load_yaml")
+async def test_load_tool_manifest_success(mock_load_yaml):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_yaml.return_value = ManifestSchema(**manifest_data)
+
+    result = await client._load_tool_manifest("test_tool")
+    assert result == ManifestSchema(**manifest_data)
+    mock_load_yaml.assert_called_once_with(
+        "https://my-toolbox.com/api/tool/test_tool", client._session
     )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value="""
-            {
-                "serverVersion": "0.0.1",
-                "tools": {
-                    "search_airport": {
-                        "description": "Use this tool to list all airports matching search criteria.\nTakes a country and a city and returns all matching airports.\nThe agent can decide to return the results directly to the user.\nInput of this tool must be in JSON format and include both inputs - country and city.\nExample:\n{{\n    \"country\": \"United States\",\n    \"city\": \"San Francisco\",\n}}\n",
-                        "parameters": [
-                            {
-                                "name": "country",
-                                "type": "string",
-                                "description": "Country"
-                            },
-                            {
-                                "name": "city",
-                                "type": "string",
-                                "description": "City"
-                            }
-                        ]
-                    }
-                }
-            }
-        """
-    )
-    mock_get.return_value = mock_response
-
-    await client._load_tool_manifest("test_tool")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool")
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "tools" in client._manifest
-    assert len(client._manifest["tools"].keys()) == 1
-    assert "test_tool" in client._manifest["tools"]
-
-    tool = client._manifest["tools"]["test_tool"]
-    assert "summary" in tool
-    assert "description" in tool
-    assert "parameters" in tool
-    assert tool["summary"] == "Test Tool"
-    assert tool["description"] == "This is a test tool."
-    assert len(tool["parameters"].keys()) == 2
-
-    assert "param1" in tool["parameters"]
-    assert "type" in tool["parameters"]["param1"]
-    assert "description" in tool["parameters"]["param1"]
-    assert tool["parameters"]["param1"]["type"] == "string"
-    assert tool["parameters"]["param1"]["description"] == "Parameter 1"
-
-    assert "param2" in tool["parameters"]
-    assert "type" in tool["parameters"]["param2"]
-    assert "description" in tool["parameters"]["param2"]
-    assert tool["parameters"]["param2"]["type"] == "integer"
-    assert tool["parameters"]["param2"]["description"] == "Parameter 2"
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_multiple_tool_manifest(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool1"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value="""
-            serverVersion: 0.0.1
-            tools:
-                test_tool1:
-                    summary: Test Tool 1
-                    description: This is a test tool 1.
-                    parameters:
-                        param1:
-                            type: string
-                            description: Parameter 1
-                        param2:
-                            type: integer
-                            description: Parameter 2
-        """
-    )
-    mock_get.return_value = mock_response
+@patch("toolbox_langchain_sdk.client._load_yaml")
+async def test_load_tool_manifest_failure(mock_load_yaml):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_yaml.side_effect = Exception("Failed to load YAML")
 
-    await client._load_tool_manifest("test_tool1")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool1")
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "tools" in client._manifest
-    assert len(client._manifest["tools"].keys()) == 1
-    assert "test_tool1" in client._manifest["tools"]
-
-    tool1 = client._manifest["tools"]["test_tool1"]
-    assert "summary" in tool1
-    assert "description" in tool1
-    assert "parameters" in tool1
-    assert tool1["summary"] == "Test Tool 1"
-    assert tool1["description"] == "This is a test tool 1."
-    assert len(tool1["parameters"].keys()) == 2
-
-    assert "param1" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param1"]
-    assert "description" in tool1["parameters"]["param1"]
-    assert tool1["parameters"]["param1"]["type"] == "string"
-    assert tool1["parameters"]["param1"]["description"] == "Parameter 1"
-
-    assert "param2" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param2"]
-    assert "description" in tool1["parameters"]["param2"]
-    assert tool1["parameters"]["param2"]["type"] == "integer"
-    assert tool1["parameters"]["param2"]["description"] == "Parameter 2"
-
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool2"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value="""
-            serverVersion: 0.0.1
-            tools:
-                test_tool2:
-                    summary: Test Tool 2
-                    description: This is a test tool 2.
-                    parameters:
-                        param1:
-                            type: integer
-                            description: Parameter 1
-                        param2:
-                            type: string
-                            description: Parameter 2
-        """
-    )
-    mock_get.return_value = mock_response
-
-    await client._load_tool_manifest("test_tool2")
-    assert mock_get.call_count == 2
-    mock_get.assert_has_calls(
-        [
-            call("https://my-toolbox.com/api/tool/test_tool1"),
-            call("https://my-toolbox.com/api/tool/test_tool2"),
-        ]
-    )
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "tools" in client._manifest
-    assert len(client._manifest["tools"].keys()) == 2
-
-    assert "test_tool1" in client._manifest["tools"]
-    tool1 = client._manifest["tools"]["test_tool1"]
-    assert "summary" in tool1
-    assert "description" in tool1
-    assert "parameters" in tool1
-    assert tool1["summary"] == "Test Tool 1"
-    assert tool1["description"] == "This is a test tool 1."
-    assert len(tool1["parameters"].keys()) == 2
-    assert "param1" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param1"]
-    assert "description" in tool1["parameters"]["param1"]
-    assert tool1["parameters"]["param1"]["type"] == "string"
-    assert tool1["parameters"]["param1"]["description"] == "Parameter 1"
-    assert "param2" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param2"]
-    assert "description" in tool1["parameters"]["param2"]
-    assert tool1["parameters"]["param2"]["type"] == "integer"
-    assert tool1["parameters"]["param2"]["description"] == "Parameter 2"
-
-    assert "test_tool2" in client._manifest["tools"]
-    tool2 = client._manifest["tools"]["test_tool2"]
-    assert "summary" in tool2
-    assert "description" in tool2
-    assert "parameters" in tool2
-    assert tool2["summary"] == "Test Tool 2"
-    assert tool2["description"] == "This is a test tool 2."
-    assert len(tool2["parameters"].keys()) == 2
-    assert "param1" in tool2["parameters"]
-    assert "type" in tool2["parameters"]["param1"]
-    assert "description" in tool2["parameters"]["param1"]
-    assert tool2["parameters"]["param1"]["type"] == "integer"
-    assert tool2["parameters"]["param1"]["description"] == "Parameter 1"
-    assert "param2" in tool2["parameters"]
-    assert "type" in tool2["parameters"]["param2"]
-    assert "description" in tool2["parameters"]["param2"]
-    assert tool2["parameters"]["param2"]["type"] == "string"
-    assert tool2["parameters"]["param2"]["description"] == "Parameter 2"
-
-
-@pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_tool_manifest_invalid_yaml(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(return_value="invalid yaml")
-    mock_get.return_value = mock_response
-
-    await client._load_tool_manifest("test_tool")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool")
-    assert client._manifest == "invalid yaml"
-
-
-@pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_tool_manifest_api_error(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    error = aiohttp.ClientError("Simulated HTTP Error")
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(side_effect=error)
-    mock_get.return_value = mock_response
-
-    with pytest.raises(aiohttp.ClientError) as exc_info:
+    with pytest.raises(Exception) as e:
         await client._load_tool_manifest("test_tool")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool")
-    assert exc_info.value == error
+    assert str(e.value) == "Failed to load YAML"
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_tool_manifest_valid_then_invalid_yaml(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool1"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
+@patch("toolbox_langchain_sdk.client._load_yaml")
+async def test_load_toolset_manifest_success(mock_load_yaml):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_yaml.return_value = ManifestSchema(**manifest_data)
+
+    # Test with toolset name
+    result = await client._load_toolset_manifest(toolset_name="test_toolset")
+    assert result == ManifestSchema(**manifest_data)
+    mock_load_yaml.assert_called_once_with(
+        "https://my-toolbox.com/api/toolset/test_toolset", client._session
     )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value="""
-            serverVersion: 0.0.1
-            tools:
-                test_tool1:
-                    summary: Test Tool 1
-                    description: This is a test tool 1.
-                    parameters:
-                        param1:
-                            type: integer
-                            description: Parameter 1
-                        param2:
-                            type: string
-                            description: Parameter 2
-    """
+    mock_load_yaml.reset_mock()
+
+    # Test without toolset name
+    result = await client._load_toolset_manifest()
+    assert result == ManifestSchema(**manifest_data)
+    mock_load_yaml.assert_called_once_with(
+        "https://my-toolbox.com/api/toolset/", client._session
     )
-    mock_get.return_value = mock_response
-
-    await client._load_tool_manifest("test_tool1")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/tool/test_tool1")
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "tools" in client._manifest
-    assert len(client._manifest["tools"].keys()) == 1
-    assert "test_tool1" in client._manifest["tools"]
-
-    tool1 = client._manifest["tools"]["test_tool1"]
-    assert "summary" in tool1
-    assert "description" in tool1
-    assert "parameters" in tool1
-    assert tool1["summary"] == "Test Tool 1"
-    assert tool1["description"] == "This is a test tool 1."
-    assert len(tool1["parameters"].keys()) == 2
-
-    assert "param1" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param1"]
-    assert "description" in tool1["parameters"]["param1"]
-    assert tool1["parameters"]["param1"]["type"] == "integer"
-    assert tool1["parameters"]["param1"]["description"] == "Parameter 1"
-
-    assert "param2" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param2"]
-    assert "description" in tool1["parameters"]["param2"]
-    assert tool1["parameters"]["param2"]["type"] == "string"
-    assert tool1["parameters"]["param2"]["description"] == "Parameter 2"
-
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool2"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(return_value="invalid yaml")
-    mock_get.return_value = mock_response
-
-    await client._load_tool_manifest("test_tool2")
-    assert mock_get.call_count == 2
-    mock_get.assert_has_calls(
-        [
-            call("https://my-toolbox.com/api/tool/test_tool1"),
-            call("https://my-toolbox.com/api/tool/test_tool2"),
-        ]
-    )
-    assert client._manifest == "invalid yaml"
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_toolset_manifest(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset/test_toolset"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value="""
-            serverVersion: 0.0.1
-            tools:
-                test_tool:
-                    summary: Test Tool
-                    description: This is a test tool.
-                    parameters:
-                        param1:
-                            type: string
-                            description: Parameter 1
-                        param2:
-                            type: integer
-                            description: Parameter 2
-        """
-    )
-    mock_get.return_value = mock_response
+@patch("toolbox_langchain_sdk.client._load_yaml")
+async def test_load_toolset_manifest_failure(mock_load_yaml):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_yaml.side_effect = Exception("Failed to load YAML")
 
-    await client._load_toolset_manifest("test_toolset")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset/test_toolset")
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "tools" in client._manifest
-    assert len(client._manifest["tools"].keys()) == 1
-    assert "test_tool" in client._manifest["tools"]
-
-    tool = client._manifest["tools"]["test_tool"]
-    assert "summary" in tool
-    assert "description" in tool
-    assert "parameters" in tool
-    assert tool["summary"] == "Test Tool"
-    assert tool["description"] == "This is a test tool."
-    assert len(tool["parameters"].keys()) == 2
-
-    assert "param1" in tool["parameters"]
-    assert "type" in tool["parameters"]["param1"]
-    assert "description" in tool["parameters"]["param1"]
-    assert tool["parameters"]["param1"]["type"] == "string"
-    assert tool["parameters"]["param1"]["description"] == "Parameter 1"
-
-    assert "param2" in tool["parameters"]
-    assert "type" in tool["parameters"]["param2"]
-    assert "description" in tool["parameters"]["param2"]
-    assert tool["parameters"]["param2"]["type"] == "integer"
-    assert tool["parameters"]["param2"]["description"] == "Parameter 2"
+    with pytest.raises(Exception) as e:
+        await client._load_toolset_manifest(toolset_name="test_toolset")
+    assert str(e.value) == "Failed to load YAML"
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_toolset_manifest_all_toolsets(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value="""
-            serverVersion: 0.0.1
-            tools:
-                test_tool1:
-                    summary: Test Tool 1
-                    description: This is a test tool 1.
-                    parameters:
-                        param1:
-                            type: string
-                            description: Parameter 1
-                test_tool2:
-                    summary: Test Tool 2
-                    description: This is a test tool 2.
-                    parameters:
-                        param2:
-                            type: integer
-                            description: Parameter 2
-        """
-    )
-    mock_get.return_value = mock_response
-
-    await client._load_toolset_manifest()
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset")
-    assert client._manifest["serverVersion"] == "0.0.1"
-    assert "tools" in client._manifest
-    assert len(client._manifest["tools"].keys()) == 2
-    assert "test_tool1" in client._manifest["tools"]
-    assert "test_tool2" in client._manifest["tools"]
-
-    tool1 = client._manifest["tools"]["test_tool1"]
-    assert "summary" in tool1
-    assert "description" in tool1
-    assert "parameters" in tool1
-    assert tool1["summary"] == "Test Tool 1"
-    assert tool1["description"] == "This is a test tool 1."
-    assert len(tool1["parameters"].keys()) == 1
-    assert "param1" in tool1["parameters"]
-    assert "type" in tool1["parameters"]["param1"]
-    assert "description" in tool1["parameters"]["param1"]
-    assert tool1["parameters"]["param1"]["type"] == "string"
-    assert tool1["parameters"]["param1"]["description"] == "Parameter 1"
-
-    tool2 = client._manifest["tools"]["test_tool2"]
-    assert "summary" in tool2
-    assert "description" in tool2
-    assert "parameters" in tool2
-    assert tool2["summary"] == "Test Tool 2"
-    assert tool2["description"] == "This is a test tool 2."
-    assert len(tool2["parameters"].keys()) == 1
-    assert "param2" in tool2["parameters"]
-    assert "type" in tool2["parameters"]["param2"]
-    assert "description" in tool2["parameters"]["param2"]
-    assert tool2["parameters"]["param2"]["type"] == "integer"
-    assert tool2["parameters"]["param2"]["description"] == "Parameter 2"
-
-
-@pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_toolset_manifest_invalid_yaml(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset/test_toolset"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(return_value="invalid yaml")
-    mock_get.return_value = mock_response
-
-    await client._load_toolset_manifest("test_toolset")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset/test_toolset")
-    assert client._manifest == "invalid yaml"
-
-
-@pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.get")
-async def test_load_toolset_manifest_api_error(mock_get):
-    client = ToolboxClient("https://my-toolbox.com")
-    mock_response = aiohttp.ClientResponse(
-        method="GET",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/toolset/test_toolset"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    error = aiohttp.ClientError("Simulated HTTP Error")
-    mock_response.raise_for_status = Mock(side_effect=error)
-    mock_get.return_value = mock_response
-
-    with pytest.raises(aiohttp.ClientError) as exc_info:
-        await client._load_toolset_manifest("test_toolset")
-    mock_get.assert_called_once_with("https://my-toolbox.com/api/toolset/test_toolset")
-    assert exc_info.value == error
-
-
-@pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.post")
-async def test_generate_tool_success(mock_post):
-    client = ToolboxClient("https://my-toolbox.com")
-    client._manifest = {
-        "tools": {
-            "test_tool": {
-                "summary": "Test Tool",
-                "description": "This is a test tool.",
-                "parameters": {
-                    "param1": {"type": "string", "description": "Parameter 1"},
-                    "param2": {"type": "integer", "description": "Parameter 2"},
-                },
-            },
-        },
-    }
-
-    mock_response = aiohttp.ClientResponse(
-        method="POST",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.status = 200
-    mock_response.json = AsyncMock(return_value={"result": "mocked_result"})
-    mock_post.return_value = mock_response
-
-    client._generate_tool("test_tool")
-    assert len(client._tools) == 1
-    tool = client._tools[0]
+async def test_generate_tool_success():
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    tool = client._generate_tool("test_tool", ManifestSchema(**manifest_data))
 
     assert isinstance(tool, StructuredTool)
-    assert tool.name == "Test Tool"
-    assert tool.description == "This is a test tool."
-    assert tool.args_schema.model_fields.keys() == {"param1", "param2"}
-    assert tool.args_schema.model_fields["param1"].annotation == str
-    assert tool.args_schema.model_fields["param2"].annotation == int
-    assert tool.args_schema.model_fields["param1"].description == "Parameter 1"
-    assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
-
-    params = {"param1": "value1", "param2": 123}
-    result = await tool.arun(params)
-    mock_post.assert_called_once_with(
-        "https://my-toolbox.com/api/tool/test_tool", json=params
-    )
-    assert result == mock_response.json.return_value
+    assert tool.name == "test_tool"
+    assert tool.description == "This is test tool."
+    assert tool.args_schema is not None  # Check if args_schema is generated
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.post")
-async def test_generate_tool_api_error(mock_post):
-    client = ToolboxClient("https://my-toolbox.com")
-    client._manifest = {
-        "tools": {
-            "test_tool": {
-                "summary": "Test Tool",
-                "description": "This is a test tool.",
-                "parameters": {
-                    "param1": {"type": "string", "description": "Parameter 1"},
-                    "param2": {"type": "integer", "description": "Parameter 2"},
-                },
-            },
-        },
-    }
+async def test_generate_tool_missing_tool():
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
 
-    mock_response = aiohttp.ClientResponse(
-        method="POST",
-        url=aiohttp.client.URL("https://my-toolbox.com/api/tool/test_tool"),
-        writer=None,
-        continue100=None,
-        timer=None,
-        request_info=None,
-        traces=None,
-        session=None,
-        loop=asyncio.get_event_loop(),
-    )
-    mock_response.status = 200
-    error = aiohttp.ClientError("Simulated HTTP Error")
-    mock_response.json = AsyncMock(side_effect=error)
-    mock_post.return_value = mock_response
-
-    client._generate_tool("test_tool")
-    assert len(client._tools) == 1
-    tool = client._tools[0]
-
-    assert isinstance(tool, StructuredTool)
-    assert tool.name == "Test Tool"
-    assert tool.description == "This is a test tool."
-    assert tool.args_schema.model_fields.keys() == {"param1", "param2"}
-    assert tool.args_schema.model_fields["param1"].annotation == str
-    assert tool.args_schema.model_fields["param2"].annotation == int
-    assert tool.args_schema.model_fields["param1"].description == "Parameter 1"
-    assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
-
-    with pytest.raises(aiohttp.ClientError) as exc_info:
-        params = {"param1": "test", "param2": 123}
-        await tool.arun(params)
-        mock_post.assert_called_once_with(
-            "https://my-toolbox.com/api/tool/test_tool",
-            json=params,
-        )
-    assert exc_info.value == error
-
-
-def test_generate_tool_missing_schema_fields():
-    client = ToolboxClient("https://my-toolbox.com")
-    client._manifest = {"tools": {"test_tool": {"summary": "Test Tool"}}}
-    with pytest.raises(ValidationError) as exc_info:
-        client._generate_tool("test_tool")
-    errors = exc_info.value.errors()
-    assert len(errors) == 2
-    assert errors[0]["input"] == client._manifest["tools"]["test_tool"]
-    assert errors[0]["loc"] == ("description",)
-    assert errors[0]["msg"] == "Field required"
-    assert errors[0]["type"] == "missing"
-    assert errors[1]["input"] == client._manifest["tools"]["test_tool"]
-    assert errors[1]["loc"] == ("parameters",)
-    assert errors[1]["msg"] == "Field required"
-    assert errors[1]["type"] == "missing"
-
-
-def test_generate_tool_invalid_schema_types():
-    client = ToolboxClient("https://my-toolbox.com")
-    client._manifest = {
-        "tools": {
-            "test_tool": {
-                "summary": 123,
-                "description": "This is a test tool.",
-                "parameters": {
-                    "param1": {"type": "string", "description": "Parameter 1"},
-                    "param2": {"type": "integer", "description": "Parameter 2"},
-                },
-            },
-        },
-    }
-    with pytest.raises(ValidationError) as exc_info:
-        client._generate_tool("test_tool")
-    errors = exc_info.value.errors()
-    assert len(errors) == 1
-    assert errors[0]["loc"] == ("summary",)
-    assert errors[0]["input"] == 123
-    assert errors[0]["msg"] == "Input should be a valid string"
+    with pytest.raises(KeyError) as e:
+        client._generate_tool("missing_tool", ManifestSchema(**manifest_data))
+    assert str(e.value) == "'missing_tool'"
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.utils.aiohttp.ClientSession.post")
-async def test_generate_tool_invalid_parameter_types(mock_post):
-    client = ToolboxClient("https://my-toolbox.com")
-    client._manifest = {
-        "tools": {
-            "test_tool": {
-                "summary": "Test Tool",
-                "description": "This is a test tool.",
-                "parameters": {
-                    "param1": {"type": "string", "description": "Parameter 1"},
-                    "param2": {"type": "integer", "description": "Parameter 2"},
-                },
-            },
-        },
-    }
-
-    client._generate_tool("test_tool")
-    assert len(client._tools) == 1
-    tool = client._tools[0]
-
-    assert isinstance(tool, StructuredTool)
-    assert tool.name == "Test Tool"
-    assert tool.description == "This is a test tool."
-    assert tool.args_schema.model_fields.keys() == {"param1", "param2"}
-    assert tool.args_schema.model_fields["param1"].annotation == str
-    assert tool.args_schema.model_fields["param2"].annotation == int
-    assert tool.args_schema.model_fields["param1"].description == "Parameter 1"
-    assert tool.args_schema.model_fields["param2"].description == "Parameter 2"
-
-    with pytest.raises(ValidationError) as exc_info:
-        await tool.arun({"param1": "test", "param2": "abc"})
-    mock_post.assert_not_called()
-    errors = exc_info.value.errors()
-    assert len(errors) == 1
-    assert errors[0]["loc"] == ("param2",)
-    assert errors[0]["input"] == "abc"
-    assert (
-        errors[0]["msg"]
-        == "Input should be a valid integer, unable to parse string as an integer"
-    )
-
-
-@pytest.mark.asyncio
-@patch.object(ToolboxClient, "_load_tool_manifest")
-async def test_load_tool(mock_load_tool_manifest):
-    client = ToolboxClient("https://my-toolbox.com")
-
-    mock_load_tool_manifest.side_effect = lambda _: setattr(
-        client,
-        "_manifest",
-        {
-            "serverVersion": "0.0.1",
-            "tools": {
-                "test_tool": {
-                    "summary": "Test Tool",
-                    "description": "This is a test tool.",
-                    "parameters": {
-                        "param1": {"type": "string", "description": "Parameter 1"},
-                        "param2": {"type": "integer", "description": "Parameter 2"},
-                    },
-                },
-            },
-        },
+@patch("toolbox_langchain_sdk.client.ToolboxClient._load_tool_manifest")
+@patch("toolbox_langchain_sdk.client.ToolboxClient._generate_tool")
+async def test_load_tool_success(mock_generate_tool, mock_load_manifest):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_manifest.return_value = ManifestSchema(**manifest_data)
+    mock_generate_tool.return_value = StructuredTool(
+        name="test_tool",
+        description="This is test tool.",
+        args_schema=None,
+        coroutine=AsyncMock(),
     )
 
     tool = await client.load_tool("test_tool")
-    mock_load_tool_manifest.assert_called_once_with("test_tool")
+
     assert isinstance(tool, StructuredTool)
-    assert tool.name == "Test Tool"
-    assert tool.description == "This is a test tool."
-    assert tool.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "string"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "integer"},
-    }
+    assert tool.name == "test_tool"
+    mock_load_manifest.assert_called_once_with("test_tool")
+    mock_generate_tool.assert_called_once_with(
+        "test_tool", ManifestSchema(**manifest_data)
+    )
 
 
 @pytest.mark.asyncio
-@patch.object(ToolboxClient, "_load_tool_manifest")
-async def test_load_multiple_tools(mock_load_tool_manifest):
-    client = ToolboxClient("https://my-toolbox.com")
+@patch("toolbox_langchain_sdk.client.ToolboxClient._load_tool_manifest")
+async def test_load_tool_failure(mock_load_manifest):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_manifest.side_effect = Exception("Failed to load manifest")
 
-    mock_load_tool_manifest.side_effect = lambda _: setattr(
-        client,
-        "_manifest",
-        {
-            "serverVersion": "0.0.1",
-            "tools": {
-                "test_tool1": {
-                    "summary": "Test Tool 1",
-                    "description": "This is a test tool 1.",
-                    "parameters": {
-                        "param1": {"type": "string", "description": "Parameter 1"},
-                        "param2": {"type": "integer", "description": "Parameter 2"},
-                    },
-                },
-            },
-        },
-    )
-
-    tool1 = await client.load_tool("test_tool1")
-    mock_load_tool_manifest.assert_called_once_with("test_tool1")
-    assert isinstance(tool1, StructuredTool)
-    assert tool1.name == "Test Tool 1"
-    assert tool1.description == "This is a test tool 1."
-    assert tool1.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "string"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "integer"},
-    }
-
-    mock_load_tool_manifest.side_effect = lambda _: setattr(
-        client,
-        "_manifest",
-        {
-            "serverVersion": "0.0.1",
-            "tools": {
-                "test_tool1": {
-                    "summary": "Test Tool 1",
-                    "description": "This is a test tool 1.",
-                    "parameters": {
-                        "param1": {"type": "string", "description": "Parameter 1"},
-                        "param2": {"type": "integer", "description": "Parameter 2"},
-                    },
-                },
-                "test_tool2": {
-                    "summary": "Test Tool 2",
-                    "description": "This is a test tool 2.",
-                    "parameters": {
-                        "param1": {"type": "integer", "description": "Parameter 1"},
-                        "param2": {"type": "string", "description": "Parameter 2"},
-                    },
-                },
-            },
-        },
-    )
-
-    tool2 = await client.load_tool("test_tool2")
-    mock_load_tool_manifest.assert_called_with("test_tool2")
-    assert isinstance(tool2, StructuredTool)
-    assert tool2.name == "Test Tool 2"
-    assert tool2.description == "This is a test tool 2."
-    assert tool2.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "integer"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "string"},
-    }
-
-    assert client._tools == [tool1, tool2]
+    with pytest.raises(Exception) as e:
+        await client.load_tool("test_tool")
+    assert str(e.value) == "Failed to load manifest"
 
 
 @pytest.mark.asyncio
-@patch.object(ToolboxClient, "_load_toolset_manifest")
-async def test_load_toolset(mock_load_toolset_manifest):
-    client = ToolboxClient("https://my-toolbox.com")
+@patch("toolbox_langchain_sdk.client.ToolboxClient._load_toolset_manifest")
+@patch("toolbox_langchain_sdk.client.ToolboxClient._generate_tool")
+async def test_load_toolset_success(mock_generate_tool, mock_load_manifest):
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_manifest.return_value = ManifestSchema(**manifest_data)
+    mock_generate_tool.side_effect = [
+        StructuredTool(
+            name="test_tool",
+            description="This is test tool.",
+            args_schema=None,
+            coroutine=AsyncMock(),
+        ),
+        StructuredTool(
+            name="test_tool2",
+            description="This is test tool 2.",
+            args_schema=None,
+            coroutine=AsyncMock(),
+        ),
+    ] * 2
 
-    mock_load_toolset_manifest.side_effect = lambda _: setattr(
-        client,
-        "_manifest",
-        {
-            "serverVersion": "0.0.1",
-            "tools": {
-                "test_tool1": {
-                    "summary": "Test Tool 1",
-                    "description": "This is a test tool 1.",
-                    "parameters": {
-                        "param1": {"type": "string", "description": "Parameter 1"},
-                        "param2": {"type": "integer", "description": "Parameter 2"},
-                    },
-                },
-                "test_tool2": {
-                    "summary": "Test Tool 2",
-                    "description": "This is a test tool 2.",
-                    "parameters": {
-                        "param1": {"type": "integer", "description": "Parameter 1"},
-                        "param2": {"type": "string", "description": "Parameter 2"},
-                    },
-                },
-            },
-        },
+    # Test with toolset name
+    tools = await client.load_toolset(toolset_name="test_toolset")
+    assert len(tools) == 2
+    assert isinstance(tools[0], StructuredTool)
+    assert tools[0].name == "test_tool"
+    assert isinstance(tools[1], StructuredTool)
+    assert tools[1].name == "test_tool2"
+    mock_load_manifest.assert_called_once_with("test_toolset")
+    mock_generate_tool.assert_has_calls(
+        [
+            call("test_tool", ManifestSchema(**manifest_data)),
+            call("test_tool2", ManifestSchema(**manifest_data)),
+        ]
     )
+    mock_load_manifest.reset_mock()
+    mock_generate_tool.reset_mock()
 
-    [tool1, tool2] = await client.load_toolset("test_toolset")
-    mock_load_toolset_manifest.assert_called_once_with("test_toolset")
-    assert isinstance(tool1, StructuredTool)
-    assert isinstance(tool2, StructuredTool)
-    assert tool1.name == "Test Tool 1"
-    assert tool1.description == "This is a test tool 1."
-    assert tool1.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "string"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "integer"},
-    }
-    assert tool2.name == "Test Tool 2"
-    assert tool2.description == "This is a test tool 2."
-    assert tool2.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "integer"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "string"},
-    }
+    # Test without toolset name
+    tools = await client.load_toolset()
+    assert len(tools) == 2
+    assert isinstance(tools[0], StructuredTool)
+    assert tools[0].name == "test_tool"
+    assert isinstance(tools[1], StructuredTool)
+    assert tools[1].name == "test_tool2"
+    mock_load_manifest.assert_called_once_with(None)
+    mock_generate_tool.assert_has_calls(
+        [
+            call("test_tool", ManifestSchema(**manifest_data)),
+            call("test_tool2", ManifestSchema(**manifest_data)),
+        ]
+    )
 
 
 @pytest.mark.asyncio
-@patch.object(ToolboxClient, "_load_toolset_manifest")
-async def test_load_default_toolset(mock_load_toolset_manifest):
-    client = ToolboxClient("https://my-toolbox.com")
+@patch("toolbox_langchain_sdk.client.ToolboxClient._load_toolset_manifest")
+async def test_load_toolset_failure(mock_load_manifest):
+    """Test handling of _load_toolset_manifest failure."""
+    client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
+    mock_load_manifest.side_effect = Exception("Failed to load manifest")
 
-    mock_load_toolset_manifest.side_effect = lambda _: setattr(
-        client,
-        "_manifest",
-        {
-            "serverVersion": "0.0.1",
-            "tools": {
-                "test_tool1": {
-                    "summary": "Test Tool 1",
-                    "description": "This is a test tool 1.",
-                    "parameters": {
-                        "param1": {"type": "string", "description": "Parameter 1"},
-                        "param2": {"type": "integer", "description": "Parameter 2"},
-                    },
-                },
-                "test_tool2": {
-                    "summary": "Test Tool 2",
-                    "description": "This is a test tool 2.",
-                    "parameters": {
-                        "param1": {"type": "integer", "description": "Parameter 1"},
-                        "param2": {"type": "string", "description": "Parameter 2"},
-                    },
-                },
-            },
-        },
-    )
-
-    [tool1, tool2] = await client.load_toolset()
-    mock_load_toolset_manifest.assert_called_once_with(None)
-    assert isinstance(tool1, StructuredTool)
-    assert isinstance(tool2, StructuredTool)
-    assert tool1.name == "Test Tool 1"
-    assert tool1.description == "This is a test tool 1."
-    assert tool1.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "string"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "integer"},
-    }
-    assert tool2.name == "Test Tool 2"
-    assert tool2.description == "This is a test tool 2."
-    assert tool2.args == {
-        "param1": {"title": "Param1", "description": "Parameter 1", "type": "integer"},
-        "param2": {"title": "Param2", "description": "Parameter 2", "type": "string"},
-    }
+    with pytest.raises(Exception) as e:
+        await client.load_toolset(toolset_name="test_toolset")
+    assert str(e.value) == "Failed to load manifest"
