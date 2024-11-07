@@ -145,7 +145,7 @@ is, which source it affects, what parameters it takes, etc.
 ```yaml
 tools:
     get_flight_by_id:
-        kind: cloud-sql-postgres-generic
+        kind: postgres-sql
         source: my-pg-instance
         description: >
             Use this tool to list all airports matching search criteria. Takes 
