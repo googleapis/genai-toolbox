@@ -25,6 +25,7 @@ tools:
             description: Parameter 2
 """
 
+
 @pytest.fixture(scope="module")
 def mock_response():
     return aiohttp.ClientResponse(
@@ -39,13 +40,12 @@ def mock_response():
         loop=asyncio.get_event_loop(),
     )
 
+
 @pytest.mark.asyncio
 @patch("aiohttp.ClientSession.get")
 async def test_load_yaml(mock_get, mock_response):
     mock_response.raise_for_status = Mock()
-    mock_response.text = AsyncMock(
-        return_value=MOCK_MANIFEST
-    )
+    mock_response.text = AsyncMock(return_value=MOCK_MANIFEST)
 
     mock_get.return_value = mock_response
     session = aiohttp.ClientSession()
@@ -62,6 +62,7 @@ async def test_load_yaml(mock_get, mock_response):
         ParameterSchema(name="param1", type="string", description="Parameter 1"),
         ParameterSchema(name="param2", type="integer", description="Parameter 2"),
     ]
+
 
 @pytest.mark.asyncio
 @patch("aiohttp.ClientSession.get")
