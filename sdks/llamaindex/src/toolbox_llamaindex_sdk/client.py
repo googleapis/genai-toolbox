@@ -79,7 +79,6 @@ class ToolboxClient:
 
         Args:
             tool_name: The name of the tool to load.
-                Default: None. If not provided, then all the tools are loaded.
 
         Returns:
             A tool loaded from the Toolbox
