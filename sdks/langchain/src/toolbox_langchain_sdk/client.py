@@ -81,7 +81,7 @@ class ToolboxClient:
         Loads the tool, with the given tool name, from the Toolbox service.
 
         Args:
-            toolset_name: The name of the toolset to load.
+            tool_name: The name of the tool to load.
                 Default: None. If not provided, then all the tools are loaded.
 
         Returns:
