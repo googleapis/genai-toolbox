@@ -99,9 +99,30 @@ Once you've installed the Toolbox LangChain SDK, you can load tools:
 
 ```python
 from toolbox_langchain_sdk import ToolboxClient
+from aiohttp import ClientSession
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1/")
+session = ClientSession()
+client = ToolboxClient("http://127.0.0.1:5000", session)
+
+# these tools can be passed to your application! 
+tools = await client.load_toolset()
+```
+
+</details>
+
+<details open>
+
+<summary>LlamaIndex</summary>
+Once you've installed the Toolbox LlamaIndex SDK, you can load tools: 
+
+```python
+from toolbox_llamaindex_sdk import ToolboxClient
+from aiohttp import ClientSession
+
+# update the url to point to your server
+session = ClientSession()
+client = ToolboxClient("http://127.0.0.1:5000", session)
 
 # these tools can be passed to your application! 
 tools = await client.load_toolset()
