@@ -24,7 +24,7 @@ applications, enabling advanced orchestration and interaction with GenAI models.
 ## Installation
 
 > [!IMPORTANT]
-> This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](#DEVELOPER.md) (up to step 3).
+> This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](DEVELOPER.md) (up to step 3).
 
 You can install the Toolbox SDK for LangChain using `pip`.
 
