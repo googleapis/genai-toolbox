@@ -60,7 +60,7 @@ Notes:
         --role roles/secretmanager.secretAccessor
     ```
 
-1. Grant additional permission to service account that are specific towards source:
+1. Grant additional permission to service account that are specific towards source, e.g.:
     - [AlloyDB for PostgreSQL](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/alloydb-pg.md#iam-identity)
     - [Cloud SQL for PostgreSQL](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#iam-identity)
 
