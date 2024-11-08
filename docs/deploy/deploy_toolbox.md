@@ -135,6 +135,10 @@ Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
 
 Next, we will use Toolbox with client SDK:
 
+1. Below are list of Client SDKs that are supported:
+
+    - LangChain / LangGraph
+
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
     ```bash
