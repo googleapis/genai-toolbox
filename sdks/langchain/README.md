@@ -40,8 +40,9 @@ from toolbox_langchain_sdk import ToolboxClient
 toolbox = ToolboxClient("http://localhost:5000")
 ```
 
-> [!TIP] You can also pass your own `ClientSession` so that the `ToolboxClient`
-> can reuse the same session.
+> [!TIP]
+> You can also pass your own `ClientSession` so that the `ToolboxClient` can
+> reuse the same session.
 > ```
 > async with ClientSession() as session:
 >   client = ToolboxClient(http://localhost:5000, session)
