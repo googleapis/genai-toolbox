@@ -18,7 +18,6 @@ applications, enabling advanced orchestration and interaction with GenAI models.
         - [Represent Tools as Nodes](#represent-tools-as-nodes)
         - [Connect Tools with LLM](#connect-tools-with-llm)
     - [Manual usage](#manual-usage)
-    - [Development](#development)
 
 <!-- /TOC -->
 
@@ -145,24 +144,3 @@ You can also execute a tool manually using the `arun` method.
 ```python
 result = await tools[0].arun({ "name": "Alice", "age": 30 })
 ```
-
-## Development
-
-Setting up a Development Environment:
-
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/googleapis/genai-toolbox.git
-    ```
-1. Navigate to the SDK directory:
-    ```bash
-    cd genai-toolbox/sdks/langchain
-    ```
-1. Install the SDK and test dependencies:
-    ```bash
-    pip install -e .[test]
-    ```
-1. Run tests and/or contribute to the SDK's development.
-    ```bash
-    pytest
-    ```
