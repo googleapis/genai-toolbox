@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional
 
 from aiohttp import ClientSession
@@ -8,16 +9,41 @@ from .utils import ManifestSchema, _invoke_tool, _load_yaml, _schema_to_model
 
 
 class ToolboxClient:
-    def __init__(self, url: str, session: ClientSession):
+    def __init__(self, url: str, session: Optional[ClientSession] = None):
         """
         Initializes the ToolboxClient for the Toolbox service at the given URL.
 
         Args:
             url: The base URL of the Toolbox service.
             session: The HTTP client session.
+                Default: None
         """
         self._url: str = url
-        self._session = session
+
+        if session:
+            self._is_session_managed: bool = False
+            self._session: ClientSession = session
+        else:
+            self._is_session_managed: bool = True
+            self._session: ClientSession = ClientSession()
+
+    async def close(self) -> None:
+        """
+        Close the Toolbox client and its tools.
+        """
+        # We check whether _is_session_managed is set or not since we do not
+        # want to close the session in case the user had passed their own
+        # ClientSession object, since then we expect the user to be owning its
+        # lifecycle.
+        if self._session and self._is_session_managed:
+            await self._session.close()
+
+    def __del__(self):
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(self.close())
+        else:
+            loop.run_until_complete(self.close()) 
 
     async def _load_tool_manifest(self, tool_name: str) -> ManifestSchema:
         """

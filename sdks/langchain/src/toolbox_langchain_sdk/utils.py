@@ -1,4 +1,4 @@
-from typing import Any, Type, Optional
+from typing import Any, Optional, Type
 
 import yaml
 from aiohttp import ClientSession
