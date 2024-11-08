@@ -115,7 +115,7 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
 
 ## Connecting to Cloud Run
 
-Next, we will use gcloud to authenticate requests to our Cloud Run instance:
+Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
 
 1. Run the `run services proxy` to proxy connections to Cloud Run:
 
