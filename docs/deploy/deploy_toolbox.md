@@ -131,7 +131,7 @@ Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
     curl http://127.0.0.1:8080
     ``` 
 
-## Connecting with client SDK
+## Connecting with Toolbox Client SDK
 
 Next, we will use Toolbox with client SDK:
 
