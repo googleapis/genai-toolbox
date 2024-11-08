@@ -4,8 +4,8 @@ This SDK allows you to seamlessly integrate the functionalities of
 [Toolbox](https://github.com/googleapis/genai-toolbox) into your LLM
 applications, enabling advanced orchestration and interaction with GenAI models.
 
-> [!NOTE] Currently the SDK only supports
-> [LangChain](https://python.langchain.com/docs/introduction/).
+> [!NOTE]
+> Currently the SDK only supports [LangChain](https://python.langchain.com/docs/introduction/).
 
 <!-- TOC -->
 
@@ -21,18 +21,16 @@ applications, enabling advanced orchestration and interaction with GenAI models.
 
 <!-- /TOC -->
 
-
 ## Installation
+
+> [!IMPORTANT]
+> This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](#DEVELOPER.md) (up to step 3).
 
 You can install the Toolbox SDK for LangChain using `pip`.
 
 ```bash
 pip install toolbox-langchain-sdk
 ```
-
-> [!IMPORTANT] This SDK is not yet available on PyPI. For now, install it from
-> source by following these [installation instructions](#development) (up to
-> step 3).
 
 ## Usage
 
