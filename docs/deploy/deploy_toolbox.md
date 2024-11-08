@@ -138,6 +138,7 @@ Next, we will use Toolbox with client SDK:
 1. Below are list of Client SDKs that are supported:
 
     - LangChain / LangGraph
+    - LlamaIndex
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 

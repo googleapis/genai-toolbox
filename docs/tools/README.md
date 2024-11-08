@@ -7,7 +7,7 @@ file. Typically, a tool will require a source to act on:
 ```yaml
 tools:
  search_flights_by_number:
-    kind: cloud-sql-postgres-generic
+    kind: postgres-sql
     source: my-pg-instance
     statement: |
       SELECT * FROM flights
