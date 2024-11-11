@@ -22,7 +22,7 @@ steps:
     env:
       - "PROJECT_ID=$PROJECT_ID"
       - "INSTANCE_ID=$_INSTANCE_ID"
-      - "DATABASE_ID=$_DATABASE_ID"
+      - "CLOUD_SQL_DATABASE_ID=$_DATABASE_ID"
       - "REGION=$_REGION"
     secretEnv: ["cloud_sql_pg_user", "cloud_sql_pg_pass"]
 
