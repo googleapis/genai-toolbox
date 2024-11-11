@@ -36,13 +36,15 @@
     - Cloud Run Developer (roles/run.developer)
     - Service Account User role (roles/iam.serviceAccountUser)
 
-Notes:
-* If you are under a domain restriction organization policy
+> [!NOTE]
+> If you are under a domain restriction organization policy
   [restricting](https://cloud.google.com/run/docs/authenticating/public#domain-restricted-sharing)
   unauthenticated invocations for your project, you will need to access your
   deployed service as described under [Testing private
   services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
-* If you are using VPC-based sources (such as AlloyDB), make sure your Cloud Run service and the database are in the same VPC network.
+
+> [!NOTE]  
+> If you are using VPC-based sources (such as AlloyDB), make sure your Cloud Run service and the database are in the same VPC network.
 
 ## Create a service account
 
