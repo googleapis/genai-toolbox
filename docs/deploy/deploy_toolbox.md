@@ -17,9 +17,9 @@
     gcloud config set project $PROJECT_ID
     ```
 
-1. Make sure you've setup and initialize your database.
+1. Make sure you've set up and initialized your database.
 
-1. You must have the following APIs Enabled:
+1. You must have the following APIs enabled:
 
     ```bash
     gcloud services enable run.googleapis.com \
@@ -62,7 +62,7 @@
         --role roles/secretmanager.secretAccessor
     ```
 
-1. Grant additional permission to service account that are specific towards source, e.g.:
+1. Grant additional permissions to the service account that are specific to the source, e.g.:
     - [AlloyDB for PostgreSQL](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/alloydb-pg.md#iam-identity)
     - [Cloud SQL for PostgreSQL](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#iam-identity)
 
@@ -137,7 +137,7 @@ Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
 
 Next, we will use Toolbox with client SDK:
 
-1. Below are list of Client SDKs that are supported:
+1. Below is a list of Client SDKs that are supported:
 
     - LangChain / LangGraph
     - LlamaIndex
@@ -148,7 +148,7 @@ Next, we will use Toolbox with client SDK:
     gcloud run services describe toolbox --format 'value(status.url)'
     ```
 
-1. Import and initialize the toolbox client with url retrieved above:
+1. Import and initialize the toolbox client with the URL retrieved above:
 
     ```bash
     from toolbox_langchain_sdk import ToolboxClient
