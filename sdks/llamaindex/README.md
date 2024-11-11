@@ -31,11 +31,9 @@ Import and initialize the toolbox client.
 
 ```python
 from toolbox_llamaindex_sdk import ToolboxClient
-from aiohttp import ClientSession
 
-session = ClientSession()
 # Replace with your Toolbox service's URL
-toolbox = ToolboxClient("http://127.0.0.1:5000", session)
+toolbox = ToolboxClient("http://127.0.0.1:5000")
 ```
 
 ## Load a toolset
