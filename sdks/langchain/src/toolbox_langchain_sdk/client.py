@@ -39,15 +39,20 @@ class ToolboxClient:
             await self._session.close()
 
     def __del__(self):
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            loop.create_task(self.close())
-        else:
-            loop.run_until_complete(self.close()) 
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(self.close())
+            else:
+                loop.run_until_complete(self.close())
+        except Exception:
+            # We "pass" assuming that the exception is thrown because  the event loop is no longer running, but at that point the Session should have been closed already anyway.
+            pass
 
     async def _load_tool_manifest(self, tool_name: str) -> ManifestSchema:
         """
-        Fetches and parses the YAML manifest for the given tool from the Toolbox service.
+        Fetches and parses the YAML manifest for the given tool from the Toolbox
+        service.
 
         Args:
             tool_name: The name of the tool to load.
@@ -66,7 +71,8 @@ class ToolboxClient:
 
         Args:
             toolset_name: The name of the toolset to load.
-                Default: None. If not provided, then all the available tools are loaded.
+                Default: None. If not provided, then all the available tools are
+                loaded.
 
         Returns:
             The parsed Toolbox manifest.
@@ -78,7 +84,8 @@ class ToolboxClient:
         self, tool_name: str, manifest: ManifestSchema
     ) -> StructuredTool:
         """
-        Creates a StructuredTool object and a dynamically generated BaseModel for the given tool.
+        Creates a StructuredTool object and a dynamically generated BaseModel
+        for the given tool.
 
         Args:
             tool_name: The name of the tool to generate.
@@ -119,7 +126,8 @@ class ToolboxClient:
         self, toolset_name: Optional[str] = None
     ) -> list[StructuredTool]:
         """
-        Loads tools from the Toolbox service, optionally filtered by toolset name.
+        Loads tools from the Toolbox service, optionally filtered by toolset
+        name.
 
         Args:
             toolset_name: The name of the toolset to load.
