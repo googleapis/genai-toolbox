@@ -29,7 +29,7 @@ pip install toolbox-llamaindex-sdk
 
 > [!IMPORTANT]
 > This SDK is not yet available on PyPI. For now, install it from source by
-following these [instructions](/DEVELOPER.md#developing-toolbox-SDKs).
+following these [instructions](sdks/DEVELOPER.md#setting-up-a-development-environment).
 
 ## Usage
 
