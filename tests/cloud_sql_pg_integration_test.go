@@ -44,15 +44,8 @@ func TestCloudsqlConnection(t *testing.T) {
 			Kind:        cloudsqlpg.SourceKind,
 			Source:      "my-pg-instance",
 			Description: "description1",
-			Statement:   "SELECT * FROM postgres",
+			Statement:   "SELECT * FROM test",
 			Parameters:  tools.Parameters{tools.NewStringParameter("str-param", "String parameter")},
-		},
-		"tool2": postgressql.Config{
-			Name:        "tool2",
-			Kind:        cloudsqlpg.SourceKind,
-			Source:      "my-pg-instance",
-			Description: "description2",
-			Parameters:  tools.Parameters{tools.NewIntParameter("int-param", "Integer parameter")},
 		},
 	}
 
