@@ -3,6 +3,7 @@ from typing import Optional
 
 from aiohttp import ClientSession
 from llama_index.core.tools import FunctionTool
+from pydantic import BaseModel
 
 from .utils import ManifestSchema, _invoke_tool, _load_yaml, _schema_to_model
 
@@ -20,21 +21,21 @@ class ToolboxClient:
         self._url: str = url
 
         if session:
-            self._is_session_managed: bool = False
+            self._should_close_session: bool = False
             self._session: ClientSession = session
         else:
-            self._is_session_managed: bool = True
+            self._should_close_session: bool = True
             self._session: ClientSession = ClientSession()
 
     async def close(self) -> None:
         """
         Close the Toolbox client and its tools.
         """
-        # We check whether _is_session_managed is set or not since we do not
+        # We check whether _should_close_session is set or not since we do not
         # want to close the session in case the user had passed their own
         # ClientSession object, since then we expect the user to be owning its
         # lifecycle.
-        if self._session and self._is_session_managed:
+        if self._session and self._should_close_session:
             await self._session.close()
 
     def __del__(self):
@@ -85,7 +86,7 @@ class ToolboxClient:
             The generated tool.
         """
         tool_schema = manifest.tools[tool_name]
-        tool_model = _schema_to_model(
+        tool_model: BaseModel = _schema_to_model(
             model_name=tool_name, schema=tool_schema.parameters
         )
 
