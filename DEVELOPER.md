@@ -115,16 +115,10 @@ Setting up a Development Environment:
     git clone https://github.com/googleapis/genai-toolbox.git
     ```
 
-1. Navigate to the SDK directory:
+1. Navigate to the SDK directory, e.g.:
 
     ```bash
     cd genai-toolbox/sdks/langchain
-    ```
-
-    or
-
-    ```bash
-    cd genai-toolbox/sdks/llamaindex
     ```
 
 1. Install the SDK and test dependencies:
