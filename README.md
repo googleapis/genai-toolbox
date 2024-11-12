@@ -99,6 +99,7 @@ application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
 <summary>LangChain / LangGraph</summary>
+
 Once you've installed the Toolbox [LangChain SDK][langchain-sdk], you can load 
 tools: 
 
@@ -118,6 +119,7 @@ tools = await client.load_toolset()
 
 <details open>
 <summary>LlamaIndex</summary>
+
 Once you've installed the Toolbox [LlamaIndex SDK][llamaindex-sdk], you can load 
 tools: 
 
