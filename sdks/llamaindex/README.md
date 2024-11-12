@@ -14,6 +14,7 @@ models.
 - [Installation](#installation)
 - [Usage](#usage)
 - [Load a toolset](#load-a-toolset)
+- [Load a single tool](#load-a-single-tool)
 - [Use with LlamaIndex](#use-with-llamaindex)
 - [Manual usage](#manual-usage)
 
@@ -44,7 +45,7 @@ toolbox = ToolboxClient("http://127.0.0.1:5000")
 
 ## Load a toolset
 
-You can load a toolsets, that are collections of related tools.
+You can load a toolset, a collection of related tools.
 
 ```python
 # Load all tools
@@ -52,6 +53,14 @@ tools = await toolbox.load_toolset()
 
 # Load a specific toolset
 tools = await toolbox.load_toolset("my-toolset")
+```
+
+## Load a single tool
+
+You can also load a single tool.
+
+```python
+tool = await toolbox.load_tool("my-tool")
 ```
 
 ## Use with LlamaIndex
