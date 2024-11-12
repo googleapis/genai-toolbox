@@ -46,7 +46,9 @@ class ToolboxClient:
             else:
                 loop.run_until_complete(self.close())
         except Exception:
-            # We "pass" assuming that the exception is thrown because  the event loop is no longer running, but at that point the Session should have been closed already anyway.
+            # We "pass" assuming that the exception is thrown because  the event
+            # loop is no longer running, but at that point the Session should
+            # have been closed already anyway.
             pass
 
     async def _load_tool_manifest(self, tool_name: str) -> ManifestSchema:
