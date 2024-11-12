@@ -19,13 +19,8 @@ class ToolboxClient:
                 Default: None
         """
         self._url: str = url
-
-        if session:
-            self._should_close_session: bool = False
-            self._session: ClientSession = session
-        else:
-            self._should_close_session: bool = True
-            self._session: ClientSession = ClientSession()
+        self._should_close_session: bool = session != None
+        self._session: ClientSession = session or ClientSession()
 
     async def close(self) -> None:
         """
@@ -46,7 +41,9 @@ class ToolboxClient:
             else:
                 loop.run_until_complete(self.close())
         except Exception:
-            # We "pass" assuming that the exception is thrown because  the event loop is no longer running, but at that point the Session should have been closed already anyway.
+            # We "pass" assuming that the exception is thrown because  the event
+            # loop is no longer running, but at that point the Session should
+            # have been closed already anyway.
             pass
 
     async def _load_tool_manifest(self, tool_name: str) -> ManifestSchema:
