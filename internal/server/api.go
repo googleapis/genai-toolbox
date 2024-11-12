@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -28,12 +29,14 @@ func apiRouter(s *Server) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
-	r.Get("/toolset/", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
+	r.Get("/toolset", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 
 	r.Route("/tool/{toolName}", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) { toolGetHandler(s, w, r) })
 		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) { toolInvokeHandler(s, w, r) })
 	})
 
@@ -49,6 +52,26 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.JSON(w, r, toolset.Manifest)
+}
+
+// toolGetHandler handles requests for a single Tool.
+func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	toolName := chi.URLParam(r, "toolName")
+	tool, ok := s.tools[toolName]
+	if !ok {
+		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+		return
+	}
+	// TODO: this can be optimized later with some caching
+	m := tools.ToolsetManifest{
+		ServerVersion: s.conf.Version,
+		ToolsManifest: map[string]tools.Manifest{
+			toolName: tool.Manifest(),
+		},
+	}
+
+	render.JSON(w, r, m)
 }
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
