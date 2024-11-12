@@ -1,4 +1,4 @@
-from typing import Any, Type, Optional
+from typing import Any, Optional, Type
 
 import yaml
 from aiohttp import ClientSession
@@ -103,8 +103,7 @@ async def _invoke_tool(
     url = f"{url}/api/tool/{tool_name}/invoke"
     async with session.post(url, json=_convert_none_to_empty_string(data)) as response:
         response.raise_for_status()
-        json_response = await response.json()
-        return json_response
+        return await response.json()
 
 
 # TODO: Remove this temporary fix once optional fields are supported by Toolbox.

@@ -14,6 +14,7 @@ models.
 - [Installation](#installation)
 - [Usage](#usage)
 - [Load a toolset](#load-a-toolset)
+- [Load a single tool](#load-a-single-tool)
 - [Use with LlamaIndex](#use-with-llamaindex)
 - [Manual usage](#manual-usage)
 
@@ -29,7 +30,7 @@ pip install toolbox-llamaindex-sdk
 
 > [!IMPORTANT]
 > This SDK is not yet available on PyPI. For now, install it from source by
-following these [instructions](sdks/DEVELOPER.md#setting-up-a-development-environment).
+following these [instructions](DEVELOPER.md#setting-up-a-development-environment).
 
 ## Usage
 
@@ -42,9 +43,17 @@ from toolbox_llamaindex_sdk import ToolboxClient
 toolbox = ToolboxClient("http://127.0.0.1:5000")
 ```
 
+> [!TIP]
+> You can also pass your own `ClientSession` so that the `ToolboxClient` can
+> reuse the same session.
+> ```
+> async with ClientSession() as session:
+>   client = ToolboxClient(http://localhost:5000, session)
+> ```
+
 ## Load a toolset
 
-You can load a toolsets, that are collections of related tools.
+You can load a toolset, a collection of related tools.
 
 ```python
 # Load all tools
@@ -52,6 +61,14 @@ tools = await toolbox.load_toolset()
 
 # Load a specific toolset
 tools = await toolbox.load_toolset("my-toolset")
+```
+
+## Load a single tool
+
+You can also load a single tool.
+
+```python
+tool = await toolbox.load_tool("my-tool")
 ```
 
 ## Use with LlamaIndex
