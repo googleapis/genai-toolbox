@@ -80,7 +80,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
 	})
 
-	// initalize and validate the sources
+	// initialize and validate the sources
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
@@ -91,7 +91,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	}
 	log.Info(fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
-	// initalize and validate the sources
+	// initialize and validate the auth sources
 	authSourcesMap := make(map[string]auth.AuthSource)
 	for name, sc := range cfg.AuthSourceConfigs {
 		a, err := sc.Initialize()
