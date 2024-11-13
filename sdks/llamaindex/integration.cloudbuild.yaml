@@ -16,7 +16,7 @@ steps:
   - id: Install module (and test requirements)
     name: python:${_VERSION}
     entrypoint: pip
-    args: ["install", ".[test]", "--user"]
+    args: ["install", "sdks/llamaindex[test]", "--user"]
   - id: Run integration tests
     name: python:${_VERSION}
     entrypoint: /bin/bash
