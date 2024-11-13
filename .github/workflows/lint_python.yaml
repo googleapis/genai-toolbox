@@ -57,7 +57,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install test requirements
-        run: pip install mypy=1.13.0 black==24.10.0 isort==5.13.2
+        run: pip install mypy==1.13.0 black==24.10.0 isort==5.13.2
 
       - name: Run linters
         run: |
