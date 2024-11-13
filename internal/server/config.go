@@ -16,6 +16,7 @@ package server
 import (
 	"fmt"
 
+	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
@@ -34,6 +35,8 @@ type ServerConfig struct {
 	Port int
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
+	// AuthSourceConfigs defines what sources of authentication are available for tools.
+	AuthSourceConfigs AuthSourceConfigs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
@@ -85,6 +88,36 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
 		}
 
+	}
+	return nil
+}
+
+// AuthSourceConfigs is a type used to allow unmarshal of the data authSource config map
+type AuthSourceConfigs map[string]authSources.AuthSourceConfig
+
+// validate interface
+var _ yaml.Unmarshaler = &SourceConfigs{}
+
+func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
+	*c = make(AuthSourceConfigs)
+	// Parse the 'kind' fields for each authSource
+	var raw map[string]yaml.Node
+	if err := node.Decode(&raw); err != nil {
+		return err
+	}
+
+	for _, n := range raw {
+		var k struct {
+			Kind string `yaml:"kind"`
+		}
+		err := n.Decode(&k)
+		if err != nil {
+			return fmt.Errorf("missing 'kind' field for %q", k)
+		}
+		switch k.Kind {
+		default:
+			return fmt.Errorf("%q is not a valid kind of auth source", k.Kind)
+		}
 	}
 	return nil
 }

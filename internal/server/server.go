@@ -24,18 +24,19 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf ServerConfig
-	root chi.Router
-
-	sources  map[string]sources.Source
-	tools    map[string]tools.Tool
-	toolsets map[string]tools.Toolset
+	conf        ServerConfig
+	root        chi.Router
+	sources     map[string]sources.Source
+	authSources map[string]authSources.AuthSource
+	tools       map[string]tools.Tool
+	toolsets    map[string]tools.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -59,6 +60,17 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 	}
 	fmt.Printf("Initalized %d sources.\n", len(sourcesMap))
 
+	// initalize and validate the sources
+	authSourcesMap := make(map[string]authSources.AuthSource)
+	for name, sc := range cfg.AuthSourceConfigs {
+		a, err := sc.Initialize()
+		if err != nil {
+			return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+		}
+		authSourcesMap[name] = a
+	}
+	fmt.Printf("Initalized %d authsources.\n", len(authSourcesMap))
+
 	// initalize and validate the tools
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
@@ -79,6 +91,7 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		cfg.ToolsetConfigs = make(ToolsetConfigs)
 	}
 	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+
 	// initalize and validate the toolsets
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
@@ -91,11 +104,12 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 	fmt.Printf("Initalized %d toolsets.\n", len(toolsetsMap))
 
 	s := &Server{
-		conf:     cfg,
-		root:     r,
-		sources:  sourcesMap,
-		tools:    toolsMap,
-		toolsets: toolsetsMap,
+		conf:        cfg,
+		root:        r,
+		sources:     sourcesMap,
+		authSources: authSourcesMap,
+		tools:       toolsMap,
+		toolsets:    toolsetsMap,
 	}
 
 	if router, err := apiRouter(s); err != nil {

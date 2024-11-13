@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/authSources/googleAuth"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -168,11 +169,12 @@ func TestToolFileFlag(t *testing.T) {
 
 func TestParseToolFile(t *testing.T) {
 	tcs := []struct {
-		description  string
-		in           string
-		wantSources  server.SourceConfigs
-		wantTools    server.ToolConfigs
-		wantToolsets server.ToolsetConfigs
+		description     string
+		in              string
+		wantSources     server.SourceConfigs
+		wantAuthSources server.AuthSourceConfigs
+		wantTools       server.ToolConfigs
+		wantToolsets    server.ToolsetConfigs
 	}{
 		{
 			description: "basic example",
@@ -184,6 +186,10 @@ func TestParseToolFile(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
+			authSources:
+				my-google-service:
+					kind: google
+					client_id: my-client-id
 			tools:
 				example_tool:
 					kind: postgres-sql
@@ -209,6 +215,13 @@ func TestParseToolFile(t *testing.T) {
 					Database: "my_db",
 				},
 			},
+			wantAuthSources: server.AuthSourceConfigs{
+				"my-google-service": googleAuth.Config{
+					Name:     "my-pg-instance",
+					Kind:     cloudsqlpgsrc.SourceKind,
+					ClientID: "my-client-id",
+				},
+			},
 			wantTools: server.ToolConfigs{
 				"example_tool": postgressql.Config{
 					Name:        "example_tool",
@@ -231,12 +244,15 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			gotSources, gotTools, gotToolsets, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			gotSources, gotAuthSources, gotTools, gotToolsets, err := parseToolsFile(testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
 			if diff := cmp.Diff(tc.wantSources, gotSources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantAuthSources, gotAuthSources); diff != "" {
+				t.Fatalf("incorrect authsources parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantTools, gotTools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
