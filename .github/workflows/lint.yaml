@@ -22,7 +22,7 @@ on:
 permissions: read-all
 
 jobs:
-  lint_go:
+  lint:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     name: lint
     runs-on: ubuntu-latest
