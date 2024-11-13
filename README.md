@@ -1,19 +1,23 @@
 ![toolbox_logo](logo.png)
-# 🧰 Project Toolbox
+# 🧰 Toolbox
 
 > [!CAUTION]
-> Project Toolbox is experimental and not an official Google product. This is 
+> Toolbox is experimental and not an official Google product. This is 
 > an early access project, intended to be shared under NDA to gather feedback
 > validate direction. You should not share or discuss this project with anyone 
 > not under NDA. 
 
-Project Toolbox is an open source server that enables developers to build
+Toolbox is an open source server that enables developers to build
 production-grade, agent-based generative AI applications that connect to
-databases via tools. 
+databases via tools. It enables you to create database-focused tools
+easier, faster, and more securely by handling the complexities around
+connection pooling, authentication, and more. 
 
-Project Toolbox sits between your application's orchestration framework and your
-database, providing a control plane for both managing and invoking tools. It
-enables you to create database-focused tools easier, faster, and more securely. 
+Toolbox also helps simplifies the management of your tools by allowing you to
+add, remove, or update tools without necessarily redeploying your application.
+It sits between your application's orchestration framework (such as LangChain
+and LlamaIndex) and your database, providing a control plane that is used to
+modify, distribute, and invoke tools.
 
 ![architecture](architecture.png)
 
@@ -79,8 +83,8 @@ go install github.com/googleapis/genai-toolbox@v0.0.1
 <!-- {x-release-please-end} -->
 
 ### Running the server
-[Configure](#configuration) a `tools.yaml` to define your tools, and then execute `toolbox` to
-start the server:
+[Configure](#configuration) a `tools.yaml` to define your tools, and then 
+execute `toolbox` to start the server:
 
 ```sh
 ./toolbox --tools_file "tools.yaml"
@@ -95,7 +99,9 @@ application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
 <summary>LangChain / LangGraph</summary>
-Once you've installed the Toolbox LangChain SDK, you can load tools: 
+
+Once you've installed the Toolbox [LangChain SDK][langchain-sdk], you can load 
+tools: 
 
 ```python
 from toolbox_langchain_sdk import ToolboxClient
@@ -107,12 +113,15 @@ client = ToolboxClient("http://127.0.0.1:5000")
 tools = await client.load_toolset()
 ```
 
+[langchain-sdk]: ./sdks/langchain/README.md
+
 </details>
 
 <details open>
-
 <summary>LlamaIndex</summary>
-Once you've installed the Toolbox LlamaIndex SDK, you can load tools: 
+
+Once you've installed the Toolbox [LlamaIndex SDK][llamaindex-sdk], you can load 
+tools: 
 
 ```python
 from toolbox_llamaindex_sdk import ToolboxClient
@@ -123,6 +132,8 @@ client = ToolboxClient("http://127.0.0.1:5000")
 # these tools can be passed to your application! 
 tools = await client.load_toolset()
 ```
+
+[llamaindex-sdk]: ./sdks/llamaindex/README.md
 
 </details>
 

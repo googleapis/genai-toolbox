@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional
+from typing import Optional, Type
 
 from aiohttp import ClientSession
 from llama_index.core.tools import FunctionTool
@@ -90,7 +90,7 @@ class ToolboxClient:
             The generated tool.
         """
         tool_schema = manifest.tools[tool_name]
-        tool_model: BaseModel = _schema_to_model(
+        tool_model: Type[BaseModel] = _schema_to_model(
             model_name=tool_name, schema=tool_schema.parameters
         )
 
