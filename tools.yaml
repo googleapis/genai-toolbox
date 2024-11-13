@@ -1,0 +1,33 @@
+sources:
+  my-pg-instance:
+    kind: cloud-sql-postgres
+    project: duwenxin-space
+    region: us-central1
+    instance: ev-recommendation
+    database: postgres
+    user: postgres
+    password: postgres
+
+authSources:
+  my-google-auth:
+    kind: google
+    client_id: 32555940559.apps.googleusercontent.com
+
+tools:
+  my-tool:
+    kind: postgres-sql
+    source: my-pg-instance
+    description: my test tool
+    statement: |
+      SELECT * FROM user_data WHERE email = $1;
+    parameters:
+      - name: email
+        type: string
+        description: email
+        authSources:
+          - name: my-google-auth
+            field: sub
+toolsets:
+  my_toolset:
+    - my-tool
+
