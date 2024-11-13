@@ -131,7 +131,6 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        print("Made changes to see if basic test is run.")
         tools: list[FunctionTool] = []
         manifest: ManifestSchema = await self._load_toolset_manifest(toolset_name)
         for tool_name in manifest.tools:
