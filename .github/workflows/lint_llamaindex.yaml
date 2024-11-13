@@ -83,4 +83,4 @@ jobs:
             ${{ runner.os }}-mypy-
 
       - name: Run type-check
-        run: mypy --install-types --non-interactive sdks/llamaindex
+        run: mypy --install-types --non-interactive --explicit-package-bases sdks/llamaindex
