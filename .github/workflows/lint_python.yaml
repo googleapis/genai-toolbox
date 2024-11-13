@@ -12,27 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: lint
+name: Lint
 on:
   pull_request:
-  pull_request_target:
-    types: [labeled]
-
-# Declare default permissions as read only.
-permissions: read-all
+    paths-ignore: # Changes to the paths list need to be reflected in lint_fallback.yml
+      - "*.md"
+      - ".kokoro/**"
+      - ".github/**"
 
 jobs:
-  lint:
+  lint_python:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
-    name: lint
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
     permissions:
       contents: 'read'
       issues: 'write'
       pull-requests: 'write'
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
@@ -50,23 +48,21 @@ jobs:
             } catch (e) {
               console.log('Failed to remove label. Another job may have already removed it!');
             }
-      - name: Setup Go
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
-        with:
-          go-version: "1.22"
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
+      - name: Setup Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: >
-          Verify go mod tidy. If you're reading this and the check has
-          failed, run `goimports -w . && go mod tidy && golangci-lint run`
+          python-version: "3.11"
+
+      - name: Install module (and test requirements)
+        run: pip install -e .[test]
+
+      - name: Run linters
         run: |
-          go mod tidy && git diff --exit-code
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v6.0.1
-        with:
-          version: latest
-          args: --timeout 3m
+          black --check .
+          isort --check .
+
+      - name: Run type-check
+        run: mypy --install-types --non-interactive .
