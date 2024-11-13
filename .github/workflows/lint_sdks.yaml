@@ -31,9 +31,9 @@ jobs:
       contents: 'read'
       issues: 'write'
       pull-requests: 'write'
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+    # concurrency:
+    #   group: ${{ github.workflow }}-${{ github.ref }}
+    #   # cancel-in-progress: true
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
@@ -60,15 +60,15 @@ jobs:
           python-version: "3.11"
 
       - name: Install SDK and requirements
-        run: pip install sdks/${matrix.sdk}[test]
+        run: pip install sdks/${{matrix.sdk}}[test]
 
       - name: Install test requirements
         run: pip install mypy==1.13.0 black==24.10.0 isort==5.13.2
 
       - name: Run linters
         run: |
-          black --check .
-          isort --check .
+          black --check sdks/${{matrix.sdk}}
+          isort --check sdks/${{matrix.sdk}}
 
       - name: Run type-check
-        run: mypy --install-types --non-interactive .
+        run: mypy --install-types --non-interactive sdks/${{matrix.sdk}}
