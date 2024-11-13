@@ -107,7 +107,7 @@
 
 ## Developing Toolbox SDKs
 
-Please refer to the [SDK developer guide](sdks/DEVELOPER.md)
+Please refer to the [SDK developer guide](sdks/langchain/DEVELOPER.md)
 
 ## CI/CD Details
 
