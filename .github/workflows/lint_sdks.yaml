@@ -24,9 +24,9 @@ jobs:
   lint_python:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        sdk: ['llamaindex', 'langchain']
+    # strategy:
+    #   matrix:
+    #     sdk: ['llamaindex', 'langchain']
     permissions:
       contents: 'read'
       issues: 'write'
@@ -60,15 +60,15 @@ jobs:
           python-version: "3.11"
 
       - name: Install SDK and requirements
-        run: pip install sdks/${{matrix.sdk}}[test]
+        run: pip install sdks/langchain[test] sdks/llamaindex[test]
 
       - name: Install test requirements
         run: pip install mypy==1.13.0 black==24.10.0 isort==5.13.2
 
       - name: Run linters
         run: |
-          black --check sdks/${{matrix.sdk}}
-          isort --check sdks/${{matrix.sdk}}
+          black --check .
+          isort --check .
 
       - name: Run type-check
-        run: mypy --install-types --non-interactive sdks/${{matrix.sdk}}
+        run: mypy --install-types --non-interactive .
