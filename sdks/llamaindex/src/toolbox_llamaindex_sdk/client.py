@@ -5,7 +5,9 @@ from aiohttp import ClientSession
 from llama_index.core.tools import FunctionTool
 from pydantic import BaseModel
 
-from .utils import ManifestSchema, _invoke_tool, _load_yaml, _schema_to_model
+# from .utils import ManifestSchema, _invoke_tool, _load_yaml, _schema_to_model
+from .utils import ManifestSchema, _load_yaml
+
 
 
 class ToolboxClient:
