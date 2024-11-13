@@ -22,7 +22,7 @@ steps:
     entrypoint: /bin/bash
     args:
       - "-c"
-      - python -m pytest --cov=toolbox_llamaindex_sdk --cov-config=.coveragerc tests/
+      - python -m pytest --cov=toolbox_llamaindex_sdk --cov-config=.coveragerc sdks/llamaindex/tests
     env:
       - "TOOLBOX_URL=$_TOOLBOX_URL"
 options:
