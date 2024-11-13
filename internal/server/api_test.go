@@ -52,6 +52,10 @@ func (t MockTool) Manifest() tools.Manifest {
 	return tools.Manifest{Description: t.Description, Parameters: pMs}
 }
 
+func (t MockTool) Authorized(verifiedAuthSources []string) bool {
+	return true
+}
+
 func TestToolsetEndpoint(t *testing.T) {
 	// Set up resources to test against
 	tool1 := MockTool{

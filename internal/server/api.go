@@ -91,7 +91,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	for _, aS := range s.authSources {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
-			err := fmt.Errorf("Failure getting claims from header: %w", err)
+			err := fmt.Errorf("failure getting claims from header: %w", err)
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
@@ -100,6 +100,21 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		claimsFromAuth[aS.GetName()] = claims
+	}
+
+	// Tool authorization check
+	verifiedAuthSources := make([]string, len(claimsFromAuth))
+	i := 0
+	for k := range claimsFromAuth {
+		verifiedAuthSources[i] = k
+		i++
+	}
+	// Check if any of the specified auth sources is verified
+	isAuthorized := tool.Authorized(verifiedAuthSources)
+	if !isAuthorized {
+		err := fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+		return
 	}
 
 	var data map[string]any

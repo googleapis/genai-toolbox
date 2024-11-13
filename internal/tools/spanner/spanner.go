@@ -39,12 +39,13 @@ var _ compatibleSource = &spannerdb.Source{}
 var compatibleSources = [...]string{spannerdb.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name"`
-	Kind        string           `yaml:"kind"`
-	Source      string           `yaml:"source"`
-	Description string           `yaml:"description"`
-	Statement   string           `yaml:"statement"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	Source       string           `yaml:"source"`
+	Description  string           `yaml:"description"`
+	Statement    string           `yaml:"statement"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -69,26 +70,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:       cfg.Name,
-		Kind:       ToolKind,
-		Parameters: cfg.Parameters,
-		Statement:  cfg.Statement,
-		Client:     s.SpannerClient(),
-		dialect:    s.DatabaseDialect(),
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		Name:         cfg.Name,
+		Kind:         ToolKind,
+		Parameters:   cfg.Parameters,
+		Statement:    cfg.Statement,
+		AuthRequired: cfg.AuthRequired,
+		Client:       s.SpannerClient(),
+		dialect:      s.DatabaseDialect(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
 
-func NewGenericTool(name, stmt, desc string, client *spanner.Client, dialect string, parameters tools.Parameters) Tool {
+func NewGenericTool(name string, stmt string, authRequired []string, desc string, client *spanner.Client, dialect string, parameters tools.Parameters) Tool {
 	return Tool{
-		Name:       name,
-		Kind:       ToolKind,
-		Statement:  stmt,
-		Client:     client,
-		dialect:    dialect,
-		manifest:   tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
-		Parameters: parameters,
+		Name:         name,
+		Kind:         ToolKind,
+		Statement:    stmt,
+		AuthRequired: authRequired,
+		Client:       client,
+		dialect:      dialect,
+		manifest:     tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
+		Parameters:   parameters,
 	}
 }
 
@@ -96,9 +99,10 @@ func NewGenericTool(name, stmt, desc string, client *spanner.Client, dialect str
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name       string           `yaml:"name"`
-	Kind       string           `yaml:"kind"`
-	Parameters tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Client    *spanner.Client
 	dialect   string
@@ -159,4 +163,8 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
+}
+
+func (t Tool) Authorized(verifiedAuthSources []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthSources)
 }

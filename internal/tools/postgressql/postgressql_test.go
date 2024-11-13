@@ -41,6 +41,9 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					description: some description
 					statement: |
 						SELECT * FROM SQL_STATEMENT;
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
 					parameters:
 						- name: country
 						  type: string
@@ -53,11 +56,12 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
-					Name:        "example_tool",
-					Kind:        postgressql.ToolKind,
-					Source:      "my-pg-instance",
-					Description: "some description",
-					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+					Name:         "example_tool",
+					Kind:         postgressql.ToolKind,
+					Source:       "my-pg-instance",
+					Description:  "some description",
+					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Parameters: []tools.Parameter{
 						tools.NewStringParameterWithAuth("country", "some description",
 							[]tools.ParamAuthSource{{Name: "my-google-auth-service", Field: "user_id"},

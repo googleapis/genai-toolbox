@@ -36,10 +36,20 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_string",
 					"type":        "string",
 					"description": "this param is a string",
+					"authSources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+				tools.NewStringParameterWithAuth("my_string", "this param is a string", authSources),
 			},
 		},
 		{
@@ -49,10 +59,20 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_integer",
 					"type":        "integer",
 					"description": "this param is an int",
+					"authSources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewIntParameter("my_integer", "this param is an int"),
+				tools.NewIntParameterWithAuth("my_integer", "this param is an int", authSources),
 			},
 		},
 		{
@@ -62,10 +82,20 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_float",
 					"type":        "float",
 					"description": "my param is a float",
+					"authSources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewFloatParameter("my_float", "my param is a float"),
+				tools.NewFloatParameterWithAuth("my_float", "my param is a float", authSources),
 			},
 		},
 		{
@@ -75,10 +105,20 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_bool",
 					"type":        "boolean",
 					"description": "this param is a boolean",
+					"authSources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a boolean"),
+				tools.NewBooleanParameterWithAuth("my_bool", "this param is a boolean", authSources),
 			},
 		},
 		{
@@ -91,10 +131,20 @@ func TestParametersMarshal(t *testing.T) {
 					"items": map[string]string{
 						"type": "string",
 					},
+					"authSources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "")),
+				tools.NewArrayParameterWithAuth("my_array", "this param is an array of strings", tools.NewStringParameter("", ""), authSources),
 			},
 		},
 		{
@@ -107,10 +157,20 @@ func TestParametersMarshal(t *testing.T) {
 					"items": map[string]string{
 						"type": "float",
 					},
+					"authSources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "")),
+				tools.NewArrayParameterWithAuth("my_array", "this param is an array of floats", tools.NewFloatParameter("", ""), authSources),
 			},
 		},
 	}
@@ -388,6 +448,165 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": 1.5,
 			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// parse map to bytes
+			data, err := yaml.Marshal(tc.in)
+			if err != nil {
+				t.Fatalf("unable to marshal input to yaml: %s", err)
+			}
+			// parse bytes to object
+			var m map[string]any
+			err = yaml.Unmarshal(data, &m)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+
+			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]map[string]any))
+			if err != nil {
+				if len(tc.want) == 0 {
+					// error is expected if no items in want
+					return
+				}
+				t.Fatalf("unexpected error from ParseParams: %s", err)
+			}
+			for i, got := range gotAll {
+				want := tc.want[i]
+				if got != want {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+				gotType, wantType := reflect.TypeOf(got), reflect.TypeOf(want)
+				if gotType != wantType {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestAuthParametersParse(t *testing.T) {
+	authSources := []tools.ParamAuthSource{
+		{
+			Name:  "my-google-auth-service",
+			Field: "auth_field",
+		},
+		{
+			Name:  "other-auth-service",
+			Field: "other_auth_field",
+		}}
+	tcs := []struct {
+		name      string
+		params    tools.Parameters
+		in        map[string]any
+		claimsMap map[string]map[string]any
+		want      tools.ParamValues
+	}{
+		{
+			name: "string",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAuth("my_string", "this param is a string", authSources),
+			},
+			in: map[string]any{
+				"my_string": "hello world",
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "hello"}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello"}},
+		},
+		{
+			name: "not string",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAuth("my_string", "this param is a string", authSources),
+			},
+			in: map[string]any{
+				"my_string": 4,
+			},
+			claimsMap: map[string]map[string]any{},
+		},
+		{
+			name: "int",
+			params: tools.Parameters{
+				tools.NewIntParameterWithAuth("my_int", "this param is an int", authSources),
+			},
+			in: map[string]any{
+				"my_int": 100,
+			},
+			claimsMap: map[string]map[string]any{"other-auth-service": {"other_auth_field": 120}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 120}},
+		},
+		{
+			name: "not int",
+			params: tools.Parameters{
+				tools.NewIntParameterWithAuth("my_int", "this param is an int", authSources),
+			},
+			in: map[string]any{
+				"my_int": 14.5,
+			},
+			claimsMap: map[string]map[string]any{},
+		},
+		{
+			name: "float",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithAuth("my_float", "this param is a float", authSources),
+			},
+			in: map[string]any{
+				"my_float": 1.5,
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": 2.1}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 2.1}},
+		},
+		{
+			name: "not float",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithAuth("my_float", "this param is a float", authSources),
+			},
+			in: map[string]any{
+				"my_float": true,
+			},
+			claimsMap: map[string]map[string]any{},
+		},
+		{
+			name: "bool",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authSources),
+			},
+			in: map[string]any{
+				"my_bool": true,
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": false}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: false}},
+		},
+		{
+			name: "not bool",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authSources),
+			},
+			in: map[string]any{
+				"my_bool": 1.5,
+			},
+			claimsMap: map[string]map[string]any{},
+		},
+		{
+			name: "username",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAuth("username", "username string", authSources),
+			},
+			in: map[string]any{
+				"username": "Violet",
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "Alice"}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "username", Value: "Alice"}},
+		},
+		{
+			name: "expect claim error",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAuth("username", "username string", authSources),
+			},
+			in: map[string]any{
+				"username": "Violet",
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"not_an_auth_field": "Alice"}},
 		},
 	}
 	for _, tc := range tcs {
