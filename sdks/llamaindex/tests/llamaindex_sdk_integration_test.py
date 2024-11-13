@@ -1,3 +1,7 @@
+from toolbox_llamaindex_sdk import ToolboxClient
+
 def test_hello_world():
-    print("Hello world test. Placeholder for LlamaIndex SDK Integration tests.")
+    print("Creating new Toolbox client.")
+    client = ToolboxClient(url="test_url")
+    print("Created toolbox client:", client)
     assert 0 == 0
