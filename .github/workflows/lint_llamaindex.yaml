@@ -21,19 +21,16 @@ on:
       - ".github/**"
 
 jobs:
-  lint_python:
+  lint_llamaindex:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     runs-on: ubuntu-latest
-    # strategy:
-    #   matrix:
-    #     sdk: ['llamaindex', 'langchain']
     permissions:
       contents: 'read'
       issues: 'write'
       pull-requests: 'write'
-    # concurrency:
-    #   group: ${{ github.workflow }}-${{ github.ref }}
-    #   # cancel-in-progress: true
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
