@@ -217,8 +217,8 @@ func TestParseToolFile(t *testing.T) {
 			},
 			wantAuthSources: server.AuthSourceConfigs{
 				"my-google-service": googleAuth.Config{
-					Name:     "my-pg-instance",
-					Kind:     cloudsqlpgsrc.SourceKind,
+					Name:     "my-google-service",
+					Kind:     googleAuth.AuthSourceKind,
 					ClientID: "my-client-id",
 				},
 			},
