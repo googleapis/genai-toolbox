@@ -12,8 +12,9 @@ FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64")
 output_string=""
 
 # Write the table header
-output_string+="| **os/arch** | **sha256**    |\n"
-output_string+="|------|---------------|\n"
+ROW_FMT="| %-93s | %73s |"
+output_string+=$(printf "$ROW_FMT" "**os/arch**" "**sha256**")$'\n'
+output_string+=$(printf "$ROW_FMT" $(printf -- '-%0.s' {1..93}) $(printf -- '-%0.s' {1..73}))$'\n'
 
 # Loop through all files matching the pattern "toolbox.*.*"
 for file in "${FILES[@]}"
@@ -31,10 +32,10 @@ do
     SHA256=$(shasum -a 256 toolbox | awk '{print $1}')
 
     # Write the table row
-    output_string+="| [$OS/$ARCH]($URL)   | $SHA256 |\n"
-    output_string+="| %-93s | %-65s |\n"
+    # output_string+="| [$OS/$ARCH]($URL)   | $SHA256 |\n"
+    output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$SHA256")$'\n'
 
     rm toolbox
 done
-printf "$output_string"
+printf "$output_string\n"
 
