@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from .utils import ManifestSchema, _load_yaml
 
 
-
 class ToolboxClient:
     def __init__(self, url: str, session: Optional[ClientSession] = None):
         """
