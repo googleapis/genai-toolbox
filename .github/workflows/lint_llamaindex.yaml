@@ -68,4 +68,4 @@ jobs:
           isort --check .
 
       - name: Run type-check
-        run: mypy --install-types --non-interactive sdkds/llamaindex
+        run: mypy --install-types --non-interactive sdks/llamaindex
