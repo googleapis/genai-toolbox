@@ -25,6 +25,8 @@ steps:
       - python -m pytest --cov=toolbox_llamaindex_sdk --cov-config=.coveragerc tests/
     env:
       - "TOOLBOX_URL=$_TOOLBOX_URL"
+options:
+  logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
 
 substitutions:
   _VERSION: "3.9"
