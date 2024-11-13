@@ -36,9 +36,10 @@ type Server struct {
 	root   chi.Router
 	logger logLib.Logger
 
-	sources  map[string]sources.Source
-	tools    map[string]tools.Tool
-	toolsets map[string]tools.Toolset
+	sources     map[string]sources.Source
+	authSources map[string]auth.AuthSource
+	tools       map[string]tools.Tool
+	toolsets    map[string]tools.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -121,12 +122,13 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	log.Info(fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
 
 	s := &Server{
-		conf:     cfg,
-		root:     r,
-		logger:   log,
-		sources:  sourcesMap,
-		tools:    toolsMap,
-		toolsets: toolsetsMap,
+		conf:        cfg,
+		root:        r,
+		logger:      log,
+		sources:     sourcesMap,
+		authSources: authSourcesMap,
+		tools:       toolsMap,
+		toolsets:    toolsetsMap,
 	}
 
 	if router, err := apiRouter(s); err != nil {

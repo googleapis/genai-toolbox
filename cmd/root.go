@@ -108,18 +108,19 @@ func NewCommand(opts ...Option) *Command {
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
-func parseToolsFile(raw []byte) (server.SourceConfigs, server.ToolConfigs, server.ToolsetConfigs, error) {
+func parseToolsFile(raw []byte) (server.SourceConfigs, server.AuthSourceConfigs, server.ToolConfigs, server.ToolsetConfigs, error) {
 	tools_file := &struct {
-		Sources  server.SourceConfigs  `yaml:"sources"`
-		Tools    server.ToolConfigs    `yaml:"tools"`
-		Toolsets server.ToolsetConfigs `yaml:"toolsets"`
+		Sources     server.SourceConfigs     `yaml:"sources"`
+		AuthSources server.AuthSourceConfigs `yaml:"authSources"`
+		Tools       server.ToolConfigs       `yaml:"tools"`
+		Toolsets    server.ToolsetConfigs    `yaml:"toolsets"`
 	}{}
 	// Parse contents
 	err := yaml.Unmarshal(raw, tools_file)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	return tools_file.Sources, tools_file.Tools, tools_file.Toolsets, nil
+	return tools_file.Sources, tools_file.AuthSources, tools_file.Tools, tools_file.Toolsets, nil
 }
 
 func run(cmd *Command) error {
@@ -151,7 +152,7 @@ func run(cmd *Command) error {
 		cmd.logger.Error(errMsg.Error())
 		return errMsg
 	}
-	cmd.cfg.SourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, err = parseToolsFile(buf)
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, err = parseToolsFile(buf)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
 		cmd.logger.Error(errMsg.Error())
