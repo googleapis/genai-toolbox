@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/authSources"
+	"github.com/googleapis/genai-toolbox/internal/authSources/googleAuth"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
@@ -171,7 +172,7 @@ func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 		return err
 	}
 
-	for _, n := range raw {
+	for name, n := range raw {
 		var k struct {
 			Kind string `yaml:"kind"`
 		}
@@ -180,6 +181,12 @@ func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("missing 'kind' field for %q", k)
 		}
 		switch k.Kind {
+		case googleAuth.AuthSourceKind:
+			actual := googleAuth.Config{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of auth source", k.Kind)
 		}
