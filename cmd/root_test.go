@@ -318,7 +318,7 @@ func TestParseToolFile(t *testing.T) {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
-				t.Fatalf("incorrect authsources parse: diff %v", diff)
+				t.Fatalf("incorrect authSources parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
