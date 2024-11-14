@@ -27,8 +27,6 @@ jobs:
       contents: 'read'
       issues: 'write'
       pull-requests: 'write'
-    # concurrency:
-    #   group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
