@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Lint
+name: llamaindex
 on:
   pull_request:
     paths-ignore: # Changes to the paths list need to be reflected in lint_fallback.yml
@@ -21,7 +21,7 @@ on:
       - ".github/**"
 
 jobs:
-  lint_llamaindex:
+  lint:
     if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     runs-on: ubuntu-latest
     permissions:
