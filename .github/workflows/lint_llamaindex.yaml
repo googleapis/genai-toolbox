@@ -15,10 +15,10 @@
 name: llamaindex
 on:
   pull_request:
-    paths-ignore: # Changes to the paths list need to be reflected in lint_fallback.yml
-      - "*.md"
-      - ".kokoro/**"
-      - ".github/**"
+    paths:
+      - 'sdks/llamaindex/**'
+      - '!sdks/llamaindex/**/*.md'
+
 
 jobs:
   lint:
@@ -30,7 +30,6 @@ jobs:
       pull-requests: 'write'
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
-      # cancel-in-progress: true
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
