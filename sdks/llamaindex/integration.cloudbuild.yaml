@@ -13,14 +13,15 @@
 # limitations under the License.
 
 steps:
-  - name: 'python:${_VERSION}'
+  - id: Install module (and test requirements)
+    name: 'python:${_VERSION}'
     args:
       - install
       - 'sdks/llamaindex[test]'
       - '--user'
-    id: Install module (and test requirements)
     entrypoint: pip
-  - name: 'python:${_VERSION}'
+  - id: Run integration tests
+    name: 'python:${_VERSION}'
     env:
       - TOOLBOX_URL=$_TOOLBOX_URL
     args:
@@ -28,7 +29,6 @@ steps:
       - >-
         python -m pytest --cov=toolbox_llamaindex_sdk --cov-config=.coveragerc
         sdks/llamaindex/tests
-    id: Run integration tests
     entrypoint: /bin/bash
 options:
   logging: CLOUD_LOGGING_ONLY

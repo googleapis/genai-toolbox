@@ -13,24 +13,24 @@
 # limitations under the License.
 
 steps:
-  - name: "python:${_VERSION}"
+  - id: Install module (and test requirements)
+    name: 'python:${_VERSION}'
     args:
       - install
-      - "sdks/langchain[test]"
-      - "--user"
-    id: Install module (and test requirements)
+      - 'sdks/langchain[test]'
+      - '--user'
     entrypoint: pip
-  - name: "python:${_VERSION}"
+  - id: Run integration tests
+    name: 'python:${_VERSION}'
     env:
       - TOOLBOX_URL=$_TOOLBOX_URL
     args:
-      - "-c"
+      - '-c'
       - >-
         python -m pytest --cov=toolbox_langchain_sdk --cov-config=.coveragerc
         sdks/langchain/tests
-    id: Run integration tests
     entrypoint: /bin/bash
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
-  _VERSION: "3.9"
+  _VERSION: '3.9'
