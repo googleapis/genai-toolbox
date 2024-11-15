@@ -19,12 +19,12 @@ on:
       - 'sdks/langchain/**'
       - '!sdks/langchain/**/*.md'
 
+# Declare default permissions as read only.
+permissions: read-all
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
