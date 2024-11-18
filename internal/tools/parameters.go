@@ -17,6 +17,7 @@ package tools
 import (
 	"fmt"
 
+	authSources "github.com/googleapis/genai-toolbox/internal/authSources"
 	"gopkg.in/yaml.v3"
 )
 
@@ -29,7 +30,7 @@ const (
 )
 
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
-func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
+func ParseParams(ps Parameters, data map[string]any, claims map[string]any) ([]any, error) {
 	params := []any{}
 	for _, p := range ps {
 		v, ok := data[p.GetName()]
@@ -50,6 +51,7 @@ type Parameter interface {
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
 	GetType() string
+	GetAuthSources() []authSources.AuthSource
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 }
@@ -169,13 +171,14 @@ func (e ParseTypeError) Error() string {
 }
 
 // NewStringParameter is a convenience function for initializing a StringParameter.
-func NewStringParameter(name, desc string) *StringParameter {
+func NewStringParameter(name, desc string, authSources []authSources.AuthSource) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name: name,
 			Type: typeString,
 			Desc: desc,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -184,6 +187,7 @@ var _ Parameter = &StringParameter{}
 // StringParameter is a parameter representing the "string" type.
 type StringParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 // Parse casts the value "v" as a "string".
@@ -194,15 +198,19 @@ func (p *StringParameter) Parse(v any) (any, error) {
 	}
 	return newV, nil
 }
+func (p *StringParameter) GetAuthSources() []authSources.AuthSource {
+	return p.AuthSources
+}
 
 // NewIntParameter is a convenience function for initializing a IntParameter.
-func NewIntParameter(name, desc string) *IntParameter {
+func NewIntParameter(name, desc string, authSources []authSources.AuthSource) *IntParameter {
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name: name,
 			Type: typeInt,
 			Desc: desc,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -211,6 +219,7 @@ var _ Parameter = &IntParameter{}
 // IntParameter is a parameter representing the "int" type.
 type IntParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
@@ -221,14 +230,19 @@ func (p *IntParameter) Parse(v any) (any, error) {
 	return newV, nil
 }
 
+func (p *IntParameter) GetAuthSources() []authSources.AuthSource {
+	return p.AuthSources
+}
+
 // NewFloatParameter is a convenience function for initializing a FloatParameter.
-func NewFloatParameter(name, desc string) *FloatParameter {
+func NewFloatParameter(name, desc string, authSources []authSources.AuthSource) *FloatParameter {
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name: name,
 			Type: typeFloat,
 			Desc: desc,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -237,6 +251,7 @@ var _ Parameter = &FloatParameter{}
 // FloatParameter is a parameter representing the "float" type.
 type FloatParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
@@ -247,14 +262,19 @@ func (p *FloatParameter) Parse(v any) (any, error) {
 	return newV, nil
 }
 
+func (p *FloatParameter) GetAuthSources() []authSources.AuthSource {
+	return p.AuthSources
+}
+
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
-func NewBooleanParameter(name, desc string) *BooleanParameter {
+func NewBooleanParameter(name, desc string, authSources []authSources.AuthSource) *BooleanParameter {
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name: name,
 			Type: typeBool,
 			Desc: desc,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -263,6 +283,7 @@ var _ Parameter = &BooleanParameter{}
 // BooleanParameter is a parameter representing the "boolean" type.
 type BooleanParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *BooleanParameter) Parse(v any) (any, error) {
@@ -273,15 +294,20 @@ func (p *BooleanParameter) Parse(v any) (any, error) {
 	return newV, nil
 }
 
+func (p *BooleanParameter) GetAuthSources() []authSources.AuthSource {
+	return p.AuthSources
+}
+
 // NewArrayParameter is a convenience function for initializing an ArrayParameter.
-func NewArrayParameter(name, desc string, items Parameter) *ArrayParameter {
+func NewArrayParameter(name, desc string, items Parameter, authSources []authSources.AuthSource) *ArrayParameter {
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name: name,
 			Type: typeArray,
 			Desc: desc,
 		},
-		Items: items,
+		Items:       items,
+		AuthSources: authSources,
 	}
 }
 
@@ -290,7 +316,8 @@ var _ Parameter = &ArrayParameter{}
 // ArrayParameter is a parameter representing the "array" type.
 type ArrayParameter struct {
 	CommonParameter `yaml:",inline"`
-	Items           Parameter `yaml:"items"`
+	Items           Parameter                `yaml:"items"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
@@ -335,4 +362,8 @@ func (p *ArrayParameter) Parse(v any) (any, error) {
 		rtn = append(rtn, val)
 	}
 	return rtn, nil
+}
+
+func (p *ArrayParameter) GetAuthSources() []authSources.AuthSource {
+	return p.AuthSources
 }

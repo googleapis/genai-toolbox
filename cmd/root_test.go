@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/authSources/googleAuth"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
@@ -230,7 +231,7 @@ func TestParseToolFile(t *testing.T) {
 					Description: "some description",
 					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+						tools.NewStringParameter("country", "some description", make([]authSources.AuthSource, 0)),
 					},
 				},
 			},

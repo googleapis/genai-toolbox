@@ -25,8 +25,9 @@ type ToolConfig interface {
 
 type Tool interface {
 	Invoke([]any) (string, error)
-	ParseParams(data map[string]any) ([]any, error)
+	ParseParams(data map[string]any, claims map[string]any) ([]any, error)
 	Manifest() Manifest
+	Authenticate(authSource string, authToken string) (map[string]any, error)
 }
 
 // Manifest is the representation of tools sent to Client SDKs.

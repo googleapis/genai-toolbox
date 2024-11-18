@@ -41,12 +41,13 @@ var _ compatibleSource = &postgres.Source{}
 var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name"`
-	Kind        string           `yaml:"kind"`
-	Source      string           `yaml:"source"`
-	Description string           `yaml:"description"`
-	Statement   string           `yaml:"statement"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	Source       string           `yaml:"source"`
+	AuthRequired bool             `yaml:"auth_required"`
+	Description  string           `yaml:"description"`
+	Statement    string           `yaml:"statement"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -71,12 +72,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:       cfg.Name,
-		Kind:       ToolKind,
-		Parameters: cfg.Parameters,
-		Statement:  cfg.Statement,
-		Pool:       s.PostgresPool(),
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		Name:         cfg.Name,
+		Kind:         ToolKind,
+		Parameters:   cfg.Parameters,
+		AuthRequired: cfg.AuthRequired,
+		Statement:    cfg.Statement,
+		Pool:         s.PostgresPool(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
@@ -96,13 +98,13 @@ func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tool
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name       string           `yaml:"name"`
-	Kind       string           `yaml:"kind"`
-	Parameters tools.Parameters `yaml:"parameters"`
-
-	Pool      *pgxpool.Pool
-	Statement string
-	manifest  tools.Manifest
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	Parameters   tools.Parameters `yaml:"parameters"`
+	AuthRequired bool             `yaml:"auth_required"`
+	Pool         *pgxpool.Pool
+	Statement    string
+	manifest     tools.Manifest
 }
 
 func (t Tool) Invoke(params []any) (string, error) {
@@ -124,8 +126,13 @@ func (t Tool) Invoke(params []any) (string, error) {
 	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
 }
 
-func (t Tool) ParseParams(data map[string]any) ([]any, error) {
-	return tools.ParseParams(t.Parameters, data)
+func (t Tool) ParseParams(data map[string]any, claims map[string]any) ([]any, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) Authenticate(authSource string, authToken string) (map[string]any, error) {
+	claims := make(map[string]any)
+	return claims, nil
 }
 
 func (t Tool) Manifest() tools.Manifest {

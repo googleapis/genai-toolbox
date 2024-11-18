@@ -83,6 +83,9 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
+	authSource := r.Header[http.CanonicalHeaderKey("AuthSource")][0]
+	authToken := r.Header[http.CanonicalHeaderKey("AuthToken")][0]
+	claims, _ := tool.Authenticate(authSource, authToken)
 
 	var data map[string]interface{}
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
@@ -92,7 +95,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := tool.ParseParams(data)
+	params, err := tool.ParseParams(data, claims)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))

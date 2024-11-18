@@ -22,6 +22,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -37,8 +38,12 @@ func (t MockTool) Invoke([]any) (string, error) {
 	return "", nil
 }
 
-func (t MockTool) ParseParams(data map[string]any) ([]any, error) {
-	return tools.ParseParams(t.Params, data)
+func (t MockTool) ParseParams(data map[string]any, claims map[string]any) ([]any, error) {
+	return tools.ParseParams(t.Params, data, claims)
+}
+
+func (t MockTool) Authenticate(authSource string, authToken string) (map[string]any, error) {
+	return make(map[string]any), nil
 }
 
 func (t MockTool) Manifest() tools.Manifest {
@@ -51,6 +56,7 @@ func (t MockTool) Manifest() tools.Manifest {
 
 func TestToolsetEndpoint(t *testing.T) {
 	// Set up resources to test against
+	var authSources []authSources.AuthSource
 	tool1 := MockTool{
 		Name:   "no_params",
 		Params: []tools.Parameter{},
@@ -58,8 +64,8 @@ func TestToolsetEndpoint(t *testing.T) {
 	tool2 := MockTool{
 		Name: "some_params",
 		Params: tools.Parameters{
-			tools.NewIntParameter("param1", "This is the first parameter."),
-			tools.NewIntParameter("param2", "This is the second parameter."),
+			tools.NewIntParameter("param1", "This is the first parameter.", authSources),
+			tools.NewIntParameter("param2", "This is the second parameter.", authSources),
 		},
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
@@ -176,6 +182,7 @@ func TestToolsetEndpoint(t *testing.T) {
 }
 func TestToolGetEndpoint(t *testing.T) {
 	// Set up resources to test against
+	var authSources []authSources.AuthSource
 	tool1 := MockTool{
 		Name:   "no_params",
 		Params: []tools.Parameter{},
@@ -183,8 +190,8 @@ func TestToolGetEndpoint(t *testing.T) {
 	tool2 := MockTool{
 		Name: "some_params",
 		Params: tools.Parameters{
-			tools.NewIntParameter("param1", "This is the first parameter."),
-			tools.NewIntParameter("param2", "This is the second parameter."),
+			tools.NewIntParameter("param1", "This is the first parameter.", authSources),
+			tools.NewIntParameter("param2", "This is the second parameter.", authSources),
 		},
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
