@@ -240,6 +240,7 @@ func NewStringParameterWithAuth(name, desc string, authSources []ParamAuthSource
 			Desc:        desc,
 			AuthSources: authSources,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -248,6 +249,7 @@ var _ Parameter = &StringParameter{}
 // StringParameter is a parameter representing the "string" type.
 type StringParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 // Parse casts the value "v" as a "string".
@@ -283,6 +285,7 @@ func NewIntParameterWithAuth(name, desc string, authSources []ParamAuthSource) *
 			Desc:        desc,
 			AuthSources: authSources,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -291,6 +294,7 @@ var _ Parameter = &IntParameter{}
 // IntParameter is a parameter representing the "int" type.
 type IntParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
@@ -326,6 +330,7 @@ func NewFloatParameterWithAuth(name, desc string, authSources []ParamAuthSource)
 			Desc:        desc,
 			AuthSources: authSources,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -334,6 +339,7 @@ var _ Parameter = &FloatParameter{}
 // FloatParameter is a parameter representing the "float" type.
 type FloatParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
@@ -369,6 +375,7 @@ func NewBooleanParameterWithAuth(name, desc string, authSources []ParamAuthSourc
 			Desc:        desc,
 			AuthSources: authSources,
 		},
+		AuthSources: authSources,
 	}
 }
 
@@ -377,6 +384,7 @@ var _ Parameter = &BooleanParameter{}
 // BooleanParameter is a parameter representing the "boolean" type.
 type BooleanParameter struct {
 	CommonParameter `yaml:",inline"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *BooleanParameter) Parse(v any) (any, error) {
@@ -413,7 +421,8 @@ func NewArrayParameterWithAuth(name, desc string, items Parameter, authSources [
 			Desc:        desc,
 			AuthSources: authSources,
 		},
-		Items: items,
+		Items:       items,
+		AuthSources: authSources,
 	}
 }
 
@@ -422,7 +431,8 @@ var _ Parameter = &ArrayParameter{}
 // ArrayParameter is a parameter representing the "array" type.
 type ArrayParameter struct {
 	CommonParameter `yaml:",inline"`
-	Items           Parameter `yaml:"items"`
+	Items           Parameter                `yaml:"items"`
+	AuthSources     []authSources.AuthSource `yaml:"auth_sources"`
 }
 
 func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {

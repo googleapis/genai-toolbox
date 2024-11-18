@@ -84,6 +84,9 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
+	authSource := r.Header[http.CanonicalHeaderKey("AuthSource")][0]
+	authToken := r.Header[http.CanonicalHeaderKey("AuthToken")][0]
+	claims, _ := tool.Authenticate(authSource, authToken)
 
 	var data map[string]interface{}
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
