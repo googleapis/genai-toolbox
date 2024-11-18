@@ -19,34 +19,16 @@ on:
       - 'sdks/langchain/**'
       - '!sdks/langchain/**/*.md'
 
+# Declare default permissions as read only.
+permissions: read-all
+
 jobs:
   lint:
-    if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      issues: 'write'
-      pull-requests: 'write'
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Remove PR Label
-        if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              await github.rest.issues.removeLabel({
-                name: 'tests: run',
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number
-              });
-            } catch (e) {
-              console.log('Failed to remove label. Another job may have already removed it!');
-            }
       - name: Checkout Repository
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
@@ -58,28 +40,10 @@ jobs:
       - name: Install SDK and requirements
         run: pip install sdks/langchain[test]
 
-      - name: Install test requirements
-        run: pip install mypy==1.13.0 black==24.10.0 isort==5.13.2
-
       - name: Run linters
         run: |
           black --check .
           isort --check .
-
-      - name: Create mypy cache directory
-        run: mkdir -p ~/.mypy_cache
-
-      - name: Set mypy cache directory
-        run: |
-          echo "MYPY_CACHE_DIR=~/.mypy_cache" >> $GITHUB_ENV
-
-      - name: Cache mypy cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.mypy_cache
-          key: ${{ runner.os }}-mypy-${{ hashFiles('**/mypy.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-mypy-
 
       - name: Run type-check
         run: mypy --install-types --non-interactive --explicit-package-bases sdks/langchain
