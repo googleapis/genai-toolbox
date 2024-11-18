@@ -8,7 +8,7 @@ authors = [
     {name = "Google LLC", email = "googleapis-packages@google.com"}
 ]
 dependencies = [
-    "aiohttp==3.10.10",
+    "aiohttp==3.10.11",
     "PyYAML==6.0.2",
     "llama-index==0.11.22",
     "pydantic==2.9.2",
