@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: llamaindex_fallback
+name: llamaindex
 on:
   pull_request:
     paths: # These paths are the inverse of lint.yml
