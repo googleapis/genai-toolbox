@@ -19,11 +19,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	authSources "github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"gopkg.in/yaml.v3"
 )
 
 func TestParametersMarhsall(t *testing.T) {
+	var authSources []authSources.AuthSource
 	tcs := []struct {
 		name string
 		in   []map[string]any
@@ -39,7 +41,7 @@ func TestParametersMarhsall(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+				tools.NewStringParameter("my_string", "this param is a string", authSources),
 			},
 		},
 		{
@@ -52,7 +54,7 @@ func TestParametersMarhsall(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewIntParameter("my_integer", "this param is an int"),
+				tools.NewIntParameter("my_integer", "this param is an int", authSources),
 			},
 		},
 		{
@@ -65,7 +67,7 @@ func TestParametersMarhsall(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewFloatParameter("my_float", "my param is a float"),
+				tools.NewFloatParameter("my_float", "my param is a float", authSources),
 			},
 		},
 		{
@@ -78,7 +80,7 @@ func TestParametersMarhsall(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a boolean"),
+				tools.NewBooleanParameter("my_bool", "this param is a boolean", authSources),
 			},
 		},
 		{
@@ -94,7 +96,7 @@ func TestParametersMarhsall(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "")),
+				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "", authSources), authSources),
 			},
 		},
 		{
@@ -110,7 +112,7 @@ func TestParametersMarhsall(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "")),
+				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "", authSources), authSources),
 			},
 		},
 	}
@@ -135,6 +137,7 @@ func TestParametersMarhsall(t *testing.T) {
 }
 
 func TestParametersParse(t *testing.T) {
+	var authSources []authSources.AuthSource
 	tcs := []struct {
 		name   string
 		params tools.Parameters
@@ -144,7 +147,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "string",
 			params: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+				tools.NewStringParameter("my_string", "this param is a string", authSources),
 			},
 			in: map[string]any{
 				"my_string": "hello world",
@@ -154,7 +157,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "not string",
 			params: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+				tools.NewStringParameter("my_string", "this param is a string", authSources),
 			},
 			in: map[string]any{
 				"my_string": 4,
@@ -163,7 +166,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "int",
 			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
+				tools.NewIntParameter("my_int", "this param is an int", authSources),
 			},
 			in: map[string]any{
 				"my_int": 100,
@@ -173,7 +176,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "not int",
 			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
+				tools.NewIntParameter("my_int", "this param is an int", authSources),
 			},
 			in: map[string]any{
 				"my_int": 14.5,
@@ -182,7 +185,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "float",
 			params: tools.Parameters{
-				tools.NewFloatParameter("my_float", "this param is a float"),
+				tools.NewFloatParameter("my_float", "this param is a float", authSources),
 			},
 			in: map[string]any{
 				"my_float": 1.5,
@@ -192,7 +195,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "not float",
 			params: tools.Parameters{
-				tools.NewFloatParameter("my_float", "this param is a float"),
+				tools.NewFloatParameter("my_float", "this param is a float", authSources),
 			},
 			in: map[string]any{
 				"my_float": true,
@@ -201,7 +204,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "bool",
 			params: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a bool"),
+				tools.NewBooleanParameter("my_bool", "this param is a bool", authSources),
 			},
 			in: map[string]any{
 				"my_bool": true,
@@ -211,7 +214,7 @@ func TestParametersParse(t *testing.T) {
 		{
 			name: "not bool",
 			params: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a bool"),
+				tools.NewBooleanParameter("my_bool", "this param is a bool", authSources),
 			},
 			in: map[string]any{
 				"my_bool": 1.5,
@@ -232,7 +235,7 @@ func TestParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m)
+			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]any))
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
