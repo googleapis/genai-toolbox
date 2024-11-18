@@ -45,20 +45,20 @@ jobs:
           black --check .
           isort --check .
 
-      - name: Create mypy cache directory
-        run: mkdir -p ~/.mypy_cache
+      # - name: Create mypy cache directory
+      #   run: mkdir -p ~/.mypy_cache
 
-      - name: Set mypy cache directory
-        run: |
-          echo "MYPY_CACHE_DIR=~/.mypy_cache" >> $GITHUB_ENV
+      # - name: Set mypy cache directory
+      #   run: |
+      #     echo "MYPY_CACHE_DIR=~/.mypy_cache" >> $GITHUB_ENV
 
-      - name: Cache mypy cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.mypy_cache
-          key: ${{ runner.os }}-mypy-${{ hashFiles('**/mypy.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-mypy-
+      # - name: Cache mypy cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.mypy_cache
+      #     key: ${{ runner.os }}-mypy-${{ hashFiles('**/mypy.ini') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-mypy-
 
       - name: Run type-check
         run: mypy --install-types --non-interactive --explicit-package-bases sdks/langchain
