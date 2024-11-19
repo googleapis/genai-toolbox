@@ -36,6 +36,16 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_string",
 					"type":        "string",
 					"description": "this param is a string",
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{

@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -27,7 +26,6 @@ import (
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
-	var authSources []authSources.AuthSource
 	tcs := []struct {
 		desc string
 		in   string

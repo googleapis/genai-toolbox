@@ -53,7 +53,6 @@ func (t MockTool) Manifest() tools.Manifest {
 
 func TestToolsetEndpoint(t *testing.T) {
 	// Set up resources to test against
-	var authSources []authSources.AuthSource
 	tool1 := MockTool{
 		Name:   "no_params",
 		Params: []tools.Parameter{},
@@ -183,7 +182,6 @@ func TestToolsetEndpoint(t *testing.T) {
 }
 func TestToolGetEndpoint(t *testing.T) {
 	// Set up resources to test against
-	var authSources []authSources.AuthSource
 	tool1 := MockTool{
 		Name:   "no_params",
 		Params: []tools.Parameter{},
