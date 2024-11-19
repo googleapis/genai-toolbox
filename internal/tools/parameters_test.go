@@ -357,7 +357,6 @@ func TestAuthParametersMarshal(t *testing.T) {
 }
 
 func TestParametersParse(t *testing.T) {
-	var authSources []tools.ParamAuthSource
 	tcs := []struct {
 		name   string
 		params tools.Parameters
@@ -630,7 +629,9 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": "hello world",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			claims:         map[string]any{},
+			authSourceName: "",
+			want:           tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello world"}},
 		},
 		{
 			name: "not string",
@@ -640,6 +641,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": 4,
 			},
+			claims:         map[string]any{},
+			authSourceName: "",
 		},
 		{
 			name: "int",
@@ -649,7 +652,9 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 100,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
+			claims:         map[string]any{},
+			authSourceName: "",
+			want:           tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
 		},
 		{
 			name: "not int",
@@ -659,6 +664,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 14.5,
 			},
+			claims:         map[string]any{},
+			authSourceName: "",
 		},
 		{
 			name: "float",
@@ -668,7 +675,9 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": 1.5,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.5}},
+			claims:         map[string]any{},
+			authSourceName: "",
+			want:           tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.5}},
 		},
 		{
 			name: "not float",
@@ -678,6 +687,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": true,
 			},
+			claims: map[string]any{},
 		},
 		{
 			name: "bool",
@@ -687,7 +697,9 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": true,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
+			claims:         map[string]any{},
+			authSourceName: "",
+			want:           tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
 			name: "not bool",
@@ -697,6 +709,20 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": 1.5,
 			},
+			claims:         map[string]any{},
+			authSourceName: "",
+		},
+		{
+			name: "username",
+			params: tools.Parameters{
+				tools.NewStringParameter("username", "username string", []tools.ParamAuthSource{{Name: "auth-source", Field: "user"}}),
+			},
+			in: map[string]any{
+				"username": "Violet",
+			},
+			claims:         map[string]any{"user": "Alice"},
+			authSourceName: "auth-source",
+			want:           []any{"Alice"},
 		},
 	}
 	for _, tc := range tcs {

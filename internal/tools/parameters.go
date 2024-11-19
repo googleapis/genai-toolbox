@@ -74,15 +74,24 @@ func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 	for _, p := range ps {
 		var v interface{}
 		var ok bool
-		if p.GetAuthSources() == nil {
+		authSources := p.GetAuthSources()
+		if authSources == nil {
 			v, ok = data[p.GetName()]
 			if !ok {
-				return nil, fmt.Errorf("parameter %q is required!", p.GetName())
+				return nil, fmt.Errorf("parameter %q is required", p.GetName())
 			}
 		} else {
-			v, ok = claims[p.GetName()]
+			for _, a := range authSources {
+				if a.Name == authSourceName {
+					v, ok = claims[a.Field]
+					break
+				}
+			}
+			if v == nil {
+				return nil, fmt.Errorf("provided auth source %s not in parameter %s's approved list", authSourceName, p.GetName())
+			}
 			if !ok {
-				return nil, fmt.Errorf("claims returned from authentication do not contain field %q!", p.GetName())
+				return nil, fmt.Errorf("claims returned from authentication do not contain field %q", p.GetName())
 			}
 		}
 		newV, err := p.Parse(v)

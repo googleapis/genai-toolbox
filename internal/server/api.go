@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -75,6 +76,24 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, m)
 }
 
+func parseAuthHeader(h http.Header) (string, string, error) {
+	authSourceName, ok := h[http.CanonicalHeaderKey("AuthSource")]
+	if ok {
+		authToken, ok := h[http.CanonicalHeaderKey("AuthToken")]
+		if ok {
+			// success
+			return authSourceName[0], authToken[0], nil
+		} else {
+			// raise error if no token is sent
+			err := fmt.Errorf("AuthToken is required if AuthSource is specified")
+			return "", "", err
+		}
+	} else {
+		// no auth header
+		return "", "", nil
+	}
+}
+
 // toolInvokeHandler handles the API request to invoke a specific Tool.
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolName := chi.URLParam(r, "toolName")
@@ -85,6 +104,26 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Tool authentication
+	authSourceName, authToken, err := parseAuthHeader(r.Header)
+	if err != nil {
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+	}
+	var authSource authSources.AuthSource
+	if authSourceName != "" {
+		authSource, ok = s.authSources[authSourceName]
+		if !ok {
+			err := fmt.Errorf("invalid auth source name: auth source with name %q does not exist", toolName)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+	}
+	claims, err := tool.Authenticate(authSource, authToken)
+	if err != nil {
+		err := fmt.Errorf("tool authentication failure: %w", err)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+		return
+	}
 	var data map[string]interface{}
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
