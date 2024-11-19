@@ -24,5 +24,5 @@ type AuthSourceConfig interface {
 type AuthSource interface {
 	AuthSourceKind() string
 	GetName() string
-	Verify()
+	Verify(token string) (map[string]interface{}, error)
 }
