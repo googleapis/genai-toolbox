@@ -1,4 +1,4 @@
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, cast
 
 import yaml
 from aiohttp import ClientSession
@@ -51,10 +51,13 @@ def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[Bas
     """
     field_definitions = {}
     for field in schema:
-        field_definitions[field.name] = (
-            # TODO: Remove the hardcoded optional types once optional fields are supported by Toolbox.
-            Optional[_parse_type(field.type)],
-            Field(description=field.description),
+        field_definitions[field.name] = cast(
+            Any,
+            (
+                # TODO: Remove the hardcoded optional types once optional fields are supported by Toolbox.
+                Optional[_parse_type(field.type)],
+                Field(description=field.description),
+            ),
         )
 
     return create_model(model_name, **field_definitions)
