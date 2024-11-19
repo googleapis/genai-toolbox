@@ -40,5 +40,9 @@ func (a AuthSource) AuthSourceKind() string {
 	return AuthSourceKind
 }
 
-func (r AuthSource) Verify() {
+func (a AuthSource) GetName() string {
+	return a.Name
+}
+
+func (a AuthSource) Verify() {
 }
