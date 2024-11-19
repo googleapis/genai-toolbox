@@ -264,6 +264,12 @@ func TestParseToolFile(t *testing.T) {
 						- name: country
 							type: string
 							description: some description
+						- name: id
+							type: integer
+							description: user id
+							auth_sources:
+							- name: my-google-service
+								field: user_id
 			toolsets:
 				example_toolset:
 					- example_tool

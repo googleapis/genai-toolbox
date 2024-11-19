@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -27,7 +26,6 @@ import (
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
-	var authSources []authSources.AuthSource
 	tcs := []struct {
 		desc string
 		in   string
@@ -47,12 +45,12 @@ func TestParseFromYamlPostgres(t *testing.T) {
 						- name: country
 						  type: string
 						  description: some description
-						  authSources:
-							- name: my-google-auth-service
-								field: user_id
+						  auth_sources:
+						  	- name: my-google-auth-service
+							  field: user_id
 							- name: other-auth-service
-								field: user_id
-		`,
+							  field: user_id
+			`,
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
 					Name:        "example_tool",
