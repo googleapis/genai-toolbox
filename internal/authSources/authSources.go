@@ -23,5 +23,6 @@ type AuthSourceConfig interface {
 // AuthSource is the interface for the authSource.
 type AuthSource interface {
 	AuthSourceKind() string
+	GetName() string
 	Verify()
 }
