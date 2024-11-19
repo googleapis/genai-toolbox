@@ -19,13 +19,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	authSources "github.com/googleapis/genai-toolbox/internal/authSources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"gopkg.in/yaml.v3"
 )
 
 func TestParametersMarhsall(t *testing.T) {
-	var authSources []authSources.AuthSource
+	authSources := []tools.ParamAuthSource{{Name: "my-google-auth-service", Field: "user_id"}, {Name: "other-auth-service", Field: "user_id"}}
 	tcs := []struct {
 		name string
 		in   []map[string]any
@@ -38,6 +37,16 @@ func TestParametersMarhsall(t *testing.T) {
 					"name":        "my_string",
 					"type":        "string",
 					"description": "this param is a string",
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
@@ -51,6 +60,16 @@ func TestParametersMarhsall(t *testing.T) {
 					"name":        "my_integer",
 					"type":        "integer",
 					"description": "this param is an int",
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
@@ -64,6 +83,16 @@ func TestParametersMarhsall(t *testing.T) {
 					"name":        "my_float",
 					"type":        "float",
 					"description": "my param is a float",
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
@@ -77,6 +106,16 @@ func TestParametersMarhsall(t *testing.T) {
 					"name":        "my_bool",
 					"type":        "boolean",
 					"description": "this param is a boolean",
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
@@ -93,10 +132,20 @@ func TestParametersMarhsall(t *testing.T) {
 					"items": map[string]string{
 						"type": "string",
 					},
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "", authSources), authSources),
+				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "", nil), authSources),
 			},
 		},
 		{
@@ -109,10 +158,20 @@ func TestParametersMarhsall(t *testing.T) {
 					"items": map[string]string{
 						"type": "float",
 					},
+					"auth_sources": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "", authSources), authSources),
+				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "", nil), authSources),
 			},
 		},
 	}
@@ -137,7 +196,7 @@ func TestParametersMarhsall(t *testing.T) {
 }
 
 func TestParametersParse(t *testing.T) {
-	var authSources []authSources.AuthSource
+	var authSources []tools.ParamAuthSource
 	tcs := []struct {
 		name   string
 		params tools.Parameters
