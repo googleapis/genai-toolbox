@@ -1,7 +1,11 @@
 package googleAuth
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/googleapis/genai-toolbox/internal/authSources"
+	"google.golang.org/api/idtoken"
 )
 
 const AuthSourceKind string = "google"
@@ -44,5 +48,10 @@ func (a AuthSource) GetName() string {
 	return a.Name
 }
 
-func (a AuthSource) Verify() {
+func (a AuthSource) Verify(token string) (map[string]interface{}, error) {
+	payload, err := idtoken.Validate(context.Background(), token, a.ClientID)
+	if err != nil {
+		return nil, fmt.Errorf("Google ID token verification failure: %w", err)
+	}
+	return payload.Claims, nil
 }
