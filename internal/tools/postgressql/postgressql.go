@@ -44,9 +44,9 @@ type Config struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
 	Source       string           `yaml:"source"`
-	AuthRequired bool             `yaml:"auth_required"`
 	Description  string           `yaml:"description"`
 	Statement    string           `yaml:"statement"`
+	AuthRequired bool             `yaml:"auth_required"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
