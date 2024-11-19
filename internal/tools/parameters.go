@@ -72,10 +72,18 @@ func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
 func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
-		name := p.GetName()
-		v, ok := data[name]
-		if !ok {
-			return nil, fmt.Errorf("parameter %q is required!", p.GetName())
+		var v interface{}
+		var ok bool
+		if p.GetAuthSources() == nil {
+			v, ok = data[p.GetName()]
+			if !ok {
+				return nil, fmt.Errorf("parameter %q is required!", p.GetName())
+			}
+		} else {
+			v, ok = claims[p.GetName()]
+			if !ok {
+				return nil, fmt.Errorf("claims returned from authentication do not contain field %q!", p.GetName())
+			}
 		}
 		newV, err := p.Parse(v)
 		if err != nil {
