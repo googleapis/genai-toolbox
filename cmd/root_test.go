@@ -262,8 +262,14 @@ func TestParseToolFile(t *testing.T) {
 						SELECT * FROM SQL_STATEMENT;
 					parameters:
 						- name: country
-						  type: string
-						  description: some description
+							type: string
+							description: some description
+						- name: id
+							type: integer
+							description: user id
+							auth_sources:
+							- name: my-google-service
+								field: user_id
 			toolsets:
 				example_toolset:
 					- example_tool
