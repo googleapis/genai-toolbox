@@ -11,7 +11,7 @@
 1. Navigate to the SDK directory, e.g.:
 
     ```bash
-    cd genai-toolbox/sdks/langchain
+    cd genai-toolbox/sdks/llamaindex
     ```
 
 1. Install the SDK and test dependencies:
