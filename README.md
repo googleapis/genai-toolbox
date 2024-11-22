@@ -174,7 +174,7 @@ is, which source it affects, what parameters it takes, etc.
 tools:
     get_flight_by_id:
         kind: postgres-sql
-        source: my-pg-instance
+        source: my-cloud-sql-source
         description: >
             Use this tool to list all airports matching search criteria. Takes 
             at least one of country, city, name, or all and returns all matching
