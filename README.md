@@ -90,7 +90,8 @@ execute `toolbox` to start the server:
 ./toolbox --tools_file "tools.yaml"
 ```
 
-You can use `toolbox help` for a full list of flags! 
+You can use `toolbox help` for a full list of flags! To stop the server, send a
+terminate signal (`ctrl+c` on most platforms).
 
 ### Using with Client SDKs
 
