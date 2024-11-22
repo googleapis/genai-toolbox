@@ -151,6 +151,8 @@ execute against.
 
 ```yaml
 sources:
+    # This tool kind has some requirements. 
+    # See https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements
     my-cloud-sql-source:
         kind: cloud-sql-postgres
         project: my-project-name
@@ -183,8 +185,8 @@ tools:
         statement: "SELECT * FROM flights WHERE id = $1"
         parameters:
         - name: id
-            type: int
-            description: 'id' represents the unique ID for each flight. 
+          type: int
+          description: 'id' represents the unique ID for each flight. 
 ```
 
 
