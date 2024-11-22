@@ -54,7 +54,7 @@ following instructions for your OS and CPU architecture.
 
 ```sh
 # see releases page for other versions
-curl https://storage.googleapis.com/genai-toolbox/v0.0.1/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.0.1/linux/amd64/toolbox
 chmod +x toolbox
 ```
 
