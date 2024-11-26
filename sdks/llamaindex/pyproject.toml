@@ -8,11 +8,7 @@ authors = [
     {name = "Google LLC", email = "googleapis-packages@google.com"}
 ]
 dependencies = [
-    "aiohttp==3.10.10",
-    "PyYAML==6.0.2",
-    "llama-index==0.11.22",
-    "pydantic==2.9.2",
-    "pytest-asyncio==0.24.0",
+    "llama-index>=0.11.2, <=0.12.1"
 ]
 
 classifiers = [
