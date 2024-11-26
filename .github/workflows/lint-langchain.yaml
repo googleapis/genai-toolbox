@@ -37,7 +37,10 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install SDK and requirements
+      - name: Install library requirements
+        run: pip install -r sdks/langchain/requirements.txt
+
+      - name: Install test requirements
         run: pip install sdks/langchain[test]
 
       - name: Run linters
