@@ -18,7 +18,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        docker buildx build -t ${_DOCKER_URI}:$REF_NAME -t ${_DOCKER_URI}:latest .
+        docker buildx build --build-arg METADATA_TAGS=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$REF_NAME -t ${_DOCKER_URI}:latest .
 
   - id: "push-docker"
     name: "gcr.io/cloud-builders/docker"
