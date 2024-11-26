@@ -280,6 +280,13 @@ func TestParseToolFile(t *testing.T) {
 						Database: "my_db",
 					},
 				},
+				AuthSources: server.AuthSourceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthSourceKind,
+						ClientID: "my-client-id",
+					},
+				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:        "example_tool",
