@@ -27,8 +27,7 @@ steps:
     args:
       - '-c'
       - >-
-        python -m pytest --cov=toolbox_langchain_sdk --cov-config=.coveragerc
-        sdks/langchain/tests
+        python -m pytest sdks/langchain/tests/
     entrypoint: /bin/bash
 options:
   logging: CLOUD_LOGGING_ONLY
