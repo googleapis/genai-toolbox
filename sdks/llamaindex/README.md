@@ -37,9 +37,7 @@ following these [instructions](DEVELOPER.md#setting-up-a-development-environment
 Import and initialize the toolbox client.
 
 ```python
-import asyncio
 from toolbox_llamaindex_sdk import ToolboxClient
-
 
 async def run_test():
     client = ToolboxClient("http://127.0.0.1:5000")
