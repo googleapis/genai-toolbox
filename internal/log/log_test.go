@@ -53,7 +53,7 @@ func TestSeverityToLevel(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := severityToLevel(tc.in)
+			got, err := SeverityToLevel(tc.in)
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
@@ -66,7 +66,7 @@ func TestSeverityToLevel(t *testing.T) {
 }
 
 func TestSeverityToLevelError(t *testing.T) {
-	_, err := severityToLevel("fail")
+	_, err := SeverityToLevel("fail")
 	if err == nil {
 		t.Fatalf("expected error on incorrect level")
 	}
