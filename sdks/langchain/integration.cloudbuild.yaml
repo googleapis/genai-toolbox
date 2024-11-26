@@ -33,4 +33,4 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
-  _VERSION: '3.9'
+  _VERSION: '3.12'
