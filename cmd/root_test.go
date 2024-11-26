@@ -235,12 +235,9 @@ func TestToolFileFlag(t *testing.T) {
 
 func TestParseToolFile(t *testing.T) {
 	tcs := []struct {
-		description     string
-		in              string
-		wantSources     server.SourceConfigs
-		wantAuthSources server.AuthSourceConfigs
-		wantTools       server.ToolConfigs
-		wantToolsets    server.ToolsetConfigs
+		description   string
+		in            string
+		wantToolsFile ToolsFile
 	}{
 		{
 			description: "basic example",
@@ -271,40 +268,42 @@ func TestParseToolFile(t *testing.T) {
 				example_toolset:
 					- example_tool
 			`,
-			wantSources: server.SourceConfigs{
-				"my-pg-instance": cloudsqlpgsrc.Config{
-					Name:     "my-pg-instance",
-					Kind:     cloudsqlpgsrc.SourceKind,
-					Project:  "my-project",
-					Region:   "my-region",
-					Instance: "my-instance",
-					IPType:   "public",
-					Database: "my_db",
-				},
-			},
-			wantAuthSources: server.AuthSourceConfigs{
-				"my-google-service": google.Config{
-					Name:     "my-google-service",
-					Kind:     google.AuthSourceKind,
-					ClientID: "my-client-id",
-				},
-			},
-			wantTools: server.ToolConfigs{
-				"example_tool": postgressql.Config{
-					Name:        "example_tool",
-					Kind:        postgressql.ToolKind,
-					Source:      "my-pg-instance",
-					Description: "some description",
-					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Kind:     cloudsqlpgsrc.SourceKind,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
 					},
 				},
-			},
-			wantToolsets: server.ToolsetConfigs{
-				"example_toolset": tools.ToolsetConfig{
-					Name:      "example_toolset",
-					ToolNames: []string{"example_tool"},
+				AuthSources: server.AuthSourceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthSourceKind,
+						ClientID: "my-client-id",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Kind:        postgressql.ToolKind,
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description"),
+						},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
 				},
 			},
 		},
@@ -315,16 +314,16 @@ func TestParseToolFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantSources, toolsFile.Sources); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantAuthSources, toolsFile.AuthSources); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
 				t.Fatalf("incorrect authsources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantTools, toolsFile.Tools); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsets, toolsFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 		})

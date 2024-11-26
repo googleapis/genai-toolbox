@@ -118,7 +118,7 @@ type ToolsFile struct {
 func parseToolsFile(raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
 	// Parse contents
-	err := yaml.Unmarshal(raw, toolsFile)
+	err := yaml.Unmarshal(raw, &toolsFile)
 	if err != nil {
 		return toolsFile, err
 	}
@@ -154,7 +154,8 @@ func run(cmd *Command) error {
 		cmd.logger.Error(errMsg.Error())
 		return errMsg
 	}
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, err = parseToolsFile(buf)
+	toolsFile, err := parseToolsFile(buf)
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthSources, toolsFile.Tools, toolsFile.Toolsets
 	if err != nil {
 		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
 		cmd.logger.Error(errMsg.Error())
