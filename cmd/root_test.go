@@ -311,20 +311,20 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			gotSources, gotAuthSources, gotTools, gotToolsets, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantSources, gotSources); diff != "" {
+			if diff := cmp.Diff(tc.wantSources, toolsFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantAuthSources, gotAuthSources); diff != "" {
+			if diff := cmp.Diff(tc.wantAuthSources, toolsFile.AuthSources); diff != "" {
 				t.Fatalf("incorrect authsources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantTools, gotTools); diff != "" {
+			if diff := cmp.Diff(tc.wantTools, toolsFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsets, gotToolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsets, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 		})

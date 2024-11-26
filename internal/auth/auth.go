@@ -14,13 +14,13 @@
 
 package auth
 
-// SourceConfig is the interface for configuring auth source.
+// SourceConfig is the interface for configuring authentication sources.
 type AuthSourceConfig interface {
 	AuthSourceConfigKind() string
 	Initialize() (AuthSource, error)
 }
 
-// AuthSource is the interface for
+// AuthSource is the interface for authentication sources.
 type AuthSource interface {
 	AuthSourceKind() string
 	GetName() string

@@ -107,20 +107,22 @@ func NewCommand(opts ...Option) *Command {
 	return cmd
 }
 
+type ToolsFile struct {
+	Sources     server.SourceConfigs     `yaml:"sources"`
+	AuthSources server.AuthSourceConfigs `yaml:"authSources"`
+	Tools       server.ToolConfigs       `yaml:"tools"`
+	Toolsets    server.ToolsetConfigs    `yaml:"toolsets"`
+}
+
 // parseToolsFile parses the provided yaml into appropriate configs.
-func parseToolsFile(raw []byte) (server.SourceConfigs, server.AuthSourceConfigs, server.ToolConfigs, server.ToolsetConfigs, error) {
-	tools_file := &struct {
-		Sources     server.SourceConfigs     `yaml:"sources"`
-		AuthSources server.AuthSourceConfigs `yaml:"authSources"`
-		Tools       server.ToolConfigs       `yaml:"tools"`
-		Toolsets    server.ToolsetConfigs    `yaml:"toolsets"`
-	}{}
+func parseToolsFile(raw []byte) (ToolsFile, error) {
+	var toolsFile ToolsFile
 	// Parse contents
-	err := yaml.Unmarshal(raw, tools_file)
+	err := yaml.Unmarshal(raw, toolsFile)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return toolsFile, err
 	}
-	return tools_file.Sources, tools_file.AuthSources, tools_file.Tools, tools_file.Toolsets, nil
+	return toolsFile, nil
 }
 
 func run(cmd *Command) error {
