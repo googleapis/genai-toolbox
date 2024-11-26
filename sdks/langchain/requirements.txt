@@ -1,0 +1,4 @@
+    aiohttp==3.10.10
+    PyYAML==6.0.2
+    langchain-core==0.3.18
+    pydantic==2.9.2
