@@ -39,9 +39,10 @@ Import and initialize the toolbox client.
 ```python
 from toolbox_llamaindex_sdk import ToolboxClient
 
-async def run_test():
+async def use_toolbox_sdk():
     # Replace with your Toolbox service's URL
     toolbox = ToolboxClient("http://127.0.0.1:5000")
+    ...
 ```
 
 > [!TIP]
