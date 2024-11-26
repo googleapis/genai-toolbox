@@ -15,6 +15,7 @@
 package log
 
 import (
+<<<<<<< HEAD
 	"fmt"
 	"io"
 	"log/slog"
