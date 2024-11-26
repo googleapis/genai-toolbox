@@ -40,7 +40,8 @@ Import and initialize the toolbox client.
 from toolbox_llamaindex_sdk import ToolboxClient
 
 async def run_test():
-    client = ToolboxClient("http://127.0.0.1:5000")
+    # Replace with your Toolbox service's URL
+    toolbox = ToolboxClient("http://127.0.0.1:5000")
 ```
 
 > [!TIP]
