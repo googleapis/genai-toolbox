@@ -73,6 +73,54 @@ func TestSeverityToLevelError(t *testing.T) {
 	}
 }
 
+func TestLevelToSeverity(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "test debug",
+			in:   slog.LevelDebug.String(),
+			want: "DEBUG",
+		},
+		{
+			name: "test info",
+			in:   slog.LevelInfo.String(),
+			want: "INFO",
+		},
+		{
+			name: "test warn",
+			in:   slog.LevelWarn.String(),
+			want: "WARN",
+		},
+		{
+			name: "test error",
+			in:   slog.LevelError.String(),
+			want: "ERROR",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := levelToSeverity(tc.in)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if got != tc.want {
+				t.Fatalf("incorrect level to severity: got %v, want %v", got, tc.want)
+			}
+
+		})
+	}
+}
+
+func TestLevelToSeverityError(t *testing.T) {
+	_, err := levelToSeverity("fail")
+	if err == nil {
+		t.Fatalf("expected error on incorrect slog level")
+	}
+}
+
 func runLogger(logger toolbox.Logger, logMsg string) {
 	switch logMsg {
 	case "info":
@@ -231,6 +279,205 @@ func TestStdLogger(t *testing.T) {
 			}
 			if diff := cmp.Diff(gotErr, tc.wantErr); diff != "" {
 				t.Fatalf("incorrect log: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestStructuredLoggerDebugLog(t *testing.T) {
+	tcs := []struct {
+		name     string
+		logLevel string
+		logMsg   string
+		wantOut  map[string]string
+		wantErr  map[string]string
+	}{
+		{
+			name:     "debug logger logging debug",
+			logLevel: "debug",
+			logMsg:   "debug",
+			wantOut: map[string]string{
+				"severity": "DEBUG",
+				"message":  "log debug",
+			},
+			wantErr: map[string]string{},
+		},
+		{
+			name:     "info logger logging debug",
+			logLevel: "info",
+			logMsg:   "debug",
+			wantOut:  map[string]string{},
+			wantErr:  map[string]string{},
+		},
+		{
+			name:     "warn logger logging debug",
+			logLevel: "warn",
+			logMsg:   "debug",
+			wantOut:  map[string]string{},
+			wantErr:  map[string]string{},
+		},
+		{
+			name:     "error logger logging debug",
+			logLevel: "error",
+			logMsg:   "debug",
+			wantOut:  map[string]string{},
+			wantErr:  map[string]string{},
+		},
+		{
+			name:     "debug logger logging info",
+			logLevel: "debug",
+			logMsg:   "info",
+			wantOut: map[string]string{
+				"severity": "INFO",
+				"message":  "log info",
+			},
+			wantErr: map[string]string{},
+		},
+		{
+			name:     "info logger logging info",
+			logLevel: "info",
+			logMsg:   "info",
+			wantOut: map[string]string{
+				"severity": "INFO",
+				"message":  "log info",
+			},
+			wantErr: map[string]string{},
+		},
+		{
+			name:     "warn logger logging info",
+			logLevel: "warn",
+			logMsg:   "info",
+			wantOut:  map[string]string{},
+			wantErr:  map[string]string{},
+		},
+		{
+			name:     "error logger logging info",
+			logLevel: "error",
+			logMsg:   "info",
+			wantOut:  map[string]string{},
+			wantErr:  map[string]string{},
+		},
+		{
+			name:     "debug logger logging warn",
+			logLevel: "debug",
+			logMsg:   "warn",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "WARN",
+				"message":  "log warn",
+			},
+		},
+		{
+			name:     "info logger logging warn",
+			logLevel: "info",
+			logMsg:   "warn",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "WARN",
+				"message":  "log warn",
+			},
+		},
+		{
+			name:     "warn logger logging warn",
+			logLevel: "warn",
+			logMsg:   "warn",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "WARN",
+				"message":  "log warn",
+			},
+		},
+		{
+			name:     "error logger logging warn",
+			logLevel: "error",
+			logMsg:   "warn",
+			wantOut:  map[string]string{},
+			wantErr:  map[string]string{},
+		},
+		{
+			name:     "debug logger logging error",
+			logLevel: "debug",
+			logMsg:   "error",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "ERROR",
+				"message":  "log error",
+			},
+		},
+		{
+			name:     "info logger logging error",
+			logLevel: "info",
+			logMsg:   "error",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "ERROR",
+				"message":  "log error",
+			},
+		},
+		{
+			name:     "warn logger logging error",
+			logLevel: "warn",
+			logMsg:   "error",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "ERROR",
+				"message":  "log error",
+			},
+		},
+		{
+			name:     "error logger logging error",
+			logLevel: "error",
+			logMsg:   "error",
+			wantOut:  map[string]string{},
+			wantErr: map[string]string{
+				"severity": "ERROR",
+				"message":  "log error",
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			outW := new(bytes.Buffer)
+			errW := new(bytes.Buffer)
+
+			logger, err := NewStructuredLogger(outW, errW, tc.logLevel)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			runLogger(logger, tc.logMsg)
+
+			if len(tc.wantOut) != 0 {
+				got := make(map[string]interface{})
+
+				if err := json.Unmarshal(outW.Bytes(), &got); err != nil {
+					t.Fatalf("failed to parse writer")
+				}
+
+				if got["severity"] != tc.wantOut["severity"] {
+					t.Fatalf("incorrect severity: got %v, want %v", got["severity"], tc.wantOut["severity"])
+				}
+
+			} else {
+				if outW.String() != "" {
+					t.Fatalf("incorrect log. got %v, want %v", outW.String(), "")
+				}
+			}
+
+			if len(tc.wantErr) != 0 {
+				got := make(map[string]interface{})
+
+				if err := json.Unmarshal(errW.Bytes(), &got); err != nil {
+					t.Fatalf("failed to parse writer")
+				}
+
+				if got["severity"] != tc.wantErr["severity"] {
+					t.Fatalf("incorrect severity: got %v, want %v", got["severity"], tc.wantErr["severity"])
+				}
+
+			} else {
+				if errW.String() != "" {
+					t.Fatalf("incorrect log. got %v, want %v", errW.String(), "")
+				}
 			}
 		})
 	}

@@ -15,7 +15,6 @@
 package log
 
 import (
-<<<<<<< HEAD
 	"fmt"
 	"io"
 	"log/slog"
@@ -89,4 +88,99 @@ func severityToLevel(s string) (slog.Level, error) {
 	default:
 		return slog.Level(-1), fmt.Errorf("invalid log level")
 	}
+}
+
+// Returns severity string based on level.
+func levelToSeverity(s string) (string, error) {
+	switch s {
+	case slog.LevelDebug.String():
+		return Debug, nil
+	case slog.LevelInfo.String():
+		return Info, nil
+	case slog.LevelWarn.String():
+		return Warn, nil
+	case slog.LevelError.String():
+		return Error, nil
+	default:
+		return "", fmt.Errorf("invalid slog level")
+	}
+}
+
+type StructuredLogger struct {
+	outLogger *slog.Logger
+	errLogger *slog.Logger
+}
+
+// NewStructuredLogger create a Logger that logs messages using JSON.
+func NewStructuredLogger(outW, errW io.Writer, logLevel string) (toolbox.Logger, error) {
+	//Set log level
+	var programLevel = new(slog.LevelVar)
+	slogLevel, err := severityToLevel(logLevel)
+	if err != nil {
+		return nil, err
+	}
+	programLevel.Set(slogLevel)
+
+	replace := func(groups []string, a slog.Attr) slog.Attr {
+		switch a.Key {
+		case slog.LevelKey:
+			value := a.Value.String()
+			sev, _ := levelToSeverity(value)
+			return slog.Attr{
+				Key:   "severity",
+				Value: slog.StringValue(sev),
+			}
+		case slog.MessageKey:
+			return slog.Attr{
+				Key:   "message",
+				Value: a.Value,
+			}
+		case slog.SourceKey:
+			return slog.Attr{
+				Key:   "logging.googleapis.com/sourceLocation",
+				Value: a.Value,
+			}
+		case slog.TimeKey:
+			return slog.Attr{
+				Key:   "timestamp",
+				Value: a.Value,
+			}
+		}
+		return a
+	}
+
+	// Configure structured logs to adhere to Cloud LogEntry format
+	// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
+	outHandler := slog.NewJSONHandler(outW, &slog.HandlerOptions{
+		AddSource:   true,
+		Level:       programLevel,
+		ReplaceAttr: replace,
+	})
+	errHandler := slog.NewJSONHandler(errW, &slog.HandlerOptions{
+		AddSource:   true,
+		Level:       programLevel,
+		ReplaceAttr: replace,
+	})
+
+	return &StructuredLogger{outLogger: slog.New(outHandler), errLogger: slog.New(errHandler)}, nil
+}
+
+// Debug logs debug messages
+func (sl *StructuredLogger) Debug(msg string, keysAndValues ...interface{}) {
+	sl.outLogger.Debug(msg, keysAndValues...)
+}
+
+// Info logs info messages
+func (sl *StructuredLogger) Info(msg string, keysAndValues ...interface{}) {
+	sl.outLogger.Info(msg, keysAndValues...)
+}
+
+// Warn logs warning messages
+func (sl *StructuredLogger) Warn(msg string, keysAndValues ...interface{}) {
+	sl.errLogger.Warn(msg, keysAndValues...)
+}
+
+// Error logs error messages
+func (sl *StructuredLogger) Error(msg string, keysAndValues ...interface{}) {
+	sl.errLogger.Error(msg, keysAndValues...)
 }
