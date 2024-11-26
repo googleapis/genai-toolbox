@@ -8,10 +8,10 @@ authors = [
     {name = "Google LLC", email = "googleapis-packages@google.com"}
 ]
 dependencies = [
-    "aiohttp",
-    "PyYAML",
-    "langchain-core",
-    "pydantic",
+    "aiohttp==3.10.10",
+    "PyYAML==6.0.2",
+    "langchain-core==0.3.18",
+    "pydantic==2.9.2",
 ]
 
 classifiers = [
@@ -32,13 +32,13 @@ Repository = "https://github.com/googleapis/genai-toolbox.git"
 
 [project.optional-dependencies]
 test = [
-    "black[jupyter]",
-    "isort",
-    "mypy",
-    "pytest-asyncio",
-    "pytest",
-    "pytest-cov",
-    "Pillow"
+    "black[jupyter]==24.10.0",
+    "isort==5.13.2",
+    "mypy==1.13.0",
+    "pytest-asyncio==0.24.0",
+    "pytest==8.3.3",
+    "pytest-cov==6.0.0",
+    "Pillow==10.4.0"
 ]
 
 [build-system]
