@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authSources
+package auth
 
 // SourceConfig is the interface for configuring auth source.
 type AuthSourceConfig interface {
@@ -20,7 +20,7 @@ type AuthSourceConfig interface {
 	Initialize() (AuthSource, error)
 }
 
-// AuthSource is the interface for the authSource.
+// AuthSource is the interface for
 type AuthSource interface {
 	AuthSourceKind() string
 	GetName() string

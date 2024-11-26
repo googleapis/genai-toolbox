@@ -22,7 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/authSources/googleAuth"
+
+	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -282,9 +283,9 @@ func TestParseToolFile(t *testing.T) {
 				},
 			},
 			wantAuthSources: server.AuthSourceConfigs{
-				"my-google-service": googleAuth.Config{
+				"my-google-service": google.Config{
 					Name:     "my-google-service",
-					Kind:     googleAuth.AuthSourceKind,
+					Kind:     google.AuthSourceKind,
 					ClientID: "my-client-id",
 				},
 			},

@@ -25,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog/v2"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	logLib "github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -89,6 +90,17 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		sourcesMap[name] = s
 	}
 	log.Info(fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
+
+	// initalize and validate the sources
+	authSourcesMap := make(map[string]auth.AuthSource)
+	for name, sc := range cfg.AuthSourceConfigs {
+		a, err := sc.Initialize()
+		if err != nil {
+			return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+		}
+		authSourcesMap[name] = a
+	}
+	fmt.Printf("Initalized %d authsources.\n", len(authSourcesMap))
 
 	// initialize and validate the tools
 	toolsMap := make(map[string]tools.Tool)

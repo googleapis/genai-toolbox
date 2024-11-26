@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/authSources"
-	"github.com/googleapis/genai-toolbox/internal/authSources/googleAuth"
+	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
@@ -159,7 +159,7 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 }
 
 // AuthSourceConfigs is a type used to allow unmarshal of the data authSource config map
-type AuthSourceConfigs map[string]authSources.AuthSourceConfig
+type AuthSourceConfigs map[string]auth.AuthSourceConfig
 
 // validate interface
 var _ yaml.Unmarshaler = &SourceConfigs{}
@@ -181,8 +181,8 @@ func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 			return fmt.Errorf("missing 'kind' field for %q", k)
 		}
 		switch k.Kind {
-		case googleAuth.AuthSourceKind:
-			actual := googleAuth.Config{Name: name}
+		case google.AuthSourceKind:
+			actual := google.Config{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
