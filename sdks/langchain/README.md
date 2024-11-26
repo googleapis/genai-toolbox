@@ -9,11 +9,6 @@ applications, enabling advanced orchestration and interaction with GenAI models.
 - [GenAI Toolbox SDK](#genai-toolbox-sdk)
     - [Installation](#installation)
     - [Usage](#usage)
-<!-- TOC -->
-
-- [GenAI Toolbox SDK](#genai-toolbox-sdk)
-    - [Installation](#installation)
-    - [Usage](#usage)
     - [Load a toolset](#load-a-toolset)
     - [Load a single tool](#load-a-single-tool)
     - [Use with LangChain](#use-with-langchain)
@@ -22,7 +17,10 @@ applications, enabling advanced orchestration and interaction with GenAI models.
         - [Connect Tools with LLM](#connect-tools-with-llm)
     - [Manual usage](#manual-usage)
 
-<!-- /TOC -->]
+<!-- /TOC -->
+## Installation
+
+> [!IMPORTANT]
 > This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](DEVELOPER.md).
 
 You can install the Toolbox SDK for LangChain using `pip`.
