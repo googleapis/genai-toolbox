@@ -9,6 +9,11 @@ applications, enabling advanced orchestration and interaction with GenAI models.
 - [GenAI Toolbox SDK](#genai-toolbox-sdk)
     - [Installation](#installation)
     - [Usage](#usage)
+<!-- TOC -->
+
+- [GenAI Toolbox SDK](#genai-toolbox-sdk)
+    - [Installation](#installation)
+    - [Usage](#usage)
     - [Load a toolset](#load-a-toolset)
     - [Load a single tool](#load-a-single-tool)
     - [Use with LangChain](#use-with-langchain)
@@ -17,10 +22,7 @@ applications, enabling advanced orchestration and interaction with GenAI models.
         - [Connect Tools with LLM](#connect-tools-with-llm)
     - [Manual usage](#manual-usage)
 
-<!-- /TOC -->
-## Installation
-
-> [!IMPORTANT]
+<!-- /TOC -->]
 > This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](DEVELOPER.md).
 
 You can install the Toolbox SDK for LangChain using `pip`.
@@ -36,8 +38,10 @@ Import and initialize the toolbox client.
 ```python
 from toolbox_langchain_sdk import ToolboxClient
 
-# Replace with your Toolbox service's URL
-toolbox = ToolboxClient("http://localhost:5000")
+async def run_toolbox():
+    # Replace with your Toolbox service's URL
+    toolbox = ToolboxClient("http://127.0.0.1:5000")
+    ...
 ```
 
 > [!TIP]
