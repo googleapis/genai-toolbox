@@ -36,7 +36,7 @@ Import and initialize the toolbox client.
 ```python
 from toolbox_langchain_sdk import ToolboxClient
 
-async def run_toolbox():
+async def use_toolbox_sdk():
     # Replace with your Toolbox service's URL
     toolbox = ToolboxClient("http://127.0.0.1:5000")
     ...
