@@ -86,6 +86,6 @@ func severityToLevel(s string) (slog.Level, error) {
 	case Error:
 		return slog.LevelError, nil
 	default:
-		return slog.Level(-1), fmt.Errorf("invalid log level")
+		return slog.Level(-5), fmt.Errorf("invalid log level")
 	}
 }
