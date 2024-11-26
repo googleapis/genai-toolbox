@@ -27,8 +27,7 @@ steps:
     args:
       - '-c'
       - >-
-        python -m pytest --cov=toolbox_llamaindex_sdk --cov-config=.coveragerc
-        sdks/llamaindex/tests
+        python -m pytest sdks/llamaindex/tests/
     entrypoint: /bin/bash
 options:
   logging: CLOUD_LOGGING_ONLY
