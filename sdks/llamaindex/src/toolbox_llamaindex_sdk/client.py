@@ -19,7 +19,7 @@ class ToolboxClient:
                 Default: None
         """
         self._url: str = url
-        self._should_close_session: bool = session != None
+        self._should_close_session: bool = session is None
         self._session: ClientSession = session or ClientSession()
 
     async def close(self) -> None:

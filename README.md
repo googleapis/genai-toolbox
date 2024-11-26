@@ -54,7 +54,7 @@ following instructions for your OS and CPU architecture.
 
 ```sh
 # see releases page for other versions
-curl https://storage.googleapis.com/genai-toolbox/v0.0.1/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.0.1/linux/amd64/toolbox
 chmod +x toolbox
 ```
 
@@ -90,7 +90,8 @@ execute `toolbox` to start the server:
 ./toolbox --tools_file "tools.yaml"
 ```
 
-You can use `toolbox help` for a full list of flags! 
+You can use `toolbox help` for a full list of flags! To stop the server, send a
+terminate signal (`ctrl+c` on most platforms).
 
 ### Using with Client SDKs
 
@@ -151,6 +152,8 @@ execute against.
 
 ```yaml
 sources:
+    # This tool kind has some requirements. 
+    # See https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements
     my-cloud-sql-source:
         kind: cloud-sql-postgres
         project: my-project-name
@@ -174,7 +177,7 @@ is, which source it affects, what parameters it takes, etc.
 tools:
     get_flight_by_id:
         kind: postgres-sql
-        source: my-pg-instance
+        source: my-cloud-sql-source
         description: >
             Use this tool to list all airports matching search criteria. Takes 
             at least one of country, city, name, or all and returns all matching
@@ -183,8 +186,8 @@ tools:
         statement: "SELECT * FROM flights WHERE id = $1"
         parameters:
         - name: id
-            type: int
-            description: 'id' represents the unique ID for each flight. 
+          type: int
+          description: 'id' represents the unique ID for each flight. 
 ```
 
 

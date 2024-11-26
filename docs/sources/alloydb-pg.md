@@ -5,7 +5,11 @@ database for demanding transactional workloads. It provides enterprise-grade
 performance and availability while maintaining 100% compatibility with
 open-source PostgreSQL.
 
+If you are new to AlloyDB for PostgreSQL, you can try [creating and connecting
+to a database by following these instructions][alloydb-quickstart].
+
 [alloydb-docs]: https://cloud.google.com/alloydb/docs
+[alloydb-quickstart]: https://cloud.google.com/alloydb/docs/quickstart/create-and-connect
 
 ## Requirements 
 

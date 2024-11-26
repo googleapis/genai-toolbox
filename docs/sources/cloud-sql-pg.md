@@ -4,7 +4,11 @@
 that helps you set up, maintain, manage, and administer your PostgreSQL
 relational databases on Google Cloud Platform.
 
+If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
+to a database by following these instructions][csql-pg-quickstart].
+
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
+[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
 ## Requirements 
 
