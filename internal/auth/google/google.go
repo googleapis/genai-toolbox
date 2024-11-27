@@ -18,26 +18,29 @@ import (
 	"context"
 	"fmt"
 
-	authSources "github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"google.golang.org/api/idtoken"
 )
 
 const AuthSourceKind string = "google"
 
 // validate interface
-var _ authSources.AuthSourceConfig = Config{}
+var _ auth.AuthSourceConfig = Config{}
 
+// Auth source configuration
 type Config struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
 	ClientID string `yaml:"client_id"`
 }
 
+// Returns the auth source kind
 func (cfg Config) AuthSourceConfigKind() string {
 	return AuthSourceKind
 }
 
-func (cfg Config) Initialize() (authSources.AuthSource, error) {
+// Initialize a Google auth source
+func (cfg Config) Initialize() (auth.AuthSource, error) {
 	a := &AuthSource{
 		Name:     cfg.Name,
 		Kind:     AuthSourceKind,
@@ -46,22 +49,26 @@ func (cfg Config) Initialize() (authSources.AuthSource, error) {
 	return a, nil
 }
 
-var _ authSources.AuthSource = AuthSource{}
+var _ auth.AuthSource = AuthSource{}
 
+// struct used to store auth source info
 type AuthSource struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
 	ClientID string `yaml:"client_id"`
 }
 
+// Returns the auth source kind
 func (a AuthSource) AuthSourceKind() string {
 	return AuthSourceKind
 }
 
+// Returns the name of the auth source
 func (a AuthSource) GetName() string {
 	return a.Name
 }
 
+// Verifies the OIDC token with Google OAuth
 func (a AuthSource) Verify(token string) (map[string]interface{}, error) {
 	payload, err := idtoken.Validate(context.Background(), token, a.ClientID)
 	if err != nil {
