@@ -249,10 +249,6 @@ func TestParseToolFile(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
-			authSources:
-				my-google-service:
-					kind: google
-					client_id: my-client-id
 			tools:
 				example_tool:
 					kind: postgres-sql
@@ -264,12 +260,6 @@ func TestParseToolFile(t *testing.T) {
 						- name: country
 							type: string
 							description: some description
-						- name: id
-							type: integer
-							description: user id
-							auth_sources:
-							- name: my-google-service
-								field: user_id
 			toolsets:
 				example_toolset:
 					- example_tool
@@ -284,13 +274,6 @@ func TestParseToolFile(t *testing.T) {
 						Instance: "my-instance",
 						IPType:   "public",
 						Database: "my_db",
-					},
-				},
-				AuthSources: server.AuthSourceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Kind:     google.AuthSourceKind,
-						ClientID: "my-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
