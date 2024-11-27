@@ -1,1 +1,4 @@
-llama-index==0.12.1
+llama-index==0.12.2
+PyYAML==6.0.2
+pydantic==2.9.2
+aiohttp==3.11.7
