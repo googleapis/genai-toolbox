@@ -20,10 +20,11 @@ COPY . .
 
 ARG TARGETOS
 ARG TARGETARCH
+ARG METADATA_TAGS=dev
 
 RUN go get ./...
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=container.$(git rev-parse HEAD)"
+    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=container.${METADATA_TAGS}"
 
 # Final Stage
 FROM gcr.io/distroless/static:nonroot

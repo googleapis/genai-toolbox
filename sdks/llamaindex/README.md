@@ -43,6 +43,11 @@ from toolbox_llamaindex_sdk import ToolboxClient
 toolbox = ToolboxClient("http://127.0.0.1:5000")
 ```
 
+> [!IMPORTANT]
+> The toolbox client requires an asynchronous environment.
+> For guidance on running asynchronous Python programs, see
+> [running an async program in python](https://docs.python.org/3/library/asyncio-runner.html#running-an-asyncio-program).
+
 > [!TIP]
 > You can also pass your own `ClientSession` so that the `ToolboxClient` can
 > reuse the same session.
