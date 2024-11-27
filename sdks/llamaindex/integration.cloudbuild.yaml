@@ -13,7 +13,15 @@
 # limitations under the License.
 
 steps:
-  - id: Install module (and test requirements)
+  - id: Install library requirements
+    name: 'python:${_VERSION}'
+    args:
+      - install
+      - '-r'
+      - 'sdks/llamaindex/requirements.txt'
+      - '--user'
+    entrypoint: pip
+  - id: Install test requirements
     name: 'python:${_VERSION}'
     args:
       - install
