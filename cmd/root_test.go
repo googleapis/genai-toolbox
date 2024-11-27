@@ -249,10 +249,6 @@ func TestParseToolFile(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
-			authSources:
-				my-google-service:
-					kind: google
-					client_id: my-client-id
 			tools:
 				example_tool:
 					kind: postgres-sql
@@ -278,13 +274,6 @@ func TestParseToolFile(t *testing.T) {
 						Instance: "my-instance",
 						IPType:   "public",
 						Database: "my_db",
-					},
-				},
-				AuthSources: server.AuthSourceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
-						ClientID: "my-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
@@ -420,6 +409,127 @@ func TestParseToolFileWithAuth(t *testing.T) {
 							tools.NewStringParameter("country", "some description"),
 							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthSource{{Name: "my-google-service", Field: "user_id"}}),
 							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthSource{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
+				t.Fatalf("incorrect sources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
+				t.Fatalf("incorrect authsources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+		})
+	}
+
+}
+
+func TestParseToolFileWithAuth(t *testing.T) {
+	tcs := []struct {
+		description   string
+		in            string
+		wantToolsFile ToolsFile
+	}{
+		{
+			description: "basic example",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+			authSources:
+				my-google-service:
+					kind: google
+					client_id: my-client-id
+				other-google-service:
+					kind: google
+					client_id: other-client-id
+			tools:
+				example_tool:
+					kind: postgres-sql
+					source: my-pg-instance
+					description: some description
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					parameters:
+						- name: country
+							type: string
+							description: some description
+						- name: id
+							type: integer
+							description: user id
+							auth_sources:
+							- name: my-google-service
+								field: user_id
+						- name: email
+							type: string
+							description: user email
+							auth_sources:
+							- name: my-google-service
+								field: email
+							- name: other-google-service
+								field: other_email
+			toolsets:
+				example_toolset:
+					- example_tool
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Kind:     cloudsqlpgsrc.SourceKind,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						Database: "my_db",
+					},
+				},
+				AuthSources: server.AuthSourceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthSourceKind,
+						ClientID: "my-client-id",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Kind:     google.AuthSourceKind,
+						ClientID: "other-client-id",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Kind:        postgressql.ToolKind,
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description", nil),
+							tools.NewIntParameter("id", "user id", []tools.ParamAuthSource{{Name: "my-google-service", Field: "user_id"}}),
+							tools.NewStringParameter("email", "user email", []tools.ParamAuthSource{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
