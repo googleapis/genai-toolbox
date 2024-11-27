@@ -1,4 +1,4 @@
-aiohttp==3.10.10
+llama-index==0.12.2
 PyYAML==6.0.2
-llama-index==0.11.22
 pydantic==2.9.2
+aiohttp==3.11.7
