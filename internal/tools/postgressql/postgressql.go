@@ -105,9 +105,10 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
-func (t Tool) Invoke(params []any) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+	sliceParams := params.SliceValues()
 	fmt.Printf("Invoked tool %s\n", t.Name)
-	results, err := t.Pool.Query(context.Background(), t.Statement, params...)
+	results, err := t.Pool.Query(context.Background(), t.Statement, sliceParams...)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -124,7 +125,7 @@ func (t Tool) Invoke(params []any) (string, error) {
 	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
 }
 
-func (t Tool) ParseParams(data map[string]any) ([]any, error) {
+func (t Tool) ParseParams(data map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data)
 }
 

@@ -28,11 +28,37 @@ const (
 	typeArray  = "array"
 )
 
-// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
-func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
+type ParamValues []ParamValue
+
+type ParamValue struct {
+	Name  string
+	Value any
+}
+
+func (p ParamValues) SliceValues() []any {
 	params := []any{}
+
+	for _, p := range p {
+		params = append(params, p.Value)
+	}
+	return params
+}
+
+func (p ParamValues) MapValues() map[string]interface{} {
+	params := make(map[string]interface{})
+
+	for _, p := range p {
+		params[p.Name] = p.Value
+	}
+	return params
+}
+
+// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
+func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
+	params := []ParamValue{}
 	for _, p := range ps {
-		v, ok := data[p.GetName()]
+		name := p.GetName()
+		v, ok := data[name]
 		if !ok {
 			return nil, fmt.Errorf("parameter %q is required!", p.GetName())
 		}
@@ -40,7 +66,7 @@ func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
 		}
-		params = append(params, newV)
+		params = append(params, ParamValue{Name: name, Value: newV})
 	}
 	return params, nil
 }
