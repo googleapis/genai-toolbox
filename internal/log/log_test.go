@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/toolbox"
 )
 
 func TestSeverityToLevel(t *testing.T) {
@@ -121,7 +120,7 @@ func TestLevelToSeverityError(t *testing.T) {
 	}
 }
 
-func runLogger(logger toolbox.Logger, logMsg string) {
+func runLogger(logger Logger, logMsg string) {
 	switch logMsg {
 	case "info":
 		logger.Info("log info")
