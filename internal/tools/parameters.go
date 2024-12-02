@@ -84,14 +84,14 @@ func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 			for _, a := range authSources {
 				if a.Name == authSourceName {
 					v, ok = claims[a.Field]
+					if !ok {
+						return nil, fmt.Errorf("claims returned from authentication do not contain field %q", p.GetName())
+					}
 					break
 				}
 			}
 			if v == nil {
 				return nil, fmt.Errorf("provided auth source %s not in parameter %s's approved list", authSourceName, p.GetName())
-			}
-			if !ok {
-				return nil, fmt.Errorf("claims returned from authentication do not contain field %q", p.GetName())
 			}
 		}
 		newV, err := p.Parse(v)

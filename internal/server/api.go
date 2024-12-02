@@ -21,7 +21,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"github.com/googleapis/genai-toolbox/internal/authSources"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -109,7 +109,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 	}
-	var authSource authSources.AuthSource
+	var authSource auth.AuthSource
 	if authSourceName != "" {
 		authSource, ok = s.authSources[authSourceName]
 		if !ok {
