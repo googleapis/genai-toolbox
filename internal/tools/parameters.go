@@ -28,14 +28,17 @@ const (
 	typeArray  = "array"
 )
 
+// ParamValues is an ordered list of ParamValue
 type ParamValues []ParamValue
 
+// ParamValue represents the parameter's name and value. This struct is parsed from arbitraryJSON object by the ParseParam helper function.
 type ParamValue struct {
 	Name  string
 	Value any
 }
 
-func (p ParamValues) SliceValuesPG() []any {
+// SliceValuesPG is a helper function to convert ParamValues into an ordered slice.
+func SliceValues(p ParamValues) []any {
 	params := []any{}
 
 	for _, p := range p {
@@ -44,17 +47,8 @@ func (p ParamValues) SliceValuesPG() []any {
 	return params
 }
 
-func (p ParamValues) MapValuesPG() map[string]interface{} {
-	params := make(map[string]interface{})
-
-	for i, p := range p {
-		key := fmt.Sprintf("p%d", i+1)
-		params[key] = p.Value
-	}
-	return params
-}
-
-func (p ParamValues) MapValuesGSQL() map[string]interface{} {
+// MapValues is a helper function to convert ParamValues into a map. It uses param name as keys.
+func MapValues(p ParamValues) map[string]interface{} {
 	params := make(map[string]interface{})
 
 	for _, p := range p {
@@ -65,7 +59,7 @@ func (p ParamValues) MapValuesGSQL() map[string]interface{} {
 
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
 func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
-	params := []ParamValue{}
+	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
 		name := p.GetName()
 		v, ok := data[name]

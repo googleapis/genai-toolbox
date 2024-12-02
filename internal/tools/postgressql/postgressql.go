@@ -106,7 +106,7 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
-	sliceParams := params.SliceValuesPG()
+	sliceParams := tools.SliceValues(params)
 	fmt.Printf("Invoked tool %s\n", t.Name)
 	results, err := t.Pool.Query(context.Background(), t.Statement, sliceParams...)
 	if err != nil {

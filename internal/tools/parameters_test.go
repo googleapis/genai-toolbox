@@ -256,25 +256,22 @@ func TestParametersParse(t *testing.T) {
 
 func TestParamValues(t *testing.T) {
 	tcs := []struct {
-		name        string
-		in          tools.ParamValues
-		wantSlice   []any
-		wantMapPG   map[string]interface{}
-		wantMapGSQL map[string]interface{}
+		name      string
+		in        tools.ParamValues
+		wantSlice []any
+		wantMap   map[string]interface{}
 	}{
 		{
-			name:        "string",
-			in:          tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}, tools.ParamValue{Name: "my_string", Value: "hello world"}},
-			wantSlice:   []any{true, "hello world"},
-			wantMapPG:   map[string]interface{}{"p1": true, "p2": "hello world"},
-			wantMapGSQL: map[string]interface{}{"my_bool": true, "my_string": "hello world"},
+			name:      "string",
+			in:        tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}, tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			wantSlice: []any{true, "hello world"},
+			wantMap:   map[string]interface{}{"my_bool": true, "my_string": "hello world"},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSlice := tc.in.SliceValuesPG()
-			gotMapPG := tc.in.MapValuesPG()
-			gotMapGSQL := tc.in.MapValuesGSQL()
+			gotSlice := tools.SliceValues(tc.in)
+			gotMap := tools.MapValues(tc.in)
 
 			for i, got := range gotSlice {
 				want := tc.wantSlice[i]
@@ -282,14 +279,8 @@ func TestParamValues(t *testing.T) {
 					t.Fatalf("unexpected value: got %q, want %q", got, want)
 				}
 			}
-			for i, got := range gotMapPG {
-				want := tc.wantMapPG[i]
-				if got != want {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-			}
-			for i, got := range gotMapGSQL {
-				want := tc.wantMapGSQL[i]
+			for i, got := range gotMap {
+				want := tc.wantMap[i]
 				if got != want {
 					t.Fatalf("unexpected value: got %q, want %q", got, want)
 				}
