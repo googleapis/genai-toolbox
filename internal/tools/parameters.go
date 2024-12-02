@@ -35,7 +35,7 @@ type ParamValue struct {
 	Value any
 }
 
-func (p ParamValues) SliceValues() []any {
+func (p ParamValues) SliceValuesPG() []any {
 	params := []any{}
 
 	for _, p := range p {
@@ -44,7 +44,17 @@ func (p ParamValues) SliceValues() []any {
 	return params
 }
 
-func (p ParamValues) MapValues() map[string]interface{} {
+func (p ParamValues) MapValuesPG() map[string]interface{} {
+	params := make(map[string]interface{})
+
+	for i, p := range p {
+		key := fmt.Sprintf("p%d", i+1)
+		params[key] = p.Value
+	}
+	return params
+}
+
+func (p ParamValues) MapValuesGSQL() map[string]interface{} {
 	params := make(map[string]interface{})
 
 	for _, p := range p {
