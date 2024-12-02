@@ -28,14 +28,13 @@ import (
 	logLib "github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/toolbox"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
 	conf   ServerConfig
 	root   chi.Router
-	logger toolbox.Logger
+	logger logLib.Logger
 
 	sources  map[string]sources.Source
 	tools    map[string]tools.Tool
@@ -43,13 +42,14 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(cfg ServerConfig, log toolbox.Logger) (*Server, error) {
+func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
 	}
 	var httpOpts httplog.Options
-	if cfg.LoggingFormat.String() == "json" {
+	switch cfg.LoggingFormat.String() {
+	case "json":
 		httpOpts = httplog.Options{
 			JSON:             true,
 			LogLevel:         logLevel,
@@ -60,7 +60,7 @@ func NewServer(cfg ServerConfig, log toolbox.Logger) (*Server, error) {
 			TimeFieldName:    "timestamp",
 			LevelFieldName:   "severity",
 		}
-	} else {
+	default:
 		httpOpts = httplog.Options{
 			LogLevel:         logLevel,
 			Concise:          true,

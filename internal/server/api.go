@@ -49,7 +49,6 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
 		err := fmt.Errorf("Toolset %q does not exist", toolsetName)
-		s.logger.Error(err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -62,7 +61,6 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		s.logger.Error(err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -83,7 +81,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		s.logger.Error(err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -92,7 +89,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err := fmt.Errorf("request body was invalid JSON: %w", err)
-		s.logger.Error(err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
@@ -100,7 +96,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	params, err := tool.ParseParams(data)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
-		s.logger.Error(err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
@@ -108,7 +103,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	res, err := tool.Invoke(params)
 	if err != nil {
 		err := fmt.Errorf("error while invoking tool: %w", err)
-		s.logger.Error(err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}

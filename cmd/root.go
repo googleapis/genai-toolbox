@@ -23,7 +23,6 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/toolbox"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -63,7 +62,7 @@ type Command struct {
 	*cobra.Command
 
 	cfg        server.ServerConfig
-	logger     toolbox.Logger
+	logger     log.Logger
 	tools_file string
 }
 
@@ -82,7 +81,7 @@ func NewCommand() *Command {
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
 	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
-	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the log level. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
+	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 
 	// wrap RunE command so that we have access to original Command object
@@ -111,13 +110,14 @@ func run(cmd *Command) error {
 	defer cancel()
 
 	// Handle logger separately from config
-	if strings.ToLower(cmd.cfg.LoggingFormat.String()) == "json" {
+	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
+	case "json":
 		logger, err := log.NewStructuredLogger(os.Stdout, os.Stderr, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}
 		cmd.logger = logger
-	} else {
+	default:
 		logger, err := log.NewStdLogger(os.Stdout, os.Stderr, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
