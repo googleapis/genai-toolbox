@@ -390,7 +390,7 @@ func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
 	// Parse auth sources
 	authSourcesNode := node.Content[authSourcesIdx+1]
 	if authSourcesNode.Kind != yaml.SequenceNode {
-		return fmt.Errorf("auth_sources must be a sequence")
+		return fmt.Errorf("auth_sources must be a list")
 	}
 
 	p.AuthSources = make([]ParamAuthSource, 0, len(authSourcesNode.Content))
