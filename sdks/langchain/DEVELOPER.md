@@ -11,7 +11,7 @@ Below are the details to set up a development environment and run tests.
     ```bash
     cd genai-toolbox/sdks/langchain
     ```
-1. Install the dependencies
+1. Install the package in editable mode, so changes are reflected without reinstall:
     ```bash
     pip install -e .
     ```
