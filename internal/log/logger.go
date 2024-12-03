@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package toolbox
+package log
 
 // Logger is the interface used throughout the project for logging.
 type Logger interface {

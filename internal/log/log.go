@@ -19,8 +19,6 @@ import (
 	"io"
 	"log/slog"
 	"strings"
-
-	"github.com/googleapis/genai-toolbox/toolbox"
 )
 
 // StdLogger is the standard logger
@@ -30,7 +28,7 @@ type StdLogger struct {
 }
 
 // NewStdLogger create a Logger that uses out and err for informational and error messages.
-func NewStdLogger(outW, errW io.Writer, logLevel string) (toolbox.Logger, error) {
+func NewStdLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 	//Set log level
 	var programLevel = new(slog.LevelVar)
 	slogLevel, err := severityToLevel(logLevel)
@@ -112,7 +110,7 @@ type StructuredLogger struct {
 }
 
 // NewStructuredLogger create a Logger that logs messages using JSON.
-func NewStructuredLogger(outW, errW io.Writer, logLevel string) (toolbox.Logger, error) {
+func NewStructuredLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 	//Set log level
 	var programLevel = new(slog.LevelVar)
 	slogLevel, err := severityToLevel(logLevel)
