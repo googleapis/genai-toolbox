@@ -397,7 +397,7 @@ func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
 	for i := 0; i < len(authSourcesNode.Content); i++ {
 		var authSource ParamAuthSource
 		if err := authSourcesNode.Content[i].Decode(&authSource); err != nil {
-			return fmt.Errorf("unable to decode auth_source: %w", err)
+			return fmt.Errorf("unable to decode auth source: %w", err)
 		}
 		p.AuthSources = append(p.AuthSources, authSource)
 	}
