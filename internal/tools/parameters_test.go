@@ -148,7 +148,7 @@ func TestAuthParametersMarhsall(t *testing.T) {
 					"name":        "my_string",
 					"type":        "string",
 					"description": "this param is a string",
-					"auth_sources": []map[string]string{
+					"authSources": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -171,7 +171,7 @@ func TestAuthParametersMarhsall(t *testing.T) {
 					"name":        "my_integer",
 					"type":        "integer",
 					"description": "this param is an int",
-					"auth_sources": []map[string]string{
+					"authSources": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -194,7 +194,7 @@ func TestAuthParametersMarhsall(t *testing.T) {
 					"name":        "my_float",
 					"type":        "float",
 					"description": "my param is a float",
-					"auth_sources": []map[string]string{
+					"authSources": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -217,7 +217,7 @@ func TestAuthParametersMarhsall(t *testing.T) {
 					"name":        "my_bool",
 					"type":        "boolean",
 					"description": "this param is a boolean",
-					"auth_sources": []map[string]string{
+					"authSources": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -243,7 +243,7 @@ func TestAuthParametersMarhsall(t *testing.T) {
 					"items": map[string]string{
 						"type": "string",
 					},
-					"auth_sources": []map[string]string{
+					"authSources": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -269,7 +269,7 @@ func TestAuthParametersMarhsall(t *testing.T) {
 					"items": map[string]string{
 						"type": "float",
 					},
-					"auth_sources": []map[string]string{
+					"authSources": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
