@@ -46,7 +46,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 						- name: country
 						  type: string
 						  description: some description
-						  auth_sources:
+						  authSources:
 							- name: my-google-auth-service
 								field: user_id
 							- name: other-auth-service

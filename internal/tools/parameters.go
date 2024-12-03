@@ -232,7 +232,7 @@ var _ Parameter = &StringParameter{}
 // StringParameter is a parameter representing the "string" type.
 type StringParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
+	AuthSources     []ParamAuthSource `yaml:"authSources"`
 }
 
 // Parse casts the value "v" as a "string".
@@ -264,7 +264,7 @@ var _ Parameter = &IntParameter{}
 // IntParameter is a parameter representing the "int" type.
 type IntParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
+	AuthSources     []ParamAuthSource `yaml:"authSources"`
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
@@ -296,7 +296,7 @@ var _ Parameter = &FloatParameter{}
 // FloatParameter is a parameter representing the "float" type.
 type FloatParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
+	AuthSources     []ParamAuthSource `yaml:"authSources"`
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
@@ -328,7 +328,7 @@ var _ Parameter = &BooleanParameter{}
 // BooleanParameter is a parameter representing the "boolean" type.
 type BooleanParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
+	AuthSources     []ParamAuthSource `yaml:"authSources"`
 }
 
 func (p *BooleanParameter) Parse(v any) (any, error) {
@@ -362,7 +362,7 @@ var _ Parameter = &ArrayParameter{}
 type ArrayParameter struct {
 	CommonParameter `yaml:",inline"`
 	Items           Parameter         `yaml:"items"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
+	AuthSources     []ParamAuthSource `yaml:"authSources"`
 }
 
 func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
@@ -381,16 +381,16 @@ func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
 	}
 	p.Items = i
 
-	authSourcesIdx, ok := findIdxByValue(node.Content, "auth_sources")
+	authSourcesIdx, ok := findIdxByValue(node.Content, "authSources")
 	if !ok {
-		// "auth_sources" is optional
+		// "authSources" is optional
 		return nil
 	}
 
 	// Parse auth sources
 	authSourcesNode := node.Content[authSourcesIdx+1]
 	if authSourcesNode.Kind != yaml.SequenceNode {
-		return fmt.Errorf("auth_sources must be a list")
+		return fmt.Errorf("authSources must be a list")
 	}
 
 	p.AuthSources = make([]ParamAuthSource, 0, len(authSourcesNode.Content))

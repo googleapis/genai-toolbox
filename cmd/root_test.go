@@ -361,13 +361,13 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						- name: id
 							type: integer
 							description: user id
-							auth_sources:
+							authSources:
 							- name: my-google-service
 								field: user_id
 						- name: email
 							type: string
 							description: user email
-							auth_sources:
+							authSources:
 							- name: my-google-service
 								field: email
 							- name: other-google-service
