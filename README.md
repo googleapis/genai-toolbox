@@ -29,7 +29,6 @@ modify, distribute, and invoke tools.
 - [Getting Started](#getting-started)
     - [Installing the server](#installing-the-server)
     - [Running the server](#running-the-server)
-    - [Deploying the server](#deploying-the-server)
     - [Using with Client SDKs](#using-with-client-sdks)
 - [Configuration](#configuration)
     - [Sources](#sources)
@@ -94,8 +93,9 @@ execute `toolbox` to start the server:
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
 
-### Deploying the server
-You can [deploy your own server to Cloud Run](./docs/deploy/deploy_toolbox.md).
+For more detailed documentation on deploying to different environments, check
+out the following in the `/docs/deploy` folder:
+  * [Cloud Run](./docs/deploy/deploy_toolbox.md).
 
 ### Using with Client SDKs
 
@@ -105,7 +105,7 @@ application. See below the list of Client SDKs for using various frameworks:
 <details open>
 <summary>LangChain / LangGraph</summary>
 
-Once you've installed the Toolbox [LangChain SDK][langchain-sdk], you can load 
+Once you've installed the [Toolbox LangChain SDK][langchain-sdk], you can load 
 tools: 
 
 ```python
@@ -118,14 +118,18 @@ client = ToolboxClient("http://127.0.0.1:5000")
 tools = await client.load_toolset()
 ```
 
-[langchain-sdk]: ./sdks/langchain/README.md
+For more detailed instructions on using the Toolbox LangChain SDK, see the
+[project's README][langchain-sdk-readme].
+
+[langchain-sdk]: ./sdks/langchain/
+[langchain-sdk-readme]: ./sdks/langchain/README.md
 
 </details>
 
 <details open>
 <summary>LlamaIndex</summary>
 
-Once you've installed the Toolbox [LlamaIndex SDK][llamaindex-sdk], you can load 
+Once you've installed the [Toolbox LlamaIndex SDK][llamaindex-sdk], you can load 
 tools: 
 
 ```python
@@ -138,7 +142,11 @@ client = ToolboxClient("http://127.0.0.1:5000")
 tools = await client.load_toolset()
 ```
 
-[llamaindex-sdk]: ./sdks/llamaindex/README.md
+For more detailed instructions on using the Toolbox LlamaIndex SDK, see the
+[project's README][llamaindex-sdk-readme].
+
+[llamaindex-sdk]: ./sdks/llamaindex/
+[llamaindex-sdk-readme]: ./sdks/llamaindex/README.md
 
 </details>
 
