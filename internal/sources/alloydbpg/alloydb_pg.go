@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"cloud.google.com/go/alloydbconn"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -30,15 +31,16 @@ const SourceKind string = "alloydb-postgres"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Project  string `yaml:"project"`
-	Region   string `yaml:"region"`
-	Cluster  string `yaml:"cluster"`
-	Instance string `yaml:"instance"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
+	Name     string          `yaml:"name"`
+	Kind     string          `yaml:"kind"`
+	Project  string          `yaml:"project"`
+	Region   string          `yaml:"region"`
+	Cluster  string          `yaml:"cluster"`
+	Instance string          `yaml:"instance"`
+	IP_type  sources.IP_type `yaml:"ip_type"`
+	User     string          `yaml:"user"`
+	Password string          `yaml:"password"`
+	Database string          `yaml:"database"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -46,7 +48,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize() (sources.Source, error) {
-	pool, err := initAlloyDBPgConnectionPool(r.Project, r.Region, r.Cluster, r.Instance, r.User, r.Password, r.Database)
+	pool, err := initAlloyDBPgConnectionPool(r.Project, r.Region, r.Cluster, r.Instance, r.IP_type.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -80,7 +82,24 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func initAlloyDBPgConnectionPool(project, region, cluster, instance, user, pass, dbname string) (*pgxpool.Pool, error) {
+func getDialer(ip_type string) (*alloydbconn.Dialer, error) {
+	switch strings.ToLower(ip_type) {
+	case "private":
+		// alloydbconn create a dialer with private IP by default
+		return alloydbconn.NewDialer(context.Background())
+	case "public":
+		return alloydbconn.NewDialer(
+			context.Background(),
+			alloydbconn.WithDefaultDialOptions(
+				alloydbconn.WithPublicIP(),
+			),
+		)
+	default:
+		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
+	}
+}
+
+func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
 	config, err := pgxpool.ParseConfig(dsn)
@@ -89,7 +108,7 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, user, pass,
 	}
 
 	// Create a new dialer with any options
-	d, err := alloydbconn.NewDialer(context.Background())
+	d, err := getDialer(ip_type)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
