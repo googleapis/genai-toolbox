@@ -48,7 +48,7 @@ PostreSQL user][alloydb-users] to login to the database with.
 ```yaml
 sources:
     my-alloydb-pg-source:
-        kind: "alloydb-pg-postgres"
+        kind: "alloydb-postgres"
         project: "my-project-name"
         region: "us-central1"
         cluster: "my-cluster"
