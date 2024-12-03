@@ -11,13 +11,13 @@ Below are the details to set up a development environment and run tests.
     ```bash
     cd genai-toolbox/sdks/llamaindex
     ```
-1. Install the package in editable mode, so changes are reflected without reinstall:
+1. Install the package in editable mode, so changes are reflected without
+   reinstall:
     ```bash
     pip install -e .
     ```
 1. Make code changes and contribute to the SDK's development.
-> [!TIP]
-> Using `-e` option allows you to make changes to the SDK code and have
+> [!TIP] Using `-e` option allows you to make changes to the SDK code and have
 > those changes reflected immediately without reinstalling the package.
 
 ## Test
