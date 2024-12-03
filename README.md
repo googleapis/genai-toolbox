@@ -29,6 +29,7 @@ modify, distribute, and invoke tools.
 - [Getting Started](#getting-started)
     - [Installing the server](#installing-the-server)
     - [Running the server](#running-the-server)
+    - [Deploying the server](#deploying-the-server)
     - [Using with Client SDKs](#using-with-client-sdks)
 - [Configuration](#configuration)
     - [Sources](#sources)
@@ -92,6 +93,9 @@ execute `toolbox` to start the server:
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
+
+### Deploying the server
+You can [deploy your own server to Cloud Run](./docs/deploy/deploy_toolbox.md).
 
 ### Using with Client SDKs
 
