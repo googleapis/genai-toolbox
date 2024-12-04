@@ -17,10 +17,12 @@ package server_test
 import (
 	"context"
 	"net"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 )
 
@@ -47,9 +49,15 @@ func TestServe(t *testing.T) {
 		Address: addr,
 		Port:    port,
 	}
-	s, err := server.NewServer(cfg)
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
-		t.Fatalf("Unable to initialize server! %v", err)
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	s, err := server.NewServer(cfg, testLogger)
+	if err != nil {
+		t.Fatalf("unable to initialize server! %v", err)
 	}
 
 	// start server in background
@@ -63,7 +71,7 @@ func TestServe(t *testing.T) {
 	}()
 
 	if !tryDial(net.JoinHostPort(addr, strconv.Itoa(port)), 10) {
-		t.Fatalf("Unable to dial server!")
+		t.Fatalf("unable to dial server!")
 	}
 
 }

@@ -21,6 +21,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -61,6 +62,7 @@ type Command struct {
 	*cobra.Command
 
 	cfg        server.ServerConfig
+	logger     log.Logger
 	tools_file string
 }
 
@@ -68,8 +70,9 @@ type Command struct {
 func NewCommand() *Command {
 	cmd := &Command{
 		Command: &cobra.Command{
-			Use:     "toolbox",
-			Version: versionString,
+			Use:           "toolbox",
+			Version:       versionString,
+			SilenceErrors: true,
 		},
 	}
 
@@ -77,7 +80,9 @@ func NewCommand() *Command {
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
-	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration")
+	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
+	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -104,24 +109,48 @@ func run(cmd *Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
+	// Handle logger separately from config
+	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
+	case "json":
+		logger, err := log.NewStructuredLogger(os.Stdout, os.Stderr, cmd.cfg.LogLevel.String())
+		if err != nil {
+			return fmt.Errorf("unable to initialize logger: %w", err)
+		}
+		cmd.logger = logger
+	default:
+		logger, err := log.NewStdLogger(os.Stdout, os.Stderr, cmd.cfg.LogLevel.String())
+		if err != nil {
+			return fmt.Errorf("unable to initialize logger: %w", err)
+		}
+		cmd.logger = logger
+	}
+
 	// Read tool file contents
 	buf, err := os.ReadFile(cmd.tools_file)
 	if err != nil {
-		return fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+		errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
 	}
 	cmd.cfg.SourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, err = parseToolsFile(buf)
 	if err != nil {
-		return fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
 	}
 
 	// run server
-	s, err := server.NewServer(cmd.cfg)
+	s, err := server.NewServer(cmd.cfg, cmd.logger)
 	if err != nil {
-		return fmt.Errorf("toolbox failed to start with the following error: %w", err)
+		errMsg := fmt.Errorf("toolbox failed to start with the following error: %w", err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
 	}
 	err = s.ListenAndServe(ctx)
 	if err != nil {
-		return fmt.Errorf("toolbox crashed with the following error: %w", err)
+		errMsg := fmt.Errorf("toolbox crashed with the following error: %w", err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
 	}
 
 	return nil

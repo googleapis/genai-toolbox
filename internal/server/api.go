@@ -48,7 +48,8 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
-		_ = render.Render(w, r, newErrResponse(fmt.Errorf("Toolset %q does not exist", toolsetName), http.StatusNotFound))
+		err := fmt.Errorf("Toolset %q does not exist", toolsetName)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
 	render.JSON(w, r, toolset.Manifest)

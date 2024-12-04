@@ -15,6 +15,7 @@ package server
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
@@ -38,6 +39,62 @@ type ServerConfig struct {
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
 	ToolsetConfigs ToolsetConfigs
+	// LoggingFormat defines whether structured loggings are used.
+	LoggingFormat logFormat
+	// LogLevel defines the levels to log
+	LogLevel StringLevel
+}
+
+type logFormat string
+
+// String is used by both fmt.Print and by Cobra in help text
+func (f *logFormat) String() string {
+	if string(*f) != "" {
+		return strings.ToLower(string(*f))
+	}
+	return "standard"
+}
+
+// validate logging format flag
+func (f *logFormat) Set(v string) error {
+	switch strings.ToLower(v) {
+	case "standard", "json":
+		*f = logFormat(v)
+		return nil
+	default:
+		return fmt.Errorf(`log format must be one of "standard", or "json"`)
+	}
+}
+
+// Type is used in Cobra help text
+func (f *logFormat) Type() string {
+	return "logFormat"
+}
+
+type StringLevel string
+
+// String is used by both fmt.Print and by Cobra in help text
+func (s *StringLevel) String() string {
+	if string(*s) != "" {
+		return strings.ToLower(string(*s))
+	}
+	return "info"
+}
+
+// validate log level flag
+func (s *StringLevel) Set(v string) error {
+	switch strings.ToLower(v) {
+	case "debug", "info", "warn", "error":
+		*s = StringLevel(v)
+		return nil
+	default:
+		return fmt.Errorf(`log level must be one of "debug", "info", "warn", or "error"`)
+	}
+}
+
+// Type is used in Cobra help text
+func (s *StringLevel) Type() string {
+	return "stringLevel"
 }
 
 // SourceConfigs is a type used to allow unmarshal of the data source config map

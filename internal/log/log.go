@@ -31,7 +31,7 @@ type StdLogger struct {
 func NewStdLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 	//Set log level
 	var programLevel = new(slog.LevelVar)
-	slogLevel, err := severityToLevel(logLevel)
+	slogLevel, err := SeverityToLevel(logLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ const (
 )
 
 // Returns severity level based on string.
-func severityToLevel(s string) (slog.Level, error) {
+func SeverityToLevel(s string) (slog.Level, error) {
 	switch strings.ToUpper(s) {
 	case Debug:
 		return slog.LevelDebug, nil
@@ -113,7 +113,7 @@ type StructuredLogger struct {
 func NewStructuredLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 	//Set log level
 	var programLevel = new(slog.LevelVar)
-	slogLevel, err := severityToLevel(logLevel)
+	slogLevel, err := SeverityToLevel(logLevel)
 	if err != nil {
 		return nil, err
 	}
