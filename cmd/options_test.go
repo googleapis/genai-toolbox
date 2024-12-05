@@ -19,16 +19,11 @@ import (
 	"io"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/spf13/cobra"
 )
 
 func TestCommandOptions(t *testing.T) {
 	w := io.Discard
-	logger, err := log.NewStdLogger(w, w, "INFO")
-	if err != nil {
-		t.Errorf("fail to initialize logger: %v", err)
-	}
 	tcs := []struct {
 		desc    string
 		isValid func(*Command) error
@@ -37,12 +32,12 @@ func TestCommandOptions(t *testing.T) {
 		{
 			desc: "with logger",
 			isValid: func(c *Command) error {
-				if c.logger != logger {
+				if c.outStream != w || c.errStream != w {
 					return errors.New("loggers do not match")
 				}
 				return nil
 			},
-			option: WithLogger(logger, w, w),
+			option: WithStreams(w, w),
 		},
 	}
 	for _, tc := range tcs {

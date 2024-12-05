@@ -16,18 +16,15 @@ package cmd
 
 import (
 	"io"
-
-	"github.com/googleapis/genai-toolbox/internal/log"
 )
 
 // Option is a function that configures a Command.
 type Option func(*Command)
 
-// WithLogger overrides the default logger.
-func WithLogger(l log.Logger, out, err io.Writer) Option {
+// WithStreams overrides the default writer.
+func WithStreams(out, err io.Writer) Option {
 	return func(c *Command) {
-		c.logger = l
-		c.out = out
-		c.err = err
+		c.outStream = out
+		c.errStream = err
 	}
 }
