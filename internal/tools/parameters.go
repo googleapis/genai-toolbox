@@ -31,14 +31,14 @@ const (
 // ParamValues is an ordered list of ParamValue
 type ParamValues []ParamValue
 
-// ParamValue represents the parameter's name and value. This struct is parsed from arbitraryJSON object by the ParseParam helper function.
+// ParamValue represents the parameter's name and value. 
 type ParamValue struct {
 	Name  string
 	Value any
 }
 
-// SliceValuesPG is a helper function to convert ParamValues into an ordered slice.
-func SliceValues(p ParamValues) []any {
+// SliceValues returns a slice of the Param's values (in order).
+func (p ParamValues) AsSlice() []any {
 	params := []any{}
 
 	for _, p := range p {
@@ -47,17 +47,16 @@ func SliceValues(p ParamValues) []any {
 	return params
 }
 
-// MapValues is a helper function to convert ParamValues into a map. It uses param name as keys.
+// MapValues returns a map of ParamValue's names to values.
 func MapValues(p ParamValues) map[string]interface{} {
 	params := make(map[string]interface{})
-
 	for _, p := range p {
 		params[p.Name] = p.Value
 	}
 	return params
 }
 
-// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
+// ParseParams parses specified Parameters from data and returns them as ParamValues. 
 func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
