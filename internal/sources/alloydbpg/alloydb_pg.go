@@ -83,20 +83,17 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func getDialer(ip_type string) (*alloydbconn.Dialer, error) {
-	switch strings.ToLower(ip_type) {
+        var dialOpts []alloydbconn.DialOption
+        switch strings.ToLower(ip_type) {
 	case "private":
-		// alloydbconn create a dialer with private IP by default
-		return alloydbconn.NewDialer(context.Background())
+		dialOpts := append(dialOpts, alloydbconn.WithPrivateIP())
 	case "public":
-		return alloydbconn.NewDialer(
-			context.Background(),
-			alloydbconn.WithDefaultDialOptions(
-				alloydbconn.WithPublicIP(),
-			),
-		)
+		dialOpts := append(dialOpts, alloydbconn.WithPublicIP())
 	default:
 		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
 	}
+	ctx := context.Background()
+	return alloydbconn.NewDialer(ctx, alloydbconn.WithDefaultDialOptions(dialOpts...))
 }
 
 func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {

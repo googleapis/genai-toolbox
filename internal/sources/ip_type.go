@@ -21,7 +21,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type IP_type string
+type IPType string
 
 func (i *IP_type) String() string {
 	if string(*i) != "" {
