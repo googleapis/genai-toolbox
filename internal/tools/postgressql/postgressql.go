@@ -41,13 +41,12 @@ var _ compatibleSource = &postgres.Source{}
 var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	Source       string           `yaml:"source"`
-	Description  string           `yaml:"description"`
-	Statement    string           `yaml:"statement"`
-	AuthRequired bool             `yaml:"auth_required"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name        string           `yaml:"name"`
+	Kind        string           `yaml:"kind"`
+	Source      string           `yaml:"source"`
+	Description string           `yaml:"description"`
+	Statement   string           `yaml:"statement"`
+	Parameters  tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -72,13 +71,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         ToolKind,
-		Parameters:   cfg.Parameters,
-		AuthRequired: cfg.AuthRequired,
-		Statement:    cfg.Statement,
-		Pool:         s.PostgresPool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		Name:       cfg.Name,
+		Kind:       ToolKind,
+		Parameters: cfg.Parameters,
+		Statement:  cfg.Statement,
+		Pool:       s.PostgresPool(),
+		manifest:   tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
@@ -98,13 +96,12 @@ func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tool
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	AuthRequired bool             `yaml:"auth_required"`
-	Pool         *pgxpool.Pool
-	Statement    string
-	manifest     tools.Manifest
+	Name       string           `yaml:"name"`
+	Kind       string           `yaml:"kind"`
+	Parameters tools.Parameters `yaml:"parameters"`
+	Pool       *pgxpool.Pool
+	Statement  string
+	manifest   tools.Manifest
 }
 
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
