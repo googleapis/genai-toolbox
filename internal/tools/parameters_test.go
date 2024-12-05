@@ -270,8 +270,8 @@ func TestParamValues(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSlice := tools.SliceValues(tc.in)
-			gotMap := tools.MapValues(tc.in)
+			gotSlice := tc.in.AsSlice()
+			gotMap := tc.in.AsMap()
 
 			for i, got := range gotSlice {
 				want := tc.wantSlice[i]

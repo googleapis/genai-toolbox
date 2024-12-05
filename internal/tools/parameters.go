@@ -31,13 +31,13 @@ const (
 // ParamValues is an ordered list of ParamValue
 type ParamValues []ParamValue
 
-// ParamValue represents the parameter's name and value. 
+// ParamValue represents the parameter's name and value.
 type ParamValue struct {
 	Name  string
 	Value any
 }
 
-// SliceValues returns a slice of the Param's values (in order).
+// AsSlice returns a slice of the Param's values (in order).
 func (p ParamValues) AsSlice() []any {
 	params := []any{}
 
@@ -47,8 +47,8 @@ func (p ParamValues) AsSlice() []any {
 	return params
 }
 
-// MapValues returns a map of ParamValue's names to values.
-func MapValues(p ParamValues) map[string]interface{} {
+// AsMap returns a map of ParamValue's names to values.
+func (p ParamValues) AsMap() map[string]interface{} {
 	params := make(map[string]interface{})
 	for _, p := range p {
 		params[p.Name] = p.Value
@@ -56,7 +56,7 @@ func MapValues(p ParamValues) map[string]interface{} {
 	return params
 }
 
-// ParseParams parses specified Parameters from data and returns them as ParamValues. 
+// ParseParams parses specified Parameters from data and returns them as ParamValues.
 func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
