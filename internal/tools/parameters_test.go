@@ -573,7 +573,7 @@ func TestAuthParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]any), "")
+			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]map[string]interface{}))
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
@@ -619,9 +619,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": "hello world",
 			},
-			claims:         map[string]any{"auth_field": "hello"},
-			authSourceName: "my-google-auth-service",
-			want:           []any{"hello"},
+			claims: map[string]map[string]interface{}{"my-google-auth-service": {"auth_field": "hello"}},
+			want:   []any{"hello"},
 		},
 		{
 			name: "not string",
@@ -631,8 +630,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": 4,
 			},
-			claims:         map[string]any{},
-			authSourceName: "my-google-auth-service",
+			claims: map[string]map[string]interface{}{},
 		},
 		{
 			name: "int",
@@ -642,9 +640,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 100,
 			},
-			claims:         map[string]any{"auth_field": 120},
-			authSourceName: "my-google-auth-service",
-			want:           []any{120},
+			claims: map[string]map[string]interface{}{"my-google-auth-service": {"auth_field": 120}},
+			want:   []any{120},
 		},
 		{
 			name: "not int",
@@ -654,8 +651,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 14.5,
 			},
-			claims:         map[string]any{},
-			authSourceName: "my-google-auth-service",
+			claims: map[string]map[string]interface{}{},
 		},
 		{
 			name: "float",
@@ -665,9 +661,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": 1.5,
 			},
-			claims:         map[string]any{"auth_field": 2.1},
-			authSourceName: "my-google-auth-service",
-			want:           []any{2.1},
+			claims: map[string]map[string]interface{}{"my-google-auth-service": {"auth_field": 2.1}},
+			want:   []any{2.1},
 		},
 		{
 			name: "not float",
@@ -677,8 +672,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": true,
 			},
-			claims:         map[string]any{},
-			authSourceName: "my-google-auth-service",
+			claims: map[string]map[string]interface{}{},
 		},
 		{
 			name: "bool",
@@ -688,9 +682,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": true,
 			},
-			claims:         map[string]any{"auth_field": false},
-			authSourceName: "my-google-auth-service",
-			want:           []any{false},
+			claims: map[string]map[string]interface{}{"my-google-auth-service": {"auth_field": false}},
+			want:   []any{false},
 		},
 		{
 			name: "not bool",
@@ -700,8 +693,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": 1.5,
 			},
-			claims:         map[string]any{},
-			authSourceName: "my-google-auth-service",
+			claims: map[string]map[string]interface{}{},
 		},
 		{
 			name: "username",
@@ -711,9 +703,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"username": "Violet",
 			},
-			claims:         map[string]any{"auth_field": "Alice"},
-			authSourceName: "my-google-auth-service",
-			want:           []any{"Alice"},
+			claims: map[string]map[string]interface{}{"my-google-auth-service": {"auth_field": "Alice"}},
+			want:   []any{"Alice"},
 		},
 		{
 			name: "expect claim error",
@@ -723,19 +714,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"username": "Violet",
 			},
-			claims:         map[string]any{"user_name": "Alice"},
-			authSourceName: "my-google-auth-service",
-		},
-		{
-			name: "expect auth provider error",
-			params: tools.Parameters{
-				tools.NewStringParameter("username", "username string", authSources),
-			},
-			in: map[string]any{
-				"username": "Violet",
-			},
-			claims:         map[string]any{"user_name": "Alice"},
-			authSourceName: "random-google-auth-service",
+			claims: map[string]map[string]interface{}{"my-google-auth-service": {"username": "Alice"}},
 		},
 	}
 	for _, tc := range tcs {
@@ -752,7 +731,7 @@ func TestAuthParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m)
+			gotAll, err := tools.ParseParams(tc.params, m, tc.claims)
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want

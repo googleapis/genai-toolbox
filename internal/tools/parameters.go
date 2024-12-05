@@ -82,16 +82,18 @@ func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 			}
 		} else {
 			for _, a := range authSources {
-				if a.Name == authSourceName {
-					v, ok = claims[a.Field]
-					if !ok {
-						return nil, fmt.Errorf("claims returned from authentication do not contain field %q", p.GetName())
+				for authName, claims := range claimsMap {
+					if a.Name == authName {
+						v, ok = claims[a.Field]
+						if !ok {
+							return nil, fmt.Errorf("claims returned from authentication do not contain field %q", p.GetName())
+						}
+						break
 					}
-					break
 				}
 			}
 			if v == nil {
-				return nil, fmt.Errorf("provided auth source %s not in parameter %s's approved list", authSourceName, p.GetName())
+				return nil, fmt.Errorf("missing authentication header for parameter %q", p.GetName())
 			}
 		}
 		newV, err := p.Parse(v)

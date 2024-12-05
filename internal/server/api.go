@@ -17,6 +17,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -76,22 +77,20 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, m)
 }
 
-func parseAuthHeader(h http.Header) (string, string, error) {
-	authSourceName, ok := h[http.CanonicalHeaderKey("AuthSource")]
-	if ok {
-		authToken, ok := h[http.CanonicalHeaderKey("AuthToken")]
-		if ok {
-			// success
-			return authSourceName[0], authToken[0], nil
-		} else {
-			// raise error if no token is sent
-			err := fmt.Errorf("AuthToken is required if AuthSource is specified")
-			return "", "", err
+func parseAuthHeader(s *Server, h http.Header) (map[auth.AuthSource]string, error) {
+	authInfo := make(map[auth.AuthSource]string)
+	for name, token := range h {
+		if strings.HasSuffix(name, "_token") {
+			name := strings.TrimSuffix(name, "_token")
+			authSource, ok := s.authSources[name]
+			if !ok {
+				return nil, fmt.Errorf("invalid auth header")
+			}
+			authInfo[authSource] = token[0]
 		}
-	} else {
-		// no auth header
-		return "", "", nil
+
 	}
+	return authInfo, nil
 }
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
@@ -105,20 +104,13 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Tool authentication
-	authSourceName, authToken, err := parseAuthHeader(r.Header)
+	authInfo, err := parseAuthHeader(s, r.Header)
 	if err != nil {
-		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		err := fmt.Errorf("failure parsing auth header: %w", err)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+		return
 	}
-	var authSource auth.AuthSource
-	if authSourceName != "" {
-		authSource, ok = s.authSources[authSourceName]
-		if !ok {
-			err := fmt.Errorf("invalid auth source name: auth source with name %q does not exist", toolName)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
-			return
-		}
-	}
-	claims, err := tool.Authenticate(authSource, authToken)
+	claims, err := tool.Authenticate(authInfo)
 	if err != nil {
 		err := fmt.Errorf("tool authentication failure: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
