@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"io"
+
 	"github.com/googleapis/genai-toolbox/internal/log"
 )
 
@@ -22,8 +24,10 @@ import (
 type Option func(*Command)
 
 // WithLogger overrides the default logger.
-func WithLogger(l log.Logger) Option {
+func WithLogger(l log.Logger, out, err io.Writer) Option {
 	return func(c *Command) {
 		c.logger = l
+		c.out = out
+		c.err = err
 	}
 }

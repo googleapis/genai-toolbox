@@ -18,6 +18,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -64,21 +65,33 @@ type Command struct {
 	cfg        server.ServerConfig
 	logger     log.Logger
 	tools_file string
+	out        io.Writer
+	err        io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
 func NewCommand(opts ...Option) *Command {
+	out := os.Stdout
+	err := os.Stderr
+
+	baseCmd := &cobra.Command{
+		Use:           "toolbox",
+		Version:       versionString,
+		SilenceErrors: true,
+	}
 	cmd := &Command{
-		Command: &cobra.Command{
-			Use:           "toolbox",
-			Version:       versionString,
-			SilenceErrors: true,
-		},
+		Command: baseCmd,
+		out:     out,
+		err:     err,
 	}
 
 	for _, o := range opts {
 		o(cmd)
 	}
+
+	// set baseCmd out and err the same as cmd.
+	baseCmd.SetOut(cmd.out)
+	baseCmd.SetErr(cmd.err)
 
 	flags := cmd.Flags()
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
@@ -116,17 +129,19 @@ func run(cmd *Command) error {
 	// Handle logger separately from config
 	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
 	case "json":
-		logger, err := log.NewStructuredLogger(os.Stdout, os.Stderr, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStructuredLogger(cmd.out, cmd.err, cmd.cfg.LogLevel.String())
+		if err != nil {
+			return fmt.Errorf("unable to initialize logger: %w", err)
+		}
+		cmd.logger = logger
+	case "standard":
+		logger, err := log.NewStdLogger(cmd.out, cmd.err, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}
 		cmd.logger = logger
 	default:
-		logger, err := log.NewStdLogger(os.Stdout, os.Stderr, cmd.cfg.LogLevel.String())
-		if err != nil {
-			return fmt.Errorf("unable to initialize logger: %w", err)
-		}
-		cmd.logger = logger
+		return fmt.Errorf("logging format invalid.")
 	}
 
 	// Read tool file contents

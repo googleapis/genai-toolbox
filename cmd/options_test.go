@@ -24,7 +24,8 @@ import (
 )
 
 func TestCommandOptions(t *testing.T) {
-	logger, err := log.NewStdLogger(io.Discard, io.Discard, "INFO")
+	w := io.Discard
+	logger, err := log.NewStdLogger(w, w, "INFO")
 	if err != nil {
 		t.Errorf("fail to initialize logger: %v", err)
 	}
@@ -41,7 +42,7 @@ func TestCommandOptions(t *testing.T) {
 				}
 				return nil
 			},
-			option: WithLogger(logger),
+			option: WithLogger(logger, w, w),
 		},
 	}
 	for _, tc := range tcs {
