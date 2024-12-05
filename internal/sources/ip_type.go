@@ -23,21 +23,21 @@ import (
 
 type IPType string
 
-func (i *IP_type) String() string {
+func (i *IPType) String() string {
 	if string(*i) != "" {
 		return strings.ToLower(string(*i))
 	}
 	return "public"
 }
 
-func (i *IP_type) UnmarshalYAML(node *yaml.Node) error {
+func (i *IPType) UnmarshalYAML(node *yaml.Node) error {
 	var ip_type string
 	if err := node.Decode(&ip_type); err != nil {
 		return err
 	}
 	switch ip_type {
 	case "private", "public":
-		*i = IP_type(ip_type)
+		*i = IPType(ip_type)
 		return nil
 	default:
 		return fmt.Errorf(`ip_type invalid: must be one of "public", or "private"`)

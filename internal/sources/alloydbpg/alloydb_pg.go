@@ -31,16 +31,16 @@ const SourceKind string = "alloydb-postgres"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string          `yaml:"name"`
-	Kind     string          `yaml:"kind"`
-	Project  string          `yaml:"project"`
-	Region   string          `yaml:"region"`
-	Cluster  string          `yaml:"cluster"`
-	Instance string          `yaml:"instance"`
-	IP_type  sources.IP_type `yaml:"ip_type"`
-	User     string          `yaml:"user"`
-	Password string          `yaml:"password"`
-	Database string          `yaml:"database"`
+	Name     string         `yaml:"name"`
+	Kind     string         `yaml:"kind"`
+	Project  string         `yaml:"project"`
+	Region   string         `yaml:"region"`
+	Cluster  string         `yaml:"cluster"`
+	Instance string         `yaml:"instance"`
+	IP_type  sources.IPType `yaml:"ip_type"`
+	User     string         `yaml:"user"`
+	Password string         `yaml:"password"`
+	Database string         `yaml:"database"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -82,18 +82,15 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialer(ip_type string) (*alloydbconn.Dialer, error) {
-        var dialOpts []alloydbconn.DialOption
-        switch strings.ToLower(ip_type) {
+func getDialOpts(ip_type string) ([]alloydbconn.DialOption, error) {
+	switch strings.ToLower(ip_type) {
 	case "private":
-		dialOpts := append(dialOpts, alloydbconn.WithPrivateIP())
+		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
 	case "public":
-		dialOpts := append(dialOpts, alloydbconn.WithPublicIP())
+		return []alloydbconn.DialOption{alloydbconn.WithPublicIP()}, nil
 	default:
 		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
 	}
-	ctx := context.Background()
-	return alloydbconn.NewDialer(ctx, alloydbconn.WithDefaultDialOptions(dialOpts...))
 }
 
 func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
@@ -104,8 +101,12 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, us
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
-	// Create a new dialer with any options
-	d, err := getDialer(ip_type)
+	// Create a new dialer with options
+	dialOpts, err := getDialOpts(ip_type)
+	if err != nil {
+		return nil, err
+	}
+	d, err := alloydbconn.NewDialer(context.Background(), alloydbconn.WithDefaultDialOptions(dialOpts...))
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
