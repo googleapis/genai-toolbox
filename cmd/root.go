@@ -67,13 +67,17 @@ type Command struct {
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
-func NewCommand() *Command {
+func NewCommand(opts ...Option) *Command {
 	cmd := &Command{
 		Command: &cobra.Command{
 			Use:           "toolbox",
 			Version:       versionString,
 			SilenceErrors: true,
 		},
+	}
+
+	for _, o := range opts {
+		o(cmd)
 	}
 
 	flags := cmd.Flags()
