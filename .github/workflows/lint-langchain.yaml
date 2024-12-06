@@ -49,4 +49,4 @@ jobs:
           isort --check .
 
       - name: Run type-check
-        run: mypy --install-types --non-interactive --explicit-package-bases sdks/langchain
+        run: mypy --install-types --non-interactive sdks/langchain
