@@ -1,4 +1,4 @@
-from typing import Any, Optional, Type, cast
+from typing import Any, Callable, Optional, Type, cast
 
 import yaml
 from aiohttp import ClientSession
@@ -89,7 +89,7 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
-def _get_auth_headers(id_token_getters: dict[str, callable[[], str]]):
+def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]):
     """
     Gets id tokens for the given auth sources in the getters map and returns
     headers to be included in tool invocation.
@@ -112,7 +112,7 @@ async def _invoke_tool(
     session: ClientSession,
     tool_name: str,
     data: dict,
-    id_token_getters: dict[str, callable[[], str]],
+    id_token_getters: dict[str, Callable[[], str]],
 ) -> dict:
     """
     Asynchronously makes an API call to the Toolbox service to invoke a tool.

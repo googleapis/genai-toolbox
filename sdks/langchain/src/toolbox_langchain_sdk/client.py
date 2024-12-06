@@ -1,6 +1,6 @@
 import asyncio
 import warnings
-from typing import Optional, Type
+from typing import Callable, Optional, Type
 
 from aiohttp import ClientSession
 from langchain_core.tools import StructuredTool
@@ -21,7 +21,7 @@ class ToolboxClient:
         """
         self._url: str = url
         self._should_close_session: bool = session is None
-        self._id_token_getters: dict[str, callable[[], str]] = {}
+        self._id_token_getters: dict[str, Callable[[], str]] = {}
         self._session: ClientSession = session or ClientSession()
 
     async def close(self) -> None:
@@ -139,13 +139,13 @@ class ToolboxClient:
         Args:
             manifest: The manifest to modify.
         """
-        for _, tool_schema in manifest.tools.items():
+        for tool_schema in manifest.tools.values():
             tool_schema.parameters = [
                 param for param in tool_schema.parameters if not param.authSources
             ]
 
     def add_auth_header(
-        self, auth_source: str, get_id_token: callable[[], str]
+        self, auth_source: str, get_id_token: Callable[[], str]
     ) -> None:
         """
         Registers a function to retrieve an ID token for a given authentication
@@ -158,7 +158,7 @@ class ToolboxClient:
         self._id_token_getters[auth_source] = get_id_token
 
     async def load_tool(
-        self, tool_name: str, auth_headers: dict[str, callable[[], str]] = {}
+        self, tool_name: str, auth_headers: dict[str, Callable[[], str]] = {}
     ) -> StructuredTool:
         """
         Loads the tool, with the given tool name, from the Toolbox service.
@@ -173,7 +173,7 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox
         """
-        for auth_source, get_id_token in auth_headers:
+        for auth_source, get_id_token in auth_headers.items():
             self.add_auth_header(auth_source, get_id_token)
 
         manifest: ManifestSchema = await self._load_tool_manifest(tool_name)
@@ -186,7 +186,7 @@ class ToolboxClient:
     async def load_toolset(
         self,
         toolset_name: Optional[str] = None,
-        auth_headers: dict[str, callable[[], str]] = {},
+        auth_headers: dict[str, Callable[[], str]] = {},
     ) -> list[StructuredTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset
@@ -203,7 +203,7 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        for auth_source, get_id_token in auth_headers:
+        for auth_source, get_id_token in auth_headers.items():
             self.add_auth_header(auth_source, get_id_token)
 
         tools: list[StructuredTool] = []
