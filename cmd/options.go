@@ -12,25 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package cmd
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"io"
 )
 
-type ToolConfig interface {
-	ToolConfigKind() string
-	Initialize(map[string]sources.Source) (Tool, error)
-}
+// Option is a function that configures a Command.
+type Option func(*Command)
 
-type Tool interface {
-	Invoke(ParamValues) (string, error)
-	ParseParams(data map[string]any) (ParamValues, error)
-	Manifest() Manifest
-}
-
-// Manifest is the representation of tools sent to Client SDKs.
-type Manifest struct {
-	Description string              `json:"description"`
-	Parameters  []ParameterManifest `json:"parameters"`
+// WithStreams overrides the default writer.
+func WithStreams(out, err io.Writer) Option {
+	return func(c *Command) {
+		c.outStream = out
+		c.errStream = err
+	}
 }

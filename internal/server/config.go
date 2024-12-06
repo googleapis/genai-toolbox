@@ -121,13 +121,13 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 		}
 		switch k.Kind {
 		case alloydbpgsrc.SourceKind:
-			actual := alloydbpgsrc.Config{Name: name}
+			actual := alloydbpgsrc.Config{Name: name, IPType: "public"}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlpgsrc.SourceKind:
-			actual := cloudsqlpgsrc.Config{Name: name}
+			actual := cloudsqlpgsrc.Config{Name: name, IPType: "public"}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}

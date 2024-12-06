@@ -35,11 +35,11 @@ type MockTool struct {
 	Params      []tools.Parameter
 }
 
-func (t MockTool) Invoke([]any) (string, error) {
+func (t MockTool) Invoke(tools.ParamValues) (string, error) {
 	return "", nil
 }
 
-func (t MockTool) ParseParams(data map[string]any) ([]any, error) {
+func (t MockTool) ParseParams(data map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Params, data)
 }
 

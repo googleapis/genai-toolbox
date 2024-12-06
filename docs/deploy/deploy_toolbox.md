@@ -100,6 +100,7 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--tools_file=/app/tools.yaml","--address=0.0.0.0","--port=8080"
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
     If you are using a VPC network, use the command below:
@@ -113,6 +114,7 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
         --args="--tools_file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
         --network default \
         --subnet default
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
 ## Connecting to Cloud Run
