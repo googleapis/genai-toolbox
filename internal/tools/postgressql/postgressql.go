@@ -98,13 +98,13 @@ func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tool
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	AuthRequired bool             `yaml:"auth_required"`
-	Pool         *pgxpool.Pool
-	Statement    string
-	manifest     tools.Manifest
+	Name       string           `yaml:"name"`
+	Kind       string           `yaml:"kind"`
+	Parameters tools.Parameters `yaml:"parameters"`
+
+	Pool      *pgxpool.Pool
+	Statement string
+	manifest  tools.Manifest
 }
 
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {

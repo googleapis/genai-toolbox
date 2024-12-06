@@ -23,6 +23,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -61,8 +62,8 @@ func TestToolsetEndpoint(t *testing.T) {
 	tool2 := MockTool{
 		Name: "some_params",
 		Params: tools.Parameters{
-			tools.NewIntParameter("param1", "This is the first parameter.", authSources),
-			tools.NewIntParameter("param2", "This is the second parameter.", authSources),
+			tools.NewIntParameter("param1", "This is the first parameter."),
+			tools.NewIntParameter("param2", "This is the second parameter."),
 		},
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
@@ -191,8 +192,8 @@ func TestToolGetEndpoint(t *testing.T) {
 	tool2 := MockTool{
 		Name: "some_params",
 		Params: tools.Parameters{
-			tools.NewIntParameter("param1", "This is the first parameter.", authSources),
-			tools.NewIntParameter("param2", "This is the second parameter.", authSources),
+			tools.NewIntParameter("param1", "This is the first parameter."),
+			tools.NewIntParameter("param2", "This is the second parameter."),
 		},
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}

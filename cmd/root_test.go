@@ -463,10 +463,11 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			authSources:
 				my-google-service:
 					kind: google
-					client_id: my-client-id
+					clientId: my-client-id
 				other-google-service:
 					kind: google
-					client_id: other-client-id
+					clientId: other-client-id
+
 			tools:
 				example_tool:
 					kind: postgres-sql
@@ -476,8 +477,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						SELECT * FROM SQL_STATEMENT;
 					parameters:
 						- name: country
-							type: string
-							description: some description
+						  type: string
+						  description: some description
 						- name: id
 							type: integer
 							description: user id
@@ -489,9 +490,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 							description: user email
 							auth_sources:
 							- name: my-google-service
-								field: email
+							  field: email
 							- name: other-google-service
-								field: other_email
+							  field: other_email
+
 			toolsets:
 				example_toolset:
 					- example_tool
@@ -527,9 +529,9 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description", nil),
-							tools.NewIntParameter("id", "user id", []tools.ParamAuthSource{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameter("email", "user email", []tools.ParamAuthSource{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							tools.NewStringParameter("country", "some description"),
+							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthSource{{Name: "my-google-service", Field: "user_id"}}),
+							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthSource{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
