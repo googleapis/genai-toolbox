@@ -20,6 +20,7 @@ class ToolboxClient:
         """
         self._url: str = url
         self._should_close_session: bool = session is None
+        self._id_token_getters: dict[str, callable[[], str]] = {}
         self._session: ClientSession = session or ClientSession()
 
     async def close(self) -> None:
