@@ -218,8 +218,8 @@ type ParamAuthSource struct {
 	Field string `yaml:"field"`
 }
 
-// NewStringParameter is a convenience function for initializing a StringParameter.
-func NewStringParameter(name, desc string, authSources []ParamAuthSource) *StringParameter {
+// Initialize a String parameter without auth sources
+func NewStringParameter(name, desc string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:        name,
@@ -239,7 +239,6 @@ func NewStringParameterWithAuth(name, desc string, authSources []ParamAuthSource
 			Desc:        desc,
 			AuthSources: authSources,
 		},
-		AuthSources: authSources,
 	}
 }
 
@@ -248,7 +247,6 @@ var _ Parameter = &StringParameter{}
 // StringParameter is a parameter representing the "string" type.
 type StringParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
 }
 
 // Parse casts the value "v" as a "string".
@@ -263,8 +261,8 @@ func (p *StringParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
 }
 
-// NewIntParameter is a convenience function for initializing a IntParameter.
-func NewIntParameter(name, desc string, authSources []ParamAuthSource) *IntParameter {
+// Initialize a new Integer parameter without auth sources
+func NewIntParameter(name, desc string) *IntParameter {
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:        name,
@@ -284,7 +282,6 @@ func NewIntParameterWithAuth(name, desc string, authSources []ParamAuthSource) *
 			Desc:        desc,
 			AuthSources: authSources,
 		},
-		AuthSources: authSources,
 	}
 }
 
@@ -293,7 +290,6 @@ var _ Parameter = &IntParameter{}
 // IntParameter is a parameter representing the "int" type.
 type IntParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
@@ -308,8 +304,8 @@ func (p *IntParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
 }
 
-// NewFloatParameter is a convenience function for initializing a FloatParameter.
-func NewFloatParameter(name, desc string, authSources []ParamAuthSource) *FloatParameter {
+// Initialize a Float parameter without auth sources
+func NewFloatParameter(name, desc string) *FloatParameter {
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:        name,
@@ -329,7 +325,6 @@ func NewFloatParameterWithAuth(name, desc string, authSources []ParamAuthSource)
 			Desc:        desc,
 			AuthSources: authSources,
 		},
-		AuthSources: authSources,
 	}
 }
 
@@ -338,7 +333,6 @@ var _ Parameter = &FloatParameter{}
 // FloatParameter is a parameter representing the "float" type.
 type FloatParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
@@ -353,8 +347,8 @@ func (p *FloatParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
 }
 
-// NewBooleanParameter is a convenience function for initializing a BooleanParameter.
-func NewBooleanParameter(name, desc string, authSources []ParamAuthSource) *BooleanParameter {
+// Initialize a new Boolean parameter without auth sources
+func NewBooleanParameter(name, desc string) *BooleanParameter {
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:        name,
@@ -374,7 +368,6 @@ func NewBooleanParameterWithAuth(name, desc string, authSources []ParamAuthSourc
 			Desc:        desc,
 			AuthSources: authSources,
 		},
-		AuthSources: authSources,
 	}
 }
 
@@ -383,7 +376,6 @@ var _ Parameter = &BooleanParameter{}
 // BooleanParameter is a parameter representing the "boolean" type.
 type BooleanParameter struct {
 	CommonParameter `yaml:",inline"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
 }
 
 func (p *BooleanParameter) Parse(v any) (any, error) {
@@ -420,8 +412,7 @@ func NewArrayParameterWithAuth(name, desc string, items Parameter, authSources [
 			Desc:        desc,
 			AuthSources: authSources,
 		},
-		Items:       items,
-		AuthSources: authSources,
+		Items: items,
 	}
 }
 
@@ -430,8 +421,7 @@ var _ Parameter = &ArrayParameter{}
 // ArrayParameter is a parameter representing the "array" type.
 type ArrayParameter struct {
 	CommonParameter `yaml:",inline"`
-	Items           Parameter         `yaml:"items"`
-	AuthSources     []ParamAuthSource `yaml:"auth_sources"`
+	Items           Parameter `yaml:"items"`
 }
 
 func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
