@@ -9,6 +9,7 @@ class ParameterSchema(BaseModel):
     name: str
     type: str
     description: str
+    authSources: list[str] 
 
 
 class ToolSchema(BaseModel):
