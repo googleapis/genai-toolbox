@@ -37,7 +37,7 @@ type Config struct {
 	Region   string         `yaml:"region"`
 	Cluster  string         `yaml:"cluster"`
 	Instance string         `yaml:"instance"`
-	IP_type  sources.IPType `yaml:"ip_type"`
+	IPType   sources.IPType `yaml:"ip_type"`
 	User     string         `yaml:"user"`
 	Password string         `yaml:"password"`
 	Database string         `yaml:"database"`
@@ -48,7 +48,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize() (sources.Source, error) {
-	pool, err := initAlloyDBPgConnectionPool(r.Project, r.Region, r.Cluster, r.Instance, r.IP_type.String(), r.User, r.Password, r.Database)
+	pool, err := initAlloyDBPgConnectionPool(r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

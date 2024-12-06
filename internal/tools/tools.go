@@ -24,8 +24,8 @@ type ToolConfig interface {
 }
 
 type Tool interface {
-	Invoke([]any) (string, error)
-	ParseParams(data map[string]any) ([]any, error)
+	Invoke(ParamValues) (string, error)
+	ParseParams(data map[string]any) (ParamValues, error)
 	Manifest() Manifest
 }
 

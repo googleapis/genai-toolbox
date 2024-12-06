@@ -271,6 +271,7 @@ func TestParseToolFile(t *testing.T) {
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
+					IPType:   "public",
 					Database: "my_db",
 				},
 			},
