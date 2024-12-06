@@ -127,6 +127,18 @@ class ToolboxClient:
                         f"Tool '{tool_name}' parameter '{param.name}' has no authSources that are registered."
                     )
 
+    def _remove_auth_params(self, manifest: ManifestSchema) -> None:
+        """
+        Removes parameters with authSources from the manifest in-place.
+
+        Args:
+            manifest: The manifest to modify.
+        """
+        for _, tool_schema in manifest.tools.items():
+            tool_schema.parameters = [
+                param for param in tool_schema.parameters if not param.authSources
+            ]
+
     def add_auth_header(self, auth_source: str, get_id_token: callable[[], str]) -> None:
         """
         Registers a function to retrieve an ID token for a given authentication
