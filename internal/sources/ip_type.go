@@ -35,9 +35,9 @@ func (i *IPType) UnmarshalYAML(node *yaml.Node) error {
 	if err := node.Decode(&ip_type); err != nil {
 		return err
 	}
-	switch ip_type {
+	switch strings.ToLower(ip_type) {
 	case "private", "public":
-		*i = IPType(ip_type)
+		*i = IPType(strings.ToLower(ip_type))
 		return nil
 	default:
 		return fmt.Errorf(`ip_type invalid: must be one of "public", or "private"`)

@@ -57,6 +57,32 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 			},
 		},
 		{
+			desc: "public ip_type",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: alloydb-postgres
+					project: my-project
+					region: my-region
+					cluster: my-cluster
+					instance: my-instance
+					ip_type: Public
+					database: my_db
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": alloydbpg.Config{
+					Name:     "my-pg-instance",
+					Kind:     alloydbpg.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Cluster:  "my-cluster",
+					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+				},
+			},
+		},
+		{
 			desc: "private ip_type",
 			in: `
 			sources:

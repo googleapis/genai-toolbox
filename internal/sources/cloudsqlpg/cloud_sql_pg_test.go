@@ -54,7 +54,31 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 			},
 		},
 		{
-			desc: "basic example",
+			desc: "public ip_type",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ip_type: Public
+					database: my_db
+			`,
+			want: server.SourceConfigs{
+				"my-pg-instance": cloudsqlpg.Config{
+					Name:     "my-pg-instance",
+					Kind:     cloudsqlpg.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+				},
+			},
+		},
+		{
+			desc: "private ip_type",
 			in: `
 			sources:
 				my-pg-instance:
