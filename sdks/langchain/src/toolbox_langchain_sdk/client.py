@@ -107,6 +107,17 @@ class ToolboxClient:
             args_schema=tool_model,
         )
 
+    def add_auth_header(self, auth_source: str, get_id_token: callable[[], str]) -> None:
+        """
+        Registers a function to retrieve an ID token for a given authentication
+        source.
+
+        Args:
+            auth_source : The name of the authentication source.
+            get_id_token: A function that returns the ID token.
+        """
+        self._id_token_getters[auth_source] = get_id_token
+
     async def load_tool(self, tool_name: str) -> StructuredTool:
         """
         Loads the tool, with the given tool name, from the Toolbox service.
