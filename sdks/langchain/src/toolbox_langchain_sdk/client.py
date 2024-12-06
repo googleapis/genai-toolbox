@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from typing import Optional, Type
 
 from aiohttp import ClientSession
@@ -106,6 +107,25 @@ class ToolboxClient:
             description=tool_schema.description,
             args_schema=tool_model,
         )
+
+    def _validate_auth_sources(self, manifest: ManifestSchema) -> None:
+        """
+        Validates that each parameter in the given manifest has at least one
+        authSource that is registered.
+
+        Args:
+            manifest: The manifest to validate.
+
+        Warns:
+            UserWarning: If a parameter in the manifest has no authSources that
+                         are registered.
+        """
+        for tool_name, tool_schema in manifest.tools.items():
+            for param in tool_schema.parameters:
+                if not any(auth_source in self._id_token_getters for auth_source in param.authSources):
+                    warnings.warn(
+                        f"Tool '{tool_name}' parameter '{param.name}' has no authSources that are registered."
+                    )
 
     def add_auth_header(self, auth_source: str, get_id_token: callable[[], str]) -> None:
         """
