@@ -48,6 +48,31 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+				},
+			},
+		},
+		{
+			desc: "basic example",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ip_type: private 
+					database: my_db
+			`,
+			want: server.SourceConfigs{
+				"my-pg-instance": cloudsqlpg.Config{
+					Name:     "my-pg-instance",
+					Kind:     cloudsqlpg.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "private",
 					Database: "my_db",
 				},
 			},
@@ -69,4 +94,37 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 		})
 	}
 
+}
+
+func FailParseFromYamlCloudSQLPg(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+	}{
+		{
+			desc: "invalid ip_type",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ip_type: fail 
+					database: my_db
+			`,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail: %s", err)
+			}
+		})
+	}
 }

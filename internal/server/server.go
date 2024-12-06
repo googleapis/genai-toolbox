@@ -24,14 +24,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog/v2"
+	logLib "github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf ServerConfig
-	root chi.Router
+	conf   ServerConfig
+	root   chi.Router
+	logger logLib.Logger
 
 	sources  map[string]sources.Source
 	tools    map[string]tools.Tool
@@ -39,9 +42,36 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(cfg ServerConfig) (*Server, error) {
+func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
+	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize http log: %w", err)
+	}
+	var httpOpts httplog.Options
+	switch cfg.LoggingFormat.String() {
+	case "json":
+		httpOpts = httplog.Options{
+			JSON:             true,
+			LogLevel:         logLevel,
+			Concise:          true,
+			RequestHeaders:   true,
+			MessageFieldName: "message",
+			SourceFieldName:  "logging.googleapis.com/sourceLocation",
+			TimeFieldName:    "timestamp",
+			LevelFieldName:   "severity",
+		}
+	default:
+		httpOpts = httplog.Options{
+			LogLevel:         logLevel,
+			Concise:          true,
+			RequestHeaders:   true,
+			MessageFieldName: "message",
+		}
+	}
+
+	logger := httplog.NewLogger("httplog", httpOpts)
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(httplog.RequestLogger(logger))
 	r.Use(middleware.Recoverer)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +87,7 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		}
 		sourcesMap[name] = s
 	}
-	fmt.Printf("Initalized %d sources.\n", len(sourcesMap))
+	log.Info(fmt.Sprintf("Initalized %d sources.", len(sourcesMap)))
 
 	// initalize and validate the tools
 	toolsMap := make(map[string]tools.Tool)
@@ -68,7 +98,7 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		}
 		toolsMap[name] = t
 	}
-	fmt.Printf("Initalized %d tools.\n", len(toolsMap))
+	log.Info(fmt.Sprintf("Initalized %d tools.", len(toolsMap)))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -88,11 +118,12 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		}
 		toolsetsMap[name] = t
 	}
-	fmt.Printf("Initalized %d toolsets.\n", len(toolsetsMap))
+	log.Info(fmt.Sprintf("Initalized %d toolsets.", len(toolsetsMap)))
 
 	s := &Server{
 		conf:     cfg,
 		root:     r,
+		logger:   log,
 		sources:  sourcesMap,
 		tools:    toolsMap,
 		toolsets: toolsetsMap,

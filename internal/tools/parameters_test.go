@@ -139,7 +139,7 @@ func TestParametersParse(t *testing.T) {
 		name   string
 		params tools.Parameters
 		in     map[string]any
-		want   []any
+		want   tools.ParamValues
 	}{
 		{
 			name: "string",
@@ -149,7 +149,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": "hello world",
 			},
-			want: []any{"hello world"},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello world"}},
 		},
 		{
 			name: "not string",
@@ -168,7 +168,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 100,
 			},
-			want: []any{100},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
 		},
 		{
 			name: "not int",
@@ -187,7 +187,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": 1.5,
 			},
-			want: []any{1.5},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.5}},
 		},
 		{
 			name: "not float",
@@ -206,15 +206,15 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": true,
 			},
-			want: []any{true},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
-			name: "bool",
+			name: "not bool",
 			params: tools.Parameters{
 				tools.NewBooleanParameter("my_bool", "this param is a bool"),
 			},
 			in: map[string]any{
-				"my_bool": "true",
+				"my_bool": 1.5,
 			},
 		},
 	}
@@ -247,6 +247,41 @@ func TestParametersParse(t *testing.T) {
 				}
 				gotType, wantType := reflect.TypeOf(got), reflect.TypeOf(want)
 				if gotType != wantType {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestParamValues(t *testing.T) {
+	tcs := []struct {
+		name      string
+		in        tools.ParamValues
+		wantSlice []any
+		wantMap   map[string]interface{}
+	}{
+		{
+			name:      "string",
+			in:        tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}, tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			wantSlice: []any{true, "hello world"},
+			wantMap:   map[string]interface{}{"my_bool": true, "my_string": "hello world"},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			gotSlice := tc.in.AsSlice()
+			gotMap := tc.in.AsMap()
+
+			for i, got := range gotSlice {
+				want := tc.wantSlice[i]
+				if got != want {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+			}
+			for i, got := range gotMap {
+				want := tc.wantMap[i]
+				if got != want {
 					t.Fatalf("unexpected value: got %q, want %q", got, want)
 				}
 			}

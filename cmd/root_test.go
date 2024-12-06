@@ -30,6 +30,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func withDefaults(c server.ServerConfig) server.ServerConfig {
+	if c.Address == "" {
+		c.Address = "127.0.0.1"
+	}
+	if c.Port == 0 {
+		c.Port = 5000
+	}
+	return c
+}
+
 func invokeCommand(args []string) (*Command, string, error) {
 	c := NewCommand()
 
@@ -70,7 +80,7 @@ func TestVersion(t *testing.T) {
 	}
 }
 
-func TestAddrPort(t *testing.T) {
+func TestServerConfigFlags(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
@@ -79,42 +89,49 @@ func TestAddrPort(t *testing.T) {
 		{
 			desc: "default values",
 			args: []string{},
-			want: server.ServerConfig{
-				Address: "127.0.0.1",
-				Port:    5000,
-			},
+			want: withDefaults(server.ServerConfig{}),
 		},
 		{
 			desc: "address short",
 			args: []string{"-a", "127.0.1.1"},
-			want: server.ServerConfig{
+			want: withDefaults(server.ServerConfig{
 				Address: "127.0.1.1",
-				Port:    5000,
-			},
+			}),
 		},
 		{
 			desc: "address long",
 			args: []string{"--address", "0.0.0.0"},
-			want: server.ServerConfig{
+			want: withDefaults(server.ServerConfig{
 				Address: "0.0.0.0",
-				Port:    5000,
-			},
+			}),
 		},
 		{
 			desc: "port short",
 			args: []string{"-p", "5052"},
-			want: server.ServerConfig{
-				Address: "127.0.0.1",
-				Port:    5052,
-			},
+			want: withDefaults(server.ServerConfig{
+				Port: 5052,
+			}),
 		},
 		{
 			desc: "port long",
 			args: []string{"--port", "5050"},
-			want: server.ServerConfig{
-				Address: "127.0.0.1",
-				Port:    5050,
-			},
+			want: withDefaults(server.ServerConfig{
+				Port: 5050,
+			}),
+		},
+		{
+			desc: "logging format",
+			args: []string{"--logging-format", "JSON"},
+			want: withDefaults(server.ServerConfig{
+				LoggingFormat: "JSON",
+			}),
+		},
+		{
+			desc: "debug logs",
+			args: []string{"--log-level", "WARN"},
+			want: withDefaults(server.ServerConfig{
+				LogLevel: "WARN",
+			}),
 		},
 	}
 	for _, tc := range tcs {
@@ -128,6 +145,54 @@ func TestAddrPort(t *testing.T) {
 				t.Fatalf("got %v, want %v", c.cfg, tc.want)
 			}
 		})
+	}
+}
+
+func TestFailServerConfigFlags(t *testing.T) {
+	tcs := []struct {
+		desc string
+		args []string
+	}{
+		{
+			desc: "logging format",
+			args: []string{"--logging-format", "fail"},
+		},
+		{
+			desc: "debug logs",
+			args: []string{"--log-level", "fail"},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, err := invokeCommand(tc.args)
+			if err == nil {
+				t.Fatalf("expected an error, but got nil")
+			}
+		})
+	}
+}
+
+func TestDefaultLoggingFormat(t *testing.T) {
+	c, _, err := invokeCommand([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error invoking command: %s", err)
+	}
+	got := c.cfg.LoggingFormat.String()
+	want := "standard"
+	if got != want {
+		t.Fatalf("unexpected default logging format flag: got %v, want %v", got, want)
+	}
+}
+
+func TestDefaultLogLevel(t *testing.T) {
+	c, _, err := invokeCommand([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error invoking command: %s", err)
+	}
+	got := c.cfg.LogLevel.String()
+	want := "info"
+	if got != want {
+		t.Fatalf("unexpected default log level flag: got %v, want %v", got, want)
 	}
 }
 
@@ -206,6 +271,7 @@ func TestParseToolFile(t *testing.T) {
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
+					IPType:   "public",
 					Database: "my_db",
 				},
 			},

@@ -12,25 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package sources
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"fmt"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
-type ToolConfig interface {
-	ToolConfigKind() string
-	Initialize(map[string]sources.Source) (Tool, error)
+type IPType string
+
+func (i *IPType) String() string {
+	if string(*i) != "" {
+		return strings.ToLower(string(*i))
+	}
+	return "public"
 }
 
-type Tool interface {
-	Invoke(ParamValues) (string, error)
-	ParseParams(data map[string]any) (ParamValues, error)
-	Manifest() Manifest
-}
-
-// Manifest is the representation of tools sent to Client SDKs.
-type Manifest struct {
-	Description string              `json:"description"`
-	Parameters  []ParameterManifest `json:"parameters"`
+func (i *IPType) UnmarshalYAML(node *yaml.Node) error {
+	var ip_type string
+	if err := node.Decode(&ip_type); err != nil {
+		return err
+	}
+	switch ip_type {
+	case "private", "public":
+		*i = IPType(ip_type)
+		return nil
+	default:
+		return fmt.Errorf(`ip_type invalid: must be one of "public", or "private"`)
+	}
 }
