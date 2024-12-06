@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: llamaindex
+name: langchain
 on:
   pull_request:
     paths:
-      - 'sdks/llamaindex/**'
-      - '!sdks/llamaindex/**/*.md'
+      - 'sdks/langchain/**'
+      - '!sdks/langchain/**/*.md'
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -38,10 +38,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install library requirements
-        run: pip install -r sdks/llamaindex/requirements.txt
+        run: pip install -r sdks/langchain/requirements.txt
 
       - name: Install test requirements
-        run: pip install sdks/llamaindex[test]
+        run: pip install sdks/langchain[test]
 
       - name: Run linters
         run: |
@@ -50,5 +50,5 @@ jobs:
 
       - name: Run type-check
         env:
-          MYPYPATH: 'sdks/llamaindex/src'
-        run: mypy --install-types --non-interactive --explicit-package-bases sdks/llamaindex
+          MYPYPATH: 'sdks/langchain/src'
+        run: mypy --install-types --non-interactive --explicit-package-bases sdks/langchain
