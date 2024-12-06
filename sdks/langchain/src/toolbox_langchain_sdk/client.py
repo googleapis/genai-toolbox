@@ -170,6 +170,7 @@ class ToolboxClient:
         manifest: ManifestSchema = await self._load_tool_manifest(tool_name)
 
         self._validate_auth_sources(manifest)
+        self._remove_auth_params(manifest)
 
         return self._generate_tool(tool_name, manifest)
 
@@ -198,6 +199,7 @@ class ToolboxClient:
         manifest: ManifestSchema = await self._load_toolset_manifest(toolset_name)
 
         self._validate_auth_sources(manifest)
+        self._remove_auth_params(manifest)
 
         for tool_name in manifest.tools:
             tools.append(self._generate_tool(tool_name, manifest))
