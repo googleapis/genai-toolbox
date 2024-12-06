@@ -49,4 +49,6 @@ jobs:
           isort --check .
 
       - name: Run type-check
-        run: mypy --install-types --non-interactive sdks/langchain
+        run: |
+          mkdir .mypy_cache
+          mypy --install-types --non-interactive sdks/langchain
