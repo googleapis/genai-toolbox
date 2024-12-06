@@ -21,8 +21,10 @@ import (
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	"gopkg.in/yaml.v3"
 )
 
@@ -138,6 +140,12 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
+		case spannersrc.SourceKind:
+			actual := spannersrc.Config{Name: name, Dialect: "google_standard_sql"}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
 		}
@@ -171,6 +179,12 @@ func (c *ToolConfigs) UnmarshalYAML(node *yaml.Node) error {
 		switch k.Kind {
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case spanner.ToolKind:
+			actual := spanner.Config{Name: name}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
