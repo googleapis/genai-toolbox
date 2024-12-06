@@ -99,7 +99,9 @@ class ToolboxClient:
         )
 
         async def _tool_func(**kwargs) -> dict:
-            return await _invoke_tool(self._url, self._session, tool_name, kwargs, self._id_token_getters)
+            return await _invoke_tool(
+                self._url, self._session, tool_name, kwargs, self._id_token_getters
+            )
 
         return StructuredTool.from_function(
             coroutine=_tool_func,
@@ -122,7 +124,10 @@ class ToolboxClient:
         """
         for tool_name, tool_schema in manifest.tools.items():
             for param in tool_schema.parameters:
-                if not any(auth_source in self._id_token_getters for auth_source in param.authSources):
+                if not any(
+                    auth_source in self._id_token_getters
+                    for auth_source in param.authSources
+                ):
                     warnings.warn(
                         f"Tool '{tool_name}' parameter '{param.name}' has no authSources that are registered."
                     )
@@ -139,7 +144,9 @@ class ToolboxClient:
                 param for param in tool_schema.parameters if not param.authSources
             ]
 
-    def add_auth_header(self, auth_source: str, get_id_token: callable[[], str]) -> None:
+    def add_auth_header(
+        self, auth_source: str, get_id_token: callable[[], str]
+    ) -> None:
         """
         Registers a function to retrieve an ID token for a given authentication
         source.
@@ -150,7 +157,9 @@ class ToolboxClient:
         """
         self._id_token_getters[auth_source] = get_id_token
 
-    async def load_tool(self, tool_name: str, auth_headers: dict[str, callable[[], str]] = {}) -> StructuredTool:
+    async def load_tool(
+        self, tool_name: str, auth_headers: dict[str, callable[[], str]] = {}
+    ) -> StructuredTool:
         """
         Loads the tool, with the given tool name, from the Toolbox service.
 
@@ -175,7 +184,9 @@ class ToolboxClient:
         return self._generate_tool(tool_name, manifest)
 
     async def load_toolset(
-        self, toolset_name: Optional[str] = None, auth_headers: dict[str, callable[[], str]] = {}
+        self,
+        toolset_name: Optional[str] = None,
+        auth_headers: dict[str, callable[[], str]] = {},
     ) -> list[StructuredTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset
