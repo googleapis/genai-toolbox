@@ -17,7 +17,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -78,17 +77,12 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 func parseAuthHeader(s *Server, h http.Header) (map[auth.AuthSource]string, error) {
+	// parse auth header into an {auth sources --> auth token} map
 	authInfo := make(map[auth.AuthSource]string)
-	for name, token := range h {
-		if strings.HasSuffix(name, "_token") {
-			name := strings.TrimSuffix(name, "_token")
-			authSource, ok := s.authSources[name]
-			if !ok {
-				return nil, fmt.Errorf("invalid auth header")
-			}
-			authInfo[authSource] = token[0]
+	for name := range s.authSources {
+		if token, ok := h[name+"_token"]; ok {
+			authInfo[s.authSources[name]] = token[0]
 		}
-
 	}
 	return authInfo, nil
 }
@@ -110,7 +104,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 		return
 	}
-	claims, err := tool.Authenticate(authInfo)
+	claimsMap, err := tool.Authenticate(authInfo)
 	if err != nil {
 		err := fmt.Errorf("tool authentication failure: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
@@ -123,7 +117,8 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
-	params, err := tool.ParseParams(data)
+
+	params, err := tool.ParseParams(data, claimsMap)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
