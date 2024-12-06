@@ -49,4 +49,6 @@ jobs:
           isort --check .
 
       - name: Run type-check
+        env:
+          MYPYPATH: 'sdks/llamaindex/src'
         run: mypy --install-types --non-interactive --explicit-package-bases sdks/llamaindex
