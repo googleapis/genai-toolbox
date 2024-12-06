@@ -89,8 +89,26 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
+def _get_auth_headers(id_token_getters: dict[str, callable[[], str]]):
+  """
+  Gets id tokens for the given auth sources in the getters map and returns
+  headers to be included in tool invocation.
+
+  Args:
+        id_token_getters: A dict that maps auth source names to the functions
+            that return its ID token.
+
+  Returns:
+    A dictionary of headers to be included in the tool invocation.
+  """
+  headers = {}
+  for auth_source, get_id_token in id_token_getters.items():
+    headers[f"{auth_source}_token"] = get_id_token()
+  return headers
+
+
 async def _invoke_tool(
-    url: str, session: ClientSession, tool_name: str, data: dict
+    url: str, session: ClientSession, tool_name: str, data: dict, id_token_getters: dict[str, callable[[], str]]
 ) -> dict:
     """
     Asynchronously makes an API call to the Toolbox service to invoke a tool.
@@ -100,12 +118,19 @@ async def _invoke_tool(
         session: The HTTP client session.
         tool_name: The name of the tool to invoke.
         data: The input data for the tool.
+        id_token_getters: A dict that maps auth source names to the functions
+            that return its ID token.
 
     Returns:
-        A dictionary containing the parsed JSON response from the tool invocation.
+        A dictionary containing the parsed JSON response from the tool
+        invocation.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
-    async with session.post(url, json=_convert_none_to_empty_string(data)) as response:
+    async with session.post(
+            url,
+            json=_convert_none_to_empty_string(data),
+            headers=_get_auth_headers(id_token_getters)
+        ) as response:
         response.raise_for_status()
         return await response.json()
 

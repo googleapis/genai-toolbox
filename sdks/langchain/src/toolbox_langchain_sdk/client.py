@@ -99,7 +99,7 @@ class ToolboxClient:
         )
 
         async def _tool_func(**kwargs) -> dict:
-            return await _invoke_tool(self._url, self._session, tool_name, kwargs)
+            return await _invoke_tool(self._url, self._session, tool_name, kwargs, self._id_token_getters)
 
         return StructuredTool.from_function(
             coroutine=_tool_func,
