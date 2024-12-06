@@ -118,21 +118,28 @@ class ToolboxClient:
         """
         self._id_token_getters[auth_source] = get_id_token
 
-    async def load_tool(self, tool_name: str) -> StructuredTool:
+    async def load_tool(self, tool_name: str, auth_headers: dict[str, callable[[], str]] = {}) -> StructuredTool:
         """
         Loads the tool, with the given tool name, from the Toolbox service.
 
         Args:
             tool_name: The name of the tool to load.
+            auth_headers: A mapping of authentication source names to
+                functions that retrieve ID tokens. If provided, these will
+                override or be added to the existing ID token getters.
+                Default: Empty.
 
         Returns:
             A tool loaded from the Toolbox
         """
+        for auth_source, get_id_token in auth_headers:
+            self.add_auth_header(auth_source, get_id_token)
+
         manifest: ManifestSchema = await self._load_tool_manifest(tool_name)
         return self._generate_tool(tool_name, manifest)
 
     async def load_toolset(
-        self, toolset_name: Optional[str] = None
+        self, toolset_name: Optional[str] = None, auth_headers: dict[str, callable[[], str]] = {}
     ) -> list[StructuredTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset
@@ -141,10 +148,17 @@ class ToolboxClient:
         Args:
             toolset_name: The name of the toolset to load.
                 Default: None. If not provided, then all the tools are loaded.
+            auth_headers: A mapping of authentication source names to
+                functions that retrieve ID tokens. If provided, these will
+                override or be added to the existing ID token getters.
+                Default: Empty.
 
         Returns:
             A list of all tools loaded from the Toolbox.
         """
+        for auth_source, get_id_token in auth_headers:
+            self.add_auth_header(auth_source, get_id_token)
+
         tools: list[StructuredTool] = []
         manifest: ManifestSchema = await self._load_toolset_manifest(toolset_name)
         for tool_name in manifest.tools:
