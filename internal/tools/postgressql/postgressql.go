@@ -99,9 +99,10 @@ type Tool struct {
 	Name       string           `yaml:"name"`
 	Kind       string           `yaml:"kind"`
 	Parameters tools.Parameters `yaml:"parameters"`
-	Pool       *pgxpool.Pool
-	Statement  string
-	manifest   tools.Manifest
+
+	Pool      *pgxpool.Pool
+	Statement string
+	manifest  tools.Manifest
 }
 
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
