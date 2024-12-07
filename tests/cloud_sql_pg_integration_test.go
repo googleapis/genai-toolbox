@@ -16,6 +16,8 @@ package tests
 
 import (
 	"context"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"testing"
@@ -91,5 +93,36 @@ func TestCloudSQLPostgres(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-    // do a request
+	tcs := []struct {
+		name string
+		api  string
+		want string
+	}{
+		{
+			name: "get tool",
+			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
+			want: "{\"serverVersion\":\"\",\"tools\":{\"my-simple-tool\":{\"description\":\"Simple tool to test end to end functionality.\",\"parameters\":[]}}}\n",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := http.Get(tc.api)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Fatalf("response status code is not 200")
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("error reading response body: %s", err)
+			}
+
+			got := string(body)
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
 }
