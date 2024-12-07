@@ -21,6 +21,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Dialect represents the dialect type of a database.
 type Dialect string
 
 func (i *Dialect) String() string {
