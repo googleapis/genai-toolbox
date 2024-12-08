@@ -82,13 +82,15 @@ class ToolboxClient:
 
     def _validate_tool_auth(self, tool_name: str) -> None:
         """
-        Validates that all the authentication sources that are required to call the given tool are registered.
+        Validates that all the authentication sources that are required to call
+        the given tool are registered.
 
         Args:
             tool_name: The name of the tool to validate.
 
         Raises:
-            PermissionError: If any of the required authentication sources are not registered.
+            PermissionError: If any of the required authentication sources are
+            not registered.
         """
         if tool_name in self._auth_tools:
             missing_auth = []
@@ -100,7 +102,9 @@ class ToolboxClient:
                 if auth_source not in self._id_token_getters:
                     missing_auth.append(auth_source)
             if missing_auth:
-                raise PermissionError(f'User must be logged in with {", ".join(missing_auth)} in order to use the tool {tool_name}.')
+                raise PermissionError(
+                    f'User must be logged in with {", ".join(missing_auth)} in order to use the tool {tool_name}.'
+                )
 
     def _generate_tool(
         self, tool_name: str, manifest: ManifestSchema
