@@ -10,7 +10,7 @@ class ParameterSchema(BaseModel):
     name: str
     type: str
     description: str
-    authSources: list[str]
+    authSources: Optional[list[str]] = None
 
 
 class ToolSchema(BaseModel):
