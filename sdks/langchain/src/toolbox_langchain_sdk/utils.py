@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Callable, Optional, Type, cast
 
 import yaml
@@ -55,7 +56,8 @@ def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[Bas
         field_definitions[field.name] = cast(
             Any,
             (
-                # TODO: Remove the hardcoded optional types once optional fields are supported by Toolbox.
+                # TODO: Remove the hardcoded optional types once optional fields
+                # are supported by Toolbox.
                 Optional[_parse_type(field.type)],
                 Field(description=field.description),
             ),
@@ -89,7 +91,7 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
-def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]):
+def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
     """
     Gets id tokens for the given auth sources in the getters map and returns
     headers to be included in tool invocation.
@@ -101,10 +103,10 @@ def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]):
     Returns:
       A dictionary of headers to be included in the tool invocation.
     """
-    headers = {}
+    auth_headers = {}
     for auth_source, get_id_token in id_token_getters.items():
-        headers[f"{auth_source}_token"] = get_id_token()
-    return headers
+        auth_headers[f"{auth_source}_token"] = get_id_token()
+    return auth_headers
 
 
 async def _invoke_tool(
@@ -130,10 +132,19 @@ async def _invoke_tool(
         invocation.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
+    auth_headers = _get_auth_headers(id_token_getters)
+
+    # ID tokens contain sensitive user information (claims). Transmitting these
+    # over HTTP exposes the data to interception and unauthorized access. Always
+    # use HTTPS to ensure secure communication and protect user privacy.
+    if auth_headers and not url.startswith("https://"):
+        warnings.warn("""Sending ID token over HTTP. User data may be exposed.
+                      Use HTTPS for secure communication.""")
+
     async with session.post(
         url,
         json=_convert_none_to_empty_string(data),
-        headers=_get_auth_headers(id_token_getters),
+        headers=auth_headers,
     ) as response:
         response.raise_for_status()
         return await response.json()

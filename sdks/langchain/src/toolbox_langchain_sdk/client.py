@@ -93,11 +93,11 @@ class ToolboxClient:
             not registered.
         """
         if tool_name in self._auth_tools:
-            missing_auth = []
 
             # If the tool had parameters that require authentication, then right
             # before invoking that tool, we validate whether all these required
             # authentication sources are registered or not.
+            missing_auth = []
             for auth_source in self._auth_tools[tool_name]:
                 if auth_source not in self._id_token_getters:
                     missing_auth.append(auth_source)
