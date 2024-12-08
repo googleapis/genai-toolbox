@@ -102,9 +102,7 @@ class ToolboxClient:
                 if auth_source not in self._id_token_getters:
                     missing_auth.append(auth_source)
             if missing_auth:
-                raise PermissionError(
-                    f'User must be logged in with {", ".join(missing_auth)} in order to use the tool {tool_name}.'
-                )
+                raise PermissionError(f"Login required before invoking {tool_name}.")
 
     def _generate_tool(
         self, tool_name: str, manifest: ManifestSchema
@@ -138,48 +136,47 @@ class ToolboxClient:
             args_schema=tool_model,
         )
 
-    def _validate_auth_sources(self, manifest: ManifestSchema) -> None:
+    def _process_auth_params(self, manifest: ManifestSchema) -> None:
         """
-        Validates that each parameter in the given manifest has at least one
-        authSource that is registered.
+        First validates that each auth parameter of each tool in the given
+        manifest has at least one auth source that is registered. Then it
+        filters out and stores parameters with auth sources from the manifest.
 
         Args:
-            manifest: The manifest to validate.
+            manifest: The manifest to validate and modify.
 
         Warns:
             UserWarning: If a parameter in the manifest has no authSources that
                          are registered.
         """
         for tool_name, tool_schema in manifest.tools.items():
-            for param in tool_schema.parameters:
-                if not any(
-                    auth_source in self._id_token_getters
-                    for auth_source in param.authSources
-                ):
-                    warnings.warn(
-                        f"Tool '{tool_name}' parameter '{param.name}' has no authSources that are registered."
-                    )
-
-    def _filter_auth_params(self, manifest: ManifestSchema) -> None:
-        """
-        Filters out and stores parameters with authSources from the manifest.
-
-        Args:
-            manifest: The manifest to modify.
-        """
-        for tool_name, tool_schema in manifest.tools.items():
             non_auth_params = []
             for param in tool_schema.parameters:
 
-                # If the parameter requires authentication, then remove it from
-                # the tool schema and store those required auth sources against
-                # the tool, so that all these required auth sources can be
-                # validated before the tool's invocation.
+                # Identify tools in the manifest that require authentication.
+                # Remove these tools from the manifest and store their required
+                # auth sources in a map called `_auth_tools`. This allows for
+                # efficient validation of auth sources immediately before tool
+                # invocation in the `_validate_tool_auth` function.
                 if param.authSources:
-                    if tool_name in self._auth_tools:
-                        self._auth_tools[tool_name].update(param.authSources)
-                    else:
-                        self._auth_tools[tool_name] = set(param.authSources)
+
+                    # If all permitted auth sources for a parameter are not yet
+                    # registered, raise a warning message to the user.
+                    if all(
+                        auth_source not in self._id_token_getters
+                        for auth_source in param.authSources
+                    ):
+                        warnings.warn(
+                            f"""The parameter {param.name} of tool {tool_name}
+                             requires authentication, but none of its permitted
+                             auth sources are currently registered. Please
+                             ensure the necessary auth source is registered
+                             before invoking this tool."""
+                        )
+
+                    if tool_name not in self._auth_tools:
+                        self._auth_tools[tool_name] = set()
+                    self._auth_tools[tool_name].update(param.authSources)
                 else:
                     non_auth_params.append(param)
             tool_schema.parameters = non_auth_params
@@ -218,8 +215,7 @@ class ToolboxClient:
 
         manifest: ManifestSchema = await self._load_tool_manifest(tool_name)
 
-        self._validate_auth_sources(manifest)
-        self._filter_auth_params(manifest)
+        self._process_auth_params(manifest)
 
         return self._generate_tool(tool_name, manifest)
 
@@ -249,8 +245,7 @@ class ToolboxClient:
         tools: list[StructuredTool] = []
         manifest: ManifestSchema = await self._load_toolset_manifest(toolset_name)
 
-        self._validate_auth_sources(manifest)
-        self._filter_auth_params(manifest)
+        self._process_auth_params(manifest)
 
         for tool_name in manifest.tools:
             tools.append(self._generate_tool(tool_name, manifest))
