@@ -1,4 +1,3 @@
-import asyncio
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
