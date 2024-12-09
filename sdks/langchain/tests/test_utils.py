@@ -142,12 +142,13 @@ class TestUtils:
         mock_post.return_value.__aenter__.return_value = mock_response
 
         result = await _invoke_tool(
-            "http://localhost:8000", ClientSession(), "tool_name", {"input": "data"}
+            "http://localhost:8000", ClientSession(), "tool_name", {"input": "data"}, {}
         )
 
         mock_post.assert_called_once_with(
             "http://localhost:8000/api/tool/tool_name/invoke",
             json=_convert_none_to_empty_string({"input": "data"}),
+            headers={}
         )
         assert result == {"key": "value"}
 

@@ -264,6 +264,7 @@ async def test_generate_tool_invoke(mock_invoke_tool):
         client._session,
         "test_tool",
         {"param1": "test_value", "param2": 123},
+        {},
     )
 
     # Assert that the result from _invoke_tool is returned
