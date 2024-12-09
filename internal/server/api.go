@@ -80,8 +80,8 @@ func parseAuthHeader(s *Server, h http.Header) (map[auth.AuthSource]string, erro
 	// parse auth header into an {auth sources --> auth token} map
 	authInfo := make(map[auth.AuthSource]string)
 	for name := range s.authSources {
-		if token, ok := h[name+"_token"]; ok {
-			authInfo[s.authSources[name]] = token[0]
+		if token := h.Get(name + "_token"); token != "" {
+			authInfo[s.authSources[name]] = token
 		}
 	}
 	return authInfo, nil
@@ -98,19 +98,25 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Tool authentication
-	authInfo, err := parseAuthHeader(s, r.Header)
-	if err != nil {
-		err := fmt.Errorf("failure parsing auth header: %w", err)
+	// Maps AthSources --> claims
+	claimsFromAuth := make(map[string]map[string]any)
+	for _, aS := range s.authSources {
+		claims, err := aS.GetClaimsFromHeader(r.Header)
+		if err != nil {
+			err := fmt.Errorf("Failure getting claims from header: %w", err)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+			return
+		}
+		claimsFromAuth[aS.GetName()] = claims
+	}
+	isAuthorized := tool.Authorized(claimsFromAuth)
+	if !isAuthorized {
+		err := fmt.Errorf("Tool invocation not authorized. Please make sure your specify correct auth headers.")
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 		return
 	}
-	claimsMap, err := tool.Authenticate(authInfo)
-	if err != nil {
-		err := fmt.Errorf("tool authentication failure: %w", err)
-		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
-		return
-	}
-	var data map[string]interface{}
+
+	var data map[string]any
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err := fmt.Errorf("request body was invalid JSON: %w", err)
@@ -118,7 +124,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := tool.ParseParams(data, claimsMap)
+	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))

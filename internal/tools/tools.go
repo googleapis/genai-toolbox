@@ -15,7 +15,6 @@
 package tools
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
 
@@ -28,7 +27,7 @@ type Tool interface {
 	Invoke(ParamValues) (string, error)
 	ParseParams(data map[string]any) (ParamValues, error)
 	Manifest() Manifest
-	Authenticate(map[auth.AuthSource]string) (map[string]map[string]any, error)
+	Authorized(map[string]map[string]any) bool
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
