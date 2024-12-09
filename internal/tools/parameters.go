@@ -68,33 +68,44 @@ func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
 	return params
 }
 
-// ParseParams parses specified Parameters from data and returns them as ParamValues.
+func parseFromAuthSource(paramAuthSources []ParamAuthSource, claimsMap map[string]map[string]any) (any, error) {
+	// parse a parameter from claims using its specified auth sources
+	for _, a := range paramAuthSources {
+		claims, ok := claimsMap[a.Name]
+		if !ok {
+			// not validated for this authsource, skip to the next one
+			continue
+		}
+		v, ok := claims[a.Field]
+		if !ok {
+			// claims do not contain specified field
+			return nil, fmt.Errorf("no field named %s in claims", a.Field)
+		}
+		return v, nil
+	}
+	return nil, fmt.Errorf("missing authentication header")
+}
+
+// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
 func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
-		var v interface{}
-		var ok bool
+		var v any
+		paramAuthSources := p.GetAuthSources()
 		name := p.GetName()
-		authSources := p.GetAuthSources()
-		if authSources == nil {
+		if paramAuthSources == nil {
+			// parse non auth-required parameter
+			var ok bool
 			v, ok = data[name]
 			if !ok {
 				return nil, fmt.Errorf("parameter %q is required", name)
 			}
 		} else {
-			for _, a := range authSources {
-				for authName, claims := range claimsMap {
-					if a.Name == authName {
-						v, ok = claims[a.Field]
-						if !ok {
-							return nil, fmt.Errorf("claims returned from authentication do not contain field %q", name)
-						}
-						break
-					}
-				}
-			}
-			if v == nil {
-				return nil, fmt.Errorf("missing authentication header for parameter %q", name)
+			// parse auth-required parameter
+			var err error
+			v, err = parseFromAuthSource(paramAuthSources, claimsMap)
+			if err != nil {
+				return nil, fmt.Errorf("authentication failed for parameter %q", name)
 			}
 		}
 		newV, err := p.Parse(v)
