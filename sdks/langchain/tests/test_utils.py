@@ -148,7 +148,7 @@ class TestUtils:
         mock_post.assert_called_once_with(
             "http://localhost:8000/api/tool/tool_name/invoke",
             json=_convert_none_to_empty_string({"input": "data"}),
-            headers={}
+            headers={},
         )
         assert result == {"key": "value"}
 
