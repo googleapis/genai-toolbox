@@ -45,8 +45,8 @@ jobs:
 
       - name: Run linters
         run: |
-          black --check .
-          isort --check .
+          black --check sdks/langchain/
+          isort --check sdks/langchain/
 
       - name: Run type-check
         env:
