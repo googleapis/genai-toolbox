@@ -173,7 +173,7 @@ class ToolboxClient:
                     continue
 
                 self._tool_param_auth.setdefault(tool_name, {})[
-                    param
+                    param.name
                 ] = param.authSources
 
             tool_schema.parameters = non_auth_params
