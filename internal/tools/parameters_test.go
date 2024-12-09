@@ -39,7 +39,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authSources),
+				tools.NewStringParameter("my_string", "this param is a string"),
 			},
 		},
 		{
@@ -52,7 +52,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_integer", "this param is an int", authSources),
+				tools.NewIntParameter("my_integer", "this param is an int"),
 			},
 		},
 		{
@@ -75,7 +75,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "my param is a float", authSources),
+				tools.NewFloatParameter("my_float", "my param is a float"),
 			},
 		},
 		{
@@ -98,7 +98,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a boolean", authSources),
+				tools.NewBooleanParameter("my_bool", "this param is a boolean"),
 			},
 		},
 		{
@@ -124,7 +124,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of strings", tools.NewStringParameter("", ""), authSources),
+				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "")),
 			},
 		},
 		{
@@ -150,7 +150,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of floats", tools.NewFloatParameter("", ""), authSources),
+				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "")),
 			},
 		},
 	}

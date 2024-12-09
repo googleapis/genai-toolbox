@@ -69,16 +69,17 @@ func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
 }
 
 // ParseParams parses specified Parameters from data and returns them as ParamValues.
-func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
+func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
 		var v interface{}
 		var ok bool
+		name := p.GetName()
 		authSources := p.GetAuthSources()
 		if authSources == nil {
-			v, ok = data[p.GetName()]
+			v, ok = data[name]
 			if !ok {
-				return nil, fmt.Errorf("parameter %q is required", p.GetName())
+				return nil, fmt.Errorf("parameter %q is required", name)
 			}
 		} else {
 			for _, a := range authSources {
@@ -86,19 +87,19 @@ func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
 					if a.Name == authName {
 						v, ok = claims[a.Field]
 						if !ok {
-							return nil, fmt.Errorf("claims returned from authentication do not contain field %q", p.GetName())
+							return nil, fmt.Errorf("claims returned from authentication do not contain field %q", name)
 						}
 						break
 					}
 				}
 			}
 			if v == nil {
-				return nil, fmt.Errorf("missing authentication header for parameter %q", p.GetName())
+				return nil, fmt.Errorf("missing authentication header for parameter %q", name)
 			}
 		}
 		newV, err := p.Parse(v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
+			return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
 	}

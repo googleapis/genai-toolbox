@@ -23,24 +23,3 @@ var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)
 func IsValidName(s string) bool {
 	return validName.MatchString(s)
 }
-
-func Authorized(parameters []Parameter, claims map[string]map[string]any) bool {
-	for _, p := range parameters {
-		if p.GetAuthSources() == nil {
-			// skip non-auth parameters
-			continue
-		}
-		isAuthorized := false
-		for _, paramAuthSource := range p.GetAuthSources() {
-			if _, ok := claims[paramAuthSource.Name]; ok {
-				// param auth source found
-				isAuthorized = true
-				break
-			}
-		}
-		if !isAuthorized {
-			return false
-		}
-	}
-	return true
-}

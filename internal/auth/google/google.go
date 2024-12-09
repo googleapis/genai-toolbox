@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"google.golang.org/api/idtoken"
 )
 
 const AuthSourceKind string = "google"

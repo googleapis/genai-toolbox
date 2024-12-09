@@ -129,10 +129,6 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t Tool) Authorized(claims map[string]map[string]any) bool {
-	return tools.Authorized(t.Parameters, claims)
-}
-
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }

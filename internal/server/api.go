@@ -97,12 +97,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 		claimsFromAuth[aS.GetName()] = claims
 	}
-	isAuthorized := tool.Authorized(claimsFromAuth)
-	if !isAuthorized {
-		err := fmt.Errorf("Tool invocation not authorized. Please make sure your specify correct auth headers.")
-		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
-		return
-	}
 
 	var data map[string]any
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
