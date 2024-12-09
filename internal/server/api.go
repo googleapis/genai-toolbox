@@ -86,7 +86,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Tool authentication
-	// Maps AthSources --> claims
+	// claimsFromAuth maps the name of the authsource to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
 	for _, aS := range s.authSources {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
