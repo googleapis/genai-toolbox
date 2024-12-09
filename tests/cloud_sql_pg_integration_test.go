@@ -87,7 +87,7 @@ func TestCloudSQLPostgres(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`INFO "Initialized 1 tools."`))
+	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`INFO "Server ready to serve"`))
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
