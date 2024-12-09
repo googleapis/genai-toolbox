@@ -21,7 +21,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -74,17 +73,6 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, m)
-}
-
-func parseAuthHeader(s *Server, h http.Header) (map[auth.AuthSource]string, error) {
-	// parse auth header into an {auth sources --> auth token} map
-	authInfo := make(map[auth.AuthSource]string)
-	for name := range s.authSources {
-		if token := h.Get(name + "_token"); token != "" {
-			authInfo[s.authSources[name]] = token
-		}
-	}
-	return authInfo, nil
 }
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
