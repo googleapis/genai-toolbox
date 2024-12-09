@@ -22,7 +22,7 @@ class ToolboxClient:
         self._url: str = url
         self._should_close_session: bool = session is None
         self._id_token_getters: dict[str, Callable[[], str]] = {}
-        self._auth_tools: dict[str, set[str]] = {}
+        self._tool_param_auth: dict[str, dict[str, list[str]]] = {}
         self._session: ClientSession = session or ClientSession()
 
     async def close(self) -> None:
@@ -80,26 +80,32 @@ class ToolboxClient:
         url = f"{self._url}/api/toolset/{toolset_name or ''}"
         return await _load_yaml(url, self._session)
 
-    def _validate_tool_auth(self, tool_name: str) -> None:
+    def _validate_auth(self, tool_name: str) -> bool:
         """
-        Validates that all the authentication sources that are required to call
-        the given tool are registered.
+        Helper method that validates the authentication requirements of the tool
+        with the given tool_name. We consider the validation to pass if at least
+        one auth sources of each of the auth parameters, of the given tool, is
+        registered.
 
         Args:
-            tool_name: The name of the tool to validate.
+            tool_name: Name of the tool to validate auth sources for.
 
-        Raises:
-            PermissionError: If any of the required authentication sources are
-            not registered.
+        Returns:
+            True if at least one permitted auth source of each of the auth
+            params, of the given tool, is registered. Also returns True if the
+            given tool does not require any auth sources.
         """
-        if tool_name in self._auth_tools:
 
-            # If the tool had parameters that require authentication, then right
-            # before invoking that tool, we validate whether all these required
-            # authentication sources are registered or not.
-            for auth_source in self._auth_tools[tool_name]:
-                if auth_source not in self._id_token_getters:
-                    raise PermissionError(f"Login required before invoking {tool_name}.")
+        if tool_name not in self._tool_param_auth:
+            return True
+
+        return all(
+            any(
+                registered_auth_source in permitted_auth_sources
+                for registered_auth_source in self._id_token_getters
+            )
+            for permitted_auth_sources in self._tool_param_auth[tool_name].values()
+        )
 
     def _generate_tool(
         self, tool_name: str, manifest: ManifestSchema
@@ -120,8 +126,13 @@ class ToolboxClient:
             model_name=tool_name, schema=tool_schema.parameters
         )
 
+        # If the tool had parameters that require authentication, then right
+        # before invoking that tool, we validate whether all these required
+        # authentication sources have been registered or not.
         async def _tool_func(**kwargs) -> dict:
-            self._validate_tool_auth(tool_name)
+            if not self._validate_auth(tool_name):
+                raise PermissionError(f"Login required before invoking {tool_name}.")
+
             return await _invoke_tool(
                 self._url, self._session, tool_name, kwargs, self._id_token_getters
             )
@@ -135,48 +146,48 @@ class ToolboxClient:
 
     def _process_auth_params(self, manifest: ManifestSchema) -> None:
         """
-        First validates that each auth parameter of each tool in the given
-        manifest has at least one auth source that is registered. Then it
-        filters out and stores parameters with auth sources from the manifest.
+        Extracts parameters requiring authentication from the manifest.
+        Verifies each parameter has at least one valid auth source.
 
         Args:
             manifest: The manifest to validate and modify.
 
         Warns:
-            UserWarning: If a parameter in the manifest has no authSources that
-                         are registered.
+            UserWarning: If a parameter in the manifest has no valid sources.
         """
         for tool_name, tool_schema in manifest.tools.items():
             non_auth_params = []
             for param in tool_schema.parameters:
 
-                # Identify tools in the manifest that require authentication.
-                # Remove these tools from the manifest and store their required
-                # auth sources in a map called `_auth_tools`. This allows for
-                # efficient validation of auth sources immediately before tool
-                # invocation in the `_validate_tool_auth` function.
-                if param.authSources:
-
-                    # If all permitted auth sources for a parameter are not yet
-                    # registered, raise a warning message to the user.
-                    if all(
-                        auth_source not in self._id_token_getters
-                        for auth_source in param.authSources
-                    ):
-                        warnings.warn(
-                            f"""The parameter {param.name} of tool {tool_name}
-                             requires authentication, but none of its permitted
-                             auth sources are currently registered. Please
-                             ensure the necessary auth source is registered
-                             before invoking this tool."""
-                        )
-
-                    if tool_name not in self._auth_tools:
-                        self._auth_tools[tool_name] = set()
-                    self._auth_tools[tool_name].update(param.authSources)
-                else:
+                # Extract auth params from the tool schema.
+                #
+                # These parameters are removed from the manifest to prevent data
+                # validation errors since their values are inferred by the
+                # Toolbox service, not provided by the user.
+                #
+                # Store the permitted authentication sources for each parameter
+                # in '_tool_param_auth' for efficient validation in
+                # '_validate_auth'.
+                if not param.authSources:
                     non_auth_params.append(param)
+                    continue
+
+                self._tool_param_auth.setdefault(tool_name, {})[
+                    param
+                ] = param.authSources
+
             tool_schema.parameters = non_auth_params
+
+            # If none of the permitted auth sources of a parameter are
+            # registered, raise a warning message to the user.
+            if not self._validate_auth(tool_name):
+                warnings.warn(
+                    f"""The parameter {param.name} of tool {tool_name}
+                        requires authentication, but none of its permitted
+                        auth sources are currently registered. Please
+                        ensure the necessary auth source is registered
+                        before invoking this tool."""
+                )
 
     def add_auth_header(
         self, auth_source: str, get_id_token: Callable[[], str]
