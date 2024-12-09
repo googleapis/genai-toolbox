@@ -610,7 +610,7 @@ func TestAuthParametersParse(t *testing.T) {
 		params    tools.Parameters
 		in        map[string]any
 		claimsMap map[string]map[string]any
-		want      []any
+		want      tools.ParamValues
 	}{
 		{
 			name: "string",
@@ -621,7 +621,7 @@ func TestAuthParametersParse(t *testing.T) {
 				"my_string": "hello world",
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "hello"}},
-			want:      []any{"hello"},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello"}},
 		},
 		{
 			name: "not string",
@@ -642,7 +642,7 @@ func TestAuthParametersParse(t *testing.T) {
 				"my_int": 100,
 			},
 			claimsMap: map[string]map[string]any{"other-auth-service": {"other_auth_field": 120}},
-			want:      []any{120},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 120}},
 		},
 		{
 			name: "not int",
@@ -663,7 +663,7 @@ func TestAuthParametersParse(t *testing.T) {
 				"my_float": 1.5,
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": 2.1}},
-			want:      []any{2.1},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 2.1}},
 		},
 		{
 			name: "not float",
@@ -684,7 +684,7 @@ func TestAuthParametersParse(t *testing.T) {
 				"my_bool": true,
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": false}},
-			want:      []any{false},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: false}},
 		},
 		{
 			name: "not bool",
@@ -705,7 +705,7 @@ func TestAuthParametersParse(t *testing.T) {
 				"username": "Violet",
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "Alice"}},
-			want:      []any{"Alice"},
+			want:      tools.ParamValues{tools.ParamValue{Name: "username", Value: "Alice"}},
 		},
 		{
 			name: "expect claim error",
