@@ -62,16 +62,6 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_float",
 					"type":        "float",
 					"description": "my param is a float",
-					"auth_sources": []map[string]string{
-						{
-							"name":  "my-google-auth-service",
-							"field": "user_id",
-						},
-						{
-							"name":  "other-auth-service",
-							"field": "user_id",
-						},
-					},
 				},
 			},
 			want: tools.Parameters{
@@ -85,16 +75,6 @@ func TestParametersMarshal(t *testing.T) {
 					"name":        "my_bool",
 					"type":        "boolean",
 					"description": "this param is a boolean",
-					"auth_sources": []map[string]string{
-						{
-							"name":  "my-google-auth-service",
-							"field": "user_id",
-						},
-						{
-							"name":  "other-auth-service",
-							"field": "user_id",
-						},
-					},
 				},
 			},
 			want: tools.Parameters{
@@ -111,16 +91,6 @@ func TestParametersMarshal(t *testing.T) {
 					"items": map[string]string{
 						"type": "string",
 					},
-					"auth_sources": []map[string]string{
-						{
-							"name":  "my-google-auth-service",
-							"field": "user_id",
-						},
-						{
-							"name":  "other-auth-service",
-							"field": "user_id",
-						},
-					},
 				},
 			},
 			want: tools.Parameters{
@@ -136,16 +106,6 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is an array of floats",
 					"items": map[string]string{
 						"type": "float",
-					},
-					"auth_sources": []map[string]string{
-						{
-							"name":  "my-google-auth-service",
-							"field": "user_id",
-						},
-						{
-							"name":  "other-auth-service",
-							"field": "user_id",
-						},
 					},
 				},
 			},

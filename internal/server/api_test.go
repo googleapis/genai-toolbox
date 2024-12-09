@@ -44,10 +44,6 @@ func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[stri
 	return tools.ParseParams(t.Params, data, claimsMap)
 }
 
-func (t MockTool) Authorized(claimsFromAuth map[string]map[string]any) bool {
-	return true
-}
-
 func (t MockTool) Manifest() tools.Manifest {
 	pMs := make([]tools.ParameterManifest, 0, len(t.Params))
 	for _, p := range t.Params {

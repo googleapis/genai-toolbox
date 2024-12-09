@@ -249,7 +249,7 @@ type ParamAuthSource struct {
 	Field string `yaml:"field"`
 }
 
-// Initialize a String parameter without auth sources
+// NewStringParameter is a convenience function for initializing a StringParameter.
 func NewStringParameter(name, desc string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
@@ -292,7 +292,7 @@ func (p *StringParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
 }
 
-// Initialize a new Integer parameter without auth sources
+// NewIntParameter is a convenience function for initializing a IntParameter.
 func NewIntParameter(name, desc string) *IntParameter {
 	return &IntParameter{
 		CommonParameter: CommonParameter{
@@ -335,7 +335,7 @@ func (p *IntParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
 }
 
-// Initialize a Float parameter without auth sources
+// NewFloatParameter is a convenience function for initializing a FloatParameter.
 func NewFloatParameter(name, desc string) *FloatParameter {
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
@@ -378,7 +378,7 @@ func (p *FloatParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
 }
 
-// Initialize a new Boolean parameter without auth sources
+// NewBooleanParameter is a convenience function for initializing a BooleanParameter.
 func NewBooleanParameter(name, desc string) *BooleanParameter {
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
@@ -434,7 +434,7 @@ func NewArrayParameter(name, desc string, items Parameter) *ArrayParameter {
 	}
 }
 
-// Initialize a new Array parameter without auth sources
+// NewArrayParameterWithAuth is a convenience function for initializing a ArrayParameter with a list of ParamAuthSource.
 func NewArrayParameterWithAuth(name, desc string, items Parameter, authSources []ParamAuthSource) *ArrayParameter {
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
