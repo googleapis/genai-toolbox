@@ -138,8 +138,8 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	return s, nil
 }
 
-// ListenAndServe starts an HTTP server for the given Server instance.
-func (s *Server) ListenAndServe(ctx context.Context) error {
+// Listen starts a listener for the given Server instance.
+func (s *Server) Listen(ctx context.Context) (net.Listener, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -147,8 +147,13 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
 	l, err := lc.Listen(ctx, "tcp", addr)
 	if err != nil {
-		return fmt.Errorf("failed to open listener for %q: %w", addr, err)
+		return nil, fmt.Errorf("failed to open listener for %q: %w", addr, err)
 	}
+	s.logger.Info("Server ready to serve")
+	return l, nil
+}
 
+// Serve starts an HTTP server for the given Server instance.
+func (s *Server) Serve(l net.Listener) error {
 	return http.Serve(l, s.root)
 }
