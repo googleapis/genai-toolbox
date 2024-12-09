@@ -311,7 +311,7 @@ func TestParametersParse(t *testing.T) {
 		name   string
 		params tools.Parameters
 		in     map[string]any
-		want   []any
+		want   tools.ParamValues
 	}{
 		{
 			name: "string",
@@ -321,7 +321,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": "hello world",
 			},
-			want: []any{"hello world"},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello world"}},
 		},
 		{
 			name: "not string",
@@ -340,7 +340,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 100,
 			},
-			want: []any{100},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
 		},
 		{
 			name: "not int",
@@ -359,7 +359,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": 1.5,
 			},
-			want: []any{1.5},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.5}},
 		},
 		{
 			name: "not float",
@@ -378,15 +378,15 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": true,
 			},
-			want: []any{true},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
-			name: "bool",
+			name: "not bool",
 			params: tools.Parameters{
 				tools.NewBooleanParameter("my_bool", "this param is a bool"),
 			},
 			in: map[string]any{
-				"my_bool": "true",
+				"my_bool": 1.5,
 			},
 		},
 	}
