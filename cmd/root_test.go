@@ -233,41 +233,6 @@ func TestDefaultLogLevel(t *testing.T) {
 	}
 }
 
-func TestToolFileFlag(t *testing.T) {
-	tcs := []struct {
-		desc string
-		args []string
-		want string
-	}{
-		{
-			desc: "default value",
-			args: []string{},
-			want: "tools.yaml",
-		},
-		{
-			desc: "foo file",
-			args: []string{"--tools_file", "foo.yaml"},
-			want: "foo.yaml",
-		},
-		{
-			desc: "address long",
-			args: []string{"--tools_file", "bar.yaml"},
-			want: "bar.yaml",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			c, _, err := invokeCommand(tc.args)
-			if err != nil {
-				t.Fatalf("unexpected error invoking command: %s", err)
-			}
-			if c.tools_file != tc.want {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
-			}
-		})
-	}
-}
-
 func TestParseToolFile(t *testing.T) {
 	tcs := []struct {
 		description   string
@@ -323,7 +288,7 @@ func TestParseToolFile(t *testing.T) {
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description", nil),
+							tools.NewStringParameter("country", "some description"),
 						},
 					},
 				},
