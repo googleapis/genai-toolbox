@@ -149,7 +149,6 @@ func (s *Server) Listen(ctx context.Context) (net.Listener, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open listener for %q: %w", addr, err)
 	}
-	s.logger.Info("Server ready to serve")
 	return l, nil
 }
 
