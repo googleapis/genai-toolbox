@@ -36,8 +36,14 @@ async def _load_yaml(url: str, session: ClientSession) -> ManifestSchema:
     """
     async with session.get(url) as response:
         response.raise_for_status()
-        parsed_yaml = yaml.safe_load(await response.text())
-        return ManifestSchema(**parsed_yaml)
+        try:
+            parsed_yaml = yaml.safe_load(await response.text())
+        except yaml.YAMLError as e:
+            raise yaml.YAMLError(f"Failed to parse YAML from {url}: {e}") from e
+        try:
+            return ManifestSchema(**parsed_yaml)
+        except ValueError as e:
+            raise ValueError(f"Invalid YAML data from {url}: {e}") from e
 
 
 def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[BaseModel]:
