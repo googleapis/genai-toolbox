@@ -23,7 +23,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -54,7 +53,6 @@ func (t MockTool) Manifest() tools.Manifest {
 
 func TestToolsetEndpoint(t *testing.T) {
 	// Set up resources to test against
-	var authSources []auth.AuthSource
 	tool1 := MockTool{
 		Name:   "no_params",
 		Params: []tools.Parameter{},

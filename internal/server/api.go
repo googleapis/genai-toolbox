@@ -92,8 +92,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
-	claims := make(map[string]any)
-	params, err := tool.ParseParams(data, claims)
+	params, err := tool.ParseParams(data)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))

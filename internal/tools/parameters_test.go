@@ -404,7 +404,7 @@ func TestParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]any))
+			gotAll, err := tools.ParseParams(tc.params, m)
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
@@ -533,7 +533,7 @@ func TestAuthParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]any))
+			gotAll, err := tools.ParseParams(tc.params, m)
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
