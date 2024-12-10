@@ -45,8 +45,8 @@ jobs:
 
       - name: Run linters
         run: |
-          black --check .
-          isort --check .
+          black --check sdks/llamaindex/
+          isort --check sdks/llamaindex/
 
       - name: Run type-check
         env:
