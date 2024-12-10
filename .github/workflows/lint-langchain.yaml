@@ -54,4 +54,5 @@ jobs:
       - name: Run type-check
         env:
           MYPYPATH: './src'
-        run: python -m mypy --install-types --non-interactive --cache-dir=.mypy_cache/
+        run: python -m mypy --install-types --non-interactive --cache-dir=.mypy_cache/ -p toolbox_langchain_sdk
+
