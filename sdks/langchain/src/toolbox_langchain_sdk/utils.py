@@ -145,8 +145,7 @@ async def _invoke_tool(
     # use HTTPS to ensure secure communication and protect user privacy.
     if auth_headers and not url.startswith("https://"):
         warnings.warn(
-            """Sending ID token over HTTP. User data may be exposed. Use HTTPS
-            for secure communication."""
+            "Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication."
         )
 
     async with session.post(
