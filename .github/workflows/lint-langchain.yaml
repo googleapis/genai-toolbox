@@ -52,7 +52,5 @@ jobs:
           isort --check .
 
       - name: Run type-check
-        env:
-          MYPYPATH: './src'
-        run: python -m mypy --install-types --non-interactive --cache-dir=.mypy_cache/ -p toolbox_langchain_sdk
+        run: python -m mypy --install-types --non-interactive -p toolbox_langchain_sdk
 
