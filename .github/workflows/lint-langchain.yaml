@@ -52,5 +52,7 @@ jobs:
           isort --check .
 
       - name: Run type-check
+        env:
+          MYPYPATH: 'sdks/langchain/src'
         run: python -m mypy --install-types --non-interactive -p toolbox_langchain_sdk
 
