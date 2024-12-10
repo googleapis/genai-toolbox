@@ -136,8 +136,8 @@ class TestUtils:
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.post")
     async def test_invoke_tool(self, mock_post):
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = AsyncMock()
+        mock_response = Mock()
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(return_value={"key": "value"})
         mock_post.return_value.__aenter__.return_value = mock_response
 
