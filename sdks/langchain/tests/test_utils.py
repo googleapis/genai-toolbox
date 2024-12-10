@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
+import yaml
 from aiohttp import ClientSession
 from pydantic import BaseModel
 
@@ -74,14 +75,35 @@ class TestUtils:
     @patch("aiohttp.ClientSession.get")
     async def test_load_yaml_invalid_yaml(self, mock_get, mock_yaml):
         mock_yaml.raise_for_status = Mock()
-        mock_yaml.text = AsyncMock(return_value="invalid yaml")
+        mock_yaml.text = AsyncMock(return_value="{ invalid yaml")
         mock_get.return_value = mock_yaml
 
-        with pytest.raises(Exception):
+        with pytest.raises(Exception) as e:
             session = aiohttp.ClientSession()
             await _load_yaml(URL, session)
             await session.close()
             mock_get.assert_called_once_with(URL)
+
+        mock_get.assert_called_once_with(URL)
+        assert isinstance(e.value, yaml.YAMLError)
+        assert str(e.value) == 'Failed to parse YAML from https://my-toolbox.com/test: while parsing a flow mapping\n  in "<unicode string>", line 1, column 1:\n    { invalid yaml\n    ^\nexpected \',\' or \'}\', but got \'<stream end>\'\n  in \"<unicode string>\", line 1, column 15:\n    { invalid yaml\n                  ^'
+
+    @pytest.mark.asyncio
+    @patch("aiohttp.ClientSession.get")
+    async def test_load_yaml_invalid_manifest(self, mock_get, mock_yaml):
+        mock_yaml.raise_for_status = Mock()
+        mock_yaml.text = AsyncMock(return_value="{ invalid yaml }")
+        mock_get.return_value = mock_yaml
+
+        with pytest.raises(Exception) as e:
+            session = aiohttp.ClientSession()
+            await _load_yaml(URL, session)
+            await session.close()
+            mock_get.assert_called_once_with(URL)
+
+        mock_get.assert_called_once_with(URL)
+        assert isinstance(e.value, ValueError)
+        assert str(e.value) == 'Invalid YAML data from https://my-toolbox.com/test: 2 validation errors for ManifestSchema\nserverVersion\n  Field required [type=missing, input_value={\'invalid yaml\': None}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\ntools\n  Field required [type=missing, input_value={\'invalid yaml\': None}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing'
 
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.get")
