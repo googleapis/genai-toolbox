@@ -46,6 +46,10 @@ jobs:
       - name: Install test requirements
         run: pip install .[test]
 
+      - name: Debug directory structure
+        run: |
+          ls -lR
+
       - name: Run linters
         run: |
           black --check sdks/langchain/
