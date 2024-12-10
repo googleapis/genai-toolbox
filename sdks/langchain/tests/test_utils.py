@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from typing import Union
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -177,6 +178,58 @@ class TestUtils:
             "http://localhost:8000/api/tool/tool_name/invoke",
             json=_convert_none_to_empty_string({"input": "data"}),
             headers={},
+        )
+        assert result == {"key": "value"}
+
+    @pytest.mark.asyncio
+    @patch("aiohttp.ClientSession.post")
+    async def test_invoke_tool_unsecure_with_auth(self, mock_post):
+        mock_response = Mock()
+        mock_response.raise_for_status = Mock()
+        mock_response.json = AsyncMock(return_value={"key": "value"})
+        mock_post.return_value.__aenter__.return_value = mock_response
+
+        with pytest.warns(
+            UserWarning,
+            match="Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication.",
+        ):
+            result = await _invoke_tool(
+                "http://localhost:8000",
+                ClientSession(),
+                "tool_name",
+                {"input": "data"},
+                {"my_test_auth": lambda: "fake_id_token"},
+            )
+
+        mock_post.assert_called_once_with(
+            "http://localhost:8000/api/tool/tool_name/invoke",
+            json=_convert_none_to_empty_string({"input": "data"}),
+            headers={"my_test_auth_token": "fake_id_token"},
+        )
+        assert result == {"key": "value"}
+
+    @pytest.mark.asyncio
+    @patch("aiohttp.ClientSession.post")
+    async def test_invoke_tool_secure_with_auth(self, mock_post):
+        mock_response = Mock()
+        mock_response.raise_for_status = Mock()
+        mock_response.json = AsyncMock(return_value={"key": "value"})
+        mock_post.return_value.__aenter__.return_value = mock_response
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            result = await _invoke_tool(
+                "https://localhost:8000",
+                ClientSession(),
+                "tool_name",
+                {"input": "data"},
+                {"my_test_auth": lambda: "fake_id_token"},
+            )
+
+        mock_post.assert_called_once_with(
+            "https://localhost:8000/api/tool/tool_name/invoke",
+            json=_convert_none_to_empty_string({"input": "data"}),
+            headers={"my_test_auth_token": "fake_id_token"},
         )
         assert result == {"key": "value"}
 
