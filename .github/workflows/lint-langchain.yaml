@@ -53,5 +53,5 @@ jobs:
 
       - name: Run type-check
         env:
-          MYPYPATH: 'sdks/langchain/src'
+          MYPYPATH: '/src'
         run: mypy --install-types --non-interactive --explicit-package-bases .
