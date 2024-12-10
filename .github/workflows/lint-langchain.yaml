@@ -54,4 +54,4 @@ jobs:
       - name: Run type-check
         env:
           MYPYPATH: './src'
-        run: mypy --install-types --non-interactive .
+        run: python -m mypy --install-types --non-interactive --cache-dir=.mypy_cache/
