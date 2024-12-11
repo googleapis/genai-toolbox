@@ -99,13 +99,15 @@ class ToolboxClient:
         if tool_name not in self._tool_param_auth:
             return True
 
-        return all(
-            any(
-                registered_auth_source in permitted_auth_sources
-                for registered_auth_source in self._id_token_getters
-            )
-            for permitted_auth_sources in self._tool_param_auth[tool_name].values()
-        )
+        for permitted_auth_sources in self._tool_param_auth[tool_name].values():
+            found_match = False
+            for registered_auth_source in self._id_token_getters:
+                if registered_auth_source in permitted_auth_sources:
+                    found_match = True
+                    break
+            if not found_match:
+                return False
+        return True
 
     def _generate_tool(
         self, tool_name: str, manifest: ManifestSchema
