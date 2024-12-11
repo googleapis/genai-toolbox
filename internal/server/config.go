@@ -141,7 +141,7 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 			}
 			(*c)[name] = actual
 		case spannersrc.SourceKind:
-			actual := spannersrc.Config{Name: name, Dialect: "google_standard_sql"}
+			actual := spannersrc.Config{Name: name, Dialect: "googlesql"}
 			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}

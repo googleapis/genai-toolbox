@@ -108,7 +108,7 @@ type Tool struct {
 
 func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
 	switch strings.ToLower(dialect) {
-	case "google_standard_sql":
+	case "googlesql":
 		return params.AsMap(), nil
 	case "postgresql":
 		return params.AsMapByOrderedKeys(), nil

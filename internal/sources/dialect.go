@@ -28,7 +28,7 @@ func (i *Dialect) String() string {
 	if string(*i) != "" {
 		return strings.ToLower(string(*i))
 	}
-	return "google_standard_sql"
+	return "googlesql"
 }
 
 func (i *Dialect) UnmarshalYAML(node *yaml.Node) error {
@@ -37,10 +37,10 @@ func (i *Dialect) UnmarshalYAML(node *yaml.Node) error {
 		return err
 	}
 	switch strings.ToLower(dialect) {
-	case "google_standard_sql", "postgresql":
+	case "googlesql", "postgresql":
 		*i = Dialect(strings.ToLower(dialect))
 		return nil
 	default:
-		return fmt.Errorf(`dialect invalid: must be one of "google_standard_sql", or "postgresql"`)
+		return fmt.Errorf(`dialect invalid: must be one of "googlesql", or "postgresql"`)
 	}
 }
