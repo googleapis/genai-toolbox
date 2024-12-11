@@ -1,3 +1,4 @@
+import asyncio
 import warnings
 from unittest.mock import AsyncMock, Mock, call, patch
 
@@ -537,3 +538,292 @@ async def test_process_auth_params(
             warnings.simplefilter("error")
             client._process_auth_params(manifest)
     assert client._tool_param_auth == expected_tool_param_auth
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client._load_yaml")
+@pytest.mark.parametrize(
+    "params, auth_headers, expected_tool_param_auth",
+    [
+        (
+            [
+                ParameterSchema(name="param1", type="string", description="Test param"),
+                ParameterSchema(name="param2", type="string", description="Test param"),
+            ],
+            {},
+            {},
+        ),  # No auth headers
+        (
+            [
+                ParameterSchema(name="param1", type="string", description="Test param"),
+                ParameterSchema(
+                    name="param2",
+                    type="string",
+                    description="Test param",
+                    authSources=["auth_source1"],
+                ),
+            ],
+            {"auth_source1": lambda: "test_token"},
+            {"tool_name": {"param2": ["auth_source1"]}},
+        ),  # With auth headers
+    ],
+)
+async def test_load_tool(
+    mock_load_yaml, params, auth_headers, expected_tool_param_auth
+):
+    """Test load_tool with and without auth headers."""
+    client = ToolboxClient("http://test-url")
+
+    # Replace with your desired mock manifest data
+    mock_load_yaml.return_value = ManifestSchema(
+        serverVersion="1.0",
+        tools={
+            "tool_name": ToolSchema(
+                description="Test tool",
+                parameters=params,
+            )
+        },
+    )
+
+    tool = await client.load_tool("tool_name", auth_headers)
+
+    assert isinstance(tool, StructuredTool)
+    assert tool.name == "tool_name"
+    assert "param1" in tool.args
+    assert client._tool_param_auth == expected_tool_param_auth
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client._load_yaml")
+@pytest.mark.parametrize(
+    "params, auth_headers, expected_tool_param_auth, expected_num_tools",
+    [
+        (
+            [
+                ParameterSchema(name="param1", type="string", description="Test param"),
+                ParameterSchema(name="param2", type="string", description="Test param"),
+            ],
+            {},
+            {},
+            1,
+        ),  # No auth headers
+        (
+            [
+                ParameterSchema(name="param1", type="string", description="Test param"),
+                ParameterSchema(
+                    name="param2",
+                    type="string",
+                    description="Test param",
+                    authSources=["auth_source1"],
+                ),
+            ],
+            {"auth_source1": lambda: "test_token"},
+            {"tool_name": {"param2": ["auth_source1"]}},
+            1,
+        ),  # With auth headers
+    ],
+)
+async def test_load_toolset(
+    mock_load_yaml,
+    params,
+    auth_headers,
+    expected_tool_param_auth,
+    expected_num_tools,
+):
+    """Test load_toolset with and without toolset name and auth headers."""
+    client = ToolboxClient("http://test-url")
+
+    # Replace with your desired mock manifest data
+    mock_load_yaml.return_value = ManifestSchema(
+        serverVersion="1.0",
+        tools={
+            "tool_name": ToolSchema(
+                description="Test tool",
+                parameters=params,
+            )
+        },
+    )
+
+    tools = await client.load_toolset("toolset_name", auth_headers)
+
+    assert isinstance(tools, list)
+    assert len(tools) == expected_num_tools
+    assert all(isinstance(tool, StructuredTool) for tool in tools)
+    assert client._tool_param_auth == expected_tool_param_auth
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client._invoke_tool")
+@pytest.mark.parametrize(
+    "manifest, tool_param_auth, id_token_getters, expected_invoke_tool_call",
+    [
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool description",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="string",
+                                description="Test param",
+                            )
+                        ],
+                    )
+                },
+            ),
+            {},
+            {},
+            True,  # _invoke_tool should be called
+        ),  # Basic tool schema, no auth
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool description",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="string",
+                                description="Test param",
+                                authSources=["auth_source1"],
+                            )
+                        ],
+                    )
+                },
+            ),
+            {"tool_name": {"param1": ["auth_source1"]}},
+            {},
+            False,  # _invoke_tool should not be called (auth missing)
+        ),  # Tool schema with auth, auth missing
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool description",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="string",
+                                description="Test param",
+                                authSources=["auth_source1"],
+                            )
+                        ],
+                    )
+                },
+            ),
+            {"tool_name": {"param1": ["auth_source1"]}},
+            {"auth_source1": lambda: "test_token"},
+            True,  # _invoke_tool should be called
+        ),  # Tool schema with auth, auth present
+    ],
+)
+async def test_generate_tool(
+    mock_invoke_tool,
+    manifest,
+    tool_param_auth,
+    id_token_getters,
+    expected_invoke_tool_call,
+):
+    """Test _generate_tool with different tool schemas and auth scenarios."""
+    client = ToolboxClient("http://test-url")
+    client._tool_param_auth = tool_param_auth
+    for auth_source, get_id_token in id_token_getters.items():
+        client.add_auth_header(auth_source, get_id_token)
+
+    tool = client._generate_tool("tool_name", manifest)
+
+    assert isinstance(tool, StructuredTool)
+    assert tool.name == "tool_name"
+    assert tool.description == "Test tool description"
+    assert tool.args_schema.__name__ == "tool_name"
+
+    # Call the tool function to check if _invoke_tool is called
+    if expected_invoke_tool_call:
+        await tool.coroutine(param1="test_value")
+        mock_invoke_tool.assert_called_once()
+    else:
+        with pytest.raises(PermissionError):
+            await tool.coroutine(param1="test_value")
+        mock_invoke_tool.assert_not_called()
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.close")
+async def test_del_closes_session(mock_close):
+    """Test that __del__ closes the session when the event loop is running."""
+    client = ToolboxClient("http://test-url")
+
+    # Simulate event loop running
+    loop = asyncio.get_event_loop()
+    loop.create_task(asyncio.sleep(0))
+
+    del client
+
+    # Give the event loop a chance to process the close task
+    await asyncio.sleep(0.1)
+
+    mock_close.assert_called_once()
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.close")
+async def test_del_closes_session_not_running(mock_close):
+    """Test that __del__ closes the session when the event loop is not running."""
+    client = ToolboxClient("http://test-url")
+
+    # Keep a reference to the session
+    session = client._session
+
+    del client
+    import gc
+
+    gc.collect()
+
+    # Now explicitly close the session
+    await session.close()
+
+    mock_close.assert_called_once()
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client.asyncio.get_event_loop")
+@patch("aiohttp.ClientSession.close")
+async def test_del_handles_exception(mock_close, mock_get_event_loop):
+    """Test that __del__ handles exceptions gracefully."""
+    client = ToolboxClient("http://test-url")
+
+    # Simulate an exception when getting the event loop
+    mock_get_event_loop.side_effect = Exception("Test exception")
+
+    del client
+
+    # close should not be called because of the exception
+    mock_close.assert_not_called()
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client.asyncio.get_event_loop")
+async def test_del_loop_not_running(mock_get_event_loop):
+    """Test that __del__ handles the case where the loop is not running."""
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    client = ToolboxClient("http://test-url")
+    mock_loop = Mock()
+    mock_loop.is_running.return_value = False
+    mock_get_event_loop.return_value = mock_loop
+
+    del client
+    import gc
+
+    gc.collect()  # Force garbage collection
+
+    # Add a small delay to allow the event loop to process the close coroutine
+    await asyncio.sleep(0.1)
+
+    loop.close()
