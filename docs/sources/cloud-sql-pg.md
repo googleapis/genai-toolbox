@@ -63,6 +63,7 @@ sources:
 | project   |  string  |     true     | Name of the GCP project that the cluster was created in (e.g. "my-project"). |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1"). |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluser (e.g. "my-instance").       |
+| ip_type   |  string  |     true     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                 |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                          |
