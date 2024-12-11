@@ -184,7 +184,7 @@ class ToolboxClient:
             # registered, raise a warning message to the user.
             if not self._validate_auth(tool_name):
                 warnings.warn(
-                    f"Some parameters of tool {tool_name} require authentication, but none of its permitted auth sources are currently registered. Please ensure the necessary auth source is registered before invoking this tool."
+                    f"Some parameters of tool {tool_name} require authentication, but no valid auth sources are registered. Please register the required sources before use."
                 )
 
     def add_auth_header(
