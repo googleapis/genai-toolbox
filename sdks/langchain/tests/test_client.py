@@ -1,3 +1,4 @@
+import warnings
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
@@ -269,3 +270,270 @@ async def test_generate_tool_invoke(mock_invoke_tool):
 
     # Assert that the result from _invoke_tool is returned
     assert result == {"result": "test_result"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "tool_param_auth, id_token_getters, expected_result",
+    [
+        ({}, {}, True),  # No auth required
+        (
+            {"tool_name": {"param1": ["auth_source1"]}},
+            {"auth_source1": lambda: "test_token"},
+            True,
+        ),  # Auth required and satisfied (single param)
+        (
+            {"tool_name": {"param1": ["auth_source1"]}},
+            {},
+            False,
+        ),  # Auth required but not satisfied (single param)
+        (
+            {"tool_name": {"param1": ["auth_source1", "auth_source2"]}},
+            {"auth_source2": lambda: "test_token"},
+            True,
+        ),  # Multiple auth sources, one satisfied (single param)
+        (
+            {
+                "tool_name": {
+                    "param1": ["auth_source1"],
+                    "param2": ["auth_source2"],
+                }
+            },
+            {
+                "auth_source1": lambda: "test_token1",
+                "auth_source2": lambda: "test_token2",
+            },
+            True,
+        ),  # Multiple params, auth satisfied
+        (
+            {
+                "tool_name": {
+                    "param1": ["auth_source1"],
+                    "param2": ["auth_source2"],
+                }
+            },
+            {"auth_source1": lambda: "test_token1"},
+            False,
+        ),  # Multiple params, one auth missing
+        (
+            {
+                "tool_name": {
+                    "param1": ["auth_source1", "auth_source3"],
+                    "param2": ["auth_source2"],
+                }
+            },
+            {
+                "auth_source2": lambda: "test_token2",
+                "auth_source3": lambda: "test_token3",
+            },
+            True,
+        ),  # Multiple params, multiple auth sources, satisfied
+    ],
+)
+async def test_validate_auth(tool_param_auth, id_token_getters, expected_result):
+    """Test _validate_auth with different auth scenarios."""
+    client = ToolboxClient("http://test-url")
+    client._tool_param_auth = tool_param_auth
+    for auth_source, get_id_token in id_token_getters.items():
+        client.add_auth_header(auth_source, get_id_token)
+    assert client._validate_auth("tool_name") == expected_result
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "manifest, id_token_getters, expected_tool_param_auth, expected_warning",
+    [
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1", type="str", description="Test param"
+                            )
+                        ],
+                    )
+                },
+            ),
+            {},
+            {},
+            None,
+        ),  # No auth params, no warning
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="str",
+                                description="Test param",
+                                authSources=["auth_source1"],
+                            ),
+                            ParameterSchema(
+                                name="param2", type="str", description="Test param"
+                            ),
+                        ],
+                    )
+                },
+            ),
+            {},
+            {"tool_name": {"param1": ["auth_source1"]}},
+            "Some parameters of tool tool_name require authentication, but no valid auth sources are registered. Please register the required sources before use.",
+        ),  # With auth params, auth not satisfied, warning expected
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="str",
+                                description="Test param",
+                                authSources=["auth_source1"],
+                            ),
+                            ParameterSchema(
+                                name="param2", type="str", description="Test param"
+                            ),
+                        ],
+                    )
+                },
+            ),
+            {"auth_source1": lambda: "test_token"},
+            {"tool_name": {"param1": ["auth_source1"]}},
+            None,
+        ),  # With auth params, auth satisfied, no warning expected
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="str",
+                                description="Test param",
+                                authSources=["auth_source1"],
+                            ),
+                            ParameterSchema(
+                                name="param2", type="str", description="Test param"
+                            ),
+                            ParameterSchema(
+                                name="param3",
+                                type="str",
+                                description="Test param",
+                                authSources=[
+                                    "auth_source1",
+                                    "auth_source2",
+                                ],
+                            ),
+                            ParameterSchema(
+                                name="param4",
+                                type="str",
+                                description="Test param",
+                            ),
+                            ParameterSchema(
+                                name="param5",
+                                type="str",
+                                description="Test param",
+                                authSources=[
+                                    "auth_source3",
+                                    "auth_source2",
+                                ],
+                            ),  # more parameters with and without authSources
+                        ],
+                    )
+                },
+            ),
+            {
+                "auth_source2": lambda: "test_token",
+                "auth_source3": lambda: "test_token",
+            },
+            {
+                "tool_name": {
+                    "param1": ["auth_source1"],
+                    "param3": ["auth_source1", "auth_source2"],
+                    "param5": ["auth_source3", "auth_source2"],
+                }
+            },
+            "Some parameters of tool tool_name require authentication, but no valid auth sources are registered. Please register the required sources before use.",
+        ),  # With multiple auth params, auth not satisfied, warning expected
+        (
+            ManifestSchema(
+                serverVersion="1.0",
+                tools={
+                    "tool_name": ToolSchema(
+                        description="Test tool",
+                        parameters=[
+                            ParameterSchema(
+                                name="param1",
+                                type="str",
+                                description="Test param",
+                                authSources=["auth_source1"],
+                            ),
+                            ParameterSchema(
+                                name="param2", type="str", description="Test param"
+                            ),
+                            ParameterSchema(
+                                name="param3",
+                                type="str",
+                                description="Test param",
+                                authSources=[
+                                    "auth_source1",
+                                    "auth_source2",
+                                ],
+                            ),
+                            ParameterSchema(
+                                name="param4",
+                                type="str",
+                                description="Test param",
+                            ),
+                            ParameterSchema(
+                                name="param5",
+                                type="str",
+                                description="Test param",
+                                authSources=[
+                                    "auth_source3",
+                                    "auth_source2",
+                                ],
+                            ),  # more parameters with and without authSources
+                        ],
+                    )
+                },
+            ),
+            {
+                "auth_source1": lambda: "test_token",
+                "auth_source3": lambda: "test_token",
+            },
+            {
+                "tool_name": {
+                    "param1": ["auth_source1"],
+                    "param3": ["auth_source1", "auth_source2"],
+                    "param5": ["auth_source3", "auth_source2"],
+                }
+            },
+            None,
+        ),  # With multiple auth params, auth satisfied, warning not expected
+    ],
+)
+async def test_process_auth_params(
+    manifest, id_token_getters, expected_tool_param_auth, expected_warning
+):
+    """Test _process_auth_params with and without auth params."""
+    client = ToolboxClient("http://test-url")
+    client._id_token_getters = id_token_getters
+    if expected_warning:
+        with pytest.warns(UserWarning, match=expected_warning):
+            client._process_auth_params(manifest)
+    else:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            client._process_auth_params(manifest)
+    assert client._tool_param_auth == expected_tool_param_auth
