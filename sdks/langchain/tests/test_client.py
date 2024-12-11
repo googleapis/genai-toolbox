@@ -351,7 +351,7 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                         description="Test tool",
                         parameters=[
                             ParameterSchema(
-                                name="param1", type="str", description="Test param"
+                                name="param1", type="string", description="Test param"
                             )
                         ],
                     )
@@ -370,12 +370,12 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                         parameters=[
                             ParameterSchema(
                                 name="param1",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=["auth_source1"],
                             ),
                             ParameterSchema(
-                                name="param2", type="str", description="Test param"
+                                name="param2", type="string", description="Test param"
                             ),
                         ],
                     )
@@ -394,12 +394,12 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                         parameters=[
                             ParameterSchema(
                                 name="param1",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=["auth_source1"],
                             ),
                             ParameterSchema(
-                                name="param2", type="str", description="Test param"
+                                name="param2", type="string", description="Test param"
                             ),
                         ],
                     )
@@ -418,16 +418,16 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                         parameters=[
                             ParameterSchema(
                                 name="param1",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=["auth_source1"],
                             ),
                             ParameterSchema(
-                                name="param2", type="str", description="Test param"
+                                name="param2", type="string", description="Test param"
                             ),
                             ParameterSchema(
                                 name="param3",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=[
                                     "auth_source1",
@@ -436,12 +436,12 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                             ),
                             ParameterSchema(
                                 name="param4",
-                                type="str",
+                                type="string",
                                 description="Test param",
                             ),
                             ParameterSchema(
                                 name="param5",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=[
                                     "auth_source3",
@@ -474,16 +474,16 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                         parameters=[
                             ParameterSchema(
                                 name="param1",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=["auth_source1"],
                             ),
                             ParameterSchema(
-                                name="param2", type="str", description="Test param"
+                                name="param2", type="string", description="Test param"
                             ),
                             ParameterSchema(
                                 name="param3",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=[
                                     "auth_source1",
@@ -492,12 +492,12 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
                             ),
                             ParameterSchema(
                                 name="param4",
-                                type="str",
+                                type="string",
                                 description="Test param",
                             ),
                             ParameterSchema(
                                 name="param5",
-                                type="str",
+                                type="string",
                                 description="Test param",
                                 authSources=[
                                     "auth_source3",
