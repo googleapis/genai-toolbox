@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Optional, Type
+from typing import Optional, Type
 
 from aiohttp import ClientSession
 from langchain_core.tools import StructuredTool
@@ -7,8 +7,6 @@ from pydantic import BaseModel
 
 from .utils import ManifestSchema, _invoke_tool, _load_yaml, _schema_to_model
 
-
-# Added comment to check presubmit run in PR
 class ToolboxClient:
     def __init__(self, url: str, session: Optional[ClientSession] = None):
         """
@@ -97,7 +95,7 @@ class ToolboxClient:
             model_name=tool_name, schema=tool_schema.parameters
         )
 
-        async def _tool_func(**kwargs: Any) -> dict:
+        async def _tool_func(**kwargs) -> dict:
             return await _invoke_tool(self._url, self._session, tool_name, kwargs)
 
         return StructuredTool.from_function(
