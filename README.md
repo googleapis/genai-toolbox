@@ -195,7 +195,7 @@ tools:
         statement: "SELECT * FROM flights WHERE id = $1"
         parameters:
         - name: id
-          type: int
+          type: integer
           description: 'id' represents the unique ID for each flight. 
 ```
 
