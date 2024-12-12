@@ -24,6 +24,7 @@ class ToolboxClient:
         self._id_token_getters: dict[str, Callable[[], str]] = {}
         self._tool_param_auth: dict[str, dict[str, list[str]]] = {}
         self._session: ClientSession = session or ClientSession()
+        self._bounded_params = {}
 
     async def close(self) -> None:
         """
@@ -136,7 +137,7 @@ class ToolboxClient:
                 raise PermissionError(f"Login required before invoking {tool_name}.")
 
             return await _invoke_tool(
-                self._url, self._session, tool_name, kwargs, self._id_token_getters
+                self._url, self._session, tool_name, kwargs, self._id_token_getters, self._bounded_params
             )
 
         return StructuredTool.from_function(
@@ -186,6 +187,17 @@ class ToolboxClient:
                 warnings.warn(
                     f"Some parameters of tool {tool_name} require authentication, but no valid auth sources are registered. Please register the required sources before use."
                 )
+
+    def set_bounded_params(self, bounded_params: dict) -> None:
+        """
+        Sets a dictionary of parameters to be fixed at predetermined values while invoking any tool.
+        Keys are parameter names (str) and values are the corresponding fixed values.
+        These parameters will never be modified by the LLM.
+
+        Args:
+            bounded_params: Dictionary of bounded parameters and their values.
+        """
+        self._bounded_params = bounded_params
 
     def add_auth_header(
         self, auth_source: str, get_id_token: Callable[[], str]

@@ -65,7 +65,10 @@ def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[Bas
                 # TODO: Remove the hardcoded optional types once optional fields
                 # are supported by Toolbox.
                 Optional[_parse_type(field.type)],
-                Field(description=field.description),
+                # Schema validation occurs before bounded parameters are added to the input.
+                # Since the LLM often omits values for these parameters,
+                # we set default values of None to prevent validation errors caused by missing keys.
+                Field(description=field.description, default=None),
             ),
         )
 
@@ -121,6 +124,7 @@ async def _invoke_tool(
     tool_name: str,
     data: dict,
     id_token_getters: dict[str, Callable[[], str]],
+    bounded_params: dict,
 ) -> dict:
     """
     Asynchronously makes an API call to the Toolbox service to invoke a tool.
@@ -132,6 +136,7 @@ async def _invoke_tool(
         data: The input data for the tool.
         id_token_getters: A dict that maps auth source names to the functions
             that return its ID token.
+        bounded_params: A dictionary of bounded parameters to override the input data given by the LLM.
 
     Returns:
         A dictionary containing the parsed JSON response from the tool
@@ -147,6 +152,10 @@ async def _invoke_tool(
         warnings.warn(
             "Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication."
         )
+
+    # Override the input data with any given bounded params.
+    data.update(bounded_params)
+
 
     async with session.post(
         url,
