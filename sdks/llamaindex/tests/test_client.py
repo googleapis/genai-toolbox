@@ -198,7 +198,7 @@ async def test_load_toolset_success(mock_generate_tool, mock_load_manifest):
             async_fn=AsyncMock(),
         ),
         FunctionTool(
-            metadata= ToolMetadata(
+            metadata=ToolMetadata(
                 name="test_tool2",
                 description="This is test tool 2.",
                 fn_schema=None,
@@ -239,6 +239,7 @@ async def test_load_toolset_success(mock_generate_tool, mock_load_manifest):
         ]
     )
 
+
 @pytest.mark.asyncio
 @patch("toolbox_llamaindex_sdk.client.ToolboxClient._load_toolset_manifest")
 async def test_load_toolset_failure(mock_load_manifest):
@@ -277,7 +278,7 @@ async def test_generate_tool_invoke(mock_invoke_tool):
     expected_result = ToolOutput(
         content=str(response),
         tool_name="test_tool",
-        raw_input={'args': (), 'kwargs': {'param1': 'test_value', 'param2': 123}},
+        raw_input={"args": (), "kwargs": {"param1": "test_value", "param2": 123}},
         raw_output=response,
     )
     assert result == expected_result
