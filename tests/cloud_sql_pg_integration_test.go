@@ -15,10 +15,13 @@
 package tests
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"regexp"
 	"testing"
 	"time"
@@ -93,15 +96,21 @@ func TestCloudSQLPostgres(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
+	// Test tool get endpoint
 	tcs := []struct {
 		name string
 		api  string
-		want string
+		want map[string]any
 	}{
 		{
-			name: "get tool",
+			name: "get my-simple-tool",
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: "{\"serverVersion\":\"\",\"tools\":{\"my-simple-tool\":{\"description\":\"Simple tool to test end to end functionality.\",\"parameters\":[]}}}\n",
+			want: map[string]any{
+				"my-simple-tool": map[string]any{
+					"description": "Simple tool to test end to end functionality.",
+					"parameters":  []any{},
+				},
+			},
 		},
 	}
 	for _, tc := range tcs {
@@ -114,12 +123,58 @@ func TestCloudSQLPostgres(t *testing.T) {
 			if resp.StatusCode != 200 {
 				t.Fatalf("response status code is not 200")
 			}
-			body, err := io.ReadAll(resp.Body)
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
 			if err != nil {
-				t.Fatalf("error reading response body: %s", err)
+				t.Fatalf("error parsing response body")
 			}
 
-			got := string(body)
+			got, ok := body["tools"]
+			if !ok {
+				t.Fatalf("unable to find tools in response body")
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		want        string
+	}{
+		{
+			name:        "invoke my-simple-tool",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "Stub tool call for \"my-simple-tool\"! Parameters parsed: [] \n Output: [%!s(int32=1)]",
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Fatalf("response status code is not 200")
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
