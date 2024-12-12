@@ -89,8 +89,6 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 	}
 	c := cmd.NewCommand(cmd.WithStreams(pw, pw))
 	c.SetArgs(args)
-	c.SetOut(pw)
-	c.SetErr(pw)
 
 	t := &CmdExec{
 		Out:     pr,
