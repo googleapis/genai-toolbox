@@ -191,10 +191,7 @@ tools:
         kind: postgres-sql
         source: my-cloud-sql-source
         description: >
-            Use this tool to list all airports matching search criteria. Takes 
-            at least one of country, city, name, or all and returns all matching
-            airports. The agent can decide to return the results directly to 
-            the user.
+            Use this tool to lookup a flight by its unique identifier.
         statement: "SELECT * FROM flights WHERE id = $1"
         parameters:
         - name: id
