@@ -29,3 +29,4 @@ We currently support the following types of kinds of sources:
 * [cloud-sql-postgres](./cloud-sql-pg.md) - Connect to a Cloud SQL for
   PostgreSQL instance.
 * [postgres](./postgres.md) - Connect to any PostgreSQL compatible database.
+* [spanner](./spanner.md) - Connect to a Spanner database.

@@ -48,6 +48,8 @@ We currently support the following types of kinds of tools:
 
 * [postgres-sql](./postgres-sql.md) - Run a PostgreSQL statement against a
   PostgreSQL-compatible database.
+* [spanner](./spanner.md) - Run a Spanner (either googlesql or postgresql)
+  statement againts Spanner database.
 
 
 ## Specifying Parameters
