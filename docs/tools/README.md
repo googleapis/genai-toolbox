@@ -111,4 +111,24 @@ requires another Parameter to be specified under the `items` field:
 | description |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
+### Authenticated Parameters
 
+Authenticated parameters automatically populate their values with user information decoded from your [ID tokens](../authSources/README.md#id-token) passed in from request headers. They do not take input values in request bodies like other parameters. Instead, specify your configured `authSources` and corresponding claim fields in ID tokens to tell Toolbox which values they should be auto-populated with.
+
+```yaml
+    parameters:
+      - name: user id
+        type: string
+        description: Auto-populated from Google login
+        authSources:
+          # `sub` is the OIDC claim field for user ID
+          - name: my-google-auth
+            field: sub
+```
+
+| **field**   | **type** | **required** | **description**                                                            |
+|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
+| name        |  string  |     true     | Name of the parameter.                                                     |
+| type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
+| description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
+| authSources |  list    |     false    | Auth source name to claim field mapping; auto-popules the parameter value. |
