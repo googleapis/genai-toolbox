@@ -137,7 +137,12 @@ class ToolboxClient:
                 raise PermissionError(f"Login required before invoking {tool_name}.")
 
             return await _invoke_tool(
-                self._url, self._session, tool_name, kwargs, self._id_token_getters, self._bounded_params
+                self._url,
+                self._session,
+                tool_name,
+                kwargs,
+                self._id_token_getters,
+                self._bounded_params,
             )
 
         return StructuredTool.from_function(

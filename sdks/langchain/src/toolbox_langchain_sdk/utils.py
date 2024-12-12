@@ -156,7 +156,6 @@ async def _invoke_tool(
     # Override the input data with any given bounded params.
     data.update(bounded_params)
 
-
     async with session.post(
         url,
         json=_convert_none_to_empty_string(data),
