@@ -165,7 +165,14 @@ func run(cmd *Command) error {
 		cmd.logger.Error(errMsg.Error())
 		return errMsg
 	}
-	err = s.ListenAndServe(ctx)
+	l, err := s.Listen(ctx)
+	if err != nil {
+		errMsg := fmt.Errorf("toolbox failed to mount listener: %w", err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
+	}
+	cmd.logger.Info("Server ready to serve")
+	err = s.Serve(l)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox crashed with the following error: %w", err)
 		cmd.logger.Error(errMsg.Error())

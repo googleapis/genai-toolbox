@@ -67,6 +67,7 @@ sources:
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1"). |
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                             |
 | instance  |  string  |     true     | Name of the AlloyDB instance within the cluser (e.g. "my-instance").         |
+| ip_type   |  string  |     true     | IP Type of the AlloyDB instance, must be either `public` or `private`. Default: `public`. |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                 |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                          |
