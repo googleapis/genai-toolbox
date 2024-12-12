@@ -1,4 +1,4 @@
-# Cloud SQL for PostgreSQL Source 
+# Cloud SQL for PostgreSQL Source
 
 [Cloud SQL for PostgreSQL][csql-pg-docs] is a fully-managed database service
 that helps you set up, maintain, manage, and administer your PostgreSQL
@@ -10,16 +10,18 @@ to a database by following these instructions][csql-pg-quickstart].
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
 [csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
-## Requirements 
+## Requirements
 
 ### IAM Identity
+
 By default, this source uses the [Cloud SQL Go Connector][csql-go-conn] to
 authorize and establish mTLS connections to your Cloud SQL instance. The Go
 connector uses your [Application Default Credentials (ADC)][adc] to authorize
-your connection to Cloud SQL. 
+your connection to Cloud SQL.
 
 In addition to [setting the ADC for your server][set-adc], you need to ensure the
 IAM identity has been given the following IAM roles:
+
 - `roles/cloudsql.client`
 
 [csql-go-conn]: https://github.com/GoogleCloudPlatform/cloud-sql-go-connector
@@ -67,5 +69,3 @@ sources:
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                 |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                          |
-
-

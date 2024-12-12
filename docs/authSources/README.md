@@ -13,10 +13,6 @@ If you are accessing Toolbox with multiple applications, each application should
 
 ## Kinds of Auth Sources
 
-We currently support the following types of kinds of sources:
+We currently support the following types of kinds of auth sources:
 
-* [alloydb-postgres](./alloydb-pg.md) - Connect to an AlloyDB for PostgreSQL
-  cluster.
-* [cloud-sql-postgres](./cloud-sql-pg.md) - Connect to a Cloud SQL for
-  PostgreSQL instance.
-* [postgres](./postgres.md) - Connect to any PostgreSQL compatible database.
+* [Google OAuth 2.0](./google.md) - Authenticate with a Google-signed OpenID Connect (OIDC) ID token.
