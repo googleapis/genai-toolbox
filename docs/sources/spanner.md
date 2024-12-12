@@ -15,14 +15,16 @@ the Google Cloud console][spanner-quickstart].
 ## Requirements 
 
 ### IAM Identity
-Spanner uses the [OAuth 2.0][oauth2] for API authentication and authorization.
-To run your code locally, make sure you run `gcloud auth application-default login` to
-set up your local development environment with authentication credentials.
+By default, Spanner uses the [OAuth 2.0][oauth2] for API authentication and
+authorization. The Cloud Spanner API uses your [Application Default Credentials
+(ADC)][adc] to authorize your connection to Spanner. 
 
-You need to ensure the IAM identity has been given the following IAM permissions:
+In addition to [setting the ADC for your server][set-adc], you need to ensure the IAM identity has been given the following IAM permissions:
 - `roles/spanner.databaseUser`
 
 [oauth2]: https://datatracker.ietf.org/doc/html/rfc6749
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 
 ## Example
 
@@ -32,8 +34,8 @@ sources:
         kind: "spanner"
         project: "my-project-name"
         instance: "my-instance"
-        dialect: "googlesql"
         database: "my_db"
+        # dialect: "googlesql"
 ```
 
 ## Reference
@@ -43,7 +45,5 @@ sources:
 | kind      |  string  |     true     | Must be "spanner".                                                           |
 | project   |  string  |     true     | Name of the GCP project that the cluster was created in (e.g. "my-project"). |
 | instance  |  string  |     true     | Name of the AlloyDB instance within the cluser (e.g. "my-instance").         |
-| dialect   |  string  |     true     | Name of the dialect type of the Spanner database, must be either `googlesql` or `postgresql`. Default: `googlesql`.        |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
-
-
+| dialect   |  string  |     true     | Name of the dialect type of the Spanner database, must be either `googlesql` or `postgresql`. Default: `googlesql`.        |
