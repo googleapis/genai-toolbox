@@ -199,6 +199,9 @@ tools:
           description: 'id' represents the unique ID for each flight. 
 ```
 
+For more details on configuring different types of tools, see the [Tool
+documentation.](docs/tools/README.md)
+
 
 ### Toolsets
 
