@@ -24,7 +24,7 @@ steps:
     args: 
       - -c
       - |
-        go test -race -v ./tests/...
+        go test -race -tags="integration" -v ./...
 
 availableSecrets:
   secretManager:
