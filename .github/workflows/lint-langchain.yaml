@@ -28,6 +28,9 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: ./sdks/langchain
     steps:
       - name: Checkout Repository
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
@@ -38,17 +41,17 @@ jobs:
           python-version: "3.13"
 
       - name: Install library requirements
-        run: pip install -r sdks/langchain/requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Install test requirements
-        run: pip install sdks/langchain[test]
+        run: pip install .[test]
 
       - name: Run linters
         run: |
-          black --check sdks/langchain/
-          isort --check sdks/langchain/
+          black --check .
+          isort --check .
 
       - name: Run type-check
         env:
-          MYPYPATH: 'sdks/langchain/src'
-        run: mypy --install-types --non-interactive --explicit-package-bases sdks/langchain
+          MYPYPATH: './src'
+        run: mypy --install-types --non-interactive --cache-dir=.mypy_cache/ -p toolbox_langchain_sdk
