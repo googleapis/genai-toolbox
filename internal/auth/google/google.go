@@ -27,7 +27,7 @@ var _ auth.AuthSourceConfig = Config{}
 type Config struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
-	ClientID string `yaml:"client_id"`
+	ClientID string `yaml:"clientId"`
 }
 
 // Returns the auth source kind
@@ -51,7 +51,7 @@ var _ auth.AuthSource = AuthSource{}
 type AuthSource struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
-	ClientID string `yaml:"client_id"`
+	ClientID string `yaml:"clientId"`
 }
 
 // Returns the auth source kind

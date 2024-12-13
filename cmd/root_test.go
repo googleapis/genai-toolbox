@@ -252,7 +252,7 @@ func TestParseToolFile(t *testing.T) {
 			authSources:
 				my-google-service:
 					kind: google
-					client_id: my-client-id
+					clientId: my-client-id
 			tools:
 				example_tool:
 					kind: postgres-sql
