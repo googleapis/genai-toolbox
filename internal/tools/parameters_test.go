@@ -584,3 +584,47 @@ func TestAuthParametersParse(t *testing.T) {
 		})
 	}
 }
+
+func TestParamValues(t *testing.T) {
+	tcs := []struct {
+		name           string
+		in             tools.ParamValues
+		wantSlice      []any
+		wantMap        map[string]interface{}
+		wantMapOrdered map[string]interface{}
+	}{
+		{
+			name:           "string",
+			in:             tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}, tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			wantSlice:      []any{true, "hello world"},
+			wantMap:        map[string]interface{}{"my_bool": true, "my_string": "hello world"},
+			wantMapOrdered: map[string]interface{}{"p1": true, "p2": "hello world"},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			gotSlice := tc.in.AsSlice()
+			gotMap := tc.in.AsMap()
+			gotMapOrdered := tc.in.AsMapByOrderedKeys()
+
+			for i, got := range gotSlice {
+				want := tc.wantSlice[i]
+				if got != want {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+			}
+			for i, got := range gotMap {
+				want := tc.wantMap[i]
+				if got != want {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+			}
+			for i, got := range gotMapOrdered {
+				want := tc.wantMapOrdered[i]
+				if got != want {
+					t.Fatalf("unexpected value: got %q, want %q", got, want)
+				}
+			}
+		})
+	}
+}
