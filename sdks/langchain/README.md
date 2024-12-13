@@ -50,7 +50,7 @@ toolbox = ToolboxClient("http://127.0.0.1:5000")
 > reuse the same session.
 > ```
 > async with ClientSession() as session:
->   client = ToolboxClient(http://localhost:5000, session)
+>   toolbox = ToolboxClient("http://localhost:5000", session)
 > ```
 
 ## Load a toolset
@@ -81,15 +81,14 @@ toolkit.
 
 ```python
 from langchain_google_vertexai import ChatVertexAI
-from langchain.agents import initialize_agent
 
-model = ChatVertexAI()
+model = ChatVertexAI(model="gemini-1.5-flash")
 
 # Initialize agent with tools
-agent = initialize_agent(tools, model)
+agent = model.bind_tools(tools)
 
 # Run the agent
-agent.run("Do something with the tools")
+result = agent.invoke("Do something with the tools")
 ```
 
 ## Use with LangGraph
