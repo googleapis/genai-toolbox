@@ -311,141 +311,12 @@ func TestParametersParse(t *testing.T) {
 		name   string
 		params tools.Parameters
 		in     map[string]any
-		want   []any
-	}{
-		{
-			name: "string",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
-			},
-			in: map[string]any{
-				"my_string": "hello world",
-			},
-			want: []any{"hello world"},
-		},
-		{
-			name: "not string",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
-			},
-			in: map[string]any{
-				"my_string": 4,
-			},
-		},
-		{
-			name: "int",
-			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
-			},
-			in: map[string]any{
-				"my_int": 100,
-			},
-			want: []any{100},
-		},
-		{
-			name: "not int",
-			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
-			},
-			in: map[string]any{
-				"my_int": 14.5,
-			},
-		},
-		{
-			name: "float",
-			params: tools.Parameters{
-				tools.NewFloatParameter("my_float", "this param is a float"),
-			},
-			in: map[string]any{
-				"my_float": 1.5,
-			},
-			want: []any{1.5},
-		},
-		{
-			name: "not float",
-			params: tools.Parameters{
-				tools.NewFloatParameter("my_float", "this param is a float"),
-			},
-			in: map[string]any{
-				"my_float": true,
-			},
-		},
-		{
-			name: "bool",
-			params: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a bool"),
-			},
-			in: map[string]any{
-				"my_bool": true,
-			},
-			want: []any{true},
-		},
-		{
-			name: "bool",
-			params: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a bool"),
-			},
-			in: map[string]any{
-				"my_bool": "true",
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// parse map to bytes
-			data, err := yaml.Marshal(tc.in)
-			if err != nil {
-				t.Fatalf("unable to marshal input to yaml: %s", err)
-			}
-			// parse bytes to object
-			var m map[string]any
-			err = yaml.Unmarshal(data, &m)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-
-			gotAll, err := tools.ParseParams(tc.params, m)
-			if err != nil {
-				if len(tc.want) == 0 {
-					// error is expected if no items in want
-					return
-				}
-				t.Fatalf("unexpected error from ParseParams: %s", err)
-			}
-			for i, got := range gotAll {
-				want := tc.want[i]
-				if got != want {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-				gotType, wantType := reflect.TypeOf(got), reflect.TypeOf(want)
-				if gotType != wantType {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-			}
-		})
-	}
-}
-
-func TestAuthParametersParse(t *testing.T) {
-	authSources := []tools.ParamAuthSource{
-		{
-			Name:  "my-google-auth-service",
-			Field: "user_id",
-		},
-		{
-			Name:  "other-auth-service",
-			Field: "user_id",
-		}}
-	tcs := []struct {
-		name   string
-		params tools.Parameters
-		in     map[string]any
 		want   tools.ParamValues
 	}{
 		{
 			name: "string",
 			params: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authSources),
+				tools.NewStringParameter("my_string", "this param is a string"),
 			},
 			in: map[string]any{
 				"my_string": "hello world",
@@ -455,7 +326,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "not string",
 			params: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authSources),
+				tools.NewStringParameter("my_string", "this param is a string"),
 			},
 			in: map[string]any{
 				"my_string": 4,
@@ -464,7 +335,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "int",
 			params: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_int", "this param is an int", authSources),
+				tools.NewIntParameter("my_int", "this param is an int"),
 			},
 			in: map[string]any{
 				"my_int": 100,
@@ -474,7 +345,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "not int",
 			params: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_int", "this param is an int", authSources),
+				tools.NewIntParameter("my_int", "this param is an int"),
 			},
 			in: map[string]any{
 				"my_int": 14.5,
@@ -483,7 +354,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "float",
 			params: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "this param is a float", authSources),
+				tools.NewFloatParameter("my_float", "this param is a float"),
 			},
 			in: map[string]any{
 				"my_float": 1.5,
@@ -493,7 +364,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "not float",
 			params: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "this param is a float", authSources),
+				tools.NewFloatParameter("my_float", "this param is a float"),
 			},
 			in: map[string]any{
 				"my_float": true,
@@ -502,7 +373,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "bool",
 			params: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authSources),
+				tools.NewBooleanParameter("my_bool", "this param is a bool"),
 			},
 			in: map[string]any{
 				"my_bool": true,
@@ -512,7 +383,7 @@ func TestAuthParametersParse(t *testing.T) {
 		{
 			name: "not bool",
 			params: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authSources),
+				tools.NewBooleanParameter("my_bool", "this param is a bool"),
 			},
 			in: map[string]any{
 				"my_bool": 1.5,
@@ -707,50 +578,6 @@ func TestAuthParametersParse(t *testing.T) {
 				}
 				gotType, wantType := reflect.TypeOf(got), reflect.TypeOf(want)
 				if gotType != wantType {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-			}
-		})
-	}
-}
-
-func TestParamValues(t *testing.T) {
-	tcs := []struct {
-		name           string
-		in             tools.ParamValues
-		wantSlice      []any
-		wantMap        map[string]interface{}
-		wantMapOrdered map[string]interface{}
-	}{
-		{
-			name:           "string",
-			in:             tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}, tools.ParamValue{Name: "my_string", Value: "hello world"}},
-			wantSlice:      []any{true, "hello world"},
-			wantMap:        map[string]interface{}{"my_bool": true, "my_string": "hello world"},
-			wantMapOrdered: map[string]interface{}{"p1": true, "p2": "hello world"},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			gotSlice := tc.in.AsSlice()
-			gotMap := tc.in.AsMap()
-			gotMapOrdered := tc.in.AsMapByOrderedKeys()
-
-			for i, got := range gotSlice {
-				want := tc.wantSlice[i]
-				if got != want {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-			}
-			for i, got := range gotMap {
-				want := tc.wantMap[i]
-				if got != want {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-			}
-			for i, got := range gotMapOrdered {
-				want := tc.wantMapOrdered[i]
-				if got != want {
 					t.Fatalf("unexpected value: got %q, want %q", got, want)
 				}
 			}

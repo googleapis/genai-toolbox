@@ -100,7 +100,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		authSourcesMap[name] = a
 	}
-	fmt.Printf("Initalized %d authsources.\n", len(authSourcesMap))
+	log.Info(fmt.Sprintf("Initialized %d authSources.", len(authSourcesMap)))
 
 	// initialize and validate the tools
 	toolsMap := make(map[string]tools.Tool)
