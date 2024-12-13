@@ -154,7 +154,7 @@ builder.add_edge("tools", 'agent')
 
 graph = builder.compile()
 
-app.invoke(
+graph.invoke(
     {"messages": [HumanMessage(content="Do something with the tools")]},
 )
 ```
