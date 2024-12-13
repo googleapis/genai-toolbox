@@ -101,11 +101,11 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 				return nil, fmt.Errorf("parameter %q is required", name)
 			}
 		} else {
-			// parse auth-required parameter
+			// parse authenticated parameter
 			var err error
 			v, err = parseFromAuthSource(paramAuthSources, claimsMap)
 			if err != nil {
-				return nil, fmt.Errorf("authentication failed for parameter %q", name)
+				return nil, fmt.Errorf("error parsing anthenticated parameter %q: %w", name, err)
 			}
 		}
 		newV, err := p.Parse(v)
