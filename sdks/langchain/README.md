@@ -81,15 +81,14 @@ toolkit.
 
 ```python
 from langchain_google_vertexai import ChatVertexAI
-from langchain.agents import initialize_agent
 
-model = ChatVertexAI()
+model = ChatVertexAI(model="gemini-1.5-flash")
 
 # Initialize agent with tools
-agent = initialize_agent(tools, model)
+agent = model.bind_tools(tools)
 
 # Run the agent
-agent.run("Do something with the tools")
+result = agent.invoke("Do something with the tools")
 ```
 
 ## Use with LangGraph
