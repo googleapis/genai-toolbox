@@ -50,7 +50,7 @@ toolbox = ToolboxClient("http://127.0.0.1:5000")
 > reuse the same session.
 > ```
 > async with ClientSession() as session:
->   client = ToolboxClient(http://localhost:5000, session)
+>   toolbox = ToolboxClient("http://localhost:5000", session)
 > ```
 
 ## Load a toolset
