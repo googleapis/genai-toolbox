@@ -17,3 +17,12 @@ authSources:
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "google".                                                  |
 | clientId  |  string  |     true     | Client ID of your application from registering your app on GCP.    |
+
+## Usage
+
+An auth source can be used for both authorization and authentication:
+
+- Authorization verifies that a Tool invocation request includes the necessary authentication token.
+- Authentication verifies the user's identity in a Tool's query to the database.
+
+

@@ -86,8 +86,6 @@ the parameter.
 | type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
 | description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
 
-
-
 ### Array Parameters
 
 The `array` type is a list of items passed in as a single parameter. This `type`
@@ -113,22 +111,44 @@ requires another Parameter to be specified under the `items` field:
 
 ### Authenticated Parameters
 
-Authenticated parameters automatically populate their values with user information decoded from your [ID tokens](../authSources/README.md#id-token) passed in from request headers. They do not take input values in request bodies like other parameters. Instead, specify your configured `authSources` and corresponding claim fields in ID tokens to tell Toolbox which values they should be auto-populated with.
+Authenticated parameters automatically populate their values with user information decoded from your [ID tokens](../authSources/README.md#id-token) passed in from request headers. They do not take input values in request bodies like other parameters. Instead, specify your configured [authSources](../authSources/README.md) and corresponding claim fields in ID tokens to tell Toolbox which values they should be auto-populated with.
 
 ```yaml
-    parameters:
-      - name: user id
-        type: string
-        description: Auto-populated from Google login
-        authSources:
-          # `sub` is the OIDC claim field for user ID
-          - name: my-google-auth
-            field: sub
+  tools:
+    search_flights_by_user_id:
+        kind: postgres-sql
+        source: my-pg-instance
+        statement: |
+          SELECT * FROM flights WHERE user_id = $1
+        parameters:
+          - name: user_id
+            type: string
+            description: Auto-populated from Google login
+            authSources:
+              # Refer to one of the `authSources` defined
+              - name: my-google-auth
+              # `sub` is the OIDC claim field for user ID
+                field: sub
 ```
 
 | **field**   | **type** | **required** | **description**                                                            |
 |-------------|:--------:|:------------:|----------------------------------------------------------------------------|
-| name        |  string  |     true     | Name of the parameter.                                                     |
-| type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
-| description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
-| authSources |  list    |     false    | Auth source name to claim field mapping; auto-popules the parameter value. |
+| name        |  string  |     true     | Name of the auth source used to verify the OIDC auth token.                |
+| field       |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.|
+
+## Tool Authorization
+
+You can require an authorization check for any Tool invocation request by specifying an `authRequired` field. Specify a list of [authSources](../authSources/README.md) defined in the previous section.
+
+```yaml
+tools:
+  search_all_flight:
+      kind: postgres-sql
+      source: my-pg-instance
+      statement: |
+        SELECT * FROM flights
+      # A list of `authSources` defined previously
+      authRequired:
+        - my-google-auth
+        - other-auth-service
+```
