@@ -1,8 +1,8 @@
 # Google OAuth 2.0
 
-## Requirements
+To use Google as your Toolbox authentication provider, you could integrate Google sign-in into your application by following this [guide](https://developers.google.com/identity/sign-in/web/sign-in). After setting up the Google sign-in workflow, you should have registered your application and retrieved a [Client ID](https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials). Configure your auth source in `tools.yaml` with the `Client ID`.
 
-To use Google as your Toolbox authentication provider, you could integrate Google sign-in into your application by following this [guide](https://developers.google.com/identity/sign-in/web/sign-in). After seting up the Google sign-in workflow, you should have registered your application and got a [Client ID](https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials). Configure your auth source in `tools.yaml` with this `Client ID`:
+## Example
 
 ```yaml
 authSources:
@@ -20,9 +20,9 @@ authSources:
 
 ## Usage
 
-An auth source can be used for both authorization and authentication:
+An auth source can be used for both `authorization` and `authentication`:
 
-- Authorization verifies that a Tool invocation request includes the necessary authentication token.
-- Authentication verifies the user's identity in a Tool's query to the database.
+- `Authorization` verifies that a Tool invocation request includes the necessary authentication token.
+- `Authentication` verifies the user's identity in a Tool's query to the database.
 
 

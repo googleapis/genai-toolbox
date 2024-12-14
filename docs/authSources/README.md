@@ -2,6 +2,8 @@
 
 Auth Sources represent authentication sources that a tool can interact with. Toolbox supports authentication providers that conform to the [OpenID Connect (OIDC) protocol](https://openid.net/developers/how-connect-works/). You can define Auth Sources as a map in the `authSources` section of your `tools.yaml` file. Typically, an Auth Source configuration will contain information required to verify token authenticity. You should provide the `kind` of the auth provider and your `clientId` for your registered app to allow Toolbox verify the authentication token.
 
+## Example
+
 ```yaml
 authSources:
   my-google-auth:
