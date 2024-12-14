@@ -47,10 +47,10 @@ func TestParseFromYamlPostgres(t *testing.T) {
 						  description: some description
 						  authSources:
 							- name: my-google-auth-service
-								field: user_id
+							  field: user_id
 							- name: other-auth-service
-								field: user_id
-		`,
+							  field: user_id
+			`,
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
 					Name:        "example_tool",

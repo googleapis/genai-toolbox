@@ -14,6 +14,8 @@
 
 package auth
 
+import "net/http"
+
 // SourceConfig is the interface for configuring authentication sources.
 type AuthSourceConfig interface {
 	AuthSourceConfigKind() string
@@ -24,4 +26,5 @@ type AuthSourceConfig interface {
 type AuthSource interface {
 	AuthSourceKind() string
 	GetName() string
+	GetClaimsFromHeader(http.Header) (map[string]any, error)
 }

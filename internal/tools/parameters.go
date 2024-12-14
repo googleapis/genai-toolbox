@@ -68,18 +68,49 @@ func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
 	return params
 }
 
-// ParseParams parses specified Parameters from data and returns them as ParamValues.
-func ParseParams(ps Parameters, data map[string]any) (ParamValues, error) {
+func parseFromAuthSource(paramAuthSources []ParamAuthSource, claimsMap map[string]map[string]any) (any, error) {
+	// parse a parameter from claims using its specified auth sources
+	for _, a := range paramAuthSources {
+		claims, ok := claimsMap[a.Name]
+		if !ok {
+			// not validated for this authsource, skip to the next one
+			continue
+		}
+		v, ok := claims[a.Field]
+		if !ok {
+			// claims do not contain specified field
+			return nil, fmt.Errorf("no field named %s in claims", a.Field)
+		}
+		return v, nil
+	}
+	return nil, fmt.Errorf("missing authentication header")
+}
+
+// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
+func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
+		var v any
+		paramAuthSources := p.GetAuthSources()
 		name := p.GetName()
-		v, ok := data[name]
-		if !ok {
-			return nil, fmt.Errorf("parameter %q is required!", p.GetName())
+		if paramAuthSources == nil {
+			// parse non auth-required parameter
+			var ok bool
+			v, ok = data[name]
+			if !ok {
+				return nil, fmt.Errorf("parameter %q is required", name)
+			}
+		} else {
+			// parse authenticated parameter
+			var err error
+			v, err = parseFromAuthSource(paramAuthSources, claimsMap)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing anthenticated parameter %q: %w", name, err)
+			}
 		}
 		newV, err := p.Parse(v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
+			return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
 	}
@@ -169,9 +200,10 @@ func (ps Parameters) Manifest() []ParameterManifest {
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	AuthSources []string `json:"authSources"`
 	// Parameter   *ParameterManifest `json:"parameter,omitempty"`
 }
 
@@ -195,10 +227,16 @@ func (p *CommonParameter) GetType() string {
 
 // GetType returns the type specified for the Parameter.
 func (p *CommonParameter) Manifest() ParameterManifest {
+	// only list ParamAuthSource names (without fields) in manifest
+	authNames := make([]string, len(p.AuthSources))
+	for i, a := range p.AuthSources {
+		authNames[i] = a.Name
+	}
 	return ParameterManifest{
 		Name:        p.Name,
 		Type:        p.Type,
 		Description: p.Desc,
+		AuthSources: authNames,
 	}
 }
 

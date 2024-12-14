@@ -125,8 +125,8 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
 }
 
-func (t Tool) ParseParams(data map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

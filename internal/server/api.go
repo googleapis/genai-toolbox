@@ -85,7 +85,20 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data map[string]interface{}
+	// Tool authentication
+	// claimsFromAuth maps the name of the authsource to the claims retrieved from it.
+	claimsFromAuth := make(map[string]map[string]any)
+	for _, aS := range s.authSources {
+		claims, err := aS.GetClaimsFromHeader(r.Header)
+		if err != nil {
+			err := fmt.Errorf("Failure getting claims from header: %w", err)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+			return
+		}
+		claimsFromAuth[aS.GetName()] = claims
+	}
+
+	var data map[string]any
 	if err := render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err := fmt.Errorf("request body was invalid JSON: %w", err)
@@ -93,7 +106,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := tool.ParseParams(data)
+	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))

@@ -39,8 +39,9 @@ func (t MockTool) Invoke(tools.ParamValues) (string, error) {
 	return "", nil
 }
 
-func (t MockTool) ParseParams(data map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Params, data)
+// claims is a map of user info decoded from an auth token
+func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Params, data, claimsMap)
 }
 
 func (t MockTool) Manifest() tools.Manifest {

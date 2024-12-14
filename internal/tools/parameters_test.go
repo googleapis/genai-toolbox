@@ -404,7 +404,7 @@ func TestParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m)
+			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]map[string]any))
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
@@ -430,17 +430,18 @@ func TestAuthParametersParse(t *testing.T) {
 	authSources := []tools.ParamAuthSource{
 		{
 			Name:  "my-google-auth-service",
-			Field: "user_id",
+			Field: "auth_field",
 		},
 		{
 			Name:  "other-auth-service",
-			Field: "user_id",
+			Field: "other_auth_field",
 		}}
 	tcs := []struct {
-		name   string
-		params tools.Parameters
-		in     map[string]any
-		want   tools.ParamValues
+		name      string
+		params    tools.Parameters
+		in        map[string]any
+		claimsMap map[string]map[string]any
+		want      tools.ParamValues
 	}{
 		{
 			name: "string",
@@ -450,7 +451,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": "hello world",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "hello"}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello"}},
 		},
 		{
 			name: "not string",
@@ -460,6 +462,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": 4,
 			},
+			claimsMap: map[string]map[string]any{},
 		},
 		{
 			name: "int",
@@ -469,7 +472,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 100,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
+			claimsMap: map[string]map[string]any{"other-auth-service": {"other_auth_field": 120}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 120}},
 		},
 		{
 			name: "not int",
@@ -479,6 +483,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 14.5,
 			},
+			claimsMap: map[string]map[string]any{},
 		},
 		{
 			name: "float",
@@ -488,7 +493,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": 1.5,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.5}},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": 2.1}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 2.1}},
 		},
 		{
 			name: "not float",
@@ -498,6 +504,7 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": true,
 			},
+			claimsMap: map[string]map[string]any{},
 		},
 		{
 			name: "bool",
@@ -507,7 +514,8 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": true,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": false}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: false}},
 		},
 		{
 			name: "not bool",
@@ -517,6 +525,28 @@ func TestAuthParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": 1.5,
 			},
+			claimsMap: map[string]map[string]any{},
+		},
+		{
+			name: "username",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAuth("username", "username string", authSources),
+			},
+			in: map[string]any{
+				"username": "Violet",
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "Alice"}},
+			want:      tools.ParamValues{tools.ParamValue{Name: "username", Value: "Alice"}},
+		},
+		{
+			name: "expect claim error",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAuth("username", "username string", authSources),
+			},
+			in: map[string]any{
+				"username": "Violet",
+			},
+			claimsMap: map[string]map[string]any{"my-google-auth-service": {"not_an_auth_field": "Alice"}},
 		},
 	}
 	for _, tc := range tcs {
@@ -533,7 +563,7 @@ func TestAuthParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m)
+			gotAll, err := tools.ParseParams(tc.params, m, tc.claimsMap)
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
