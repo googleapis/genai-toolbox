@@ -80,7 +80,7 @@ func TestGoogleAuthVerification(t *testing.T) {
 			if tc.isErr {
 				return
 			} else {
-				t.Fatalf("Error getting claims from token: %s, %s", err, token)
+				t.Fatalf("Error getting claims from token: %s", err)
 			}
 		}
 	}
