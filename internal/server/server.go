@@ -25,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog/v2"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	logLib "github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -36,9 +37,10 @@ type Server struct {
 	root   chi.Router
 	logger logLib.Logger
 
-	sources  map[string]sources.Source
-	tools    map[string]tools.Tool
-	toolsets map[string]tools.Toolset
+	sources     map[string]sources.Source
+	authSources map[string]auth.AuthSource
+	tools       map[string]tools.Tool
+	toolsets    map[string]tools.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -87,9 +89,20 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		sourcesMap[name] = s
 	}
-	log.Info(fmt.Sprintf("Initalized %d sources.", len(sourcesMap)))
+	log.Info(fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
-	// initalize and validate the tools
+	// initalize and validate the sources
+	authSourcesMap := make(map[string]auth.AuthSource)
+	for name, sc := range cfg.AuthSourceConfigs {
+		a, err := sc.Initialize()
+		if err != nil {
+			return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+		}
+		authSourcesMap[name] = a
+	}
+	fmt.Printf("Initalized %d authsources.\n", len(authSourcesMap))
+
+	// initialize and validate the tools
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := tc.Initialize(sourcesMap)
@@ -98,7 +111,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		toolsMap[name] = t
 	}
-	log.Info(fmt.Sprintf("Initalized %d tools.", len(toolsMap)))
+	log.Info(fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -109,7 +122,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		cfg.ToolsetConfigs = make(ToolsetConfigs)
 	}
 	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
-	// initalize and validate the toolsets
+	// initialize and validate the toolsets
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := tc.Initialize(cfg.Version, toolsMap)
@@ -118,15 +131,16 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		toolsetsMap[name] = t
 	}
-	log.Info(fmt.Sprintf("Initalized %d toolsets.", len(toolsetsMap)))
+	log.Info(fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
 
 	s := &Server{
-		conf:     cfg,
-		root:     r,
-		logger:   log,
-		sources:  sourcesMap,
-		tools:    toolsMap,
-		toolsets: toolsetsMap,
+		conf:        cfg,
+		root:        r,
+		logger:      log,
+		sources:     sourcesMap,
+		authSources: authSourcesMap,
+		tools:       toolsMap,
+		toolsets:    toolsetsMap,
 	}
 
 	if router, err := apiRouter(s); err != nil {
