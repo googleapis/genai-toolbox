@@ -78,7 +78,7 @@ func TestGoogleAuthVerification(t *testing.T) {
 	for _, tc := range tcs {
 
 		token, err := getGoogleIdToken(clientId)
-		t.Log(token)
+
 		if err != nil {
 			t.Fatalf("ID token generation error: %s", err)
 		}
