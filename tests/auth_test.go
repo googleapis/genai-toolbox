@@ -74,7 +74,7 @@ func TestGoogleAuthVerification(t *testing.T) {
 		}
 		headers := http.Header{}
 		headers.Add("my-google-auth_token", token)
-		_, err = tc.authSource.GetClaimsFromHeader(headers)
+		claims, err = tc.authSource.GetClaimsFromHeader(headers)
 
 		if err != nil {
 			if tc.isErr {
@@ -82,6 +82,11 @@ func TestGoogleAuthVerification(t *testing.T) {
 			} else {
 				t.Fatalf("Error getting claims from token: %s", err)
 			}
+		}
+
+		_, ok := claims["sub"]
+		if !ok {
+			t.Fatalf("Invalid claims.")
 		}
 	}
 }
