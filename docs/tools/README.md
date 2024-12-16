@@ -51,7 +51,6 @@ We currently support the following types of kinds of tools:
 * [spanner](./spanner.md) - Run a Spanner (either googlesql or postgresql)
   statement againts Spanner database.
 
-
 ## Specifying Parameters
 
 Parameters for each Tool will define what inputs the Agent will need to provide
@@ -71,7 +70,7 @@ to invoke them. Parameters should be pass as a list of Parameter objects:
 
 Basic parameters types include `string`, `integer`, `float`, `boolean` types. In
 most cases, the description will be provided to the LLM as context on specifying
-the parameter. 
+the parameter.
 
 ```yaml
     parameters:
