@@ -111,7 +111,12 @@ requires another Parameter to be specified under the `items` field:
 
 ### Authenticated Parameters
 
-Authenticated parameters automatically populate their values with user information decoded from your [ID tokens](../authSources/README.md#id-token) passed in from request headers. They do not take input values in request bodies like other parameters. Instead, specify your configured [authSources](../authSources/README.md) and corresponding claim fields in ID tokens to tell Toolbox which values they should be auto-populated with.
+Authenticated parameters automatically populate their values with user
+information decoded from your [ID tokens](../authSources/README.md#id-token)
+passed in from request headers. They do not take input values in request bodies
+like other parameters. Instead, specify your configured
+[authSources](../authSources/README.md) and corresponding claim fields in ID
+tokens to tell Toolbox which values they should be auto-populated with.
 
 ```yaml
   tools:
@@ -133,12 +138,14 @@ Authenticated parameters automatically populate their values with user informati
 
 | **field**   | **type** | **required** | **description**                                                            |
 |-------------|:--------:|:------------:|----------------------------------------------------------------------------|
-| name        |  string  |     true     | Name of the auth source used to verify the OIDC auth token.                |
+| name        |  string  |     true     | Name of the [authSources](../authSources/README.md) used to verify the OIDC auth token.                |
 | field       |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.|
 
-## Tool Authorization
+## Authorized Tool Call
 
-You can require an authorization check for any Tool invocation request by specifying an `authRequired` field. Specify a list of [authSources](../authSources/README.md) defined in the previous section.
+You can require an authorization check for any Tool invocation request by
+specifying an `authRequired` field. Specify a list of
+[authSources](../authSources/README.md) defined in the previous section.
 
 ```yaml
 tools:

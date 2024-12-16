@@ -183,21 +183,6 @@ sources:
 For more details on configuring different types of sources, see the [Source
 documentation.](docs/sources/README.md)
 
-### Auth Sources
-
-The `authSources` section of your `tools.yaml` defines what auth sources your
-Toolbox should authenticate with.
-
-```yaml
-authSources:
-  my-google-auth:
-    kind: google
-    clientId: YOUR_GOOGLE_CLIENT_ID
-```
-
-For more details on configuring different types of sources, see the [Auth Source
-documentation.](docs/authSources/README.md)
-
 ### Tools
 
 The `tools` section of your `tools.yaml` define your tools: what kind of tool it
@@ -246,6 +231,21 @@ all_tools = await client.load_toolset()
 # This will only load the tools listed in 'my_second_toolset'
 my_second_toolset = await client.load_toolset("my_second_toolset")
 ```
+
+### AuthSources
+
+The `authSources` section of your `tools.yaml` defines what authentication sources your
+Toolbox should interact with.
+
+```yaml
+authSources:
+  my-google-auth:
+    kind: google
+    clientId: YOUR_GOOGLE_CLIENT_ID
+```
+
+For more details on configuring different types of sources, see the [AuthSources
+documentation](docs/authsources/README.md).
 
 ## Versioning
 
