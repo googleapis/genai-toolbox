@@ -74,7 +74,7 @@ func TestGoogleAuthVerification(t *testing.T) {
 		}
 		headers := http.Header{}
 		headers.Add("my-google-auth_token", token)
-		claims, err = tc.authSource.GetClaimsFromHeader(headers)
+		claims, err := tc.authSource.GetClaimsFromHeader(headers)
 
 		if err != nil {
 			if tc.isErr {
