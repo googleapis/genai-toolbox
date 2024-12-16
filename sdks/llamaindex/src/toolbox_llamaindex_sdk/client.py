@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
 from aiohttp import ClientSession
 from llama_index.core.tools import FunctionTool
@@ -94,7 +94,7 @@ class ToolboxClient:
             model_name=tool_name, schema=tool_schema.parameters
         )
 
-        async def _tool_func(**kwargs) -> dict:
+        async def _tool_func(**kwargs: Any) -> dict:
             return await _invoke_tool(self._url, self._session, tool_name, kwargs)
 
         return FunctionTool.from_defaults(

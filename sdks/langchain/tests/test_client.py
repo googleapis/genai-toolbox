@@ -746,7 +746,9 @@ async def test_generate_tool(
         await tool.coroutine(param1="test_value")
         mock_invoke_tool.assert_called_once()
     else:
-        with pytest.raises(PermissionError):
+        with pytest.raises(
+            PermissionError, match="Login required before invoking tool_name."
+        ):
             await tool.coroutine(param1="test_value")
         mock_invoke_tool.assert_not_called()
 
