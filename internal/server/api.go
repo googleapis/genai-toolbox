@@ -95,6 +95,10 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
+		if claims == nil {
+			// authSource not present in header
+			continue
+		}
 		claimsFromAuth[aS.GetName()] = claims
 	}
 
