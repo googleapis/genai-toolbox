@@ -22,4 +22,4 @@ authSources:
 | **field** | **type** | **required** | **description**                                                              |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "google".                                                  |
-| clientId  |  string  |     true     | Client ID of your application from registering your app on GCP.    |
+| clientId  |  string  |     true     | Client ID of your application from registering your application.   |
