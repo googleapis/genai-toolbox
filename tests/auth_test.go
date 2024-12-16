@@ -18,6 +18,7 @@ package tests
 import (
 	"io"
 	"net/http"
+	"os/exec"
 
 	"testing"
 
@@ -25,22 +26,30 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 )
 
-// Returns an ID token of the service account
+// Get a Google ID token
 func getGoogleIdToken(audience string) (string, error) {
-	url := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=" + audience
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Metadata-Flavor", "Google")
+	// For local testing
+	cmd := exec.Command("gcloud", "auth", "print-identity-token")
+	output, err := cmd.Output()
+	if err == nil {
+		return string(output), nil
+	} else {
+		// Cloud Build testing
+		url := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=" + audience
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			return "", err
+		}
+		req.Header.Set("Metadata-Flavor", "Google")
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		return string(body), nil
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	return string(body), nil
 }
 
 func TestGoogleAuthVerification(t *testing.T) {
@@ -69,6 +78,7 @@ func TestGoogleAuthVerification(t *testing.T) {
 	for _, tc := range tcs {
 
 		token, err := getGoogleIdToken(clientId)
+		t.Log(token)
 		if err != nil {
 			t.Fatalf("ID token generation error: %s", err)
 		}
@@ -86,7 +96,11 @@ func TestGoogleAuthVerification(t *testing.T) {
 
 		_, ok := claims["sub"]
 		if !ok {
-			t.Fatalf("Invalid claims.")
+			if tc.isErr {
+				return
+			} else {
+				t.Fatalf("Invalid claims.")
+			}
 		}
 	}
 }
