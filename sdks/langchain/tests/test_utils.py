@@ -1,11 +1,11 @@
 import asyncio
+import json
 import warnings
 from typing import Union
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
-import json
 from aiohttp import ClientSession
 from pydantic import BaseModel
 
@@ -105,7 +105,7 @@ class TestUtils:
     @patch("aiohttp.ClientSession.get")
     async def test_load_manifest_invalid_manifest(self, mock_get, mock_manifest):
         mock_manifest.raise_for_status = Mock()
-        mock_manifest.text = AsyncMock(return_value="{ \"something\": \"invalid\" }")
+        mock_manifest.text = AsyncMock(return_value='{ "something": "invalid" }')
         mock_get.return_value = mock_manifest
 
         with pytest.raises(Exception) as e:

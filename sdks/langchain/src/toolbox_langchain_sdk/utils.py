@@ -1,7 +1,7 @@
+import json
 import warnings
 from typing import Any, Callable, Optional, Type, cast
 
-import json
 from aiohttp import ClientSession
 from pydantic import BaseModel, Field, create_model
 
@@ -40,7 +40,9 @@ async def _load_manifest(url: str, session: ClientSession) -> ManifestSchema:
         try:
             parsed_json = json.loads(await response.text())
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"Failed to parse JSON from {url}: {e}", e.doc, e.pos) from e
+            raise json.JSONDecodeError(
+                f"Failed to parse JSON from {url}: {e}", e.doc, e.pos
+            ) from e
         try:
             return ManifestSchema(**parsed_json)
         except ValueError as e:
