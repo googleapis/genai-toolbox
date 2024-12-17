@@ -6,7 +6,7 @@ from aiohttp import ClientSession
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from .utils import ManifestSchema, _invoke_tool, _load_yaml, _schema_to_model
+from .utils import ManifestSchema, _invoke_tool, _load_manifest, _schema_to_model
 
 
 class ToolboxClient:
@@ -51,8 +51,8 @@ class ToolboxClient:
 
     async def _load_tool_manifest(self, tool_name: str) -> ManifestSchema:
         """
-        Fetches and parses the YAML manifest for the given tool from the Toolbox
-        service.
+        Fetches and parses the manifest schema for the given tool from the
+        Toolbox service.
 
         Args:
             tool_name: The name of the tool to load.
@@ -61,13 +61,13 @@ class ToolboxClient:
             The parsed Toolbox manifest.
         """
         url = f"{self._url}/api/tool/{tool_name}"
-        return await _load_yaml(url, self._session)
+        return await _load_manifest(url, self._session)
 
     async def _load_toolset_manifest(
         self, toolset_name: Optional[str] = None
     ) -> ManifestSchema:
         """
-        Fetches and parses the YAML manifest from the Toolbox service.
+        Fetches and parses the manifest schema from the Toolbox service.
 
         Args:
             toolset_name: The name of the toolset to load.
@@ -78,7 +78,7 @@ class ToolboxClient:
             The parsed Toolbox manifest.
         """
         url = f"{self._url}/api/toolset/{toolset_name or ''}"
-        return await _load_yaml(url, self._session)
+        return await _load_manifest(url, self._session)
 
     def _validate_auth(self, tool_name: str) -> bool:
         """

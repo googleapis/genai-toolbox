@@ -1,7 +1,7 @@
 import warnings
 from typing import Any, Callable, Optional, Type, cast
 
-import yaml
+import json
 from aiohttp import ClientSession
 from pydantic import BaseModel, Field, create_model
 
@@ -23,12 +23,13 @@ class ManifestSchema(BaseModel):
     tools: dict[str, ToolSchema]
 
 
-async def _load_yaml(url: str, session: ClientSession) -> ManifestSchema:
+async def _load_manifest(url: str, session: ClientSession) -> ManifestSchema:
     """
-    Asynchronously fetches and parses the YAML data from the given URL.
+    Asynchronously fetches and parses the JSON manifest schema from the given
+    URL.
 
     Args:
-        url: The base URL to fetch the YAML from.
+        url: The base URL to fetch the JSON from.
         session: The HTTP client session
 
     Returns:
@@ -37,18 +38,18 @@ async def _load_yaml(url: str, session: ClientSession) -> ManifestSchema:
     async with session.get(url) as response:
         response.raise_for_status()
         try:
-            parsed_yaml = yaml.safe_load(await response.text())
-        except yaml.YAMLError as e:
-            raise yaml.YAMLError(f"Failed to parse YAML from {url}: {e}") from e
+            parsed_json = json.loads(await response.text())
+        except json.JSONDecodeError as e:
+            raise json.JSONDecodeError(f"Failed to parse JSON from {url}: {e}", e.doc, e.pos) from e
         try:
-            return ManifestSchema(**parsed_yaml)
+            return ManifestSchema(**parsed_json)
         except ValueError as e:
-            raise ValueError(f"Invalid YAML data from {url}: {e}") from e
+            raise ValueError(f"Invalid JSON data from {url}: {e}") from e
 
 
 def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[BaseModel]:
     """
-    Converts a schema (from the YAML manifest) to a Pydantic BaseModel class.
+    Converts the given manifest schema to a Pydantic BaseModel class.
 
     Args:
         model_name: The name of the model to create.

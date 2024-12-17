@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
-import yaml
+import json
 from aiohttp import ClientSession
 from pydantic import BaseModel
 
@@ -13,31 +13,40 @@ from toolbox_langchain_sdk.utils import (
     ParameterSchema,
     _convert_none_to_empty_string,
     _invoke_tool,
-    _load_yaml,
+    _load_manifest,
     _parse_type,
     _schema_to_model,
 )
 
 URL = "https://my-toolbox.com/test"
 MOCK_MANIFEST = """
-serverVersion: 0.0.1
-tools:
-    test_tool:
-        summary: Test Tool
-        description: This is a test tool.
-        parameters:
-          - name: param1
-            type: string
-            description: Parameter 1
-          - name: param2
-            type: integer
-            description: Parameter 2
+{
+  "serverVersion": "0.0.1",
+  "tools": {
+    "test_tool": {
+      "summary": "Test Tool",
+      "description": "This is a test tool.",
+      "parameters": [
+        {
+          "name": "param1",
+          "type": "string",
+          "description": "Parameter 1"
+        },
+        {
+          "name": "param2",
+          "type": "integer",
+          "description": "Parameter 2"
+        }
+      ]
+    }
+  }
+}
 """
 
 
 class TestUtils:
     @pytest.fixture(scope="module")
-    def mock_yaml(self):
+    def mock_manifest(self):
         return aiohttp.ClientResponse(
             method="GET",
             url=aiohttp.client.URL(URL),
@@ -52,13 +61,13 @@ class TestUtils:
 
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.get")
-    async def test_load_yaml(self, mock_get, mock_yaml):
-        mock_yaml.raise_for_status = Mock()
-        mock_yaml.text = AsyncMock(return_value=MOCK_MANIFEST)
+    async def test_load_manifest(self, mock_get, mock_manifest):
+        mock_manifest.raise_for_status = Mock()
+        mock_manifest.text = AsyncMock(return_value=MOCK_MANIFEST)
 
-        mock_get.return_value = mock_yaml
+        mock_get.return_value = mock_manifest
         session = aiohttp.ClientSession()
-        manifest = await _load_yaml(URL, session)
+        manifest = await _load_manifest(URL, session)
         await session.close()
         mock_get.assert_called_once_with(URL)
 
@@ -74,34 +83,34 @@ class TestUtils:
 
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.get")
-    async def test_load_yaml_invalid_yaml(self, mock_get, mock_yaml):
-        mock_yaml.raise_for_status = Mock()
-        mock_yaml.text = AsyncMock(return_value="{ invalid yaml")
-        mock_get.return_value = mock_yaml
+    async def test_load_manifest_invalid_manifest(self, mock_get, mock_manifest):
+        mock_manifest.raise_for_status = Mock()
+        mock_manifest.text = AsyncMock(return_value="{ invalid manifest")
+        mock_get.return_value = mock_manifest
 
         with pytest.raises(Exception) as e:
             session = aiohttp.ClientSession()
-            await _load_yaml(URL, session)
+            await _load_manifest(URL, session)
             await session.close()
             mock_get.assert_called_once_with(URL)
 
         mock_get.assert_called_once_with(URL)
-        assert isinstance(e.value, yaml.YAMLError)
+        assert isinstance(e.value, json.JSONDecodeError)
         assert (
             str(e.value)
-            == "Failed to parse YAML from https://my-toolbox.com/test: while parsing a flow mapping\n  in \"<unicode string>\", line 1, column 1:\n    { invalid yaml\n    ^\nexpected ',' or '}', but got '<stream end>'\n  in \"<unicode string>\", line 1, column 15:\n    { invalid yaml\n                  ^"
+            == "Failed to parse JSON from https://my-toolbox.com/test: Expecting property name enclosed in double quotes: line 1 column 3 (char 2): line 1 column 3 (char 2)"
         )
 
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.get")
-    async def test_load_yaml_invalid_manifest(self, mock_get, mock_yaml):
-        mock_yaml.raise_for_status = Mock()
-        mock_yaml.text = AsyncMock(return_value="{ invalid yaml }")
-        mock_get.return_value = mock_yaml
+    async def test_load_manifest_invalid_manifest(self, mock_get, mock_manifest):
+        mock_manifest.raise_for_status = Mock()
+        mock_manifest.text = AsyncMock(return_value="{ \"something\": \"invalid\" }")
+        mock_get.return_value = mock_manifest
 
         with pytest.raises(Exception) as e:
             session = aiohttp.ClientSession()
-            await _load_yaml(URL, session)
+            await _load_manifest(URL, session)
             await session.close()
             mock_get.assert_called_once_with(URL)
 
@@ -109,20 +118,20 @@ class TestUtils:
         assert isinstance(e.value, ValueError)
         assert (
             str(e.value)
-            == "Invalid YAML data from https://my-toolbox.com/test: 2 validation errors for ManifestSchema\nserverVersion\n  Field required [type=missing, input_value={'invalid yaml': None}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\ntools\n  Field required [type=missing, input_value={'invalid yaml': None}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing"
+            == "Invalid JSON data from https://my-toolbox.com/test: 2 validation errors for ManifestSchema\nserverVersion\n  Field required [type=missing, input_value={'something': 'invalid'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\ntools\n  Field required [type=missing, input_value={'something': 'invalid'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing"
         )
 
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.get")
-    async def test_load_yaml_api_error(self, mock_get, mock_yaml):
+    async def test_load_manifest_api_error(self, mock_get, mock_manifest):
         error = aiohttp.ClientError("Simulated HTTP Error")
-        mock_yaml.raise_for_status = Mock()
-        mock_yaml.text = AsyncMock(side_effect=error)
-        mock_get.return_value = mock_yaml
+        mock_manifest.raise_for_status = Mock()
+        mock_manifest.text = AsyncMock(side_effect=error)
+        mock_get.return_value = mock_manifest
 
         with pytest.raises(aiohttp.ClientError) as exc_info:
             session = aiohttp.ClientSession()
-            await _load_yaml(URL, session)
+            await _load_manifest(URL, session)
             await session.close()
         mock_get.assert_called_once_with(URL)
         assert exc_info.value == error

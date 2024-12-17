@@ -71,60 +71,60 @@ async def test_close_not_closing_session():
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client._load_yaml")
-async def test_load_tool_manifest_success(mock_load_yaml):
+@patch("toolbox_langchain_sdk.client._load_manifest")
+async def test_load_tool_manifest_success(mock_load_manifest):
     client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
-    mock_load_yaml.return_value = ManifestSchema(**manifest_data)
+    mock_load_manifest.return_value = ManifestSchema(**manifest_data)
 
     result = await client._load_tool_manifest("test_tool")
     assert result == ManifestSchema(**manifest_data)
-    mock_load_yaml.assert_called_once_with(
+    mock_load_manifest.assert_called_once_with(
         "https://my-toolbox.com/api/tool/test_tool", client._session
     )
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client._load_yaml")
-async def test_load_tool_manifest_failure(mock_load_yaml):
+@patch("toolbox_langchain_sdk.client._load_manifest")
+async def test_load_tool_manifest_failure(mock_load_manifest):
     client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
-    mock_load_yaml.side_effect = Exception("Failed to load YAML")
+    mock_load_manifest.side_effect = Exception("Failed to load manifest")
 
     with pytest.raises(Exception) as e:
         await client._load_tool_manifest("test_tool")
-    assert str(e.value) == "Failed to load YAML"
+    assert str(e.value) == "Failed to load manifest"
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client._load_yaml")
-async def test_load_toolset_manifest_success(mock_load_yaml):
+@patch("toolbox_langchain_sdk.client._load_manifest")
+async def test_load_toolset_manifest_success(mock_load_manifest):
     client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
-    mock_load_yaml.return_value = ManifestSchema(**manifest_data)
+    mock_load_manifest.return_value = ManifestSchema(**manifest_data)
 
     # Test with toolset name
     result = await client._load_toolset_manifest(toolset_name="test_toolset")
     assert result == ManifestSchema(**manifest_data)
-    mock_load_yaml.assert_called_once_with(
+    mock_load_manifest.assert_called_once_with(
         "https://my-toolbox.com/api/toolset/test_toolset", client._session
     )
-    mock_load_yaml.reset_mock()
+    mock_load_manifest.reset_mock()
 
     # Test without toolset name
     result = await client._load_toolset_manifest()
     assert result == ManifestSchema(**manifest_data)
-    mock_load_yaml.assert_called_once_with(
+    mock_load_manifest.assert_called_once_with(
         "https://my-toolbox.com/api/toolset/", client._session
     )
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client._load_yaml")
-async def test_load_toolset_manifest_failure(mock_load_yaml):
+@patch("toolbox_langchain_sdk.client._load_manifest")
+async def test_load_toolset_manifest_failure(mock_load_manifest):
     client = ToolboxClient("https://my-toolbox.com", session=aiohttp.ClientSession())
-    mock_load_yaml.side_effect = Exception("Failed to load YAML")
+    mock_load_manifest.side_effect = Exception("Failed to load manifest")
 
     with pytest.raises(Exception) as e:
         await client._load_toolset_manifest(toolset_name="test_toolset")
-    assert str(e.value) == "Failed to load YAML"
+    assert str(e.value) == "Failed to load manifest"
 
 
 @pytest.mark.asyncio
@@ -541,7 +541,7 @@ async def test_process_auth_params(
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client._load_yaml")
+@patch("toolbox_langchain_sdk.client._load_manifest")
 @pytest.mark.parametrize(
     "params, auth_headers, expected_tool_param_auth",
     [
@@ -569,13 +569,13 @@ async def test_process_auth_params(
     ],
 )
 async def test_load_tool(
-    mock_load_yaml, params, auth_headers, expected_tool_param_auth
+    mock_load_manifest, params, auth_headers, expected_tool_param_auth
 ):
     """Test load_tool with and without auth headers."""
     client = ToolboxClient("http://test-url")
 
     # Replace with your desired mock manifest data
-    mock_load_yaml.return_value = ManifestSchema(
+    mock_load_manifest.return_value = ManifestSchema(
         serverVersion="1.0",
         tools={
             "tool_name": ToolSchema(
@@ -594,7 +594,7 @@ async def test_load_tool(
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client._load_yaml")
+@patch("toolbox_langchain_sdk.client._load_manifest")
 @pytest.mark.parametrize(
     "params, auth_headers, expected_tool_param_auth, expected_num_tools",
     [
@@ -624,7 +624,7 @@ async def test_load_tool(
     ],
 )
 async def test_load_toolset(
-    mock_load_yaml,
+    mock_load_manifest,
     params,
     auth_headers,
     expected_tool_param_auth,
@@ -634,7 +634,7 @@ async def test_load_toolset(
     client = ToolboxClient("http://test-url")
 
     # Replace with your desired mock manifest data
-    mock_load_yaml.return_value = ManifestSchema(
+    mock_load_manifest.return_value = ManifestSchema(
         serverVersion="1.0",
         tools={
             "tool_name": ToolSchema(
