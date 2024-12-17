@@ -83,7 +83,7 @@ class TestUtils:
 
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.get")
-    async def test_load_manifest_invalid_manifest(self, mock_get, mock_manifest):
+    async def test_load_manifest_invalid_json(self, mock_get, mock_manifest):
         mock_manifest.raise_for_status = Mock()
         mock_manifest.text = AsyncMock(return_value="{ invalid manifest")
         mock_get.return_value = mock_manifest
