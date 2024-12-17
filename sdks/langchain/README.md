@@ -198,9 +198,9 @@ Here's an example:
 
 ```yaml
 authSources:
-  my_auth_service:
-    kind: google # Indicates Google OAuth 2.0
-    client_id: YOUR_CLIENT_ID
+    my_auth_service:
+        kind: google # Indicates Google OAuth 2.0
+        client_id: YOUR_CLIENT_ID
 ```
 
 Then, inside the `tools` section, add a tool parameter that references the
@@ -211,12 +211,12 @@ Here's an example:
 
 ```yaml
 tools:
-  my_tool:
+my_tool:
     parameters:
-      - name: user_id # Name of the user information field expected by the tool
+    - name: user_id # Name of the user information field expected by the tool
         type: string
         auth_sources: # Link to the configured authentication source
-          - name: my_auth_service
+        - name: my_auth_service
             field: sub # Field in the Google OAuth response that provides the user ID
     ...
 ```
@@ -236,11 +236,11 @@ Here's an example:
 
 ```yaml
 tools:
-  my_tool_no_param: # Authentication required, but no specific user information needed
-    kind: cloud-sql-postgres-static
-    datasource: my-pg-instance
-    auth_required:
-      - my_auth_service
+    my_tool_no_param: # Authentication required, but no specific user information needed
+        kind: cloud-sql-postgres-static
+        datasource: my-pg-instance
+        auth_required:
+            - my_auth_service
 ```
 
 > [!TIP]
