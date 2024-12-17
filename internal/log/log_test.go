@@ -16,6 +16,7 @@ package log
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"strings"
@@ -121,15 +122,16 @@ func TestLevelToSeverityError(t *testing.T) {
 }
 
 func runLogger(logger Logger, logMsg string) {
+	ctx := context.Background()
 	switch logMsg {
 	case "info":
-		logger.Info("log info")
+		logger.InfoContext(ctx, "log info")
 	case "debug":
-		logger.Debug("log debug")
+		logger.DebugContext(ctx, "log debug")
 	case "warn":
-		logger.Warn("log warn")
+		logger.WarnContext(ctx, "log warn")
 	case "error":
-		logger.Error("log error")
+		logger.ErrorContext(ctx, "log error")
 	}
 }
 

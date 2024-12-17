@@ -89,7 +89,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		sourcesMap[name] = s
 	}
-	log.Info(fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
+	log.InfoContext(context.Background(), fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
 	// initialize and validate the auth sources
 	authSourcesMap := make(map[string]auth.AuthSource)
@@ -100,7 +100,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		authSourcesMap[name] = a
 	}
-	log.Info(fmt.Sprintf("Initialized %d authSources.", len(authSourcesMap)))
+	log.InfoContext(context.Background(), fmt.Sprintf("Initialized %d authSources.", len(authSourcesMap)))
 
 	// initialize and validate the tools
 	toolsMap := make(map[string]tools.Tool)
@@ -111,7 +111,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		toolsMap[name] = t
 	}
-	log.Info(fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+	log.InfoContext(context.Background(), fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -131,7 +131,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		}
 		toolsetsMap[name] = t
 	}
-	log.Info(fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
+	log.InfoContext(context.Background(), fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
 
 	s := &Server{
 		conf:        cfg,

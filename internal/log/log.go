@@ -15,6 +15,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -45,24 +46,24 @@ func NewStdLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 	}, nil
 }
 
-// Debug logs debug messages
-func (sl *StdLogger) Debug(msg string, keysAndValues ...interface{}) {
-	sl.outLogger.Debug(msg, keysAndValues...)
+// DebugContext logs debug messages
+func (sl *StdLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.outLogger.DebugContext(ctx, msg, keysAndValues...)
 }
 
-// Info logs debug messages
-func (sl *StdLogger) Info(msg string, keysAndValues ...interface{}) {
-	sl.outLogger.Info(msg, keysAndValues...)
+// InfoContext logs debug messages
+func (sl *StdLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.outLogger.InfoContext(ctx, msg, keysAndValues...)
 }
 
-// Warn logs warning messages
-func (sl *StdLogger) Warn(msg string, keysAndValues ...interface{}) {
-	sl.errLogger.Warn(msg, keysAndValues...)
+// WarnContext logs warning messages
+func (sl *StdLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.errLogger.WarnContext(ctx, msg, keysAndValues...)
 }
 
-// Error logs error messages
-func (sl *StdLogger) Error(msg string, keysAndValues ...interface{}) {
-	sl.errLogger.Error(msg, keysAndValues...)
+// ErrorContext logs error messages
+func (sl *StdLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.errLogger.ErrorContext(ctx, msg, keysAndValues...)
 }
 
 const (
@@ -149,36 +150,36 @@ func NewStructuredLogger(outW, errW io.Writer, logLevel string) (Logger, error) 
 
 	// Configure structured logs to adhere to Cloud LogEntry format
 	// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
-	outHandler := slog.NewJSONHandler(outW, &slog.HandlerOptions{
+	outHandler := handlerWithSpanContext(slog.NewJSONHandler(outW, &slog.HandlerOptions{
 		AddSource:   true,
 		Level:       programLevel,
 		ReplaceAttr: replace,
-	})
-	errHandler := slog.NewJSONHandler(errW, &slog.HandlerOptions{
+	}))
+	errHandler := handlerWithSpanContext(slog.NewJSONHandler(errW, &slog.HandlerOptions{
 		AddSource:   true,
 		Level:       programLevel,
 		ReplaceAttr: replace,
-	})
+	}))
 
 	return &StructuredLogger{outLogger: slog.New(outHandler), errLogger: slog.New(errHandler)}, nil
 }
 
-// Debug logs debug messages
-func (sl *StructuredLogger) Debug(msg string, keysAndValues ...interface{}) {
-	sl.outLogger.Debug(msg, keysAndValues...)
+// DebugContext logs debug messages
+func (sl *StructuredLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.outLogger.DebugContext(ctx, msg, keysAndValues...)
 }
 
-// Info logs info messages
-func (sl *StructuredLogger) Info(msg string, keysAndValues ...interface{}) {
-	sl.outLogger.Info(msg, keysAndValues...)
+// InfoContext logs info messages
+func (sl *StructuredLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.outLogger.InfoContext(ctx, msg, keysAndValues...)
 }
 
-// Warn logs warning messages
-func (sl *StructuredLogger) Warn(msg string, keysAndValues ...interface{}) {
-	sl.errLogger.Warn(msg, keysAndValues...)
+// WarnContext logs warning messages
+func (sl *StructuredLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.errLogger.WarnContext(ctx, msg, keysAndValues...)
 }
 
-// Error logs error messages
-func (sl *StructuredLogger) Error(msg string, keysAndValues ...interface{}) {
-	sl.errLogger.Error(msg, keysAndValues...)
+// ErrorContext logs error messages
+func (sl *StructuredLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+	sl.errLogger.ErrorContext(ctx, msg, keysAndValues...)
 }

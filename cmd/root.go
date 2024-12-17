@@ -154,14 +154,14 @@ func run(cmd *Command) error {
 	buf, err := os.ReadFile(cmd.tools_file)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.Error(errMsg.Error())
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 	toolsFile, err := parseToolsFile(buf)
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthSources, toolsFile.Tools, toolsFile.Toolsets
 	if err != nil {
 		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.Error(errMsg.Error())
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
@@ -169,20 +169,20 @@ func run(cmd *Command) error {
 	s, err := server.NewServer(cmd.cfg, cmd.logger)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to start with the following error: %w", err)
-		cmd.logger.Error(errMsg.Error())
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 	l, err := s.Listen(ctx)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to mount listener: %w", err)
-		cmd.logger.Error(errMsg.Error())
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	cmd.logger.Info("Server ready to serve")
+	cmd.logger.InfoContext(ctx, "Server ready to serve")
 	err = s.Serve(l)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox crashed with the following error: %w", err)
-		cmd.logger.Error(errMsg.Error())
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
