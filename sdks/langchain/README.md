@@ -236,7 +236,7 @@ Here's an example:
 
 ```yaml
 tools:
-  my_tool: # Authentication required, but no specific user information needed
+  my_tool_no_param: # Authentication required, but no specific user information needed
     kind: cloud-sql-postgres-static
     datasource: my-pg-instance
     auth_required:
