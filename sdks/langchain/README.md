@@ -265,10 +265,10 @@ tools:
 >             - name: user_id
 >               type: string
 >               auth_sources:
-> 		        - name: my_auth_app_1
->                   field: sub
-> 		        - name: my_auth_app_2
->                   field: sub
+>                   - name: my_auth_app_1
+>                     field: sub
+>                   - name: my_auth_app_2
+>                     field: sub
 >         ...
 >
 >     my_tool_no_param:
