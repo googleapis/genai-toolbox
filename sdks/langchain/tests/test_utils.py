@@ -220,6 +220,7 @@ class TestUtils:
     @pytest.mark.asyncio
     @patch("aiohttp.ClientSession.post")
     async def test_invoke_tool_secure_with_auth(self, mock_post):
+        session = ClientSession()
         mock_response = Mock()
         mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(return_value={"key": "value"})
@@ -229,7 +230,7 @@ class TestUtils:
             warnings.simplefilter("error")
             result = await _invoke_tool(
                 "https://localhost:8000",
-                ClientSession(),
+                session,
                 "tool_name",
                 {"input": "data"},
                 {"my_test_auth": lambda: "fake_id_token"},
