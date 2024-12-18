@@ -181,102 +181,16 @@ access sensitive data. This section guides you on how to configure tools for
 authentication and use them with the SDK.
 
 ### Supported Authentication Mechanisms
-The Toolbox SDK currently supports authentication using [Google OAuth
+The Toolbox SDK currently supports authentication using [OIDC
+protocol](https://openid.net/specs/openid-connect-core-1_0.html). Specifically,
+it uses [ID
+tokens](https://openid.net/specs/openid-connect-core-1_0.html#IDToken) and *not*
+access tokens for [Google OAuth
 2.0](https://cloud.google.com/apigee/docs/api-platform/security/oauth/oauth-home).
 
 ### Configuring Tools for Authentication
 
-There are two main approaches to configure tools for authentication:
-
-#### 1. Specifying Authentication Parameters:
-
-First, define authentication sources under a new section called `authSources` in
-your tools file. This section specifies how the SDK retrieves user information
-for the tool.
-
-Here's an example:
-
-```yaml
-authSources:
-    my_auth_service:
-        kind: google # Indicates Google OAuth 2.0
-        client_id: YOUR_CLIENT_ID
-```
-
-Then, inside the `tools` section, add a tool parameter that references the
-configured authentication source. The parameter definition includes the name of
-the user information field the tool expects.
-
-Here's an example:
-
-```yaml
-tools:
-my_tool:
-    parameters:
-    - name: user_id # Name of the user information field expected by the tool
-        type: string
-        auth_sources: # Link to the configured authentication source
-        - name: my_auth_service
-            field: sub # Field in the Google OAuth response that provides the user ID
-    ...
-```
-
-> [!NOTE]
-> The `field` key under `auth_sources` should be a [standard OIDC
-> claim](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims).
-> Common examples include `sub` (subject / user ID), `email`, and `name`.
-
-#### 2. Authentication Required Without Parameters:
-
-If the tool requires authentication but doesn't need specific user information,
-set the `auth_required` field in the tool definition. This field specifies the
-permitted authentication service names.
-
-Here's an example:
-
-```yaml
-tools:
-    my_tool_no_param: # Authentication required, but no specific user information needed
-        kind: cloud-sql-postgres-static
-        datasource: my-pg-instance
-        auth_required:
-            - my_auth_service
-```
-
-> [!TIP]
-> You can configure multiple authentication sources with the same `kind` (e.g.,
-> Google OAuth) to accommodate different applications using the same service
-> with distinct client IDs.
->
-> Here's an example:
->
-> ```yaml
-> authSources:
->     my_auth_app_1:
->         kind: google
->         client_id: YOUR_CLIENT_ID_1
->     my_auth_app_2:
->         kind: google
->         client_id: YOUR_CLIENT_ID_2
->
-> tools:
->     my_tool:
->         parameters:
->             - name: user_id
->               type: string
->               auth_sources:
->                   - name: my_auth_app_1
->                     field: sub
->                   - name: my_auth_app_2
->                     field: sub
->         ...
->
->     my_tool_no_param:
->         auth_required:
->             - my_auth_app_1
->             - my_auth_app_2
->         ...
-> ```
+Refer to [these instructions](https://github.com/googleapis/genai-toolbox/blob/main/docs/tools/README.md#authenticated-parameters) on configuring tools for authenticated parameters.
 
 ### Configure SDK for Authentication
 
