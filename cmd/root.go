@@ -89,6 +89,9 @@ func NewCommand(opts ...Option) *Command {
 		o(cmd)
 	}
 
+	// Set server version
+	cmd.cfg.Version = versionString
+
 	// set baseCmd out and err the same as cmd.
 	baseCmd.SetOut(cmd.outStream)
 	baseCmd.SetErr(cmd.errStream)
@@ -146,9 +149,6 @@ func run(cmd *Command) error {
 	default:
 		return fmt.Errorf("logging format invalid.")
 	}
-
-	// Set server version
-	cmd.cfg.Version = versionString
 
 	// Read tool file contents
 	buf, err := os.ReadFile(cmd.tools_file)
