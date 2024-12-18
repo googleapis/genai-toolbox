@@ -33,6 +33,8 @@ import (
 )
 
 func withDefaults(c server.ServerConfig) server.ServerConfig {
+	data, _ := os.ReadFile("version.txt")
+	c.Version = strings.TrimSpace(string(data))
 	if c.Address == "" {
 		c.Address = "127.0.0.1"
 	}
