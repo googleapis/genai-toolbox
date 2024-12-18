@@ -16,6 +16,11 @@ applications, enabling advanced orchestration and interaction with GenAI models.
         - [Represent Tools as Nodes](#represent-tools-as-nodes)
         - [Connect Tools with LLM](#connect-tools-with-llm)
     - [Manual usage](#manual-usage)
+    - [Authenticating Tools](#authenticating-tools)
+        - [Supported Authentication Mechanisms](#supported-authentication-mechanisms)
+        - [Configuring Tools for Authentication](#configuring-tools-for-authentication)
+        - [Configure SDK for Authentication](#configure-sdk-for-authentication)
+        - [Complete Example](#complete-example)
 
 <!-- /TOC -->
 ## Installation
