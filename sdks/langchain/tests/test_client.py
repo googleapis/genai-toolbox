@@ -135,7 +135,17 @@ async def test_generate_tool_success():
     assert isinstance(tool, StructuredTool)
     assert tool.name == "test_tool"
     assert tool.description == "This is test tool."
-    assert tool.args_schema is not None  # Check if args_schema is generated
+    assert tool.args is not None
+
+    assert "param1" in tool.args
+    assert tool.args["param1"]["title"] == "Param1"
+    assert tool.args["param1"]["description"] == "Parameter 1"
+    assert tool.args["param1"]["anyOf"] == [{"type": "string"}, {"type": "null"}]
+
+    assert "param2" in tool.args
+    assert tool.args["param2"]["title"] == "Param2"
+    assert tool.args["param2"]["description"] == "Parameter 2"
+    assert tool.args["param2"]["anyOf"] == [{"type": "integer"}, {"type": "null"}]
 
 
 @pytest.mark.asyncio
@@ -258,7 +268,7 @@ async def test_generate_tool_invoke(mock_invoke_tool):
     tool = client._generate_tool("test_tool", ManifestSchema(**manifest_data))
 
     # Call the tool function with some arguments
-    result = await tool.coroutine(param1="test_value", param2=123)
+    result = await tool.ainvoke({"param1": "test_value", "param2": 123})
 
     # Assert that _invoke_tool was called with the correct parameters
     mock_invoke_tool.assert_called_once_with(
@@ -739,7 +749,10 @@ async def test_generate_tool(
     assert isinstance(tool, StructuredTool)
     assert tool.name == "tool_name"
     assert tool.description == "Test tool description"
-    assert tool.args_schema.__name__ == "tool_name"
+    assert "param1" in tool.args
+    assert tool.args["param1"]["title"] == "Param1"
+    assert tool.args["param1"]["description"] == "Test param"
+    assert tool.args["param1"]["anyOf"] == [{"type": "string"}, {"type": "null"}]
 
     # Call the tool function to check if _invoke_tool is called
     if expected_invoke_tool_call:

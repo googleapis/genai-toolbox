@@ -195,7 +195,9 @@ access tokens for [Google OAuth
 
 ### Configuring Tools for Authentication
 
-Refer to [these instructions](https://github.com/googleapis/genai-toolbox/blob/main/docs/tools/README.md#authenticated-parameters) on configuring tools for authenticated parameters.
+Refer to [these
+instructions](../../docs/tools/README.md#authenticated-parameters) on
+configuring tools for authenticated parameters.
 
 ### Configure SDK for Authentication
 
@@ -230,11 +232,9 @@ toolbox.add_auth_header("my_auth_service", get_auth_header)
 ```
 
 > [!NOTE]
-> After adding authentication headers, either through `load_tool`,
-> `load_toolset`, or `add_auth_header`, all subsequent tool invocations from
-> that point onward will use these authentications, regardless of whether the
-> tool was loaded before or after calling these methods. This maintains a
-> consistent authentication context.
+> Authentication headers added via `load_tool`, `load_toolset`, or
+> `add_auth_header` apply to all subsequent tool invocations, regardless of when
+> the tool was loaded. This ensures a consistent authentication context.
 
 ### Complete Example
 
