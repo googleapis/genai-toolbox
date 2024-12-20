@@ -24,7 +24,7 @@ steps:
     args: 
       - -c
       - |
-        go test -race -v -tags=integration tests/cloud_sql_pg_integration_test.go
+        go test -race -v -tags=integration,cloudsql tests/cloud_sql_pg_integration_test.go
 
 availableSecrets:
   secretManager:
