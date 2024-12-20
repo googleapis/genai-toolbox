@@ -30,28 +30,28 @@ import (
 )
 
 var (
-	ALLOYDB_PG_PROJECT  = os.Getenv("ALLOYDB_PG_PROJECT")
-	ALLOYDB_PG_REGION   = os.Getenv("ALLOYDB_PG_REGION")
-	ALLOYDB_PG_INSTANCE = os.Getenv("ALLOYDB_PG_INSTANCE")
-	ALLOYDB_PG_DATABASE = os.Getenv("ALLOYDB_PG_DATABASE")
-	ALLOYDB_PG_USER     = os.Getenv("ALLOYDB_PG_USER")
-	ALLOYDB_PG_PASS     = os.Getenv("ALLOYDB_PG_PASS")
+	ALLOYDB_POSTGRES_PROJECT  = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
+	ALLOYDB_POSTGRES_REGION   = os.Getenv("ALLOYDB_POSTGRES_REGION")
+	ALLOYDB_POSTGRES_INSTANCE = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
+	ALLOYDB_POSTGRES_DATABASE = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
+	ALLOYDB_POSTGRES_USER     = os.Getenv("ALLOYDB_POSTGRES_USER")
+	ALLOYDB_POSTGRES_PASS     = os.Getenv("ALLOYDB_POSTGRES_PASS")
 )
 
 func requireAlloyDBPgVars(t *testing.T) {
 	switch "" {
-	case ALLOYDB_PG_PROJECT:
-		t.Fatal("'ALLOYDB_PG_PROJECT' not set")
-	case ALLOYDB_PG_REGION:
-		t.Fatal("'ALLOYDB_PG_REGION' not set")
-	case ALLOYDB_PG_INSTANCE:
-		t.Fatal("'ALLOYDB_PG_INSTANCE' not set")
-	case ALLOYDB_PG_DATABASE:
-		t.Fatal("'ALLOYDB_PG_DATABASE' not set")
-	case ALLOYDB_PG_USER:
-		t.Fatal("'ALLOYDB_PG_USER' not set")
-	case ALLOYDB_PG_PASS:
-		t.Fatal("'ALLOYDB_PG_PASS' not set")
+	case ALLOYDB_POSTGRES_PROJECT:
+		t.Fatal("'ALLOYDB_POSTGRES_PROJECT' not set")
+	case ALLOYDB_POSTGRES_REGION:
+		t.Fatal("'ALLOYDB_POSTGRES_REGION' not set")
+	case ALLOYDB_POSTGRES_INSTANCE:
+		t.Fatal("'ALLOYDB_POSTGRES_INSTANCE' not set")
+	case ALLOYDB_POSTGRES_DATABASE:
+		t.Fatal("'ALLOYDB_POSTGRES_DATABASE' not set")
+	case ALLOYDB_POSTGRES_USER:
+		t.Fatal("'ALLOYDB_POSTGRES_USER' not set")
+	case ALLOYDB_POSTGRES_PASS:
+		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
 	}
 }
 
@@ -67,12 +67,12 @@ func TestAlloyDBPostgres(t *testing.T) {
 		"sources": map[string]any{
 			"my-pg-instance": map[string]any{
 				"kind":     "alloydb-postgres",
-				"project":  ALLOYDB_PG_PROJECT,
-				"instance": ALLOYDB_PG_INSTANCE,
-				"region":   ALLOYDB_PG_REGION,
-				"database": ALLOYDB_PG_DATABASE,
-				"user":     ALLOYDB_PG_USER,
-				"password": ALLOYDB_PG_PASS,
+				"project":  ALLOYDB_POSTGRES_PROJECT,
+				"instance": ALLOYDB_POSTGRES_INSTANCE,
+				"region":   ALLOYDB_POSTGRES_REGION,
+				"database": ALLOYDB_POSTGRES_DATABASE,
+				"user":     ALLOYDB_POSTGRES_USER,
+				"password": ALLOYDB_POSTGRES_PASS,
 			},
 		},
 		"tools": map[string]any{
