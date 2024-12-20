@@ -22,6 +22,7 @@ applications, enabling advanced orchestration and interaction with GenAI models.
     - [Complete Example](#complete-example)
 
 <!-- /TOC -->
+
 ## Installation
 
 > [!IMPORTANT]
