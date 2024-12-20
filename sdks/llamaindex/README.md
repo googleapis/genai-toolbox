@@ -6,24 +6,24 @@ applications, enabling advanced orchestration and interaction with GenAI models.
 
 <!-- TOC -->
 
-- [GenAI Toolbox SDK](#genai-toolbox-sdk)
-    - [Installation](#installation)
-    - [Usage](#usage)
-    - [Load a toolset](#load-a-toolset)
-    - [Load a single tool](#load-a-single-tool)
-    - [Use with LlamaIndex](#use-with-llamaindex)
-    - [Manual usage](#manual-usage)
-    - [Authenticating Tools](#authenticating-tools)
-        - [Supported Authentication Mechanisms](#supported-authentication-mechanisms)
-        - [Configuring Tools for Authentication](#configuring-tools-for-authentication)
-        - [Configure SDK for Authentication](#configure-sdk-for-authentication)
-        - [Complete Example](#complete-example)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Load a toolset](#load-a-toolset)
+- [Load a single tool](#load-a-single-tool)
+- [Use with LlamaIndex](#use-with-llamaindex)
+- [Manual usage](#manual-usage)
+- [Authenticating Tools](#authenticating-tools)
+    - [Supported Authentication Mechanisms](#supported-authentication-mechanisms)
+    - [Configuring Tools for Authentication](#configuring-tools-for-authentication)
+    - [Configure SDK for Authentication](#configure-sdk-for-authentication)
+    - [Complete Example](#complete-example)
 
 <!-- /TOC -->
 ## Installation
 
 > [!IMPORTANT]
-> This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](DEVELOPER.md).
+> This SDK is not yet available on PyPI. For now, install it from source by
+> following these [installation instructions](DEVELOPER.md).
 
 You can install the Toolbox SDK for LlamaIndex using `pip`.
 
@@ -99,7 +99,7 @@ response = agent.query("Get some response from the agent.")
 You can also execute a tool manually using the `acall` method.
 
 ```py
-result = await tools[0].arun({ "name": "Alice", "age": 30 })
+result = await tools[0].acall({ "name": "Alice", "age": 30 })
 ```
 
 ## Authenticating Tools
@@ -186,7 +186,7 @@ async def main():
     toolbox = ToolboxClient("http://localhost:5000")
     toolbox.add_auth_header("my_auth_service", get_auth_header)
     tools = await toolbox.load_toolset()
-    result = await tools[0].arun({"input": "some input"})
+    result = await tools[0].acall({"input": "some input"})
     print(result)
 
 if __name__ == "__main__":
