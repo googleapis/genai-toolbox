@@ -91,8 +91,6 @@ class TestUtils:
         with pytest.raises(Exception) as e:
             session = aiohttp.ClientSession()
             await _load_manifest(URL, session)
-            await session.close()
-            mock_get.assert_called_once_with(URL)
 
         mock_get.assert_called_once_with(URL)
         assert isinstance(e.value, json.JSONDecodeError)
@@ -111,8 +109,6 @@ class TestUtils:
         with pytest.raises(Exception) as e:
             session = aiohttp.ClientSession()
             await _load_manifest(URL, session)
-            await session.close()
-            mock_get.assert_called_once_with(URL)
 
         mock_get.assert_called_once_with(URL)
         assert isinstance(e.value, ValueError)
@@ -132,7 +128,6 @@ class TestUtils:
         with pytest.raises(aiohttp.ClientError) as exc_info:
             session = aiohttp.ClientSession()
             await _load_manifest(URL, session)
-            await session.close()
         mock_get.assert_called_once_with(URL)
         assert exc_info.value == error
 
