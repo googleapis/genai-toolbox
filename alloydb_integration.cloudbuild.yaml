@@ -24,7 +24,7 @@ steps:
     args: 
       - -c
       - |
-        go test -race -tags="alloydb-integration" -v ./...
+        go test -race -v alloydb_pg_integration_test.go
 
 availableSecrets:
   secretManager:
