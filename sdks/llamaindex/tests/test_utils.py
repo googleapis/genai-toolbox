@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 import warnings
 from typing import Union
 from unittest.mock import AsyncMock, Mock, patch
@@ -112,9 +113,9 @@ class TestUtils:
 
         mock_get.assert_called_once_with(URL)
         assert isinstance(e.value, ValueError)
-        assert (
-            str(e.value)
-            == "Invalid JSON data from https://my-toolbox.com/test: 2 validation errors for ManifestSchema\nserverVersion\n  Field required [type=missing, input_value={'something': 'invalid'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\ntools\n  Field required [type=missing, input_value={'something': 'invalid'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing"
+        assert re.match(
+            r"Invalid JSON data from https://my-toolbox.com/test: 2 validation errors for ManifestSchema\nserverVersion\n  Field required \[type=missing, input_value={'something': 'invalid'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/\d+\.\d+/v/missing\ntools\n  Field required \[type=missing, input_value={'something': 'invalid'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/\d+\.\d+/v/missing",
+            str(e.value),
         )
 
     @pytest.mark.asyncio
