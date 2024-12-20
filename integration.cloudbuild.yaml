@@ -20,7 +20,11 @@ steps:
       - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
       - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_POSTGRES_REGION=$_CLOUD_SQL_POSTGRES_REGION"
-    secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
+      - "ALLOYDB_PSTGRES_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
+      - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "ALLOYDB_POSTGRES_REGION=$_ALLOYDB_POSTGRES_REGION"
+    secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS", "ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS"]
     args: 
       - -c
       - |
@@ -32,6 +36,10 @@ availableSecrets:
       env: CLOUD_SQL_POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_pass/versions/latest
       env: CLOUD_SQL_POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_user/versions/latest
+      env: ALLOYDB_POSTGRES_USER
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_pass/versions/latest
+      env: ALLOYDB_POSTGRES_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
