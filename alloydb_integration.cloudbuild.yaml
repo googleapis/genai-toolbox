@@ -16,10 +16,6 @@ steps:
   - name: golang:1.22
     entrypoint: /bin/bash
     env:
-      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
-      - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
-      - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_POSTGRES_REGION=$_CLOUD_SQL_POSTGRES_REGION"
       - "ALLOYDB_PSTGRES_PROJECT=$PROJECT_ID"
       - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
       - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
@@ -28,14 +24,10 @@ steps:
     args: 
       - -c
       - |
-        go test -race -tags="integration" -v ./...
+        go test -race -tags="alloydb-integration" -v ./...
 
 availableSecrets:
   secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
-      env: CLOUD_SQL_POSTGRES_USER
-    - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_pass/versions/latest
-      env: CLOUD_SQL_POSTGRES_PASS
     - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_user/versions/latest
       env: ALLOYDB_POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_pass/versions/latest
