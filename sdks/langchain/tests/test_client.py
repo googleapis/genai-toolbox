@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import aiohttp
 import pytest
 from langchain_core.tools import StructuredTool
+from pydantic import BaseModel
 
 from toolbox_langchain_sdk import ToolboxClient
 from toolbox_langchain_sdk.utils import ManifestSchema, ParameterSchema, ToolSchema
@@ -166,7 +167,7 @@ async def test_load_tool_success(mock_generate_tool, mock_load_manifest):
     mock_generate_tool.return_value = StructuredTool(
         name="test_tool",
         description="This is test tool.",
-        args_schema=None,
+        args_schema=BaseModel,
         coroutine=AsyncMock(),
     )
 
@@ -201,13 +202,13 @@ async def test_load_toolset_success(mock_generate_tool, mock_load_manifest):
         StructuredTool(
             name="test_tool",
             description="This is test tool.",
-            args_schema=None,
+            args_schema=BaseModel,
             coroutine=AsyncMock(),
         ),
         StructuredTool(
             name="test_tool2",
             description="This is test tool 2.",
-            args_schema=None,
+            args_schema=BaseModel,
             coroutine=AsyncMock(),
         ),
     ] * 2

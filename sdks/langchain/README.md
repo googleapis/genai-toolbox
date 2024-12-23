@@ -4,29 +4,32 @@ This SDK allows you to seamlessly integrate the functionalities of
 [Toolbox](https://github.com/googleapis/genai-toolbox) into your LLM
 applications, enabling advanced orchestration and interaction with GenAI models.
 
+<!-- TOC ignore:true -->
+## Table of Contents
 <!-- TOC -->
 
-- [GenAI Toolbox SDK](#genai-toolbox-sdk)
-    - [Installation](#installation)
-    - [Usage](#usage)
-    - [Load a toolset](#load-a-toolset)
-    - [Load a single tool](#load-a-single-tool)
-    - [Use with LangChain](#use-with-langchain)
-    - [Use with LangGraph](#use-with-langgraph)
-        - [Represent Tools as Nodes](#represent-tools-as-nodes)
-        - [Connect Tools with LLM](#connect-tools-with-llm)
-    - [Manual usage](#manual-usage)
-    - [Authenticating Tools](#authenticating-tools)
-        - [Supported Authentication Mechanisms](#supported-authentication-mechanisms)
-        - [Configuring Tools for Authentication](#configuring-tools-for-authentication)
-        - [Configure SDK for Authentication](#configure-sdk-for-authentication)
-        - [Complete Example](#complete-example)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Load a toolset](#load-a-toolset)
+- [Load a single tool](#load-a-single-tool)
+- [Use with LangChain](#use-with-langchain)
+- [Use with LangGraph](#use-with-langgraph)
+    - [Represent Tools as Nodes](#represent-tools-as-nodes)
+    - [Connect Tools with LLM](#connect-tools-with-llm)
+- [Manual usage](#manual-usage)
+- [Authenticating Tools](#authenticating-tools)
+    - [Supported Authentication Mechanisms](#supported-authentication-mechanisms)
+    - [Configuring Tools for Authentication](#configuring-tools-for-authentication)
+    - [Configure SDK for Authentication](#configure-sdk-for-authentication)
+    - [Complete Example](#complete-example)
 
 <!-- /TOC -->
+
 ## Installation
 
 > [!IMPORTANT]
-> This SDK is not yet available on PyPI. For now, install it from source by following these [installation instructions](DEVELOPER.md).
+> This SDK is not yet available on PyPI. For now, install it from source by
+> following these [installation instructions](DEVELOPER.md).
 
 You can install the Toolbox SDK for LangChain using `pip`.
 

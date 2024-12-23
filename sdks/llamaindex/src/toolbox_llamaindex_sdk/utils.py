@@ -1,6 +1,7 @@
-from typing import Any, Optional, Type, cast
+import json
+import warnings
+from typing import Any, Callable, Optional, Type, cast
 
-import yaml
 from aiohttp import ClientSession
 from pydantic import BaseModel, Field, create_model
 
@@ -9,6 +10,7 @@ class ParameterSchema(BaseModel):
     name: str
     type: str
     description: str
+    authSources: Optional[list[str]] = None
 
 
 class ToolSchema(BaseModel):
@@ -21,12 +23,13 @@ class ManifestSchema(BaseModel):
     tools: dict[str, ToolSchema]
 
 
-async def _load_yaml(url: str, session: ClientSession) -> ManifestSchema:
+async def _load_manifest(url: str, session: ClientSession) -> ManifestSchema:
     """
-    Asynchronously fetches and parses the YAML data from the given URL.
+    Asynchronously fetches and parses the JSON manifest schema from the given
+    URL.
 
     Args:
-        url: The base URL to fetch the YAML from.
+        url: The base URL to fetch the JSON from.
         session: The HTTP client session
 
     Returns:
@@ -34,13 +37,21 @@ async def _load_yaml(url: str, session: ClientSession) -> ManifestSchema:
     """
     async with session.get(url) as response:
         response.raise_for_status()
-        parsed_yaml = yaml.safe_load(await response.text())
-        return ManifestSchema(**parsed_yaml)
+        try:
+            parsed_json = json.loads(await response.text())
+        except json.JSONDecodeError as e:
+            raise json.JSONDecodeError(
+                f"Failed to parse JSON from {url}: {e}", e.doc, e.pos
+            ) from e
+        try:
+            return ManifestSchema(**parsed_json)
+        except ValueError as e:
+            raise ValueError(f"Invalid JSON data from {url}: {e}") from e
 
 
 def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[BaseModel]:
     """
-    Converts a schema (from the YAML manifest) to a Pydantic BaseModel class.
+    Converts the given manifest schema to a Pydantic BaseModel class.
 
     Args:
         model_name: The name of the model to create.
@@ -54,7 +65,8 @@ def _schema_to_model(model_name: str, schema: list[ParameterSchema]) -> Type[Bas
         field_definitions[field.name] = cast(
             Any,
             (
-                # TODO: Remove the hardcoded optional types once optional fields are supported by Toolbox.
+                # TODO: Remove the hardcoded optional types once optional fields
+                # are supported by Toolbox.
                 Optional[_parse_type(field.type)],
                 Field(description=field.description),
             ),
@@ -88,8 +100,30 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
+def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
+    """
+    Gets id tokens for the given auth sources in the getters map and returns
+    headers to be included in tool invocation.
+
+    Args:
+        id_token_getters: A dict that maps auth source names to the functions
+        that return its ID token.
+
+    Returns:
+        A dictionary of headers to be included in the tool invocation.
+    """
+    auth_headers = {}
+    for auth_source, get_id_token in id_token_getters.items():
+        auth_headers[f"{auth_source}_token"] = get_id_token()
+    return auth_headers
+
+
 async def _invoke_tool(
-    url: str, session: ClientSession, tool_name: str, data: dict
+    url: str,
+    session: ClientSession,
+    tool_name: str,
+    data: dict,
+    id_token_getters: dict[str, Callable[[], str]],
 ) -> dict:
     """
     Asynchronously makes an API call to the Toolbox service to invoke a tool.
@@ -99,12 +133,29 @@ async def _invoke_tool(
         session: The HTTP client session.
         tool_name: The name of the tool to invoke.
         data: The input data for the tool.
+        id_token_getters: A dict that maps auth source names to the functions
+            that return its ID token.
 
     Returns:
-        A dictionary containing the parsed JSON response from the tool invocation.
+        A dictionary containing the parsed JSON response from the tool
+        invocation.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
-    async with session.post(url, json=_convert_none_to_empty_string(data)) as response:
+    auth_headers = _get_auth_headers(id_token_getters)
+
+    # ID tokens contain sensitive user information (claims). Transmitting these
+    # over HTTP exposes the data to interception and unauthorized access. Always
+    # use HTTPS to ensure secure communication and protect user privacy.
+    if auth_headers and not url.startswith("https://"):
+        warnings.warn(
+            "Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication."
+        )
+
+    async with session.post(
+        url,
+        json=_convert_none_to_empty_string(data),
+        headers=auth_headers,
+    ) as response:
         response.raise_for_status()
         return await response.json()
 

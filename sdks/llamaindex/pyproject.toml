@@ -1,7 +1,7 @@
 [project]
 name = "toolbox-llamaindex-sdk"
 version="0.0.1"
-description = "Python SDK for interacting with the Toolbox service with Llamaindex"
+description = "Python SDK for interacting with the Toolbox service with LlamaIndex"
 license = {file = "LICENSE"}
 requires-python = ">=3.9"
 authors = [
