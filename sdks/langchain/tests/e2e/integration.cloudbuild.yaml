@@ -13,25 +13,15 @@
 # limitations under the License.
 
 steps:
-  # - id: Install library requirements
-  #   name: 'python:${_VERSION}'
-  #   args:
-  #     - install
-  #     - '-r'
-  #     - 'sdks/langchain/requirements.txt'
-  #     - '--user'
-  #   entrypoint: pip
-  # - id: Install test requirements
-  #   name: 'python:${_VERSION}'
-  #   args:
-  #     - install
-  #     - 'sdks/langchain[test]'
-  #     - '--user'
-  #   entrypoint: pip
+  - id: Install test requirements
+    name: 'python:${_VERSION}'
+    args:
+      - install
+      - 'sdks/langchain[test]'
+      - '--user'
+    entrypoint: pip
   - id: Deploy toolbox instance
     name: 'python:${_VERSION}'
-    # env:
-    #   - TOOLBOX_URL=$_TOOLBOX_URL
     args:
       - deploy_toolbox.sh
     entrypoint: /bin/bash

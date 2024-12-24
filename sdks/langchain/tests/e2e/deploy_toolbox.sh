@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Install gcloud CLI
-pip install gcloud
-
 # TODO: Configure image
 export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
 
