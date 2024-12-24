@@ -166,7 +166,7 @@ func run(cmd *Command) error {
 	}
 
 	// run server
-	s, err := server.NewServer(cmd.cfg, cmd.logger)
+	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to start with the following error: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
