@@ -106,11 +106,11 @@ def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]) -> dict[st
     headers to be included in tool invocation.
 
     Args:
-          id_token_getters: A dict that maps auth source names to the functions
-              that return its ID token.
+        id_token_getters: A dict that maps auth source names to the functions
+        that return its ID token.
 
     Returns:
-      A dictionary of headers to be included in the tool invocation.
+        A dictionary of headers to be included in the tool invocation.
     """
     auth_headers = {}
     for auth_source, get_id_token in id_token_getters.items():

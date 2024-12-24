@@ -13,18 +13,36 @@
 # limitations under the License.
 
 steps:
-  - name: golang:1.22
+  - id: "cloud-sql-pg"
+    name: golang:1.22
+    waitFor: ['-']
     entrypoint: /bin/bash
     env:
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
       - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_POSTGRES_REGION=$_CLOUD_SQL_POSTGRES_REGION"
+      - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
     secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
     args: 
       - -c
       - |
-        go test -race -tags="integration" -v ./...
+        go test -race -v -tags=integration,cloudsql ./tests
+
+  - id: "alloydb-pg"
+    name: golang:1.22
+    waitFor: ['-']
+    entrypoint: /bin/bash
+    env:
+      - "ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
+      - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
+      - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "ALLOYDB_POSTGRES_REGION=$_REGION"
+    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS"]
+    args: 
+      - -c
+      - |
+        go test -race -v -tags=integration,alloydb ./tests
 
 availableSecrets:
   secretManager:
@@ -32,6 +50,10 @@ availableSecrets:
       env: CLOUD_SQL_POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_pass/versions/latest
       env: CLOUD_SQL_POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_user/versions/latest
+      env: ALLOYDB_POSTGRES_USER
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_pass/versions/latest
+      env: ALLOYDB_POSTGRES_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -39,6 +61,7 @@ options:
 
 substitutions:
   _DATABASE_NAME: test_database
-  _CLOUD_SQL_POSTGRES_REGION: "us-central1"
+  _REGION: "us-central1"
   _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
-  
+  _ALLOYDB_POSTGRES_CLUSTER: "alloydb-pg-testing"
+  _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"

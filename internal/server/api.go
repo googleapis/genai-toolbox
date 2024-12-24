@@ -43,7 +43,7 @@ func apiRouter(s *Server) (chi.Router, error) {
 	return r, nil
 }
 
-// toolInvokeHandler handles the request for information about a Toolset.
+// toolsetHandler handles the request for information about a Toolset.
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]

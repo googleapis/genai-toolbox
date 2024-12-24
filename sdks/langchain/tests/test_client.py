@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import aiohttp
 import pytest
 from langchain_core.tools import StructuredTool
+from pydantic import BaseModel
 
 from toolbox_langchain_sdk import ToolboxClient
 from toolbox_langchain_sdk.utils import ManifestSchema, ParameterSchema, ToolSchema
@@ -135,7 +136,17 @@ async def test_generate_tool_success():
     assert isinstance(tool, StructuredTool)
     assert tool.name == "test_tool"
     assert tool.description == "This is test tool."
-    assert tool.args_schema is not None  # Check if args_schema is generated
+    assert tool.args is not None
+
+    assert "param1" in tool.args
+    assert tool.args["param1"]["title"] == "Param1"
+    assert tool.args["param1"]["description"] == "Parameter 1"
+    assert tool.args["param1"]["anyOf"] == [{"type": "string"}, {"type": "null"}]
+
+    assert "param2" in tool.args
+    assert tool.args["param2"]["title"] == "Param2"
+    assert tool.args["param2"]["description"] == "Parameter 2"
+    assert tool.args["param2"]["anyOf"] == [{"type": "integer"}, {"type": "null"}]
 
 
 @pytest.mark.asyncio
@@ -156,7 +167,7 @@ async def test_load_tool_success(mock_generate_tool, mock_load_manifest):
     mock_generate_tool.return_value = StructuredTool(
         name="test_tool",
         description="This is test tool.",
-        args_schema=None,
+        args_schema=BaseModel,
         coroutine=AsyncMock(),
     )
 
@@ -191,13 +202,13 @@ async def test_load_toolset_success(mock_generate_tool, mock_load_manifest):
         StructuredTool(
             name="test_tool",
             description="This is test tool.",
-            args_schema=None,
+            args_schema=BaseModel,
             coroutine=AsyncMock(),
         ),
         StructuredTool(
             name="test_tool2",
             description="This is test tool 2.",
-            args_schema=None,
+            args_schema=BaseModel,
             coroutine=AsyncMock(),
         ),
     ] * 2
@@ -258,7 +269,7 @@ async def test_generate_tool_invoke(mock_invoke_tool):
     tool = client._generate_tool("test_tool", ManifestSchema(**manifest_data))
 
     # Call the tool function with some arguments
-    result = await tool.coroutine(param1="test_value", param2=123)
+    result = await tool.ainvoke({"param1": "test_value", "param2": 123})
 
     # Assert that _invoke_tool was called with the correct parameters
     mock_invoke_tool.assert_called_once_with(
@@ -739,7 +750,10 @@ async def test_generate_tool(
     assert isinstance(tool, StructuredTool)
     assert tool.name == "tool_name"
     assert tool.description == "Test tool description"
-    assert tool.args_schema.__name__ == "tool_name"
+    assert "param1" in tool.args
+    assert tool.args["param1"]["title"] == "Param1"
+    assert tool.args["param1"]["description"] == "Test param"
+    assert tool.args["param1"]["anyOf"] == [{"type": "string"}, {"type": "null"}]
 
     # Call the tool function to check if _invoke_tool is called
     if expected_invoke_tool_call:

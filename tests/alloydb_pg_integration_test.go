@@ -1,4 +1,4 @@
-//go:build integration && cloudsql
+//go:build integration && alloydb
 
 // Copyright 2024 Google LLC
 //
@@ -30,33 +30,36 @@ import (
 )
 
 var (
-	CLOUD_SQL_POSTGRES_PROJECT  = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
-	CLOUD_SQL_POSTGRES_REGION   = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
-	CLOUD_SQL_POSTGRES_INSTANCE = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
-	CLOUD_SQL_POSTGRES_DATABASE = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
-	CLOUD_SQL_POSTGRES_USER     = os.Getenv("CLOUD_SQL_POSTGRES_USER")
-	CLOUD_SQL_POSTGRES_PASS     = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
+	ALLOYDB_POSTGRES_PROJECT  = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
+	ALLOYDB_POSTGRES_REGION   = os.Getenv("ALLOYDB_POSTGRES_REGION")
+	ALLOYDB_POSTGRES_CLUSTER  = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
+	ALLOYDB_POSTGRES_INSTANCE = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
+	ALLOYDB_POSTGRES_DATABASE = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
+	ALLOYDB_POSTGRES_USER     = os.Getenv("ALLOYDB_POSTGRES_USER")
+	ALLOYDB_POSTGRES_PASS     = os.Getenv("ALLOYDB_POSTGRES_PASS")
 )
 
-func requireCloudSQLPgVars(t *testing.T) {
+func requireAlloyDBPgVars(t *testing.T) {
 	switch "" {
-	case CLOUD_SQL_POSTGRES_PROJECT:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PROJECT' not set")
-	case CLOUD_SQL_POSTGRES_REGION:
-		t.Fatal("'CLOUD_SQL_POSTGRES_REGION' not set")
-	case CLOUD_SQL_POSTGRES_INSTANCE:
-		t.Fatal("'CLOUD_SQL_POSTGRES_INSTANCE' not set")
-	case CLOUD_SQL_POSTGRES_DATABASE:
-		t.Fatal("'CLOUD_SQL_POSTGRES_DATABASE' not set")
-	case CLOUD_SQL_POSTGRES_USER:
-		t.Fatal("'CLOUD_SQL_POSTGRES_USER' not set")
-	case CLOUD_SQL_POSTGRES_PASS:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
+	case ALLOYDB_POSTGRES_PROJECT:
+		t.Fatal("'ALLOYDB_POSTGRES_PROJECT' not set")
+	case ALLOYDB_POSTGRES_REGION:
+		t.Fatal("'ALLOYDB_POSTGRES_REGION' not set")
+	case ALLOYDB_POSTGRES_CLUSTER:
+		t.Fatal("'ALLOYDB_POSTGRES_CLUSTER' not set")
+	case ALLOYDB_POSTGRES_INSTANCE:
+		t.Fatal("'ALLOYDB_POSTGRES_INSTANCE' not set")
+	case ALLOYDB_POSTGRES_DATABASE:
+		t.Fatal("'ALLOYDB_POSTGRES_DATABASE' not set")
+	case ALLOYDB_POSTGRES_USER:
+		t.Fatal("'ALLOYDB_POSTGRES_USER' not set")
+	case ALLOYDB_POSTGRES_PASS:
+		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
 	}
 }
 
-func TestCloudSQLPostgres(t *testing.T) {
-	requireCloudSQLPgVars(t)
+func TestAlloyDBPostgres(t *testing.T) {
+	requireAlloyDBPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -66,13 +69,14 @@ func TestCloudSQLPostgres(t *testing.T) {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-pg-instance": map[string]any{
-				"kind":     "cloud-sql-postgres",
-				"project":  CLOUD_SQL_POSTGRES_PROJECT,
-				"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-				"region":   CLOUD_SQL_POSTGRES_REGION,
-				"database": CLOUD_SQL_POSTGRES_DATABASE,
-				"user":     CLOUD_SQL_POSTGRES_USER,
-				"password": CLOUD_SQL_POSTGRES_PASS,
+				"kind":     "alloydb-postgres",
+				"project":  ALLOYDB_POSTGRES_PROJECT,
+				"instance": ALLOYDB_POSTGRES_INSTANCE,
+				"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+				"region":   ALLOYDB_POSTGRES_REGION,
+				"database": ALLOYDB_POSTGRES_DATABASE,
+				"user":     ALLOYDB_POSTGRES_USER,
+				"password": ALLOYDB_POSTGRES_PASS,
 			},
 		},
 		"tools": map[string]any{

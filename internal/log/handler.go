@@ -21,6 +21,8 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ValueTextHandler is a [Handler] that writes Records to an [io.Writer] with values separated by spaces.
@@ -113,4 +115,35 @@ func (h *ValueTextHandler) appendAttr(buf []byte, a slog.Attr) []byte {
 	}
 
 	return buf
+}
+
+// spanContextLogHandler is an slog.Handler which adds attributes from the span
+// context.
+type spanContextLogHandler struct {
+	slog.Handler
+}
+
+// handlerWithSpanContext adds attributes from the span context.
+func handlerWithSpanContext(handler slog.Handler) *spanContextLogHandler {
+	return &spanContextLogHandler{Handler: handler}
+}
+
+// Handle overrides slog.Handler's Handle method. This adds attributes from the
+// span context to the slog.Record.
+func (t *spanContextLogHandler) Handle(ctx context.Context, record slog.Record) error {
+	// Get the SpanContext from the golang Context.
+	if s := trace.SpanContextFromContext(ctx); s.IsValid() {
+		// Add trace context attributes following Cloud Logging structured log format described
+		// in https://cloud.google.com/logging/docs/structured-logging#special-payload-fields
+		record.AddAttrs(
+			slog.Any("logging.googleapis.com/trace", s.TraceID()),
+		)
+		record.AddAttrs(
+			slog.Any("logging.googleapis.com/spanId", s.SpanID()),
+		)
+		record.AddAttrs(
+			slog.Bool("logging.googleapis.com/trace_sampled", s.TraceFlags().IsSampled()),
+		)
+	}
+	return t.Handler.Handle(ctx, record)
 }

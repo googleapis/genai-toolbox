@@ -14,14 +14,18 @@
 
 package log
 
+import (
+	"context"
+)
+
 // Logger is the interface used throughout the project for logging.
 type Logger interface {
-	// Debug is for reporting additional information about internal operations.
-	Debug(format string, args ...interface{})
-	// Info is for reporting informational messages.
-	Info(format string, args ...interface{})
-	// Warn is for reporting warning messages.
-	Warn(format string, args ...interface{})
-	// Error is for reporting errors.
-	Error(format string, args ...interface{})
+	// DebugContext is for reporting additional information about internal operations.
+	DebugContext(ctx context.Context, format string, args ...interface{})
+	// InfoContext is for reporting informational messages.
+	InfoContext(ctx context.Context, format string, args ...interface{})
+	// WarnContext is for reporting warning messages.
+	WarnContext(ctx context.Context, format string, args ...interface{})
+	// ErrorContext is for reporting errors.
+	ErrorContext(ctx context.Context, format string, args ...interface{})
 }
