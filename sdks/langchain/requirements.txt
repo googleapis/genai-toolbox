@@ -2,3 +2,4 @@ langchain-core==0.3.21
 PyYAML==6.0.2
 pydantic==2.10.2
 aiohttp==3.11.7
+gcloud==0.18.3
