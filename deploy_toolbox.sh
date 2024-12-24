@@ -16,7 +16,7 @@ export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
 echo "Deploying toolbox to Cloud Run..."
 if ! gcloud run deploy toolbox \
     --image $IMAGE \
-    --service-account 107716898620-compute \
+    --service-account toolbox-testing \
     --region us-central1 \
     --set-secrets "/app/tools.yaml=sdk_testing_tools:latest" \
     --args="--tools_file=/app/tools.yaml","--address=0.0.0.0","--port=8080"; then
