@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/opentel"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -149,14 +149,14 @@ func run(cmd *Command) error {
 	}
 
 	// Set up OpenTelemetry
-	otelShutdown, err := opentel.SetupOTelSDK(ctx, cmd.Command.Version)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.Error(errMsg.Error())
 		return errMsg
 	}
 	defer func() {
-		err := otelShutdown(context.Background())
+		err := otelShutdown(ctx)
 		if err != nil {
 			errMsg := fmt.Errorf("error shutting down OpenTelemetry: %w", err)
 			cmd.logger.Error(errMsg.Error())

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package opentel
+package telemetry
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTelSDK(ctx context.Context, versionString string) (shutdown func(context.Context) error, err error) {
+func SetupOTel(ctx context.Context, versionString string) (shutdown func(context.Context) error, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -55,7 +55,6 @@ func SetupOTelSDK(ctx context.Context, versionString string) (shutdown func(cont
 	// Configure Context Propagation to use the default W3C traceparent format.
 	otel.SetTextMapPropagator(autoprop.NewTextMapPropagator())
 
-	// Set up resource
 	res, err := newResource(versionString)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up resource: %w", err)
@@ -63,8 +62,7 @@ func SetupOTelSDK(ctx context.Context, versionString string) (shutdown func(cont
 		return
 	}
 
-	// Set up trace provider.
-	tracerProvider, err := newTraceProvider(res)
+	tracerProvider, err := newTracerProvider(res)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up trace provider: %w", err)
 		handleErr(errMsg)
@@ -73,7 +71,6 @@ func SetupOTelSDK(ctx context.Context, versionString string) (shutdown func(cont
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
 
-	// Set up meter provider.
 	meterProvider, err := newMeterProvider(res)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up meter provider: %w", err)
@@ -86,7 +83,8 @@ func SetupOTelSDK(ctx context.Context, versionString string) (shutdown func(cont
 	return shutdown, nil
 }
 
-// Create default resources for telemetry data
+// newResource create default resources for telemetry data.
+// Resource represents the entity producing telemetry.
 func newResource(versionString string) (*resource.Resource, error) {
 	// Ensure default SDK resources and the required service name are set.
 	r, err := resource.New(
@@ -100,7 +98,6 @@ func newResource(versionString string) (*resource.Resource, error) {
 		resource.WithAttributes( // Add other custom resource attributes.
 			semconv.ServiceName("Toolbox"),
 			semconv.ServiceVersion(versionString),
-			semconv.ServiceInstanceID("default-instance'id"),
 		),
 	)
 	if err != nil {
@@ -109,7 +106,9 @@ func newResource(versionString string) (*resource.Resource, error) {
 	return r, nil
 }
 
-func newTraceProvider(r *resource.Resource) (*trace.TracerProvider, error) {
+// newTracerProvider creates TracerProvider.
+// TracerProvider is a factory for Tracers and is responsible for creating spans.
+func newTracerProvider(r *resource.Resource) (*trace.TracerProvider, error) {
 	// TODO: stdout used for dev, will be updated to OTLP exporter
 	traceExporter, err := stdouttrace.New(
 		stdouttrace.WithPrettyPrint())
@@ -119,13 +118,15 @@ func newTraceProvider(r *resource.Resource) (*trace.TracerProvider, error) {
 
 	traceProvider := trace.NewTracerProvider(
 		trace.WithBatcher(traceExporter,
-			// Default is 5s. Set to 1s for demonstrative purposes.
+			// TODO: Default is 5s. Set to 1s for dev purposes.
 			trace.WithBatchTimeout(time.Second)),
 		trace.WithResource(r),
 	)
 	return traceProvider, nil
 }
 
+// newMeterProvider creates MeterProvider.
+// MeterProvider is a factory for Meters, and is responsible for creating metrics.
 func newMeterProvider(r *resource.Resource) (*metric.MeterProvider, error) {
 	// TODO: stdout used for dev, will be updated to OTLP exporter
 	metricExporter, err := stdoutmetric.New(
@@ -136,7 +137,7 @@ func newMeterProvider(r *resource.Resource) (*metric.MeterProvider, error) {
 
 	meterProvider := metric.NewMeterProvider(
 		metric.WithReader(metric.NewPeriodicReader(metricExporter,
-			// Default is 1m. Set to 10s for demonstrative purposes.
+			// TODO: Default is 1m. Set to 10s for dev purposes.
 			metric.WithInterval(3*time.Second))),
 		metric.WithResource(r),
 	)
