@@ -33,9 +33,7 @@ steps:
     # env:
     #   - TOOLBOX_URL=$_TOOLBOX_URL
     args:
-      - '-c'
-      - >-
-        ./deploy_toolbox.sh
+      - deploy_toolbox.sh
     entrypoint: /bin/bash
 options:
   logging: CLOUD_LOGGING_ONLY
