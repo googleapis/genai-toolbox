@@ -13,16 +13,15 @@
 # limitations under the License.
 
 steps:
-  - id: Install library requirements
-    name: 'python:${_VERSION}'
-    args:
-      - install
-      - '-r'
-      - 'sdks/langchain/requirements.txt'
-      - '--user'
-    entrypoint: pip
+  # - id: Install gcloud cli
+  #   name: 'gcr.io/cloud-builders/gcloud'  # Use the gcloud image
+  #   entrypoint: 'bash'                   # Explicitly set entrypoint to bash
+  #   args:
+  #   - '-c'                                # Run the following as a single command
+  #   - |                                   # Use the pipe (|) for multi-line commands
+  #     gcloud config set project "toolbox-testing"
   - id: Deploy toolbox instance
-    name: 'python:${_VERSION}'
+    name: gcr.io/cloud-builders/gcloud'
     args:
       - deploy_toolbox.sh
     entrypoint: /bin/bash
