@@ -21,7 +21,7 @@ steps:
   #   - |                                   # Use the pipe (|) for multi-line commands
   #     gcloud config set project "toolbox-testing"
   - id: Deploy toolbox instance
-    name: gcr.io/cloud-builders/gcloud'
+    name: gcr.io/cloud-builders/gcloud
     args:
       - deploy_toolbox.sh
     entrypoint: /bin/bash
