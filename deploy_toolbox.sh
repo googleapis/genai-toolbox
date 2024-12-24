@@ -3,8 +3,8 @@
 # Download the gcloud CLI installation script
 curl https://sdk.cloud.google.com | bash
 
-# Add the gcloud CLI to your PATH
-exec -l $SHELL
+# Source the gcloud configuration
+source /google-cloud-sdk/path.bash.inc
 
 # Initialize the gcloud CLI
 gcloud init --console-only
