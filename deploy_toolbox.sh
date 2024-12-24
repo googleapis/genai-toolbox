@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Download the gcloud CLI installation script
+curl https://sdk.cloud.google.com | bash
+
+# Add the gcloud CLI to your PATH
+exec -l $SHELL
+
+# Initialize the gcloud CLI
+gcloud init --console-only
+
 # TODO: Configure image
 export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
 
