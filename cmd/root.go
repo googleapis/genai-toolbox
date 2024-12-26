@@ -24,6 +24,7 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -146,6 +147,21 @@ func run(cmd *Command) error {
 	default:
 		return fmt.Errorf("logging format invalid.")
 	}
+
+	// Set up OpenTelemetry
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version)
+	if err != nil {
+		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			errMsg := fmt.Errorf("error shutting down OpenTelemetry: %w", err)
+			cmd.logger.Error(errMsg.Error())
+		}
+	}()
 
 	// Read tool file contents
 	buf, err := os.ReadFile(cmd.tools_file)
