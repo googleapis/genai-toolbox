@@ -28,7 +28,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
@@ -47,6 +50,9 @@ type Server struct {
 
 // NewServer returns a Server object based on provided Config.
 func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
+	ctx, span := telemetry.Tracer().Start(context.Background(), "toolbox/server/init")
+	defer span.End()
+
 	// set up http serving
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -84,9 +90,22 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
-		s, err := sc.Initialize()
+		s, err := func() (sources.Source, error) {
+			ctx, span := telemetry.Tracer().Start(
+				ctx,
+				"toolbox/server/source/init",
+				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
+				trace.WithAttributes(attribute.String("source_name", name)),
+			)
+			defer span.End()
+			s, err := sc.Initialize(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
+			}
+			return s, nil
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
+			return nil, err
 		}
 		sourcesMap[name] = s
 	}

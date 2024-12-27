@@ -46,8 +46,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize() (sources.Source, error) {
-	pool, err := initCloudSQLPgConnectionPool(r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+func (r Config) Initialize(ctx context.Context) (sources.Source, error) {
+	pool, err := initCloudSQLPgConnectionPool(ctx, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -92,7 +92,11 @@ func getDialOpts(ip_type string) ([]cloudsqlconn.DialOption, error) {
 	}
 }
 
-func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initCloudSQLPgConnectionPool(ctx context.Context, name, project, region, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, SourceKind, name)
+	defer span.End()
+
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
 	config, err := pgxpool.ParseConfig(dsn)
