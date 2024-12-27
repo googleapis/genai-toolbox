@@ -124,9 +124,23 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	// initialize and validate the tools
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
-		t, err := tc.Initialize(sourcesMap)
+		t, err := func() (tools.Tool, error) {
+			var span trace.Span
+			ctx, span = telemetry.Tracer().Start(
+				ctx,
+				"toolbox/server/tool/init",
+				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
+				trace.WithAttributes(attribute.String("tool_name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(sourcesMap)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			}
+			return t, nil
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			return nil, err
 		}
 		toolsMap[name] = t
 	}
