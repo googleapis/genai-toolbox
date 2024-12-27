@@ -62,6 +62,22 @@ steps:
       - -c
       - |
         go test -race -v -tags=integration,alloydb ./tests
+  
+  - id: "auth test"
+    name: golang:1.22
+    waitFor: ['-']
+    entrypoint: /bin/bash
+    env:
+      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
+      - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
+      - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
+    args: 
+      - -c
+      - |
+        go test -race -v -tags=integration,auth ./tests
 
   - id: "postgres"
     name: golang:1
