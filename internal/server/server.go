@@ -39,6 +39,7 @@ type Server struct {
 	conf   ServerConfig
 	root   chi.Router
 	logger logLib.Logger
+	metric *telemetry.Metric
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -170,6 +171,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		conf:        cfg,
 		root:        r,
 		logger:      log,
+		metric:      metric,
 		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,

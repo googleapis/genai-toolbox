@@ -36,25 +36,25 @@ func apiRouter(s *Server) (chi.Router, error) {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/toolset", func(w http.ResponseWriter, r *http.Request) {
-		telemetry.OperationActiveUpDownCounter().Add(r.Context(), 1)
+		s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
 		toolsetHandler(s, w, r)
-		telemetry.OperationActiveUpDownCounter().Add(r.Context(), -1)
+		s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
 	})
 	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) {
-		telemetry.OperationActiveUpDownCounter().Add(r.Context(), 1)
+		s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
 		toolsetHandler(s, w, r)
-		telemetry.OperationActiveUpDownCounter().Add(r.Context(), -1)
+		s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
 	})
 	r.Route("/tool/{toolName}", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			telemetry.OperationActiveUpDownCounter().Add(r.Context(), 1)
+			s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
 			toolGetHandler(s, w, r)
-			telemetry.OperationActiveUpDownCounter().Add(r.Context(), -1)
+			s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
 		})
 		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) {
-			telemetry.OperationActiveUpDownCounter().Add(r.Context(), 1)
+			s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
 			toolInvokeHandler(s, w, r)
-			telemetry.OperationActiveUpDownCounter().Add(r.Context(), -1)
+			s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
 		})
 	})
 
@@ -65,23 +65,26 @@ func apiRouter(s *Server) (chi.Router, error) {
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]
-	if !ok {
-		telemetry.ToolsetGetCounter().Add(
+	var err error
+	defer func() {
+		var status string
+		if err != nil {
+			status = "error"
+		} else {
+			status = "success"
+		}
+		s.metric.ToolsetGetCounter().Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolsetName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
-		err := fmt.Errorf("Toolset %q does not exist", toolsetName)
+	}()
+	if !ok {
+		err = fmt.Errorf("Toolset %q does not exist", toolsetName)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
-	telemetry.ToolsetGetCounter().Add(
-		r.Context(),
-		1,
-		metric.WithAttributes(attribute.String("toolbox.name", toolsetName)),
-		metric.WithAttributes(attribute.String("toolbox.operation.status", "success")),
-	)
 	render.JSON(w, r, toolset.Manifest)
 }
 
@@ -95,14 +98,23 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	toolName := chi.URLParam(r, "toolName")
 	tool, ok := s.tools[toolName]
-	if !ok {
-		telemetry.ToolGetCounter().Add(
+	var err error
+	defer func() {
+		var status string
+		if err != nil {
+			status = "error"
+		} else {
+			status = "success"
+		}
+		s.metric.ToolGetCounter().Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
-		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+	}()
+	if !ok {
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -113,12 +125,6 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			toolName: tool.Manifest(),
 		},
 	}
-	telemetry.ToolGetCounter().Add(
-		r.Context(),
-		1,
-		metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-		metric.WithAttributes(attribute.String("toolbox.operation.status", "success")),
-	)
 	render.JSON(w, r, m)
 }
 
@@ -132,14 +138,23 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	toolName := chi.URLParam(r, "toolName")
 	tool, ok := s.tools[toolName]
-	if !ok {
-		telemetry.ToolInvokeCounter().Add(
+	var err error
+	defer func() {
+		var status string
+		if err != nil {
+			status = "error"
+		} else {
+			status = "success"
+		}
+		s.metric.ToolInvokeCounter().Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
-		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+	}()
+	if !ok {
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -150,13 +165,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	for _, aS := range s.authSources {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
-			telemetry.ToolInvokeCounter().Add(
-				r.Context(),
-				1,
-				metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-				metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
-			)
-			err := fmt.Errorf("failure getting claims from header: %w", err)
+			err = fmt.Errorf("failure getting claims from header: %w", err)
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
@@ -177,62 +186,32 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Check if any of the specified auth sources is verified
 	isAuthorized := tool.Authorized(verifiedAuthSources)
 	if !isAuthorized {
-		telemetry.ToolInvokeCounter().Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
-		)
-		err := fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 		return
 	}
 
 	var data map[string]any
-	if err := render.DecodeJSON(r.Body, &data); err != nil {
-		telemetry.ToolInvokeCounter().Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
-		)
+	if err = render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
-		err := fmt.Errorf("request body was invalid JSON: %w", err)
+		err = fmt.Errorf("request body was invalid JSON: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
-		telemetry.ToolInvokeCounter().Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
-		)
-		err := fmt.Errorf("provided parameters were invalid: %w", err)
+		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	res, err := tool.Invoke(params)
 	if err != nil {
-		telemetry.ToolInvokeCounter().Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", "error")),
-		)
-		err := fmt.Errorf("error while invoking tool: %w", err)
+		err = fmt.Errorf("error while invoking tool: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
-	telemetry.ToolInvokeCounter().Add(
-		r.Context(),
-		1,
-		metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-		metric.WithAttributes(attribute.String("toolbox.operation.status", "success")),
-	)
 
 	_ = render.Render(w, r, &resultResponse{Result: res})
 }

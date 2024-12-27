@@ -31,6 +31,8 @@ import (
 
 var _ tools.Tool = &MockTool{}
 
+const versionString = "0.0.0"
+
 type MockTool struct {
 	Name        string
 	Description string
@@ -58,19 +60,19 @@ func (t MockTool) Authorized(verifiedAuthSources []string) bool {
 	return true
 }
 
-func setupServer(ctx context.Context) (context.Context, Server, func(context.Context) error, error) {
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0")
+func setupServer(ctx context.Context) (Server, func(context.Context) error, error) {
+	customMetric, otelShutdown, err := telemetry.SetupOTel(ctx, versionString)
 	if err != nil {
-		return nil, Server{}, nil, err
+		return Server{}, nil, err
 	}
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
-		return nil, Server{}, nil, err
+		return Server{}, nil, err
 	}
-	server := Server{conf: ServerConfig{Version: "0.0.0"}, logger: testLogger}
+	server := Server{conf: ServerConfig{Version: versionString}, logger: testLogger, metric: customMetric}
 
-	return ctx, server, otelShutdown, nil
+	return server, otelShutdown, nil
 }
 
 func TestToolsetEndpoint(t *testing.T) {
@@ -95,14 +97,15 @@ func TestToolsetEndpoint(t *testing.T) {
 		"tool2_only": {tool2.Name},
 	} {
 		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
-		m, err := tc.Initialize("0.0.0", toolsMap)
+		m, err := tc.Initialize(versionString, toolsMap)
 		if err != nil {
 			t.Fatalf("unable to initialize toolset %q: %s", name, err)
 		}
 		toolsets[name] = m
 	}
 
-	ctx, server, otelShutdown, err := setupServer(context.Background())
+	ctx := context.Background()
+	server, otelShutdown, err := setupServer(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -140,7 +143,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    "0.0.0",
+				version:    versionString,
 				tools:      []string{tool1.Name, tool2.Name},
 			},
 		},
@@ -157,7 +160,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "tool1_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    "0.0.0",
+				version:    versionString,
 				tools:      []string{tool1.Name},
 			},
 		},
@@ -166,7 +169,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "tool2_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    "0.0.0",
+				version:    versionString,
 				tools:      []string{tool2.Name},
 			},
 		},
@@ -225,7 +228,8 @@ func TestToolGetEndpoint(t *testing.T) {
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
 
-	ctx, server, otelShutdown, err := setupServer(context.Background())
+	ctx := context.Background()
+	server, otelShutdown, err := setupServer(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -262,7 +266,7 @@ func TestToolGetEndpoint(t *testing.T) {
 			toolName: tool1.Name,
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    "0.0.0",
+				version:    versionString,
 				tools:      []string{tool1.Name},
 			},
 		},
@@ -271,7 +275,7 @@ func TestToolGetEndpoint(t *testing.T) {
 			toolName: tool2.Name,
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    "0.0.0",
+				version:    versionString,
 				tools:      []string{tool2.Name},
 			},
 		},
