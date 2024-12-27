@@ -84,6 +84,14 @@ func SetupOTel(ctx context.Context, versionString string, cfg server.ServerConfi
 	shutdownFuncs = append(shutdownFuncs, meterProvider.Shutdown)
 	otel.SetMeterProvider(meterProvider)
 
+	setMeter(versionString)
+	err = createCustomMetric()
+	if err != nil {
+		errMsg := fmt.Errorf("unable to set up custom metrics: %w", err)
+		handleErr(errMsg)
+		return
+	}
+
 	return shutdown, nil
 }
 

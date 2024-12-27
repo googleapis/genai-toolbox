@@ -15,6 +15,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -56,6 +58,21 @@ func (t MockTool) Authorized(verifiedAuthSources []string) bool {
 	return true
 }
 
+func setupServer(ctx context.Context) (context.Context, Server, func(context.Context) error, error) {
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0")
+	if err != nil {
+		return nil, Server{}, nil, err
+	}
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		return nil, Server{}, nil, err
+	}
+	server := Server{conf: ServerConfig{Version: "0.0.0"}, logger: testLogger}
+
+	return ctx, server, otelShutdown, nil
+}
+
 func TestToolsetEndpoint(t *testing.T) {
 	// Set up resources to test against
 	tool1 := MockTool{
@@ -85,11 +102,19 @@ func TestToolsetEndpoint(t *testing.T) {
 		toolsets[name] = m
 	}
 
-	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	ctx, server, otelShutdown, err := setupServer(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	server := Server{conf: ServerConfig{}, logger: testLogger, tools: toolsMap, toolsets: toolsets}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	server.tools = toolsMap
+	server.toolsets = toolsets
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -200,11 +225,18 @@ func TestToolGetEndpoint(t *testing.T) {
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
 
-	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	ctx, server, otelShutdown, err := setupServer(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	server := Server{conf: ServerConfig{Version: "0.0.0"}, logger: testLogger, tools: toolsMap}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	server.tools = toolsMap
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
