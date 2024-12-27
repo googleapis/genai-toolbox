@@ -347,7 +347,7 @@ async def test_validate_auth(tool_param_auth, id_token_getters, expected_result)
     client = ToolboxClient("http://test-url")
     client._tool_param_auth = tool_param_auth
     for auth_source, get_id_token in id_token_getters.items():
-        client.add_auth_header(auth_source, get_id_token)
+        client.add_auth_token(auth_source, get_id_token)
     assert client._validate_auth("tool_name") == expected_result
 
 
@@ -554,7 +554,7 @@ async def test_process_auth_params(
 @pytest.mark.asyncio
 @patch("toolbox_langchain_sdk.client._load_manifest")
 @pytest.mark.parametrize(
-    "params, auth_headers, expected_tool_param_auth",
+    "params, auth_tokens, expected_tool_param_auth",
     [
         (
             [
@@ -563,7 +563,7 @@ async def test_process_auth_params(
             ],
             {},
             {},
-        ),  # No auth headers
+        ),  # No auth tokens
         (
             [
                 ParameterSchema(name="param1", type="string", description="Test param"),
@@ -576,13 +576,13 @@ async def test_process_auth_params(
             ],
             {"auth_source1": lambda: "test_token"},
             {"tool_name": {"param2": ["auth_source1"]}},
-        ),  # With auth headers
+        ),  # With auth tokens
     ],
 )
 async def test_load_tool(
-    mock_load_manifest, params, auth_headers, expected_tool_param_auth
+    mock_load_manifest, params, auth_tokens, expected_tool_param_auth
 ):
-    """Test load_tool with and without auth headers."""
+    """Test load_tool with and without auth tokens."""
     client = ToolboxClient("http://test-url")
 
     # Replace with your desired mock manifest data
@@ -596,7 +596,7 @@ async def test_load_tool(
         },
     )
 
-    tool = await client.load_tool("tool_name", auth_headers)
+    tool = await client.load_tool("tool_name", auth_tokens)
 
     assert isinstance(tool, StructuredTool)
     assert tool.name == "tool_name"
@@ -607,7 +607,7 @@ async def test_load_tool(
 @pytest.mark.asyncio
 @patch("toolbox_langchain_sdk.client._load_manifest")
 @pytest.mark.parametrize(
-    "params, auth_headers, expected_tool_param_auth, expected_num_tools",
+    "params, auth_tokens, expected_tool_param_auth, expected_num_tools",
     [
         (
             [
@@ -617,7 +617,7 @@ async def test_load_tool(
             {},
             {},
             1,
-        ),  # No auth headers
+        ),  # No auth tokens
         (
             [
                 ParameterSchema(name="param1", type="string", description="Test param"),
@@ -631,17 +631,17 @@ async def test_load_tool(
             {"auth_source1": lambda: "test_token"},
             {"tool_name": {"param2": ["auth_source1"]}},
             1,
-        ),  # With auth headers
+        ),  # With auth tokens
     ],
 )
 async def test_load_toolset(
     mock_load_manifest,
     params,
-    auth_headers,
+    auth_tokens,
     expected_tool_param_auth,
     expected_num_tools,
 ):
-    """Test load_toolset with and without toolset name and auth headers."""
+    """Test load_toolset with and without toolset name and auth tokens."""
     client = ToolboxClient("http://test-url")
 
     # Replace with your desired mock manifest data
@@ -655,7 +655,7 @@ async def test_load_toolset(
         },
     )
 
-    tools = await client.load_toolset("toolset_name", auth_headers)
+    tools = await client.load_toolset("toolset_name", auth_tokens)
 
     assert isinstance(tools, list)
     assert len(tools) == expected_num_tools
@@ -743,7 +743,7 @@ async def test_generate_tool(
     client = ToolboxClient("http://test-url")
     client._tool_param_auth = tool_param_auth
     for auth_source, get_id_token in id_token_getters.items():
-        client.add_auth_header(auth_source, get_id_token)
+        client.add_auth_token(auth_source, get_id_token)
 
     tool = client._generate_tool("tool_name", manifest)
 
