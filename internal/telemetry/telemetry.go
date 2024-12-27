@@ -70,6 +70,7 @@ func SetupOTel(ctx context.Context, versionString string) (shutdown func(context
 	}
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
+	setTracer(versionString)
 
 	meterProvider, err := newMeterProvider(res)
 	if err != nil {
