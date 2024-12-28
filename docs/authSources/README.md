@@ -68,7 +68,7 @@ called
 [claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims).
 ID tokens can include claims such as user ID, user name, user emails etc. After
 specifying `authSources`, you can configure your tool's authenticated parameters
-by following this [guide](../tools/README.md#authenticated-parameters)
+by following this [guide](../tools/README.md#authenticated-parameters).
 
 ## Usage
 

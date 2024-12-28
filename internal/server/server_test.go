@@ -55,7 +55,7 @@ func TestServe(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	s, err := server.NewServer(cfg, testLogger)
+	s, err := server.NewServer(context.Background(), cfg, testLogger)
 	if err != nil {
 		t.Fatalf("unable to initialize server! %v", err)
 	}
