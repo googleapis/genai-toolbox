@@ -39,6 +39,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.Port == 0 {
 		c.Port = 5000
 	}
+	if c.TelemetryServiceName == "" {
+		c.TelemetryServiceName = "toolbox"
+	}
 	return c
 }
 
@@ -133,6 +136,27 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--log-level", "WARN"},
 			want: withDefaults(server.ServerConfig{
 				LogLevel: "WARN",
+			}),
+		},
+		{
+			desc: "telemetry gcp",
+			args: []string{"--telemetry-gcp"},
+			want: withDefaults(server.ServerConfig{
+				TelemetryGCP: true,
+			}),
+		},
+		{
+			desc: "telemetry otlp",
+			args: []string{"--telemetry-otlp", "http://127.0.0.1:4553"},
+			want: withDefaults(server.ServerConfig{
+				TelemetryOTLP: "http://127.0.0.1:4553",
+			}),
+		},
+		{
+			desc: "telemetry service name",
+			args: []string{"--telemetry-service-name", "toolbox-custom"},
+			want: withDefaults(server.ServerConfig{
+				TelemetryServiceName: "toolbox-custom",
 			}),
 		},
 	}
