@@ -186,9 +186,7 @@ class ToolboxClient:
                     f"Some parameters of tool {tool_name} require authentication, but no valid auth sources are registered. Please register the required sources before use."
                 )
 
-    @deprecated(
-        "Please use `add_auth_token` instead."
-    )
+    @deprecated("Please use `add_auth_token` instead.")
     def add_auth_header(
         self, auth_source: str, get_id_token: Callable[[], str]
     ) -> None:
