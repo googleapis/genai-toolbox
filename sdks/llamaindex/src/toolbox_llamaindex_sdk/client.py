@@ -187,7 +187,7 @@ class ToolboxClient:
                 )
 
     @deprecated(
-        "Method `add_auth_header` is deprecated. Please use `add_auth_token` instead."
+        "Please use `add_auth_token` instead."
     )
     def add_auth_header(
         self, auth_source: str, get_id_token: Callable[[], str]

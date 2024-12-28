@@ -939,6 +939,6 @@ async def test_add_auth_header_deprecation_warning():
 
     with pytest.warns(
         DeprecationWarning,
-        match="Method `add_auth_header` is deprecated. Please use `add_auth_token` instead.",
+        match="Please use `add_auth_token` instead.",
     ):
         client.add_auth_header("auth_source1", lambda: "test_token")

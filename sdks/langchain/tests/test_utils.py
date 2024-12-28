@@ -252,6 +252,6 @@ class TestUtils:
         """Test _get_auth_headers deprecation warning."""
         with pytest.warns(
             DeprecationWarning,
-            match=r"Call to deprecated function \(or staticmethod\) _get_auth_headers\. \(Method `_get_auth_headers` is deprecated\. Please use `_get_auth_tokens` instead\.\)$",
+            match=r"Call to deprecated function \(or staticmethod\) _get_auth_headers\. \(Please use `_get_auth_tokens` instead\.\)$",
         ):
             _get_auth_headers({"auth_source1": lambda: "test_token"})

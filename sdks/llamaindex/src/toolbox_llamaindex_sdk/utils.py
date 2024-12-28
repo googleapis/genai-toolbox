@@ -103,7 +103,7 @@ def _parse_type(type_: str) -> Any:
 
 
 @deprecated(
-    "Method `_get_auth_headers` is deprecated. Please use `_get_auth_tokens` instead."
+    "Please use `_get_auth_tokens` instead."
 )
 def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
     return _get_auth_tokens(id_token_getters)
