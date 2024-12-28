@@ -17,7 +17,7 @@ package sources
 import (
 	"context"
 
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -35,7 +35,7 @@ type Source interface {
 
 // InitConnectionSpan adds a span for database pool connection initialization
 func InitConnectionSpan(ctx context.Context, sourceKind, sourceName string) (context.Context, trace.Span) {
-	ctx, span := telemetry.Tracer().Start(
+	ctx, span := telemetrytrace.Tracer().Start(
 		ctx,
 		"toolbox/server/source/connect",
 		trace.WithAttributes(attribute.String("source_kind", sourceKind)),

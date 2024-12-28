@@ -47,8 +47,12 @@ type ServerConfig struct {
 	ToolsetConfigs ToolsetConfigs
 	// LoggingFormat defines whether structured loggings are used.
 	LoggingFormat logFormat
-	// LogLevel defines the levels to log
+	// LogLevel defines the levels to log.
 	LogLevel StringLevel
+	// TelemetryGCP defines whether GCP exporter is used.
+	TelemetryGCP bool
+	// TelemetryOTLP defines OTLP collector url for telemetry exports.
+	TelemetryOTLP string
 }
 
 type logFormat string

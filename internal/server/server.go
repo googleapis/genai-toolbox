@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	logLib "github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -48,7 +48,7 @@ type Server struct {
 
 // NewServer returns a Server object based on provided Config.
 func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
-	ctx, span := telemetry.Tracer().Start(context.Background(), "toolbox/server/init")
+	ctx, span := telemetrytrace.Tracer().Start(context.Background(), "toolbox/server/init")
 	defer span.End()
 
 	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
@@ -90,7 +90,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
-			ctx, span := telemetry.Tracer().Start(
+			ctx, span := telemetrytrace.Tracer().Start(
 				ctx,
 				"toolbox/server/source/init",
 				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
@@ -126,7 +126,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
 			var span trace.Span
-			ctx, span = telemetry.Tracer().Start(
+			ctx, span = telemetrytrace.Tracer().Start(
 				ctx,
 				"toolbox/server/tool/init",
 				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
