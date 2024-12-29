@@ -23,6 +23,7 @@ import (
 	"cloud.google.com/go/alloydbconn"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceKind string = "alloydb-postgres"
@@ -47,8 +48,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context) (sources.Source, error) {
-	pool, err := initAlloyDBPgConnectionPool(ctx, r.Name, r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	pool, err := initAlloyDBPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -93,9 +94,9 @@ func getDialOpts(ip_type string) ([]alloydbconn.DialOption, error) {
 	}
 }
 
-func initAlloyDBPgConnectionPool(ctx context.Context, name, project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database

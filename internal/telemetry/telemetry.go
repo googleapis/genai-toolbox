@@ -21,15 +21,15 @@ import (
 
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
-	internaltrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"go.opentelemetry.io/contrib/propagators/autoprop"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
@@ -72,7 +72,6 @@ func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemet
 	}
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
-	internaltrace.SetTracer(versionString)
 
 	meterProvider, err := newMeterProvider(ctx, res, telemetryOTLP, telemetryGCP)
 	if err != nil {
@@ -120,18 +119,18 @@ func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP 
 		if err != nil {
 			return nil, err
 		}
-		traceOpts = append(traceOpts, trace.WithBatcher(otlpExporter))
+		traceOpts = append(traceOpts, tracesdk.WithBatcher(otlpExporter))
 	}
 	if telemetryGCP {
 		gcpExporter, err := texporter.New()
 		if err != nil {
 			return nil, err
 		}
-		traceOpts = append(traceOpts, trace.WithBatcher(gcpExporter))
+		traceOpts = append(traceOpts, tracesdk.WithBatcher(gcpExporter))
 	}
-	traceOpts = append(traceOpts, trace.WithResource(r))
+	traceOpts = append(traceOpts, tracesdk.WithResource(r))
 
-	traceProvider := trace.NewTracerProvider(traceOpts...)
+	traceProvider := tracesdk.NewTracerProvider(traceOpts...)
 	return traceProvider, nil
 }
 

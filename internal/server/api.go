@@ -21,7 +21,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -48,6 +47,12 @@ func apiRouter(s *Server) (chi.Router, error) {
 
 // toolsetHandler handles the request for information about a Toolset.
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	_, span := s.tracer.Start(
+		r.Context(),
+		"toolbox/server/toolset/get",
+	)
+	defer span.End()
+
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]
 	var err error
@@ -73,7 +78,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolGetHandler handles requests for a single Tool.
 func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	_, span := telemetrytrace.Tracer().Start(
+	_, span := s.tracer.Start(
 		r.Context(),
 		"toolbox/server/tool/get",
 	)
@@ -112,11 +117,17 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	_, span := telemetrytrace.Tracer().Start(
+	var err error
+	_, span := s.tracer.Start(
 		r.Context(),
 		"toolbox/server/tool/invoke",
 	)
-	defer span.End()
+	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 
 	toolName := chi.URLParam(r, "toolName")
 	tool, ok := s.tools[toolName]

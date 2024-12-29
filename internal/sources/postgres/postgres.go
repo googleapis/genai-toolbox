@@ -20,6 +20,7 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceKind string = "postgres"
@@ -41,8 +42,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create pool: %w", err)
 	}
@@ -76,9 +77,9 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func initPostgresConnectionPool(ctx context.Context, name, host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)
