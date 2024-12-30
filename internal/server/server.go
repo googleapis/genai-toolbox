@@ -151,6 +151,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	srv := &http.Server{Addr: addr, Handler: r}
 
 	s = &Server{
+		version:     cfg.Version,
 		srv:         srv,
 		root:        r,
 		logger:      l,

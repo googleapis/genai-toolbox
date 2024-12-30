@@ -78,5 +78,4 @@ func TestServe(t *testing.T) {
 	if !tryDial(net.JoinHostPort(addr, strconv.Itoa(port)), 10) {
 		t.Fatalf("unable to dial server!")
 	}
-
 }
