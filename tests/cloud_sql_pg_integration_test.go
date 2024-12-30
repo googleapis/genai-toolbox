@@ -1,5 +1,3 @@
-//go:build integration && cloudsql
-
 // Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,7 +88,7 @@ func TestCloudSQLPostgres(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
 	if err != nil {

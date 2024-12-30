@@ -47,8 +47,6 @@ type Server struct {
 
 // NewServer returns a Server object based on provided Config.
 func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
-	var s *Server
-
 	// set up http serving
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -82,16 +80,6 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	}
 	httpLogger := httplog.NewLogger("httplog", httpOpts)
 	r.Use(httplog.RequestLogger(httpLogger))
-	// control plane
-	apiR, err := apiRouter(s)
-	if err != nil {
-		return nil, err
-	}
-	r.Mount("/api", apiR)
-	// default endpoint for validating server is running
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
-	})
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
@@ -150,7 +138,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
-	s = &Server{
+	s := &Server{
 		version:     cfg.Version,
 		srv:         srv,
 		root:        r,
@@ -160,6 +148,16 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		tools:       toolsMap,
 		toolsets:    toolsetsMap,
 	}
+	// control plane
+	apiR, err := apiRouter(s)
+	if err != nil {
+		return nil, err
+	}
+	r.Mount("/api", apiR)
+	// default endpoint for validating server is running
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
+	})
 
 	return s, nil
 }
