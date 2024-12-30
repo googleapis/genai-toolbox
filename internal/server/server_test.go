@@ -27,6 +27,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 )
 
+const fakeVersionString = "0.0.0"
+
 // tryDial is a utility function that dials an address up to 'attempts' number of times.
 func tryDial(addr string, attempts int) bool {
 	for i := 0; i < attempts; i++ {
@@ -51,7 +53,7 @@ func TestServe(t *testing.T) {
 		Port:    port,
 	}
 
-	customMetric, otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0")
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -61,12 +63,16 @@ func TestServe(t *testing.T) {
 			t.Fatalf("unexpected error: %s", err)
 		}
 	}()
+	metrics, err := server.CreateCustomMetrics(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	s, err := server.NewServer(cfg, testLogger, customMetric)
+	s, err := server.NewServer(cfg, testLogger, metrics)
 	if err != nil {
 		t.Fatalf("unable to initialize server! %v", err)
 	}

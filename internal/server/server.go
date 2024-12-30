@@ -36,10 +36,10 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf   ServerConfig
-	root   chi.Router
-	logger logLib.Logger
-	metric *telemetry.Metric
+	conf    ServerConfig
+	root    chi.Router
+	logger  logLib.Logger
+	metrics *ServerMetrics
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -171,7 +171,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		conf:        cfg,
 		root:        r,
 		logger:      log,
-		metric:      metric,
+		metrics:     metrics,
 		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,

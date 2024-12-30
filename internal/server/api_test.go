@@ -60,22 +60,9 @@ func (t MockTool) Authorized(verifiedAuthSources []string) bool {
 	return true
 }
 
-func setupServer(ctx context.Context) (Server, func(context.Context) error, error) {
-	customMetric, otelShutdown, err := telemetry.SetupOTel(ctx, versionString)
-	if err != nil {
-		return Server{}, nil, err
-	}
-
-	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
-	if err != nil {
-		return Server{}, nil, err
-	}
-	server := Server{conf: ServerConfig{Version: versionString}, logger: testLogger, metric: customMetric}
-
-	return server, otelShutdown, nil
-}
-
 func TestToolsetEndpoint(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	// Set up resources to test against
 	tool1 := MockTool{
 		Name:   "no_params",
@@ -97,17 +84,16 @@ func TestToolsetEndpoint(t *testing.T) {
 		"tool2_only": {tool2.Name},
 	} {
 		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
-		m, err := tc.Initialize(versionString, toolsMap)
+		m, err := tc.Initialize(fakeVersionString, toolsMap)
 		if err != nil {
 			t.Fatalf("unable to initialize toolset %q: %s", name, err)
 		}
 		toolsets[name] = m
 	}
 
-	ctx := context.Background()
-	server, otelShutdown, err := setupServer(ctx)
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString)
 	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+		t.Fatalf("unable to initialize telemetry: %s", err)
 	}
 	defer func() {
 		err := otelShutdown(ctx)
@@ -115,9 +101,16 @@ func TestToolsetEndpoint(t *testing.T) {
 			t.Fatalf("unexpected error: %s", err)
 		}
 	}()
+	metrics, err := CreateCustomMetrics(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unable to initialize custom metrics: %s", err)
+	}
 
-	server.tools = toolsMap
-	server.toolsets = toolsets
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, metrics: metrics, tools: toolsMap, toolsets: toolsets}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -143,7 +136,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    versionString,
+				version:    fakeVersionString,
 				tools:      []string{tool1.Name, tool2.Name},
 			},
 		},
@@ -160,7 +153,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "tool1_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    versionString,
+				version:    fakeVersionString,
 				tools:      []string{tool1.Name},
 			},
 		},
@@ -169,7 +162,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "tool2_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    versionString,
+				version:    fakeVersionString,
 				tools:      []string{tool2.Name},
 			},
 		},
@@ -229,9 +222,9 @@ func TestToolGetEndpoint(t *testing.T) {
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
 
 	ctx := context.Background()
-	server, otelShutdown, err := setupServer(ctx)
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString)
 	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+		t.Fatalf("unable to initialize telemetry: %s", err)
 	}
 	defer func() {
 		err := otelShutdown(ctx)
@@ -239,8 +232,16 @@ func TestToolGetEndpoint(t *testing.T) {
 			t.Fatalf("unexpected error: %s", err)
 		}
 	}()
+	metrics, err := CreateCustomMetrics(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unable to initialize custom metrics: %s", err)
+	}
 
-	server.tools = toolsMap
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, metrics: metrics, tools: toolsMap}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -266,7 +267,7 @@ func TestToolGetEndpoint(t *testing.T) {
 			toolName: tool1.Name,
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    versionString,
+				version:    fakeVersionString,
 				tools:      []string{tool1.Name},
 			},
 		},
@@ -275,7 +276,7 @@ func TestToolGetEndpoint(t *testing.T) {
 			toolName: tool2.Name,
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    versionString,
+				version:    fakeVersionString,
 				tools:      []string{tool2.Name},
 			},
 		},

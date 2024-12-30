@@ -164,6 +164,12 @@ func run(cmd *Command) error {
 			cmd.logger.Error(errMsg.Error())
 		}
 	}()
+	metrics, err := server.CreateCustomMetrics(cmd.Command.Version)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to create custom metrics: %w", err)
+		cmd.logger.Error(errMsg.Error())
+		return errMsg
+	}
 
 	// Read tool file contents
 	buf, err := os.ReadFile(cmd.tools_file)
@@ -181,7 +187,7 @@ func run(cmd *Command) error {
 	}
 
 	// run server
-	s, err := server.NewServer(cmd.cfg, cmd.logger, metric)
+	s, err := server.NewServer(cmd.cfg, cmd.logger, metrics)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to start with the following error: %w", err)
 		cmd.logger.Error(errMsg.Error())

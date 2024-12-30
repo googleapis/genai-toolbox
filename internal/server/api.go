@@ -35,27 +35,12 @@ func apiRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
-	r.Get("/toolset", func(w http.ResponseWriter, r *http.Request) {
-		s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
-		toolsetHandler(s, w, r)
-		s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
-	})
-	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) {
-		s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
-		toolsetHandler(s, w, r)
-		s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
-	})
+	r.Get("/toolset", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
+	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
+
 	r.Route("/tool/{toolName}", func(r chi.Router) {
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
-			toolGetHandler(s, w, r)
-			s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
-		})
-		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) {
-			s.metric.OperationActiveUpDownCounter().Add(r.Context(), 1)
-			toolInvokeHandler(s, w, r)
-			s.metric.OperationActiveUpDownCounter().Add(r.Context(), -1)
-		})
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) { toolGetHandler(s, w, r) })
+		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) { toolInvokeHandler(s, w, r) })
 	})
 
 	return r, nil
@@ -70,8 +55,8 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		status := "success"
 		if err != nil {
 			status = "error"
-		} 
-		s.metric.ToolsetGetCounter().Add(
+		}
+		s.metrics.ToolsetGet.Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolsetName)),
@@ -104,7 +89,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		} else {
 			status = "success"
 		}
-		s.metric.ToolGetCounter().Add(
+		s.metrics.ToolGet.Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
@@ -123,6 +108,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			toolName: tool.Manifest(),
 		},
 	}
+
 	render.JSON(w, r, m)
 }
 
@@ -144,7 +130,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		} else {
 			status = "success"
 		}
-		s.metric.ToolInvokeCounter().Add(
+		s.metrics.ToolInvoke.Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
