@@ -48,7 +48,7 @@ PostreSQL user][cloud-sql-users] to login to the database with.
 ```yaml
 sources:
     my-cloud-sql-pg-source:
-        kind: "cloud-sql-pg-postgres"
+        kind: "cloud-sql-postgres"
         project: "my-project"
         region: "us-central1"
         instance: "my-instance"
