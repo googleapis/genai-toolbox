@@ -16,29 +16,16 @@ package server_test
 
 import (
 	"context"
-	"net"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
-	"strconv"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 )
-
-// tryDial is a utility function that dials an address up to 'attempts' number of times.
-func tryDial(addr string, attempts int) bool {
-	for i := 0; i < attempts; i++ {
-		conn, err := net.Dial("tcp", addr)
-		if err != nil {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
-		_ = conn.Close()
-		return true
-	}
-	return false
-}
 
 func TestServe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -46,6 +33,7 @@ func TestServe(t *testing.T) {
 
 	addr, port := "127.0.0.1", 5000
 	cfg := server.ServerConfig{
+		Version: "0.0.0",
 		Address: addr,
 		Port:    port,
 	}
@@ -57,7 +45,12 @@ func TestServe(t *testing.T) {
 
 	s, err := server.NewServer(context.Background(), cfg, testLogger)
 	if err != nil {
-		t.Fatalf("unable to initialize server! %v", err)
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	err = s.Listen(ctx)
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
 	}
 
 	// start server in background
@@ -65,17 +58,26 @@ func TestServe(t *testing.T) {
 	go func() {
 		defer close(errCh)
 
-		err := s.Listen(ctx)
-		if err != nil {
-			errCh <- err
-		}
 		err = s.Serve()
 		if err != nil {
 			errCh <- err
 		}
 	}()
 
-	if !tryDial(net.JoinHostPort(addr, strconv.Itoa(port)), 10) {
-		t.Fatalf("unable to dial server!")
+	url := fmt.Sprintf("http://%s:%d/", addr, port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("response status code is not 200")
+	}
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("error reading from request body: %s", err)
+	}
+	if got := string(raw); strings.Contains(got, "0.0.0") {
+		t.Fatalf("version missing from output: %q", got)
 	}
 }
