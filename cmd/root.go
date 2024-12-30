@@ -142,7 +142,7 @@ func run(cmd *Command) error {
 		var s os.Signal
 		select {
 		case <-ctx.Done():
-			// this should only happen when the context supplied in tests in canceled
+			// this should only happen when the context supplied when testing is canceled
 			return
 		case s = <-signals:
 		}
