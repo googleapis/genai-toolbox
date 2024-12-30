@@ -13,46 +13,69 @@
 # limitations under the License.
 
 steps:
-  - id: "cloud-sql-pg"
-    name: golang:1.22
+  - id: "install-dependencies"
+    name: golang:1
     waitFor: ['-']
+    env:
+      - 'GOPATH=/gopath'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+    script: |
+        go get -d ./...
+
+  - id: "cloud-sql-pg"
+    name: golang:1
+    waitFor: ['install-dependencies']
     entrypoint: /bin/bash
     env:
+      - 'GOPATH=/gopath'
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
       - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
     secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
+    volumes:
+      - name: 'go'
+        path: '/gopath'
     args: 
       - -c
       - |
         go test -race -v -tags=integration,cloudsql ./tests
 
   - id: "alloydb-pg"
-    name: golang:1.22
-    waitFor: ['-']
+    name: golang:1
+    waitFor: ['install-dependencies']
     entrypoint: /bin/bash
     env:
+      - 'GOPATH=/gopath'
       - "ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID"
       - "ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
       - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
       - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "ALLOYDB_POSTGRES_REGION=$_REGION"
     secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS"]
+    volumes:
+      - name: 'go'
+        path: '/gopath'
     args: 
       - -c
       - |
         go test -race -v -tags=integration,alloydb ./tests
 
   - id: "postgres"
-    name: golang:1.22
-    waitFor: ['-']
+    name: golang:1
+    waitFor: ['install-dependencies']
     entrypoint: /bin/bash
     env:
+      - 'GOPATH=/gopath'
       - "POSTGRES_DATABASE=$_DATABASE_NAME"
       - "POSTGRES_HOST=$_POSTGRES_HOST"
       - "POSTGRES_PORT=$_POSTGRES_PORT"
     secretEnv: ["POSTGRES_USER", "POSTGRES_PASS"]
+    volumes:
+      - name: 'go'
+        path: '/gopath'
     args: 
       - -c
       - |
