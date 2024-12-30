@@ -214,6 +214,7 @@ func run(cmd *Command) error {
 		}
 	}()
 
+	// wait for either the server to error out or the command's context to be canceled
 	select {
 	case err := <-srvErr:
 		if err != nil {
@@ -221,7 +222,6 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
-
 	case <-ctx.Done():
 		shutdownContext, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
