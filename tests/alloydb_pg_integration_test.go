@@ -94,7 +94,7 @@ func TestAlloyDBPostgres(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
 	if err != nil {
