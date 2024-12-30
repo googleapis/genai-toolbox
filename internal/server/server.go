@@ -33,11 +33,11 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version string
-	srv     *http.Server
-	l       net.Listener
-	root    chi.Router
-	logger  log.Logger
+	version  string
+	srv      *http.Server
+	listener net.Listener
+	root     chi.Router
+	logger   log.Logger
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -168,12 +168,12 @@ func (s *Server) Listen(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if s.l != nil {
-		return fmt.Errorf("server is already listening: %s", s.l.Addr().String())
+	if s.listener != nil {
+		return fmt.Errorf("server is already listening: %s", s.listener.Addr().String())
 	}
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
 	var err error
-	if s.l, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
 	return nil
@@ -181,7 +181,7 @@ func (s *Server) Listen(ctx context.Context) error {
 
 // Serve starts an HTTP server for the given Server instance.
 func (s *Server) Serve() error {
-	return s.srv.Serve(s.l)
+	return s.srv.Serve(s.listener)
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active
