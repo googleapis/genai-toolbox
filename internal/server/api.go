@@ -67,12 +67,10 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolset, ok := s.toolsets[toolsetName]
 	var err error
 	defer func() {
-		var status string
+		status := "success"
 		if err != nil {
 			status = "error"
-		} else {
-			status = "success"
-		}
+		} 
 		s.metric.ToolsetGetCounter().Add(
 			r.Context(),
 			1,

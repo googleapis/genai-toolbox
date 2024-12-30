@@ -31,7 +31,7 @@ import (
 
 var _ tools.Tool = &MockTool{}
 
-const versionString = "0.0.0"
+const fakeVersionString = "0.0.0"
 
 type MockTool struct {
 	Name        string
