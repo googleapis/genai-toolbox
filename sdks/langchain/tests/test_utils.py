@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from toolbox_langchain_sdk.utils import (
     ParameterSchema,
     _convert_none_to_empty_string,
+    _get_auth_headers,
     _invoke_tool,
     _load_manifest,
     _parse_type,
@@ -246,3 +247,11 @@ class TestUtils:
         input_dict = {"a": None, "b": 123}
         expected_output = {"a": "", "b": 123}
         assert _convert_none_to_empty_string(input_dict) == expected_output
+
+    def test_get_auth_headers_deprecation_warning(self):
+        """Test _get_auth_headers deprecation warning."""
+        with pytest.warns(
+            DeprecationWarning,
+            match=r"Call to deprecated function \(or staticmethod\) _get_auth_headers\. \(Please use `_get_auth_tokens` instead\.\)$",
+        ):
+            _get_auth_headers({"auth_source1": lambda: "test_token"})

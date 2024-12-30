@@ -245,7 +245,7 @@ authSources:
 ```
 
 For more details on configuring different types of sources, see the [AuthSources
-documentation](docs/authsources/README.md).
+documentation](docs/authSources/README.md).
 
 ## Versioning
 

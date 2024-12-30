@@ -1,8 +1,9 @@
 import asyncio
-import warnings
 from typing import Any, Callable, Optional, Type
+from warnings import warn
 
 from aiohttp import ClientSession
+from deprecated import deprecated
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
@@ -183,13 +184,17 @@ class ToolboxClient:
             # If none of the permitted auth sources of a parameter are
             # registered, raise a warning message to the user.
             if not self._validate_auth(tool_name):
-                warnings.warn(
+                warn(
                     f"Some parameters of tool {tool_name} require authentication, but no valid auth sources are registered. Please register the required sources before use."
                 )
 
+    @deprecated("Please use `add_auth_token` instead.")
     def add_auth_header(
         self, auth_source: str, get_id_token: Callable[[], str]
     ) -> None:
+        self.add_auth_token(auth_source, get_id_token)
+
+    def add_auth_token(self, auth_source: str, get_id_token: Callable[[], str]) -> None:
         """
         Registers a function to retrieve an ID token for a given authentication
         source.
@@ -201,14 +206,17 @@ class ToolboxClient:
         self._id_token_getters[auth_source] = get_id_token
 
     async def load_tool(
-        self, tool_name: str, auth_headers: dict[str, Callable[[], str]] = {}
+        self,
+        tool_name: str,
+        auth_tokens: dict[str, Callable[[], str]] = {},
+        auth_headers: Optional[dict[str, Callable[[], str]]] = None,
     ) -> StructuredTool:
         """
         Loads the tool, with the given tool name, from the Toolbox service.
 
         Args:
             tool_name: The name of the tool to load.
-            auth_headers: A mapping of authentication source names to
+            auth_tokens: A mapping of authentication source names to
                 functions that retrieve ID tokens. If provided, these will
                 override or be added to the existing ID token getters.
                 Default: Empty.
@@ -216,8 +224,21 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox
         """
-        for auth_source, get_id_token in auth_headers.items():
-            self.add_auth_header(auth_source, get_id_token)
+        if auth_headers:
+            if auth_tokens:
+                warn(
+                    "Both `auth_tokens` and `auth_headers` are provided. `auth_headers` is deprecated, and `auth_tokens` will be used.",
+                    DeprecationWarning,
+                )
+            else:
+                warn(
+                    "Argument `auth_headers` is deprecated. Use `auth_tokens` instead.",
+                    DeprecationWarning,
+                )
+                auth_tokens = auth_headers
+
+        for auth_source, get_id_token in auth_tokens.items():
+            self.add_auth_token(auth_source, get_id_token)
 
         manifest: ManifestSchema = await self._load_tool_manifest(tool_name)
 
@@ -228,7 +249,8 @@ class ToolboxClient:
     async def load_toolset(
         self,
         toolset_name: Optional[str] = None,
-        auth_headers: dict[str, Callable[[], str]] = {},
+        auth_tokens: dict[str, Callable[[], str]] = {},
+        auth_headers: Optional[dict[str, Callable[[], str]]] = None,
     ) -> list[StructuredTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset
@@ -237,7 +259,7 @@ class ToolboxClient:
         Args:
             toolset_name: The name of the toolset to load.
                 Default: None. If not provided, then all the tools are loaded.
-            auth_headers: A mapping of authentication source names to
+            auth_tokens: A mapping of authentication source names to
                 functions that retrieve ID tokens. If provided, these will
                 override or be added to the existing ID token getters.
                 Default: Empty.
@@ -245,8 +267,21 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        for auth_source, get_id_token in auth_headers.items():
-            self.add_auth_header(auth_source, get_id_token)
+        if auth_headers:
+            if auth_tokens:
+                warn(
+                    "Both `auth_tokens` and `auth_headers` are provided. `auth_headers` is deprecated, and `auth_tokens` will be used.",
+                    DeprecationWarning,
+                )
+            else:
+                warn(
+                    "Argument `auth_headers` is deprecated. Use `auth_tokens` instead.",
+                    DeprecationWarning,
+                )
+                auth_tokens = auth_headers
+
+        for auth_source, get_id_token in auth_tokens.items():
+            self.add_auth_token(auth_source, get_id_token)
 
         tools: list[StructuredTool] = []
         manifest: ManifestSchema = await self._load_toolset_manifest(toolset_name)

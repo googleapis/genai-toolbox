@@ -44,6 +44,20 @@ steps:
       - |
         go test -race -v -tags=integration,alloydb ./tests
 
+  - id: "postgres"
+    name: golang:1.22
+    waitFor: ['-']
+    entrypoint: /bin/bash
+    env:
+      - "POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "POSTGRES_HOST=$_POSTGRES_HOST"
+      - "POSTGRES_PORT=$_POSTGRES_PORT"
+    secretEnv: ["POSTGRES_USER", "POSTGRES_PASS"]
+    args: 
+      - -c
+      - |
+        go test -race -v -tags=integration,postgres ./tests
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -54,10 +68,18 @@ availableSecrets:
       env: ALLOYDB_POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_pass/versions/latest
       env: ALLOYDB_POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/postgres_user/versions/latest
+      env: POSTGRES_USER
+    - versionName: projects/$PROJECT_ID/secrets/postgres_pass/versions/latest
+      env: POSTGRES_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  automapSubstitutions: true
+  substitutionOption: 'ALLOW_LOOSE'
   dynamicSubstitutions: true
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/alloy-private-pool # Necessary for VPC network connection
 
 substitutions:
   _DATABASE_NAME: test_database
@@ -65,3 +87,5 @@ substitutions:
   _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
   _ALLOYDB_POSTGRES_CLUSTER: "alloydb-pg-testing"
   _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"
+  _POSTGRES_HOST: 127.0.0.1
+  _POSTGRES_PORT: "5432"

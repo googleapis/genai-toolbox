@@ -1,8 +1,10 @@
 import json
 import warnings
 from typing import Any, Callable, Optional, Type, cast
+from warnings import warn
 
 from aiohttp import ClientSession
+from deprecated import deprecated
 from pydantic import BaseModel, Field, create_model
 
 
@@ -100,22 +102,27 @@ def _parse_type(type_: str) -> Any:
         raise ValueError(f"Unsupported schema type: {type_}")
 
 
+@deprecated("Please use `_get_auth_tokens` instead.")
 def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
+    return _get_auth_tokens(id_token_getters)
+
+
+def _get_auth_tokens(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
     """
     Gets id tokens for the given auth sources in the getters map and returns
-    headers to be included in tool invocation.
+    tokens to be included in tool invocation.
 
     Args:
         id_token_getters: A dict that maps auth source names to the functions
         that return its ID token.
 
     Returns:
-        A dictionary of headers to be included in the tool invocation.
+        A dictionary of tokens to be included in the tool invocation.
     """
-    auth_headers = {}
+    auth_tokens = {}
     for auth_source, get_id_token in id_token_getters.items():
-        auth_headers[f"{auth_source}_token"] = get_id_token()
-    return auth_headers
+        auth_tokens[f"{auth_source}_token"] = get_id_token()
+    return auth_tokens
 
 
 async def _invoke_tool(
@@ -141,20 +148,20 @@ async def _invoke_tool(
         invocation.
     """
     url = f"{url}/api/tool/{tool_name}/invoke"
-    auth_headers = _get_auth_headers(id_token_getters)
+    auth_tokens = _get_auth_tokens(id_token_getters)
 
     # ID tokens contain sensitive user information (claims). Transmitting these
     # over HTTP exposes the data to interception and unauthorized access. Always
     # use HTTPS to ensure secure communication and protect user privacy.
-    if auth_headers and not url.startswith("https://"):
-        warnings.warn(
+    if auth_tokens and not url.startswith("https://"):
+        warn(
             "Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication."
         )
 
     async with session.post(
         url,
         json=_convert_none_to_empty_string(data),
-        headers=auth_headers,
+        headers=auth_tokens,
     ) as response:
         response.raise_for_status()
         return await response.json()
