@@ -63,12 +63,13 @@ func TestServe(t *testing.T) {
 	// start server in background
 	errCh := make(chan error)
 	go func() {
-		l, err := s.Listen(ctx)
 		defer close(errCh)
+
+		err := s.Listen(ctx)
 		if err != nil {
 			errCh <- err
 		}
-		err = s.Serve(l)
+		err = s.Serve()
 		if err != nil {
 			errCh <- err
 		}

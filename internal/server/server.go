@@ -26,16 +26,18 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog/v2"
 	"github.com/googleapis/genai-toolbox/internal/auth"
-	logLib "github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf   ServerConfig
-	root   chi.Router
-	logger logLib.Logger
+	version string
+	srv     *http.Server
+	l       net.Listener
+	root    chi.Router
+	logger  log.Logger
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -44,8 +46,14 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Server, error) {
-	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
+func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
+	var s *Server
+
+	// set up http serving
+	r := chi.NewRouter()
+	r.Use(middleware.Recoverer)
+	// logging
+	logLevel, err := log.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
 	}
@@ -62,25 +70,30 @@ func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Serve
 			TimeFieldName:    "timestamp",
 			LevelFieldName:   "severity",
 		}
-	default:
+	case "standard":
 		httpOpts = httplog.Options{
 			LogLevel:         logLevel,
 			Concise:          true,
 			RequestHeaders:   true,
 			MessageFieldName: "message",
 		}
+	default:
+		return nil, fmt.Errorf("invalid Logging format: %q", cfg.LoggingFormat.String())
 	}
-
-	logger := httplog.NewLogger("httplog", httpOpts)
-	r := chi.NewRouter()
-	r.Use(httplog.RequestLogger(logger))
-	r.Use(middleware.Recoverer)
-
+	httpLogger := httplog.NewLogger("httplog", httpOpts)
+	r.Use(httplog.RequestLogger(httpLogger))
+	// control plane
+	apiR, err := apiRouter(s)
+	if err != nil {
+		return nil, err
+	}
+	r.Mount("/api", apiR)
+	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
 	})
 
-	// initialize and validate the sources
+	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := sc.Initialize()
@@ -89,9 +102,9 @@ func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Serve
 		}
 		sourcesMap[name] = s
 	}
-	log.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
-	// initialize and validate the auth sources
+	// initialize and validate the auth sources from configs
 	authSourcesMap := make(map[string]auth.AuthSource)
 	for name, sc := range cfg.AuthSourceConfigs {
 		a, err := sc.Initialize()
@@ -100,9 +113,9 @@ func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Serve
 		}
 		authSourcesMap[name] = a
 	}
-	log.InfoContext(ctx, fmt.Sprintf("Initialized %d authSources.", len(authSourcesMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authSources.", len(authSourcesMap)))
 
-	// initialize and validate the tools
+	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := tc.Initialize(sourcesMap)
@@ -111,7 +124,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Serve
 		}
 		toolsMap[name] = t
 	}
-	log.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -122,7 +135,8 @@ func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Serve
 		cfg.ToolsetConfigs = make(ToolsetConfigs)
 	}
 	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
-	// initialize and validate the toolsets
+
+	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := tc.Initialize(cfg.Version, toolsMap)
@@ -131,42 +145,47 @@ func NewServer(ctx context.Context, cfg ServerConfig, log logLib.Logger) (*Serve
 		}
 		toolsetsMap[name] = t
 	}
-	log.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
 
-	s := &Server{
-		conf:        cfg,
+	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
+	srv := &http.Server{Addr: addr, Handler: r}
+
+	s = &Server{
+		srv:         srv,
 		root:        r,
-		logger:      log,
+		logger:      l,
 		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,
 		toolsets:    toolsetsMap,
 	}
 
-	if router, err := apiRouter(s); err != nil {
-		return nil, err
-	} else {
-		r.Mount("/api", router)
-	}
-
 	return s, nil
 }
 
 // Listen starts a listener for the given Server instance.
-func (s *Server) Listen(ctx context.Context) (net.Listener, error) {
+func (s *Server) Listen(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	addr := net.JoinHostPort(s.conf.Address, strconv.Itoa(s.conf.Port))
-	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
-	l, err := lc.Listen(ctx, "tcp", addr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open listener for %q: %w", addr, err)
+	if s.l != nil {
+		return fmt.Errorf("server is already listening: %s", s.l.Addr().String())
 	}
-	return l, nil
+	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
+	var err error
+	if s.l, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
+	}
+	return nil
 }
 
 // Serve starts an HTTP server for the given Server instance.
-func (s *Server) Serve(l net.Listener) error {
-	return http.Serve(l, s.root)
+func (s *Server) Serve() error {
+	return s.srv.Serve(s.l)
+}
+
+// Shutdown gracefully shuts down the server without interrupting any active
+// connections. It uses http.Server.Shutdown() and has the same functionality.
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.srv.Shutdown(ctx)
 }

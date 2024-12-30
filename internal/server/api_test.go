@@ -89,7 +89,7 @@ func TestToolsetEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	server := Server{conf: ServerConfig{}, logger: testLogger, tools: toolsMap, toolsets: toolsets}
+	server := Server{logger: testLogger, tools: toolsMap, toolsets: toolsets}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -204,7 +204,7 @@ func TestToolGetEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	server := Server{conf: ServerConfig{Version: "0.0.0"}, logger: testLogger, tools: toolsMap}
+	server := Server{version: "0.0.0", logger: testLogger, tools: toolsMap}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)

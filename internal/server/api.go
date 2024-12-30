@@ -66,7 +66,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: this can be optimized later with some caching
 	m := tools.ToolsetManifest{
-		ServerVersion: s.conf.Version,
+		ServerVersion: s.version,
 		ToolsManifest: map[string]tools.Manifest{
 			toolName: tool.Manifest(),
 		},

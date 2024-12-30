@@ -20,7 +20,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
@@ -132,6 +135,26 @@ func run(cmd *Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
+	// watch for sigterm / sigint signals
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		var s os.Signal
+		select {
+		case <-ctx.Done():
+			// this should only happen when the context supplied in tests in canceled
+			return
+		case s = <-signals:
+		}
+		switch s {
+		case syscall.SIGINT:
+			cmd.logger.DebugContext(ctx, "Received SIGINT signal to shutdown.")
+		case syscall.SIGTERM:
+			cmd.logger.DebugContext(ctx, "Sending SIGTERM signal to shutdown.")
+		}
+		cancel()
+	}()
+
 	// Handle logger separately from config
 	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
 	case "json":
@@ -165,25 +188,48 @@ func run(cmd *Command) error {
 		return errMsg
 	}
 
-	// run server
+	// start server
 	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
 	if err != nil {
-		errMsg := fmt.Errorf("toolbox failed to start with the following error: %w", err)
+		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	l, err := s.Listen(ctx)
+
+	err = s.Listen(ctx)
 	if err != nil {
-		errMsg := fmt.Errorf("toolbox failed to mount listener: %w", err)
+		errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	cmd.logger.InfoContext(ctx, "Server ready to serve")
-	err = s.Serve(l)
-	if err != nil {
-		errMsg := fmt.Errorf("toolbox crashed with the following error: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
+	cmd.logger.InfoContext(ctx, "Server ready to serve!")
+
+	// run server in background
+	srvErr := make(chan error)
+	go func() {
+		defer close(srvErr)
+		err = s.Serve()
+		if err != nil {
+			srvErr <- err
+		}
+	}()
+
+	select {
+	case err := <-srvErr:
+		if err != nil {
+			errMsg := fmt.Errorf("toolbox crashed with the following error: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+
+	case <-ctx.Done():
+		shutdownContext, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		cmd.logger.WarnContext(shutdownContext, "Shutting down gracefully...")
+		err := s.Shutdown(shutdownContext)
+		if err == context.DeadlineExceeded {
+			return fmt.Errorf("graceful shutdown timed out... forcing exit.")
+		}
 	}
 
 	return nil
