@@ -63,6 +63,7 @@ func (t MockTool) Authorized(verifiedAuthSources []string) bool {
 func TestToolsetEndpoint(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	// Set up resources to test against
 	tool1 := MockTool{
 		Name:   "no_params",
@@ -91,25 +92,26 @@ func TestToolsetEndpoint(t *testing.T) {
 		toolsets[name] = m
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString)
-	if err != nil {
-		t.Fatalf("unable to initialize telemetry: %s", err)
-	}
-	defer func() {
-		err := otelShutdown(ctx)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-	}()
-	metrics, err := CreateCustomMetrics(fakeVersionString)
-	if err != nil {
-		t.Fatalf("unable to initialize custom metrics: %s", err)
-	}
-
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false)
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+	metrics, err := CreateCustomMetrics(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
 	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, metrics: metrics, tools: toolsMap, toolsets: toolsets}
 	r, err := apiRouter(&server)
 	if err != nil {
@@ -207,6 +209,9 @@ func TestToolsetEndpoint(t *testing.T) {
 	}
 }
 func TestToolGetEndpoint(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Set up resources to test against
 	tool1 := MockTool{
 		Name:   "no_params",
@@ -221,26 +226,26 @@ func TestToolGetEndpoint(t *testing.T) {
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
 
-	ctx := context.Background()
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString)
-	if err != nil {
-		t.Fatalf("unable to initialize telemetry: %s", err)
-	}
-	defer func() {
-		err := otelShutdown(ctx)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-	}()
-	metrics, err := CreateCustomMetrics(fakeVersionString)
-	if err != nil {
-		t.Fatalf("unable to initialize custom metrics: %s", err)
-	}
-
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false)
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+	metrics, err := CreateCustomMetrics(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
 	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, metrics: metrics, tools: toolsMap}
 	r, err := apiRouter(&server)
 	if err != nil {

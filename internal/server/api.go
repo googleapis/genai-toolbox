@@ -83,11 +83,9 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	var err error
 	defer func() {
-		var status string
+		status := "success"
 		if err != nil {
 			status = "error"
-		} else {
-			status = "success"
 		}
 		s.metrics.ToolGet.Add(
 			r.Context(),
@@ -124,11 +122,9 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	var err error
 	defer func() {
-		var status string
+		status := "success"
 		if err != nil {
 			status = "error"
-		} else {
-			status = "success"
 		}
 		s.metrics.ToolInvoke.Add(
 			r.Context(),

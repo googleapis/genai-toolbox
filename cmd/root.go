@@ -151,7 +151,7 @@ func run(cmd *Command) error {
 	}
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.Error(errMsg.Error())
@@ -164,12 +164,6 @@ func run(cmd *Command) error {
 			cmd.logger.Error(errMsg.Error())
 		}
 	}()
-	metrics, err := server.CreateCustomMetrics(cmd.Command.Version)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to create custom metrics: %w", err)
-		cmd.logger.Error(errMsg.Error())
-		return errMsg
-	}
 
 	// Read tool file contents
 	buf, err := os.ReadFile(cmd.tools_file)
@@ -187,7 +181,7 @@ func run(cmd *Command) error {
 	}
 
 	// run server
-	s, err := server.NewServer(cmd.cfg, cmd.logger, metrics)
+	s, err := server.NewServer(cmd.cfg, cmd.logger)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to start with the following error: %w", err)
 		cmd.logger.Error(errMsg.Error())

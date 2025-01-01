@@ -52,6 +52,11 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	ctx, span := telemetrytrace.Tracer().Start(context.Background(), "toolbox/server/init")
 	defer span.End()
 
+	metrics, err := CreateCustomMetrics(cfg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create custom metrics: %w", err)
+	}
+
 	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
