@@ -18,12 +18,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
+	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
+	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	internaltrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"go.opentelemetry.io/contrib/propagators/autoprop"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -32,7 +35,7 @@ import (
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTel(ctx context.Context, versionString string) (shutdown func(context.Context) error, err error) {
+func SetupOTel(ctx context.Context, versionString string, cfg server.ServerConfig) (shutdown func(context.Context) error, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -55,14 +58,14 @@ func SetupOTel(ctx context.Context, versionString string) (shutdown func(context
 	// Configure Context Propagation to use the default W3C traceparent format.
 	otel.SetTextMapPropagator(autoprop.NewTextMapPropagator())
 
-	res, err := newResource(versionString)
+	res, err := newResource(ctx, versionString)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up resource: %w", err)
 		handleErr(errMsg)
 		return
 	}
 
-	tracerProvider, err := newTracerProvider(res)
+	tracerProvider, err := newTracerProvider(ctx, res, cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up trace provider: %w", err)
 		handleErr(errMsg)
@@ -70,9 +73,9 @@ func SetupOTel(ctx context.Context, versionString string) (shutdown func(context
 	}
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
-	setTracer(versionString)
+	internaltrace.SetTracer(versionString)
 
-	meterProvider, err := newMeterProvider(res)
+	meterProvider, err := newMeterProvider(ctx, res, cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up meter provider: %w", err)
 		handleErr(errMsg)
@@ -86,15 +89,15 @@ func SetupOTel(ctx context.Context, versionString string) (shutdown func(context
 
 // newResource create default resources for telemetry data.
 // Resource represents the entity producing telemetry.
-func newResource(versionString string) (*resource.Resource, error) {
+func newResource(ctx context.Context, versionString string) (*resource.Resource, error) {
 	// Ensure default SDK resources and the required service name are set.
 	r, err := resource.New(
-		context.Background(),
-		resource.WithFromEnv(),                    // Discover and provide attributes from OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME environment variables.
-		resource.WithTelemetrySDK(),               // Discover and provide information about the OTel SDK used.
-		resource.WithOS(),                         // Discover and provide OS information.
-		resource.WithContainer(),                  // Discover and provide container information.
-		resource.WithHost(),                       //Discover and provide host information.
+		ctx,
+		resource.WithFromEnv(),      // Discover and provide attributes from OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME environment variables.
+		resource.WithTelemetrySDK(), // Discover and provide information about the OTel SDK used.
+		resource.WithOS(),           // Discover and provide OS information.
+		resource.WithContainer(),    // Discover and provide container information.
+		resource.WithHost(),         //Discover and provide host information.
 		resource.WithSchemaURL(semconv.SchemaURL), // Set the schema url.
 		resource.WithAttributes( // Add other custom resource attributes.
 			semconv.ServiceName("Toolbox"),
@@ -109,38 +112,51 @@ func newResource(versionString string) (*resource.Resource, error) {
 
 // newTracerProvider creates TracerProvider.
 // TracerProvider is a factory for Tracers and is responsible for creating spans.
-func newTracerProvider(r *resource.Resource) (*trace.TracerProvider, error) {
-	// TODO: stdout used for dev, will be updated to OTLP exporter
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
-	if err != nil {
-		return nil, err
+func newTracerProvider(ctx context.Context, r *resource.Resource, cfg server.ServerConfig) (*trace.TracerProvider, error) {
+	traceOpts := []trace.TracerProviderOption{}
+	if cfg.TelemetryOTLP != "" {
+		// otlptracehttp provides an OTLP span exporter using HTTP with protobuf payloads.
+		// By default, the telemetry is sent to https://localhost:4318/v1/traces.
+		otlpExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(cfg.TelemetryOTLP))
+		if err != nil {
+			return nil, err
+		}
+		traceOpts = append(traceOpts, trace.WithBatcher(otlpExporter))
 	}
+	if cfg.TelemetryGCP {
+		gcpExporter, err := texporter.New()
+		if err != nil {
+			return nil, err
+		}
+		traceOpts = append(traceOpts, trace.WithBatcher(gcpExporter))
+	}
+	traceOpts = append(traceOpts, trace.WithResource(r))
 
-	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(traceExporter,
-			// TODO: Default is 5s. Set to 1s for dev purposes.
-			trace.WithBatchTimeout(time.Second)),
-		trace.WithResource(r),
-	)
+	traceProvider := trace.NewTracerProvider(traceOpts...)
 	return traceProvider, nil
 }
 
 // newMeterProvider creates MeterProvider.
 // MeterProvider is a factory for Meters, and is responsible for creating metrics.
-func newMeterProvider(r *resource.Resource) (*metric.MeterProvider, error) {
-	// TODO: stdout used for dev, will be updated to OTLP exporter
-	metricExporter, err := stdoutmetric.New(
-		stdoutmetric.WithPrettyPrint())
-	if err != nil {
-		return nil, err
+func newMeterProvider(ctx context.Context, r *resource.Resource, cfg server.ServerConfig) (*metric.MeterProvider, error) {
+	metricOpts := []metric.Option{}
+	if cfg.TelemetryOTLP != "" {
+		// otlpmetrichttp provides an OTLP metrics exporter using HTTP with protobuf payloads.
+		// By default, the telemetry is sent to https://localhost:4318/v1/metrics.
+		otlpExporter, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpoint(cfg.TelemetryOTLP))
+		if err != nil {
+			return nil, err
+		}
+		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(otlpExporter)))
+	}
+	if cfg.TelemetryGCP {
+		gcpExporter, err := mexporter.New()
+		if err != nil {
+			return nil, err
+		}
+		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(gcpExporter)))
 	}
 
-	meterProvider := metric.NewMeterProvider(
-		metric.WithReader(metric.NewPeriodicReader(metricExporter,
-			// TODO: Default is 1m. Set to 10s for dev purposes.
-			metric.WithInterval(3*time.Second))),
-		metric.WithResource(r),
-	)
+	meterProvider := metric.NewMeterProvider(metricOpts...)
 	return meterProvider, nil
 }

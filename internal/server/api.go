@@ -24,7 +24,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -62,7 +62,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolGetHandler handles requests for a single Tool.
 func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	_, span := telemetry.Tracer().Start(
+	_, span := telemetrytrace.Tracer().Start(
 		r.Context(),
 		"toolbox/server/tool/get",
 	)
@@ -89,7 +89,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	_, span := telemetry.Tracer().Start(
+	_, span := telemetrytrace.Tracer().Start(
 		r.Context(),
 		"toolbox/server/tool/invoke",
 	)
