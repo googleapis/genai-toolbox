@@ -101,6 +101,8 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
 	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
+	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
+	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -149,7 +151,7 @@ func run(cmd *Command) error {
 	}
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.Error(errMsg.Error())

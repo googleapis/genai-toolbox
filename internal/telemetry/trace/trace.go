@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package telemetry
+package trace
 
 import (
 	"go.opentelemetry.io/otel"
@@ -23,7 +23,7 @@ import (
 var tracer = otel.Tracer("")
 
 // setTracer sets the tracer with instrumentation name and instrumentation version
-func setTracer(versionString string) {
+func SetTracer(versionString string) {
 	tracer = otel.Tracer("github.com/googleapis/genai-toolbox/internal/opentel", trace.WithInstrumentationVersion(versionString))
 }
 
