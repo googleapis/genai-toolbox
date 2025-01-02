@@ -26,6 +26,8 @@ import (
 	"github.com/go-chi/render"
 	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -51,8 +53,21 @@ func apiRouter(s *Server) (chi.Router, error) {
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]
+	var err error
+	defer func() {
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		s.metrics.ToolsetGet.Add(
+			r.Context(),
+			1,
+			metric.WithAttributes(attribute.String("toolbox.name", toolsetName)),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
+		)
+	}()
 	if !ok {
-		err := fmt.Errorf("Toolset %q does not exist", toolsetName)
+		err = fmt.Errorf("Toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
@@ -70,8 +85,21 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	toolName := chi.URLParam(r, "toolName")
 	tool, ok := s.tools[toolName]
+	var err error
+	defer func() {
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		s.metrics.ToolGet.Add(
+			r.Context(),
+			1,
+			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
+		)
+	}()
 	if !ok {
-		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
@@ -97,8 +125,21 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	toolName := chi.URLParam(r, "toolName")
 	tool, ok := s.tools[toolName]
+	var err error
+	defer func() {
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		s.metrics.ToolInvoke.Add(
+			r.Context(),
+			1,
+			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
+		)
+	}()
 	if !ok {
-		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
@@ -110,7 +151,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	for _, aS := range s.authSources {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
-			err := fmt.Errorf("failure getting claims from header: %w", err)
+			err = fmt.Errorf("failure getting claims from header: %w", err)
 			s.logger.DebugContext(context.Background(), err.Error())
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
@@ -132,16 +173,16 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Check if any of the specified auth sources is verified
 	isAuthorized := tool.Authorized(verifiedAuthSources)
 	if !isAuthorized {
-		err := fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 		return
 	}
 
 	var data map[string]any
-	if err := decodeJSON(r.Body, &data); err != nil {
+	if err = render.DecodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
-		err := fmt.Errorf("request body was invalid JSON: %w", err)
+		err = fmt.Errorf("request body was invalid JSON: %w", err)
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
@@ -149,7 +190,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
-		err := fmt.Errorf("provided parameters were invalid: %w", err)
+		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
@@ -157,7 +198,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	res, err := tool.Invoke(params)
 	if err != nil {
-		err := fmt.Errorf("error while invoking tool: %w", err)
+		err = fmt.Errorf("error while invoking tool: %w", err)
 		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return

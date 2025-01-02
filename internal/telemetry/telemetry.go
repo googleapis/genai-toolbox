@@ -21,7 +21,6 @@ import (
 
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
-	"github.com/googleapis/genai-toolbox/internal/server"
 	internaltrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"go.opentelemetry.io/contrib/propagators/autoprop"
 	"go.opentelemetry.io/otel"
@@ -35,7 +34,7 @@ import (
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTel(ctx context.Context, versionString string, cfg server.ServerConfig) (shutdown func(context.Context) error, err error) {
+func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemetryGCP bool) (shutdown func(context.Context) error, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -65,7 +64,7 @@ func SetupOTel(ctx context.Context, versionString string, cfg server.ServerConfi
 		return
 	}
 
-	tracerProvider, err := newTracerProvider(ctx, res, cfg)
+	tracerProvider, err := newTracerProvider(ctx, res, telemetryOTLP, telemetryGCP)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up trace provider: %w", err)
 		handleErr(errMsg)
@@ -75,7 +74,7 @@ func SetupOTel(ctx context.Context, versionString string, cfg server.ServerConfi
 	otel.SetTracerProvider(tracerProvider)
 	internaltrace.SetTracer(versionString)
 
-	meterProvider, err := newMeterProvider(ctx, res, cfg)
+	meterProvider, err := newMeterProvider(ctx, res, telemetryOTLP, telemetryGCP)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up meter provider: %w", err)
 		handleErr(errMsg)
@@ -112,18 +111,18 @@ func newResource(ctx context.Context, versionString string) (*resource.Resource,
 
 // newTracerProvider creates TracerProvider.
 // TracerProvider is a factory for Tracers and is responsible for creating spans.
-func newTracerProvider(ctx context.Context, r *resource.Resource, cfg server.ServerConfig) (*trace.TracerProvider, error) {
+func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool) (*trace.TracerProvider, error) {
 	traceOpts := []trace.TracerProviderOption{}
-	if cfg.TelemetryOTLP != "" {
+	if telemetryOTLP != "" {
 		// otlptracehttp provides an OTLP span exporter using HTTP with protobuf payloads.
 		// By default, the telemetry is sent to https://localhost:4318/v1/traces.
-		otlpExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(cfg.TelemetryOTLP))
+		otlpExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(telemetryOTLP))
 		if err != nil {
 			return nil, err
 		}
 		traceOpts = append(traceOpts, trace.WithBatcher(otlpExporter))
 	}
-	if cfg.TelemetryGCP {
+	if telemetryGCP {
 		gcpExporter, err := texporter.New()
 		if err != nil {
 			return nil, err
@@ -138,18 +137,18 @@ func newTracerProvider(ctx context.Context, r *resource.Resource, cfg server.Ser
 
 // newMeterProvider creates MeterProvider.
 // MeterProvider is a factory for Meters, and is responsible for creating metrics.
-func newMeterProvider(ctx context.Context, r *resource.Resource, cfg server.ServerConfig) (*metric.MeterProvider, error) {
+func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool) (*metric.MeterProvider, error) {
 	metricOpts := []metric.Option{}
-	if cfg.TelemetryOTLP != "" {
+	if telemetryOTLP != "" {
 		// otlpmetrichttp provides an OTLP metrics exporter using HTTP with protobuf payloads.
 		// By default, the telemetry is sent to https://localhost:4318/v1/metrics.
-		otlpExporter, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpoint(cfg.TelemetryOTLP))
+		otlpExporter, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpoint(telemetryOTLP))
 		if err != nil {
 			return nil, err
 		}
 		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(otlpExporter)))
 	}
-	if cfg.TelemetryGCP {
+	if telemetryGCP {
 		gcpExporter, err := mexporter.New()
 		if err != nil {
 			return nil, err

@@ -41,6 +41,7 @@ type Server struct {
 	listener net.Listener
 	root     chi.Router
 	logger   log.Logger
+	metrics *ServerMetrics
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -52,6 +53,11 @@ type Server struct {
 func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
 	ctx, span := telemetrytrace.Tracer().Start(context.Background(), "toolbox/server/init")
 	defer span.End()
+
+	metrics, err := CreateCustomMetrics(cfg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create custom metrics: %w", err)
+	}
 
 	// set up http serving
 	r := chi.NewRouter()
@@ -176,6 +182,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		srv:         srv,
 		root:        r,
 		logger:      l,
+		metrics:     metrics,
 		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,
