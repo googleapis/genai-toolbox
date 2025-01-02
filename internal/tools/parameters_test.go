@@ -15,6 +15,9 @@
 package tools_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"math"
 	"reflect"
 	"testing"
 
@@ -352,6 +355,16 @@ func TestParametersParse(t *testing.T) {
 			},
 		},
 		{
+			name: "not int (big)",
+			params: tools.Parameters{
+				tools.NewIntParameter("my_int", "this param is an int"),
+			},
+			in: map[string]any{
+				"my_int": math.MaxInt64,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: math.MaxInt64}},
+		},
+		{
 			name: "float",
 			params: tools.Parameters{
 				tools.NewFloatParameter("my_float", "this param is a float"),
@@ -393,24 +406,30 @@ func TestParametersParse(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// parse map to bytes
-			data, err := yaml.Marshal(tc.in)
+			data, err := json.Marshal(tc.in)
 			if err != nil {
 				t.Fatalf("unable to marshal input to yaml: %s", err)
 			}
 			// parse bytes to object
 			var m map[string]any
-			err = yaml.Unmarshal(data, &m)
+
+			d := json.NewDecoder(bytes.NewReader(data))
+			d.UseNumber()
+			err = d.Decode(&m)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
+			wantErr := len(tc.want) == 0 // error is expected if no items in want
 			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]map[string]any))
 			if err != nil {
-				if len(tc.want) == 0 {
-					// error is expected if no items in want
+				if wantErr {
 					return
 				}
 				t.Fatalf("unexpected error from ParseParams: %s", err)
+			}
+			if wantErr {
+				t.Fatalf("expected error but Param parsed successfully: %s", err)
 			}
 			for i, got := range gotAll {
 				want := tc.want[i]
@@ -552,13 +571,13 @@ func TestAuthParametersParse(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// parse map to bytes
-			data, err := yaml.Marshal(tc.in)
+			data, err := json.Marshal(tc.in)
 			if err != nil {
 				t.Fatalf("unable to marshal input to yaml: %s", err)
 			}
 			// parse bytes to object
 			var m map[string]any
-			err = yaml.Unmarshal(data, &m)
+			err = json.Unmarshal(data, &m)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

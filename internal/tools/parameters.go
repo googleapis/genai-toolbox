@@ -15,6 +15,7 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"gopkg.in/yaml.v3"
@@ -105,7 +106,7 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 			var err error
 			v, err = parseFromAuthSource(paramAuthSources, claimsMap)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing anthenticated parameter %q: %w", name, err)
+				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
 			}
 		}
 		newV, err := p.Parse(v)
@@ -331,11 +332,15 @@ type IntParameter struct {
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
-	newV, ok := v.(int)
+	newV, ok := v.(json.Number)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
-	return newV, nil
+	newI, err := newV.Int64()
+	if err != nil {
+		return nil, &ParseTypeError{p.Name, p.Type, v}
+	}
+	return int(newI), nil
 }
 
 func (p *IntParameter) GetAuthSources() []ParamAuthSource {
@@ -374,11 +379,15 @@ type FloatParameter struct {
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
-	newV, ok := v.(float64)
+	newV, ok := v.(json.Number)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
-	return newV, nil
+	newF, err := newV.Float64()
+	if err != nil {
+		return nil, &ParseTypeError{p.Name, p.Type, v}
+	}
+	return newF, nil
 }
 
 func (p *FloatParameter) GetAuthSources() []ParamAuthSource {

@@ -15,7 +15,9 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -118,7 +120,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data map[string]any
-	if err := render.DecodeJSON(r.Body, &data); err != nil {
+	if err := decodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err := fmt.Errorf("request body was invalid JSON: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
@@ -180,4 +182,14 @@ type errResponse struct {
 func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
+}
+
+// decodeJSON decodes a given reader into an interface using the json decoder.
+func decodeJSON(r io.Reader, v interface{}) error {
+	defer io.Copy(io.Discard, r) //nolint:errcheck
+	d := json.NewDecoder(r)
+	// specify JSON numbers should get parsed to json.Number instead of float64 by default.
+	// This prevents loss between floats/ints.
+	d.UseNumber()
+	return d.Decode(v)
 }
