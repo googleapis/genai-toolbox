@@ -34,7 +34,7 @@ import (
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemetryGCP bool) (shutdown func(context.Context) error, err error) {
+func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemetryGCP bool, telemetryServiceName string) (shutdown func(context.Context) error, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -57,7 +57,7 @@ func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemet
 	// Configure Context Propagation to use the default W3C traceparent format.
 	otel.SetTextMapPropagator(autoprop.NewTextMapPropagator())
 
-	res, err := newResource(ctx, versionString)
+	res, err := newResource(ctx, versionString, telemetryServiceName)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up resource: %w", err)
 		handleErr(errMsg)
@@ -88,7 +88,7 @@ func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemet
 
 // newResource create default resources for telemetry data.
 // Resource represents the entity producing telemetry.
-func newResource(ctx context.Context, versionString string) (*resource.Resource, error) {
+func newResource(ctx context.Context, versionString string, telemetryServiceName string) (*resource.Resource, error) {
 	// Ensure default SDK resources and the required service name are set.
 	r, err := resource.New(
 		ctx,
@@ -99,7 +99,7 @@ func newResource(ctx context.Context, versionString string) (*resource.Resource,
 		resource.WithHost(),         //Discover and provide host information.
 		resource.WithSchemaURL(semconv.SchemaURL), // Set the schema url.
 		resource.WithAttributes( // Add other custom resource attributes.
-			semconv.ServiceName("Toolbox"),
+			semconv.ServiceName(telemetryServiceName),
 			semconv.ServiceVersion(versionString),
 		),
 	)

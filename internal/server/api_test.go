@@ -97,7 +97,7 @@ func TestToolsetEndpoint(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false)
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
@@ -231,7 +231,7 @@ func TestToolGetEndpoint(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false)
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
