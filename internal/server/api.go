@@ -24,9 +24,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -51,21 +51,31 @@ func apiRouter(s *Server) (chi.Router, error) {
 
 // toolsetHandler handles the request for information about a Toolset.
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/toolset/get")
+	r = r.WithContext(ctx)
+
 	toolsetName := chi.URLParam(r, "toolsetName")
-	toolset, ok := s.toolsets[toolsetName]
+	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 	var err error
 	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+
 		status := "success"
 		if err != nil {
 			status = "error"
 		}
-		s.metrics.ToolsetGet.Add(
+		s.instrumentation.ToolsetGet.Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolsetName)),
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
 	}()
+
+	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
 		err = fmt.Errorf("Toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(context.Background(), err.Error())
@@ -77,27 +87,30 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolGetHandler handles requests for a single Tool.
 func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	_, span := telemetrytrace.Tracer().Start(
-		r.Context(),
-		"toolbox/server/tool/get",
-	)
-	defer span.End()
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/tool/get")
+	r = r.WithContext(ctx)
 
 	toolName := chi.URLParam(r, "toolName")
-	tool, ok := s.tools[toolName]
+	span.SetAttributes(attribute.String("tool_name", toolName))
 	var err error
 	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+
 		status := "success"
 		if err != nil {
 			status = "error"
 		}
-		s.metrics.ToolGet.Add(
+		s.instrumentation.ToolGet.Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
 	}()
+	tool, ok := s.tools[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(context.Background(), err.Error())
@@ -117,27 +130,31 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	_, span := telemetrytrace.Tracer().Start(
-		r.Context(),
-		"toolbox/server/tool/invoke",
-	)
-	defer span.End()
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/tool/invoke")
+	r = r.WithContext(ctx)
 
 	toolName := chi.URLParam(r, "toolName")
-	tool, ok := s.tools[toolName]
+	span.SetAttributes(attribute.String("tool_name", toolName))
 	var err error
 	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+
 		status := "success"
 		if err != nil {
 			status = "error"
 		}
-		s.metrics.ToolInvoke.Add(
+		s.instrumentation.ToolInvoke.Add(
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
 	}()
+
+	tool, ok := s.tools[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(context.Background(), err.Error())

@@ -28,7 +28,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	telemetrytrace "github.com/googleapis/genai-toolbox/internal/telemetry/trace"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -42,6 +41,7 @@ type Server struct {
 	root     chi.Router
 	logger   log.Logger
 	metrics *ServerMetrics
+	instrumentation *Instrumentation
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -50,14 +50,15 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
+<<<<<<< HEAD
 func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
-	ctx, span := telemetrytrace.Tracer().Start(context.Background(), "toolbox/server/init")
-	defer span.End()
-
-	metrics, err := CreateCustomMetrics(cfg.Version)
+	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create custom metrics: %w", err)
+		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
 	}
+
+	ctx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
+	defer span.End()
 
 	// set up http serving
 	r := chi.NewRouter()
@@ -97,14 +98,14 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
-			ctx, span := telemetrytrace.Tracer().Start(
+			ctx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/init",
 				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			s, err := sc.Initialize(ctx)
+			s, err := sc.Initialize(ctx, instrumentation.Tracer)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 			}
@@ -120,9 +121,23 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the auth sources from configs
 	authSourcesMap := make(map[string]auth.AuthSource)
 	for name, sc := range cfg.AuthSourceConfigs {
-		a, err := sc.Initialize()
+		a, err := func() (auth.AuthSource, error) {
+			var span trace.Span
+			ctx, span = instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/auth/init",
+				trace.WithAttributes(attribute.String("auth_kind", sc.AuthSourceConfigKind())),
+				trace.WithAttributes(attribute.String("auth_name", name)),
+			)
+			defer span.End()
+			a, err := sc.Initialize()
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+			}
+			return a, nil
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+			return nil, err
 		}
 		authSourcesMap[name] = a
 	}
@@ -133,7 +148,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
 			var span trace.Span
-			ctx, span = telemetrytrace.Tracer().Start(
+			ctx, span = instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/tool/init",
 				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
@@ -166,9 +181,22 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
-		t, err := tc.Initialize(cfg.Version, toolsMap)
+		t, err := func() (tools.Toolset, error) {
+			var span trace.Span
+			ctx, span = instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/toolset/init",
+				trace.WithAttributes(attribute.String("toolset_name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(cfg.Version, toolsMap)
+			if err != nil {
+				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+			}
+			return t, err
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+			return nil, err
 		}
 		toolsetsMap[name] = t
 	}
@@ -182,8 +210,9 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		srv:         srv,
 		root:        r,
 		logger:      l,
-		metrics:     metrics,
-		sources:     sourcesMap,
+		instrumentation: instrumentation,
+
+		sources:         sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,
 		toolsets:    toolsetsMap,
