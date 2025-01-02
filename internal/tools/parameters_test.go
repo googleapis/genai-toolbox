@@ -429,7 +429,7 @@ func TestParametersParse(t *testing.T) {
 				t.Fatalf("unexpected error from ParseParams: %s", err)
 			}
 			if wantErr {
-				t.Fatalf("expected error but Param parsed successfully: %s", err)
+				t.Fatalf("expected error but Param parsed successfully: %s", gotAll)
 			}
 			for i, got := range gotAll {
 				want := tc.want[i]
@@ -577,7 +577,9 @@ func TestAuthParametersParse(t *testing.T) {
 			}
 			// parse bytes to object
 			var m map[string]any
-			err = json.Unmarshal(data, &m)
+			d := json.NewDecoder(bytes.NewReader(data))
+			d.UseNumber()
+			err = d.Decode(&m)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

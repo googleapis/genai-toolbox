@@ -332,15 +332,24 @@ type IntParameter struct {
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
-	newV, ok := v.(json.Number)
-	if !ok {
+	var out int
+	switch newV := v.(type) {
+	default:
 		return nil, &ParseTypeError{p.Name, p.Type, v}
+	case int:
+		out = int(newV)
+	case int32:
+		out = int(newV)
+	case int64:
+		out = int(newV)
+	case json.Number:
+		newI, err := newV.Int64()
+		if err != nil {
+			return nil, &ParseTypeError{p.Name, p.Type, v}
+		}
+		out = int(newI)
 	}
-	newI, err := newV.Int64()
-	if err != nil {
-		return nil, &ParseTypeError{p.Name, p.Type, v}
-	}
-	return int(newI), nil
+	return out, nil
 }
 
 func (p *IntParameter) GetAuthSources() []ParamAuthSource {
@@ -379,15 +388,22 @@ type FloatParameter struct {
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
-	newV, ok := v.(json.Number)
-	if !ok {
+	var out float64
+	switch newV := v.(type) {
+	default:
 		return nil, &ParseTypeError{p.Name, p.Type, v}
+	case float32:
+		out = float64(newV)
+	case float64:
+		out = newV
+	case json.Number:
+		newI, err := newV.Float64()
+		if err != nil {
+			return nil, &ParseTypeError{p.Name, p.Type, v}
+		}
+		out = float64(newI)
 	}
-	newF, err := newV.Float64()
-	if err != nil {
-		return nil, &ParseTypeError{p.Name, p.Type, v}
-	}
-	return newF, nil
+	return out, nil
 }
 
 func (p *FloatParameter) GetAuthSources() []ParamAuthSource {
