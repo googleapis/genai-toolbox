@@ -151,7 +151,7 @@ func run(cmd *Command) error {
 	}
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.Error(errMsg.Error())

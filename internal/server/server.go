@@ -36,9 +36,10 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf   ServerConfig
-	root   chi.Router
-	logger logLib.Logger
+	conf    ServerConfig
+	root    chi.Router
+	logger  logLib.Logger
+	metrics *ServerMetrics
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -50,6 +51,11 @@ type Server struct {
 func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 	ctx, span := telemetrytrace.Tracer().Start(context.Background(), "toolbox/server/init")
 	defer span.End()
+
+	metrics, err := CreateCustomMetrics(cfg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create custom metrics: %w", err)
+	}
 
 	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
@@ -170,6 +176,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
 		conf:        cfg,
 		root:        r,
 		logger:      log,
+		metrics:     metrics,
 		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,
