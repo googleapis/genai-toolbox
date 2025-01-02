@@ -55,6 +55,9 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 	var err error
 	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
 		span.End()
 
 		status := "success"
@@ -72,7 +75,6 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
 		err = fmt.Errorf("Toolset %q does not exist", toolsetName)
-		span.SetStatus(codes.Error, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -88,6 +90,9 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	span.SetAttributes(attribute.String("tool_name", toolName))
 	var err error
 	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
 		span.End()
 
 		status := "success"
@@ -104,7 +109,6 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		span.SetStatus(codes.Error, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
