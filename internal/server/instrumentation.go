@@ -19,10 +19,12 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
-	InstrumentationName = "github.com/googleapis/genai-toolbox/internal/opentel"
+	TracerName = "github.com/googleapis/genai-toolbox/internal/opentel"
+	MetricName = "github.com/googleapis/genai-toolbox/internal/opentel"
 
 	toolsetGetCountName = "toolbox.server.toolset.get.count"
 	toolGetCountName    = "toolbox.server.tool.get.count"
@@ -30,17 +32,22 @@ const (
 	operationActiveName = "toolbox.server.operation.active"
 )
 
-// ServerMetric defines the custom server metrics for toolbox
-type ServerMetrics struct {
+// Instrumentation defines the telemetry instrumentation for toolbox
+type Instrumentation struct {
+	Tracer     trace.Tracer
 	meter      metric.Meter
 	ToolsetGet metric.Int64Counter
 	ToolGet    metric.Int64Counter
 	ToolInvoke metric.Int64Counter
 }
 
-// createCustomMetric creates all the custom metrics for toolbox
-func CreateCustomMetrics(versionString string) (*ServerMetrics, error) {
-	meter := otel.Meter(InstrumentationName, metric.WithInstrumentationVersion(versionString))
+func CreateTelemetryInstrumentation(versionString string) (*Instrumentation, error) {
+	tracer := otel.Tracer(
+		TracerName,
+		trace.WithInstrumentationVersion(versionString),
+	)
+
+	meter := otel.Meter(MetricName, metric.WithInstrumentationVersion(versionString))
 	toolsetGet, err := meter.Int64Counter(
 		toolsetGetCountName,
 		metric.WithDescription("Number of toolset GET API calls."),
@@ -68,11 +75,12 @@ func CreateCustomMetrics(versionString string) (*ServerMetrics, error) {
 		return nil, fmt.Errorf("unable to create %s metric: %w", toolInvokeCountName, err)
 	}
 
-	metrics := &ServerMetrics{
+	instrumentation := &Instrumentation{
+		Tracer:     tracer,
 		meter:      meter,
 		ToolsetGet: toolsetGet,
 		ToolGet:    toolGet,
 		ToolInvoke: toolInvoke,
 	}
-	return metrics, nil
+	return instrumentation, nil
 }
