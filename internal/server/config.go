@@ -53,6 +53,8 @@ type ServerConfig struct {
 	TelemetryGCP bool
 	// TelemetryOTLP defines OTLP collector url for telemetry exports.
 	TelemetryOTLP string
+	// TelemetryServiceName defines the value of service.name resource attribute.
+	TelemetryServiceName string
 }
 
 type logFormat string
