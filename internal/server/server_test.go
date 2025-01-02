@@ -51,7 +51,7 @@ func TestServe(t *testing.T) {
 		Port:    port,
 	}
 
-	tracer, otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", cfg) 
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -67,7 +67,7 @@ func TestServe(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	s, err := server.NewServer(cfg, testLogger, tracer)
+	s, err := server.NewServer(cfg, testLogger)
 	if err != nil {
 		t.Fatalf("unable to initialize server! %v", err)
 	}

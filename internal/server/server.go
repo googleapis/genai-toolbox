@@ -35,11 +35,10 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	conf    ServerConfig
-	root    chi.Router
-	logger  logLib.Logger
-	metrics *ServerMetrics
-	tracer trace.Tracer
+	conf            ServerConfig
+	root            chi.Router
+	logger          logLib.Logger
+	instrumentation *Instrumentation
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -48,14 +47,14 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(cfg ServerConfig, log logLib.Logger, tracer trace.Tracer) (*Server, error) {
-	ctx, span := tracer.Start(context.Background(), "toolbox/server/init")
-	defer span.End()
-
-	metrics, err := CreateCustomMetrics(cfg.Version)
+func NewServer(cfg ServerConfig, log logLib.Logger) (*Server, error) {
+	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create custom metrics: %w", err)
+		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
 	}
+
+	ctx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
+	defer span.End()
 
 	logLevel, err := logLib.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
@@ -96,14 +95,14 @@ func NewServer(cfg ServerConfig, log logLib.Logger, tracer trace.Tracer) (*Serve
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
-			ctx, span := tracer.Start(
+			ctx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/init",
 				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			s, err := sc.Initialize(ctx, tracer)
+			s, err := sc.Initialize(ctx, instrumentation.Tracer)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 			}
@@ -121,7 +120,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger, tracer trace.Tracer) (*Serve
 	for name, sc := range cfg.AuthSourceConfigs {
 		a, err := func() (auth.AuthSource, error) {
 			var span trace.Span
-			ctx, span = tracer.Start(
+			ctx, span = instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/auth/init",
 				trace.WithAttributes(attribute.String("auth_kind", sc.AuthSourceConfigKind())),
@@ -146,7 +145,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger, tracer trace.Tracer) (*Serve
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
 			var span trace.Span
-			ctx, span = tracer.Start(
+			ctx, span = instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/tool/init",
 				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
@@ -180,7 +179,7 @@ func NewServer(cfg ServerConfig, log logLib.Logger, tracer trace.Tracer) (*Serve
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := func() (tools.Toolset, error) {
 			var span trace.Span
-			ctx, span = tracer.Start(
+			ctx, span = instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/toolset/init",
 				trace.WithAttributes(attribute.String("toolset_name", name)),
@@ -200,15 +199,14 @@ func NewServer(cfg ServerConfig, log logLib.Logger, tracer trace.Tracer) (*Serve
 	log.Info(fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
 
 	s := &Server{
-		conf:        cfg,
-		root:        r,
-		logger:      log,
-		metrics:     metrics,
-		tracer:      tracer,
-		sources:     sourcesMap,
-		authSources: authSourcesMap,
-		tools:       toolsMap,
-		toolsets:    toolsetsMap,
+		conf:            cfg,
+		root:            r,
+		logger:          log,
+		instrumentation: instrumentation,
+		sources:         sourcesMap,
+		authSources:     authSourcesMap,
+		tools:           toolsMap,
+		toolsets:        toolsetsMap,
 	}
 
 	if router, err := apiRouter(s); err != nil {

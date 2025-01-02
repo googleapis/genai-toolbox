@@ -24,7 +24,6 @@ import (
 	"os"
 	"testing"
 
-    "github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -59,21 +58,6 @@ func (t MockTool) Manifest() tools.Manifest {
 
 func (t MockTool) Authorized(verifiedAuthSources []string) bool {
 	return true
-}
-
-func setupServer(ctx context.Context) (Server, func(context.Context) error, error) {
-	tracer, otelShutdown, err := telemetry.SetupOTel(ctx, versionString)
-	if err != nil {
-		return Server{}, nil, err
-	}
-
-	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
-	if err != nil {
-		return Server{}, nil, err
-	}
-	server := Server{conf: ServerConfig{Version: versionString}, logger: testLogger, tracer: tracer}
-
-	return server, otelShutdown, nil
 }
 
 func TestToolsetEndpoint(t *testing.T) {
@@ -123,12 +107,12 @@ func TestToolsetEndpoint(t *testing.T) {
 			t.Fatalf("error shutting down OpenTelemetry: %s", err)
 		}
 	}()
-	metrics, err := CreateCustomMetrics(fakeVersionString)
+	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, metrics: metrics, tools: toolsMap, toolsets: toolsets}
+	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, instrumentation: instrumentation, tools: toolsMap, toolsets: toolsets}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -257,12 +241,12 @@ func TestToolGetEndpoint(t *testing.T) {
 			t.Fatalf("error shutting down OpenTelemetry: %s", err)
 		}
 	}()
-	metrics, err := CreateCustomMetrics(fakeVersionString)
+	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, metrics: metrics, tools: toolsMap}
+	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, instrumentation: instrumentation, tools: toolsMap}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)

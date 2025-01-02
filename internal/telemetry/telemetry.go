@@ -29,7 +29,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
@@ -110,8 +109,8 @@ func newResource(ctx context.Context, versionString string, telemetryServiceName
 
 // newTracerProvider creates TracerProvider.
 // TracerProvider is a factory for Tracers and is responsible for creating spans.
-func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool) (*trace.TracerProvider, error) {
-	traceOpts := []trace.TracerProviderOption{}
+func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool) (*tracesdk.TracerProvider, error) {
+	traceOpts := []tracesdk.TracerProviderOption{}
 	if telemetryOTLP != "" {
 		// otlptracehttp provides an OTLP span exporter using HTTP with protobuf payloads.
 		// By default, the telemetry is sent to https://localhost:4318/v1/traces.
