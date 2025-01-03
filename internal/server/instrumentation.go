@@ -29,7 +29,6 @@ const (
 	toolsetGetCountName = "toolbox.server.toolset.get.count"
 	toolGetCountName    = "toolbox.server.tool.get.count"
 	toolInvokeCountName = "toolbox.server.tool.invoke.count"
-	operationActiveName = "toolbox.server.operation.active"
 )
 
 // Instrumentation defines the telemetry instrumentation for toolbox

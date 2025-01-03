@@ -57,7 +57,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
 	}
 
-	ctx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
+	parentCtx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
 	defer span.End()
 
 	// set up http serving
@@ -99,7 +99,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
 			ctx, span := instrumentation.Tracer.Start(
-				ctx,
+				parentCtx,
 				"toolbox/server/source/init",
 				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
 				trace.WithAttributes(attribute.String("source_name", name)),
@@ -122,9 +122,8 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	authSourcesMap := make(map[string]auth.AuthSource)
 	for name, sc := range cfg.AuthSourceConfigs {
 		a, err := func() (auth.AuthSource, error) {
-			var span trace.Span
-			ctx, span = instrumentation.Tracer.Start(
-				ctx,
+			_, span := instrumentation.Tracer.Start(
+				parentCtx,
 				"toolbox/server/auth/init",
 				trace.WithAttributes(attribute.String("auth_kind", sc.AuthSourceConfigKind())),
 				trace.WithAttributes(attribute.String("auth_name", name)),
@@ -147,9 +146,8 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
-			var span trace.Span
-			ctx, span = instrumentation.Tracer.Start(
-				ctx,
+			_, span := instrumentation.Tracer.Start(
+				parentCtx,
 				"toolbox/server/tool/init",
 				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
 				trace.WithAttributes(attribute.String("tool_name", name)),
@@ -182,9 +180,8 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := func() (tools.Toolset, error) {
-			var span trace.Span
-			ctx, span = instrumentation.Tracer.Start(
-				ctx,
+			_, span := instrumentation.Tracer.Start(
+				parentCtx,
 				"toolbox/server/toolset/init",
 				trace.WithAttributes(attribute.String("toolset_name", name)),
 			)
