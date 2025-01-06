@@ -39,7 +39,7 @@ authSources:
 >         parameters:
 >             - name: user_id
 >               type: string
->               auth_sources:
+>               authSources:
 >                   - name: my_auth_app_1
 >                     field: sub
 >                   - name: my_auth_app_2
@@ -47,7 +47,7 @@ authSources:
 >         ...
 >
 >     my_tool_no_param:
->         auth_required:
+>         authRequired:
 >             - my_auth_app_1
 >             - my_auth_app_2
 >         ...
