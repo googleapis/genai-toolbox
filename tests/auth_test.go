@@ -1,4 +1,4 @@
-//go:build integration && auth
+//go:build integration
 
 // Copyright 2024 Google LLC
 //
@@ -33,7 +33,6 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 )
 
 var clientId string = "32555940559.apps.googleusercontent.com"
@@ -47,25 +46,6 @@ var (
 	CLOUD_SQL_POSTGRES_PASS     = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
 	SERVICE_ACCOUNT_EMAIL       = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 )
-
-func requireCloudSQLPgVars(t *testing.T) {
-	switch "" {
-	case CLOUD_SQL_POSTGRES_PROJECT:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PROJECT' not set")
-	case CLOUD_SQL_POSTGRES_REGION:
-		t.Fatal("'CLOUD_SQL_POSTGRES_REGION' not set")
-	case CLOUD_SQL_POSTGRES_INSTANCE:
-		t.Fatal("'CLOUD_SQL_POSTGRES_INSTANCE' not set")
-	case CLOUD_SQL_POSTGRES_DATABASE:
-		t.Fatal("'CLOUD_SQL_POSTGRES_DATABASE' not set")
-	case CLOUD_SQL_POSTGRES_USER:
-		t.Fatal("'CLOUD_SQL_POSTGRES_USER' not set")
-	case CLOUD_SQL_POSTGRES_PASS:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
-	case SERVICE_ACCOUNT_EMAIL:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
-	}
-}
 
 // Get a Google ID token
 func getGoogleIdToken(audience string) (string, error) {
@@ -149,53 +129,20 @@ func TestGoogleAuthVerification(t *testing.T) {
 	}
 }
 
-func TestAuthenticatedParameter(t *testing.T) {
-	// Set up test table
-	pool, err := cloudsqlpg.InitCloudSQLPgConnectionPool(CLOUD_SQL_POSTGRES_PROJECT, CLOUD_SQL_POSTGRES_REGION, CLOUD_SQL_POSTGRES_INSTANCE, "public", CLOUD_SQL_POSTGRES_USER, CLOUD_SQL_POSTGRES_PASS, CLOUD_SQL_POSTGRES_DATABASE)
-	if err != nil {
-		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
+func GoogleAuthenticatedParameterTestHelper(t *testing.T, sourceConfig map[string]any, toolKind string) {
+	// create query statement
+	var statement string
+	switch {
+	case strings.EqualFold(toolKind, "postgres-sql"):
+		statement = "SELECT * FROM auth_table WHERE email = $1;"
+	default:
+		t.Fatalf("invalid tool kind: %s", toolKind)
 	}
-
-	err = pool.Ping(context.Background())
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	_, err = pool.Query(context.Background(), `
-		CREATE TABLE auth_table (
-			id SERIAL PRIMARY KEY,
-			name TEXT,
-			email TEXT
-		);
-	`)
-	if err != nil {
-		t.Fatalf("unable to create test table: %s", err)
-	}
-
-	// Insert test data
-	statement := `
-		INSERT INTO auth_table (name, email) 
-		VALUES ($1, $2), ($3, $4)
-	`
-	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
-	_, err = pool.Query(context.Background(), statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-	defer pool.Exec(context.Background(), `DROP TABLE auth_table;`)
 
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-pg-instance": map[string]any{
-				"kind":     "cloud-sql-postgres",
-				"project":  CLOUD_SQL_POSTGRES_PROJECT,
-				"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-				"region":   CLOUD_SQL_POSTGRES_REGION,
-				"database": CLOUD_SQL_POSTGRES_DATABASE,
-				"user":     CLOUD_SQL_POSTGRES_USER,
-				"password": CLOUD_SQL_POSTGRES_PASS,
-			},
+			"my-pg-instance": sourceConfig,
 		},
 		"authSources": map[string]any{
 			"my-google-auth": map[string]any{
@@ -205,10 +152,11 @@ func TestAuthenticatedParameter(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-auth-tool": map[string]any{
-				"kind":        "postgres-sql",
+				"kind":        toolKind,
 				"source":      "my-pg-instance",
 				"description": "Tool to test authenticated parameters.",
-				"statement":   "SELECT * FROM auth_table WHERE email = $1;",
+				// statement to auto-fill authenticated parameter
+				"statement": statement,
 				"parameters": []map[string]any{
 					{
 						"name":        "email",
@@ -225,6 +173,7 @@ func TestAuthenticatedParameter(t *testing.T) {
 			},
 		},
 	}
+
 	// Initialize a test command
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -328,19 +277,11 @@ func TestAuthenticatedParameter(t *testing.T) {
 	}
 }
 
-func TestAuthRequiredToolInvocation(t *testing.T) {
+func AuthRequiredToolInvocationTestHelper(t *testing.T, sourceConfig map[string]any, toolKind string) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-pg-instance": map[string]any{
-				"kind":     "cloud-sql-postgres",
-				"project":  CLOUD_SQL_POSTGRES_PROJECT,
-				"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-				"region":   CLOUD_SQL_POSTGRES_REGION,
-				"database": CLOUD_SQL_POSTGRES_DATABASE,
-				"user":     CLOUD_SQL_POSTGRES_USER,
-				"password": CLOUD_SQL_POSTGRES_PASS,
-			},
+			"my-pg-instance": sourceConfig,
 		},
 		"authSources": map[string]any{
 			"my-google-auth": map[string]any{
@@ -350,7 +291,7 @@ func TestAuthRequiredToolInvocation(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-auth-tool": map[string]any{
-				"kind":        "postgres-sql",
+				"kind":        toolKind,
 				"source":      "my-pg-instance",
 				"description": "Tool to test authenticated parameters.",
 				"statement":   "SELECT 1;",
@@ -376,7 +317,7 @@ func TestAuthRequiredToolInvocation(t *testing.T) {
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`INFO "Server ready to serve"`))
+	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`"Server ready to serve"`))
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
