@@ -9,7 +9,7 @@ interact with the database.
 sources:
     my-cloud-sql-source:
         kind: cloud-sql-postgres
-        project: my-project-name
+        project: my-project-id
         region: us-central1
         instance: my-instance-name
         database: my_db
