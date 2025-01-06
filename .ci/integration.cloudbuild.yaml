@@ -81,6 +81,23 @@ steps:
       - |
         go test -race -v -tags=integration,postgres ./tests
 
+  - id: "spanner"
+    name: golang:1
+    waitFor: ['install-dependencies']
+    entrypoint: /bin/bash
+    env:
+      - 'GOPATH=/gopath'
+      - "SPANNER_PROJECT=$PROJECT_ID"
+      - "SPANNER_DATABASE=$_DATABASE_NAME"
+      - "SPANNER_INSTANCE=$_SPANNER_INSTANCE"
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+    args: 
+      - -c
+      - |
+        go test -race -v -tags=integration,spanner ./tests
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -112,3 +129,4 @@ substitutions:
   _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
+  _SPANNER_INSTANCE: "spanner-testing"

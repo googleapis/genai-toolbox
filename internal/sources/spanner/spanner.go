@@ -94,7 +94,6 @@ func initSpannerClient(project, instance, dbname string) (*spanner.Client, error
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new client: %w", err)
 	}
-	defer client.Close()
 
 	return client, nil
 }
