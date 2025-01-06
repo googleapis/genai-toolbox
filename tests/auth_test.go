@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	"testing"
 )
 
+var SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 var clientId string = "32555940559.apps.googleusercontent.com"
 
 // Get a Google ID token
