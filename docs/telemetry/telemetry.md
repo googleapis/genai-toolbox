@@ -103,23 +103,22 @@ the backend, or the OTLP Exporter along with a Collector that will act as a
 proxy to collect and export data to the telemetry backend of user's choice.
 
 #### Google Cloud Exporter
-The google cloud exporter directly exports telemetry to google cloud platform
-monitoring. It utilizes the [GCP Metric Exporter][gcp-metric-exporter] and [GCP
-Trace Exporter][gcp-trace-exporter].
-
-##### Before You Begin
-If you're using Google Cloud Monitoring, the following APIs will need to be
-enabled:
-
-- logging.googleapis.com
-- monitoring.googleapis.com
-- cloudtrace.googleapis.com
+The google cloud exporter directly exports telemetry to Google Cloud Monitoring.
+It utilizes the [GCP Metric Exporter][gcp-metric-exporter] and [GCP Trace
+Exporter][gcp-trace-exporter].
 
 [gcp-metric-exporter]:
     https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/metric
 [gcp-trace-exporter]:
     https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/trace
 
+> [!NOTE]
+> If you're using Google Cloud Monitoring, the following APIs will need to be
+enabled:
+>
+> - logging.googleapis.com
+> - monitoring.googleapis.com
+> - cloudtrace.googleapis.com
 
 #### OTLP Exporter
 This implementation uses the default OTLP exporter over HTTP for
