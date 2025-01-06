@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -33,16 +32,6 @@ import (
 )
 
 var clientId string = "32555940559.apps.googleusercontent.com"
-
-var (
-	CLOUD_SQL_POSTGRES_PROJECT  = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
-	CLOUD_SQL_POSTGRES_REGION   = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
-	CLOUD_SQL_POSTGRES_INSTANCE = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
-	CLOUD_SQL_POSTGRES_DATABASE = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
-	CLOUD_SQL_POSTGRES_USER     = os.Getenv("CLOUD_SQL_POSTGRES_USER")
-	CLOUD_SQL_POSTGRES_PASS     = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
-	SERVICE_ACCOUNT_EMAIL       = os.Getenv("SERVICE_ACCOUNT_EMAIL")
-)
 
 // Get a Google ID token
 func getGoogleIdToken(audience string) (string, error) {
@@ -236,7 +225,8 @@ func AuthRequiredToolInvocationTestHelper(t *testing.T, sourceConfig map[string]
 			"my-auth-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-pg-instance",
-				"description": "Tool to test authenticated parameters.",
+				"description": "Tool to test auth required invocation.",
+				"statement":   "SELECT 1;",
 				"authRequired": []string{
 					"my-google-auth",
 				},

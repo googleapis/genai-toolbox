@@ -128,8 +128,9 @@ func TestCloudSQLPostgres(t *testing.T) {
 				t.Fatalf("error when sending a request: %s", err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
+			if resp.StatusCode != http.StatusOK {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
 			var body map[string]interface{}
@@ -169,8 +170,9 @@ func TestCloudSQLPostgres(t *testing.T) {
 				t.Fatalf("error when sending a request: %s", err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
+			if resp.StatusCode != http.StatusOK {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
 			var body map[string]interface{}
