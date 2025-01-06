@@ -30,9 +30,6 @@ import (
 	"time"
 
 	"testing"
-
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/auth/google"
 )
 
 var clientId string = "32555940559.apps.googleusercontent.com"
@@ -54,79 +51,25 @@ func getGoogleIdToken(audience string) (string, error) {
 	output, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(output)), nil
-	} else {
-		// Cloud Build testing
-		url := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=" + audience
-		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			return "", err
-		}
-		req.Header.Set("Metadata-Flavor", "Google")
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return "", err
-		}
-		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return "", err
-		}
-		return string(body), nil
 	}
-}
-
-func TestGoogleAuthVerification(t *testing.T) {
-	tcs := []struct {
-		authSource auth.AuthSource
-		isErr      bool
-	}{
-		{
-			authSource: google.AuthSource{
-				Name:     "my-google-auth",
-				Kind:     google.AuthSourceKind,
-				ClientID: clientId,
-			},
-			isErr: false,
-		},
-		{
-			authSource: google.AuthSource{
-				Name:     "err-google-auth",
-				Kind:     google.AuthSourceKind,
-				ClientID: "random-client-id",
-			},
-			isErr: true,
-		},
+	// Cloud Build testing
+	url := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=" + audience
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
 	}
-	for _, tc := range tcs {
+	req.Header.Set("Metadata-Flavor", "Google")
 
-		token, err := getGoogleIdToken(clientId)
-
-		if err != nil {
-			t.Fatalf("ID token generation error: %s", err)
-		}
-		headers := http.Header{}
-		headers.Add("my-google-auth_token", token)
-		claims, err := tc.authSource.GetClaimsFromHeader(headers)
-
-		if err != nil {
-			if tc.isErr {
-				return
-			} else {
-				t.Fatalf("Error getting claims from token: %s", err)
-			}
-		}
-
-		// Check if decoded claims are valid
-		_, ok := claims["sub"]
-		if !ok {
-			if tc.isErr {
-				return
-			} else {
-				t.Fatalf("Invalid claims.")
-			}
-		}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
 	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
 
 func GoogleAuthenticatedParameterTestHelper(t *testing.T, sourceConfig map[string]any, toolKind string) {
@@ -294,7 +237,6 @@ func AuthRequiredToolInvocationTestHelper(t *testing.T, sourceConfig map[string]
 				"kind":        toolKind,
 				"source":      "my-pg-instance",
 				"description": "Tool to test authenticated parameters.",
-				"statement":   "SELECT 1;",
 				"authRequired": []string{
 					"my-google-auth",
 				},

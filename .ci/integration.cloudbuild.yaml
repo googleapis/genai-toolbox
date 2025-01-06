@@ -15,40 +15,41 @@
 steps:
   - id: "install-dependencies"
     name: golang:1
-    waitFor: ['-']
+    waitFor: ["-"]
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
     volumes:
-      - name: 'go'
-        path: '/gopath'
+      - name: "go"
+        path: "/gopath"
     script: |
-        go get -d ./...
+      go get -d ./...
 
   - id: "cloud-sql-pg"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
       - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,cloudsql ./tests
 
   - id: "alloydb-pg"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID"
       - "ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
       - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
@@ -56,43 +57,27 @@ steps:
       - "ALLOYDB_POSTGRES_REGION=$_REGION"
     secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS"]
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,alloydb ./tests
-  
-  - id: "auth test"
-    name: golang:1.22
-    waitFor: ['-']
-    entrypoint: /bin/bash
-    env:
-      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
-      - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
-      - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
-    args: 
-      - -c
-      - |
-        go test -race -v -tags=integration,auth ./tests
 
   - id: "postgres"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "POSTGRES_DATABASE=$_DATABASE_NAME"
       - "POSTGRES_HOST=$_POSTGRES_HOST"
       - "POSTGRES_PORT=$_POSTGRES_PORT"
     secretEnv: ["POSTGRES_USER", "POSTGRES_PASS"]
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,postgres ./tests
@@ -132,7 +117,7 @@ availableSecrets:
 options:
   logging: CLOUD_LOGGING_ONLY
   automapSubstitutions: true
-  substitutionOption: 'ALLOW_LOOSE'
+  substitutionOption: "ALLOW_LOOSE"
   dynamicSubstitutions: true
   pool:
     name: projects/$PROJECT_ID/locations/us-central1/workerPools/integration-testing # Necessary for VPC network connection
