@@ -15,7 +15,7 @@ Toolbox supports both standard and structured logging format.
 
 The standard logging (also the default logging format) outputs log as string:
 ```
-2024-11-12T15:08:11.451377-08:00 INFO "Initalized 0 sources.\n"
+2024-11-12T15:08:11.451377-08:00 INFO "Initialized 0 sources.\n"
 ```
 
 The structured logging outputs log as JSON:
