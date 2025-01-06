@@ -39,7 +39,6 @@ var (
 	CLOUD_SQL_POSTGRES_DATABASE = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
 	CLOUD_SQL_POSTGRES_USER     = os.Getenv("CLOUD_SQL_POSTGRES_USER")
 	CLOUD_SQL_POSTGRES_PASS     = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
-	SERVICE_ACCOUNT_EMAIL       = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 )
 
 func requireCloudSQLPgVars(t *testing.T) map[string]any {
