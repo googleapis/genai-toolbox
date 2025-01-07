@@ -172,7 +172,7 @@ sources:
     # See https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements
     my-cloud-sql-source:
         kind: cloud-sql-postgres
-        project: my-project-name
+        project: my-project-id
         region: us-central1
         instance: my-instance-name
         user: my-user
