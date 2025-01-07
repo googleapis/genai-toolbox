@@ -15,7 +15,9 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -43,12 +45,13 @@ func apiRouter(s *Server) (chi.Router, error) {
 	return r, nil
 }
 
-// toolInvokeHandler handles the request for information about a Toolset.
+// toolsetHandler handles the request for information about a Toolset.
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
-		_ = render.Render(w, r, newErrResponse(fmt.Errorf("Toolset %q does not exist", toolsetName), http.StatusNotFound))
+		err := fmt.Errorf("Toolset %q does not exist", toolsetName)
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
 	render.JSON(w, r, toolset.Manifest)
@@ -65,7 +68,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: this can be optimized later with some caching
 	m := tools.ToolsetManifest{
-		ServerVersion: s.conf.Version,
+		ServerVersion: s.version,
 		ToolsManifest: map[string]tools.Manifest{
 			toolName: tool.Manifest(),
 		},
@@ -84,15 +87,47 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data map[string]interface{}
-	if err := render.DecodeJSON(r.Body, &data); err != nil {
+	// Tool authentication
+	// claimsFromAuth maps the name of the authsource to the claims retrieved from it.
+	claimsFromAuth := make(map[string]map[string]any)
+	for _, aS := range s.authSources {
+		claims, err := aS.GetClaimsFromHeader(r.Header)
+		if err != nil {
+			err := fmt.Errorf("failure getting claims from header: %w", err)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+			return
+		}
+		if claims == nil {
+			// authSource not present in header
+			continue
+		}
+		claimsFromAuth[aS.GetName()] = claims
+	}
+
+	// Tool authorization check
+	verifiedAuthSources := make([]string, len(claimsFromAuth))
+	i := 0
+	for k := range claimsFromAuth {
+		verifiedAuthSources[i] = k
+		i++
+	}
+	// Check if any of the specified auth sources is verified
+	isAuthorized := tool.Authorized(verifiedAuthSources)
+	if !isAuthorized {
+		err := fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+		return
+	}
+
+	var data map[string]any
+	if err := decodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err := fmt.Errorf("request body was invalid JSON: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 
-	params, err := tool.ParseParams(data)
+	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
@@ -147,4 +182,14 @@ type errResponse struct {
 func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
+}
+
+// decodeJSON decodes a given reader into an interface using the json decoder.
+func decodeJSON(r io.Reader, v interface{}) error {
+	defer io.Copy(io.Discard, r) //nolint:errcheck
+	d := json.NewDecoder(r)
+	// specify JSON numbers should get parsed to json.Number instead of float64 by default.
+	// This prevents loss between floats/ints.
+	d.UseNumber()
+	return d.Decode(v)
 }

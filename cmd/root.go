@@ -18,9 +18,14 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"io"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -61,23 +66,46 @@ type Command struct {
 	*cobra.Command
 
 	cfg        server.ServerConfig
+	logger     log.Logger
 	tools_file string
+	outStream  io.Writer
+	errStream  io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
-func NewCommand() *Command {
-	cmd := &Command{
-		Command: &cobra.Command{
-			Use:     "toolbox",
-			Version: versionString,
-		},
+func NewCommand(opts ...Option) *Command {
+	out := os.Stdout
+	err := os.Stderr
+
+	baseCmd := &cobra.Command{
+		Use:           "toolbox",
+		Version:       versionString,
+		SilenceErrors: true,
 	}
+	cmd := &Command{
+		Command:   baseCmd,
+		outStream: out,
+		errStream: err,
+	}
+
+	for _, o := range opts {
+		o(cmd)
+	}
+
+	// Set server version
+	cmd.cfg.Version = versionString
+
+	// set baseCmd out and err the same as cmd.
+	baseCmd.SetOut(cmd.outStream)
+	baseCmd.SetErr(cmd.errStream)
 
 	flags := cmd.Flags()
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
-	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration")
+	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
+	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -85,43 +113,123 @@ func NewCommand() *Command {
 	return cmd
 }
 
+type ToolsFile struct {
+	Sources     server.SourceConfigs     `yaml:"sources"`
+	AuthSources server.AuthSourceConfigs `yaml:"authSources"`
+	Tools       server.ToolConfigs       `yaml:"tools"`
+	Toolsets    server.ToolsetConfigs    `yaml:"toolsets"`
+}
+
 // parseToolsFile parses the provided yaml into appropriate configs.
-func parseToolsFile(raw []byte) (server.SourceConfigs, server.ToolConfigs, server.ToolsetConfigs, error) {
-	tools_file := &struct {
-		Sources  server.SourceConfigs  `yaml:"sources"`
-		Tools    server.ToolConfigs    `yaml:"tools"`
-		Toolsets server.ToolsetConfigs `yaml:"toolsets"`
-	}{}
+func parseToolsFile(raw []byte) (ToolsFile, error) {
+	var toolsFile ToolsFile
 	// Parse contents
-	err := yaml.Unmarshal(raw, tools_file)
+	err := yaml.Unmarshal(raw, &toolsFile)
 	if err != nil {
-		return nil, nil, nil, err
+		return toolsFile, err
 	}
-	return tools_file.Sources, tools_file.Tools, tools_file.Toolsets, nil
+	return toolsFile, nil
 }
 
 func run(cmd *Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
+	// watch for sigterm / sigint signals
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		var s os.Signal
+		select {
+		case <-ctx.Done():
+			// this should only happen when the context supplied when testing is canceled
+			return
+		case s = <-signals:
+		}
+		switch s {
+		case syscall.SIGINT:
+			cmd.logger.DebugContext(ctx, "Received SIGINT signal to shutdown.")
+		case syscall.SIGTERM:
+			cmd.logger.DebugContext(ctx, "Sending SIGTERM signal to shutdown.")
+		}
+		cancel()
+	}()
+
+	// Handle logger separately from config
+	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
+	case "json":
+		logger, err := log.NewStructuredLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		if err != nil {
+			return fmt.Errorf("unable to initialize logger: %w", err)
+		}
+		cmd.logger = logger
+	case "standard":
+		logger, err := log.NewStdLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		if err != nil {
+			return fmt.Errorf("unable to initialize logger: %w", err)
+		}
+		cmd.logger = logger
+	default:
+		return fmt.Errorf("logging format invalid.")
+	}
+
 	// Read tool file contents
 	buf, err := os.ReadFile(cmd.tools_file)
 	if err != nil {
-		return fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+		errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
 	}
-	cmd.cfg.SourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, err = parseToolsFile(buf)
+	toolsFile, err := parseToolsFile(buf)
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthSources, toolsFile.Tools, toolsFile.Toolsets
 	if err != nil {
-		return fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
 	}
 
-	// run server
-	s, err := server.NewServer(cmd.cfg)
+	// start server
+	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
 	if err != nil {
-		return fmt.Errorf("toolbox failed to start with the following error: %w", err)
+		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
 	}
-	err = s.ListenAndServe(ctx)
+
+	err = s.Listen(ctx)
 	if err != nil {
-		return fmt.Errorf("toolbox crashed with the following error: %w", err)
+		errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+	cmd.logger.InfoContext(ctx, "Server ready to serve!")
+
+	// run server in background
+	srvErr := make(chan error)
+	go func() {
+		defer close(srvErr)
+		err = s.Serve()
+		if err != nil {
+			srvErr <- err
+		}
+	}()
+
+	// wait for either the server to error out or the command's context to be canceled
+	select {
+	case err := <-srvErr:
+		if err != nil {
+			errMsg := fmt.Errorf("toolbox crashed with the following error: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+	case <-ctx.Done():
+		shutdownContext, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		cmd.logger.WarnContext(shutdownContext, "Shutting down gracefully...")
+		err := s.Shutdown(shutdownContext)
+		if err == context.DeadlineExceeded {
+			return fmt.Errorf("graceful shutdown timed out... forcing exit.")
+		}
 	}
 
 	return nil

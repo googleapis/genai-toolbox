@@ -15,6 +15,7 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"gopkg.in/yaml.v3"
@@ -28,19 +29,91 @@ const (
 	typeArray  = "array"
 )
 
-// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
-func ParseParams(ps Parameters, data map[string]any) ([]any, error) {
+// ParamValues is an ordered list of ParamValue
+type ParamValues []ParamValue
+
+// ParamValue represents the parameter's name and value.
+type ParamValue struct {
+	Name  string
+	Value any
+}
+
+// AsSlice returns a slice of the Param's values (in order).
+func (p ParamValues) AsSlice() []any {
 	params := []any{}
-	for _, p := range ps {
-		v, ok := data[p.GetName()]
+
+	for _, p := range p {
+		params = append(params, p.Value)
+	}
+	return params
+}
+
+// AsMap returns a map of ParamValue's names to values.
+func (p ParamValues) AsMap() map[string]interface{} {
+	params := make(map[string]interface{})
+	for _, p := range p {
+		params[p.Name] = p.Value
+	}
+	return params
+}
+
+// AsMapByOrderedKeys returns a map of a key's position to it's value, as neccesary for Spanner PSQL.
+// Example { $1 -> "value1", $2 -> "value2" }
+func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
+	params := make(map[string]interface{})
+
+	for i, p := range p {
+		key := fmt.Sprintf("p%d", i+1)
+		params[key] = p.Value
+	}
+	return params
+}
+
+func parseFromAuthSource(paramAuthSources []ParamAuthSource, claimsMap map[string]map[string]any) (any, error) {
+	// parse a parameter from claims using its specified auth sources
+	for _, a := range paramAuthSources {
+		claims, ok := claimsMap[a.Name]
 		if !ok {
-			return nil, fmt.Errorf("parameter %q is required!", p.GetName())
+			// not validated for this authsource, skip to the next one
+			continue
+		}
+		v, ok := claims[a.Field]
+		if !ok {
+			// claims do not contain specified field
+			return nil, fmt.Errorf("no field named %s in claims", a.Field)
+		}
+		return v, nil
+	}
+	return nil, fmt.Errorf("missing authentication header")
+}
+
+// ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
+func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
+	params := make([]ParamValue, 0, len(ps))
+	for _, p := range ps {
+		var v any
+		paramAuthSources := p.GetAuthSources()
+		name := p.GetName()
+		if paramAuthSources == nil {
+			// parse non auth-required parameter
+			var ok bool
+			v, ok = data[name]
+			if !ok {
+				return nil, fmt.Errorf("parameter %q is required", name)
+			}
+		} else {
+			// parse authenticated parameter
+			var err error
+			v, err = parseFromAuthSource(paramAuthSources, claimsMap)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
+			}
 		}
 		newV, err := p.Parse(v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse value for %q: %w", p.GetName(), err)
+			return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
 		}
-		params = append(params, newV)
+		params = append(params, ParamValue{Name: name, Value: newV})
 	}
 	return params, nil
 }
@@ -50,6 +123,7 @@ type Parameter interface {
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
 	GetType() string
+	GetAuthSources() []ParamAuthSource
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 }
@@ -65,7 +139,7 @@ func (c *Parameters) UnmarshalYAML(node *yaml.Node) error {
 		return err
 	}
 	for _, n := range nodeList {
-		p, err := parseFromYamlNode(&n)
+		p, err := parseParamFromNode(&n)
 		if err != nil {
 			return err
 		}
@@ -74,7 +148,9 @@ func (c *Parameters) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func parseFromYamlNode(node *yaml.Node) (Parameter, error) {
+func parseParamFromNode(node *yaml.Node) (Parameter, error) {
+	// Helper function that is required to parse parameters
+	// because there are multiple different types
 	var p CommonParameter
 	err := node.Decode(&p)
 	if err != nil {
@@ -125,17 +201,19 @@ func (ps Parameters) Manifest() []ParameterManifest {
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	AuthSources []string `json:"authSources"`
 	// Parameter   *ParameterManifest `json:"parameter,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
-	Name string `yaml:"name"`
-	Type string `yaml:"type"`
-	Desc string `yaml:"description"`
+	Name        string            `yaml:"name"`
+	Type        string            `yaml:"type"`
+	Desc        string            `yaml:"description"`
+	AuthSources []ParamAuthSource `yaml:"authSources"`
 }
 
 // GetName returns the name specified for the Parameter.
@@ -150,10 +228,16 @@ func (p *CommonParameter) GetType() string {
 
 // GetType returns the type specified for the Parameter.
 func (p *CommonParameter) Manifest() ParameterManifest {
+	// only list ParamAuthSource names (without fields) in manifest
+	authNames := make([]string, len(p.AuthSources))
+	for i, a := range p.AuthSources {
+		authNames[i] = a.Name
+	}
 	return ParameterManifest{
 		Name:        p.Name,
 		Type:        p.Type,
 		Description: p.Desc,
+		AuthSources: authNames,
 	}
 }
 
@@ -168,13 +252,31 @@ func (e ParseTypeError) Error() string {
 	return fmt.Sprintf("%q not type %q", e.Value, e.Type)
 }
 
+type ParamAuthSource struct {
+	Name  string `yaml:"name"`
+	Field string `yaml:"field"`
+}
+
 // NewStringParameter is a convenience function for initializing a StringParameter.
 func NewStringParameter(name, desc string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
-			Name: name,
-			Type: typeString,
-			Desc: desc,
+			Name:        name,
+			Type:        typeString,
+			Desc:        desc,
+			AuthSources: nil,
+		},
+	}
+}
+
+// NewStringParameterWithAuth is a convenience function for initializing a StringParameter with a list of ParamAuthSource.
+func NewStringParameterWithAuth(name, desc string, authSources []ParamAuthSource) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:        name,
+			Type:        typeString,
+			Desc:        desc,
+			AuthSources: authSources,
 		},
 	}
 }
@@ -194,14 +296,30 @@ func (p *StringParameter) Parse(v any) (any, error) {
 	}
 	return newV, nil
 }
+func (p *StringParameter) GetAuthSources() []ParamAuthSource {
+	return p.AuthSources
+}
 
 // NewIntParameter is a convenience function for initializing a IntParameter.
 func NewIntParameter(name, desc string) *IntParameter {
 	return &IntParameter{
 		CommonParameter: CommonParameter{
-			Name: name,
-			Type: typeInt,
-			Desc: desc,
+			Name:        name,
+			Type:        typeInt,
+			Desc:        desc,
+			AuthSources: nil,
+		},
+	}
+}
+
+// NewIntParameterWithAuth is a convenience function for initializing a IntParameter with a list of ParamAuthSource.
+func NewIntParameterWithAuth(name, desc string, authSources []ParamAuthSource) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:        name,
+			Type:        typeInt,
+			Desc:        desc,
+			AuthSources: authSources,
 		},
 	}
 }
@@ -214,20 +332,50 @@ type IntParameter struct {
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
-	newV, ok := v.(int)
-	if !ok {
+	var out int
+	switch newV := v.(type) {
+	default:
 		return nil, &ParseTypeError{p.Name, p.Type, v}
+	case int:
+		out = int(newV)
+	case int32:
+		out = int(newV)
+	case int64:
+		out = int(newV)
+	case json.Number:
+		newI, err := newV.Int64()
+		if err != nil {
+			return nil, &ParseTypeError{p.Name, p.Type, v}
+		}
+		out = int(newI)
 	}
-	return newV, nil
+	return out, nil
+}
+
+func (p *IntParameter) GetAuthSources() []ParamAuthSource {
+	return p.AuthSources
 }
 
 // NewFloatParameter is a convenience function for initializing a FloatParameter.
 func NewFloatParameter(name, desc string) *FloatParameter {
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
-			Name: name,
-			Type: typeFloat,
-			Desc: desc,
+			Name:        name,
+			Type:        typeFloat,
+			Desc:        desc,
+			AuthSources: nil,
+		},
+	}
+}
+
+// NewFloatParameterWithAuth is a convenience function for initializing a FloatParameter with a list of ParamAuthSource.
+func NewFloatParameterWithAuth(name, desc string, authSources []ParamAuthSource) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:        name,
+			Type:        typeFloat,
+			Desc:        desc,
+			AuthSources: authSources,
 		},
 	}
 }
@@ -240,20 +388,48 @@ type FloatParameter struct {
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
-	newV, ok := v.(float64)
-	if !ok {
+	var out float64
+	switch newV := v.(type) {
+	default:
 		return nil, &ParseTypeError{p.Name, p.Type, v}
+	case float32:
+		out = float64(newV)
+	case float64:
+		out = newV
+	case json.Number:
+		newI, err := newV.Float64()
+		if err != nil {
+			return nil, &ParseTypeError{p.Name, p.Type, v}
+		}
+		out = float64(newI)
 	}
-	return newV, nil
+	return out, nil
+}
+
+func (p *FloatParameter) GetAuthSources() []ParamAuthSource {
+	return p.AuthSources
 }
 
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
 func NewBooleanParameter(name, desc string) *BooleanParameter {
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
-			Name: name,
-			Type: typeBool,
-			Desc: desc,
+			Name:        name,
+			Type:        typeBool,
+			Desc:        desc,
+			AuthSources: nil,
+		},
+	}
+}
+
+// NewBooleanParameterWithAuth is a convenience function for initializing a BooleanParameter with a list of ParamAuthSource.
+func NewBooleanParameterWithAuth(name, desc string, authSources []ParamAuthSource) *BooleanParameter {
+	return &BooleanParameter{
+		CommonParameter: CommonParameter{
+			Name:        name,
+			Type:        typeBool,
+			Desc:        desc,
+			AuthSources: authSources,
 		},
 	}
 }
@@ -273,13 +449,31 @@ func (p *BooleanParameter) Parse(v any) (any, error) {
 	return newV, nil
 }
 
-// NewArrayParameter is a convenience function for initializing an ArrayParameter.
+func (p *BooleanParameter) GetAuthSources() []ParamAuthSource {
+	return p.AuthSources
+}
+
+// NewArrayParameter is a convenience function for initializing a ArrayParameter.
 func NewArrayParameter(name, desc string, items Parameter) *ArrayParameter {
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
-			Name: name,
-			Type: typeArray,
-			Desc: desc,
+			Name:        name,
+			Type:        typeArray,
+			Desc:        desc,
+			AuthSources: nil,
+		},
+		Items: items,
+	}
+}
+
+// NewArrayParameterWithAuth is a convenience function for initializing a ArrayParameter with a list of ParamAuthSource.
+func NewArrayParameterWithAuth(name, desc string, items Parameter, authSources []ParamAuthSource) *ArrayParameter {
+	return &ArrayParameter{
+		CommonParameter: CommonParameter{
+			Name:        name,
+			Type:        typeArray,
+			Desc:        desc,
+			AuthSources: authSources,
 		},
 		Items: items,
 	}
@@ -303,11 +497,15 @@ func (p *ArrayParameter) UnmarshalYAML(node *yaml.Node) error {
 		return fmt.Errorf("array parameter missing 'items' field!")
 	}
 	// Parse items from the "value" of "items" field
-	i, err := parseFromYamlNode(node.Content[idx+1])
+	i, err := parseParamFromNode(node.Content[idx+1])
 	if err != nil {
 		return fmt.Errorf("unable to parse 'items' field: %w", err)
 	}
+	if i.GetAuthSources() != nil {
+		return fmt.Errorf("nested items should not have auth sources: %w", err)
+	}
 	p.Items = i
+
 	return nil
 }
 
@@ -335,4 +533,8 @@ func (p *ArrayParameter) Parse(v any) (any, error) {
 		rtn = append(rtn, val)
 	}
 	return rtn, nil
+}
+
+func (p *ArrayParameter) GetAuthSources() []ParamAuthSource {
+	return p.AuthSources
 }

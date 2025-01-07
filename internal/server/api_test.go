@@ -20,8 +20,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -33,12 +35,13 @@ type MockTool struct {
 	Params      []tools.Parameter
 }
 
-func (t MockTool) Invoke([]any) (string, error) {
+func (t MockTool) Invoke(tools.ParamValues) (string, error) {
 	return "", nil
 }
 
-func (t MockTool) ParseParams(data map[string]any) ([]any, error) {
-	return tools.ParseParams(t.Params, data)
+// claims is a map of user info decoded from an auth token
+func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Params, data, claimsMap)
 }
 
 func (t MockTool) Manifest() tools.Manifest {
@@ -47,6 +50,10 @@ func (t MockTool) Manifest() tools.Manifest {
 		pMs = append(pMs, p.Manifest())
 	}
 	return tools.Manifest{Description: t.Description, Parameters: pMs}
+}
+
+func (t MockTool) Authorized(verifiedAuthSources []string) bool {
+	return true
 }
 
 func TestToolsetEndpoint(t *testing.T) {
@@ -78,7 +85,11 @@ func TestToolsetEndpoint(t *testing.T) {
 		toolsets[name] = m
 	}
 
-	server := Server{conf: ServerConfig{}, tools: toolsMap, toolsets: toolsets}
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	server := Server{logger: testLogger, tools: toolsMap, toolsets: toolsets}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -189,7 +200,11 @@ func TestToolGetEndpoint(t *testing.T) {
 	}
 	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
 
-	server := Server{conf: ServerConfig{Version: "0.0.0"}, tools: toolsMap}
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	server := Server{version: "0.0.0", logger: testLogger, tools: toolsMap}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)

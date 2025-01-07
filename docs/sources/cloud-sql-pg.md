@@ -1,21 +1,27 @@
-# Cloud SQL for PostgreSQL Source 
+# Cloud SQL for PostgreSQL Source
 
 [Cloud SQL for PostgreSQL][csql-pg-docs] is a fully-managed database service
 that helps you set up, maintain, manage, and administer your PostgreSQL
 relational databases on Google Cloud Platform.
 
-[csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
+If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
+to a database by following these instructions][csql-pg-quickstart].
 
-## Requirements 
+[csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
+[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
+
+## Requirements
 
 ### IAM Identity
+
 By default, this source uses the [Cloud SQL Go Connector][csql-go-conn] to
 authorize and establish mTLS connections to your Cloud SQL instance. The Go
 connector uses your [Application Default Credentials (ADC)][adc] to authorize
-your connection to Cloud SQL. 
+your connection to Cloud SQL.
 
 In addition to [setting the ADC for your server][set-adc], you need to ensure the
 IAM identity has been given the following IAM roles:
+
 - `roles/cloudsql.client`
 
 [csql-go-conn]: https://github.com/GoogleCloudPlatform/cloud-sql-go-connector
@@ -42,7 +48,7 @@ PostreSQL user][cloud-sql-users] to login to the database with.
 ```yaml
 sources:
     my-cloud-sql-pg-source:
-        kind: "cloud-sql-pg-postgres"
+        kind: "cloud-sql-postgres"
         project: "my-project"
         region: "us-central1"
         instance: "my-instance"
@@ -59,8 +65,7 @@ sources:
 | project   |  string  |     true     | Name of the GCP project that the cluster was created in (e.g. "my-project"). |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1"). |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluser (e.g. "my-instance").       |
+| ip_type   |  string  |     true     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                 |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                          |
-
-

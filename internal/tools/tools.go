@@ -15,6 +15,8 @@
 package tools
 
 import (
+	"slices"
+
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
 
@@ -24,13 +26,28 @@ type ToolConfig interface {
 }
 
 type Tool interface {
-	Invoke([]any) (string, error)
-	ParseParams(data map[string]any) ([]any, error)
+	Invoke(ParamValues) (string, error)
+	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
+	Authorized([]string) bool
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
 type Manifest struct {
 	Description string              `json:"description"`
 	Parameters  []ParameterManifest `json:"parameters"`
+}
+
+// Helper function that returns if a tool invocation request is authorized
+func IsAuthorized(authRequiredSources []string, verifiedAuthSources []string) bool {
+	if len(authRequiredSources) == 0 {
+		// no authorization requirement
+		return true
+	}
+	for _, a := range authRequiredSources {
+		if slices.Contains(verifiedAuthSources, a) {
+			return true
+		}
+	}
+	return false
 }

@@ -16,27 +16,16 @@ package server_test
 
 import (
 	"context"
-	"net"
-	"strconv"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
 	"testing"
-	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 )
-
-// tryDial is a utility function that dials an address up to 'attempts' number of times.
-func tryDial(addr string, attempts int) bool {
-	for i := 0; i < attempts; i++ {
-		conn, err := net.Dial("tcp", addr)
-		if err != nil {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
-		_ = conn.Close()
-		return true
-	}
-	return false
-}
 
 func TestServe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -44,26 +33,51 @@ func TestServe(t *testing.T) {
 
 	addr, port := "127.0.0.1", 5000
 	cfg := server.ServerConfig{
+		Version: "0.0.0",
 		Address: addr,
 		Port:    port,
 	}
-	s, err := server.NewServer(cfg)
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
-		t.Fatalf("Unable to initialize server! %v", err)
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	s, err := server.NewServer(context.Background(), cfg, testLogger)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	err = s.Listen(ctx)
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
 	}
 
 	// start server in background
 	errCh := make(chan error)
 	go func() {
-		err := s.ListenAndServe(ctx)
 		defer close(errCh)
+
+		err = s.Serve()
 		if err != nil {
 			errCh <- err
 		}
 	}()
 
-	if !tryDial(net.JoinHostPort(addr, strconv.Itoa(port)), 10) {
-		t.Fatalf("Unable to dial server!")
+	url := fmt.Sprintf("http://%s:%d/", addr, port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
 	}
-
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("response status code is not 200")
+	}
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("error reading from request body: %s", err)
+	}
+	if got := string(raw); strings.Contains(got, "0.0.0") {
+		t.Fatalf("version missing from output: %q", got)
+	}
 }

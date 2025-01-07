@@ -1,0 +1,5 @@
+llama-index==0.12.2
+PyYAML==6.0.2
+pydantic==2.10.2
+aiohttp==3.11.7
+deprecated==1.2.15

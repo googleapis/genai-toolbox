@@ -22,6 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -29,6 +31,18 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/spf13/cobra"
 )
+
+func withDefaults(c server.ServerConfig) server.ServerConfig {
+	data, _ := os.ReadFile("version.txt")
+	c.Version = strings.TrimSpace(string(data))
+	if c.Address == "" {
+		c.Address = "127.0.0.1"
+	}
+	if c.Port == 0 {
+		c.Port = 5000
+	}
+	return c
+}
 
 func invokeCommand(args []string) (*Command, string, error) {
 	c := NewCommand()
@@ -70,7 +84,7 @@ func TestVersion(t *testing.T) {
 	}
 }
 
-func TestAddrPort(t *testing.T) {
+func TestServerConfigFlags(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
@@ -79,42 +93,49 @@ func TestAddrPort(t *testing.T) {
 		{
 			desc: "default values",
 			args: []string{},
-			want: server.ServerConfig{
-				Address: "127.0.0.1",
-				Port:    5000,
-			},
+			want: withDefaults(server.ServerConfig{}),
 		},
 		{
 			desc: "address short",
 			args: []string{"-a", "127.0.1.1"},
-			want: server.ServerConfig{
+			want: withDefaults(server.ServerConfig{
 				Address: "127.0.1.1",
-				Port:    5000,
-			},
+			}),
 		},
 		{
 			desc: "address long",
 			args: []string{"--address", "0.0.0.0"},
-			want: server.ServerConfig{
+			want: withDefaults(server.ServerConfig{
 				Address: "0.0.0.0",
-				Port:    5000,
-			},
+			}),
 		},
 		{
 			desc: "port short",
 			args: []string{"-p", "5052"},
-			want: server.ServerConfig{
-				Address: "127.0.0.1",
-				Port:    5052,
-			},
+			want: withDefaults(server.ServerConfig{
+				Port: 5052,
+			}),
 		},
 		{
 			desc: "port long",
 			args: []string{"--port", "5050"},
-			want: server.ServerConfig{
-				Address: "127.0.0.1",
-				Port:    5050,
-			},
+			want: withDefaults(server.ServerConfig{
+				Port: 5050,
+			}),
+		},
+		{
+			desc: "logging format",
+			args: []string{"--logging-format", "JSON"},
+			want: withDefaults(server.ServerConfig{
+				LoggingFormat: "JSON",
+			}),
+		},
+		{
+			desc: "debug logs",
+			args: []string{"--log-level", "WARN"},
+			want: withDefaults(server.ServerConfig{
+				LogLevel: "WARN",
+			}),
 		},
 	}
 	for _, tc := range tcs {
@@ -166,13 +187,59 @@ func TestToolFileFlag(t *testing.T) {
 	}
 }
 
+func TestFailServerConfigFlags(t *testing.T) {
+	tcs := []struct {
+		desc string
+		args []string
+	}{
+		{
+			desc: "logging format",
+			args: []string{"--logging-format", "fail"},
+		},
+		{
+			desc: "debug logs",
+			args: []string{"--log-level", "fail"},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, err := invokeCommand(tc.args)
+			if err == nil {
+				t.Fatalf("expected an error, but got nil")
+			}
+		})
+	}
+}
+
+func TestDefaultLoggingFormat(t *testing.T) {
+	c, _, err := invokeCommand([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error invoking command: %s", err)
+	}
+	got := c.cfg.LoggingFormat.String()
+	want := "standard"
+	if got != want {
+		t.Fatalf("unexpected default logging format flag: got %v, want %v", got, want)
+	}
+}
+
+func TestDefaultLogLevel(t *testing.T) {
+	c, _, err := invokeCommand([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error invoking command: %s", err)
+	}
+	got := c.cfg.LogLevel.String()
+	want := "info"
+	if got != want {
+		t.Fatalf("unexpected default log level flag: got %v, want %v", got, want)
+	}
+}
+
 func TestParseToolFile(t *testing.T) {
 	tcs := []struct {
-		description  string
-		in           string
-		wantSources  server.SourceConfigs
-		wantTools    server.ToolConfigs
-		wantToolsets server.ToolsetConfigs
+		description   string
+		in            string
+		wantToolsFile ToolsFile
 	}{
 		{
 			description: "basic example",
@@ -193,55 +260,185 @@ func TestParseToolFile(t *testing.T) {
 						SELECT * FROM SQL_STATEMENT;
 					parameters:
 						- name: country
-						  type: string
-						  description: some description
+							type: string
+							description: some description
 			toolsets:
 				example_toolset:
 					- example_tool
 			`,
-			wantSources: server.SourceConfigs{
-				"my-pg-instance": cloudsqlpgsrc.Config{
-					Name:     "my-pg-instance",
-					Kind:     cloudsqlpgsrc.SourceKind,
-					Project:  "my-project",
-					Region:   "my-region",
-					Instance: "my-instance",
-					Database: "my_db",
-				},
-			},
-			wantTools: server.ToolConfigs{
-				"example_tool": postgressql.Config{
-					Name:        "example_tool",
-					Kind:        postgressql.ToolKind,
-					Source:      "my-pg-instance",
-					Description: "some description",
-					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Kind:     cloudsqlpgsrc.SourceKind,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
 					},
 				},
-			},
-			wantToolsets: server.ToolsetConfigs{
-				"example_toolset": tools.ToolsetConfig{
-					Name:      "example_toolset",
-					ToolNames: []string{"example_tool"},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Kind:        postgressql.ToolKind,
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description"),
+						},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			gotSources, gotTools, gotToolsets, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantSources, gotSources); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantTools, gotTools); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
+				t.Fatalf("incorrect authSources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsets, gotToolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+		})
+	}
+
+}
+
+func TestParseToolFileWithAuth(t *testing.T) {
+	tcs := []struct {
+		description   string
+		in            string
+		wantToolsFile ToolsFile
+	}{
+		{
+			description: "basic example",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+			authSources:
+				my-google-service:
+					kind: google
+					clientId: my-client-id
+				other-google-service:
+					kind: google
+					clientId: other-client-id
+
+			tools:
+				example_tool:
+					kind: postgres-sql
+					source: my-pg-instance
+					description: some description
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					parameters:
+						- name: country
+						  type: string
+						  description: some description
+						- name: id
+						  type: integer
+						  description: user id
+						  authSources:
+							- name: my-google-service
+								field: user_id
+						- name: email
+							type: string
+							description: user email
+							authSources:
+							- name: my-google-service
+							  field: email
+							- name: other-google-service
+							  field: other_email
+
+			toolsets:
+				example_toolset:
+					- example_tool
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Kind:     cloudsqlpgsrc.SourceKind,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
+					},
+				},
+				AuthSources: server.AuthSourceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthSourceKind,
+						ClientID: "my-client-id",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Kind:     google.AuthSourceKind,
+						ClientID: "other-client-id",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Kind:        postgressql.ToolKind,
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description"),
+							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthSource{{Name: "my-google-service", Field: "user_id"}}),
+							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthSource{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
+				t.Fatalf("incorrect sources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
+				t.Fatalf("incorrect authSources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 		})

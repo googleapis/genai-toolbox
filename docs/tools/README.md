@@ -48,7 +48,8 @@ We currently support the following types of kinds of tools:
 
 * [postgres-sql](./postgres-sql.md) - Run a PostgreSQL statement against a
   PostgreSQL-compatible database.
-
+* [spanner](./spanner.md) - Run a Spanner (either googlesql or postgresql)
+  statement againts Spanner database.
 
 ## Specifying Parameters
 
@@ -69,7 +70,7 @@ to invoke them. Parameters should be pass as a list of Parameter objects:
 
 Basic parameters types include `string`, `integer`, `float`, `boolean` types. In
 most cases, the description will be provided to the LLM as context on specifying
-the parameter. 
+the parameter.
 
 ```yaml
     parameters:
@@ -83,8 +84,6 @@ the parameter.
 | name        |  string  |     true     | Name of the parameter.                                                     |
 | type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
 | description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
-
-
 
 ### Array Parameters
 
@@ -109,4 +108,53 @@ requires another Parameter to be specified under the `items` field:
 | description |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
+### Authenticated Parameters
 
+Authenticated parameters automatically populate their values with user
+information decoded from your [ID tokens](../authSources/README.md#id-token)
+passed in from request headers. They do not take input values in request bodies
+like other parameters. Instead, specify your configured
+[authSources](../authSources/README.md) and corresponding claim fields in ID
+tokens to tell Toolbox which values they should be auto-populated with.
+
+```yaml
+  tools:
+    search_flights_by_user_id:
+        kind: postgres-sql
+        source: my-pg-instance
+        statement: |
+          SELECT * FROM flights WHERE user_id = $1
+        parameters:
+          - name: user_id
+            type: string
+            description: Auto-populated from Google login
+            authSources:
+              # Refer to one of the `authSources` defined
+              - name: my-google-auth
+              # `sub` is the OIDC claim field for user ID
+                field: sub
+```
+
+| **field**   | **type** | **required** | **description**                                                            |
+|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
+| name        |  string  |     true     | Name of the [authSources](../authSources/README.md) used to verify the OIDC auth token.                |
+| field       |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.|
+
+## Authorized Tool Call
+
+You can require an authorization check for any Tool invocation request by
+specifying an `authRequired` field. Specify a list of
+[authSources](../authSources/README.md) defined in the previous section.
+
+```yaml
+tools:
+  search_all_flight:
+      kind: postgres-sql
+      source: my-pg-instance
+      statement: |
+        SELECT * FROM flights
+      # A list of `authSources` defined previously
+      authRequired:
+        - my-google-auth
+        - other-auth-service
+```

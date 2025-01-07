@@ -41,12 +41,13 @@ var _ compatibleSource = &postgres.Source{}
 var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name"`
-	Kind        string           `yaml:"kind"`
-	Source      string           `yaml:"source"`
-	Description string           `yaml:"description"`
-	Statement   string           `yaml:"statement"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	Source       string           `yaml:"source"`
+	Description  string           `yaml:"description"`
+	Statement    string           `yaml:"statement"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -71,24 +72,26 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:       cfg.Name,
-		Kind:       ToolKind,
-		Parameters: cfg.Parameters,
-		Statement:  cfg.Statement,
-		Pool:       s.PostgresPool(),
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		Name:         cfg.Name,
+		Kind:         ToolKind,
+		Parameters:   cfg.Parameters,
+		Statement:    cfg.Statement,
+		AuthRequired: cfg.AuthRequired,
+		Pool:         s.PostgresPool(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
 
-func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tools.Parameters) Tool {
+func NewGenericTool(name string, stmt string, authRequired []string, desc string, pool *pgxpool.Pool, parameters tools.Parameters) Tool {
 	return Tool{
-		Name:       name,
-		Kind:       ToolKind,
-		Statement:  stmt,
-		Pool:       pool,
-		manifest:   tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
-		Parameters: parameters,
+		Name:         name,
+		Kind:         ToolKind,
+		Statement:    stmt,
+		AuthRequired: authRequired,
+		Pool:         pool,
+		manifest:     tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
+		Parameters:   parameters,
 	}
 }
 
@@ -96,18 +99,20 @@ func NewGenericTool(name, stmt, desc string, pool *pgxpool.Pool, parameters tool
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name       string           `yaml:"name"`
-	Kind       string           `yaml:"kind"`
-	Parameters tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Pool      *pgxpool.Pool
 	Statement string
 	manifest  tools.Manifest
 }
 
-func (t Tool) Invoke(params []any) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+	sliceParams := params.AsSlice()
 	fmt.Printf("Invoked tool %s\n", t.Name)
-	results, err := t.Pool.Query(context.Background(), t.Statement, params...)
+	results, err := t.Pool.Query(context.Background(), t.Statement, sliceParams...)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -124,10 +129,14 @@ func (t Tool) Invoke(params []any) (string, error) {
 	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
 }
 
-func (t Tool) ParseParams(data map[string]any) ([]any, error) {
-	return tools.ParseParams(t.Parameters, data)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
+}
+
+func (t Tool) Authorized(verifiedAuthSources []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthSources)
 }

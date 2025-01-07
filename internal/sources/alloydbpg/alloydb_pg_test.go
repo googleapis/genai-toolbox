@@ -51,6 +51,59 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					Region:   "my-region",
 					Cluster:  "my-cluster",
 					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+				},
+			},
+		},
+		{
+			desc: "public ip_type",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: alloydb-postgres
+					project: my-project
+					region: my-region
+					cluster: my-cluster
+					instance: my-instance
+					ip_type: Public
+					database: my_db
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": alloydbpg.Config{
+					Name:     "my-pg-instance",
+					Kind:     alloydbpg.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Cluster:  "my-cluster",
+					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+				},
+			},
+		},
+		{
+			desc: "private ip_type",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: alloydb-postgres
+					project: my-project
+					region: my-region
+					cluster: my-cluster
+					instance: my-instance
+					ip_type: private
+					database: my_db
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": alloydbpg.Config{
+					Name:     "my-pg-instance",
+					Kind:     alloydbpg.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Cluster:  "my-cluster",
+					Instance: "my-instance",
+					IPType:   "private",
 					Database: "my_db",
 				},
 			},
@@ -71,5 +124,38 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 			}
 		})
 	}
+}
 
+func FailParseFromYamlAlloyDBPg(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+	}{
+		{
+			desc: "invalid ip_type",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: alloydb-postgres
+					project: my-project
+					region: my-region
+					cluster: my-cluster
+					instance: my-instance
+					ip_type: fail 
+					database: my_db
+			`,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail: %s", err)
+			}
+		})
+	}
 }
