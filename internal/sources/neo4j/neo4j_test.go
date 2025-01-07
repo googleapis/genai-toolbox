@@ -36,16 +36,14 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			sources:
 				my-neo4j-instance:
 					kind: neo4j
-					host: my-host
-					port: 0000
+					uri: neo4j+s://my-host:7687
 					database: my_db
 			`,
 			want: server.SourceConfigs{
 				"my-neo4j-instance": neo4j.Config{
 					Name:     "my-neo4j-instance",
 					Kind:     neo4j.SourceKind,
-					Host:     "my-host",
-					Port:     "0000",
+					Uri:      "neo4j+s://my-host:7687",
 					Database: "my_db",
 				},
 			},

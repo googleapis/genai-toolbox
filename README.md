@@ -186,9 +186,7 @@ Example for Neo4j
 sources:
     my-neo4j-source:
         kind: neo4j
-        proto: neo4j+s
-        host: my-neo4j-host
-        port: 7687
+        uri: neo4j+s://my-neo4j-host:7687
         user: neo4j
         password: my-password
         database: my_db

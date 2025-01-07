@@ -1,9 +1,7 @@
 sources:
   neo4j-movies-instance:
     kind: "neo4j"
-    proto: "neo4j+s"
-    host: "demo.neo4jlabs.com"
-    port: "7687"
+    host: "neo4j+s://demo.neo4jlabs.com:7687"
     user: "movies"
     password: "movies"
     database: "movies"

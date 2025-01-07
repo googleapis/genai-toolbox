@@ -30,9 +30,7 @@ var _ sources.SourceConfig = Config{}
 type Config struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
-	Proto    string `yaml:"proto"`
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
+	Uri      string `yaml:"uri"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
@@ -43,7 +41,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize() (sources.Source, error) {
-	driver, err := initNeo4jDriver(r.Proto, r.Host, r.Port, r.User, r.Password)
+	driver, err := initNeo4jDriver(r.Uri, r.User, r.Password)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create driver: %w", err)
 	}
@@ -86,11 +84,9 @@ func (s *Source) Neo4jDatabase() string {
 	return s.Database
 }
 
-func initNeo4jDriver(proto, host, port, user, password string) (neo4j.DriverWithContext, error) {
-	// urlExample := "neo4j+s://localhost:7687"
-	url := fmt.Sprintf("%s://%s:%s", proto, host, port)
+func initNeo4jDriver(uri, user, password string) (neo4j.DriverWithContext, error) {
 	auth := neo4j.BasicAuth(user, password, "")
-	driver, err := neo4j.NewDriverWithContext(url, auth)
+	driver, err := neo4j.NewDriverWithContext(uri, auth)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create connection driver: %w", err)
 	}
