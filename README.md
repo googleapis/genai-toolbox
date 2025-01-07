@@ -180,6 +180,20 @@ sources:
         database: my_db
 ```
 
+Example for Neo4j
+
+```yaml
+sources:
+    my-neo4j-source:
+        kind: neo4j
+        proto: neo4j+s
+        host: my-neo4j-host
+        port: 7687
+        user: neo4j
+        password: my-password
+        database: my_db
+```
+
 For more details on configuring different types of sources, see the [Source
 documentation.](docs/sources/README.md)
 
@@ -200,6 +214,22 @@ tools:
         - name: id
           type: integer
           description: 'id' represents the unique ID for each flight. 
+```
+
+Neo4j-Cypher Example
+
+```yaml
+tools:
+    get_movies_in_year:
+        kind: neo4j-cypher
+        source: my-neo4j-instance
+        description: >
+            Use this tool to list all movies titles in a given year. 
+        statement: "MATCH (m:Movie) WHERE m.year = $year RETURN m.title"
+        parameters:
+          - name: "year"
+            type: integer
+            description: 'year' represents a 4 digit year since 1900 up to the current year 
 ```
 
 For more details on configuring different types of tools, see the [Tool
