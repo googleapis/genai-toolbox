@@ -32,7 +32,7 @@ In addition to [setting the ADC for your server][set-adc], you need to ensure th
 sources:
     my-spanner-source:
         kind: "spanner"
-        project: "my-project-name"
+        project: "my-project-id"
         instance: "my-instance"
         database: "my_db"
         # dialect: "googlesql"
@@ -43,7 +43,7 @@ sources:
 | **field** | **type** | **required** | **description**                                                              |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "spanner".                                                           |
-| project   |  string  |     true     | Name of the GCP project that the cluster was created in (e.g. "my-project"). |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | instance  |  string  |     true     | Name of the AlloyDB instance within the cluser (e.g. "my-instance").         |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | dialect   |  string  |     true     | Name of the dialect type of the Spanner database, must be either `googlesql` or `postgresql`. Default: `googlesql`.        |

@@ -51,7 +51,7 @@ PostreSQL user][alloydb-users] to login to the database with.
 sources:
     my-alloydb-pg-source:
         kind: "alloydb-postgres"
-        project: "my-project-name"
+        project: "my-project-id"
         region: "us-central1"
         cluster: "my-cluster"
         instance: "my-instance"
@@ -65,7 +65,7 @@ sources:
 | **field** | **type** | **required** | **description**                                                              |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "alloydb-postgres".                                                  |
-| project   |  string  |     true     | Name of the GCP project that the cluster was created in (e.g. "my-project"). |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1"). |
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                             |
 | instance  |  string  |     true     | Name of the AlloyDB instance within the cluser (e.g. "my-instance").         |

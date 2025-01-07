@@ -49,7 +49,7 @@ PostreSQL user][cloud-sql-users] to login to the database with.
 sources:
     my-cloud-sql-pg-source:
         kind: "cloud-sql-postgres"
-        project: "my-project"
+        project: "my-project-id"
         region: "us-central1"
         instance: "my-instance"
         database: "my_db"
@@ -62,7 +62,7 @@ sources:
 | **field** | **type** | **required** | **description**                                                              |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                |
-| project   |  string  |     true     | Name of the GCP project that the cluster was created in (e.g. "my-project"). |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1"). |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluser (e.g. "my-instance").       |
 | ip_type   |  string  |     true     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
