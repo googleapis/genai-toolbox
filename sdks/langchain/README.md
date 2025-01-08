@@ -90,7 +90,7 @@ toolkit.
 ```py
 from langchain_google_vertexai import ChatVertexAI
 
-model = ChatVertexAI(model="gemini-1.5-flash")
+model = ChatVertexAI(model="gemini-1.5-flash-001")
 
 # Initialize agent with tools
 agent = model.bind_tools(tools)
@@ -123,7 +123,7 @@ def call_model(state: MessagesState):
     # We return a list, because this will get added to the existing list
     return {"messages": [response]}
 
-model = ChatVertexAI()
+model = ChatVertexAI(model="gemini-1.5-flash-001")
 builder = StateGraph(MessagesState)
 tool_node = ToolNode(tools)
 
