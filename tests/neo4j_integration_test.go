@@ -145,7 +145,7 @@ func TestNeo4j(t *testing.T) {
 			name:        "invoke my-simple-cypher-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "Stub tool call for \"my-simple-cypher-tool\"! Parameters parsed: [] \n Output: [%!s(a=1)]",
+			want:        "Stub tool call for \"my-simple-cypher-tool\"! Parameters parsed: map[] \n Output: \n\ta: %!s(int64=1)\n",
 		},
 	}
 	for _, tc := range invokeTcs {

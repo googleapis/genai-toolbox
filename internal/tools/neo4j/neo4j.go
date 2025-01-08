@@ -101,7 +101,7 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	ctx := context.Background()
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
 	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, t.Statement, paramsMap,
-		nil, config)
+		neo4j.EagerResultTransformer, config)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
