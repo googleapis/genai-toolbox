@@ -171,6 +171,9 @@ class ToolboxTool(StructuredTool):
 
             self._auth_tokens[auth_source] = get_id_token
 
+        # Remove auth params from the schema to prevent data validation errors
+        # since their values are inferred by the Toolbox service, not provided
+        # by the user.
         self._process_auth_params()
 
         if dupe_sources:
