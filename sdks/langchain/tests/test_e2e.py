@@ -22,7 +22,8 @@ This file covers the following use cases:
 4. Running a tool with no required auth, with auth provided.
 5. Running a tool with required auth:
     a. No auth provided.
-    b. Wrong auth provided.
+    b. Wrong auth provided: The tool requires a different authentication
+                            than the one provided.
     c. Correct auth provided.
 6. Running a tool with a parameter that requires auth:
     a. No auth provided.
