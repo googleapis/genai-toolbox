@@ -279,6 +279,9 @@ class ToolboxTool(StructuredTool):
 
             self._bound_params[param_name] = param_value
 
+        # Bound parameters are handled internally, so remove them from the
+        # schema to prevent validation errors and present a cleaner schema in
+        # the tool.
         self._remove_bound_params()
 
         if dupe_params:
