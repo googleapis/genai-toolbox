@@ -86,7 +86,6 @@ async def test_toolbox_tool_init(MockClientSession, tool_schema):
     assert tool.description == "Test Tool Description"
 
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "auth_tokens, expected_auth_tokens",
@@ -151,7 +150,6 @@ async def test_toolbox_tool_call(toolbox_tool):
     async for tool in toolbox_tool:
         result = await tool.ainvoke({"param1": "test-value", "param2": 123})
         assert result == {"result": "test-result"}
-
 
 
 @pytest.mark.asyncio

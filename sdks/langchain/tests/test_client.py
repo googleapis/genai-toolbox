@@ -345,7 +345,6 @@ async def test_toolbox_client_load_toolset_with_auth_and_headers(
         assert len(tools) == len(manifest_schema.tools)
 
 
-
 @pytest.mark.asyncio
 async def test_toolbox_client_del_loop_not_running():
     """Test __del__ when the loop is not running."""
