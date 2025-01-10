@@ -18,7 +18,7 @@ This file covers the following use cases:
 
 1. Loading a tool.
 2. Loading a specific toolset.
-3. Loading all toolsets.
+3. Loading the default toolset (contains all tools).
 4. Running a tool with no required auth, with auth provided.
 5. Running a tool with required auth:
     a. No auth provided.
@@ -27,7 +27,7 @@ This file covers the following use cases:
 6. Running a tool with a parameter that requires auth:
     a. No auth provided.
     b. Correct auth provided.
-    c. Auth provided does not contain the required field.
+    c. Auth provided does not contain the required claim.
 """
 
 import pytest
