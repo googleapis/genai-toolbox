@@ -11,7 +11,7 @@ from .utils import ParameterSchema, ToolSchema, _invoke_tool, _schema_to_model
 class ToolboxTool(StructuredTool):
     """
     A subclass of LangChain's StructuredTool that supports features specific to
-    Toolbox, like authenticated tools.
+    Toolbox, like bound parameters and authenticated tools.
     """
 
     def __init__(
@@ -21,6 +21,7 @@ class ToolboxTool(StructuredTool):
         url: str,
         session: ClientSession,
         auth_tokens: dict[str, Callable[[], str]] = {},
+        bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
     ) -> None:
         """
         Initializes a ToolboxTool instance.
@@ -32,6 +33,8 @@ class ToolboxTool(StructuredTool):
             session: The HTTP client session.
             auth_tokens: A mapping of authentication source names to functions
                 that retrieve ID tokens.
+            bound_params: A mapping of parameter names to their bound
+                values.
         """
         # If the schema is not already a ToolSchema instance, we create one from
         # its attributes. This allows flexibility in how the schema is provided,
@@ -54,7 +57,9 @@ class ToolboxTool(StructuredTool):
         self._session: ClientSession = session
         self._auth_tokens: dict[str, Callable[[], str]] = {}
         self._auth_params: dict[str, list[str]] = {}
+        self._bound_params: dict[str, Union[Any, Callable[[], Any]]] = {}
 
+        self.bind_params(bound_params, strict=False)
         self.add_auth_tokens(auth_tokens)
         self.__validate_auth(strict=False)
 
@@ -88,6 +93,17 @@ class ToolboxTool(StructuredTool):
         # before invoking that tool, we check whether all these required
         # authentication sources have been registered or not.
         self.__validate_auth()
+
+        # Evaluate dynamic parameter values if any
+        evaluated_params = {}
+        for param_name, param_value in self._bound_params.items():
+            if callable(param_value):
+                evaluated_params[param_name] = param_value()
+            else:
+                evaluated_params[param_name] = param_value
+
+        # Merge bound parameters with the provided arguments
+        kwargs.update(evaluated_params)
 
         return await _invoke_tool(
             self._url, self._session, self._name, kwargs, self._auth_tokens
@@ -152,6 +168,23 @@ class ToolboxTool(StructuredTool):
                 raise PermissionError(message)
             warn(message)
 
+    def _remove_bound_params(self) -> None:
+        """
+        Removes parameters bound to a value from the tool schema.
+
+        This is to prevent data validation errors since their values are
+        inferred by the SDK, not provided by the user.
+
+        Raises:
+            ValueError: If attempting to bind a value on an authenticated tool.
+        """
+        non_bound_params: list[ParameterSchema] = []
+        for param in self._schema.parameters:
+            if param.name not in self._bound_params:
+                non_bound_params.append(param)
+
+        self._update_params(non_bound_params)
+
     def add_auth_tokens(self, auth_tokens: dict[str, Callable[[], str]]) -> None:
         """
         Registers functions to retrieve ID tokens for the corresponding
@@ -199,3 +232,88 @@ class ToolboxTool(StructuredTool):
                 registered.
         """
         return self.add_auth_tokens({auth_source: get_id_token})
+
+    def bind_params(
+        self,
+        bound_params: dict[str, Union[Any, Callable[[], Any]]],
+        strict: bool = True,
+    ) -> None:
+        """
+        Registers values or functions to retrieve the value for the
+        corresponding bound parameters.
+
+        Args:
+            bound_params: A dictionary of the bound parameter name to the
+                value or function of the bound value.
+            strict: If True, raises a ValueError if the parameter is not
+                present in the tool's schema.
+
+        Raises:
+            ValueError: If the given parameter is already bound, or if strict
+                is True and the parameter is not present in the tool's schema.
+        """
+        dupe_params: list[str] = []
+        invalid_params: list[str] = []
+        missing_params: list[str] = []
+        for param_name, param_value in bound_params.items():
+
+            # Check if the parameter is already bound.
+            if param_name in self._bound_params:
+                dupe_params.append(param_name)
+                continue
+
+            # Check if the parameter has authSources set OR is already present
+            # in _auth_params.
+            if param_name in self._auth_params or any(
+                param.authSources
+                for param in self._schema.parameters
+                if param.name == param_name
+            ):
+                invalid_params.append(param_name)
+                continue
+
+            # Check if the parameter is missing from the tool schema.
+            if not param_name in [param.name for param in self._schema.parameters]:
+                missing_params.append(param_name)
+                continue
+
+            self._bound_params[param_name] = param_value
+
+        self._remove_bound_params()
+
+        if dupe_params:
+            raise ValueError(
+                f"Parameter(s) `{', '.join(dupe_params)}` already bound in tool `{self._name}`."
+            )
+        if invalid_params:
+            raise ValueError(
+                f"Value(s) for `{', '.join(invalid_params)}` automatically handled by authentication source(s) and cannot be modified."
+            )
+        if missing_params:
+            message = f"Parameter(s) `{', '.join(missing_params)}` not existing in tool `{self._name}`."
+            if strict:
+                raise ValueError(message)
+            warn(message)
+
+    def bind_param(
+        self,
+        param_name: str,
+        param_value: Union[Any, Callable[[], Any]],
+        strict: bool = True,
+    ) -> None:
+        """
+        Registers a value or a function to retrieve the value for a given
+        bound parameter.
+
+        Args:
+            param_name: The name of the bound parameter.
+            param_value: The value of the bound parameter, or a callable
+                that returns the value.
+            strict: If True, raises a ValueError if the parameter is not
+                present in the tool's schema.
+
+        Raises:
+            ValueError: If the given parameter is already bound, or if strict
+                is True and the parameter is not present in the tool's schema.
+        """
+        return self.bind_params({param_name: param_value}, strict)

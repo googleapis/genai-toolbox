@@ -49,6 +49,11 @@ def mock_auth_tokens():
     return {"test-auth-source": lambda: "test-token"}
 
 
+@pytest.fixture
+def mock_bound_params():
+    return {"param1": "bound-value"}
+
+
 @pytest.mark.asyncio
 @patch("toolbox_langchain_sdk.client.ClientSession")
 async def test_toolbox_client_init(mock_client):
@@ -170,6 +175,7 @@ async def test_toolbox_client_load_tool(mock_load_manifest, MockToolboxTool):
             "https://test-url",
             session,
             {},
+            {},
         )
 
 
@@ -192,6 +198,7 @@ async def test_toolbox_client_load_tool_with_auth(
             "https://test-url",
             session,
             mock_auth_tokens,
+            {},
         )
 
 
@@ -218,6 +225,7 @@ async def test_toolbox_client_load_tool_with_auth_headers(
             "https://test-url",
             session,
             mock_auth_tokens,
+            {},
         )
 
 
@@ -246,10 +254,35 @@ async def test_toolbox_client_load_tool_with_auth_and_headers(
             "https://test-url",
             session,
             mock_auth_tokens,
+            {},
         )
 
 
 @pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client.ToolboxTool")
+@patch("toolbox_langchain_sdk.client._load_manifest")
+async def test_toolbox_client_load_tool_with_bound_params(
+    mock_load_manifest, MockToolboxTool, mock_bound_params
+):
+    mock_load_manifest.return_value = AsyncMock(
+        return_value={"tools": {"test_tool": {"description": "Test Tool Description"}}}
+    )
+    async with ClientSession() as session:
+        client = ToolboxClient(url="https://test-url", session=session)
+        tool = await client.load_tool("test_tool", bound_params=mock_bound_params)
+        assert tool == MockToolboxTool.return_value
+        MockToolboxTool.assert_called_once_with(
+            "test_tool",
+            mock_load_manifest.return_value.tools.__getitem__("test_tool"),
+            "https://test-url",
+            session,
+            {},
+            mock_bound_params,
+        )
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client.ToolboxTool")
 @patch("toolbox_langchain_sdk.client._load_manifest")
 async def test_toolbox_client_load_toolset(
     mock_load_manifest, toolbox_client, manifest_schema
@@ -281,6 +314,7 @@ async def test_toolbox_client_load_toolset_with_auth(
             assert call_args[2] == client._url
             assert call_args[3] == client._session
             assert call_args[4] == mock_auth_tokens
+            assert call_args[5] == {}
 
         assert len(tools) == len(manifest_schema.tools)
 
@@ -310,6 +344,7 @@ async def test_toolbox_client_load_toolset_with_auth_headers(
             assert call_args[2] == client._url
             assert call_args[3] == client._session
             assert call_args[4] == mock_auth_tokens
+            assert call_args[5] == {}
 
         assert len(tools) == len(manifest_schema.tools)
 
@@ -341,6 +376,33 @@ async def test_toolbox_client_load_toolset_with_auth_and_headers(
             assert call_args[2] == client._url
             assert call_args[3] == client._session
             assert call_args[4] == mock_auth_tokens
+            assert call_args[5] == {}
+
+        assert len(tools) == len(manifest_schema.tools)
+
+
+@pytest.mark.asyncio
+@patch("toolbox_langchain_sdk.client.ToolboxTool")
+@patch("toolbox_langchain_sdk.client._load_manifest")
+async def test_toolbox_client_load_toolset_with_bound_params(
+    mock_load_manifest,
+    mock_toolbox_tool,
+    toolbox_client,
+    manifest_schema,
+    mock_bound_params,
+):
+    mock_load_manifest.return_value = manifest_schema
+    for client in toolbox_client:
+        tools = await client.load_toolset(bound_params=mock_bound_params)
+
+        for i, (tool_name, tool_schema) in enumerate(manifest_schema.tools.items()):
+            call_args, _ = mock_toolbox_tool.call_args_list[i]
+            assert call_args[0] == tool_name
+            assert call_args[1] == tool_schema
+            assert call_args[2] == client._url
+            assert call_args[3] == client._session
+            assert call_args[4] == {}
+            assert call_args[5] == mock_bound_params
 
         assert len(tools) == len(manifest_schema.tools)
 

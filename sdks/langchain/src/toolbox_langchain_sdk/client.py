@@ -99,6 +99,7 @@ class ToolboxClient:
         tool_name: str,
         auth_tokens: dict[str, Callable[[], str]] = {},
         auth_headers: Optional[dict[str, Callable[[], str]]] = None,
+        bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
     ) -> ToolboxTool:
         """
         Loads the tool with the given tool name from the Toolbox service.
@@ -108,6 +109,8 @@ class ToolboxClient:
             auth_tokens: An optional mapping of authentication source names to
                 functions that retrieve ID tokens.
             auth_headers: Deprecated. Use `auth_tokens` instead.
+            bound_params: An optional mapping of parameter names to their
+                bound values.
 
         Returns:
             A tool loaded from the Toolbox.
@@ -132,6 +135,7 @@ class ToolboxClient:
             self._url,
             self._session,
             auth_tokens,
+            bound_params,
         )
 
     async def load_toolset(
@@ -139,6 +143,7 @@ class ToolboxClient:
         toolset_name: Optional[str] = None,
         auth_tokens: dict[str, Callable[[], str]] = {},
         auth_headers: Optional[dict[str, Callable[[], str]]] = None,
+        bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
     ) -> list[ToolboxTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset
@@ -150,6 +155,8 @@ class ToolboxClient:
             auth_tokens: An optional mapping of authentication source names to
                 functions that retrieve ID tokens.
             auth_headers: Deprecated. Use `auth_tokens` instead.
+            bound_params: An optional mapping of parameter names to their
+                bound values.
 
         Returns:
             A list of all tools loaded from the Toolbox.
@@ -178,6 +185,7 @@ class ToolboxClient:
                     self._url,
                     self._session,
                     auth_tokens,
+                    bound_params,
                 )
             )
         return tools
