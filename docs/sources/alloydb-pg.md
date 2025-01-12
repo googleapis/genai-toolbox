@@ -32,15 +32,15 @@ IAM identity has been given the following IAM permissions:
 
 ### Network Path
 
-Currently, this source only supports [connecting over Private
-IP][private-ip]. Most notably, this means
-you need to connect from a VPC that AlloyDB has been connected to.
+Currently, AlloyDB supports connection over both [private
+IP][private-ip] and [public IP][public-ip]. Specify the `ip_type` parameter in your source configuration.
 
 [private-ip]: https://cloud.google.com/alloydb/docs/private-ip
+[public-ip]: https://cloud.google.com/alloydb/docs/connect-public-ipa
 
 ### Database User
 
-Current, this source only uses standard authentication. You will need to [create a
+Currently, this source only uses standard authentication. You will need to [create a
 PostreSQL user][alloydb-users] to login to the database with.
 
 [alloydb-users]: https://cloud.google.com/alloydb/docs/database-users/about
@@ -73,5 +73,3 @@ sources:
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                 |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                          |
-
-
