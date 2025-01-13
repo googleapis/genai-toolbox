@@ -30,6 +30,8 @@ import (
 	"time"
 
 	"testing"
+
+	"google.golang.org/api/idtoken"
 )
 
 var SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
@@ -37,30 +39,24 @@ var clientId = os.Getenv("CLIENT_ID")
 
 // Get a Google ID token
 func getGoogleIdToken(audience string) (string, error) {
-	// For local testing - use gcloud CLI to print ID token
+	// For local testing - use gcloud command to print personal ID token
 	cmd := exec.Command("gcloud", "auth", "print-identity-token")
 	output, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(output)), nil
+	} else {
+		return "", err
 	}
-	// For Cloud Build testing - retrieve ID token from metadata server
-	url := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=" + audience
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	// For Cloud Build testing - retrieve ID token from GCE metadata server
+	ts, err := idtoken.NewTokenSource(context.Background(), clientId)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Metadata-Flavor", "Google")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := ts.Token()
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
+	return token.AccessToken, nil
 }
 
 func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
