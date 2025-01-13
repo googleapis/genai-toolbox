@@ -26,7 +26,7 @@ jobs:
   # Required checks verify the job name, not the workflow name. This workflow
   # defines a no-op check so PRs without build impact will be passed.
   # https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
-  deploy:
+  preview:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No build required"'
