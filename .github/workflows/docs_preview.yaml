@@ -22,6 +22,7 @@ on:
     paths:
       - 'docs/**'
       - 'github/workflows/docs**'
+      - '.hugo'
 
 jobs:
   preview:
@@ -60,7 +61,8 @@ jobs:
       - run: npm ci
       - run: hugo --minify
         env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}//previews/PR-${{ github.event.number }}/
+          HUGO_BASEURL: https://vigilant-guacamole-plnwrm9.pages.github.io/previews/PR-${{ github.event.number }}/
+          # HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/previews/PR-${{ github.event.number }}/
           HUGO_ENVIRONMENT: preview
           HUGO_RELATIVEURLS: false
 
@@ -84,5 +86,5 @@ jobs:
               issue_number: context.payload.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "🔎 Preview at https://${{ github.repository_owner }}.github.io/${{ github.repository }}/previews/PR-${{ github.event.number }}/"
+              body: https://vigilant-guacamole-plnwrm9.pages.github.io/previews/PR-${{ github.event.number }}/
             })

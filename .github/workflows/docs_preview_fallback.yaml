@@ -19,6 +19,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'github/workflows/docs**'
+      - '.hugo'
 
 jobs:
   # This workflow defines fallback handling for required 'deploy' check.
