@@ -63,8 +63,7 @@ There are a couple of steps to run and use a Collector.
 1. Set up the Collector config.
     Below are some examples for setting up the Collector config:
     - [Google Cloud Exporter][google-cloud-exporter]
-    - [Google
-    Managed Service for Prometheus Exporter][google-prometheus-exporter]
+    - [Google Managed Service for Prometheus Exporter][google-prometheus-exporter]
 
 1. Run the Collector with the configuration file.
 
@@ -72,7 +71,8 @@ There are a couple of steps to run and use a Collector.
     ./otelcol-contrib --config=collector-config.yaml
     ```
 
-1. Run toolbox with the `--telemetry-otlp` flag. Configure it to send them to `http://127.0.0.1:4553` (for HTTP) or the Collector's URL.
+1. Run toolbox with the `--telemetry-otlp` flag. Configure it to send them to
+   `http://127.0.0.1:4553` (for HTTP) or the Collector's URL.
 
     ```bash
     ./toolbox --telemetry-otlp=http://127.0.0.1:4553
@@ -88,7 +88,9 @@ There are a couple of steps to run and use a Collector.
 > the Google Cloud Exporter for traces and the Google Managed Service for
 > Prometheus Exporter for metrics.
 
-[google-cloud-exporter]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
-[google-prometheus-exporter]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter#example-configuration
+[google-cloud-exporter]:
+    https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
+[google-prometheus-exporter]:
+    https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter#example-configuration
 [metrics-explorer]: https://console.cloud.google.com/monitoring/metrics-explorer
 [trace-explorer]: https://console.cloud.google.com/traces
