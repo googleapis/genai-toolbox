@@ -117,7 +117,8 @@ class ToolboxTool(FunctionTool):
         # To ensure data integrity, we added input validation against the
         # function schema, as this is not currently performed by the underlying
         # `FunctionTool`.
-        self.metadata.fn_schema.model_validate(kwargs)
+        if self.metadata.fn_schema is not None:
+            self.metadata.fn_schema.model_validate(kwargs)
 
         return await _invoke_tool(
             self._url, self._session, self._name, kwargs, self._auth_tokens
