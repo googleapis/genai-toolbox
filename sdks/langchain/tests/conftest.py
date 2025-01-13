@@ -101,12 +101,12 @@ def project_id() -> str:
 def toolbox_version() -> str:
     return get_env_var("TOOLBOX_VERSION")
 
-
+# test run with clientId instead of client_id
 @pytest_asyncio.fixture(scope="session")
 def tools_file_path(project_id: str) -> Generator[str]:
     """Provides a temporary file path containing the tools manifest."""
     tools_manifest = access_secret_version(
-        project_id=project_id, secret_id="sdk_testing_tools"
+        project_id=project_id, secret_id="sdk_testing_tools", version_id='11'
     )
     tools_file_path = create_tmpfile(tools_manifest)
     yield tools_file_path
