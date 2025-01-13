@@ -16,8 +16,7 @@ name: "docs"
 
 permissions:
   contents: write
-  pages: write
-  pull-requests: read
+  issues: write
 
 on:
   push:
