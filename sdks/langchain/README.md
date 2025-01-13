@@ -256,8 +256,9 @@ tool = await toolbox.load_tool(auth_tokens={"my_auth": get_auth_token})
 tools = await toolbox.load_toolset(auth_tokens={"my_auth": get_auth_token})
 ```
 
-> [!NOTE] Authentication tokens added during loading only affect the tools
-> loaded within that specific call.
+> [!NOTE]
+> Authentication tokens added during loading only affect the tools loaded within
+> that specific call.
 
 ### Complete Example
 
