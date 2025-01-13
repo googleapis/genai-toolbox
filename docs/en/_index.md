@@ -7,4 +7,4 @@ description: >
   All of Toolbox's documentation. 
 ---
 
-{{ partial "toc.html" . }}
+Placeholder for top-level directory. 
