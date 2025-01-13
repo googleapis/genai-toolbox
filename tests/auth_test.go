@@ -33,17 +33,17 @@ import (
 )
 
 var SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
-var clientId string = "32555940559.apps.googleusercontent.com"
+var clientId = os.Getenv("CLIENT_ID")
 
 // Get a Google ID token
 func getGoogleIdToken(audience string) (string, error) {
-	// For local testing
+	// For local testing - use gcloud CLI to print ID token
 	cmd := exec.Command("gcloud", "auth", "print-identity-token")
 	output, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(output)), nil
 	}
-	// Cloud Build testing
+	// For Cloud Build testing - retrieve ID token from metadata server
 	url := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=" + audience
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -63,7 +63,7 @@ func getGoogleIdToken(audience string) (string, error) {
 	return string(body), nil
 }
 
-func GoogleAuthenticatedParameterTestHelper(t *testing.T, sourceConfig map[string]any, toolKind string) {
+func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
 	// create query statement
 	var statement string
 	switch {
@@ -76,7 +76,7 @@ func GoogleAuthenticatedParameterTestHelper(t *testing.T, sourceConfig map[strin
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-pg-instance": sourceConfig,
+			"my-instance": sourceConfig,
 		},
 		"authSources": map[string]any{
 			"my-google-auth": map[string]any{
@@ -87,7 +87,7 @@ func GoogleAuthenticatedParameterTestHelper(t *testing.T, sourceConfig map[strin
 		"tools": map[string]any{
 			"my-auth-tool": map[string]any{
 				"kind":        toolKind,
-				"source":      "my-pg-instance",
+				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
 				"statement": statement,
@@ -211,11 +211,11 @@ func GoogleAuthenticatedParameterTestHelper(t *testing.T, sourceConfig map[strin
 	}
 }
 
-func AuthRequiredToolInvocationTestHelper(t *testing.T, sourceConfig map[string]any, toolKind string) {
+func RunAuthRequiredToolInvocationTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-pg-instance": sourceConfig,
+			"my-instance": sourceConfig,
 		},
 		"authSources": map[string]any{
 			"my-google-auth": map[string]any{
@@ -226,7 +226,7 @@ func AuthRequiredToolInvocationTestHelper(t *testing.T, sourceConfig map[string]
 		"tools": map[string]any{
 			"my-auth-tool": map[string]any{
 				"kind":        toolKind,
-				"source":      "my-pg-instance",
+				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"statement":   "SELECT 1;",
 				"authRequired": []string{

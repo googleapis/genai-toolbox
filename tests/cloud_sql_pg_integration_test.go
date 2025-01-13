@@ -239,7 +239,7 @@ func TestGoogleAuthenticatedParameter(t *testing.T) {
 	defer teardownTest(t)
 
 	// call generic auth test helper
-	GoogleAuthenticatedParameterTestHelper(t, sourceConfig, "postgres-sql")
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql")
 
 }
 
@@ -248,6 +248,6 @@ func TestAuthRequiredToolInvocation(t *testing.T) {
 	sourceConfig := requireCloudSQLPgVars(t)
 
 	// call generic auth test helper
-	AuthRequiredToolInvocationTestHelper(t, sourceConfig, "postgres-sql")
+	RunAuthRequiredToolInvocationTest(t, sourceConfig, "postgres-sql")
 
 }
