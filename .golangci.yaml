@@ -33,3 +33,7 @@ issues:
 run:
   build-tags:
     - integration
+    - cloudsql
+    - postgres
+    - alloydb
+    - spanner

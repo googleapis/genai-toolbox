@@ -30,20 +30,20 @@ import (
 )
 
 var (
-    SPANNER_PROJECT = os.Getenv("SPANNER_PROJECT")
+	SPANNER_PROJECT  = os.Getenv("SPANNER_PROJECT")
 	SPANNER_DATABASE = os.Getenv("SPANNER_DATABASE")
 	SPANNER_INSTANCE = os.Getenv("SPANNER_INSTANCE")
 )
 
 func requireSpannerVars(t *testing.T) {
 	switch "" {
-    case SPANNER_PROJECT:
-        t.Fatal("'SPANNER_PROJECT' not set")
+	case SPANNER_PROJECT:
+		t.Fatal("'SPANNER_PROJECT' not set")
 	case SPANNER_DATABASE:
 		t.Fatal("'SPANNER_DATABASE' not set")
 	case SPANNER_INSTANCE:
 		t.Fatal("'SPANNER_INSTANCE' not set")
-    }
+	}
 }
 
 func TestSpanner(t *testing.T) {
@@ -58,8 +58,8 @@ func TestSpanner(t *testing.T) {
 		"sources": map[string]any{
 			"my-spanner-instance": map[string]any{
 				"kind":     "spanner",
-                "project":  SPANNER_PROJECT,
-				"instance":     SPANNER_INSTANCE,
+				"project":  SPANNER_PROJECT,
+				"instance": SPANNER_INSTANCE,
 				"database": SPANNER_DATABASE,
 			},
 		},
