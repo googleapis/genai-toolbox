@@ -30,10 +30,10 @@ The structured logging outputs log as JSON:
 ```
 > [!NOTE]
 > `logging.googleapis.com/sourceLocation` shows the source code location
-> informaiton associated with the log entry, if any.
+> information associated with the log entry, if any.
 
 ### Log level
-Toolbox supports four types of logging format, including `Debug`, `Info`, `Warn`,
+Toolbox supports four log levels, including `Debug`, `Info`, `Warn`,
 and `Error`. Toolbox will only output logs that are equal or more severe to the
 level that it is set. Below are the log levels that Toolbox supports in the
 order of severity.
@@ -41,8 +41,8 @@ order of severity.
 | **Log level** | **Description** |
 |---------------|-----------------|
 | Debug         | Debug logs typically contain information that is only useful during the debugging phase and may be of little value during production. |
-| Info          | Info logs includes information about successful operations within the application, such as a successful start, pause, or exit of the application. |
-| Warn          | Warning logs are slightly less severe than error conditions. While it does not cause an error, it indicate that an operation might fail in the future if action is not taken now. |
+| Info          | Info logs include information about successful operations within the application, such as a successful start, pause, or exit of the application. |
+| Warn          | Warning logs are slightly less severe than error conditions. While it does not cause an error, it indicates that an operation might fail in the future if action is not taken now. |
 | Error         | Error log is assigned to event logs that contain an application error message. |
 
 ### Logging Configurations
@@ -67,9 +67,9 @@ Toolbox provides the following custom metrics:
 
 | **Metric Name** | **Description** |
 |-----------------|-----------------|
-| `toolbox.server.toolset.get.count` | Count the number of toolset manifest request served |
-| `toolbox.server.tool.get.count` | Count the number of tool manifest request served |
-| `toolbox.server.tool.get.invoke` | Count the number of tool invocation request served |
+| `toolbox.server.toolset.get.count` | Counts the number of toolset manifest requests served |
+| `toolbox.server.tool.get.count` | Counts the number of tool manifest requests served |
+| `toolbox.server.tool.get.invoke` | Counts the number of tool invocation requests served |
 
 All custom metrics have the following attributes/labels:
 
@@ -127,7 +127,7 @@ this exporter if you choose to export your telemetry data to a Collector.
 [otlp-trace-exporter]: https://opentelemetry.io/docs/languages/go/exporters/#otlp-traces-over-http
 
 ### Collector
-A Collector act as a proxy between the application and the telemetry backend. It
+A collector acts as a proxy between the application and the telemetry backend. It
 receives telemetry data, transforms it, and then exports data to backends that
 can store it permanently. Toolbox provide an option to export telemetry data to user's choice of
 backend(s) that are compatible with the Open Telemetry Protocol (OTLP). If you
@@ -135,7 +135,7 @@ would like to use a collector, please refer to this
 [guide](./guide_collector.md).
 
 ### Telemetry Configurations
-The following flag are used to determine Toolbox's telemetry configuration:
+The following flags are used to determine Toolbox's telemetry configuration:
 
 | **flag** | **type** | **description** |
 |-------------------------------|----------|-----------------|
