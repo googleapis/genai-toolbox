@@ -192,7 +192,7 @@ func TestCloudSQLPostgres(t *testing.T) {
 }
 
 // Set up auth test database table
-func setupAuthTest(t *testing.T) func(*testing.T) {
+func setupAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
 	// set up testt
 	pool, err := cloudsqlpg.InitCloudSQLPgConnectionPool(CLOUD_SQL_POSTGRES_PROJECT, CLOUD_SQL_POSTGRES_REGION, CLOUD_SQL_POSTGRES_INSTANCE, "public", CLOUD_SQL_POSTGRES_USER, CLOUD_SQL_POSTGRES_PASS, CLOUD_SQL_POSTGRES_DATABASE)
 	if err != nil {
