@@ -44,8 +44,6 @@ func getGoogleIdToken(audience string) (string, error) {
 	output, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(output)), nil
-	} else {
-		return "", err
 	}
 	// For Cloud Build testing - retrieve ID token from GCE metadata server
 	ts, err := idtoken.NewTokenSource(context.Background(), clientId)
