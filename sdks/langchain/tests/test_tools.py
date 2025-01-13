@@ -61,7 +61,7 @@ async def auth_toolbox_tool(MockClientSession, auth_tool_schema):
     )
     with pytest.warns(
         UserWarning,
-        match=r"Parameter\(s\) \`param1\` of tool test_tool require authentication\, but no valid authentication sources are registered\. Please register the required sources before use\.",
+        match="Parameter\(s\) \`param1\` of tool test_tool require authentication\, but no valid authentication sources are registered\. Please register the required sources before use\.",
     ):
         tool = ToolboxTool(
             name="test_tool",
