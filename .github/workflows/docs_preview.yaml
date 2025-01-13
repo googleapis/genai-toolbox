@@ -61,7 +61,7 @@ jobs:
       - run: npm ci
       - run: hugo --minify
         env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/{{ github.repository }}//previews/PR-${{ github.event.number }}/
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}//previews/PR-${{ github.event.number }}/
           HUGO_ENVIRONMENT: preview
 
       - name: Deploy
@@ -84,5 +84,5 @@ jobs:
               issue_number: context.payload.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "🔎 Preview at https://${{ github.repository_owner }}.github.io/{{ github.repository }}/previews/PR-${{ github.event.number }}/"
+              body: "🔎 Preview at https://${{ github.repository_owner }}.github.io/${{ github.repository }}/previews/PR-${{ github.event.number }}/"
             })
