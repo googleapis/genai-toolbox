@@ -45,7 +45,7 @@ async def main():
     toolbox = ToolboxClient("http://127.0.0.1:5000")
     tools = await toolbox.load_toolset()
     
-    model = Vertex(model="gemini-1.5-pro-002")
+    model = Vertex(model="gemini-pro")
     agent = ReActAgent.from_tools(tools, llm=model, verbose=True)
     response = agent.query("Get some response from the agent.")
     print(result)
@@ -122,7 +122,7 @@ input. Include tools loaded from the Toolbox SDK in the agent's toolkit:
 from llama_index.llms.vertex import Vertex
 from llama_index.core.agent import ReActAgent
 
-model = Vertex(model="gemini-1.5-pro-002")
+model = Vertex(model="gemini-pro")
 
 # Initialize agent with tools
 agent = ReActAgent.from_tools(tools, llm=model, verbose=True)
