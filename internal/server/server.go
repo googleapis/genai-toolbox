@@ -35,12 +35,11 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version  string
-	srv      *http.Server
-	listener net.Listener
-	root     chi.Router
-	logger   log.Logger
-	metrics *ServerMetrics
+	version         string
+	srv             *http.Server
+	listener        net.Listener
+	root            chi.Router
+	logger          log.Logger
 	instrumentation *Instrumentation
 
 	sources     map[string]sources.Source
@@ -50,7 +49,6 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-<<<<<<< HEAD
 func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
 	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
 	if err != nil {
@@ -203,13 +201,13 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	srv := &http.Server{Addr: addr, Handler: r}
 
 	s := &Server{
-		version:     cfg.Version,
-		srv:         srv,
-		root:        r,
-		logger:      l,
+		version:         cfg.Version,
+		srv:             srv,
+		root:            r,
+		logger:          l,
 		instrumentation: instrumentation,
 
-		sources:         sourcesMap,
+		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,
 		toolsets:    toolsetsMap,

@@ -197,7 +197,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data map[string]any
-	if err = render.DecodeJSON(r.Body, &data); err != nil {
+	if err = decodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err = fmt.Errorf("request body was invalid JSON: %w", err)
 		s.logger.DebugContext(context.Background(), err.Error())

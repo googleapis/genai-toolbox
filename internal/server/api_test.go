@@ -112,7 +112,7 @@ func TestToolsetEndpoint(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, instrumentation: instrumentation, tools: toolsMap, toolsets: toolsets}
+	server := Server{logger: testLogger, instrumentation: instrumentation, tools: toolsMap, toolsets: toolsets}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
@@ -246,7 +246,7 @@ func TestToolGetEndpoint(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	server := Server{conf: ServerConfig{Version: fakeVersionString}, logger: testLogger, instrumentation: instrumentation, tools: toolsMap}
+	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, tools: toolsMap}
 	r, err := apiRouter(&server)
 	if err != nil {
 		t.Fatalf("unable to initialize router: %s", err)
