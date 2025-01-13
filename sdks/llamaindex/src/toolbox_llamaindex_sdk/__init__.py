@@ -13,5 +13,6 @@
 # limitations under the License.
 
 from .client import ToolboxClient
+from .tools import ToolboxTool
 
-__all__ = ["ToolboxClient"]
+__all__ = ["ToolboxClient", "ToolboxTool"]
