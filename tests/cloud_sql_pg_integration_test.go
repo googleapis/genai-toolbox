@@ -199,12 +199,12 @@ func setupAuthTest(t *testing.T) func(*testing.T) {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
 
-	err = pool.Ping(context.Background())
+	err = pool.Ping(ctx)
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
 
-	_, err = pool.Query(context.Background(), `
+	_, err = pool.Query(ctx, `
 		CREATE TABLE auth_table (
 			id SERIAL PRIMARY KEY,
 			name TEXT,
@@ -221,21 +221,24 @@ func setupAuthTest(t *testing.T) func(*testing.T) {
 		VALUES ($1, $2), ($3, $4)
 	`
 	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
-	_, err = pool.Query(context.Background(), statement, params...)
+	_, err = pool.Query(ctx, statement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}
 
 	return func(t *testing.T) {
 		// tear down test
-		pool.Exec(context.Background(), `DROP TABLE auth_table;`)
+		pool.Exec(ctx, `DROP TABLE auth_table;`)
 	}
 }
 
 func TestGoogleAuthenticatedParameter(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
 	// create test configs
 	sourceConfig := requireCloudSQLPgVars(t)
-	teardownTest := setupAuthTest(t)
+	teardownTest := setupAuthTest(ctx, t)
 	defer teardownTest(t)
 
 	// call generic auth test helper
