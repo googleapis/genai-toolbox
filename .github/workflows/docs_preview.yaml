@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Preview
+name: "docs"
 
 # This Workflow depends on 'github.event.number',
 # not compatible with branch or manual triggers.
@@ -24,7 +24,7 @@ on:
       - 'github/workflows/docs**'
 
 jobs:
-  deploy:
+  preview:
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -36,7 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive # Fetch the Docsy theme
           fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
 
       - name: Setup Hugo
@@ -70,7 +69,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: .hugo/public
           destination_dir: ./previews/PR-${{ github.event.number }}
           commit_message: "stage: PR-${{ github.event.number }}: ${{ github.event.head_commit.message }}"
 

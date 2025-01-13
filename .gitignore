@@ -9,4 +9,5 @@ node_modules
 
 # hugo
 .hugo/public/
+.hugo/resources/_gen
 .hugo_build.lock

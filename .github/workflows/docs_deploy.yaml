@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Docs Deploy
+name: "docs"
 
 on:
   push:
@@ -36,8 +36,8 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
-        # with:
-        #   fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
+        with:
+          fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
@@ -65,7 +65,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: .hugo/public
           # Do not delete previews on each production deploy.
           # CSS or JS changes will require manual clean-up.
           keep_files: true
