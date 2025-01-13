@@ -15,6 +15,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,6 +52,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
 		err := fmt.Errorf("Toolset %q does not exist", toolsetName)
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -63,6 +65,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -83,6 +86,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -94,6 +98,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
 			err := fmt.Errorf("failure getting claims from header: %w", err)
+			s.logger.DebugContext(context.Background(), err.Error())
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
@@ -115,6 +120,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	isAuthorized := tool.Authorized(verifiedAuthSources)
 	if !isAuthorized {
 		err := fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 		return
 	}
@@ -123,6 +129,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if err := decodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err := fmt.Errorf("request body was invalid JSON: %w", err)
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
@@ -130,6 +137,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err := fmt.Errorf("provided parameters were invalid: %w", err)
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
@@ -137,6 +145,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	res, err := tool.Invoke(params)
 	if err != nil {
 		err := fmt.Errorf("error while invoking tool: %w", err)
+		s.logger.DebugContext(context.Background(), err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
