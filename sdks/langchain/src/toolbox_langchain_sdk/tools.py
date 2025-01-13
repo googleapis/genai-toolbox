@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, Union
 from warnings import warn
 
 from aiohttp import ClientSession
