@@ -17,8 +17,6 @@ package sources
 import (
 	"fmt"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 // Dialect represents the dialect type of a database.
@@ -31,9 +29,9 @@ func (i *Dialect) String() string {
 	return "googlesql"
 }
 
-func (i *Dialect) UnmarshalYAML(node *yaml.Node) error {
+func (i *Dialect) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var dialect string
-	if err := node.Decode(&dialect); err != nil {
+	if err := unmarshal(&dialect); err != nil {
 		return err
 	}
 	switch strings.ToLower(dialect) {

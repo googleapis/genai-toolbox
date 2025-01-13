@@ -34,7 +34,7 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	yaml "github.com/goccy/go-yaml"
 
 	"github.com/googleapis/genai-toolbox/cmd"
 )

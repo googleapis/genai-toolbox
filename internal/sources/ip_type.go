@@ -17,8 +17,6 @@ package sources
 import (
 	"fmt"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type IPType string
@@ -30,9 +28,9 @@ func (i *IPType) String() string {
 	return "public"
 }
 
-func (i *IPType) UnmarshalYAML(node *yaml.Node) error {
+func (i *IPType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var ipType string
-	if err := node.Decode(&ipType); err != nil {
+	if err := unmarshal(&ipType); err != nil {
 		return err
 	}
 	switch strings.ToLower(ipType) {
