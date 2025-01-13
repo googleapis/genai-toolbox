@@ -108,10 +108,10 @@ class TestE2EClient:
     @pytest.mark.asyncio
     async def test_run_tool_wrong_auth(self, toolbox, auth_token2):
         """Tests running a tool with incorrect auth."""
-        toolbox.add_auth_token("my-test-auth", lambda: auth_token2)
         tool = await toolbox.load_tool(
             "get-row-by-id-auth",
         )
+        tool.add_auth_token("my-test-auth", lambda: auth_token2)
         # TODO: Fix error message (b/389577313)
         with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
             await tool.arun({"id": "2"})
@@ -119,10 +119,10 @@ class TestE2EClient:
     @pytest.mark.asyncio
     async def test_run_tool_auth(self, toolbox, auth_token1):
         """Tests running a tool with correct auth."""
-        toolbox.add_auth_token("my-test-auth", lambda: auth_token1)
         tool = await toolbox.load_tool(
             "get-row-by-id-auth",
         )
+        tool.add_auth_token("my-test-auth", lambda: auth_token1)
         response = await tool.arun({"id": "2"})
         assert "row2" in response["result"]
 
