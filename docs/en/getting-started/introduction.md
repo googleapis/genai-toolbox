@@ -5,6 +5,6 @@ weight: 1
 description: An introduction to Toolbox 
 ---
 
-# Hello! 
+# Introduction
 
-Hello World
+This is a placeholder for the introduction. 
