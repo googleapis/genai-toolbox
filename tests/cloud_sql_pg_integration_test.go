@@ -228,7 +228,10 @@ func setupAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
 
 	return func(t *testing.T) {
 		// tear down test
-		pool.Exec(ctx, `DROP TABLE auth_table;`)
+		_, err := pool.Exec(ctx, `DROP TABLE auth_table;`)
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
 	}
 }
 
