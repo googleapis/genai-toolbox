@@ -60,8 +60,9 @@ jobs:
       - run: npm ci
       - run: hugo --minify
         env:
-          # HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}//previews/PR-${{ github.event.number }}/
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}//previews/PR-${{ github.event.number }}/
           HUGO_ENVIRONMENT: preview
+          HUGO_RELATIVEURLS: false
 
       - name: Deploy
         # If run from a fork, GitHub write operations will fail.
