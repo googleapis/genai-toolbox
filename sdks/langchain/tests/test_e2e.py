@@ -105,7 +105,6 @@ class TestE2EClient:
         await tool.arun({"id": "2"})
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="b/388259742")
     async def test_run_tool_wrong_auth(self, toolbox, auth_token2):
         """Tests running a tool with incorrect auth."""
         toolbox.add_auth_token("my-test-auth", lambda: auth_token2)
