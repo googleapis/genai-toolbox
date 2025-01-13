@@ -238,7 +238,7 @@ func TestGoogleAuthenticatedParameter(t *testing.T) {
 
 	// create test configs
 	sourceConfig := requireCloudSQLPgVars(t)
-	teardownTest := setupAuthTest(ctx, t)
+	teardownTest := setupAuthTest(t, ctx)
 	defer teardownTest(t)
 
 	// call generic auth test helper
