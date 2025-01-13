@@ -282,7 +282,6 @@ async def test_toolbox_client_load_tool_with_bound_params(
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client.ToolboxTool")
 @patch("toolbox_langchain_sdk.client._load_manifest")
 async def test_toolbox_client_load_toolset(
     mock_load_manifest, toolbox_client, manifest_schema
