@@ -24,6 +24,10 @@ on:
       - 'github/workflows/docs**'
       - '.hugo'
 
+permissions:
+  pages: write
+  pull-requests: read
+
 jobs:
   preview:
     runs-on: ubuntu-24.04

@@ -14,6 +14,10 @@
 
 name: "docs"
 
+permissions:
+  pages: write
+  pull-requests: read
+
 # This Workflow depends on 'github.event.number',
 # not compatible with branch or manual triggers.
 on:
