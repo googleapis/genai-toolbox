@@ -16,7 +16,7 @@ name: "docs"
 
 permissions:
   contents: write
-  issues: write
+  pull-requests: write
 
 # This Workflow depends on 'github.event.number',
 # not compatible with branch or manual triggers.
