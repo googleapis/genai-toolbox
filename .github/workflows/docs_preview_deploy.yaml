@@ -25,6 +25,7 @@ on:
       - '.hugo'
 
 permissions:
+  contents: write
   pages: write
   pull-requests: read
 
