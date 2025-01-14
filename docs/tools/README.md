@@ -96,9 +96,9 @@ requires another Parameter to be specified under the `items` field:
         type: array
         description: A list of airline, ordered by preference. 
         items:
-          - name: name 
-            type: string
-            description: Name of the airline. 
+          name: name 
+          type: string
+          description: Name of the airline. 
 ```
 
 | **field**   |     **type**     | **required** | **description**                                                            |

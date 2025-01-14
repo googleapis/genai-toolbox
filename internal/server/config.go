@@ -162,7 +162,7 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 type AuthSourceConfigs map[string]auth.AuthSourceConfig
 
 // validate interface
-var _ yaml.Unmarshaler = &SourceConfigs{}
+var _ yaml.Unmarshaler = &AuthSourceConfigs{}
 
 func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 	*c = make(AuthSourceConfigs)
