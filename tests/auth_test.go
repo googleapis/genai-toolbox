@@ -101,7 +101,6 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 			},
 		},
 	}
-
 	// Initialize a test command
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
