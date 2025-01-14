@@ -17,9 +17,10 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
