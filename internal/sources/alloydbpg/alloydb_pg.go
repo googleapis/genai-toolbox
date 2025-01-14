@@ -38,7 +38,7 @@ type Config struct {
 	Region   string         `yaml:"region"`
 	Cluster  string         `yaml:"cluster"`
 	Instance string         `yaml:"instance"`
-	IPType   sources.IPType `yaml:"ip_type"`
+	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user"`
 	Password string         `yaml:"password"`
 	Database string         `yaml:"database"`
@@ -83,18 +83,18 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialOpts(ip_type string) ([]alloydbconn.DialOption, error) {
-	switch strings.ToLower(ip_type) {
+func getDialOpts(ipType string) ([]alloydbconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
 	case "private":
 		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
 	case "public":
 		return []alloydbconn.DialOption{alloydbconn.WithPublicIP()}, nil
 	default:
-		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }
 
-func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -107,7 +107,7 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ip_type)
+	dialOpts, err := getDialOpts(ipType)
 	if err != nil {
 		return nil, err
 	}
