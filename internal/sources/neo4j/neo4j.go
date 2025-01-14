@@ -20,6 +20,7 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceKind string = "neo4j"
@@ -40,8 +41,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize() (sources.Source, error) {
-	driver, err := initNeo4jDriver(r.Uri, r.User, r.Password)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	driver, err := initNeo4jDriver(ctx, tracer, r.Uri, r.User, r.Password, r.Name)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create driver: %w", err)
 	}
@@ -84,11 +85,15 @@ func (s *Source) Neo4jDatabase() string {
 	return s.Database
 }
 
-func initNeo4jDriver(uri, user, password string) (neo4j.DriverWithContext, error) {
+func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, password, name string) (neo4j.DriverWithContext, error) {
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	defer span.End()
+
 	auth := neo4j.BasicAuth(user, password, "")
 	driver, err := neo4j.NewDriverWithContext(uri, auth)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create connection driver: %w", err)
+		return nil, fmt.Errorf("unable to create connection driver: %w", err)
 	}
 	return driver, nil
 }
