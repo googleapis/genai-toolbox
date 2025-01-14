@@ -311,8 +311,8 @@ func TestToolInvocationWithParams(t *testing.T) {
 
 // Set up auth test table
 func setupAlloyDBAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
-	// set up dn connection pool
-	pool, err := alloydbpg.InitAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
+	// set up db connection pool
+	pool, err := alloydbpg.initAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
 	if err != nil {
 		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}
