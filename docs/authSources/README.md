@@ -29,10 +29,10 @@ authSources:
 > authSources:
 >     my_auth_app_1:
 >         kind: google
->         client_id: YOUR_CLIENT_ID_1
+>         clientId: YOUR_CLIENT_ID_1
 >     my_auth_app_2:
 >         kind: google
->         client_id: YOUR_CLIENT_ID_2
+>         clientId: YOUR_CLIENT_ID_2
 >
 > tools:
 >     my_tool:

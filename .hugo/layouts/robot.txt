@@ -1,0 +1,4 @@
+User-agent: *
+{{ if eq hugo.Environment "preview" }}
+Disallow: /*
+{{ end }}

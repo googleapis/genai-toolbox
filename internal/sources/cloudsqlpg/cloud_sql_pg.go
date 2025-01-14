@@ -23,6 +23,7 @@ import (
 	"cloud.google.com/go/cloudsqlconn"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceKind string = "cloud-sql-postgres"
@@ -36,7 +37,7 @@ type Config struct {
 	Project  string         `yaml:"project"`
 	Region   string         `yaml:"region"`
 	Instance string         `yaml:"instance"`
-	IPType   sources.IPType `yaml:"ip_type"`
+	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user"`
 	Password string         `yaml:"password"`
 	Database string         `yaml:"database"`
@@ -46,8 +47,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize() (sources.Source, error) {
-	pool, err := initCloudSQLPgConnectionPool(r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	pool, err := initCloudSQLPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -81,18 +82,22 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialOpts(ip_type string) ([]cloudsqlconn.DialOption, error) {
-	switch strings.ToLower(ip_type) {
+func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
 	case "private":
 		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
 	case "public":
 		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
 	default:
-		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }
 
-func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	defer span.End()
+
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
 	config, err := pgxpool.ParseConfig(dsn)
@@ -101,7 +106,7 @@ func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ip_type)
+	dialOpts, err := getDialOpts(ipType)
 	if err != nil {
 		return nil, err
 	}
