@@ -334,7 +334,8 @@ func setupAlloyDBAuthTest(t *testing.T, ctx context.Context, tableName string) f
 	_, err = pool.Query(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 			id SERIAL PRIMARY KEY,
-			name TEXT
+			name TEXT,
+			email TEXT
 		);
 	`, tableName))
 	if err != nil {
