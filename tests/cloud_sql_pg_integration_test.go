@@ -74,7 +74,7 @@ func requireCloudSQLPgVars(t *testing.T) map[string]any {
 }
 
 // Copied over from cloud_sql_pg.go
-func getDialOpts(ip_type string) ([]cloudsqlconn.DialOption, error) {
+func getCloudSQLDialOpts(ip_type string) ([]cloudsqlconn.DialOption, error) {
 	switch strings.ToLower(ip_type) {
 	case "private":
 		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil

@@ -76,7 +76,7 @@ func requireAlloyDBPgVars(t *testing.T) map[string]any {
 }
 
 // Copied over from  alloydb_pg.go
-func getDialOpts(ip_type string) ([]alloydbconn.DialOption, error) {
+func getAlloyDBDialOpts(ip_type string) ([]alloydbconn.DialOption, error) {
 	switch strings.ToLower(ip_type) {
 	case "private":
 		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
