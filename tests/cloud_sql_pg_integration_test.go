@@ -21,15 +21,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	"cloud.google.com/go/cloudsqlconn"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -66,6 +71,51 @@ func requireCloudSQLPgVars(t *testing.T) map[string]any {
 		"user":     CLOUD_SQL_POSTGRES_USER,
 		"password": CLOUD_SQL_POSTGRES_PASS,
 	}
+}
+
+// Copied over from cloud_sql_pg.go
+func getDialOpts(ip_type string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ip_type) {
+	case "private":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
+	case "public":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
+	default:
+		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
+	}
+}
+
+// Copied over from cloud_sql_pg.go
+func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+	// Configure the driver to connect to the database
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
+	}
+
+	// Create a new dialer with options
+	dialOpts, err := getDialOpts(ip_type)
+	if err != nil {
+		return nil, err
+	}
+	d, err := cloudsqlconn.NewDialer(context.Background(), cloudsqlconn.WithDefaultDialOptions(dialOpts...))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
+	}
+
+	// Tell the driver to use the Cloud SQL Go Connector to create connections
+	i := fmt.Sprintf("%s:%s:%s", project, region, instance)
+	config.ConnConfig.DialFunc = func(ctx context.Context, _ string, instance string) (net.Conn, error) {
+		return d.Dial(ctx, i)
+	}
+
+	// Interact with the driver directly as you normally would
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		return nil, err
+	}
+	return pool, nil
 }
 
 func TestCloudSQLPostgres(t *testing.T) {
@@ -192,9 +242,9 @@ func TestCloudSQLPostgres(t *testing.T) {
 }
 
 // Set up auth test database table
-func setupAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
+func setupAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
 	// set up testt
-	pool, err := cloudsqlpg.InitCloudSQLPgConnectionPool(CLOUD_SQL_POSTGRES_PROJECT, CLOUD_SQL_POSTGRES_REGION, CLOUD_SQL_POSTGRES_INSTANCE, "public", CLOUD_SQL_POSTGRES_USER, CLOUD_SQL_POSTGRES_PASS, CLOUD_SQL_POSTGRES_DATABASE)
+	pool, err := initCloudSQLPgConnectionPool(CLOUD_SQL_POSTGRES_PROJECT, CLOUD_SQL_POSTGRES_REGION, CLOUD_SQL_POSTGRES_INSTANCE, "public", CLOUD_SQL_POSTGRES_USER, CLOUD_SQL_POSTGRES_PASS, CLOUD_SQL_POSTGRES_DATABASE)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
@@ -204,22 +254,22 @@ func setupAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
 
-	_, err = pool.Query(ctx, `
-		CREATE TABLE auth_table (
+	_, err = pool.Query(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
 			id SERIAL PRIMARY KEY,
 			name TEXT,
 			email TEXT
 		);
-	`)
+	`, tableName))
 	if err != nil {
 		t.Fatalf("unable to create test table: %s", err)
 	}
 
 	// Insert test data
-	statement := `
-		INSERT INTO auth_table (name, email) 
+	statement := fmt.Sprintf(`
+		INSERT INTO %s (name, email) 
 		VALUES ($1, $2), ($3, $4)
-	`
+	`, tableName)
 	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	_, err = pool.Query(ctx, statement, params...)
 	if err != nil {
@@ -228,7 +278,7 @@ func setupAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
 
 	return func(t *testing.T) {
 		// tear down test
-		_, err := pool.Exec(ctx, `DROP TABLE auth_table;`)
+		_, err := pool.Exec(ctx, fmt.Sprintf(`DROP TABLE %s;`, tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
@@ -241,11 +291,16 @@ func TestGoogleAuthenticatedParameter(t *testing.T) {
 
 	// create test configs
 	sourceConfig := requireCloudSQLPgVars(t)
-	teardownTest := setupAuthTest(t, ctx)
+
+	// create table name with UUID
+	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// test setup function reterns teardown function
+	teardownTest := setupAuthTest(t, ctx, tableName)
 	defer teardownTest(t)
 
 	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql")
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql", tableName)
 
 }
 

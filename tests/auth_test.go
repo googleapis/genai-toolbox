@@ -57,12 +57,12 @@ func getGoogleIdToken(audience string) (string, error) {
 	return token.AccessToken, nil
 }
 
-func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
+func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]any, toolKind string, tableName string) {
 	// create query statement
 	var statement string
 	switch {
 	case strings.EqualFold(toolKind, "postgres-sql"):
-		statement = "SELECT * FROM auth_table WHERE email = $1;"
+		statement = fmt.Sprintf("SELECT * FROM %s WHERE email = $1;", tableName)
 	default:
 		t.Fatalf("invalid tool kind: %s", toolKind)
 	}
