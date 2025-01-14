@@ -97,7 +97,7 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, us
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ip_type)
+	dialOpts, err := getAlloyDBDialOpts(ip_type)
 	if err != nil {
 		return nil, err
 	}

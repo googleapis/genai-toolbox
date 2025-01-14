@@ -95,7 +95,7 @@ func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ip_type)
+	dialOpts, err := getCloudSQLDialOpts(ip_type)
 	if err != nil {
 		return nil, err
 	}
