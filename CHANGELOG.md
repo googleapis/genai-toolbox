@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.0.5](https://github.com/googleapis/genai-toolbox/compare/v0.0.4...v0.0.5) (2025-01-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* replace Source field `ip_type` with `ipType` for consistency ([#197](https://github.com/googleapis/genai-toolbox/issues/197))
+* **toolbox-sdk:** deprecate 'add_auth_headers' in favor of 'add_auth_tokens'  ([#170](https://github.com/googleapis/genai-toolbox/issues/170))
+
+### Features
+
+* Add support for OpenTelemetry ([#205](https://github.com/googleapis/genai-toolbox/issues/205)) ([1fcc20a](https://github.com/googleapis/genai-toolbox/commit/1fcc20a8469794ed8e6846cded44196d26c306be))
+* Added Neo4j Source and Tool ([#189](https://github.com/googleapis/genai-toolbox/issues/189)) ([8a1224b](https://github.com/googleapis/genai-toolbox/commit/8a1224b9e0145c4e214d42f14f5308b508ea27ce))
+* **llamaindex-sdk:** Implement OAuth support for LlamaIndex. ([#159](https://github.com/googleapis/genai-toolbox/issues/159)) ([003ce51](https://github.com/googleapis/genai-toolbox/commit/003ce510a1fb37a23e4c64fdf21376e0e32ec8ab))
+* Replace Source field `ip_type` with `ipType` for consistency ([#197](https://github.com/googleapis/genai-toolbox/issues/197)) ([e069520](https://github.com/googleapis/genai-toolbox/commit/e069520bb79d086dbdd37ebc3ad9bb39b31c8fac))
+* Update log with given context ([#147](https://github.com/googleapis/genai-toolbox/issues/147)) ([809e547](https://github.com/googleapis/genai-toolbox/commit/809e547a481bd4af351bbaa2dcfd203b086bb51d))
+
+
+### Bug Fixes
+
+* Correct parsing of floats/ints from json ([#180](https://github.com/googleapis/genai-toolbox/issues/180)) ([387a5b5](https://github.com/googleapis/genai-toolbox/commit/387a5b56b53ccfe0637a0f44c0ddbec8e991cc39))
+* **doc:** Update example `clientId` field ([#198](https://github.com/googleapis/genai-toolbox/issues/198)) ([0c86e89](https://github.com/googleapis/genai-toolbox/commit/0c86e895066ee3dee9ab9bc20fe00934066b67ac))
+* Fix config name in auth doc samples ([#186](https://github.com/googleapis/genai-toolbox/issues/186)) ([bb03457](https://github.com/googleapis/genai-toolbox/commit/bb0345767e0550fcda975958f450086e44f6a913))
+* Handle shutdown gracefully ([#178](https://github.com/googleapis/genai-toolbox/issues/178)) ([66ab70f](https://github.com/googleapis/genai-toolbox/commit/66ab70f702d7178c61c8d90399483b6125ba01c8))
+* Improve return error for parameters  ([#206](https://github.com/googleapis/genai-toolbox/issues/206)) ([346c57d](https://github.com/googleapis/genai-toolbox/commit/346c57da2394e398ee8cc527b84973aa2bcde642))
+* **toolbox-sdk:** Deprecate 'add_auth_headers' in favor of 'add_auth_tokens'  ([#170](https://github.com/googleapis/genai-toolbox/issues/170)) ([b56fa68](https://github.com/googleapis/genai-toolbox/commit/b56fa685e379c3515025ed76d9abe61f93365a65))
+
+
+### Miscellaneous Chores
+
+* Release 0.0.5 ([#210](https://github.com/googleapis/genai-toolbox/issues/210)) ([bd407c0](https://github.com/googleapis/genai-toolbox/commit/bd407c0ab749c9a72523122a2212652f9d97ab03))
+
 ## [0.0.4](https://github.com/googleapis/genai-toolbox/compare/v0.0.3...v0.0.4) (2024-12-18)
 
 
