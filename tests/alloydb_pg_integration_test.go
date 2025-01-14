@@ -309,8 +309,9 @@ func TestToolInvocationWithParams(t *testing.T) {
 	// call generic invocation test helper
 	RunToolInvocationWithParamsTest(t, sourceConfig, "postgres-sql", tableName)
 
-// Set up auth test table
-func setupAlloyDBAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
+
+// Set up auth test database table
+func setupAlloyDBAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
 	// set up db connection pool
 	pool, err := initAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
 	if err != nil {
@@ -334,11 +335,10 @@ func setupAlloyDBAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
 
 	// Insert test data
 	statement := fmt.Sprintf(`
-		INSERT INTO %s (name)
-		VALUES ($1), ($2), ($3);
+		INSERT INTO %s (name, email) 
+		VALUES ($1, $2), ($3, $4)
 	`, tableName)
-
-	params := []any{"Alice", "Jane", "Sid"}
+	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	_, err = pool.Query(ctx, statement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
@@ -359,11 +359,16 @@ func TestAlloyDBGoogleAuthenticatedParameter(t *testing.T) {
 
 	// create test configs
 	sourceConfig := requireAlloyDBPgVars(t)
+
+	// create table name with UUID
+	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// test setup function returns teardown funtion
 	teardownTest := setupAlloyDBAuthTest(t, ctx)
 	defer teardownTest(t)
 
 	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql")
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql", tableName)
 
 }
 
