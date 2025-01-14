@@ -107,7 +107,7 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "NEO4J_DATABASE=$_DATABASE_NAME"
+      - "NEO4J_DATABASE=$_NEO4J_DATABASE"
       - "NEO4J_URI=$_NEO4J_URI"
     secretEnv: ["NEO4J_USER", "NEO4J_PASS"]
     volumes:
@@ -156,3 +156,4 @@ substitutions:
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
+  _NEO4J_DATABASE: "neo4j"
