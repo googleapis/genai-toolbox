@@ -1,2 +1,13 @@
+# direnv
+.envrc
+
 # vscode
 .vscode/
+
+# npm
+node_modules
+
+# hugo
+.hugo/public/
+.hugo/resources/_gen
+.hugo_build.lock

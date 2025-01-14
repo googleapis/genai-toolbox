@@ -29,15 +29,18 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version  string
-	srv      *http.Server
-	listener net.Listener
-	root     chi.Router
-	logger   log.Logger
+	version         string
+	srv             *http.Server
+	listener        net.Listener
+	root            chi.Router
+	logger          log.Logger
+	instrumentation *Instrumentation
 
 	sources     map[string]sources.Source
 	authSources map[string]auth.AuthSource
@@ -47,6 +50,14 @@ type Server struct {
 
 // NewServer returns a Server object based on provided Config.
 func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
+	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
+	}
+
+	parentCtx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
+	defer span.End()
+
 	// set up http serving
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -84,9 +95,22 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
-		s, err := sc.Initialize()
+		s, err := func() (sources.Source, error) {
+			ctx, span := instrumentation.Tracer.Start(
+				parentCtx,
+				"toolbox/server/source/init",
+				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
+				trace.WithAttributes(attribute.String("source_name", name)),
+			)
+			defer span.End()
+			s, err := sc.Initialize(ctx, instrumentation.Tracer)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
+			}
+			return s, nil
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
+			return nil, err
 		}
 		sourcesMap[name] = s
 	}
@@ -95,9 +119,22 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the auth sources from configs
 	authSourcesMap := make(map[string]auth.AuthSource)
 	for name, sc := range cfg.AuthSourceConfigs {
-		a, err := sc.Initialize()
+		a, err := func() (auth.AuthSource, error) {
+			_, span := instrumentation.Tracer.Start(
+				parentCtx,
+				"toolbox/server/auth/init",
+				trace.WithAttributes(attribute.String("auth_kind", sc.AuthSourceConfigKind())),
+				trace.WithAttributes(attribute.String("auth_name", name)),
+			)
+			defer span.End()
+			a, err := sc.Initialize()
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+			}
+			return a, nil
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+			return nil, err
 		}
 		authSourcesMap[name] = a
 	}
@@ -106,9 +143,22 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
-		t, err := tc.Initialize(sourcesMap)
+		t, err := func() (tools.Tool, error) {
+			_, span := instrumentation.Tracer.Start(
+				parentCtx,
+				"toolbox/server/tool/init",
+				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
+				trace.WithAttributes(attribute.String("tool_name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(sourcesMap)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			}
+			return t, nil
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			return nil, err
 		}
 		toolsMap[name] = t
 	}
@@ -127,9 +177,21 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
-		t, err := tc.Initialize(cfg.Version, toolsMap)
+		t, err := func() (tools.Toolset, error) {
+			_, span := instrumentation.Tracer.Start(
+				parentCtx,
+				"toolbox/server/toolset/init",
+				trace.WithAttributes(attribute.String("toolset_name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(cfg.Version, toolsMap)
+			if err != nil {
+				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+			}
+			return t, err
+		}()
 		if err != nil {
-			return nil, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+			return nil, err
 		}
 		toolsetsMap[name] = t
 	}
@@ -139,10 +201,12 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	srv := &http.Server{Addr: addr, Handler: r}
 
 	s := &Server{
-		version:     cfg.Version,
-		srv:         srv,
-		root:        r,
-		logger:      l,
+		version:         cfg.Version,
+		srv:             srv,
+		root:            r,
+		logger:          l,
+		instrumentation: instrumentation,
+
 		sources:     sourcesMap,
 		authSources: authSourcesMap,
 		tools:       toolsMap,
@@ -175,16 +239,19 @@ func (s *Server) Listen(ctx context.Context) error {
 	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
+	s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
 	return nil
 }
 
 // Serve starts an HTTP server for the given Server instance.
 func (s *Server) Serve() error {
+	s.logger.DebugContext(context.Background(), "Starting a HTTP server.")
 	return s.srv.Serve(s.listener)
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active
 // connections. It uses http.Server.Shutdown() and has the same functionality.
 func (s *Server) Shutdown(ctx context.Context) error {
+	s.logger.DebugContext(context.Background(), "shutting down the server.")
 	return s.srv.Shutdown(ctx)
 }
