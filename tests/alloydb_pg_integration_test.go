@@ -300,7 +300,7 @@ func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*t
 
 	return func(t *testing.T) {
 		// tear down test
-		pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
