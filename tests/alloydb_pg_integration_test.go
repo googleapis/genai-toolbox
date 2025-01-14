@@ -121,7 +121,7 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, us
 }
 
 func TestAlloyDBSimpleToolEndpoints(t *testing.T) {
-	requireAlloyDBPgVars(t)
+	sourceConfig := requireAlloyDBPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -289,6 +289,14 @@ func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*t
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
 }
 
 func TestToolInvocationWithParams(t *testing.T) {
@@ -308,7 +316,7 @@ func TestToolInvocationWithParams(t *testing.T) {
 
 	// call generic invocation test helper
 	RunToolInvocationWithParamsTest(t, sourceConfig, "postgres-sql", tableName)
-
+}
 
 // Set up auth test database table
 func setupAlloyDBAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
@@ -364,7 +372,7 @@ func TestAlloyDBGoogleAuthenticatedParameter(t *testing.T) {
 	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// test setup function returns teardown funtion
-	teardownTest := setupAlloyDBAuthTest(t, ctx)
+	teardownTest := setupAlloyDBAuthTest(t, ctx, tableName)
 	defer teardownTest(t)
 
 	// call generic auth test helper

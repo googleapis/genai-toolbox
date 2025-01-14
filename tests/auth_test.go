@@ -37,25 +37,6 @@ import (
 var SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 var clientId = os.Getenv("CLIENT_ID")
 
-func requireCloudSQLPgVars(t *testing.T) {
-	switch "" {
-	case CLOUD_SQL_POSTGRES_PROJECT:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PROJECT' not set")
-	case CLOUD_SQL_POSTGRES_REGION:
-		t.Fatal("'CLOUD_SQL_POSTGRES_REGION' not set")
-	case CLOUD_SQL_POSTGRES_INSTANCE:
-		t.Fatal("'CLOUD_SQL_POSTGRES_INSTANCE' not set")
-	case CLOUD_SQL_POSTGRES_DATABASE:
-		t.Fatal("'CLOUD_SQL_POSTGRES_DATABASE' not set")
-	case CLOUD_SQL_POSTGRES_USER:
-		t.Fatal("'CLOUD_SQL_POSTGRES_USER' not set")
-	case CLOUD_SQL_POSTGRES_PASS:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
-	case SERVICE_ACCOUNT_EMAIL:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
-	}
-}
-
 // Get a Google ID token
 func getGoogleIdToken(audience string) (string, error) {
 	// For local testing - use gcloud command to print personal ID token
