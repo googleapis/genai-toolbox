@@ -66,6 +66,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
+export VERSION=0.0.1
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
