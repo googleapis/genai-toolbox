@@ -285,7 +285,7 @@ func setupAuthTest(t *testing.T, ctx context.Context, tableName string) func(*te
 	}
 }
 
-func TestGoogleAuthenticatedParameter(t *testing.T) {
+func TestCloudSQLGoogleAuthenticatedParameter(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -304,7 +304,7 @@ func TestGoogleAuthenticatedParameter(t *testing.T) {
 
 }
 
-func TestAuthRequiredToolInvocation(t *testing.T) {
+func TestCloudSQLAuthRequiredToolInvocation(t *testing.T) {
 	// create test configs
 	sourceConfig := requireCloudSQLPgVars(t)
 

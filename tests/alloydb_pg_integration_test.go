@@ -130,16 +130,7 @@ func TestAlloyDBSimpleToolEndpoints(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-pg-instance": map[string]any{
-				"kind":     "alloydb-postgres",
-				"project":  ALLOYDB_POSTGRES_PROJECT,
-				"instance": ALLOYDB_POSTGRES_INSTANCE,
-				"cluster":  ALLOYDB_POSTGRES_CLUSTER,
-				"region":   ALLOYDB_POSTGRES_REGION,
-				"database": ALLOYDB_POSTGRES_DATABASE,
-				"user":     ALLOYDB_POSTGRES_USER,
-				"password": ALLOYDB_POSTGRES_PASS,
-			},
+			"my-pg-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
@@ -264,9 +255,64 @@ func TestPrivateIpConnection(t *testing.T) {
 	RunSourceConnectionTest(t, sourceConfig, "postgres-sql")
 }
 
+// Set up tool calling with parameters test table
 func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
 	// Set up Tool invocation with parameters test
 	pool, err := initAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
+	}
+
+	err = pool.Ping(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	_, err = pool.Query(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id SERIAL PRIMARY KEY,
+			name TEXT
+		);
+	`, tableName))
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	statement := fmt.Sprintf(`
+		INSERT INTO %s (name)
+		VALUES ($1), ($2), ($3);
+	`, tableName)
+
+	params := []any{"Alice", "Jane", "Sid"}
+	_, err = pool.Query(ctx, statement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+}
+
+func TestToolInvocationWithParams(t *testing.T) {
+	// create test configs
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// create source config
+	sourceConfig := requireAlloyDBPgVars(t)
+
+	// create table name with UUID
+	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// test setup function reterns teardown function
+	teardownTest := setupParamTest(t, ctx, tableName)
+	defer teardownTest(t)
+
+	// call generic invocation test helper
+	RunToolInvocationWithParamsTest(t, sourceConfig, "postgres-sql", tableName)
+
+// Set up auth test table
+func setupAlloyDBAuthTest(t *testing.T, ctx context.Context) func(*testing.T) {
+	// set up dn connection pool
+	pool, err := alloydbpg.InitAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
 	if err != nil {
 		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}
@@ -307,21 +353,25 @@ func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*t
 	}
 }
 
-func TestToolInvocationWithParams(t *testing.T) {
-	// create test configs
+func TestAlloyDBGoogleAuthenticatedParameter(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	// create source config
+	// create test configs
 	sourceConfig := requireAlloyDBPgVars(t)
-
-	// create table name with UUID
-	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-
-	// test setup function reterns teardown function
-	teardownTest := setupParamTest(t, ctx, tableName)
+	teardownTest := setupAlloyDBAuthTest(t, ctx)
 	defer teardownTest(t)
 
-	// call generic invocation test helper
-	RunToolInvocationWithParamsTest(t, sourceConfig, "postgres-sql", tableName)
+	// call generic auth test helper
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql")
+
+}
+
+func TestAlloyDBAuthRequiredToolInvocation(t *testing.T) {
+	// create test configs
+	sourceConfig := requireAlloyDBPgVars(t)
+
+	// call generic auth test helper
+	RunAuthRequiredToolInvocationTest(t, sourceConfig, "postgres-sql")
+
 }
