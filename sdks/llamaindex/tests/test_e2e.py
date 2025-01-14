@@ -63,13 +63,13 @@ class TestE2EClient:
     async def test_load_toolset_specific(self, toolbox):
         toolset = await toolbox.load_toolset("my-toolset")
         assert len(toolset) == 1
-        assert toolset[0].name == "get-row-by-id"
+        assert toolset[0].metadata.name == "get-row-by-id"
 
         toolset = await toolbox.load_toolset("my-toolset-2")
         assert len(toolset) == 2
         tool_names = ["get-n-rows", "get-row-by-id"]
-        assert toolset[0].name in tool_names
-        assert toolset[1].name in tool_names
+        assert toolset[0].metadata.name in tool_names
+        assert toolset[1].metadata.name in tool_names
 
     @pytest.mark.asyncio
     async def test_load_toolset_all(self, toolbox):
@@ -83,7 +83,7 @@ class TestE2EClient:
             "get-row-by-content-auth",
         ]
         for tool in toolset:
-            assert tool.name in tool_names
+            assert tool.metadata.name in tool_names
 
     ##### Auth tests
     @pytest.mark.asyncio
