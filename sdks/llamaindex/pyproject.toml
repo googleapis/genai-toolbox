@@ -39,7 +39,9 @@ test = [
     "pytest-asyncio==0.24.0",
     "pytest==8.3.3",
     "pytest-cov==6.0.0",
-    "Pillow==10.4.0"
+    "Pillow==10.4.0",
+    "google-cloud-secret-manager==2.22.0",
+    "google-cloud-storage==2.19.0",
 ]
 
 [build-system]
