@@ -32,8 +32,8 @@ import (
 var (
 	NEO4J_DATABASE = os.Getenv("NEO4J_DATABASE")
 	NEO4J_URI      = os.Getenv("NEO4J_URI")
-	NEO4J_USERNAME = os.Getenv("NEO4J_USERNAME")
-	NEO4J_PASSWORD = os.Getenv("NEO4J_PASSWORD")
+	NEO4J_USER     = os.Getenv("NEO4J_USER")
+	NEO4J_PASS     = os.Getenv("NEO4J_PASS")
 )
 
 func requireNeo4jVars(t *testing.T) {
@@ -42,10 +42,10 @@ func requireNeo4jVars(t *testing.T) {
 		t.Fatal("'NEO4J_DATABASE' not set")
 	case NEO4J_URI:
 		t.Fatal("'NEO4J_URI' not set")
-	case NEO4J_USERNAME:
-		t.Fatal("'NEO4J_USERNAME' not set")
-	case NEO4J_PASSWORD:
-		t.Fatal("'NEO4J_PASSWORD' not set")
+	case NEO4J_USER:
+		t.Fatal("'NEO4J_USER' not set")
+	case NEO4J_PASS:
+		t.Fatal("'NEO4J_PASS' not set")
 	}
 }
 
@@ -63,8 +63,8 @@ func TestNeo4j(t *testing.T) {
 				"kind":     "neo4j",
 				"uri":      NEO4J_URI,
 				"database": NEO4J_DATABASE,
-				"user":     NEO4J_USERNAME,
-				"password": NEO4J_PASSWORD,
+				"user":     NEO4J_USER,
+				"password": NEO4J_PASS,
 			},
 		},
 		"tools": map[string]any{
