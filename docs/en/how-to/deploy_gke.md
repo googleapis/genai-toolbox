@@ -24,8 +24,6 @@ description: >
     gcloud config set project $PROJECT_ID
     ```
 
-1. Make sure you've set up and initialized your database.
-
 1. You must have the following APIs enabled:
 
     ```bash
@@ -36,7 +34,14 @@ description: >
     ```
 
 1. `kubectl` is used to manage Kubernetes, the cluster orchestration system used
-   by GKE. Install `kubectl` by using `gcloud`:
+   by GKE. Verify if you have `kubectl` installed:
+
+    ```bash
+    kubectl version --client
+    ```
+   
+
+1. If needed, install `kubectl` component using the Google Cloud CLI:
 
    ```bash
    gcloud components install kubectl
@@ -56,14 +61,19 @@ description: >
     gcloud iam service-accounts create $sa_name
     ```
 
-1.  Grant IAM roles to the service account for the associated database that you
-    are using (example below is for cloud sql):
+1.  Grant any IAM roles necessary to the IAM service account. Each source have a
+    list of necessary IAM permissions listed on it's page. The example below is
+    for cloud sql postgres source:
 
     ```bash
     gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member serviceAccount:$sa_name@$PROJECT_ID.iam.gserviceaccount.com \
         --role roles/cloudsql.client
     ```
+
+    - [AlloyDB IAM Identity](../sources/alloydb-pg.md#iam-identity)
+    - [CloudSQL IAM Identity](../sources/cloud-sql-pg.md#iam-identity)
+    - [Spanner IAM Identity](../sources/spanner.md#iam-identity)
 
 ## Deploying to GKE
 
@@ -79,7 +89,7 @@ description: >
     export ksa_name=toolbox-service-account
     ```
 
-1. Create a GKE cluster.
+1. Create a [GKE cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture).
 
     ```bash
     gcloud container clusters create-auto $cluster_name \
@@ -120,7 +130,7 @@ description: >
     gcloud iam service-accounts add-iam-policy-binding \
         --role="roles/iam.workloadIdentityUser" \
         --member="serviceAccount:$PROJECT_ID.svc.id.goog[$namespace/$ksa_name]" \
-        $sa_name@$PROJECT_ID.iam.gserviceaccount.com
+        $SA_NAME@$PROJECT_ID.iam.gserviceaccount.com
     ```
 
 1. Add annotation to KSA to complete binding:
@@ -128,7 +138,7 @@ description: >
     ```bash
     kubectl annotate serviceaccount \
         $ksa_name \
-        iam.gke.io/gcp-service-account=$sa_name@$PROJECT_ID.iam.gserviceaccount.com \
+        iam.gke.io/gcp-service-account=$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
         --namespace $namespace
     ```
 
@@ -160,7 +170,8 @@ description: >
           serviceAccountName: k8s-toolbox-sa
           containers:
             - name: toolbox
-              image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
+              # use the newest version for toolbox
+              image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.0.5
               volumeMounts:
                 - name: toolbox-config
                   mountPath: "/etc/tools.yaml"
