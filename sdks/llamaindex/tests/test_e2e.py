@@ -53,7 +53,7 @@ class TestE2EClient:
     async def test_load_tool(self, toolbox):
         tool = await toolbox.load_tool("get-n-rows")
         response = await tool.acall(**{"num_rows": "2"})
-        result = response.raw_output
+        result = response.raw_output["result"]
 
         assert "row1" in result
         assert "row2" in result
@@ -94,7 +94,7 @@ class TestE2EClient:
             "get-row-by-id", auth_tokens={"my-test-auth": lambda: auth_token2}
         )
         response = await tool.acall(**{"id": "2"})
-        assert "row2" in response.raw_output
+        assert "row2" in response.raw_output["result"]
 
     @pytest.mark.asyncio
     async def test_run_tool_no_auth(self, toolbox):
@@ -124,7 +124,7 @@ class TestE2EClient:
             "get-row-by-id-auth",
         )
         response = await tool.acall(**{"id": "2"})
-        assert "row2" in response.raw_output
+        assert "row2" in response.raw_output["result"]
 
     @pytest.mark.asyncio
     async def test_run_tool_param_auth_no_auth(self, toolbox):
@@ -140,7 +140,7 @@ class TestE2EClient:
             "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
         )
         response = await tool.acall(**{})
-        result = response.raw_output
+        result = response.raw_output["result"]
         assert "row4" in result
         assert "row5" in result
         assert "row6" in result
