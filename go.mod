@@ -14,7 +14,9 @@ require (
 	github.com/go-chi/httplog/v2 v2.1.1
 	github.com/go-chi/render v1.0.3
 	github.com/google/go-cmp v0.6.0
+	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1
+	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/spf13/cobra v1.8.1
 	go.opentelemetry.io/contrib/propagators/autoprop v0.58.0
 	go.opentelemetry.io/otel v1.33.0
@@ -53,7 +55,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0 // indirect

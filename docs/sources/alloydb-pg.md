@@ -41,7 +41,7 @@ configuration to `public` or `private`.
 
 ### Database User
 
-Currently, this source only uses standard authentication. You will need to [create a
+Current, this source only uses standard authentication. You will need to [create a
 PostreSQL user][alloydb-users] to login to the database with.
 
 [alloydb-users]: https://cloud.google.com/alloydb/docs/database-users/about

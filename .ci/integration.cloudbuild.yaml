@@ -15,88 +15,108 @@
 steps:
   - id: "install-dependencies"
     name: golang:1
-    waitFor: ['-']
+    waitFor: ["-"]
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
     volumes:
-      - name: 'go'
-        path: '/gopath'
+      - name: "go"
+        path: "/gopath"
     script: |
-        go get -d ./...
+      go get -d ./...
 
   - id: "cloud-sql-pg"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
       - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
-    secretEnv: ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS"]
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv:
+      ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS", "CLIENT_ID"]
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,cloudsql ./tests
 
   - id: "alloydb-pg"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID"
       - "ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
       - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
       - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "ALLOYDB_POSTGRES_REGION=$_REGION"
-    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS"]
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS", "CLIENT_ID"]
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,alloydb ./tests
 
   - id: "postgres"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "POSTGRES_DATABASE=$_DATABASE_NAME"
       - "POSTGRES_HOST=$_POSTGRES_HOST"
       - "POSTGRES_PORT=$_POSTGRES_PORT"
     secretEnv: ["POSTGRES_USER", "POSTGRES_PASS"]
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,postgres ./tests
 
   - id: "spanner"
     name: golang:1
-    waitFor: ['install-dependencies']
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
-      - 'GOPATH=/gopath'
+      - "GOPATH=/gopath"
       - "SPANNER_PROJECT=$PROJECT_ID"
       - "SPANNER_DATABASE=$_DATABASE_NAME"
       - "SPANNER_INSTANCE=$_SPANNER_INSTANCE"
     volumes:
-      - name: 'go'
-        path: '/gopath'
-    args: 
+      - name: "go"
+        path: "/gopath"
+    args:
       - -c
       - |
         go test -race -v -tags=integration,spanner ./tests
+
+  - id: "neo4j"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "NEO4J_DATABASE=$_NEO4J_DATABASE"
+      - "NEO4J_URI=$_NEO4J_URI"
+    secretEnv: ["NEO4J_USER", "NEO4J_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,neo4j ./tests
 
 availableSecrets:
   secretManager:
@@ -112,11 +132,17 @@ availableSecrets:
       env: POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/postgres_pass/versions/latest
       env: POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/client_id/versions/latest
+      env: CLIENT_ID
+    - versionName: projects/$PROJECT_ID/secrets/neo4j_user/versions/latest
+      env: NEO4J_USER
+    - versionName: projects/$PROJECT_ID/secrets/neo4j_pass/versions/latest
+      env: NEO4J_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
   automapSubstitutions: true
-  substitutionOption: 'ALLOW_LOOSE'
+  substitutionOption: "ALLOW_LOOSE"
   dynamicSubstitutions: true
   pool:
     name: projects/$PROJECT_ID/locations/us-central1/workerPools/integration-testing # Necessary for VPC network connection
@@ -130,3 +156,4 @@ substitutions:
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
+  _NEO4J_DATABASE: "neo4j"

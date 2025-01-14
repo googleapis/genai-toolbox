@@ -20,13 +20,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
+
+	"cloud.google.com/go/alloydbconn"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -39,7 +46,7 @@ var (
 	ALLOYDB_POSTGRES_PASS     = os.Getenv("ALLOYDB_POSTGRES_PASS")
 )
 
-func requireAlloyDBPgVars(t *testing.T) {
+func requireAlloyDBPgVars(t *testing.T) map[string]any {
 	switch "" {
 	case ALLOYDB_POSTGRES_PROJECT:
 		t.Fatal("'ALLOYDB_POSTGRES_PROJECT' not set")
@@ -56,10 +63,65 @@ func requireAlloyDBPgVars(t *testing.T) {
 	case ALLOYDB_POSTGRES_PASS:
 		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
 	}
+	return map[string]any{
+		"kind":     "alloydb-postgres",
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+		"user":     ALLOYDB_POSTGRES_USER,
+		"password": ALLOYDB_POSTGRES_PASS,
+	}
 }
 
-func TestAlloyDBPostgres(t *testing.T) {
-	requireAlloyDBPgVars(t)
+// Copied over from  alloydb_pg.go
+func getAlloyDBDialOpts(ip_type string) ([]alloydbconn.DialOption, error) {
+	switch strings.ToLower(ip_type) {
+	case "private":
+		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
+	case "public":
+		return []alloydbconn.DialOption{alloydbconn.WithPublicIP()}, nil
+	default:
+		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
+	}
+}
+
+// Copied over from  alloydb_pg.go
+func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+	// Configure the driver to connect to the database
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
+	}
+
+	// Create a new dialer with options
+	dialOpts, err := getAlloyDBDialOpts(ip_type)
+	if err != nil {
+		return nil, err
+	}
+	d, err := alloydbconn.NewDialer(context.Background(), alloydbconn.WithDefaultDialOptions(dialOpts...))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
+	}
+
+	// Tell the driver to use the AlloyDB Go Connector to create connections
+	i := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, region, cluster, instance)
+	config.ConnConfig.DialFunc = func(ctx context.Context, _ string, instance string) (net.Conn, error) {
+		return d.Dial(ctx, i)
+	}
+
+	// Interact with the driver directly as you normally would
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		return nil, err
+	}
+	return pool, nil
+}
+
+func TestAlloyDBSimpleToolEndpoints(t *testing.T) {
+	sourceConfig := requireAlloyDBPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -68,16 +130,7 @@ func TestAlloyDBPostgres(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-pg-instance": map[string]any{
-				"kind":     "alloydb-postgres",
-				"project":  ALLOYDB_POSTGRES_PROJECT,
-				"instance": ALLOYDB_POSTGRES_INSTANCE,
-				"cluster":  ALLOYDB_POSTGRES_CLUSTER,
-				"region":   ALLOYDB_POSTGRES_REGION,
-				"database": ALLOYDB_POSTGRES_DATABASE,
-				"user":     ALLOYDB_POSTGRES_USER,
-				"password": ALLOYDB_POSTGRES_PASS,
-			},
+			"my-pg-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
@@ -186,4 +239,153 @@ func TestAlloyDBPostgres(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPublicIpConnection(t *testing.T) {
+	// Test connecting to an AlloyDB source's public IP
+	sourceConfig := requireAlloyDBPgVars(t)
+	sourceConfig["ipType"] = "public"
+	RunSourceConnectionTest(t, sourceConfig, "postgres-sql")
+}
+
+func TestPrivateIpConnection(t *testing.T) {
+	// Test connecting to an AlloyDB source's private IP
+	sourceConfig := requireAlloyDBPgVars(t)
+	sourceConfig["ipType"] = "private"
+	RunSourceConnectionTest(t, sourceConfig, "postgres-sql")
+}
+
+// Set up tool calling with parameters test table
+func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
+	// Set up Tool invocation with parameters test
+	pool, err := initAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
+	}
+
+	err = pool.Ping(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	_, err = pool.Query(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id SERIAL PRIMARY KEY,
+			name TEXT
+		);
+	`, tableName))
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	statement := fmt.Sprintf(`
+		INSERT INTO %s (name)
+		VALUES ($1), ($2), ($3);
+	`, tableName)
+
+	params := []any{"Alice", "Jane", "Sid"}
+	_, err = pool.Query(ctx, statement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+}
+
+func TestToolInvocationWithParams(t *testing.T) {
+	// create test configs
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// create source config
+	sourceConfig := requireAlloyDBPgVars(t)
+
+	// create table name with UUID
+	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// test setup function reterns teardown function
+	teardownTest := setupParamTest(t, ctx, tableName)
+	defer teardownTest(t)
+
+	// call generic invocation test helper
+	RunToolInvocationWithParamsTest(t, sourceConfig, "postgres-sql", tableName)
+}
+
+// Set up auth test database table
+func setupAlloyDBAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
+	// set up db connection pool
+	pool, err := initAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
+	}
+
+	err = pool.Ping(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	_, err = pool.Query(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id SERIAL PRIMARY KEY,
+			name TEXT,
+			email TEXT
+		);
+	`, tableName))
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	statement := fmt.Sprintf(`
+		INSERT INTO %s (name, email) 
+		VALUES ($1, $2), ($3, $4)
+	`, tableName)
+	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
+	_, err = pool.Query(ctx, statement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+}
+
+func TestAlloyDBGoogleAuthenticatedParameter(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// create test configs
+	sourceConfig := requireAlloyDBPgVars(t)
+
+	// create table name with UUID
+	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// test setup function returns teardown funtion
+	teardownTest := setupAlloyDBAuthTest(t, ctx, tableName)
+	defer teardownTest(t)
+
+	// call generic auth test helper
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "postgres-sql", tableName)
+
+}
+
+func TestAlloyDBAuthRequiredToolInvocation(t *testing.T) {
+	// create test configs
+	sourceConfig := requireAlloyDBPgVars(t)
+
+	// call generic auth test helper
+	RunAuthRequiredToolInvocationTest(t, sourceConfig, "postgres-sql")
+
 }

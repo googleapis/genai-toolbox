@@ -30,3 +30,4 @@ We currently support the following types of kinds of sources:
   PostgreSQL instance.
 * [postgres](./postgres.md) - Connect to any PostgreSQL compatible database.
 * [spanner](./spanner.md) - Connect to a Spanner database.
+* [neo4j](./neo4j.md) - Connect to a Neo4j instance.
