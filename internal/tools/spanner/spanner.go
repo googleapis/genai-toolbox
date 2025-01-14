@@ -130,8 +130,7 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 	var out strings.Builder
 
-	ctx := context.Background()
-	_, err = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+	_, err = t.Client.ReadWriteTransaction(context.Background(), func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		stmt := spanner.Statement{
 			SQL:    t.Statement,
 			Params: mapParams,

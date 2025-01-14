@@ -14,13 +14,31 @@
 
 package sources
 
+import (
+	"context"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+)
+
 // SourceConfig is the interface for configuring a source.
 type SourceConfig interface {
 	SourceConfigKind() string
-	Initialize() (Source, error)
+	Initialize(ctx context.Context, tracer trace.Tracer) (Source, error)
 }
 
 // Source is the interface for the source itself.
 type Source interface {
 	SourceKind() string
+}
+
+// InitConnectionSpan adds a span for database pool connection initialization
+func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceKind, sourceName string) (context.Context, trace.Span) {
+	ctx, span := tracer.Start(
+		ctx,
+		"toolbox/server/source/connect",
+		trace.WithAttributes(attribute.String("source_kind", sourceKind)),
+		trace.WithAttributes(attribute.String("source_name", sourceName)),
+	)
+	return ctx, span
 }
