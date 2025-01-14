@@ -30,16 +30,17 @@ IAM identity has been given the following IAM roles:
 
 ### Network Path
 
-Currently, this source only supports [connecting over Public IP][public-ip].
-Because it uses the Go connector, is uses rotating client certificates to
-establish a secure mTLS connection with the instance.
+Currently, Cloud SQL supports connection over both [private IP][private-ip] and
+[public IP][public-ip]. Set the `ipType` parameter in your source
+configuration to `public` or `private`.
 
+[private-ip]: https://cloud.google.com/sql/docs/postgres/configure-private-ip
 [public-ip]: https://cloud.google.com/sql/docs/postgres/configure-ip
 
 ### Database User
 
 Current, this source only uses standard authentication. You will need to [create a
-PostreSQL user][cloud-sql-users] to login to the database with. 
+PostreSQL user][cloud-sql-users] to login to the database with.
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/postgres/create-manage-users
 
@@ -65,7 +66,7 @@ sources:
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1"). |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluser (e.g. "my-instance").       |
-| ip_type   |  string  |     true     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
+| ipType   |  string  |     true     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                  |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                 |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                          |

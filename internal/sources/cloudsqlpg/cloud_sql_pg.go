@@ -37,7 +37,7 @@ type Config struct {
 	Project  string         `yaml:"project"`
 	Region   string         `yaml:"region"`
 	Instance string         `yaml:"instance"`
-	IPType   sources.IPType `yaml:"ip_type"`
+	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user"`
 	Password string         `yaml:"password"`
 	Database string         `yaml:"database"`
@@ -82,18 +82,18 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialOpts(ip_type string) ([]cloudsqlconn.DialOption, error) {
-	switch strings.ToLower(ip_type) {
+func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
 	case "private":
 		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
 	case "public":
 		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
 	default:
-		return nil, fmt.Errorf("invalid ip_type %s", ip_type)
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }
 
-func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -106,7 +106,7 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ip_type)
+	dialOpts, err := getDialOpts(ipType)
 	if err != nil {
 		return nil, err
 	}
