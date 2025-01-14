@@ -268,7 +268,7 @@ func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*t
 	// Set up Tool invocation with parameters test
 	pool, err := initAlloyDBPgConnectionPool(ALLOYDB_POSTGRES_PROJECT, ALLOYDB_POSTGRES_REGION, ALLOYDB_POSTGRES_CLUSTER, ALLOYDB_POSTGRES_INSTANCE, "public", ALLOYDB_POSTGRES_USER, ALLOYDB_POSTGRES_PASS, ALLOYDB_POSTGRES_DATABASE)
 	if err != nil {
-		t.Fatalf("unable to create ALLOYDB connection pool: %s", err)
+		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}
 
 	err = pool.Ping(ctx)
@@ -283,7 +283,7 @@ func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*t
 		);
 	`, tableName))
 	if err != nil {
-		t.Fatalf("unable to create test table: %s", err)
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
 	}
 
 	// Insert test data
@@ -301,6 +301,9 @@ func setupParamTest(t *testing.T, ctx context.Context, tableName string) func(*t
 	return func(t *testing.T) {
 		// tear down test
 		pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
 	}
 }
 
@@ -313,7 +316,7 @@ func TestToolInvocationWithParams(t *testing.T) {
 	sourceConfig := requireAlloyDBPgVars(t)
 
 	// create table name with UUID
-	tableName := "param_test_table" + uuid.New().String()
+	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// test setup function reterns teardown function
 	teardownTest := setupParamTest(t, ctx, tableName)
