@@ -154,7 +154,7 @@ func parseParamFromNode(node *yaml.Node) (Parameter, error) {
 	var p CommonParameter
 	err := node.Decode(&p)
 	if err != nil {
-		return nil, fmt.Errorf("parameter missing required fields")
+		return nil, fmt.Errorf("parameter missing required fields: %w", err)
 	}
 	switch p.Type {
 	case typeString:
