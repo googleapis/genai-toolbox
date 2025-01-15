@@ -168,7 +168,7 @@ class ToolboxTool(StructuredTool):
                 raise PermissionError(message)
             warn(message)
 
-    def _remove_bound_params(self) -> None:
+    def __remove_bound_params(self) -> None:
         """
         Removes parameters bound to a value from the tool schema.
 
@@ -183,7 +183,7 @@ class ToolboxTool(StructuredTool):
             if param.name not in self._bound_params:
                 non_bound_params.append(param)
 
-        self._update_params(non_bound_params)
+        self.__update_params(non_bound_params)
 
     def add_auth_tokens(self, auth_tokens: dict[str, Callable[[], str]]) -> None:
         """
@@ -282,7 +282,7 @@ class ToolboxTool(StructuredTool):
         # Bound parameters are handled internally, so remove them from the
         # schema to prevent validation errors and present a cleaner schema in
         # the tool.
-        self._remove_bound_params()
+        self.__remove_bound_params()
 
         if dupe_params:
             raise ValueError(
