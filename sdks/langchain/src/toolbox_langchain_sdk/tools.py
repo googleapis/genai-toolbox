@@ -93,7 +93,7 @@ class ToolboxTool(StructuredTool):
             self._url, self._session, self._name, kwargs, self._auth_tokens
         )
 
-    def _process_auth_params(self) -> None:
+    def __process_auth_params(self) -> None:
         """
         Extracts parameters requiring authentication from the schema.
 
@@ -178,7 +178,7 @@ class ToolboxTool(StructuredTool):
         # Remove auth params from the schema to prevent data validation errors
         # since their values are inferred by the Toolbox service, not provided
         # by the user.
-        self._process_auth_params()
+        self.__process_auth_params()
 
         if dupe_sources:
             raise ValueError(
