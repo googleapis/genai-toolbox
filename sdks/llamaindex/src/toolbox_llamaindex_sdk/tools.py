@@ -169,7 +169,7 @@ class ToolboxTool(FunctionTool):
         """
         params_missing_auth: list[str] = []
 
-       # check each parameter for at least 1 required auth_source
+        # check each parameter for at least 1 required auth_source
         for param_name, required_auth in self._auth_params.items():
             has_auth = False
             for src in required_auth:
