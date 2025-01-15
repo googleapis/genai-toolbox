@@ -58,7 +58,7 @@ description: >
 1. Create a backend service account:
 
     ```bash
-    gcloud iam service-accounts create $sa_name
+    gcloud iam service-accounts create $SA_NAME
     ```
 
 1.  Grant any IAM roles necessary to the IAM service account. Each source have a
@@ -67,7 +67,7 @@ description: >
 
     ```bash
     gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member serviceAccount:$sa_name@$PROJECT_ID.iam.gserviceaccount.com \
+        --member serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
         --role roles/cloudsql.client
     ```
 
@@ -150,7 +150,7 @@ description: >
         --namespace=$namespace
     ```
 
-1. Create a kubernetes manifest file (`k8s_deployment.yaml`) to build deployment and create service.
+1. Create a kubernetes manifest file (`k8s_deployment.yaml`) to build deployment.
 
     ```yaml
     apiVersion: apps/v1
@@ -167,14 +167,16 @@ description: >
           labels:
             app: toolbox
         spec:
-          serviceAccountName: k8s-toolbox-sa
+          serviceAccountName: toolbox-service-account
           containers:
             - name: toolbox
-              # use the newest version for toolbox
+              # Recommend to use the latest version of toolbox
               image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.0.5
+              ports:
+                - containerPort: 5000
               volumeMounts:
                 - name: toolbox-config
-                  mountPath: "/etc/tools.yaml"
+                  mountPath: "/app/tools.yaml"
                   subPath: tools.yaml
                   readOnly: true
           volumes:
@@ -184,19 +186,6 @@ description: >
                 items:
                 - key: tools.yaml
                   path: tools.yaml
-    ---
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: toolbox-service
-      namespace: toolbox-namespace
-    spec:
-      selector:
-        app: toolbox
-      ports:
-        - port: 80
-          targetPort: 8080
-      type: LoadBalancer
     ```
 
 1. Create the deployment.
@@ -211,6 +200,31 @@ description: >
     kubectl get deployments --namespace $namespace
     ```
 
+1. Create a kubernetes manifest file (`k8s_service.yaml`) to build service.
+
+    ```yaml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: toolbox-service
+      namespace: toolbox-namespace
+      annotations:
+        cloud.google.com/l4-rbs: "enabled"
+    spec:
+      selector:
+        app: toolbox
+      ports:
+        - port: 5000
+          targetPort: 5000
+      type: LoadBalancer
+    ```
+
+1. Create the service.
+
+    ```bash
+    kubectl apply -f k8s_service.yaml --namespace $namespace
+    ```
+
 1. You can find your IP address created for your service by getting the service
    information through the following.
 
@@ -221,7 +235,19 @@ description: >
 1. To look at logs, run the following.
 
     ```bash
-    kubectl logs -f deploy/$deployment_name --namespace toolbox-namespace
+    kubectl logs -f deploy/$deployment_name --namespace $namespace
+    ```
+
+1. Use port forwarding to access Toolbox in the cluster.
+
+    ```bash
+    kubectl port-forward service/$service_name 5000:5000
+    ```
+
+1. Access toolbox locally.
+
+    ```bash
+    curl http://127.0.0.1:5000
     ```
 
 ## Clean up resources
