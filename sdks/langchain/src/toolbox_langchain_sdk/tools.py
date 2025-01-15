@@ -33,6 +33,10 @@ class ToolboxTool(StructuredTool):
             auth_tokens: A mapping of authentication source names to functions
                 that retrieve ID tokens.
         """
+        # If the schema is not already a ToolSchema instance, we create one from
+        # its attributes. This allows flexibility in how the schema is provided,
+        # accepting both a ToolSchema object and a dictionary of schema
+        # attributes.
         if not isinstance(schema, ToolSchema):
             schema = ToolSchema(**schema)
 
