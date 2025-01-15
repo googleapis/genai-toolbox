@@ -138,7 +138,7 @@ async def test_toolbox_tool_add_auth_token(auth_toolbox_tool):
 async def test_toolbox_tool_validate_auth_strict(auth_toolbox_tool):
     async for tool in auth_toolbox_tool:
         with pytest.raises(PermissionError) as e:
-            tool._validate_auth(strict=True)
+            tool._ToolboxTool__validate_auth(strict=True)
         assert (
             "Parameter(s) `param1` of tool test_tool require authentication, but no valid authentication sources are registered. Please register the required sources before use."
             in str(e.value)

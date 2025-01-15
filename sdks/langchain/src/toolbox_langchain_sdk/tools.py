@@ -56,7 +56,7 @@ class ToolboxTool(StructuredTool):
         self._auth_params: dict[str, list[str]] = {}
 
         self.add_auth_tokens(auth_tokens)
-        self._validate_auth(strict=False)
+        self.__validate_auth(strict=False)
 
     def _update_params(self, params: list[ParameterSchema]) -> None:
         """
@@ -87,7 +87,7 @@ class ToolboxTool(StructuredTool):
         # If the tool had parameters that require authentication, then right
         # before invoking that tool, we check whether all these required
         # authentication sources have been registered or not.
-        self._validate_auth()
+        self.__validate_auth()
 
         return await _invoke_tool(
             self._url, self._session, self._name, kwargs, self._auth_tokens
@@ -102,7 +102,7 @@ class ToolboxTool(StructuredTool):
         provided by the user.
 
         The permitted authentication sources for each parameter are stored in
-        `_auth_params` for efficient validation in `_validate_auth`.
+        `_auth_params` for efficient validation in `__validate_auth`.
         """
         non_auth_params: list[ParameterSchema] = []
         for param in self._schema.parameters:
@@ -113,7 +113,7 @@ class ToolboxTool(StructuredTool):
 
         self._update_params(non_auth_params)
 
-    def _validate_auth(self, strict: bool = True) -> None:
+    def __validate_auth(self, strict: bool = True) -> None:
         """
         Checks if a tool meets the authentication requirements.
 
