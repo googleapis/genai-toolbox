@@ -143,14 +143,12 @@ class ToolboxTool(StructuredTool):
             if not found_match:
                 unauth_params.append(param_name)
 
-        if not unauth_params:
-            return
+        if unauth_params:
+            message = f"Parameter(s) `{', '.join(unauth_params)}` of tool {self._name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
 
-        message = f"Parameter(s) `{', '.join(unauth_params)}` of tool {self._name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
-
-        if strict:
-            raise PermissionError(message)
-        warn(message)
+            if strict:
+                raise PermissionError(message)
+            warn(message)
 
     def add_auth_tokens(self, auth_tokens: dict[str, Callable[[], str]]) -> None:
         """
