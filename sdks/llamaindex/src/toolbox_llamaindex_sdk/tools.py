@@ -167,19 +167,21 @@ class ToolboxTool(FunctionTool):
             PermissionError: If strict is True and any required authentication
                 sources are not registered.
         """
-        unauth_params: list[str] = []
+        params_missing_auth: list[str] = []
 
-        for param_name, auth_sources in self._auth_params.items():
-            found_match = False
-            for registered_auth_source in self._auth_tokens:
-                if registered_auth_source in auth_sources:
-                    found_match = True
+       # check each parameter for at least 1 required auth_source
+        for param_name, required_auth in self._auth_params.items():
+            has_auth = False
+            for src in required_auth:
+                # find first auth_source that is specified
+                if src in self._auth_tokens:
+                    has_auth = True
                     break
-            if not found_match:
-                unauth_params.append(param_name)
+            if not has_auth:
+                params_missing_auth.append(param_name)
 
-        if unauth_params:
-            message = f"Parameter(s) `{', '.join(unauth_params)}` of tool {self._name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
+        if params_missing_auth:
+            message = f"Parameter(s) `{', '.join(params_missing_auth)}` of tool {self._name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
 
             if strict:
                 raise PermissionError(message)
