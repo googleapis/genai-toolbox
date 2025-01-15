@@ -41,7 +41,7 @@ class ToolboxTool(StructuredTool):
             schema = ToolSchema(**schema)
 
         super().__init__(
-            coroutine=self._tool_func,
+            coroutine=self.__tool_func,
             func=None,
             name=name,
             description=schema.description,
@@ -58,7 +58,7 @@ class ToolboxTool(StructuredTool):
         self.add_auth_tokens(auth_tokens)
         self.__validate_auth(strict=False)
 
-    def _update_params(self, params: list[ParameterSchema]) -> None:
+    def __update_params(self, params: list[ParameterSchema]) -> None:
         """
         Updates the tool's schema with the given parameters and regenerates the
         args schema.
@@ -72,7 +72,7 @@ class ToolboxTool(StructuredTool):
             model_name=self._name, schema=self._schema.parameters
         )
 
-    async def _tool_func(self, **kwargs: Any) -> dict:
+    async def __tool_func(self, **kwargs: Any) -> dict:
         """
         The coroutine that invokes the tool with the given arguments.
 
@@ -111,7 +111,7 @@ class ToolboxTool(StructuredTool):
             else:
                 non_auth_params.append(param)
 
-        self._update_params(non_auth_params)
+        self.__update_params(non_auth_params)
 
     def __validate_auth(self, strict: bool = True) -> None:
         """
