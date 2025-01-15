@@ -170,7 +170,7 @@ and the corresponding SQL statements to execute upon tool invocation.
     tools = await client.load_toolset()
     ```
 
-1. Install required modules
+1. Install required modules.
 
     ```bash
     pip install langgraph langchain-google-vertexai
