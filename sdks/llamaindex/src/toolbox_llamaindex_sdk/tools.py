@@ -57,7 +57,7 @@ class ToolboxTool(FunctionTool):
             schema = ToolSchema(**schema)
 
         super().__init__(
-            async_fn=self._tool_func,
+            async_fn=self.__tool_func,
             metadata=ToolMetadata(
                 name=name,
                 description=schema.description,
@@ -76,7 +76,7 @@ class ToolboxTool(FunctionTool):
         self.add_auth_tokens(auth_tokens)
         self.__validate_auth(strict=False)
 
-    def _update_params(self, params: list[ParameterSchema]) -> None:
+    def __update_params(self, params: list[ParameterSchema]) -> None:
         """
         Updates the tool's schema with the given parameters and regenerates the
         args schema.
@@ -90,7 +90,7 @@ class ToolboxTool(FunctionTool):
             model_name=self._name, schema=self._schema.parameters
         )
 
-    async def _tool_func(self, **kwargs: Any) -> dict:
+    async def __tool_func(self, **kwargs: Any) -> dict:
         """
         The coroutine that invokes the tool with the given arguments.
 
@@ -146,7 +146,7 @@ class ToolboxTool(FunctionTool):
             else:
                 non_auth_params.append(param)
 
-        self._update_params(non_auth_params)
+        self.__update_params(non_auth_params)
 
     def __validate_auth(self, strict: bool = True) -> None:
         """
@@ -187,7 +187,7 @@ class ToolboxTool(FunctionTool):
                 raise PermissionError(message)
             warn(message)
 
-    def _remove_bound_params(self) -> None:
+    def __remove_bound_params(self) -> None:
         """
         Removes parameters bound to a value from the tool schema.
 
@@ -202,7 +202,7 @@ class ToolboxTool(FunctionTool):
             if param.name not in self._bound_params:
                 non_bound_params.append(param)
 
-        self._update_params(non_bound_params)
+        self.__update_params(non_bound_params)
 
     def add_auth_tokens(self, auth_tokens: dict[str, Callable[[], str]]) -> None:
         """
@@ -301,7 +301,7 @@ class ToolboxTool(FunctionTool):
         # Bound parameters are handled internally, so remove them from the
         # schema to prevent validation errors and present a cleaner schema in
         # the tool.
-        self._remove_bound_params()
+        self.__remove_bound_params()
 
         if dupe_params:
             raise ValueError(
