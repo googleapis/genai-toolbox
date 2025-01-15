@@ -125,7 +125,7 @@ and the corresponding SQL statements to execute upon tool invocation.
     ./toolbox --tools_file "tools.yaml"
     ```
 
-## Step 5: Start using Toolbox
+## Step 5: Start building using Toolbox
 
 1. Install the `toolbox_langchain_sdk` package.
 
