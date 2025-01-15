@@ -17,6 +17,8 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const (
@@ -129,29 +131,15 @@ type Parameter interface {
 // Parameters is a type used to allow unmarshal a list of parameters
 type Parameters []Parameter
 
-// RawParam is a type used to allow unmarshal another InterfaceUnmarshaler
-type RawParam struct {
-	unmarshal func(interface{}) error
-}
-
-func (r *RawParam) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	r.unmarshal = unmarshal
-	return nil
-}
-
-func (r *RawParam) Unmarshal(v interface{}) error {
-	return r.unmarshal(v)
-}
-
 func (c *Parameters) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(Parameters, 0)
 	// Parse the 'kind' fields for each source
-	var rawList []RawParam
+	var rawList []util.DelayedUnmarshaler
 	if err := unmarshal(&rawList); err != nil {
 		return err
 	}
-	for _, n := range rawList {
-		p, err := parseParamFromRawParam(&n)
+	for _, u := range rawList {
+		p, err := parseParamFromDelayedUnmarshaler(&u)
 		if err != nil {
 			return err
 		}
@@ -160,42 +148,42 @@ func (c *Parameters) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-func parseParamFromRawParam(rawParam *RawParam) (Parameter, error) {
-	// Helper function that is required to parse parameters
-	// because there are multiple different types
+// parseParamFromDelayedUnmarshaler is a helper function that is required to parse
+// parameters because there are multiple different types
+func parseParamFromDelayedUnmarshaler(u *util.DelayedUnmarshaler) (Parameter, error) {
 	var p CommonParameter
-	err := rawParam.Unmarshal(&p)
+	err := u.Unmarshal(&p)
 	if err != nil {
 		return nil, fmt.Errorf("parameter missing required fields: %w", err)
 	}
 	switch p.Type {
 	case typeString:
 		a := &StringParameter{}
-		if err := rawParam.Unmarshal(a); err != nil {
+		if err := u.Unmarshal(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
 		}
 		return a, nil
 	case typeInt:
 		a := &IntParameter{}
-		if err := rawParam.Unmarshal(a); err != nil {
+		if err := u.Unmarshal(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
 		}
 		return a, nil
 	case typeFloat:
 		a := &FloatParameter{}
-		if err := rawParam.Unmarshal(a); err != nil {
+		if err := u.Unmarshal(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
 		}
 		return a, nil
 	case typeBool:
 		a := &BooleanParameter{}
-		if err := rawParam.Unmarshal(a); err != nil {
+		if err := u.Unmarshal(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
 		}
 		return a, nil
 	case typeArray:
 		a := &ArrayParameter{}
-		if err := rawParam.Unmarshal(a); err != nil {
+		if err := u.Unmarshal(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
 		}
 		return a, nil
@@ -504,12 +492,12 @@ func (p *ArrayParameter) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		return err
 	}
 	var rawItem struct {
-		Items RawParam `yaml:"items"`
+		Items util.DelayedUnmarshaler `yaml:"items"`
 	}
 	if err := unmarshal(&rawItem); err != nil {
 		return err
 	}
-	i, err := parseParamFromRawParam(&rawItem.Items)
+	i, err := parseParamFromDelayedUnmarshaler(&rawItem.Items)
 	if err != nil {
 		return fmt.Errorf("unable to parse 'items' field: %w", err)
 	}

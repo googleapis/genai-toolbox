@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	// "bytes"
 	"context"
 	_ "embed"
 	"fmt"

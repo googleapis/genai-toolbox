@@ -30,6 +30,7 @@ import (
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 type ServerConfig struct {
@@ -117,24 +118,10 @@ type SourceConfigs map[string]sources.SourceConfig
 // validate interface
 var _ yaml.InterfaceUnmarshaler = &SourceConfigs{}
 
-// RawConfig is a type used to allow unmarshal another InterfaceUnmarshaler
-type RawConfig struct {
-	unmarshal func(interface{}) error
-}
-
-func (conf *RawConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	conf.unmarshal = unmarshal
-	return nil
-}
-
-func (conf *RawConfig) Unmarshal(v interface{}) error {
-	return conf.unmarshal(v)
-}
-
 func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(SourceConfigs)
 	// Parse the 'kind' fields for each source
-	var raw map[string]RawConfig
+	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
@@ -195,7 +182,7 @@ var _ yaml.InterfaceUnmarshaler = &AuthSourceConfigs{}
 func (c *AuthSourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(AuthSourceConfigs)
 	// Parse the 'kind' fields for each authSource
-	var raw map[string]RawConfig
+	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
@@ -231,7 +218,7 @@ var _ yaml.InterfaceUnmarshaler = &ToolConfigs{}
 func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(ToolConfigs)
 	// Parse the 'kind' fields for each source
-	var raw map[string]RawConfig
+	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
