@@ -4,25 +4,32 @@ This guide would help you set up a basic agentic application using toolbox.
 
 ## Step 1: Set up a Cloud SQL database
 
-1. [Create a Cloud SQL instance](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create-instance)
+1. [Create a Cloud SQL instance](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create-instance).
 1. [Create a
-   database](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create-database)
+   database](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create-database).
 1. [Create a database
-   user](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create_a_user)
+   user](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create_a_user).
 1. [Set up a service
-   account](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#set_up_a_service_account)
+   account](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#set_up_a_service_account).
 
 ## Step 2: Import data into the database
 
-Import the database using the command
+Run the command.
 
 ```bash
 gcloud sql import sql {INSTANCE_NAME} gs://toolbox-quickstart/hotels.gz --database={DATABASE_NAME}
 ```
 
+### (Optional) Explore your data
+
+You can explore the data by logging into [Cloud SQL
+Studio](https://cloud.google.com/sql/docs/mysql/manage-data-using-studio#explore-data)
+and running SQL queries.
+
 ## Step 3: Create a tools config file
 
-Copy the following into an empty `tools.yaml` file.
+Create a `tools.yaml` file with the following content, updating the `project`,
+`database`, `instance`, `user`, and `password` fields:
 
 ```yaml
 sources:
@@ -87,35 +94,24 @@ tools:
     statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
 ```
 
-Update the `project`, `database`, `instance`, `user` and `password` fields.
-
 > [!NOTE]
 > If your instance belongs to a different region, update the `region` field.
 
-You can see that in the above file, we have four tools configured:
+The config file defines four tools:
 `search-hotels`, `book-hotel`, `update-hotel` and `cancel-hotel`.
 
-For each tool, we mention the tool name, description,
-[kind](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements) and
-[source](./docs/sources/README.md).
-
-We also mention that various parameters that the tool takes along with their
-[types](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements)
-and descriptions.
-Each tool also has a corresponding statement, which is the SQL query to be executed
-on tool invocation.
+Each tool specifies its description,
+[kind](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements),
+[source](./docs/sources/README.md), required parameters
+and the corresponding SQL statements to execute upon tool invocation.
 
 ## Step 4: Start a toolbox server locally
 
-1. Use the command to download the toolbox binary.
+1. Download the latest toolbox binary.
 
     ```bash
     curl -O https://storage.googleapis.com/genai-toolbox/v0.0.5/linux/amd64/toolbox
     ```
-
-    > [!TIP]
-    > Use the latest features provided by toolbox by downloading the latest
-    > toolbox version. Here, '0.0.5' represents the latest toolbox version currently.
 
 1. Provide binary execution permissions.
 
@@ -123,7 +119,7 @@ on tool invocation.
     chmod +x toolbox
     ```
 
-1. Run the toolbox server.
+1. Run the Toolbox server.
 
     ```bash
     ./toolbox --tools_file "tools.yaml"
@@ -131,7 +127,7 @@ on tool invocation.
 
 ## Step 5: Start using Toolbox
 
-1. Install the toolbox_langchain_sdk package.
+1. Install the `toolbox_langchain_sdk` package.
 
     ```bash
     pip install toolbox_langchain_sdk
@@ -146,24 +142,18 @@ on tool invocation.
     > pip install .
     > ```
 
-1. Create an async runner function to help run async functions in python.
+1. Create a python script to connect to the toolbox SDK.
 
     ```python
     import asyncio
-
-    async def main():
-       # All our code will be added here
-       pass
-
-    asyncio.run(main())
-    ```
-
-1. Connect to the toolbox SDK
-
-    ```python
     from toolbox_langchain_sdk import ToolboxClient
 
-    client = ToolboxClient("http://127.0.0.1:5000")
+    async def main():
+      client = ToolboxClient("http://127.0.0.1:5000")
+      # All our code will be added here
+      pass
+
+    asyncio.run(main())
     ```
 
 1. Try out the `search-hotels` tool.
@@ -186,7 +176,7 @@ on tool invocation.
     pip install langgraph langchain-google-vertexai
     ```
 
-1. Create a langraph [ReAct
+1. Create a LangGraph [ReAct
    agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent).
 
 
@@ -199,7 +189,7 @@ on tool invocation.
     agent = create_react_agent(model, tools, checkpointer=MemorySaver())
     ```
 
-1. Define the initial prompt for a hotel assistant.
+1. Define the initial prompt and user queries.
 
     ```python
     prompt = """
@@ -209,11 +199,7 @@ on tool invocation.
         searches. This is very important for any operations. For any bookings or 
         cancellations, please provide the appropriate confirmation.
         """
-    ```
-
-1. Write the user queries that we want to run.
-
-    ```python
+    
     queries = [
         "Find hotels in Basel with Basel in it's name.",
         "Can you book the Hilton Basel for me?",
@@ -222,20 +208,7 @@ on tool invocation.
     ]
     ```
 
-1. Explore your dataset
-
-    1. [Login into Cloud SQL
-       studio](https://cloud.google.com/sql/docs/mysql/manage-data-using-studio#explore-data)
-    1. In the query editor, run the query to view the data.
-
-        ```sql
-        SELECT * FROM hotels;
-        ```
-
-    1. Observe that the `booked` column is `0` for all hotels. This means that
-       none of the hotels are booked yet.
-
-1. Run the queries and see the output!
+1. Run the queries and observe the output!
 
     ```python
     config = {"configurable": {"thread_id": "thread-1"}}
@@ -246,7 +219,9 @@ on tool invocation.
         print(response["messages"][-1].content)
     ```
 
-    You can now see that the `booked` column for `Hyatt Regency Basel` has been
-    changed to `1`. This means that the hotel has been booked by the agent. Also
-    note that the checkin and checkout dates of the hotel have been updated to
-    `2024-04-10` and `2024-04-19` from `2024-04-02` and `2024-04-20`.
+    To verify the agent's actions, you can [examine the hotels table in Cloud
+    SQL Studio](#optional-explore-your-data). You should observe that the
+    `booked` column for the `Hyatt Regency Basel` has changed from `0` to `1`,
+    indicating that the hotel has been successfully booked. Additionally, the
+    `checkin_date` and `checkout_date` have been updated to `2024-04-10` and
+    `2024-04-19` from `2024-04-02` and `2024-04-20` respectively.
