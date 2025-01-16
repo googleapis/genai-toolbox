@@ -105,7 +105,7 @@ The config file defines four tools:
 
 Each tool specifies its description,
 [kind](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements),
-[source](./docs/sources/README.md), required parameters
+[source](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/README.md), required parameters
 and the corresponding SQL statements to execute upon tool invocation.
 
 ## Step 4: Start a toolbox server locally
@@ -115,6 +115,8 @@ and the corresponding SQL statements to execute upon tool invocation.
     ```bash
     curl -O https://storage.googleapis.com/genai-toolbox/v0.0.5/linux/amd64/toolbox
     ```
+
+  > **_NOTE:_**  Use the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture.
 
 1. Provide binary execution permissions.
 
