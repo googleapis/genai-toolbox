@@ -1,6 +1,10 @@
-# Toolbox Quickstart
+---
+title: "Toolbox Quickstart"
+type: docs
+weight: 1
+description: This guide would help you set up a basic agentic application using toolbox.
 
-This guide would help you set up a basic agentic application using toolbox.
+---
 
 ## Step 1: Set up a Cloud SQL database
 
@@ -94,8 +98,7 @@ tools:
     statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
 ```
 
-> [!NOTE]
-> If your instance belongs to a different region, update the `region` field.
+> **_NOTE:_**  If your instance belongs to a different region, update the `region` field.
 
 The config file defines four tools:
 `search-hotels`, `book-hotel`, `update-hotel` and `cancel-hotel`.
@@ -133,7 +136,7 @@ and the corresponding SQL statements to execute upon tool invocation.
     pip install toolbox_langchain_sdk
     ```
 
-    > [!NOTE]
+    > **_NOTE:_** 
     > Right now, the toolbox_langchain_sdk package is not available on pip. To
     > use the sdk, download the source code from [git](https://github.com/googleapis/genai-toolbox/tree/main/sdks/langchain) and install it locally
     > using the command:
