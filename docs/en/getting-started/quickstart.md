@@ -104,7 +104,7 @@ The config file defines four tools:
 `search-hotels`, `book-hotel`, `update-hotel` and `cancel-hotel`.
 
 Each tool specifies its description,
-[kind](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#requirements),
+[kind](https://github.com/googleapis/genai-toolbox/tree/main/docs/sources#kinds-of-sources),
 [source](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/README.md), required parameters
 and the corresponding SQL statements to execute upon tool invocation.
 
