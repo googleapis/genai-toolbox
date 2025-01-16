@@ -118,6 +118,27 @@ steps:
       - |
         go test -race -v -tags=integration,neo4j ./tests
 
+  - id: "cloud-sql-mssql"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CLOUD_SQL_MSSQL_PROJECT=$PROJECT_ID"
+      - "CLOUD_SQL_MSSQL_INSTANCE=$_CLOUD_SQL_MSSQL_INSTANCE"
+      - "CLOUD_SQL_MSSQL_IP=$_CLOUD_SQL_MSSQL_IP"
+      - "CLOUD_SQL_MSSQL_DATABASE=$_DATABASE_NAME"
+      - "CLOUD_SQL_MSSQL_REGION=$_REGION"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLOUD_SQL_MSSQL_USER", "CLOUD_SQL_MSSQL_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,cloudsqlmssql ./tests
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -157,3 +178,4 @@ substitutions:
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
   _NEO4J_DATABASE: "neo4j"
+  _CLOUD_SQL_MSSQL_INSTANCE: "cloud-sql-mssql-testing"

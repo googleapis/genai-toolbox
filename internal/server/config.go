@@ -22,12 +22,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	cloudsqlmssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	neo4jrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/mssql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
@@ -173,6 +175,12 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
+		case cloudsqlmssqlsrc.SourceKind:
+			actual := cloudsqlmssqlsrc.Config{Name: name}
+			if err := n.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
 		}
@@ -261,6 +269,12 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		case neo4jtool.ToolKind:
 			actual := neo4jtool.Config{Name: name}
 			if err := u.Unmarshal(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case mssql.ToolKind:
+			actual := mssql.Config{Name: name}
+			if err := n.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual

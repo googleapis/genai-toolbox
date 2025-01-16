@@ -63,6 +63,8 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 	switch {
 	case strings.EqualFold(toolKind, "postgres-sql"):
 		statement = fmt.Sprintf("SELECT * FROM %s WHERE email = $1;", tableName)
+	case strings.EqualFold(toolKind, "mssql"):
+		statement = fmt.Sprintf("SELECT * FROM %s WHERE email = @email;", tableName)
 	default:
 		t.Fatalf("invalid tool kind: %s", toolKind)
 	}

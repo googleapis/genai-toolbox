@@ -242,7 +242,7 @@ func TestCloudSQLPostgres(t *testing.T) {
 }
 
 // Set up auth test database table
-func setupAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
+func setupCloudSQLPgAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
 	// set up testt
 	pool, err := initCloudSQLPgConnectionPool(CLOUD_SQL_POSTGRES_PROJECT, CLOUD_SQL_POSTGRES_REGION, CLOUD_SQL_POSTGRES_INSTANCE, "public", CLOUD_SQL_POSTGRES_USER, CLOUD_SQL_POSTGRES_PASS, CLOUD_SQL_POSTGRES_DATABASE)
 	if err != nil {
@@ -285,7 +285,7 @@ func setupAuthTest(t *testing.T, ctx context.Context, tableName string) func(*te
 	}
 }
 
-func TestCloudSQLGoogleAuthenticatedParameter(t *testing.T) {
+func TestCloudSQLPgGoogleAuthenticatedParameter(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -296,7 +296,7 @@ func TestCloudSQLGoogleAuthenticatedParameter(t *testing.T) {
 	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// test setup function reterns teardown function
-	teardownTest := setupAuthTest(t, ctx, tableName)
+	teardownTest := setupCloudSQLPgAuthTest(t, ctx, tableName)
 	defer teardownTest(t)
 
 	// call generic auth test helper

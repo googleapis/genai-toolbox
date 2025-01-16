@@ -1,0 +1,130 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package cloudsqlmssql
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"slices"
+	"strings"
+
+	"cloud.google.com/go/cloudsqlconn"
+	"cloud.google.com/go/cloudsqlconn/sqlserver/mssql"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"go.opentelemetry.io/otel/trace"
+)
+
+const SourceKind string = "cloud-sql-mssql"
+
+// validate interface
+var _ sources.SourceConfig = Config{}
+
+type Config struct {
+	Name      string `yaml:"name"`
+	Kind      string `yaml:"kind"`
+	Project   string `yaml:"project"`
+	Region    string `yaml:"region"`
+	Instance  string `yaml:"instance"`
+	IPAddress string `yaml:"ipAddress"`
+	IPType    string `yaml:"ipType"`
+	User      string `yaml:"user"`
+	Password  string `yaml:"password"`
+	Database  string `yaml:"database"`
+}
+
+func (r Config) SourceConfigKind() string {
+	return SourceKind
+}
+
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	db, err := initCloudSQLMssqlConnection(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPAddress, r.IPType, r.User, r.Password, r.Database)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create db connection: %w", err)
+	}
+
+	// Verify db connection
+	err = db.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect successfully: %w", err)
+	}
+
+	s := &Source{
+		Name: r.Name,
+		Kind: SourceKind,
+		Db:   db,
+	}
+	return s, nil
+}
+
+var _ sources.Source = &Source{}
+
+type Source struct {
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
+	Db   *sql.DB
+}
+
+func (s *Source) SourceKind() string {
+	return SourceKind
+}
+
+func (s *Source) MssqlDb() *sql.DB {
+	return s.Db
+}
+
+func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
+	case "private":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
+	case "public":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
+	default:
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
+	}
+}
+
+func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	defer span.End()
+
+	// Create dsn
+	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
+
+	// Get dial options
+	dialOpts, err := getDialOpts(ipType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Register sql server driver
+	if !slices.Contains(sql.Drivers(), "cloudsql-sqlserver-driver") {
+		_, err := mssql.RegisterDriver("cloudsql-sqlserver-driver", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Open database connection
+	db, err := sql.Open(
+		"cloudsql-sqlserver-driver",
+		dsn,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
