@@ -119,8 +119,8 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	}
 
 	cl := len(cols)
-	v := make([]interface{}, cl)
-	pointers := make([]interface{}, cl)
+	v := make([]any, cl)
+	pointers := make([]any, cl)
 	for i := range v {
 		pointers[i] = &v[i]
 	}
