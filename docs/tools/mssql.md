@@ -8,7 +8,7 @@ database. It's compatible with any of the following sources:
 The specified T-SQL statement is executed as a [prepared statement][prepare-statement],
 and specified parameters will inserted according to their names:
 
-[prepare-statement]: https://learn.microsoft.com/=sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql
+[prepare-statement]: https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
 
 ## Example
 

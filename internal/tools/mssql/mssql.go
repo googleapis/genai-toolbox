@@ -128,10 +128,16 @@ func createTypedRow(types []*sql.ColumnType) []any {
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 
-	// Convert params into named values
+	// Convert params into named
 	namedArgs := make([]any, 0, len(params))
-	for k, v := range params.AsMap() {
-		namedArgs = append(namedArgs, sql.Named(k, v))
+	paramsMap := params.AsReversedMap()
+	for _, v := range params.AsSlice() {
+		paramName := paramsMap[v]
+		if strings.Contains(t.Statement, "@"+paramName) {
+			namedArgs = append(namedArgs, sql.Named(paramName, v))
+		} else {
+			namedArgs = append(namedArgs, v)
+		}
 	}
 	rows, err := t.Db.Query(t.Statement, namedArgs...)
 	if err != nil {

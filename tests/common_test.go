@@ -216,7 +216,7 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 	case "postgres-sql":
 		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
 	case "mssql":
-		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name;", tableName)
+		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
 	default:
 		t.Fatalf("invalid tool kind: %s", toolKind)
 	}
