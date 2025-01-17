@@ -87,20 +87,24 @@ sources:
         user: test_user
         password: test-password
 tools:
-  search-hotels:
+  search-hotels-by-name:
     kind: postgres-sql
     source: my-pg-source
-    description: Search for hotels based on location and name. 
-      Returns a list of hotel dictionaries matching the search criteria.
+    description: Search for hotels based on name. 
+    parameters:
+      - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+  search-hotels-by-location:
+    kind: postgres-sql
+    source: my-pg-source
+    description: Search for hotels based on location. 
     parameters:
       - name: location
         type: string
         description: The location of the hotel.
-      - name: name
-        type: string
-        description: The name of the hotel.
-    statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%' AND
-        name ILIKE '%' || $2 || '%';
+    statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
   book-hotel:
     kind: postgres-sql
     source: my-pg-source
@@ -139,8 +143,8 @@ tools:
     statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
 ```
 
-The config file defines four tools:
-`search-hotels`, `book-hotel`, `update-hotel` and `cancel-hotel`.
+The config file defines five tools:
+`search-hotels-by-name`, `search-hotels-by-location`, `book-hotel`, `update-hotel` and `cancel-hotel`.
 
 Each tool specifies its description,
 [kind](https://github.com/googleapis/genai-toolbox/tree/main/docs/sources#kinds-of-sources),
@@ -206,11 +210,11 @@ and the corresponding SQL statements to execute upon tool invocation.
     asyncio.run(main())
     ```
 
-1. Try out the `search-hotels` tool.
+1. Try out the `search-hotels-by-name` tool.
 
     ```python
-    search_tool = await client.load_tool('search-hotels')
-    response = await search_tool.ainvoke({"location": "Zurich", "name": ""})
+    search_tool = await client.load_tool('search-hotels-by-name')
+    response = await search_tool.ainvoke({"name": "Hilton"})
     print(response)
     ```
 
