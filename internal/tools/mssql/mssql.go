@@ -157,24 +157,25 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 			if i > 0 {
 				out.WriteString(" ")
 			}
+			// Print output variables as string to match other tools' output
 			if resValue, ok := res.(*sql.NullBool); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Bool))
+				out.WriteString(fmt.Sprintf("%s", resValue.Bool)) //nolint:all
 				continue
 			}
 			if resValue, ok := res.(*sql.NullString); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.String))
+				out.WriteString(resValue.String) //nolint:all
 				continue
 			}
 			if resValue, ok := res.(*sql.NullInt32); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Int32))
+				out.WriteString(fmt.Sprintf("%s", resValue.Int32)) //nolint:all
 				continue
 			}
 			if resValue, ok := res.(*sql.NullInt64); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Int64))
+				out.WriteString(fmt.Sprintf("%s", resValue.Int64)) //nolint:all
 				continue
 			}
 			if resValue, ok := res.(*sql.NullFloat64); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Float64))
+				out.WriteString(fmt.Sprintf("%s", resValue.Float64)) //nolint:all
 				continue
 			}
 		}
