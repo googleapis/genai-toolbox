@@ -38,7 +38,6 @@ This process creates a database `postgres` with superuser `postgres`.
       booked        BIT  NOT NULL
     );
     ```
-    <!-- 1. Download the data csv file (TODO: Add csv filepath) -->
 
 1. Insert data into the table.
 
