@@ -27,7 +27,7 @@ import (
 const ToolKind string = "mssql"
 
 type compatibleSource interface {
-	MssqlDb() *sql.DB
+	MSSQLDB() *sql.DB
 }
 
 // validate compatible sources are still compatible
@@ -72,7 +72,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
-		Db:           s.MssqlDb(),
+		Db:           s.MSSQLDB(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil

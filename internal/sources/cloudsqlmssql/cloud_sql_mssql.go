@@ -33,6 +33,7 @@ const SourceKind string = "cloud-sql-mssql"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
+	// Cloud SQL MSSQL configs
 	Name      string `yaml:"name"`
 	Kind      string `yaml:"kind"`
 	Project   string `yaml:"project"`
@@ -46,10 +47,12 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
+	// Returns Cloud SQL MSSQL source kind
 	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	// Initializes a Cloud SQL MSSQL source
 	db, err := initCloudSQLMssqlConnection(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPAddress, r.IPType, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
@@ -72,16 +75,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
+	// Cloud SQL MSSQL struct with connection pool
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
 	Db   *sql.DB
 }
 
 func (s *Source) SourceKind() string {
+	// Returns Cloud SQL MSSQL source kind
 	return SourceKind
 }
 
-func (s *Source) MssqlDb() *sql.DB {
+func (s *Source) MSSQLDB() *sql.DB {
+	// Returns a Cloud SQL MSSQL database connection pool
 	return s.Db
 }
 
