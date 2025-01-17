@@ -1,5 +1,5 @@
 ---
-title: "Toolbox Quickstart"
+title: "Local Quickstart"
 type: docs
 weight: 1
 description: This guide would help you set up a basic agentic application using toolbox.
