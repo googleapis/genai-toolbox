@@ -1,4 +1,10 @@
-# Sources
+---
+title: "Sources"
+type: docs
+weight: 1
+description: > 
+  Sources represent your different data sources that a tool can interact with.
+---
 
 A Source represents a data sources that a tool can interact with. You can define
 Sources as a map in the `sources` section of your `tools.yaml` file. Typically,
@@ -20,14 +26,4 @@ sources:
 In implementation, each source is a different connection pool or client that used
 to connect to the database and execute the tool. 
 
-## Kinds of Sources
-
-We currently support the following types of kinds of sources:
-
-* [alloydb-postgres](./alloydb-pg.md) - Connect to an AlloyDB for PostgreSQL
-  cluster.
-* [cloud-sql-postgres](./cloud-sql-pg.md) - Connect to a Cloud SQL for
-  PostgreSQL instance.
-* [postgres](./postgres.md) - Connect to any PostgreSQL compatible database.
-* [spanner](./spanner.md) - Connect to a Spanner database.
-* [neo4j](./neo4j.md) - Connect to a Neo4j instance.
+## Available Sources

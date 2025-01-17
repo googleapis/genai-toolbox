@@ -1,4 +1,13 @@
-# PostgreSQL Source 
+---
+title: "PostgreSQL"
+type: docs
+weight: 1
+description: >
+  PostgreSQL is a powerful, open source object-relational database.
+
+---
+
+##  About
 
 [PostgreSQL][pg-docs] is a powerful, open source object-relational database
 system with over 35 years of active development that has earned it a strong
@@ -6,7 +15,7 @@ reputation for reliability, feature robustness, and performance.
 
 [pg-docs]: https://www.postgresql.org/
 
-## Requirements 
+## Requirements
 
 ### Database User
 
