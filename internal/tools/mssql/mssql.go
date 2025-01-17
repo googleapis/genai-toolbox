@@ -105,6 +105,7 @@ type Tool struct {
 }
 
 func createTypedRow(types []*sql.ColumnType) []any {
+	// Create a slice of typed variables to scan the query output into.
 	v := make([]any, len(types))
 	for i := range v {
 		switch types[i].DatabaseTypeName() {
