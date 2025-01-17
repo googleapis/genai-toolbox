@@ -177,7 +177,7 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case cloudsqlmssqlsrc.SourceKind:
 			actual := cloudsqlmssqlsrc.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
@@ -274,7 +274,7 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case mssql.ToolKind:
 			actual := mssql.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
