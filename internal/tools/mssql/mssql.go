@@ -104,6 +104,27 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
+func createTypedRow(types []*sql.ColumnType) []any {
+	v := make([]any, len(types))
+	for i := range v {
+		switch types[i].DatabaseTypeName() {
+		case "VARCHAR", "TEXT", "UUID", "TIMESTAMP":
+			v[i] = new(sql.NullString)
+		case "BOOL":
+			v[i] = new(sql.NullBool)
+		case "INT":
+			v[i] = new(sql.NullInt32)
+		case "BIGINT":
+			v[i] = new(sql.NullInt64)
+		case "DECIMAL":
+			v[i] = new(sql.NullFloat64)
+		default:
+			v[i] = new(sql.NullString)
+		}
+	}
+	return v
+}
+
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 
@@ -117,15 +138,11 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
 
-	// Get number of returned columns and construct result list
-	cols, err := rows.Columns()
+	types, err := rows.ColumnTypes()
 	if err != nil {
-		return "", fmt.Errorf("unable to get columns for row: %w", err)
+		return "", fmt.Errorf("unable to fetch column types: %w", err)
 	}
-	v := make([]any, len(cols))
-	for i := range cols {
-		v[i] = new([]byte)
-	}
+	v := createTypedRow(types)
 
 	// fetch result into a string
 	var out strings.Builder
@@ -136,11 +153,30 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 			return "", fmt.Errorf("unable to parse row: %w", err)
 		}
 		out.WriteString("[")
-		for i := range v {
+		for i, res := range v {
 			if i > 0 {
 				out.WriteString(" ")
 			}
-			out.Write(*(v[i].(*[]byte)))
+			if resValue, ok := res.(*sql.NullBool); ok {
+				out.WriteString(fmt.Sprintf("%s", resValue.Bool))
+				continue
+			}
+			if resValue, ok := res.(*sql.NullString); ok {
+				out.WriteString(fmt.Sprintf("%s", resValue.String))
+				continue
+			}
+			if resValue, ok := res.(*sql.NullInt32); ok {
+				out.WriteString(fmt.Sprintf("%s", resValue.Int32))
+				continue
+			}
+			if resValue, ok := res.(*sql.NullInt64); ok {
+				out.WriteString(fmt.Sprintf("%s", resValue.Int64))
+				continue
+			}
+			if resValue, ok := res.(*sql.NullFloat64); ok {
+				out.WriteString(fmt.Sprintf("%s", resValue.Float64))
+				continue
+			}
 		}
 		out.WriteString("]")
 	}

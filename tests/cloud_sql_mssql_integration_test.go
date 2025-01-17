@@ -69,11 +69,23 @@ func requireCloudSQLMssqlVars(t *testing.T) map[string]any {
 		"kind":      "cloud-sql-mssql",
 		"project":   CLOUD_SQL_MSSQL_PROJECT,
 		"instance":  CLOUD_SQL_MSSQL_INSTANCE,
+		"ipType":    "public",
 		"ipAddress": CLOUD_SQL_MSSQL_IP,
 		"region":    CLOUD_SQL_MSSQL_REGION,
 		"database":  CLOUD_SQL_MSSQL_DATABASE,
 		"user":      CLOUD_SQL_MSSQL_USER,
 		"password":  CLOUD_SQL_MSSQL_PASS,
+	}
+}
+
+func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
+	case "private":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
+	case "public":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
+	default:
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }
 
