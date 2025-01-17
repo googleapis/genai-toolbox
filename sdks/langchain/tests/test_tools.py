@@ -101,6 +101,101 @@ async def test_toolbox_tool_init(MockClientSession, tool_schema):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    "params, expected_bound_params",
+    [
+        ({"param1": "bound-value"}, {"param1": "bound-value"}),
+        ({"param1": lambda: "bound-value"}, {"param1": lambda: "bound-value"}),
+        (
+            {"param1": "bound-value", "param2": 123},
+            {"param1": "bound-value", "param2": 123},
+        ),
+    ],
+)
+async def test_toolbox_tool_bind_params(toolbox_tool, params, expected_bound_params):
+    async for tool in toolbox_tool:
+        tool = tool.bind_params(params)
+        for key, value in expected_bound_params.items():
+            if callable(value):
+                assert value() == tool._bound_params[key]()
+            else:
+                assert value == tool._bound_params[key]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("strict", [True, False])
+async def test_toolbox_tool_bind_params_invalid(toolbox_tool, strict):
+    async for tool in toolbox_tool:
+        if strict:
+            with pytest.raises(ValueError) as e:
+                tool = tool.bind_params({"param3": "bound-value"}, strict=strict)
+            assert "Parameter(s) param3 missing and cannot be bound." in str(e.value)
+        else:
+            with pytest.warns(UserWarning) as record:
+                tool = tool.bind_params({"param3": "bound-value"}, strict=strict)
+            assert len(record) == 1
+            assert "Parameter(s) param3 missing and cannot be bound." in str(
+                record[0].message
+            )
+
+
+@pytest.mark.asyncio
+async def test_toolbox_tool_bind_params_duplicate(toolbox_tool):
+    async for tool in toolbox_tool:
+        tool = tool.bind_params({"param1": "bound-value"})
+        with pytest.raises(ValueError) as e:
+            tool = tool.bind_params({"param1": "bound-value"})
+        assert "Parameter(s) `param1` already bound in tool `test_tool`." in str(
+            e.value
+        )
+
+
+@pytest.mark.asyncio
+async def test_toolbox_tool_bind_params_invalid_params(auth_toolbox_tool):
+    async for tool in auth_toolbox_tool:
+        with pytest.raises(ValueError) as e:
+            tool = tool.bind_params({"param1": "bound-value"})
+        assert "Parameter(s) param1 already authenticated and cannot be bound." in str(
+            e.value
+        )
+
+
+@pytest.mark.asyncio
+async def test_toolbox_tool_bind_param(toolbox_tool):
+    async for tool in toolbox_tool:
+        tool = tool.bind_param("param1", "bound-value")
+        assert tool._bound_params == {"param1": "bound-value"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("strict", [True, False])
+async def test_toolbox_tool_bind_param_invalid(toolbox_tool, strict):
+    async for tool in toolbox_tool:
+        if strict:
+            with pytest.raises(ValueError) as e:
+                tool = tool.bind_param("param3", "bound-value", strict=strict)
+            assert "Parameter(s) param3 missing and cannot be bound." in str(e.value)
+        else:
+            with pytest.warns(UserWarning) as record:
+                tool = tool.bind_param("param3", "bound-value", strict=strict)
+            assert len(record) == 1
+            assert "Parameter(s) param3 missing and cannot be bound." in str(
+                record[0].message
+            )
+
+
+@pytest.mark.asyncio
+async def test_toolbox_tool_bind_param_duplicate(toolbox_tool):
+    async for tool in toolbox_tool:
+        tool = tool.bind_param("param1", "bound-value")
+        with pytest.raises(ValueError) as e:
+            tool = tool.bind_param("param1", "bound-value")
+        assert "Parameter(s) `param1` already bound in tool `test_tool`." in str(
+            e.value
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     "auth_tokens, expected_auth_tokens",
     [
         (
@@ -159,9 +254,25 @@ async def test_toolbox_tool_validate_auth_strict(auth_toolbox_tool):
 
 
 @pytest.mark.asyncio
+async def test_toolbox_tool_call_with_callable_bound_params(toolbox_tool):
+    async for tool in toolbox_tool:
+        tool = tool.bind_param("param1", lambda: "bound-value")
+        result = await tool.ainvoke({"param2": 123})
+        assert result == {"result": "test-result"}
+
+
+@pytest.mark.asyncio
 async def test_toolbox_tool_call(toolbox_tool):
     async for tool in toolbox_tool:
         result = await tool.ainvoke({"param1": "test-value", "param2": 123})
+        assert result == {"result": "test-result"}
+
+
+@pytest.mark.asyncio
+async def test_toolbox_tool_call_with_bound_params(toolbox_tool):
+    async for tool in toolbox_tool:
+        tool = tool.bind_params({"param1": "bound-value"})
+        result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
 
 
