@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import warnings
 from typing import Any, Callable, Optional, Type, cast
 from warnings import warn
 
@@ -23,6 +22,10 @@ from pydantic import BaseModel, Field, create_model
 
 
 class ParameterSchema(BaseModel):
+    """
+    Schema for a tool parameter.
+    """
+
     name: str
     type: str
     description: str
@@ -30,11 +33,19 @@ class ParameterSchema(BaseModel):
 
 
 class ToolSchema(BaseModel):
+    """
+    Schema for a tool.
+    """
+
     description: str
     parameters: list[ParameterSchema]
 
 
 class ManifestSchema(BaseModel):
+    """
+    Schema for the Toolbox manifest.
+    """
+
     serverVersion: str
     tools: dict[str, ToolSchema]
 
@@ -45,11 +56,15 @@ async def _load_manifest(url: str, session: ClientSession) -> ManifestSchema:
     URL.
 
     Args:
-        url: The base URL to fetch the JSON from.
-        session: The HTTP client session
+        url: The URL to fetch the JSON from.
+        session: The HTTP client session.
 
     Returns:
         The parsed Toolbox manifest.
+
+    Raises:
+        json.JSONDecodeError: If the response is not valid JSON.
+        ValueError: If the response is not a valid manifest.
     """
     async with session.get(url) as response:
         response.raise_for_status()
@@ -100,6 +115,9 @@ def _parse_type(type_: str) -> Any:
 
     Returns:
         A valid JSON type.
+
+    Raises:
+        ValueError: If the given type is not supported.
     """
 
     if type_ == "string":
@@ -118,17 +136,20 @@ def _parse_type(type_: str) -> Any:
 
 @deprecated("Please use `_get_auth_tokens` instead.")
 def _get_auth_headers(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
+    """
+    Deprecated. Use `_get_auth_tokens` instead.
+    """
     return _get_auth_tokens(id_token_getters)
 
 
 def _get_auth_tokens(id_token_getters: dict[str, Callable[[], str]]) -> dict[str, str]:
     """
-    Gets id tokens for the given auth sources in the getters map and returns
+    Gets ID tokens for the given auth sources in the getters map and returns
     tokens to be included in tool invocation.
 
     Args:
         id_token_getters: A dict that maps auth source names to the functions
-        that return its ID token.
+            that return its ID token.
 
     Returns:
         A dictionary of tokens to be included in the tool invocation.
@@ -181,8 +202,20 @@ async def _invoke_tool(
         return await response.json()
 
 
-# TODO: Remove this temporary fix once optional fields are supported by Toolbox.
 def _convert_none_to_empty_string(input_dict):
+    """
+    Temporary fix to convert None values to empty strings in the input data.
+    This is needed because the current version of the Toolbox service does not
+    support optional fields.
+
+    TODO: Remove this once optional fields are supported by Toolbox.
+
+    Args:
+        input_dict: The input data dictionary.
+
+    Returns:
+        A new dictionary with None values replaced by empty strings.
+    """
     new_dict = {}
     for key, value in input_dict.items():
         if value is None:
@@ -190,3 +223,18 @@ def _convert_none_to_empty_string(input_dict):
         else:
             new_dict[key] = value
     return new_dict
+
+
+def _find_auth_params(
+    params: list[ParameterSchema],
+) -> tuple[list[ParameterSchema], list[ParameterSchema]]:
+    _auth_params: list[ParameterSchema] = []
+    _non_auth_params: list[ParameterSchema] = []
+
+    for param in params:
+        if param.authSources:
+            _auth_params.append(param)
+        else:
+            _non_auth_params.append(param)
+
+    return (_auth_params, _non_auth_params)
