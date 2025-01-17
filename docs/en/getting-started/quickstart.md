@@ -6,49 +6,73 @@ description: This guide would help you set up a basic agentic application using 
 
 ---
 
-## Step 1: Set up a Cloud SQL database
+## Step 1: Set up a database
 
-1. [Create a Cloud SQL instance](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create-instance).
-1. [Create a
-   database](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create-database).
-1. [Create a database
-   user](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#create_a_user).
-1. [Set up a service
-   account](https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer#set_up_a_service_account).
+[Install postgres and configure a
+database](https://neon.tech/postgresql/postgresql-getting-started) for your
+system.
+
+This process creates a database `postgres` with superuser `postgres`.
 
 ## Step 2: Import data into the database
 
-Run the command.
+1. Connect to the database using command line.
 
-```bash
-gcloud sql import sql {INSTANCE_NAME} gs://toolbox-quickstart/hotels.gz --database={DATABASE_NAME}
-```
+    ```bash
+    psql -U postgres -d postgres
+    ```
 
-### (Optional) Explore your data
+    Here, the first postgres denotes the user and the second one denotes the
+    database name.
 
-You can explore the data by logging into [Cloud SQL
-Studio](https://cloud.google.com/sql/docs/mysql/manage-data-using-studio#explore-data)
-and running SQL queries.
+1. Create a table using the following command.
+
+    ```sql
+    CREATE TABLE hotels(
+      id            INTEGER  NOT NULL PRIMARY KEY,
+      name          VARCHAR NOT NULL,
+      location      VARCHAR NOT NULL,
+      price_tier    VARCHAR NOT NULL,
+      checkin_date  DATE  NOT NULL,
+      checkout_date DATE  NOT NULL,
+      booked        BIT  NOT NULL
+    );
+    ```
+    <!-- 1. Download the data csv file (TODO: Add csv filepath) -->
+
+1. Insert data into the table.
+
+    ```sql
+    INSERT INTO hotels(id, name, location, price_tier, checkin_date, checkout_date, booked) VALUES 
+    (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', B'0'),
+    (2, 'Marriott Zurich', 'Zurich', 'Upscale', '2024-04-14', '2024-04-21', B'0'), 
+    (3, 'Hyatt Regency Basel', 'Basel', 'Upper Upscale', '2024-04-02', '2024-04-20', B'0'),
+    (4, 'Radisson Blu Lucerne', 'Lucerne', 'Midscale', '2024-04-24', '2024-04-05', B'0'), 
+    (5, 'Best Western Bern', 'Bern', 'Upper Midscale', '2024-04-23', '2024-04-01', B'0'),
+    (6, 'InterContinental Geneva', 'Geneva', 'Luxury', '2024-04-23', '2024-04-28', B'0'),
+    (7, 'Sheraton Zurich', 'Zurich', 'Upper Upscale', '2024-04-27', '2024-04-02', B'0'),
+    (8, 'Holiday Inn Basel', 'Basel', 'Upper Midscale', '2024-04-24', '2024-04-09', B'0'),
+    (9, 'Courtyard Zurich', 'Zurich', 'Upscale', '2024-04-03', '2024-04-13', B'0'),
+    (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
+    ```
 
 ## Step 3: Create a tools config file
 
-Create a `tools.yaml` file with the following content, updating the `project`,
-`database`, `instance`, `user`, and `password` fields:
+Create a `tools.yaml` file with the following content, updating the `password` field:
 
 ```yaml
 sources:
-    my-cloud-sql-pg-source:
-        kind: cloud-sql-postgres
-        project: {GCP_PROJECT}
-        region: us-central1
-        instance: {INSTANCE_NAME}
-        database: {DATABASE_NAME}
-        user: {DATABASE_USER}
-        password: {PASSWORD}
+    my-pg-source:
+        kind: postgres
+        host: 127.0.0.1
+        port: 5432
+        database: postgres
+        user: postgres
+        password: {password}
 tools:
   search-hotels:
     kind: postgres-sql
-    source: my-cloud-sql-pg-source
+    source: my-pg-source
     description: Search for hotels based on location and name. 
       Returns a list of hotel dictionaries matching the search criteria.
     parameters:
@@ -62,7 +86,7 @@ tools:
         name ILIKE '%' || $2 || '%';
   book-hotel:
     kind: postgres-sql
-    source: my-cloud-sql-pg-source
+    source: my-pg-source
     description: Book a hotel by its ID. Returns a message indicating 
        whether the hotel was successfully booked or not.
     parameters:
@@ -72,7 +96,7 @@ tools:
     statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
   update-hotel:
     kind: postgres-sql
-    source: my-cloud-sql-pg-source
+    source: my-pg-source
     description: Update a hotel's check-in and check-out dates by its ID. Returns a 
         message indicating  whether the hotel was successfully updated or not.
     parameters:
@@ -89,7 +113,7 @@ tools:
         checkout_date = CAST($3 as date) WHERE id = $1;
   cancel-hotel:
     kind: postgres-sql
-    source: my-cloud-sql-pg-source
+    source: my-pg-source
     description: Cancel a hotel by its ID.
     parameters:
       - name: hotel_id
@@ -97,8 +121,6 @@ tools:
         description: The ID of the hotel to cancel.
     statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
 ```
-
-> **_NOTE:_**  If your instance belongs to a different region, update the `region` field.
 
 The config file defines four tools:
 `search-hotels`, `book-hotel`, `update-hotel` and `cancel-hotel`.
@@ -198,12 +220,13 @@ and the corresponding SQL statements to execute upon tool invocation.
 
     ```python
     prompt = """
-        You're a helpful hotel assistant. You handle hotel searching, booking and
-        cancellations. When the user searches for a hotel, mention it's name, id, 
-        location and price tier. Always mention hotel ids while performing any 
-        searches. This is very important for any operations. For any bookings or 
-        cancellations, please provide the appropriate confirmation.
-        """
+      You're a helpful hotel assistant. You handle hotel searching, booking and
+      cancellations. When the user searches for a hotel, mention it's name, id, 
+      location and price tier. Always mention hotel ids while performing any 
+      searches. This is very important for any operations. For any bookings or 
+      cancellations, please provide the appropriate confirmation.
+      Don't ask for confirmations from the user.
+    """
     
     queries = [
         "Find hotels in Basel with Basel in it's name.",
