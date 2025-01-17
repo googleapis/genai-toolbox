@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"gopkg.in/yaml.v3"
 )
 
 func TestParametersMarshal(t *testing.T) {

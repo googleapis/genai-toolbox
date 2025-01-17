@@ -17,12 +17,12 @@ package postgressql_test
 import (
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
-	"gopkg.in/yaml.v3"
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {

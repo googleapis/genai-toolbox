@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -29,7 +30,7 @@ import (
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
-	"gopkg.in/yaml.v3"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 type ServerConfig struct {
@@ -115,52 +116,52 @@ func (s *StringLevel) Type() string {
 type SourceConfigs map[string]sources.SourceConfig
 
 // validate interface
-var _ yaml.Unmarshaler = &SourceConfigs{}
+var _ yaml.InterfaceUnmarshaler = &SourceConfigs{}
 
-func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
+func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(SourceConfigs)
 	// Parse the 'kind' fields for each source
-	var raw map[string]yaml.Node
-	if err := node.Decode(&raw); err != nil {
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
 		return err
 	}
 
-	for name, n := range raw {
+	for name, u := range raw {
 		var k struct {
 			Kind string `yaml:"kind"`
 		}
-		err := n.Decode(&k)
+		err := u.Unmarshal(&k)
 		if err != nil {
 			return fmt.Errorf("missing 'kind' field for %q", k)
 		}
 		switch k.Kind {
 		case alloydbpgsrc.SourceKind:
 			actual := alloydbpgsrc.Config{Name: name, IPType: "public"}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlpgsrc.SourceKind:
 			actual := cloudsqlpgsrc.Config{Name: name, IPType: "public"}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case postgressrc.SourceKind:
 			actual := postgressrc.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case spannersrc.SourceKind:
 			actual := spannersrc.Config{Name: name, Dialect: "googlesql"}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case neo4jrc.SourceKind:
 			actual := neo4jrc.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
@@ -176,28 +177,28 @@ func (c *SourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 type AuthSourceConfigs map[string]auth.AuthSourceConfig
 
 // validate interface
-var _ yaml.Unmarshaler = &AuthSourceConfigs{}
+var _ yaml.InterfaceUnmarshaler = &AuthSourceConfigs{}
 
-func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
+func (c *AuthSourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(AuthSourceConfigs)
 	// Parse the 'kind' fields for each authSource
-	var raw map[string]yaml.Node
-	if err := node.Decode(&raw); err != nil {
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
 		return err
 	}
 
-	for name, n := range raw {
+	for name, u := range raw {
 		var k struct {
 			Kind string `yaml:"kind"`
 		}
-		err := n.Decode(&k)
+		err := u.Unmarshal(&k)
 		if err != nil {
 			return fmt.Errorf("missing 'kind' field for %q", k)
 		}
 		switch k.Kind {
 		case google.AuthSourceKind:
 			actual := google.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
@@ -212,40 +213,40 @@ func (c *AuthSourceConfigs) UnmarshalYAML(node *yaml.Node) error {
 type ToolConfigs map[string]tools.ToolConfig
 
 // validate interface
-var _ yaml.Unmarshaler = &ToolConfigs{}
+var _ yaml.InterfaceUnmarshaler = &ToolConfigs{}
 
-func (c *ToolConfigs) UnmarshalYAML(node *yaml.Node) error {
+func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(ToolConfigs)
 	// Parse the 'kind' fields for each source
-	var raw map[string]yaml.Node
-	if err := node.Decode(&raw); err != nil {
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
 		return err
 	}
 
-	for name, n := range raw {
+	for name, u := range raw {
 		var k struct {
 			Kind string `yaml:"kind"`
 		}
-		err := n.Decode(&k)
+		err := u.Unmarshal(&k)
 		if err != nil {
 			return fmt.Errorf("missing 'kind' field for %q", name)
 		}
 		switch k.Kind {
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case spanner.ToolKind:
 			actual := spanner.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
 		case neo4jtool.ToolKind:
 			actual := neo4jtool.Config{Name: name}
-			if err := n.Decode(&actual); err != nil {
+			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
@@ -261,13 +262,13 @@ func (c *ToolConfigs) UnmarshalYAML(node *yaml.Node) error {
 type ToolsetConfigs map[string]tools.ToolsetConfig
 
 // validate interface
-var _ yaml.Unmarshaler = &ToolsetConfigs{}
+var _ yaml.InterfaceUnmarshaler = &ToolsetConfigs{}
 
-func (c *ToolsetConfigs) UnmarshalYAML(node *yaml.Node) error {
+func (c *ToolsetConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = make(ToolsetConfigs)
 
 	var raw map[string][]string
-	if err := node.Decode(&raw); err != nil {
+	if err := unmarshal(&raw); err != nil {
 		return err
 	}
 
