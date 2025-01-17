@@ -135,30 +135,38 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	for name, u := range raw {
-		var k struct {
-			Kind string `yaml:"kind"`
+		// Unmarshal to a general type that ensure it capture all fields
+		var v map[string]any
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
-		err := u.Unmarshal(&k)
+
+		kind, ok := v["kind"]
+		if !ok {
+			return fmt.Errorf("missing 'kind' field for %q", name)
+		}
+
+		dec, err := util.NewStrictDecoder(v)
 		if err != nil {
-			return fmt.Errorf("missing 'kind' field for %q", k)
+			return fmt.Errorf("error creating decoder: %w", err)
 		}
-		switch k.Kind {
+		switch kind {
 		case alloydbpgsrc.SourceKind:
 			actual := alloydbpgsrc.Config{Name: name, IPType: "public"}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlpgsrc.SourceKind:
 			actual := cloudsqlpgsrc.Config{Name: name, IPType: "public"}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case postgressrc.SourceKind:
 			actual := postgressrc.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlmysqlsrc.SourceKind:
@@ -175,14 +183,14 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case spannersrc.SourceKind:
 			actual := spannersrc.Config{Name: name, Dialect: "googlesql"}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case neo4jrc.SourceKind:
 			actual := neo4jrc.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlmssqlsrc.SourceKind:
@@ -204,7 +212,7 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			(*c)[name] = actual
 		default:
-			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
+			return fmt.Errorf("%q is not a valid kind of data source", kind)
 		}
 
 	}
@@ -226,22 +234,29 @@ func (c *AuthSourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) err
 	}
 
 	for name, u := range raw {
-		var k struct {
-			Kind string `yaml:"kind"`
+		var v map[string]any
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
-		err := u.Unmarshal(&k)
+
+		kind, ok := v["kind"]
+		if !ok {
+			return fmt.Errorf("missing 'kind' field for %q", name)
+		}
+
+		dec, err := util.NewStrictDecoder(v)
 		if err != nil {
-			return fmt.Errorf("missing 'kind' field for %q", k)
+			return fmt.Errorf("error creating decoder: %w", err)
 		}
-		switch k.Kind {
+		switch kind {
 		case google.AuthSourceKind:
 			actual := google.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		default:
-			return fmt.Errorf("%q is not a valid kind of auth source", k.Kind)
+			return fmt.Errorf("%q is not a valid kind of auth source", kind)
 		}
 	}
 	return nil
@@ -262,18 +277,26 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	for name, u := range raw {
-		var k struct {
-			Kind string `yaml:"kind"`
+		var v map[string]any
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
-		err := u.Unmarshal(&k)
-		if err != nil {
+
+		kind, ok := v["kind"]
+		if !ok {
 			return fmt.Errorf("missing 'kind' field for %q", name)
 		}
-		switch k.Kind {
+
+		dec, err := util.NewStrictDecoder(v)
+		if err != nil {
+			return fmt.Errorf("error creating decoder: %w", err)
+		}
+		switch kind {
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				fmt.Printf("err is %s\n", err)
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mysqlsql.ToolKind:
@@ -284,14 +307,14 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case spanner.ToolKind:
 			actual := spanner.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case neo4jtool.ToolKind:
 			actual := neo4jtool.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mssqlsql.ToolKind:
@@ -307,7 +330,7 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			(*c)[name] = actual
 		default:
-			return fmt.Errorf("%q is not a valid kind of tool", k.Kind)
+			return fmt.Errorf("%q is not a valid kind of tool", kind)
 		}
 
 	}

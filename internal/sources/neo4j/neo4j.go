@@ -29,12 +29,12 @@ const SourceKind string = "neo4j"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Uri      string `yaml:"uri"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
+	Name     string `yaml:"name" validate:"required"`
+	Kind     string `yaml:"kind" validate:"required"`
+	Uri      string `yaml:"uri" validate:"required"`
+	User     string `yaml:"user" validate:"required"`
+	Password string `yaml:"password" validate:"required"`
+	Database string `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigKind() string {

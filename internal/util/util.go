@@ -14,6 +14,10 @@
 package util
 
 import (
+	"bytes"
+	"fmt"
+
+	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
 )
 
@@ -39,3 +43,17 @@ type contextKey string
 
 // UserAgentKey is the key used to store userAgent within context
 const UserAgentKey contextKey = "userAgent"
+
+func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
+	b, err := yaml.Marshal(v)
+	if err != nil {
+		return nil, fmt.Errorf("fail to marshal %q: %w", v, err)
+	}
+
+	dec := yaml.NewDecoder(
+		bytes.NewReader(b),
+		yaml.Strict(),
+		yaml.Validator(validator.New()),
+	)
+	return dec, nil
+}

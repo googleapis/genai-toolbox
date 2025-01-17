@@ -30,12 +30,12 @@ const SourceKind string = "spanner"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string          `yaml:"name"`
-	Kind     string          `yaml:"kind"`
-	Project  string          `yaml:"project"`
-	Instance string          `yaml:"instance"`
-	Dialect  sources.Dialect `yaml:"dialect"`
-	Database string          `yaml:"database"`
+	Name     string          `yaml:"name" validate:"required"`
+	Kind     string          `yaml:"kind" validate:"required"`
+	Project  string          `yaml:"project" validate:"required"`
+	Instance string          `yaml:"instance" validate:"required"`
+	Dialect  sources.Dialect `yaml:"dialect" validate:"required"`
+	Database string          `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigKind() string {

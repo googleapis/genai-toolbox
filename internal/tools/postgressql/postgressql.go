@@ -41,11 +41,11 @@ var _ compatibleSource = &postgres.Source{}
 var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	Source       string           `yaml:"source"`
-	Description  string           `yaml:"description"`
-	Statement    string           `yaml:"statement"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Statement    string           `yaml:"statement" validate:"required"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 }

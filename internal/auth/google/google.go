@@ -30,9 +30,9 @@ var _ auth.AuthSourceConfig = Config{}
 
 // Auth source configuration
 type Config struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	ClientID string `yaml:"clientId"`
+	Name     string `yaml:"name" validate:"required"`
+	Kind     string `yaml:"kind" validate:"required"`
+	ClientID string `yaml:"clientId" validate:"required"`
 }
 
 // Returns the auth source kind

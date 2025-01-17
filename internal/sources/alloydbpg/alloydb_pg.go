@@ -33,16 +33,16 @@ const SourceKind string = "alloydb-postgres"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string         `yaml:"name"`
-	Kind     string         `yaml:"kind"`
-	Project  string         `yaml:"project"`
-	Region   string         `yaml:"region"`
-	Cluster  string         `yaml:"cluster"`
-	Instance string         `yaml:"instance"`
-	IPType   sources.IPType `yaml:"ipType"`
-	User     string         `yaml:"user"`
-	Password string         `yaml:"password"`
-	Database string         `yaml:"database"`
+	Name     string         `yaml:"name" validate:"required"`
+	Kind     string         `yaml:"kind" validate:"required"`
+	Project  string         `yaml:"project" validate:"required"`
+	Region   string         `yaml:"region" validate:"required"`
+	Cluster  string         `yaml:"cluster" validate:"required"`
+	Instance string         `yaml:"instance" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	User     string         `yaml:"user" validate:"required"`
+	Password string         `yaml:"password" validate:"required"`
+	Database string         `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigKind() string {

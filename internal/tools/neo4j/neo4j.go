@@ -39,11 +39,11 @@ var _ compatibleSource = &neo4jsc.Source{}
 var compatibleSources = [...]string{neo4jsc.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name"`
-	Kind        string           `yaml:"kind"`
-	Source      string           `yaml:"source"`
-	Description string           `yaml:"description"`
-	Statement   string           `yaml:"statement"`
+	Name        string           `yaml:"name" validate:"required"`
+	Kind        string           `yaml:"kind" validate:"required"`
+	Source      string           `yaml:"source" validate:"required"`
+	Description string           `yaml:"description" validate:"required"`
+	Statement   string           `yaml:"statement" validate:"required"`
 	Parameters  tools.Parameters `yaml:"parameters"`
 }
 

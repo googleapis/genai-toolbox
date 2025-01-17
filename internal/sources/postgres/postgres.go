@@ -29,13 +29,13 @@ const SourceKind string = "postgres"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
+	Name     string `yaml:"name" validate:"required"`
+	Kind     string `yaml:"kind" validate:"required"`
+	Host     string `yaml:"host" validate:"required"`
+	Port     string `yaml:"port" validate:"required"`
+	User     string `yaml:"user" validate:"required"`
+	Password string `yaml:"password" validate:"required"`
+	Database string `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigKind() string {
