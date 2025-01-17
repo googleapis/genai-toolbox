@@ -1,12 +1,15 @@
 # Cloud SQL Mssql Tool
 
-A "mssql" tool executes a pre-defined T-SQL statement against a Cloud SQL for SQL Server
+A "mssql" tool executes a pre-defined SQL statement against a Cloud SQL for SQL Server
 database. It's compatible with any of the following sources:
 
 - [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
 
-The specified T-SQL statement is executed as a [prepared statement][prepare-statement],
-and specified parameters will inserted according to their names:
+Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL Server and expects parameters in the SQL query to be in the form of either @Name or @p1 to @pN (ordinal position).
+
+```
+db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
+```
 
 [prepare-statement]: https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
 

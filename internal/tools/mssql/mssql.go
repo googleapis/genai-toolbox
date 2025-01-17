@@ -128,9 +128,9 @@ func createTypedRow(types []*sql.ColumnType) []any {
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 
-	// Convert params into named
 	namedArgs := make([]any, 0, len(params))
 	paramsMap := params.AsReversedMap()
+	// To support both named args (e.g @id) and positional args (e.g @p1), check if arg name is contained in the statement.
 	for _, v := range params.AsSlice() {
 		paramName := paramsMap[v]
 		if strings.Contains(t.Statement, "@"+paramName) {
@@ -163,7 +163,7 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 			if i > 0 {
 				out.WriteString(" ")
 			}
-			// Print output variables as string to match other tools' output
+			// Print output variables as strings to match other tools' output
 			if resValue, ok := res.(*sql.NullBool); ok {
 				out.WriteString(fmt.Sprintf("%s", resValue.Bool)) //nolint:all
 				continue
