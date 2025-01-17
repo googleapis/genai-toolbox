@@ -169,6 +169,12 @@ and the corresponding SQL statements to execute upon tool invocation.
     > pip install .
     > ```
 
+1. Install other required modules.
+
+    ```bash
+    pip install langgraph langchain-google-vertexai
+    ```
+
 1. Create a python script to connect to the toolbox SDK.
 
     ```python
@@ -195,12 +201,6 @@ and the corresponding SQL statements to execute upon tool invocation.
 
     ```python
     tools = await client.load_toolset()
-    ```
-
-1. Install required modules.
-
-    ```bash
-    pip install langgraph langchain-google-vertexai
     ```
 
 1. Create a LangGraph [ReAct
