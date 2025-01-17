@@ -113,7 +113,7 @@ async def test_toolbox_tool_init(MockClientSession, tool_schema):
 )
 async def test_toolbox_tool_bind_params(toolbox_tool, params, expected_bound_params):
     async for tool in toolbox_tool:
-        tool.bind_params(params)
+        tool = tool.bind_params(params)
         for key, value in expected_bound_params.items():
             if callable(value):
                 assert value() == tool._bound_params[key]()
@@ -127,15 +127,13 @@ async def test_toolbox_tool_bind_params_invalid(toolbox_tool, strict):
     async for tool in toolbox_tool:
         if strict:
             with pytest.raises(ValueError) as e:
-                tool.bind_params({"param3": "bound-value"}, strict=strict)
-            assert "Parameter(s) `param3` not existing in tool `test_tool`." in str(
-                e.value
-            )
+                tool = tool.bind_params({"param3": "bound-value"}, strict=strict)
+            assert "Parameter(s) param3 missing and cannot be bound." in str(e.value)
         else:
             with pytest.warns(UserWarning) as record:
-                tool.bind_params({"param3": "bound-value"}, strict=strict)
+                tool = tool.bind_params({"param3": "bound-value"}, strict=strict)
             assert len(record) == 1
-            assert "Parameter(s) `param3` not existing in tool `test_tool`." in str(
+            assert "Parameter(s) param3 missing and cannot be bound." in str(
                 record[0].message
             )
 
@@ -143,9 +141,9 @@ async def test_toolbox_tool_bind_params_invalid(toolbox_tool, strict):
 @pytest.mark.asyncio
 async def test_toolbox_tool_bind_params_duplicate(toolbox_tool):
     async for tool in toolbox_tool:
-        tool.bind_params({"param1": "bound-value"})
+        tool = tool.bind_params({"param1": "bound-value"})
         with pytest.raises(ValueError) as e:
-            tool.bind_params({"param1": "bound-value"})
+            tool = tool.bind_params({"param1": "bound-value"})
         assert "Parameter(s) `param1` already bound in tool `test_tool`." in str(
             e.value
         )
@@ -155,17 +153,16 @@ async def test_toolbox_tool_bind_params_duplicate(toolbox_tool):
 async def test_toolbox_tool_bind_params_invalid_params(auth_toolbox_tool):
     async for tool in auth_toolbox_tool:
         with pytest.raises(ValueError) as e:
-            tool.bind_params({"param1": "bound-value"})
-        assert (
-            "Value(s) for `param1` automatically handled by authentication source(s) and cannot be modified."
-            in str(e.value)
+            tool = tool.bind_params({"param1": "bound-value"})
+        assert "Parameter(s) param1 already authenticated and cannot be bound." in str(
+            e.value
         )
 
 
 @pytest.mark.asyncio
 async def test_toolbox_tool_bind_param(toolbox_tool):
     async for tool in toolbox_tool:
-        tool.bind_param("param1", "bound-value")
+        tool = tool.bind_param("param1", "bound-value")
         assert tool._bound_params == {"param1": "bound-value"}
 
 
@@ -175,15 +172,13 @@ async def test_toolbox_tool_bind_param_invalid(toolbox_tool, strict):
     async for tool in toolbox_tool:
         if strict:
             with pytest.raises(ValueError) as e:
-                tool.bind_param("param3", "bound-value", strict=strict)
-            assert "Parameter(s) `param3` not existing in tool `test_tool`." in str(
-                e.value
-            )
+                tool = tool.bind_param("param3", "bound-value", strict=strict)
+            assert "Parameter(s) param3 missing and cannot be bound." in str(e.value)
         else:
             with pytest.warns(UserWarning) as record:
-                tool.bind_param("param3", "bound-value", strict=strict)
+                tool = tool.bind_param("param3", "bound-value", strict=strict)
             assert len(record) == 1
-            assert "Parameter(s) `param3` not existing in tool `test_tool`." in str(
+            assert "Parameter(s) param3 missing and cannot be bound." in str(
                 record[0].message
             )
 
@@ -191,9 +186,9 @@ async def test_toolbox_tool_bind_param_invalid(toolbox_tool, strict):
 @pytest.mark.asyncio
 async def test_toolbox_tool_bind_param_duplicate(toolbox_tool):
     async for tool in toolbox_tool:
-        tool.bind_param("param1", "bound-value")
+        tool = tool.bind_param("param1", "bound-value")
         with pytest.raises(ValueError) as e:
-            tool.bind_param("param1", "bound-value")
+            tool = tool.bind_param("param1", "bound-value")
         assert "Parameter(s) `param1` already bound in tool `test_tool`." in str(
             e.value
         )
@@ -223,7 +218,7 @@ async def test_toolbox_tool_add_auth_tokens(
     auth_toolbox_tool, auth_tokens, expected_auth_tokens
 ):
     async for tool in auth_toolbox_tool:
-        tool.add_auth_tokens(auth_tokens)
+        tool = tool.add_auth_tokens(auth_tokens)
         for source, getter in expected_auth_tokens.items():
             assert tool._auth_tokens[source]() == getter()
 
@@ -231,9 +226,9 @@ async def test_toolbox_tool_add_auth_tokens(
 @pytest.mark.asyncio
 async def test_toolbox_tool_add_auth_tokens_duplicate(auth_toolbox_tool):
     async for tool in auth_toolbox_tool:
-        tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
+        tool = tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
         with pytest.raises(ValueError) as e:
-            tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
+            tool = tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
         assert (
             "Authentication source(s) `test-auth-source` already registered in tool `test_tool`."
             in str(e.value)
@@ -243,7 +238,7 @@ async def test_toolbox_tool_add_auth_tokens_duplicate(auth_toolbox_tool):
 @pytest.mark.asyncio
 async def test_toolbox_tool_add_auth_token(auth_toolbox_tool):
     async for tool in auth_toolbox_tool:
-        tool.add_auth_token("test-auth-source", lambda: "test-token")
+        tool = tool.add_auth_token("test-auth-source", lambda: "test-token")
         assert tool._auth_tokens["test-auth-source"]() == "test-token"
 
 
@@ -261,7 +256,7 @@ async def test_toolbox_tool_validate_auth_strict(auth_toolbox_tool):
 @pytest.mark.asyncio
 async def test_toolbox_tool_call_with_callable_bound_params(toolbox_tool):
     async for tool in toolbox_tool:
-        tool.bind_param("param1", lambda: "bound-value")
+        tool = tool.bind_param("param1", lambda: "bound-value")
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
 
@@ -276,7 +271,7 @@ async def test_toolbox_tool_call(toolbox_tool):
 @pytest.mark.asyncio
 async def test_toolbox_tool_call_with_bound_params(toolbox_tool):
     async for tool in toolbox_tool:
-        tool.bind_params({"param1": "bound-value"})
+        tool = tool.bind_params({"param1": "bound-value"})
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
 
@@ -284,7 +279,7 @@ async def test_toolbox_tool_call_with_bound_params(toolbox_tool):
 @pytest.mark.asyncio
 async def test_toolbox_tool_call_with_auth_tokens(auth_toolbox_tool):
     async for tool in auth_toolbox_tool:
-        tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
+        tool = tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
 
@@ -297,7 +292,7 @@ async def test_toolbox_tool_call_with_auth_tokens_insecure(auth_toolbox_tool):
             match="Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication.",
         ):
             tool._url = "http://test-url"
-            tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
+            tool = tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
             result = await tool.ainvoke({"param2": 123})
             assert result == {"result": "test-result"}
 

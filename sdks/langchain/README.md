@@ -236,29 +236,26 @@ async def get_auth_token():
 toolbox = ToolboxClient("http://localhost:5000")
 tools = await toolbox.load_toolset()
 
-tools[0].add_auth_token("my_auth", get_auth_token)
+auth_tool = tools[0].add_auth_token("my_auth", get_auth_token) # Single token
+
+multi_auth_tool = tools[0].add_auth_tokens({"my_auth", get_auth_token}) # Multiple tokens
 
 # OR
 
-for tool in tools:
-    tool.add_auth_token("my_auth", get_auth_token)
+auth_tools = [tool.add_auth_token("my_auth", get_auth_token) for tool in tools]
 ```
 
 #### Add Authentication While Loading
 
 ```py
-toolbox = ToolboxClient("http://localhost:5000")
+auth_tool = await toolbox.load_tool(auth_tokens={"my_auth": get_auth_token})
 
-tool = await toolbox.load_tool(auth_tokens={"my_auth": get_auth_token})
-
-# OR
-
-tools = await toolbox.load_toolset(auth_tokens={"my_auth": get_auth_token})
+auth_tools = await toolbox.load_toolset(auth_tokens={"my_auth": get_auth_token})
 ```
 
 > [!NOTE]
-> Authentication tokens added during loading only affect the tools loaded within
-> that specific call.
+> Adding auth tokens during loading only affect the tools loaded within
+> that call.
 
 ### Complete Example
 
@@ -274,8 +271,8 @@ async def main():
     toolbox = ToolboxClient("http://localhost:5000")
     tool = await toolbox.load_tool("my-tool")
 
-    tool.add_auth_token({"my_auth": get_auth_token})
-    result = await tool.ainvoke({"input": "some input"})
+    auth_tool = tool.add_auth_token("my_auth", get_auth_token)
+    result = await auth_tool.ainvoke({"input": "some input"})
     print(result)
 
 if __name__ == "__main__":
@@ -294,14 +291,24 @@ modified by the LLM. This is useful for:
 ### Binding Parameters to a Tool
 
 ```py
-tool.bind_param({"param": "value"}) 
+toolbox = ToolboxClient("http://localhost:5000")
+tools = await toolbox.load_toolset()
+
+bound_tool = tool[0].bind_param("param", "value") # Single param
+
+multi_bound_tool = tools[0].bind_params({"param1": "value1", "param2": "value2"}) # Multiple params
+
+# OR
+
+bound_tools = [tool.bind_param("param", "value") for tool in tools]
 ```
 
 ### Binding Parameters While Loading
 
 ```py
-tool = await toolbox.load_tool(bound_params={"param": "value"})
-tools = await toolbox.load_toolset(bound_params={"param": "value"})
+bound_tool = await toolbox.load_tool(bound_params={"param": "value"})
+
+bound_tools = await toolbox.load_toolset(bound_params={"param": "value"})
 ```
 
 > [!NOTE]
@@ -316,11 +323,7 @@ def get_dynamic_value():
   # Logic to determine the value
   return "dynamic_value"
 
-tool.bind_param({"param": get_dynamic_value})
-
-# OR
-
-tools = await toolbox.load_toolset(bound_params={"param": get_dynamic_value})
+dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
 
 > [!IMPORTANT]

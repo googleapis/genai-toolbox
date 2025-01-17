@@ -223,3 +223,33 @@ def _convert_none_to_empty_string(input_dict):
         else:
             new_dict[key] = value
     return new_dict
+
+
+def _find_auth_params(
+    params: list[ParameterSchema],
+) -> tuple[list[ParameterSchema], list[ParameterSchema]]:
+    _auth_params: list[ParameterSchema] = []
+    _non_auth_params: list[ParameterSchema] = []
+
+    for param in params:
+        if param.authSources:
+            _auth_params.append(param)
+        else:
+            _non_auth_params.append(param)
+
+    return (_auth_params, _non_auth_params)
+
+
+def _find_bound_params(
+    params: list[ParameterSchema], bound_params: list[str]
+) -> tuple[list[ParameterSchema], list[ParameterSchema]]:
+    _bound_params: list[ParameterSchema] = []
+    _non_bound_params: list[ParameterSchema] = []
+
+    for param in params:
+        if param.name in bound_params:
+            _bound_params.append(param)
+        else:
+            _non_bound_params.append(param)
+
+    return (_bound_params, _non_bound_params)
