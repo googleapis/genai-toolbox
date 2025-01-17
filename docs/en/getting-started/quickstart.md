@@ -33,6 +33,12 @@ This process creates a database `postgres` with superuser `postgres`.
     ALTER DATABASE test_db OWNER TO test_user;
     ```
 
+1. Quit the db connection with the superuser.
+
+    ```bash
+    \q
+    ```
+
 1. Connect to your database with your new user.
 
     ```bash
