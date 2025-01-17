@@ -8,13 +8,9 @@ description: This guide would help you set up a basic agentic application using 
 
 ## Step 1: Set up a database
 
-[Install postgres and configure a
+1. [Install postgres and configure a
 database](https://neon.tech/postgresql/postgresql-getting-started) for your
-system.
-
-This process creates a database `postgres` with superuser `postgres`.
-
-## Step 2: Import data into the database
+system. This process creates a database `postgres` with superuser `postgres`.
 
 1. Connect to postgres using command line.
 
@@ -27,7 +23,7 @@ This process creates a database `postgres` with superuser `postgres`.
 1. Create a new database and a new user.
 
     ```bash
-    CREATE USER test_user WITH PASSWORD '{password}';
+    CREATE USER test_user WITH PASSWORD 'test-password';
     CREATE DATABASE test_db;
     GRANT ALL PRIVILEGES ON DATABASE test_db to test_user;
     ALTER DATABASE test_db OWNER TO test_user;
@@ -38,6 +34,8 @@ This process creates a database `postgres` with superuser `postgres`.
     ```bash
     \q
     ```
+
+## Step 2: Import data into the database
 
 1. Connect to your database with your new user.
 
@@ -87,7 +85,7 @@ sources:
         port: 5432
         database: test_db
         user: test_user
-        password: {password}
+        password: test-password
 tools:
   search-hotels:
     kind: postgres-sql
