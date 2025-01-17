@@ -160,7 +160,7 @@ and the corresponding SQL statements to execute upon tool invocation.
     pip install toolbox_langchain_sdk
     ```
 
-    > **_NOTE:_** 
+    > **_NOTE:_**
     > Right now, the toolbox_langchain_sdk package is not available on pip. To
     > use the sdk, download the source code from [git](https://github.com/googleapis/genai-toolbox/tree/main/sdks/langchain) and install it locally
     > using the command:
@@ -206,7 +206,6 @@ and the corresponding SQL statements to execute upon tool invocation.
 1. Create a LangGraph [ReAct
    agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent).
 
-
     ```python
     from langgraph.prebuilt import create_react_agent
     from langchain_google_vertexai import ChatVertexAI
@@ -247,9 +246,9 @@ and the corresponding SQL statements to execute upon tool invocation.
         print(response["messages"][-1].content)
     ```
 
-    To verify the agent's actions, you can [examine the hotels table in Cloud
-    SQL Studio](#optional-explore-your-data). You should observe that the
-    `booked` column for the `Hyatt Regency Basel` has changed from `0` to `1`,
-    indicating that the hotel has been successfully booked. Additionally, the
-    `checkin_date` and `checkout_date` have been updated to `2024-04-10` and
-    `2024-04-19` from `2024-04-02` and `2024-04-20` respectively.
+    To verify the agent's actions, you can examine the hotels table. You should
+    observe that the `booked` column for the `Hyatt Regency Basel` has changed
+    from `0` to `1`, indicating that the hotel has been successfully booked.
+    Additionally, the `checkin_date` and `checkout_date` have been updated to
+    `2024-04-10` and `2024-04-19` from `2024-04-02` and `2024-04-20`
+    respectively.
