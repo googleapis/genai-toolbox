@@ -13,6 +13,7 @@ require (
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/httplog/v2 v2.1.1
 	github.com/go-chi/render v1.0.3
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/goccy/go-yaml v1.15.13
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
@@ -28,6 +29,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.33.0
 	go.opentelemetry.io/otel/trace v1.33.0
 	google.golang.org/api v0.211.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -40,6 +42,7 @@ require (
 	cloud.google.com/go/longrunning v0.6.3 // indirect
 	cloud.google.com/go/monitoring v1.22.0 // indirect
 	cloud.google.com/go/trace v1.11.2 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.2 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.49.0 // indirect

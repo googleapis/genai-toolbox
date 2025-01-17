@@ -22,11 +22,13 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	neo4jrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
@@ -153,6 +155,12 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
+		case cloudsqlmysqlsrc.SourceKind:
+			actual := cloudsqlmysqlsrc.Config{Name: name, IPType: "public"}
+			if err := u.Unmarshal(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		case spannersrc.SourceKind:
 			actual := spannersrc.Config{Name: name, Dialect: "googlesql"}
 			if err := u.Unmarshal(&actual); err != nil {
@@ -234,6 +242,12 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		switch k.Kind {
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
+			if err := u.Unmarshal(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case mysql.ToolKind:
+			actual := mysql.Config{Name: name}
 			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}

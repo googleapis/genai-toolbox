@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spanner
+package mysql
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
-	"cloud.google.com/go/spanner"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/iterator"
 )
 
-const ToolKind string = "spanner-sql"
+const ToolKind string = "mysql"
 
 type compatibleSource interface {
-	SpannerClient() *spanner.Client
-	DatabaseDialect() string
+	MySQLPool() *sql.DB
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &spannerdb.Source{}
+var _ compatibleSource = &cloudsqlmysql.Source{}
 
-var compatibleSources = [...]string{spannerdb.SourceKind}
+var compatibleSources = [...]string{cloudsqlmysql.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name"`
@@ -75,21 +73,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.SpannerClient(),
-		dialect:      s.DatabaseDialect(),
+		Pool:         s.MySQLPool(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
 
-func NewGenericTool(name string, stmt string, authRequired []string, desc string, client *spanner.Client, dialect string, parameters tools.Parameters) Tool {
+func NewGenericTool(name string, stmt string, authRequired []string, desc string, pool *sql.DB, parameters tools.Parameters) Tool {
 	return Tool{
 		Name:         name,
 		Kind:         ToolKind,
 		Statement:    stmt,
 		AuthRequired: authRequired,
-		Client:       client,
-		dialect:      dialect,
+		Pool:         pool,
 		manifest:     tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
 		Parameters:   parameters,
 	}
@@ -104,52 +100,46 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client    *spanner.Client
-	dialect   string
+	Pool      *sql.DB
 	Statement string
 	manifest  tools.Manifest
 }
 
-func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
-	switch strings.ToLower(dialect) {
-	case "googlesql":
-		return params.AsMap(), nil
-	case "postgresql":
-		return params.AsMapByOrderedKeys(), nil
-	default:
-		return nil, fmt.Errorf("invalid dialect %s", dialect)
-	}
-}
-
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
-	mapParams, err := getMapParams(params, t.dialect)
+	sliceParams := params.AsSlice()
+
+	results, err := t.Pool.QueryContext(context.Background(), t.Statement, sliceParams...)
 	if err != nil {
-		return "", fmt.Errorf("fail to get map params: %w", err)
+		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
 
-	var out strings.Builder
-
-	_, err = t.Client.ReadWriteTransaction(context.Background(), func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		stmt := spanner.Statement{
-			SQL:    t.Statement,
-			Params: mapParams,
-		}
-		iter := txn.Query(ctx, stmt)
-		defer iter.Stop()
-
-		for {
-			row, err := iter.Next()
-			if err == iterator.Done {
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("unable to parse row: %w", err)
-			}
-			out.WriteString(row.String())
-		}
-	})
+	cols, err := results.Columns()
 	if err != nil {
-		return "", fmt.Errorf("unable to execute client: %w", err)
+		return "", fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	cl := len(cols)
+	v := make([]interface{}, cl)
+	pointers := make([]interface{}, cl)
+	for i := range v {
+		pointers[i] = &v[i]
+	}
+	var out strings.Builder
+	for results.Next() {
+		err := results.Scan(pointers...)
+		if err != nil {
+			return "", fmt.Errorf("unable to parse row: %w", err)
+		}
+		out.WriteString(fmt.Sprintf("%s", v))
+	}
+
+	err = results.Close()
+	if err != nil {
+		return "", fmt.Errorf("unable to close rows: %w", err)
+	}
+
+	if err := results.Err(); err != nil {
+		return "", fmt.Errorf("errors encountered by results.Scan: %w", err)
 	}
 
 	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil

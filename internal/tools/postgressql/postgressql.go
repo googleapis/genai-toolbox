@@ -111,7 +111,6 @@ type Tool struct {
 
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	sliceParams := params.AsSlice()
-	fmt.Printf("Invoked tool %s\n", t.Name)
 	results, err := t.Pool.Query(context.Background(), t.Statement, sliceParams...)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute query: %w", err)
