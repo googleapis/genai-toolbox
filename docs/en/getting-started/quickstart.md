@@ -16,14 +16,28 @@ This process creates a database `postgres` with superuser `postgres`.
 
 ## Step 2: Import data into the database
 
-1. Connect to the database using command line.
+1. Connect to postgres using command line.
 
     ```bash
-    psql -U postgres -d postgres
+    psql -U postgres
     ```
 
-    Here, the first postgres denotes the user and the second one denotes the
-    database name.
+    Here, `postgres` denotes the default postgres superuser.
+
+1. Create a new database and a new user.
+
+    ```bash
+    CREATE USER test_user WITH PASSWORD '{password}';
+    CREATE DATABASE test_db;
+    GRANT ALL PRIVILEGES ON DATABASE test_db to test_user;
+    ALTER DATABASE test_db OWNER TO test_user;
+    ```
+
+1. Connect to your database with your new user.
+
+    ```bash
+    psql -U test_user -d test_db
+    ```
 
 1. Create a table using the following command.
 
@@ -65,8 +79,8 @@ sources:
         kind: postgres
         host: 127.0.0.1
         port: 5432
-        database: postgres
-        user: postgres
+        database: test_db
+        user: test_user
         password: {password}
 tools:
   search-hotels:
@@ -222,7 +236,8 @@ and the corresponding SQL statements to execute upon tool invocation.
       cancellations. When the user searches for a hotel, mention it's name, id, 
       location and price tier. Always mention hotel ids while performing any 
       searches. This is very important for any operations. For any bookings or 
-      cancellations, please provide the appropriate confirmation.
+      cancellations, please provide the appropriate confirmation. Be sure to update 
+      checkin or checkout dates if mentioned by the user.
       Don't ask for confirmations from the user.
     """
     
