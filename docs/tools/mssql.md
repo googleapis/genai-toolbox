@@ -5,9 +5,11 @@ database. It's compatible with any of the following sources:
 
 - [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
 
-Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL Server and expects parameters in the SQL query to be in the form of either @Name or @p1 to @pN (ordinal position).
+Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL
+Server and expects parameters in the SQL query to be in the form of either @Name
+or @p1 to @pN (ordinal position).
 
-```
+```sql
 db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
 ```
 

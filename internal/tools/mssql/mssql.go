@@ -104,28 +104,6 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
-func createTypedRow(types []*sql.ColumnType) []any {
-	// Create a slice of typed variables to scan the query output into.
-	v := make([]any, len(types))
-	for i := range v {
-		switch types[i].DatabaseTypeName() {
-		case "VARCHAR", "TEXT", "UUID", "TIMESTAMP":
-			v[i] = new(sql.NullString)
-		case "BOOL":
-			v[i] = new(sql.NullBool)
-		case "INT":
-			v[i] = new(sql.NullInt32)
-		case "BIGINT":
-			v[i] = new(sql.NullInt64)
-		case "DECIMAL":
-			v[i] = new(sql.NullFloat64)
-		default:
-			v[i] = new(sql.NullString)
-		}
-	}
-	return v
-}
-
 func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	fmt.Printf("Invoked tool %s\n", t.Name)
 
@@ -149,44 +127,32 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to fetch column types: %w", err)
 	}
-	v := createTypedRow(types)
+	v := make([]any, len(types))
+	pointers := make([]any, len(types))
+	for i := range types {
+		pointers[i] = &v[i]
+	}
 
 	// fetch result into a string
 	var out strings.Builder
 
 	for rows.Next() {
-		err = rows.Scan(v...)
+		err = rows.Scan(pointers...)
 		if err != nil {
 			return "", fmt.Errorf("unable to parse row: %w", err)
 		}
-		out.WriteString("[")
-		for i, res := range v {
-			if i > 0 {
-				out.WriteString(" ")
-			}
-			// Print output variables as strings to match other tools' output
-			if resValue, ok := res.(*sql.NullBool); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Bool)) //nolint:all
-				continue
-			}
-			if resValue, ok := res.(*sql.NullString); ok {
-				out.WriteString(resValue.String) //nolint:all
-				continue
-			}
-			if resValue, ok := res.(*sql.NullInt32); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Int32)) //nolint:all
-				continue
-			}
-			if resValue, ok := res.(*sql.NullInt64); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Int64)) //nolint:all
-				continue
-			}
-			if resValue, ok := res.(*sql.NullFloat64); ok {
-				out.WriteString(fmt.Sprintf("%s", resValue.Float64)) //nolint:all
-				continue
+		for i := range v {
+			// Database/sql scans both `INT` and `BIGINT` into `int64``
+			// Cast the result into `int32` if the column type is `INT`
+			if types[i].DatabaseTypeName() == "INT" {
+				v[i] = int32(v[i].(int64))
 			}
 		}
-		out.WriteString("]")
+		out.WriteString(fmt.Sprintf("%s", v))
+	}
+	err = rows.Close()
+	if err != nil {
+		return "", fmt.Errorf("unable to close rows: %w", err)
 	}
 
 	// Check if error occured during iteration

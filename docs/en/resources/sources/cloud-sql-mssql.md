@@ -1,6 +1,8 @@
 # Cloud SQL for SQL Server Source
 
-[Cloud SQL for SQL Server][csql-mssql-docs] is a managed database service that helps you set up, maintain, manage, and administer your SQL Server databases on Google Cloud.
+[Cloud SQL for SQL Server][csql-mssql-docs] is a managed database service that
+helps you set up, maintain, manage, and administer your SQL Server databases on
+Google Cloud.
 
 If you are new to Cloud SQL for SQL Server, you can try [creating and connecting
 to a database by following these instructions][csql-mssql-connect].
@@ -37,7 +39,7 @@ configuration to `public` or `private`.
 
 ### Database User
 
-Current, this source only uses standard authentication. You will need to [create a
+Currently, this source only uses standard authentication. You will need to [create a
 SQL Server user][cloud-sql-users] to login to the database with.
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/sqlserver/create-manage-users
