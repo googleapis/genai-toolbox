@@ -33,7 +33,8 @@ AlloyDB instance. The Go connector uses your [Application Default Credentials
 (ADC)][adc] to authorize your connection to AlloyDB.
 
 In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the following IAM permissions:
+the IAM identity has been given the following IAM roles (or corresponding
+permissions):
 
 - `roles/alloydb.client`
 - `roles/serviceusage.serviceUsageConsumer`

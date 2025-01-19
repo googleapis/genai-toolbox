@@ -18,7 +18,7 @@ If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
 to a database by following these instructions][csql-pg-quickstart].
 
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
-[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
+[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-compaduter
 
 ## Requirements
 
@@ -30,7 +30,8 @@ connector uses your [Application Default Credentials (ADC)][adc] to authorize
 your connection to Cloud SQL.
 
 In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the following IAM roles:
+the IAM identity has been given the following IAM roles (or corresponding
+permissions):
 
 - `roles/cloudsql.client`
 
