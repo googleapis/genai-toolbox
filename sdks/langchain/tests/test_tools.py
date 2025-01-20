@@ -269,6 +269,14 @@ async def test_toolbox_tool_call(toolbox_tool):
 
 
 @pytest.mark.asyncio
+async def test_toolbox_sync_tool_call_(toolbox_tool):
+    async for tool in toolbox_tool:
+        with pytest.raises(NotImplementedError) as e:
+            result = tool.invoke({"param1": "test-value", "param2": 123})
+        assert "Sync tool calls not supported yet." in str(e.value)
+
+
+@pytest.mark.asyncio
 async def test_toolbox_tool_call_with_bound_params(toolbox_tool):
     async for tool in toolbox_tool:
         tool = tool.bind_params({"param1": "bound-value"})

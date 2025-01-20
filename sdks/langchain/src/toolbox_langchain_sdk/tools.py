@@ -17,7 +17,7 @@ from typing import Any, Callable, Union
 from warnings import warn
 
 from aiohttp import ClientSession
-from langchain_core.tools import StructuredTool
+from langchain_core.tools import BaseTool
 from typing_extensions import Self
 
 from .utils import (
@@ -30,7 +30,7 @@ from .utils import (
 )
 
 
-class ToolboxTool(StructuredTool):
+class ToolboxTool(BaseTool):
     """
     A subclass of LangChain's StructuredTool that supports features specific to
     Toolbox, like bound parameters and authenticated tools.
@@ -120,8 +120,6 @@ class ToolboxTool(StructuredTool):
         # Due to how pydantic works, we must initialize the underlying
         # StructuredTool class before assigning values to member variables.
         super().__init__(
-            coroutine=self.__tool_func,
-            func=None,
             name=name,
             description=schema.description,
             args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
@@ -139,7 +137,7 @@ class ToolboxTool(StructuredTool):
         # tool invocation.
         self.__validate_auth(strict=False)
 
-    async def __tool_func(self, **kwargs: Any) -> dict:
+    async def _arun(self, **kwargs: Any) -> dict[str, Any]:
         """
         The coroutine that invokes the tool with the given arguments.
 
@@ -170,6 +168,9 @@ class ToolboxTool(StructuredTool):
         return await _invoke_tool(
             self._url, self._session, self._name, kwargs, self._auth_tokens
         )
+
+    def _run(self, **kwargs: Any) -> dict[str, Any]:
+        raise NotImplementedError("Sync tool calls not supported yet.")
 
     def __validate_auth(self, strict: bool = True) -> None:
         """
