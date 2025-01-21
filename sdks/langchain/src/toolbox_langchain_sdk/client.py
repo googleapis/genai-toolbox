@@ -53,16 +53,10 @@ class ToolboxClient:
         collected.
         """
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                loop.create_task(self.close())
-            else:
-                loop.run_until_complete(self.close())
-        except Exception:
-            # We "pass" assuming that the exception is thrown because the event
-            # loop is no longer running, but at that point the Session should
-            # have been closed already anyway.
-            pass
+            loop = asyncio.get_running_loop()
+            loop.create_task(self.close())
+        except RuntimeError:
+            asyncio.run(self.close())
 
     async def _load_tool_manifest(self, tool_name: str) -> ManifestSchema:
         """

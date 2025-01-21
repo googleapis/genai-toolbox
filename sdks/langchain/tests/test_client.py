@@ -427,13 +427,11 @@ async def test_toolbox_client_del_loop_not_running():
 @pytest.mark.asyncio
 async def test_toolbox_client_del_exception():
     """Test __del__ when an exception occurs."""
-    mock_loop = Mock()
-    mock_loop.is_running.return_value = True
-    mock_loop.create_task.side_effect = Exception("Test Exception")
-
-    with patch("asyncio.get_event_loop", return_value=mock_loop):
-        client = ToolboxClient(url="https://test-url")
-        client.__del__()
-
-    # Assert that create_task was called (despite the exception)
-    mock_loop.create_task.assert_called_once()
+    client = ToolboxClient(url="https://test-url")
+    with patch(
+        "asyncio.get_running_loop", side_effect=RuntimeError("No event loop running.")
+    ):
+        with patch("asyncio.run") as mock_run:
+            client.__del__()
+        mock_run.call_count == 1
+        mock_run.call_args.args[0].__qualname__ == "ToolboxClient.close"
