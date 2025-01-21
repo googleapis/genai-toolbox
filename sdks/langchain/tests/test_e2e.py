@@ -19,13 +19,16 @@ This file covers the following use cases:
 1. Loading a tool.
 2. Loading a specific toolset.
 3. Loading the default toolset (contains all tools).
-4. Running a tool with no required auth, with auth provided.
-5. Running a tool with required auth:
+4. Running a tool with
+    a. Missing params.
+    b. Wrong param type.
+5. Running a tool with no required auth, with auth provided.
+6. Running a tool with required auth:
     a. No auth provided.
     b. Wrong auth provided: The tool requires a different authentication
                             than the one provided.
     c. Correct auth provided.
-6. Running a tool with a parameter that requires auth:
+7. Running a tool with a parameter that requires auth:
     a. No auth provided.
     b. Correct auth provided.
     c. Auth provided does not contain the required claim.
@@ -34,6 +37,7 @@ This file covers the following use cases:
 import pytest
 import pytest_asyncio
 from aiohttp import ClientResponseError
+from pydantic import ValidationError
 
 from toolbox_langchain_sdk.client import ToolboxClient
 
@@ -85,6 +89,18 @@ class TestE2EClient:
         for tool in toolset:
             assert tool.name in tool_names
 
+    @pytest.mark.asyncio
+    async def test_run_tool_missing_params(self, toolbox):
+        tool = await toolbox.load_tool("get-n-rows")
+        with pytest.raises(ValidationError, match="Field required"):
+            await tool.ainvoke({})
+
+    @pytest.mark.asyncio
+    async def test_run_tool_wrong_param_type(self, toolbox):
+        tool = await toolbox.load_tool("get-n-rows")
+        with pytest.raises(ValidationError, match="Input should be a valid string"):
+            await tool.ainvoke({"num_rows": 2})
+
     ##### Auth tests
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="b/389574566")
@@ -93,7 +109,7 @@ class TestE2EClient:
         tool = await toolbox.load_tool(
             "get-row-by-id", auth_tokens={"my-test-auth": lambda: auth_token2}
         )
-        response = await tool.arun({"id": "2"})
+        response = await tool.ainvoke({"id": "2"})
         assert "row2" in response["result"]
 
     @pytest.mark.asyncio
@@ -103,35 +119,38 @@ class TestE2EClient:
             "get-row-by-id-auth",
         )
         with pytest.raises(ClientResponseError, match="401, message='Unauthorized'"):
-            await tool.arun({"id": "2"})
+            await tool.ainvoke({"id": "2"})
 
     @pytest.mark.asyncio
     async def test_run_tool_wrong_auth(self, toolbox, auth_token2):
         """Tests running a tool with incorrect auth."""
-        toolbox.add_auth_token("my-test-auth", lambda: auth_token2)
         tool = await toolbox.load_tool(
             "get-row-by-id-auth",
         )
+        auth_tool = tool.add_auth_token("my-test-auth", lambda: auth_token2)
         # TODO: Fix error message (b/389577313)
         with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
-            await tool.arun({"id": "2"})
+            await auth_tool.ainvoke({"id": "2"})
 
     @pytest.mark.asyncio
     async def test_run_tool_auth(self, toolbox, auth_token1):
         """Tests running a tool with correct auth."""
-        toolbox.add_auth_token("my-test-auth", lambda: auth_token1)
         tool = await toolbox.load_tool(
             "get-row-by-id-auth",
         )
-        response = await tool.arun({"id": "2"})
+        auth_tool = tool.add_auth_token("my-test-auth", lambda: auth_token1)
+        response = await auth_tool.ainvoke({"id": "2"})
         assert "row2" in response["result"]
 
     @pytest.mark.asyncio
     async def test_run_tool_param_auth_no_auth(self, toolbox):
         """Tests running a tool with a param requiring auth, without auth."""
         tool = await toolbox.load_tool("get-row-by-email-auth")
-        with pytest.raises(PermissionError, match="Login required"):
-            await tool.arun({})
+        with pytest.raises(
+            PermissionError,
+            match="Parameter\(s\) `email` of tool get-row-by-email-auth require authentication\, but no valid authentication sources are registered\. Please register the required sources before use\.",
+        ):
+            await tool.ainvoke({})
 
     @pytest.mark.asyncio
     async def test_run_tool_param_auth(self, toolbox, auth_token1):
@@ -139,7 +158,7 @@ class TestE2EClient:
         tool = await toolbox.load_tool(
             "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
         )
-        response = await tool.arun({})
+        response = await tool.ainvoke({})
         result = response["result"]
         assert "row4" in result
         assert "row5" in result
@@ -152,4 +171,4 @@ class TestE2EClient:
             "get-row-by-content-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
         )
         with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
-            await tool.arun({})
+            await tool.ainvoke({})
