@@ -202,13 +202,11 @@ from Toolbox.
 1. Install the `toolbox_langchain_sdk` package.
 
     > **_NOTE:_** Right now, the toolbox_langchain_sdk package is not available
-    > on PyPi. To use the sdk during preview, execute the following steps in a
-    > new terminal instead: 
+    > on PyPi. To use the sdk during preview, you can install directly from the
+    > git repo instead:
     >
     > ```bash
-    > git clone https://github.com/googleapis/genai-toolbox
-    > cd genai-toolbox/sdks/langchain
-    > pip install .
+    > pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
     > ```
 
     ```bash
