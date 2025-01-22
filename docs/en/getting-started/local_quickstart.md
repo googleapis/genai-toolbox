@@ -248,7 +248,7 @@ from Toolbox.
         # TODO(reader): replace this with another model if needed
         model = ChatVertexAI(model_name="gemini-pro")
         
-        
+        # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
         tools = await client.load_toolset()
 
