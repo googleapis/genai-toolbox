@@ -13,7 +13,7 @@ This guide assumes you have already done the following:
 
 1. Installed [Python 3.9+][install-python]
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
-1. Have setup [Vertex AI through LangChain][install-vertexai] (or are
+1. Completed [setup for `langchain-vertexai` package][install-vertexai] (or are
    comfortable switching the example to a different LLM model)
 
 
@@ -34,12 +34,12 @@ This guide assumes you have already done the following:
 1. Create a new database and a new user:
 
     ```sql
-      CREATE USER toolbox-user WITH PASSWORD 'my-password';
+      CREATE USER toolbox_user WITH PASSWORD 'my-password';
 
       CREATE DATABASE toolbox_db;
-      GRANT ALL PRIVILEGES ON DATABASE toolbox_db TO toolbox-USER;
+      GRANT ALL PRIVILEGES ON DATABASE toolbox_db TO toolbox_user;
 
-      ALTER DATABASE toolbox_db OWNER TO toolbox-user;
+      ALTER DATABASE toolbox_db OWNER TO toolbox_user;
     ```
 
     > **_NOTE:_**  For a real application, it's best to follow the principle of
@@ -54,7 +54,7 @@ This guide assumes you have already done the following:
 1. Connect to your database with your new user:
 
     ```bash
-    psql -U toolbox-user -d toolbox_db
+    psql -U toolbox_user -d toolbox_db
     ```
 
 1. Create a table using the following command:
@@ -111,76 +111,76 @@ This guide assumes you have already done the following:
 1. Write the following into a `tools.yaml` file. Be sure to update the
 `password` field:
 
-```yaml
-sources:
-  my-pg-source:
-    kind: postgres
-    host: 127.0.0.1
-    port: 5432
-    database: test_db
-    user: test_user
-    password: my-password
-tools:
-  # Define the 5 tools we want our agent to have
-  # for more info on tools check out the "Resources" section of the docs
-  search-hotels-by-name:
-    kind: postgres-sql
-    source: my-pg-source
-    description: Search for hotels based on name.
-    parameters:
-      - name: name
-        type: string
-        description: The name of the hotel.
-    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
-  search-hotels-by-location:
-    kind: postgres-sql
-    source: my-pg-source
-    description: Search for hotels based on location.
-    parameters:
-      - name: location
-        type: string
-        description: The location of the hotel.
-    statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
-  book-hotel:
-    kind: postgres-sql
-    source: my-pg-source
-    description: >-
-      Book a hotel by its ID. Returns a message indicating whether the hotel was
-      successfully booked or not.
-    parameters:
-      - name: hotel_id
-        type: string
-        description: The ID of the hotel to book.
-    statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
-  update-hotel:
-    kind: postgres-sql
-    source: my-pg-source
-    description: >-
-      Update a hotel's check-in and check-out dates by its ID. Returns a message
-      indicating  whether the hotel was successfully updated or not.
-    parameters:
-      - name: hotel_id
-        type: string
-        description: The ID of the hotel to update.
-      - name: checkin_date
-        type: string
-        description: The new check-in date of the hotel.
-      - name: checkout_date
-        type: string
-        description: The new check-out date of the hotel.
-    statement: >-
-      UPDATE hotels SET checkin_date = CAST($2 as date), checkout_date = CAST($3
-      as date) WHERE id = $1;
-  cancel-hotel:
-    kind: postgres-sql
-    source: my-pg-source
-    description: Cancel a hotel by its ID.
-    parameters:
-      - name: hotel_id
-        type: string
-        description: The ID of the hotel to cancel.
-    statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
-```
+    ```yaml
+    sources:
+      my-pg-source:
+        kind: postgres
+        host: 127.0.0.1
+        port: 5432
+        database: test_db
+        user: test_user
+        password: my-password
+    tools:
+      # Define the 5 tools we want our agent to have
+      # for more info on tools check out the "Resources" section of the docs
+      search-hotels-by-name:
+        kind: postgres-sql
+        source: my-pg-source
+        description: Search for hotels based on name.
+        parameters:
+          - name: name
+            type: string
+            description: The name of the hotel.
+        statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+      search-hotels-by-location:
+        kind: postgres-sql
+        source: my-pg-source
+        description: Search for hotels based on location.
+        parameters:
+          - name: location
+            type: string
+            description: The location of the hotel.
+        statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
+      book-hotel:
+        kind: postgres-sql
+        source: my-pg-source
+        description: >-
+          Book a hotel by its ID. Returns a message indicating whether the hotel was
+          successfully booked or not.
+        parameters:
+          - name: hotel_id
+            type: string
+            description: The ID of the hotel to book.
+        statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
+      update-hotel:
+        kind: postgres-sql
+        source: my-pg-source
+        description: >-
+          Update a hotel's check-in and check-out dates by its ID. Returns a message
+          indicating  whether the hotel was successfully updated or not.
+        parameters:
+          - name: hotel_id
+            type: string
+            description: The ID of the hotel to update.
+          - name: checkin_date
+            type: string
+            description: The new check-in date of the hotel.
+          - name: checkout_date
+            type: string
+            description: The new check-out date of the hotel.
+        statement: >-
+          UPDATE hotels SET checkin_date = CAST($2 as date), checkout_date = CAST($3
+          as date) WHERE id = $1;
+      cancel-hotel:
+        kind: postgres-sql
+        source: my-pg-source
+        description: Cancel a hotel by its ID.
+        parameters:
+          - name: hotel_id
+            type: string
+            description: The ID of the hotel to cancel.
+        statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
+    ```
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
