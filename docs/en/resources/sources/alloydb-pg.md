@@ -17,7 +17,7 @@ performance and availability while maintaining 100% compatibility with
 open-source PostgreSQL.
 
 If you are new to AlloyDB for PostgreSQL, you can [create a free trial
-cluster.][alloydb-free-trial].
+cluster][alloydb-free-trial].
 
 [alloydb-docs]: https://cloud.google.com/alloydb/docs
 [alloydb-free-trial]: https://cloud.google.com/alloydb/docs/create-free-trial-cluster
@@ -61,8 +61,8 @@ mTLS.
 
 ### Database User
 
-Current, this source only uses standard authentication. You will need to [create
-a PostreSQL user][alloydb-users] to login to the database with.
+Currently, this source only uses standard authentication. You will need to [create
+a PostgreSQL user][alloydb-users] to login to the database with.
 
 [alloydb-users]: https://cloud.google.com/alloydb/docs/database-users/about
 
