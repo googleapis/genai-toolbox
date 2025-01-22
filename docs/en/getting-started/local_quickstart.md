@@ -23,6 +23,9 @@ This guide assumes you have already done the following:
 
 ## Step 1: Set up your database
 
+In this section, we will create a database, insert some data that needs to be
+access by our agent, and create a database user for Toolbox to connect with. 
+
 1. Connect to postgres using the `psql` command:
 
     ```bash
@@ -74,7 +77,7 @@ This guide assumes you have already done the following:
 1. Insert data into the table.
 
     ```sql
-    INSERT INTO hotels(id, name, LOCATION, price_tier, checkin_date, checkout_date, booked)
+    INSERT INTO hotels(id, name, location, price_tier, checkin_date, checkout_date, booked)
     VALUES 
       (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', B'0'),
       (2, 'Marriott Zurich', 'Zurich', 'Upscale', '2024-04-14', '2024-04-21', B'0'),
@@ -90,6 +93,9 @@ This guide assumes you have already done the following:
 
 ## Step 2: Install and configure Toolbox
 
+In this section, we will download Toolbox, configure our tools in a
+`tools.yaml`, and then run the Toolbox server.
+
 1. Download the latest version of Toolbox as a binary:
 
     > **_NOTE:_**  Use the [correct binary][install-toolbox] corresponding to
@@ -100,7 +106,7 @@ This guide assumes you have already done the following:
     curl -O https://storage.googleapis.com/genai-toolbox/v0.0.5/$OS/toolbox
     ```
 
-[install-toolbox]: https://github.com/googleapis/genai-toolbox/releases
+    [install-toolbox]: https://github.com/googleapis/genai-toolbox/releases
 
 1. Make the binary executable:
 
@@ -190,10 +196,13 @@ This guide assumes you have already done the following:
 
 ## Step 3: Connect your agent to Toolbox
 
+In this section, we will write + run a LangGraph agent that will load the Tools
+from Toolbox.
+
 1. Install the `toolbox_langchain_sdk` package.
 
     > **_NOTE:_** Right now, the toolbox_langchain_sdk package is not available
-    > on pip. To use the sdk during preview, execute the following steps in a
+    > on PyPi. To use the sdk during preview, execute the following steps in a
     > new terminal instead: 
     >
     > ```bash
@@ -256,8 +265,8 @@ This guide assumes you have already done the following:
     asyncio.run(main())
     ```
 
-[langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
-[langchain-hotels]: https://langchain-ai.github.io/langgraph/tutorials/customer-support/customer-support/#hotels
+    [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
+    [langchain-hotels]: https://langchain-ai.github.io/langgraph/tutorials/customer-support/customer-support/#hotels
 
 1. Run your agent, and observe the results:
 
