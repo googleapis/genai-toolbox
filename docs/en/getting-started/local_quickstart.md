@@ -91,6 +91,13 @@ access by our agent, and create a database user for Toolbox to connect with.
       (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
     ```
 
+1. End the database session:
+
+    ```bash
+    \q
+    ```
+
+
 ## Step 2: Install and configure Toolbox
 
 In this section, we will download Toolbox, configure our tools in a
