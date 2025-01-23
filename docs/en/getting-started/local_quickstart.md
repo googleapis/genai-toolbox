@@ -114,8 +114,9 @@ In this section, we will download Toolbox, configure our tools in a
     chmod +x toolbox
     ```
 
-1. Write the following into a `tools.yaml` file. Be sure to update the
-`password` field:
+1. Write the following into a `tools.yaml` file. Be sure to update any fields
+   such as `user`, `password`, or `database` that you may have customized in the
+   previous step.
 
     ```yaml
     sources:
@@ -199,11 +200,10 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
-1. Install the `toolbox_langchain_sdk` package.
+1. In a new terminal,install the `toolbox_langchain_sdk` package.
 
-    > **_NOTE:_** Right now, the toolbox_langchain_sdk package is not available
-    > on PyPi. To use the sdk during preview, you can install directly from the
-    > git repo instead:
+    > **_NOTE:_** toolbox_langchain_sdk package is not yet published to PyPi.
+    > Install it directly from the git repo instead:
     >
     > ```bash
     > pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
