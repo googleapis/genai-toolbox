@@ -123,8 +123,8 @@ In this section, we will download Toolbox, configure our tools in a
         kind: postgres
         host: 127.0.0.1
         port: 5432
-        database: test_db
-        user: test_user
+        database: toolbox_db
+        user: toolbox_user
         password: my-password
     tools:
       # Define the 5 tools we want our agent to have
@@ -196,7 +196,7 @@ In this section, we will download Toolbox, configure our tools in a
 
 ## Step 3: Connect your agent to Toolbox
 
-In this section, we will write + run a LangGraph agent that will load the Tools
+In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
 1. Install the `toolbox_langchain_sdk` package.
@@ -219,13 +219,17 @@ from Toolbox.
     pip install langgraph langchain-google-vertexai
     ```
 
-1. In a new file named `langgraph_hotel_agent.py`, copy the following code to 
+1. Create a new file named `langgraph_hotel_agent.py` and copy the following code to 
    create a [LangGraph agent][langgraph-agent], based on their [Hotels example][langchain-hotels]:
 
     ```python
+    import asyncio
+
     from langgraph.prebuilt import create_react_agent
     from langchain_google_vertexai import ChatVertexAI
     from langgraph.checkpoint.memory import MemorySaver
+    
+    from toolbox_langchain_sdk import ToolboxClient
 
     prompt = """
       You're a helpful hotel assistant. You handle hotel searching, booking and
