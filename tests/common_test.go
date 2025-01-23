@@ -210,7 +210,7 @@ func (c *CmdExec) WaitForString(ctx context.Context, re *regexp.Regexp) (string,
 }
 
 func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, toolKind string, tableName string) {
-	// Write config into a file and pass it to command
+	// Specify query statement for different tool kinds
 	var statement string
 	switch toolKind {
 	case "postgres-sql":
@@ -221,6 +221,16 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 		t.Fatalf("invalid tool kind: %s", toolKind)
 	}
 
+	// Tools using database/sql interface only outputs `int64` instead of `int32`
+	var wantString string
+	switch toolKind {
+	case "mssql":
+		wantString = "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int64=1) Alice][%!s(int64=3) Sid]"
+	default:
+		wantString = "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int32=1) Alice][%!s(int32=3) Sid]"
+	}
+
+	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
@@ -282,7 +292,7 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 			api:         "http://127.0.0.1:5000/api/tool/my-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
 			isErr:       false,
-			want:        "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int32=1) Alice][%!s(int32=3) Sid]",
+			want:        wantString,
 		},
 		{
 			name:        "Invoke my-tool without parameters",

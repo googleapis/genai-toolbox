@@ -129,8 +129,14 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	// Create wanted string
-	wantResult := fmt.Sprintf("Stub tool call for \"my-auth-tool\"! Parameters parsed: [{\"email\" \"%s\"}] \n Output: [%%!s(int32=1) Alice %s]", SERVICE_ACCOUNT_EMAIL, SERVICE_ACCOUNT_EMAIL)
+	// Tools using database/sql interface only outputs `int64` instead of `int32`
+	var wantString string
+	switch toolKind {
+	case "mssql":
+		wantString = fmt.Sprintf("Stub tool call for \"my-auth-tool\"! Parameters parsed: [{\"email\" \"%s\"}] \n Output: [%%!s(int64=1) Alice %s]", SERVICE_ACCOUNT_EMAIL, SERVICE_ACCOUNT_EMAIL)
+	default:
+		wantString = fmt.Sprintf("Stub tool call for \"my-auth-tool\"! Parameters parsed: [{\"email\" \"%s\"}] \n Output: [%%!s(int32=1) Alice %s]", SERVICE_ACCOUNT_EMAIL, SERVICE_ACCOUNT_EMAIL)
+	}
 
 	// Test tool invocation with authenticated parameters
 	invokeTcs := []struct {
@@ -147,7 +153,7 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
-			want:          wantResult,
+			want:          wantString,
 		},
 		{
 			name:          "Invoke my-auth-tool with invalid auth token",
@@ -207,6 +213,15 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 }
 
 func RunAuthRequiredToolInvocationTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
+	// Tools using database/sql interface only outputs `int64` instead of `int32`
+	var wantString string
+	switch toolKind {
+	case "mssql":
+		wantString = "Stub tool call for \"my-auth-tool\"! Parameters parsed: [] \n Output: [%!s(int64=1)]"
+	default:
+		wantString = "Stub tool call for \"my-auth-tool\"! Parameters parsed: [] \n Output: [%!s(int32=1)]"
+	}
+
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -273,7 +288,7 @@ func RunAuthRequiredToolInvocationTest(t *testing.T, sourceConfig map[string]any
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
-			want:          "Stub tool call for \"my-auth-tool\"! Parameters parsed: [] \n Output: [%!s(int32=1)]",
+			want:          wantString,
 		},
 		{
 			name:          "Invoke my-auth-tool with invalid auth token",

@@ -141,13 +141,6 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("unable to parse row: %w", err)
 		}
-		for i := range v {
-			// Database/sql scans both `INT` and `BIGINT` into `int64``
-			// Cast the result into `int32` if the column type is `INT`
-			if types[i].DatabaseTypeName() == "INT" {
-				v[i] = int32(v[i].(int64))
-			}
-		}
 		out.WriteString(fmt.Sprintf("%s", v))
 	}
 	err = rows.Close()
