@@ -13,15 +13,14 @@
 # limitations under the License.
 
 from copy import deepcopy
-from typing import Any, Callable, Union
+from typing import Any, Callable, TypeVar, Union
 from warnings import warn
 
 from aiohttp import ClientSession
 from langchain_core.tools import BaseTool
-from typing_extensions import Self
 
+from .background_loop import _BackgroundLoop
 from .utils import (
-    ParameterSchema,
     ToolSchema,
     _find_auth_params,
     _find_bound_params,
@@ -29,10 +28,12 @@ from .utils import (
     _schema_to_model,
 )
 
+T = TypeVar("T")
+
 
 class ToolboxTool(BaseTool):
     """
-    A subclass of LangChain's StructuredTool that supports features specific to
+    A subclass of LangChain's BaseTool that supports features specific to
     Toolbox, like bound parameters and authenticated tools.
     """
 
@@ -42,6 +43,7 @@ class ToolboxTool(BaseTool):
         schema: ToolSchema,
         url: str,
         session: ClientSession,
+        bg_loop: _BackgroundLoop = _BackgroundLoop(),
         auth_tokens: dict[str, Callable[[], str]] = {},
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool = True,
@@ -54,6 +56,7 @@ class ToolboxTool(BaseTool):
             schema: The tool schema.
             url: The base URL of the Toolbox service.
             session: The HTTP client session.
+            bg_loop: Optional background async event loop.
             auth_tokens: A mapping of authentication source names to functions
                 that retrieve ID tokens.
             bound_params: A mapping of parameter names to their bound
@@ -125,17 +128,52 @@ class ToolboxTool(BaseTool):
             args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
         )
 
-        self._name: str = name
-        self._schema: ToolSchema = schema
-        self._url: str = url
-        self._session: ClientSession = session
-        self._auth_tokens: dict[str, Callable[[], str]] = auth_tokens
-        self._auth_params: list[ParameterSchema] = auth_params
-        self._bound_params: dict[str, Union[Any, Callable[[], Any]]] = bound_params
+        self.__name = name
+        self.__schema = schema
+        self.__url = url
+        self.__session = session
+        self.__bg_loop = bg_loop
+        self.__auth_tokens = auth_tokens
+        self.__auth_params = auth_params
+        self.__bound_params = bound_params
 
         # Warn users about any missing authentication so they can add it before
         # tool invocation.
         self.__validate_auth(strict=False)
+
+    def _run(self, **kwargs: Any) -> dict[str, Any]:
+        """
+        The function that invokes the tool with the given arguments.
+
+        Args:
+            **kwargs: The arguments to the tool.
+
+        Returns:
+            A dictionary containing the parsed JSON response from the tool
+            invocation.
+        """
+
+        # If the tool had parameters that require authentication, then right
+        # before invoking that tool, we check whether all these required
+        # authentication sources have been registered or not.
+        self.__validate_auth()
+
+        # Evaluate dynamic parameter values if any
+        evaluated_params = {}
+        for param_name, param_value in self.__bound_params.items():
+            if callable(param_value):
+                evaluated_params[param_name] = param_value()
+            else:
+                evaluated_params[param_name] = param_value
+
+        # Merge bound parameters with the provided arguments
+        kwargs.update(evaluated_params)
+
+        return self.__bg_loop.run_as_sync(
+            _invoke_tool(
+                self.__url, self.__session, self.__name, kwargs, self.__auth_tokens
+            )
+        )
 
     async def _arun(self, **kwargs: Any) -> dict[str, Any]:
         """
@@ -156,7 +194,7 @@ class ToolboxTool(BaseTool):
 
         # Evaluate dynamic parameter values if any
         evaluated_params = {}
-        for param_name, param_value in self._bound_params.items():
+        for param_name, param_value in self.__bound_params.items():
             if callable(param_value):
                 evaluated_params[param_name] = param_value()
             else:
@@ -165,12 +203,11 @@ class ToolboxTool(BaseTool):
         # Merge bound parameters with the provided arguments
         kwargs.update(evaluated_params)
 
-        return await _invoke_tool(
-            self._url, self._session, self._name, kwargs, self._auth_tokens
+        return await self.__bg_loop.run_as_async(
+            _invoke_tool(
+                self.__url, self.__session, self.__name, kwargs, self.__auth_tokens
+            )
         )
-
-    def _run(self, **kwargs: Any) -> dict[str, Any]:
-        raise NotImplementedError("Sync tool calls not supported yet.")
 
     def __validate_auth(self, strict: bool = True) -> None:
         """
@@ -194,19 +231,20 @@ class ToolboxTool(BaseTool):
         params_missing_auth: list[str] = []
 
         # Check each parameter for at least 1 required auth source
-        for param in self._auth_params:
+        for param in self.__auth_params:
             assert param.authSources is not None
             has_auth = False
             for src in param.authSources:
+
                 # Find first auth source that is specified
-                if src in self._auth_tokens:
+                if src in self.__auth_tokens:
                     has_auth = True
                     break
             if not has_auth:
                 params_missing_auth.append(param.name)
 
         if params_missing_auth:
-            message = f"Parameter(s) `{', '.join(params_missing_auth)}` of tool {self._name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
+            message = f"Parameter(s) `{', '.join(params_missing_auth)}` of tool {self.__name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
 
             if strict:
                 raise PermissionError(message)
@@ -218,9 +256,9 @@ class ToolboxTool(BaseTool):
         auth_tokens: dict[str, Callable[[], str]] = {},
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool,
-    ) -> Self:
+    ) -> "ToolboxTool":
         """
-        Creates a deep copy of the current ToolboxTool instance, allowing for
+        Creates a copy of the current ToolboxTool instance, allowing for
         modification of auth tokens and bound params.
 
         This method enables the creation of new tool instances with inherited
@@ -244,7 +282,7 @@ class ToolboxTool(BaseTool):
             A new ToolboxTool instance that is a deep copy of the current
             instance, with added auth tokens or bound params.
         """
-        new_schema = deepcopy(self._schema)
+        new_schema = deepcopy(self.__schema)
 
         # Reconstruct the complete parameter schema by merging the auth
         # parameters back with the non-auth parameters. This is necessary to
@@ -252,20 +290,21 @@ class ToolboxTool(BaseTool):
         # params in the constructor of the new ToolboxTool instance, ensuring
         # that any overlaps or conflicts are correctly identified and reported
         # as errors or warnings, depending on the given `strict` flag.
-        new_schema.parameters += self._auth_params
-        return type(self)(
-            name=self._name,
+        new_schema.parameters += self.__auth_params
+        return self.__class__(
+            name=self.__name,
             schema=new_schema,
-            url=self._url,
-            session=self._session,
-            auth_tokens={**self._auth_tokens, **auth_tokens},
-            bound_params={**self._bound_params, **bound_params},
+            url=self.__url,
+            session=self.__session,
+            bg_loop=self.__bg_loop,
+            auth_tokens={**self.__auth_tokens, **auth_tokens},
+            bound_params={**self.__bound_params, **bound_params},
             strict=strict,
         )
 
     def add_auth_tokens(
         self, auth_tokens: dict[str, Callable[[], str]], strict: bool = True
-    ) -> Self:
+    ) -> "ToolboxTool":
         """
         Registers functions to retrieve ID tokens for the corresponding
         authentication sources.
@@ -274,30 +313,34 @@ class ToolboxTool(BaseTool):
             auth_tokens: A dictionary of authentication source names to the
                 functions that return corresponding ID token.
             strict: If True, a ValueError is raised if any of the provided auth
-                tokens are already registered, or are already bound. If False,
-                only a warning is issued.
+                tokens are already bound. If False, only a warning is issued.
 
         Returns:
             A new ToolboxTool instance that is a deep copy of the current
             instance, with added auth tokens.
+
+        Raises:
+            ValueError: If the provided auth tokens are already registered.
+            ValueError: If the provided auth tokens are already bound and strict
+                is True.
         """
 
         # Check if the authentication source is already registered.
         dupe_tokens: list[str] = []
         for auth_token, _ in auth_tokens.items():
-            if auth_token in self._auth_tokens:
+            if auth_token in self.__auth_tokens:
                 dupe_tokens.append(auth_token)
 
         if dupe_tokens:
             raise ValueError(
-                f"Authentication source(s) `{', '.join(dupe_tokens)}` already registered in tool `{self._name}`."
+                f"Authentication source(s) `{', '.join(dupe_tokens)}` already registered in tool `{self.__name}`."
             )
 
         return self.__create_copy(auth_tokens=auth_tokens, strict=strict)
 
     def add_auth_token(
         self, auth_source: str, get_id_token: Callable[[], str], strict: bool = True
-    ) -> Self:
+    ) -> "ToolboxTool":
         """
         Registers a function to retrieve an ID token for a given authentication
         source.
@@ -306,12 +349,16 @@ class ToolboxTool(BaseTool):
             auth_source: The name of the authentication source.
             get_id_token: A function that returns the ID token.
             strict: If True, a ValueError is raised if any of the provided auth
-                tokens are already registered, or are already bound. If False,
-                only a warning is issued.
+                token is already bound. If False, only a warning is issued.
 
         Returns:
             A new ToolboxTool instance that is a deep copy of the current
-            instance, with added auth tokens.
+            instance, with added auth token.
+
+        Raises:
+            ValueError: If the provided auth token is already registered.
+            ValueError: If the provided auth token is already bound and strict
+                is True.
         """
         return self.add_auth_tokens({auth_source: get_id_token}, strict=strict)
 
@@ -319,7 +366,7 @@ class ToolboxTool(BaseTool):
         self,
         bound_params: dict[str, Union[Any, Callable[[], Any]]],
         strict: bool = True,
-    ) -> Self:
+    ) -> "ToolboxTool":
         """
         Registers values or functions to retrieve the value for the
         corresponding bound parameters.
@@ -328,23 +375,28 @@ class ToolboxTool(BaseTool):
             bound_params: A dictionary of the bound parameter name to the
                 value or function of the bound value.
             strict: If True, a ValueError is raised if any of the provided bound
-                params are already bound, not defined in the tool's schema, or
-                require authentication. If False, only a warning is issued.
+                params are not defined in the tool's schema, or require
+                authentication. If False, only a warning is issued.
 
         Returns:
             A new ToolboxTool instance that is a deep copy of the current
             instance, with added bound params.
+
+        Raises:
+            ValueError: If the provided bound params are already bound.
+            ValueError: if the provided bound params are not defined in the tool's schema, or require
+                authentication, and strict is True.
         """
 
         # Check if the parameter is already bound.
         dupe_params: list[str] = []
         for param_name, _ in bound_params.items():
-            if param_name in self._bound_params:
+            if param_name in self.__bound_params:
                 dupe_params.append(param_name)
 
         if dupe_params:
             raise ValueError(
-                f"Parameter(s) `{', '.join(dupe_params)}` already bound in tool `{self._name}`."
+                f"Parameter(s) `{', '.join(dupe_params)}` already bound in tool `{self.__name}`."
             )
 
         return self.__create_copy(bound_params=bound_params, strict=strict)
@@ -354,21 +406,26 @@ class ToolboxTool(BaseTool):
         param_name: str,
         param_value: Union[Any, Callable[[], Any]],
         strict: bool = True,
-    ) -> Self:
+    ) -> "ToolboxTool":
         """
-        Registers a value or a function to retrieve the value for a given
-        bound parameter.
+        Registers a value or a function to retrieve the value for a given bound
+        parameter.
 
         Args:
-            param_name: The name of the bound parameter.
-            param_value: The value of the bound parameter, or a callable
-                that returns the value.
+            param_name: The name of the bound parameter. param_value: The value
+            of the bound parameter, or a callable that
+                returns the value.
             strict: If True, a ValueError is raised if any of the provided bound
-                params are already bound, not defined in the tool's schema, or
-                require authentication. If False, only a warning is issued.
+                params is not defined in the tool's schema, or requires
+                authentication. If False, only a warning is issued.
 
         Returns:
             A new ToolboxTool instance that is a deep copy of the current
-            instance, with added bound params.
+            instance, with added bound param.
+
+        Raises:
+            ValueError: If the provided bound param is already bound.
+            ValueError: if the provided bound param is not defined in the tool's
+                schema, or requires authentication, and strict is True.
         """
         return self.bind_params({param_name: param_value}, strict)

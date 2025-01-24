@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .async_client import AsyncToolboxClient
 from .client import ToolboxClient
 from .tools import ToolboxTool
 
-__all__ = ["ToolboxClient", "ToolboxTool"]
+__all__ = ["AsyncToolboxClient", "ToolboxClient", "ToolboxTool"]
