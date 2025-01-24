@@ -3,14 +3,14 @@ title: "spanner-sql"
 type: docs
 weight: 1
 description: > 
-  A "spanner-sql" tool executes a pre-defined SQL statement against a Postgres
-  database.
+  A "spanner-sql" tool executes a pre-defined SQL statement against a Google 
+  Cloud Spanner database.
 ---
 
 ## About
 
 A "spanner-sql" tool executes a pre-defined SQL statement (either `googlesql` or
-`postgresql`) against Spanner database. It's compatible with any of the
+`postgresql`) against a Cloud Spanner database. It's compatible with any of the
 following sources:
 - [spanner](../sources/spanner.md)
 
@@ -18,10 +18,10 @@ For `googlesql` dialect, the specified SQL statement is executed as a [data
 manipulation language (DML)][gsql-dml] statements, and specified parameters will
 inserted according to their name: e.g. "@name".
 
-For `postgresql` dialect, the specified SQL statement is executed as a
-[prepared statement][pg-prepare], and specified parameters will inserted according
-to their position: e.g. "$1" will be the first parameter specified, "$@" will be the
-second parameter, and so on.
+For `postgresql` dialect, the specified SQL statement is executed as a [prepared
+statement][pg-prepare], and specified parameters will inserted according to
+their position: e.g. "$1" will be the first parameter specified, "$@" will be
+the second parameter, and so on.
 
 
 [gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
