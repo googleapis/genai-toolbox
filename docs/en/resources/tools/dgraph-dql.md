@@ -1,12 +1,21 @@
-# Dgraph DQL Tool 
+---
+title: "dgraph-dql"
+type: docs
+weight: 1
+description: > 
+  A "dgraph-dql" tool executes a pre-defined DQL statement against a Dgraph
+database.
+---
 
+## About
 
-A "dgraph-dql" tool executes a pre-defined DQL statement against a Dgraph database. It's compatible with any of the following 
-sources:
+A "dgraph-dql" tool executes a pre-defined DQL statement against a Dgraph
+database. It's compatible with any of the following sources:
 - [dgraph](../sources/dgraph.md)
 
-To run a statement as a query, you need to set the config isQuery=true. For upserts or mutations, set isQuery=false.
-You can also configure timeout for a query.
+To run a statement as a query, you need to set the config isQuery=true. For
+upserts or mutations, set isQuery=false. You can also configure timeout for a
+query.
 
 ## Example
 

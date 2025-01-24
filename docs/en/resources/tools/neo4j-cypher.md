@@ -1,12 +1,24 @@
-# Neo4j Cypher Tool 
+---
+title: "neo4j-cypher"
+type: docs
+weight: 1
+description: > 
+  A "neo4j-cypher" tool executes a pre-defined cypher statement against a Neo4j
+database.
+---
 
-A "neo4j-cypher" tool executes a pre-defined Cypher statement against a Neo4j database. It's compatible with any of the following sources:
+## About
+
+A "neo4j-cypher" tool executes a pre-defined Cypher statement against a Neo4j
+database. It's compatible with any of the following sources:
 - [neo4j](../sources/neo4j.md)
 
-The specified Cypher statement is executed as a [parameterized statement][neo4j-parameters],
-and specified parameters will be used according to their name: e.g. `$id`.
+The specified Cypher statement is executed as a [parameterized
+statement][neo4j-parameters], and specified parameters will be used according to
+their name: e.g. `$id`.
 
-[neo4j-parameters]: https://neo4j.com/docs/cypher-manual/current/syntax/parameters/
+[neo4j-parameters]:
+    https://neo4j.com/docs/cypher-manual/current/syntax/parameters/
 
 ## Example
 

@@ -1,13 +1,22 @@
-# Spanner Tool 
+---
+title: "spanner-sql"
+type: docs
+weight: 1
+description: > 
+  A "spanner-sql" tool executes a pre-defined SQL statement against a Postgres
+database.
+---
 
-A "spanner-sql" tool executes a pre-defined SQL statement (either
-`googlesql` or `postgresql`) against Spanner  database. It's
-compatible with any of the following sources:
+## About
+
+A "spanner-sql" tool executes a pre-defined SQL statement (either `googlesql` or
+`postgresql`) against Spanner database. It's compatible with any of the
+following sources:
 - [spanner](../sources/spanner.md)
 
-For `googlesql` dialect, the specified SQL statement is executed
-as a [data manipulation language (DML)][gsql-dml] statements, and specified parameters will inserted
-according to their name: e.g. "@name".
+For `googlesql` dialect, the specified SQL statement is executed as a [data
+manipulation language (DML)][gsql-dml] statements, and specified parameters will
+inserted according to their name: e.g. "@name".
 
 For `postgresql` dialect, the specified SQL statement is executed as a
 [prepared statement][pg-prepare], and specified parameters will inserted according
@@ -102,7 +111,7 @@ tools:
 
 | **field**   |                   **type**                   | **required** | **description**                                                                                     |
 |-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "postgres-generic".                                                                         |
+| kind        |                    string                    |     true     | Must be "spanner-sql".                                                                         |
 | source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
 | description |                    string                    |     true     | Port to connect to (e.g. "5432")                                                                    |
 | statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |

@@ -1,8 +1,16 @@
-# Tools
+---
+title: "Tools"
+type: docs
+weight: 2
+description: > 
+  Tools define actions an agent can take -- such as reading and writing to a 
+  source.
+---
 
-Tools represent an action your agent can take, such as running a SQL statement.
-You can define Tools as a map in the `sources` section of your `tools.yaml`
-file. Typically, a tool will require a source to act on:
+A tool represents an action your agent can take, such as running a SQL
+statement. You can define Tools as a map in the `sources` section of your
+`tools.yaml` file. Typically, a tool will require a source to act on:
+
 
 ```yaml
 tools:
@@ -42,24 +50,11 @@ tools:
         description: 1 to 4 digit number
 ```
 
-## Kinds of Tools
-
-We currently support the following types of kinds of tools:
-
-* [postgres-sql](./postgres-sql.md) - Run a PostgreSQL statement against a
-  PostgreSQL-compatible database.
-* [spanner](./spanner.md) - Run a Spanner (either googlesql or postgresql)
-  statement againts Spanner database.
-* [neo4j-cypher](./neo4j-cypher.md) - Run a Cypher statement against a
-  Neo4j database.
-* [dgraph-dql](./dgraph-dql.md) - Run a DQL statement against a
-  Dgraph database.
-
 
 ## Specifying Parameters
 
-Parameters for each Tool will define what inputs the Agent will need to provide
-to invoke them. Parameters should be passed as a list of Parameter objects.
+Parameters for each Tool will define what inputs the agent will need to provide
+to invoke them. Parameters should be pass as a list of Parameter objects:
 
 ```yaml
     parameters:
@@ -141,12 +136,12 @@ specific claims within the user's ID token.
                 field: sub
 ```
 
-| **field**   | **type** | **required** | **description**                                                            |
-|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
-| name        |  string  |     true     | Name of the [authSources](../authSources/README.md) used to verify the OIDC auth token.                |
-| field       |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.|
+| **field** | **type** | **required** | **description**                                                                         |
+|-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
+| name      |  string  |     true     | Name of the [authSources](../authSources/README.md) used to verify the OIDC auth token. |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
-## Authorized Tool Call
+## Authorized Invocations
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
@@ -164,3 +159,5 @@ tools:
         - my-google-auth
         - other-auth-service
 ```
+
+## Kinds of tools

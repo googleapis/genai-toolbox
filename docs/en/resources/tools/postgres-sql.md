@@ -1,32 +1,39 @@
-# SQL Server Tool
+---
+title: "postgres-sql"
+type: docs
+weight: 1
+description: > 
+  A "postgres-sql" tool executes a pre-defined SQL statement against a Postgres
+database.
+---
 
-A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
+## About
+
+A "postgres-sql" tool executes a pre-defined SQL statement against a Postgres
 database. It's compatible with any of the following sources:
+- [alloydb-postgres](../sources/alloydb-pg.md)
+- [cloud-sql-postgres](../sources/cloud-sql-pg.md)
+- [postgres](../sources/postgres.md)
 
-- [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
-- [mssql](../sources/mssql.md)
+The specified SQL statement is executed as a [prepared statement][pg-prepare],
+and specified parameters will inserted according to their position: e.g. "$1"
+will be the first parameter specified, "$@" will be the second parameter, and so
+on.
 
-Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL
-Server and expects parameters in the SQL query to be in the form of either @Name
-or @p1 to @pN (ordinal position).
 
-```sql
-db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
-```
-
-[prepare-statement]: https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
+[pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ## Example
 
 ```yaml
 tools:
  search_flights_by_number:
-    kind: mssql-sql
-    source: my-instance
+    kind: postgres-sql
+    source: my-pg-instance
     statement: |
       SELECT * FROM flights
-      WHERE airline = @airline
-      AND flight_number = @flight_number
+      WHERE airline = $1
+      AND flight_number = $2
       LIMIT 10
     description: |
       Use this tool to get information for a specific flight.
@@ -60,8 +67,10 @@ tools:
 
 | **field**   |                   **type**                   | **required** | **description**                                                                                     |
 |-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "mssql-sql".                                                                                |
-| source      |                    string                    |     true     | Name of the source the T-SQL statement should execute on.                                           |
+| kind        |                    string                    |     true     | Must be "postgres-sql".                                                                             |
+| source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
 | description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
-| statement   |                    string                    |     true     | SQL statement to execute.                                                                           |
+| statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |
 | parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+
+

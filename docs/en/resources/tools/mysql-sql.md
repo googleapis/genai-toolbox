@@ -1,8 +1,18 @@
+---
+title: "mysql-sql"
+type: docs
+weight: 1
+description: > 
+  A "mysql-sql" tool executes a pre-defined SQL statement against a SQL Server
+database.
+---
+
 # MySQL Tool 
 
 A "mysql-sql" tool executes a pre-defined SQL statement against a mysql 
 database. It's compatible with any of the following sources:
 - [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
+- [mysql](../sources/mysql.md)
 
 The specified SQL statement is executed as a [prepared statement][mysql-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
