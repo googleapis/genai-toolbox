@@ -67,8 +67,10 @@ async def _load_manifest(url: str, session: ClientSession) -> ManifestSchema:
         ValueError: If the response is not a valid manifest.
     """
     async with session.get(url) as response:
+        # TODO: Remove as it masks error messages.
         response.raise_for_status()
         try:
+            # TODO: Simply use response.json()
             parsed_json = json.loads(await response.text())
         except json.JSONDecodeError as e:
             raise json.JSONDecodeError(
@@ -198,6 +200,7 @@ async def _invoke_tool(
         json=_convert_none_to_empty_string(data),
         headers=auth_tokens,
     ) as response:
+        # TODO: Remove as it masks error messages.
         response.raise_for_status()
         return await response.json()
 
@@ -228,6 +231,17 @@ def _convert_none_to_empty_string(input_dict):
 def _find_auth_params(
     params: list[ParameterSchema],
 ) -> tuple[list[ParameterSchema], list[ParameterSchema]]:
+    """
+    Separates parameters into those that are authenticated and those that are not.
+
+    Args:
+        params: A list of ParameterSchema objects.
+
+    Returns:
+        A tuple containing two lists:
+            - auth_params: A list of ParameterSchema objects that require authentication.
+            - non_auth_params: A list of ParameterSchema objects that do not require authentication.
+    """
     _auth_params: list[ParameterSchema] = []
     _non_auth_params: list[ParameterSchema] = []
 
@@ -243,6 +257,19 @@ def _find_auth_params(
 def _find_bound_params(
     params: list[ParameterSchema], bound_params: list[str]
 ) -> tuple[list[ParameterSchema], list[ParameterSchema]]:
+    """
+    Separates parameters into those that are bound and those that are not.
+
+    Args:
+        params: A list of ParameterSchema objects.
+        bound_params: A list of parameter names that are bound.
+
+    Returns:
+        A tuple containing two lists:
+            - bound_params: A list of ParameterSchema objects whose names are in the bound_params list.
+            - non_bound_params: A list of ParameterSchema objects whose names are not in the bound_params list.
+    """
+
     _bound_params: list[ParameterSchema] = []
     _non_bound_params: list[ParameterSchema] = []
 
