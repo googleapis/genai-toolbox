@@ -4,7 +4,7 @@ type: docs
 weight: 1
 description: > 
   A "dgraph-dql" tool executes a pre-defined DQL statement against a Dgraph
-database.
+  database.
 ---
 
 ## About

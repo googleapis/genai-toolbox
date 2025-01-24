@@ -4,7 +4,7 @@ type: docs
 weight: 1
 description: > 
   A "neo4j-cypher" tool executes a pre-defined cypher statement against a Neo4j
-database.
+  database.
 ---
 
 ## About

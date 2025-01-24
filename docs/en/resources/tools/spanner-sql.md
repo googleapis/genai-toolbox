@@ -4,7 +4,7 @@ type: docs
 weight: 1
 description: > 
   A "spanner-sql" tool executes a pre-defined SQL statement against a Postgres
-database.
+  database.
 ---
 
 ## About

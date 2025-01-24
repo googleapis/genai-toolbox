@@ -4,7 +4,7 @@ type: docs
 weight: 1
 description: > 
   A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
-database.
+  database.
 ---
 
 ## About
