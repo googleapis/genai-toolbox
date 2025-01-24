@@ -93,7 +93,7 @@ func parseFromAuthSource(paramAuthSources []ParamAuthSource, claimsMap map[strin
 		}
 		return v, nil
 	}
-	return nil, fmt.Errorf("missing authentication header")
+	return nil, fmt.Errorf("missing or invalid authentication header")
 }
 
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.

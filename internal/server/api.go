@@ -168,10 +168,8 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	for _, aS := range s.authSources {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
-			err = fmt.Errorf("failure getting claims from header: %w", err)
 			s.logger.DebugContext(context.Background(), err.Error())
-			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
-			return
+			continue
 		}
 		if claims == nil {
 			// authSource not present in header
@@ -187,6 +185,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		verifiedAuthSources[i] = k
 		i++
 	}
+
 	// Check if any of the specified auth sources is verified
 	isAuthorized := tool.Authorized(verifiedAuthSources)
 	if !isAuthorized {
