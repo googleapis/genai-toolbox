@@ -382,6 +382,7 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 	}
 }
 
+// GetCloudSQLDialOpts returns cloud sql connector's dial option for ip type.
 func GetCloudSQLDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
 	switch strings.ToLower(ipType) {
 	case "private":

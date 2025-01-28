@@ -74,7 +74,7 @@ func requireCloudSQLMySQLVars(t *testing.T) map[string]any {
 }
 
 // Copied over from cloud_sql_mysql.go
-func initCloudSQLMySQLConnectionPool(project, region, instance, ip_type, user, pass, dbname string) (*sql.DB, error) {
+func initCloudSQLMySQLConnectionPool(project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
 
 	// Create a new dialer with options
 	dialOpts, err := GetCloudSQLDialOpts(ipType)
@@ -82,7 +82,7 @@ func initCloudSQLMySQLConnectionPool(project, region, instance, ip_type, user, p
 		return nil, err
 	}
 
-    _, err := mysql.RegisterDriver("cloudsql-mysql", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
+    _, err = mysql.RegisterDriver("cloudsql-mysql", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
     if err != nil {
         return nil, fmt.Errorf("unable to register driver: %w", err)
     }
