@@ -34,6 +34,7 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/cloudsqlconn"
 	yaml "github.com/goccy/go-yaml"
 
 	"github.com/googleapis/genai-toolbox/cmd"
@@ -378,5 +379,16 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+}
+
+func GetCloudSQLDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
+	case "private":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
+	case "public":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
+	default:
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }

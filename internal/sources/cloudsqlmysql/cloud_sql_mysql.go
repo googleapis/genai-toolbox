@@ -18,11 +18,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net"
 	"strings"
 
 	"cloud.google.com/go/cloudsqlconn"
-	"github.com/go-sql-driver/mysql"
+	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -104,24 +103,20 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	if err != nil {
 		return nil, err
 	}
-	d, err := cloudsqlconn.NewDialer(context.Background())
+
+	_, err = mysql.RegisterDriver("cloudsql-mysql", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
+		return nil, fmt.Errorf("unable to register driver: %w", err)
 	}
 
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	i := fmt.Sprintf("%s:%s:%s", project, region, instance)
-	mysql.RegisterDialContext("cloudsqlconn", func(ctx context.Context, addr string) (net.Conn, error) {
-		return d.Dial(ctx, i, dialOpts...)
-	})
-
-	// Configure the driver to connect to the database
-	dbURI := fmt.Sprintf("%s:%s@cloudsqlconn(localhost:3306)/%s?parseTime=true", user, pass, dbname)
-
-	// Interact with the driver directly as you normally would
-	pool, err := sql.Open("mysql", dbURI)
+	dsn := fmt.Sprintf("%s: %s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
+	db, err := sql.Open(
+		"cloudsql-mysql",
+		dsn,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("sql.Open: %w", err)
+		return nil, err
 	}
-	return pool, nil
+	return db, nil
 }
