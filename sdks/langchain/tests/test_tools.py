@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
+from threading import Thread
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pydantic import ValidationError
 
+from toolbox_langchain_sdk.background_loop import _BackgroundLoop
 from toolbox_langchain_sdk.tools import ToolboxTool
 
 
@@ -58,8 +61,29 @@ async def toolbox_tool(MockClientSession, tool_schema):
     tool = ToolboxTool(
         name="test_tool",
         schema=tool_schema,
-        url="https://test-url",
+        url="http://test_url",
         session=mock_session,
+    )
+    yield tool
+
+
+@pytest.fixture
+@patch("aiohttp.ClientSession")
+def sync_toolbox_tool(MockClientSession, tool_schema):
+    mock_session = MockClientSession.return_value
+    mock_session.post.return_value.__aenter__.return_value.raise_for_status = Mock()
+    mock_session.post.return_value.__aenter__.return_value.json = AsyncMock(
+        return_value={"result": "test-result"}
+    )
+    loop = asyncio.new_event_loop()
+    thread = Thread(target=loop.run_forever, daemon=True)
+    thread.start()
+    tool = ToolboxTool(
+        name="test_tool",
+        schema=tool_schema,
+        url="http://test_url",
+        session=mock_session,
+        bg_loop=_BackgroundLoop(loop, thread),
     )
     yield tool
 
@@ -86,7 +110,7 @@ async def auth_toolbox_tool(MockClientSession, auth_tool_schema):
 
 
 @pytest.mark.asyncio
-@patch("toolbox_langchain_sdk.client.ClientSession")
+@patch("aiohttp.ClientSession")
 async def test_toolbox_tool_init(MockClientSession, tool_schema):
     mock_session = MockClientSession.return_value
     tool = ToolboxTool(
@@ -116,9 +140,9 @@ async def test_toolbox_tool_bind_params(toolbox_tool, params, expected_bound_par
         tool = tool.bind_params(params)
         for key, value in expected_bound_params.items():
             if callable(value):
-                assert value() == tool._bound_params[key]()
+                assert value() == tool._ToolboxTool__bound_params[key]()
             else:
-                assert value == tool._bound_params[key]
+                assert value == tool._ToolboxTool__bound_params[key]
 
 
 @pytest.mark.asyncio
@@ -163,7 +187,7 @@ async def test_toolbox_tool_bind_params_invalid_params(auth_toolbox_tool):
 async def test_toolbox_tool_bind_param(toolbox_tool):
     async for tool in toolbox_tool:
         tool = tool.bind_param("param1", "bound-value")
-        assert tool._bound_params == {"param1": "bound-value"}
+        assert tool._ToolboxTool__bound_params == {"param1": "bound-value"}
 
 
 @pytest.mark.asyncio
@@ -220,7 +244,7 @@ async def test_toolbox_tool_add_auth_tokens(
     async for tool in auth_toolbox_tool:
         tool = tool.add_auth_tokens(auth_tokens)
         for source, getter in expected_auth_tokens.items():
-            assert tool._auth_tokens[source]() == getter()
+            assert tool._ToolboxTool__auth_tokens[source]() == getter()
 
 
 @pytest.mark.asyncio
@@ -239,7 +263,7 @@ async def test_toolbox_tool_add_auth_tokens_duplicate(auth_toolbox_tool):
 async def test_toolbox_tool_add_auth_token(auth_toolbox_tool):
     async for tool in auth_toolbox_tool:
         tool = tool.add_auth_token("test-auth-source", lambda: "test-token")
-        assert tool._auth_tokens["test-auth-source"]() == "test-token"
+        assert tool._ToolboxTool__auth_tokens["test-auth-source"]() == "test-token"
 
 
 @pytest.mark.asyncio
@@ -269,11 +293,10 @@ async def test_toolbox_tool_call(toolbox_tool):
 
 
 @pytest.mark.asyncio
-async def test_toolbox_sync_tool_call_(toolbox_tool):
-    async for tool in toolbox_tool:
-        with pytest.raises(NotImplementedError) as e:
-            result = tool.invoke({"param1": "test-value", "param2": 123})
-        assert "Sync tool calls not supported yet." in str(e.value)
+async def test_toolbox_sync_tool_call(sync_toolbox_tool):
+    for tool in sync_toolbox_tool:
+        result = tool.invoke({"param1": "test-value", "param2": 123})
+        assert result == {"result": "test-result"}
 
 
 @pytest.mark.asyncio
@@ -299,7 +322,7 @@ async def test_toolbox_tool_call_with_auth_tokens_insecure(auth_toolbox_tool):
             UserWarning,
             match="Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication.",
         ):
-            tool._url = "http://test-url"
+            tool._ToolboxTool__url = "http://test-url"
             tool = tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
             result = await tool.ainvoke({"param2": 123})
             assert result == {"result": "test-result"}
