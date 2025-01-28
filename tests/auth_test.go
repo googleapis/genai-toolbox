@@ -65,6 +65,8 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 		statement = fmt.Sprintf("SELECT * FROM %s WHERE email = $1;", tableName)
 	case strings.EqualFold(toolKind, "mssql-sql"):
 		statement = fmt.Sprintf("SELECT * FROM %s WHERE email = @email;", tableName)
+	case strings.EqualFold(toolKind, "mysql"):
+		statement = fmt.Sprintf("SELECT * FROM %s WHERE email = ?;", tableName)
 	default:
 		t.Fatalf("invalid tool kind: %s", toolKind)
 	}
@@ -132,7 +134,7 @@ func RunGoogleAuthenticatedParameterTest(t *testing.T, sourceConfig map[string]a
 	// Tools using database/sql interface only outputs `int64` instead of `int32`
 	var wantString string
 	switch toolKind {
-	case "mssql-sql":
+	case "mssql-sql", "mysql-sql":
 		wantString = fmt.Sprintf("Stub tool call for \"my-auth-tool\"! Parameters parsed: [{\"email\" \"%s\"}] \n Output: [%%!s(int64=1) Alice %s]", SERVICE_ACCOUNT_EMAIL, SERVICE_ACCOUNT_EMAIL)
 	default:
 		wantString = fmt.Sprintf("Stub tool call for \"my-auth-tool\"! Parameters parsed: [{\"email\" \"%s\"}] \n Output: [%%!s(int32=1) Alice %s]", SERVICE_ACCOUNT_EMAIL, SERVICE_ACCOUNT_EMAIL)
@@ -216,7 +218,7 @@ func RunAuthRequiredToolInvocationTest(t *testing.T, sourceConfig map[string]any
 	// Tools using database/sql interface only outputs `int64` instead of `int32`
 	var wantString string
 	switch toolKind {
-	case "mssql-sql":
+	case "mssql-sql", "mysql-sql":
 		wantString = "Stub tool call for \"my-auth-tool\"! Parameters parsed: [] \n Output: [%!s(int64=1)]"
 	default:
 		wantString = "Stub tool call for \"my-auth-tool\"! Parameters parsed: [] \n Output: [%!s(int32=1)]"

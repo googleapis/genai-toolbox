@@ -232,7 +232,7 @@ func TestCloudSQLMssql(t *testing.T) {
 }
 
 // Set up tool calling with parameters test table
-func setupParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
+func setupCloudSQLMssqlParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
 	// Set up Tool invocation with parameters test
 	db, err := initCloudSQLMssqlConnection(CLOUD_SQL_MSSQL_PROJECT, CLOUD_SQL_MSSQL_REGION, CLOUD_SQL_MSSQL_INSTANCE, CLOUD_SQL_MSSQL_IP, "public", CLOUD_SQL_MSSQL_USER, CLOUD_SQL_MSSQL_PASS, CLOUD_SQL_MSSQL_DATABASE)
 	if err != nil {
@@ -274,7 +274,7 @@ func setupParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
 	}, nil
 }
 
-func TestToolInvocationWithParams(t *testing.T) {
+func TestToolInvocationCloudSQLMssqlWithParams(t *testing.T) {
 	// create source config
 	sourceConfig := requireCloudSQLMssqlVars(t)
 
@@ -282,7 +282,7 @@ func TestToolInvocationWithParams(t *testing.T) {
 	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// test setup function reterns teardown function
-	teardownTest, err := setupParamTest(t, tableName)
+	teardownTest, err := setupCloudSQLMssqlParamTest(t, tableName)
 	if err != nil {
 		t.Fatalf("Unable to set up auth test: %s", err)
 	}

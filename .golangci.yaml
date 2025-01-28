@@ -33,7 +33,10 @@ issues:
 run:
   build-tags:
     - integration
-    - cloudsql
+    - cloudsqlpg
     - postgres
     - alloydb
     - spanner
+    - cloudsqlmssql
+    - cloudsqlmysql
+    - neo4j

@@ -20,6 +20,7 @@ package tests
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,13 +28,13 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
-    "database/sql"
 
 	"cloud.google.com/go/cloudsqlconn"
-    "cloud.google.com/go/cloudsqlconn/mysql/mysql"
+	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
 	"github.com/google/uuid"
 )
 
@@ -82,17 +83,19 @@ func initCloudSQLMySQLConnectionPool(project, region, instance, ipType, user, pa
 		return nil, err
 	}
 
-    _, err = mysql.RegisterDriver("cloudsql-mysql", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
-    if err != nil {
-        return nil, fmt.Errorf("unable to register driver: %w", err)
-    }
+	if !slices.Contains(sql.Drivers(), "cloudsql-mysql") {
+		_, err = mysql.RegisterDriver("cloudsql-mysql", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
+		if err != nil {
+			return nil, fmt.Errorf("unable to register driver: %w", err)
+		}
+	}
 
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-    dsn := fmt.Sprintf("%s: %s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
-    db, err := sql.Open(
-        "cloudsql-mysql",
-        dsn,
-    )
+	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
+	db, err := sql.Open(
+		"cloudsql-mysql",
+		dsn,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +193,7 @@ func TestCloudSQLMySQL(t *testing.T) {
 			name:        "invoke my-simple-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "Stub tool call for \"my-simple-tool\"! Parameters parsed: [] \n Output: [%!s(int32=1)]",
+			want:        "Stub tool call for \"my-simple-tool\"! Parameters parsed: [] \n Output: [%!s(int64=1)]",
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -237,7 +240,7 @@ func setupCloudSQLMySQLAuthTest(t *testing.T, ctx context.Context, tableName str
 
 	_, err = pool.QueryContext(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
-			id MEDIUMINT PRIMARY KEY,
+			id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 			name VARCHAR(255),
 			email VARCHAR(255)
 		);
@@ -249,10 +252,10 @@ func setupCloudSQLMySQLAuthTest(t *testing.T, ctx context.Context, tableName str
 	// Insert test data
 	statement := fmt.Sprintf(`
 		INSERT INTO %s (name, email) 
-		VALUES (@alice, @aliceemail), (@jane, @janeemail)
+		VALUES (?, ?), (?, ?)
 	`, tableName)
-    
-	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", SERVICE_ACCOUNT_EMAIL), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
+
+	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	_, err = pool.QueryContext(ctx, statement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
