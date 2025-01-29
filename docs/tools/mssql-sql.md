@@ -1,6 +1,6 @@
 # Cloud SQL Mssql Tool
 
-A "mssql" tool executes a pre-defined SQL statement against a Cloud SQL for SQL Server
+A "mssql-sql" tool executes a pre-defined SQL statement against a Cloud SQL for SQL Server
 database. It's compatible with any of the following sources:
 
 - [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
@@ -20,12 +20,12 @@ db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named
 ```yaml
 tools:
  search_flights_by_number:
-    kind: mssql
+    kind: mssql-sql
     source: my-instance
     statement: |
       SELECT * FROM flights
       WHERE airline = @airline
-      AND flight_number = @number
+      AND flight_number = @flight_number
       LIMIT 10
     description: |
       Use this tool to get information for a specific flight.
@@ -50,7 +50,7 @@ tools:
       - name: airline
         type: string
         description: Airline unique 2 letter identifier
-      - name: number
+      - name: flight_number
         type: string
         description: 1 to 4 digit number
 ```
@@ -59,8 +59,8 @@ tools:
 
 | **field**   |                   **type**                   | **required** | **description**                                                                                     |
 |-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "mssql". |
-| source      |                    string                    |     true     | Name of the source the T-SQL statement should execute on.|
-| description |                    string                    |     true     | Description of the tool that is passed to the LLM|
-| statement   |                    string                    |     true     | SQL statement to execute. |
+| kind        |                    string                    |     true     | Must be "mssql-sql".                                                                                |
+| source      |                    string                    |     true     | Name of the source the T-SQL statement should execute on.                                           |
+| description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
+| statement   |                    string                    |     true     | SQL statement to execute.                                                                           |
 | parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
