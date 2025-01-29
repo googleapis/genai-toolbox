@@ -18,7 +18,7 @@ If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
 to a database by following these instructions][csql-pg-quickstart].
 
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
-[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-compaduter
+[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
 ## Requirements
 
@@ -46,9 +46,9 @@ permissions):
 
 ### Networking
 
-AlloyDB supports connecting over both from external networks via the internet
+Cloud SQL supports connecting over both from external networks via the internet
 ([public IP][public-ip]), and internal networks ([private IP][private-ip]). 
-For more information on choosing between the two options, see the AlloyDB page 
+For more information on choosing between the two options, see the Cloud SQL page 
 [Connection overview][conn-overview].
 
 You can configure the `ipType` parameter in your source configuration to 
@@ -56,9 +56,9 @@ You can configure the `ipType` parameter in your source configuration to
 you choose, all connections use IAM-based authorization and are encrypted with
 mTLS. 
 
-[private-ip]: https://cloud.google.com/alloydb/docs/private-ip
-[public-ip]: https://cloud.google.com/alloydb/docs/connect-public-ip
-[conn-overview]: https://cloud.google.com/alloydb/docs/connection-overview
+[private-ip]: https://cloud.google.com/sql/docs/postgres/configure-private-ip
+[public-ip]: https://cloud.google.com/sql/docs/postgres/configure-ip
+[conn-overview]: https://cloud.google.com/sql/docs/postgres/connect-overview
 
 ### Database User
 
@@ -79,7 +79,7 @@ sources:
         database: "my_db"
         user: "my-user"
         password: "my-password"
-        # ipType: "public"
+        # ipType: "private"
 ```
 
 ## Reference
