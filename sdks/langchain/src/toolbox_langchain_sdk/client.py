@@ -66,7 +66,11 @@ class ToolboxClient:
             cls.__bg_loop = _BackgroundLoop(loop, thread)
         coro = cls.__create(url)
 
-        assert cls.__bg_loop._loop
+        if cls.__bg_loop._loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
+
         return asyncio.run_coroutine_threadsafe(coro, cls.__bg_loop._loop)
 
     @classmethod
@@ -183,7 +187,11 @@ class ToolboxClient:
             A tool loaded from the Toolbox.
         """
 
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
+
         return self.__bg_loop.run_as_sync(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
@@ -217,7 +225,11 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
+
         return self.__bg_loop.run_as_sync(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
