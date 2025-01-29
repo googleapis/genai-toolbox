@@ -41,8 +41,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	client, err := initSpannerClient(ctx, tracer, r.Name, r.Project, r.Instance, r.Database)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer, userAgent string) (sources.Source, error) {
+	client, err := initSpannerClient(ctx, tracer, r.Name, r.Project, r.Instance, r.Database, userAgent)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create client: %w", err)
 	}
@@ -77,7 +77,7 @@ func (s *Source) DatabaseDialect() string {
 	return s.Dialect
 }
 
-func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*spanner.Client, error) {
+func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname, userAgent string) (*spanner.Client, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -94,7 +94,7 @@ func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, 
 	}
 
 	// Create spanner client
-	client, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig})
+	client, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig, UserAgent: userAgent})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new client: %w", err)
 	}

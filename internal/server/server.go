@@ -49,7 +49,7 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
+func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, version string) (*Server, error) {
 	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
@@ -103,7 +103,8 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			s, err := sc.Initialize(ctx, instrumentation.Tracer)
+			userAgent := fmt.Sprintf("genai-toolbox/%s", version)
+			s, err := sc.Initialize(ctx, instrumentation.Tracer, userAgent)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 			}

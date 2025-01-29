@@ -48,8 +48,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initAlloyDBPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer, userAgent string) (sources.Source, error) {
+	pool, err := initAlloyDBPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database, userAgent)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -83,18 +83,24 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialOpts(ipType string) ([]alloydbconn.DialOption, error) {
+func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
 	switch strings.ToLower(ipType) {
 	case "private":
-		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
+		return []alloydbconn.Option{
+			alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()),
+			alloydbconn.WithUserAgent(userAgent),
+		}, nil
 	case "public":
-		return []alloydbconn.DialOption{alloydbconn.WithPublicIP()}, nil
+		return []alloydbconn.Option{
+			alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()),
+			alloydbconn.WithUserAgent(userAgent),
+		}, nil
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }
 
-func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname, userAgent string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -107,11 +113,11 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ipType)
+	opts, err := getOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}
-	d, err := alloydbconn.NewDialer(context.Background(), alloydbconn.WithDefaultDialOptions(dialOpts...))
+	d, err := alloydbconn.NewDialer(context.Background(), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}

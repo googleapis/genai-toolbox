@@ -41,7 +41,7 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer, userAgent string) (sources.Source, error) {
 	driver, err := initNeo4jDriver(ctx, tracer, r.Uri, r.User, r.Password, r.Name)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create driver: %w", err)

@@ -24,7 +24,7 @@ import (
 // SourceConfig is the interface for configuring a source.
 type SourceConfig interface {
 	SourceConfigKind() string
-	Initialize(ctx context.Context, tracer trace.Tracer) (Source, error)
+	Initialize(ctx context.Context, tracer trace.Tracer, userAgent string) (Source, error)
 }
 
 // Source is the interface for the source itself.
