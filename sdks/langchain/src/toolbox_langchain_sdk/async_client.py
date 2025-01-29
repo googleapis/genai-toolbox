@@ -24,47 +24,34 @@ from .utils import ManifestSchema, _load_manifest
 
 class AsyncToolboxClient:
     __default_session: Optional[ClientSession] = None
-    __create_key = object()
 
     def __init__(
         self,
-        key: object,
         url: str,
-        session: ClientSession,
-        bg_loop: Optional[_BackgroundLoop] = None,
+        bg_loop: _BackgroundLoop,
+        session: Optional[ClientSession] = None,
     ):
         """
         Initializes the AsyncToolboxClient for the Toolbox service at the given URL.
 
         Args:
-            key: Prevent direct constructor usage.
             url: The base URL of the Toolbox service.
+            bg_loop: Optional background async event loop used to create
+            ToolboxTool.
             session: An HTTP client session.
-            bg_loop: Optional background async event loop used to create ToolboxTool.
         """
-        if key != AsyncToolboxClient.__create_key:
-            raise Exception("Only create class through 'create' method!")
-
         self.__url = url
-        self.__session = session
         self.__bg_loop = bg_loop
-
-    @classmethod
-    def create(
-        cls: type["AsyncToolboxClient"],
-        url: str,
-        session: Optional[ClientSession] = None,
-        bg_loop: Optional[_BackgroundLoop] = None,
-    ) -> "AsyncToolboxClient":
 
         # Use a default session if none is provided. This leverages connection
         # pooling for better performance by reusing a single session throughout
         # the application's lifetime.
         if session is None:
-            if cls.__default_session is None:
-                cls.__default_session = ClientSession()
-            session = cls.__default_session
-        return AsyncToolboxClient(cls.__create_key, url, session, bg_loop)
+            if AsyncToolboxClient.__default_session is None:
+                AsyncToolboxClient.__default_session = ClientSession(loop=self.__bg_loop._loop)
+            session = AsyncToolboxClient.__default_session
+
+        self.__session = session
 
     async def aload_tool(
         self,
