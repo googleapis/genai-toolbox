@@ -116,7 +116,7 @@ func TestCloudSQLMySQL(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        "mysql",
+				"kind":        "mysql-sql",
 				"source":      "my-mysql-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -285,7 +285,7 @@ func TestCloudSQLMySQLGoogleAuthenticatedParameter(t *testing.T) {
 	defer teardownTest(t)
 
 	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mysql", tableName)
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mysql-sql", tableName)
 
 }
 
@@ -294,6 +294,6 @@ func TestCloudSQLMySQLAuthRequiredToolInvocation(t *testing.T) {
 	sourceConfig := requireCloudSQLMySQLVars(t)
 
 	// call generic auth test helper
-	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mysql")
+	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mysql-sql")
 
 }
