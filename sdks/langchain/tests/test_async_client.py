@@ -55,9 +55,10 @@ MANIFEST_JSON = {
 class MockBackgroundLoop:
     def __init__(self):
         self._loop = asyncio.new_event_loop()
-    
+
     def run_async(self, coro):
         return asyncio.run(coro)
+
 
 @pytest.mark.asyncio
 class TestAsyncToolboxClient:
@@ -75,9 +76,7 @@ class TestAsyncToolboxClient:
 
     @pytest.fixture()
     def mock_client(self, mock_session, mock_bg_loop):
-        return AsyncToolboxClient(
-            URL, bg_loop=mock_bg_loop, session=mock_session
-        )
+        return AsyncToolboxClient(URL, bg_loop=mock_bg_loop, session=mock_session)
 
     async def test_create_with_existing_session(self, mock_client, mock_session):
         assert mock_client._AsyncToolboxClient__session == mock_session

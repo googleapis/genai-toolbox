@@ -39,11 +39,11 @@ class ToolboxClient:
         """
         bg_loop = self.__class__.__bg_loop
 
-        if bg_loop  is None:
+        if bg_loop is None:
             loop = asyncio.new_event_loop()
             thread = Thread(target=loop.run_forever, daemon=True)
             thread.start()
-            bg_loop  = _BackgroundLoop(loop, thread)
+            bg_loop = _BackgroundLoop(loop, thread)
 
         if bg_loop is None:
             raise RuntimeError(
@@ -52,9 +52,7 @@ class ToolboxClient:
 
         # Rely on AsyncToolboxClient's default session for managing its own
         # connections.
-        self.__async_client = AsyncToolboxClient(
-            url, bg_loop, None
-        )
+        self.__async_client = AsyncToolboxClient(url, bg_loop, None)
 
         self.__class__.__bg_loop = bg_loop
 

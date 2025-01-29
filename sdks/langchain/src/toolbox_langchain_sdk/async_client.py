@@ -48,7 +48,9 @@ class AsyncToolboxClient:
         # the application's lifetime.
         if session is None:
             if AsyncToolboxClient.__default_session is None:
-                AsyncToolboxClient.__default_session = ClientSession(loop=self.__bg_loop._loop)
+                AsyncToolboxClient.__default_session = ClientSession(
+                    loop=self.__bg_loop._loop
+                )
             session = AsyncToolboxClient.__default_session
 
         self.__session = session
