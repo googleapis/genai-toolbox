@@ -29,7 +29,7 @@ import (
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mssql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
@@ -272,8 +272,8 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
-		case mssql.ToolKind:
-			actual := mssql.Config{Name: name}
+		case mssqlsql.ToolKind:
+			actual := mssqlsql.Config{Name: name}
 			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}

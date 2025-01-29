@@ -133,7 +133,7 @@ func TestCloudSQLMssql(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        "mssql",
+				"kind":        "mssql-sql",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -300,7 +300,7 @@ func TestToolInvocationWithParams(t *testing.T) {
 	defer teardownTest(t)
 
 	// call generic invocation test helper
-	RunToolInvocationWithParamsTest(t, sourceConfig, "mssql", tableName)
+	RunToolInvocationWithParamsTest(t, sourceConfig, "mssql-sql", tableName)
 }
 
 // Set up auth test database table
@@ -362,7 +362,7 @@ func TestCloudSQLMssqlGoogleAuthenticatedParameter(t *testing.T) {
 	defer teardownTest(t)
 
 	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mssql", tableName)
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mssql-sql", tableName)
 
 }
 
@@ -371,6 +371,6 @@ func TestCloudSQLMssqlAuthRequiredToolInvocation(t *testing.T) {
 	sourceConfig := requireCloudSQLMssqlVars(t)
 
 	// call generic auth test helper
-	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mssql")
+	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mssql-sql")
 
 }

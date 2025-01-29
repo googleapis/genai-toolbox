@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mssql_test
+package mssqlsql_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mssql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,7 +36,7 @@ func TestParseFromYamlMssql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mssql
+					kind: mssql-sql
 					source: my-instance
 					description: some description
 					statement: |
@@ -55,9 +55,9 @@ func TestParseFromYamlMssql(t *testing.T) {
 							  field: user_id
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mssql.Config{
+				"example_tool": mssqlsql.Config{
 					Name:         "example_tool",
-					Kind:         mssql.ToolKind,
+					Kind:         mssqlsql.ToolKind,
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
