@@ -26,7 +26,7 @@ URL = "http://test_url"
 class TestToolboxClient:
     @pytest.fixture()
     def toolbox_client(self):
-        client = ToolboxClient(URL)
+        client = ToolboxClient.create(URL)
         assert isinstance(client, ToolboxClient)
         assert client._ToolboxClient__async_client is not None
 
@@ -35,6 +35,12 @@ class TestToolboxClient:
         assert client._ToolboxClient__bg_loop._loop.is_running()
 
         return client
+
+    def test_constructor_direct_access_raises_exception(self):
+        with pytest.raises(
+            Exception, match="Only create class through 'create' method!"
+        ):
+            ToolboxClient(object(), URL)
 
     @patch("toolbox_langchain_sdk.client.AsyncToolboxClient.aload_tool")
     def test_load_tool(self, mock_aload_tool, toolbox_client):

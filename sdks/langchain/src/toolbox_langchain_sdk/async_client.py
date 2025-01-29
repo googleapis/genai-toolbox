@@ -23,30 +23,48 @@ from .utils import ManifestSchema, _load_manifest
 
 
 class AsyncToolboxClient:
+    __default_session: Optional[ClientSession] = None
+    __create_key = object()
+
     def __init__(
         self,
+        key: object,
         url: str,
-        session: Optional[ClientSession] = None,
+        session: ClientSession,
         bg_loop: Optional[_BackgroundLoop] = None,
     ):
         """
         Initializes the AsyncToolboxClient for the Toolbox service at the given URL.
 
         Args:
+            key: Prevent direct constructor usage.
             url: The base URL of the Toolbox service.
             session: An HTTP client session.
             bg_loop: Optional background async event loop used to create ToolboxTool.
         """
-        self.__url = url
-        self.__bg_loop = bg_loop
-        self.__session = session
+        if key != AsyncToolboxClient.__create_key:
+            raise Exception("Only create class through 'create' method!")
 
-    @property
-    async def session(self) -> ClientSession:
-        """Gets the aiohttp ClientSession, creating it if necessary."""
-        if self.__session is None:
-            self.__session = ClientSession()
-        return self.__session
+        self.__url = url
+        self.__session = session
+        self.__bg_loop = bg_loop
+
+    @classmethod
+    def create(
+        cls: type["AsyncToolboxClient"],
+        url: str,
+        session: Optional[ClientSession] = None,
+        bg_loop: Optional[_BackgroundLoop] = None,
+    ) -> "AsyncToolboxClient":
+
+        # Use a default session if none is provided. This leverages connection
+        # pooling for better performance by reusing a single session throughout
+        # the application's lifetime.
+        if session is None:
+            if cls.__default_session is None:
+                cls.__default_session = ClientSession()
+            session = cls.__default_session
+        return AsyncToolboxClient(cls.__create_key, url, session, bg_loop)
 
     async def aload_tool(
         self,
