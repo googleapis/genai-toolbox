@@ -1,30 +1,25 @@
-# Postgres SQL Tool 
+# MySQL Tool 
 
-A "postgres-sql" tool executes a pre-defined SQL statement against a postgres
+A "mysql-sql" tool executes a pre-defined SQL statement against a mysql 
 database. It's compatible with any of the following sources:
-- [alloydb-postgres](../sources/alloydb-pg.md)
-- [cloud-sql-postgres](../sources/cloud-sql-pg.md)
-- [postgres](../sources/postgres.md)
+- [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
 
-The specified SQL statement is executed as a [prepared statement][pg-prepare],
-and specified parameters will inserted according to their position: e.g. "$1"
-will be the first parameter specified, "$@" will be the second parameter, and so
-on.
+The specified SQL statement is executed as a [prepared statement][mysql-prepare],
+and expects parameters in the SQL query to be in the form of placeholders `?`.
 
-
-[pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
+[mysql-prepare]: https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 
 ## Example
 
 ```yaml
 tools:
  search_flights_by_number:
-    kind: postgres-sql
-    source: my-pg-instance
+    kind: mysql-sql
+    source: my-mysql-instance
     statement: |
       SELECT * FROM flights
-      WHERE airline = $1
-      AND flight_number = $2
+      WHERE airline = ?
+      AND flight_number = ?
       LIMIT 10
     description: |
       Use this tool to get information for a specific flight.
@@ -58,7 +53,7 @@ tools:
 
 | **field**   |                   **type**                   | **required** | **description**                                                                                     |
 |-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "postgres-sql".                                                                             |
+| kind        |                    string                    |     true     | Must be "mysql-sql".                                                                                |
 | source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
 | description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
 | statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |

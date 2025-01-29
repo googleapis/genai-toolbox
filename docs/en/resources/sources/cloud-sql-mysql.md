@@ -1,24 +1,24 @@
 ---
-title: "Cloud SQL for PostgreSQL"
-linkTitle: "Cloud SQL (Postgres)"
+title: "Cloud SQL for MySQL"
+linkTitle: "Cloud SQL (MySQL)"
 type: docs
 weight: 1
 description: >
-  Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
+  Cloud SQL for MySQL is a fully-managed database service for MySQL.
 
 ---
 
 ## About
 
-[Cloud SQL for PostgreSQL][csql-pg-docs] is a fully-managed database service
-that helps you set up, maintain, manage, and administer your PostgreSQL
+[Cloud SQL for MySQL][csql-mysql-docs] is a fully-managed database service
+that helps you set up, maintain, manage, and administer your MySQL 
 relational databases on Google Cloud Platform.
 
-If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
-to a database by following these instructions][csql-pg-quickstart].
+If you are new to Cloud SQL for MySQL, you can try [creating and connecting
+to a database by following these instructions][csql-mysql-quickstart].
 
-[csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
-[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
+[csql-mysql-docs]: https://cloud.google.com/sql/docs/mysql
+[csql-mysql-quickstart]: https://cloud.google.com/sql/docs/mysql/connect-instance-local-computer
 
 ## Requirements
 
@@ -56,23 +56,23 @@ You can configure the `ipType` parameter in your source configuration to
 you choose, all connections use IAM-based authorization and are encrypted with
 mTLS. 
 
-[private-ip]: https://cloud.google.com/sql/docs/postgres/configure-private-ip
-[public-ip]: https://cloud.google.com/sql/docs/postgres/configure-ip
-[conn-overview]: https://cloud.google.com/sql/docs/postgres/connect-overview
+[private-ip]: https://cloud.google.com/sql/docs/mysql/configure-private-ip
+[public-ip]: https://cloud.google.com/sql/docs/mysql/configure-ip
+[conn-overview]: https://cloud.google.com/sql/docs/mysql/connect-overview
 
 ### Database User
 
 Current, this source only uses standard authentication. You will need to [create
-a PostreSQL user][cloud-sql-users] to login to the database with.
+a MySQL user][cloud-sql-users] to login to the database with.
 
-[cloud-sql-users]: https://cloud.google.com/sql/docs/postgres/create-manage-users
+[cloud-sql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
 
 ## Example
 
 ```yaml
 sources:
-    my-cloud-sql-pg-source:
-        kind: "cloud-sql-postgres"
+    my-cloud-sql-mysql-source:
+        kind: "cloud-sql-mysql"
         project: "my-project-id"
         region: "us-central1"
         instance: "my-instance"
@@ -86,11 +86,11 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                                             |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                               |
+| kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                 |
-| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                                |
-| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                                         |
+| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                    |
+| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                   |
+| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`. |
