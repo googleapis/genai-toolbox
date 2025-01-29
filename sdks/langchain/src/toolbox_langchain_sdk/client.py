@@ -14,7 +14,7 @@
 
 import asyncio
 from threading import Thread
-from typing import Any, Callable, Optional, TypeVar, Union, Dict, List
+from typing import Any, Callable, Optional, TypeVar, Union
 
 from .async_client import AsyncToolboxClient
 from .background_loop import _BackgroundLoop
@@ -112,7 +112,7 @@ class ToolboxClient:
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
             )
         )
-    
+
     #### Async methods
     async def aload_tool(
         self,
