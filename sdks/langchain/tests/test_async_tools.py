@@ -201,12 +201,14 @@ class TestAsyncToolboxTool:
         tool = toolbox_tool.bind_params({"param1": "bound-value"})
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
+        # TODO: Check if call is made with the correct params
 
 
     async def test_toolbox_tool_call_with_auth_tokens(self, auth_toolbox_tool):
         tool = auth_toolbox_tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
+        # TODO: Check if call is made with the correct params
 
 
     async def test_toolbox_tool_call_with_auth_tokens_insecure(self, auth_toolbox_tool):
@@ -220,6 +222,7 @@ class TestAsyncToolboxTool:
             )
             result = await tool.ainvoke({"param2": 123})
             assert result == {"result": "test-result"}
+            # TODO: Check if call is made with the correct params
 
 
     async def test_toolbox_tool_call_with_invalid_input(self, toolbox_tool):
