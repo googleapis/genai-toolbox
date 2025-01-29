@@ -72,7 +72,10 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox.
         """
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
         return self.__bg_loop.run_as_sync(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
@@ -106,7 +109,10 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
         return self.__bg_loop.run_as_sync(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
@@ -140,7 +146,10 @@ class ToolboxClient:
             A tool loaded from the Toolbox.
         """
 
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
         return await self.__bg_loop.run_as_async(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
@@ -174,7 +183,10 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
         return await self.__bg_loop.run_as_async(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict

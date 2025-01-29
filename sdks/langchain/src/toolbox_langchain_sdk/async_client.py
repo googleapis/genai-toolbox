@@ -89,7 +89,11 @@ class AsyncToolboxClient:
         url = f"{self.__url}/api/tool/{tool_name}"
         manifest: ManifestSchema = await _load_manifest(url, self.__session)
 
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
+        
         return ToolboxTool(
             tool_name,
             manifest.tools[tool_name],
@@ -145,7 +149,10 @@ class AsyncToolboxClient:
         manifest: ManifestSchema = await _load_manifest(url, self.__session)
         tools: list[ToolboxTool] = []
 
-        assert self.__bg_loop
+        if self.__bg_loop is None:
+            raise RuntimeError(
+                "Background loop not initialized. ToolboxClient was not properly initialized."
+            )
         for tool_name, tool_schema in manifest.tools.items():
             tools.append(
                 ToolboxTool(
