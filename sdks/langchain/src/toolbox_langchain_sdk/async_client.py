@@ -93,7 +93,7 @@ class AsyncToolboxClient:
             raise RuntimeError(
                 "Background loop not initialized. ToolboxClient was not properly initialized."
             )
-        
+
         return ToolboxTool(
             tool_name,
             manifest.tools[tool_name],
