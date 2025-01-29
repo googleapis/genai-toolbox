@@ -30,7 +30,7 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssql"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
@@ -254,8 +254,8 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
-		case mysql.ToolKind:
-			actual := mysql.Config{Name: name}
+		case mysqlsql.ToolKind:
+			actual := mysqlsql.Config{Name: name}
 			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}

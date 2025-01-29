@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysql_test
+package mysqlsql_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,7 +36,7 @@ func TestParseFromYamlMySQL(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mysql
+					kind: mysql-sql
 					source: my-mysql-instance
 					description: some description
 					statement: |
@@ -55,9 +55,9 @@ func TestParseFromYamlMySQL(t *testing.T) {
 							  field: user_id
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mysql.Config{
+				"example_tool": mysqlsql.Config{
 					Name:         "example_tool",
-					Kind:         mysql.ToolKind,
+					Kind:         mysqlsql.ToolKind,
 					Source:       "my-mysql-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

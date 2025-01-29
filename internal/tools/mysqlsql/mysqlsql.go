@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysql
+package mysqlsql
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "mysql"
+const ToolKind string = "mysql-sql"
 
 type compatibleSource interface {
 	MySQLPool() *sql.DB
