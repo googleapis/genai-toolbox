@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/alloydbconn"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -48,8 +49,8 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context, tracer trace.Tracer, userAgent string) (sources.Source, error) {
-	pool, err := initAlloyDBPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database, userAgent)
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	pool, err := initAlloyDBPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Cluster, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -84,23 +85,19 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
+	opts := []alloydbconn.Option{alloydbconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {
 	case "private":
-		return []alloydbconn.Option{
-			alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()),
-			alloydbconn.WithUserAgent(userAgent),
-		}, nil
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()))
 	case "public":
-		return []alloydbconn.Option{
-			alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()),
-			alloydbconn.WithUserAgent(userAgent),
-		}, nil
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()))
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
+	return opts, nil
 }
 
-func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname, userAgent string) (*pgxpool.Pool, error) {
+func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -113,7 +110,7 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	}
 
 	// Create a new dialer with options
-	opts, err := getOpts(ipType, userAgent)
+	opts, err := getOpts(ipType, ctx.Value(util.UserAgentKey).(string))
 	if err != nil {
 		return nil, err
 	}

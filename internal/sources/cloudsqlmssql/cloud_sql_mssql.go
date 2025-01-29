@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn/sqlserver/mssql"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -49,9 +50,9 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
-func (r Config) Initialize(ctx context.Context, tracer trace.Tracer, userAgent string) (sources.Source, error) {
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Cloud SQL MSSQL source
-	db, err := initCloudSQLMssqlConnection(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPAddress, r.IPType, r.User, r.Password, r.Database, userAgent)
+	db, err := initCloudSQLMssqlConnection(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPAddress, r.IPType, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
 	}
@@ -89,7 +90,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 	return s.Db
 }
 
-func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipAddress, ipType, user, pass, dbname, userAgent string) (*sql.DB, error) {
+func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -98,7 +99,7 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
 
 	// Get dial options
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
+	opts, err := sources.GetCloudSQLOpts(ipType, ctx.Value(util.UserAgentKey).(string))
 	if err != nil {
 		return nil, err
 	}

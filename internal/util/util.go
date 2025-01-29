@@ -34,3 +34,8 @@ func (d *DelayedUnmarshaler) UnmarshalYAML(unmarshal func(interface{}) error) er
 func (d *DelayedUnmarshaler) Unmarshal(v interface{}) error {
 	return d.unmarshal(v)
 }
+
+type contextKey string
+
+// UserAgentKey is the key used to store userAgent within context
+const UserAgentKey contextKey = "userAgent"

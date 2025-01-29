@@ -24,18 +24,14 @@ import (
 // GetCloudSQLDialOpts retrieve dial options with the right ip type and user agent for cloud sql
 // databases.
 func GetCloudSQLOpts(ipType, userAgent string) ([]cloudsqlconn.Option, error) {
+	opts := []cloudsqlconn.Option{cloudsqlconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {
 	case "private":
-		return []cloudsqlconn.Option{
-			cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPrivateIP()),
-			cloudsqlconn.WithUserAgent(userAgent),
-		}, nil
+		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPrivateIP()))
 	case "public":
-		return []cloudsqlconn.Option{
-			cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPublicIP()),
-			cloudsqlconn.WithUserAgent(userAgent),
-		}, nil
+		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPublicIP()))
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
+	return opts, nil
 }

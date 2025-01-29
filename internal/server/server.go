@@ -29,6 +29,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -49,7 +50,7 @@ type Server struct {
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, version string) (*Server, error) {
+func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
 	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
@@ -57,6 +58,9 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, version stri
 
 	parentCtx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
 	defer span.End()
+
+	userAgent := fmt.Sprintf("genai-toolbox/%s", cfg.Version)
+	parentCtx = context.WithValue(parentCtx, util.UserAgentKey, userAgent)
 
 	// set up http serving
 	r := chi.NewRouter()
@@ -103,8 +107,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, version stri
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			userAgent := fmt.Sprintf("genai-toolbox/%s", version)
-			s, err := sc.Initialize(ctx, instrumentation.Tracer, userAgent)
+			s, err := sc.Initialize(ctx, instrumentation.Tracer)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 			}

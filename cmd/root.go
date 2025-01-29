@@ -208,7 +208,7 @@ func run(cmd *Command) error {
 	}
 
 	// start server
-	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger, cmd.cfg.Version)
+	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())

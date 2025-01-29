@@ -54,9 +54,8 @@ func TestServe(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	testUserAgent := "genai-toolbox/test"
 
-	s, err := server.NewServer(context.Background(), cfg, testLogger, testUserAgent)
+	s, err := server.NewServer(context.Background(), cfg, testLogger)
 	if err != nil {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
