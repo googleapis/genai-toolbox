@@ -203,13 +203,22 @@ class TestAsyncToolboxTool:
             headers={},
         )
 
-    async def test_toolbox_tool_call_with_bound_params(self, toolbox_tool):
-        tool = toolbox_tool.bind_params({"param1": "bound-value"})
+    @pytest.mark.parametrize(
+        "bound_param, expected_value",
+        [
+            ({"param1": "bound-value"}, "bound-value"),
+            ({"param1": lambda: "dynamic-value"}, "dynamic-value"),
+        ],
+    )
+    async def test_toolbox_tool_call_with_bound_params(
+        self, toolbox_tool, bound_param, expected_value
+    ):
+        tool = toolbox_tool.bind_params(bound_param)
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
         toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with(
             "http://test_url/api/tool/test_tool/invoke",
-            json={"param1": "bound-value", "param2": 123},
+            json={"param1": expected_value, "param2": 123},
             headers={},
         )
 
