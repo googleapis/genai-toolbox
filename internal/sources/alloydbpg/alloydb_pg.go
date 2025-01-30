@@ -110,7 +110,8 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	}
 
 	// Create a new dialer with options
-	opts, err := getOpts(ipType, ctx.Value(util.UserAgentKey).(string))
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	opts, err := getOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}

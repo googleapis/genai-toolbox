@@ -99,7 +99,8 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
 
 	// Get dial options
-	opts, err := sources.GetCloudSQLOpts(ipType, ctx.Value(util.UserAgentKey).(string))
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}

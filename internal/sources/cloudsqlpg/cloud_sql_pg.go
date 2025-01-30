@@ -95,7 +95,8 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	}
 
 	// Create a new dialer with options
-	opts, err := sources.GetCloudSQLOpts(ipType, ctx.Value(util.UserAgentKey).(string))
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}
