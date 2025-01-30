@@ -18,11 +18,11 @@ tools:
       Use this tool to get information for a specific flight.
       Takes an airline code and flight number and returns info on the flight.
       Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      A airline code is a code for an airline service consisting of two-character
-      airline designator and followed by flight number, which is 1 to 4 digit number.
+      An airline code is a code for an airline service consisting of a two-character
+      airline designator and followed by a flight number, which is a 1 to 4 digit number.
       For example, if given CY 0123, the airline is "CY", and flight_number is "123".
       Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
-      If the tool returns more than one option choose the date closes to today.
+      If the tool returns more than one option choose the date closest to today.
       Example:
       {{
           "airline": "CY",
