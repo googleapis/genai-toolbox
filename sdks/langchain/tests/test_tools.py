@@ -241,6 +241,14 @@ class TestToolboxTool:
         mock_arun.assert_called_once_with(param1="test-value", param2=123)
 
     @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
+    @pytest.mark.asyncio
+    async def test_toolbox_tool_call_async(self, mock_arun, toolbox_tool):
+        mock_arun.return_value = {"result": "test-result"}
+        result = await toolbox_tool.ainvoke({"param1": "test-value", "param2": 123})
+        assert result == {"result": "test-result"}
+        mock_arun.assert_called_once_with(param1="test-value", param2=123)
+
+    @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
     def test_toolbox_tool_call_with_bound_params(self, mock_arun, toolbox_tool):
         mock_arun.return_value = {"result": "test-result"}
         tool = toolbox_tool.bind_params({"param1": "bound-value"})
