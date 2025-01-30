@@ -43,7 +43,7 @@ from toolbox_langchain_sdk.client import ToolboxClient
 
 
 @pytest.mark.asyncio
-# @pytest.mark.usefixtures("toolbox_server")
+@pytest.mark.usefixtures("toolbox_server")
 class TestE2EClientAsync:
     @pytest.fixture(scope="function")
     def toolbox(self):
@@ -178,7 +178,7 @@ class TestE2EClientAsync:
             await tool.ainvoke({})
 
 
-# @pytest.mark.usefixtures("toolbox_server")
+@pytest.mark.usefixtures("toolbox_server")
 class TestE2EClientSync:
     @pytest.fixture(scope="function")
     def toolbox(self):
