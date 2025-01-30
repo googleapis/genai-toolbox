@@ -88,12 +88,12 @@ class ToolboxTool(BaseTool):
     ) -> "ToolboxTool":
         """Creates a ToolboxTool from an AsyncToolboxTool (factory method)."""
         return ToolboxTool(
-            name=async_tool._AsyncToolboxTool__name,
-            schema=async_tool._AsyncToolboxTool__schema,
-            url=async_tool._AsyncToolboxTool__url,
-            session=async_tool._AsyncToolboxTool__session,
-            auth_tokens=async_tool._AsyncToolboxTool__auth_tokens,
-            bound_params=async_tool._AsyncToolboxTool__bound_params,
+            name=async_tool._name,
+            schema=async_tool._schema,
+            url=async_tool._url,
+            session=async_tool._session,
+            auth_tokens=async_tool._auth_tokens,
+            bound_params=async_tool._bound_params,
             strict=strict,
         )
 

@@ -125,13 +125,13 @@ class AsyncToolboxTool(BaseTool):
             args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
         )
 
-        self.__name = name
-        self.__schema = schema
-        self.__url = url
-        self.__session = session
-        self.__auth_tokens = auth_tokens
-        self.__auth_params = auth_params
-        self.__bound_params = bound_params
+        self._name = name
+        self._schema = schema
+        self._url = url
+        self._session = session
+        self._auth_tokens = auth_tokens
+        self._auth_params = auth_params
+        self._bound_params = bound_params
 
         # Warn users about any missing authentication so they can add it before
         # tool invocation.
@@ -156,7 +156,7 @@ class AsyncToolboxTool(BaseTool):
 
         # Evaluate dynamic parameter values if any
         evaluated_params = {}
-        for param_name, param_value in self.__bound_params.items():
+        for param_name, param_value in self._bound_params.items():
             if callable(param_value):
                 evaluated_params[param_name] = param_value()
             else:
@@ -166,7 +166,7 @@ class AsyncToolboxTool(BaseTool):
         kwargs.update(evaluated_params)
 
         return await _invoke_tool(
-            self.__url, self.__session, self.__name, kwargs, self.__auth_tokens
+            self._url, self._session, self._name, kwargs, self._auth_tokens
         )
 
     def _run(self, **kwargs: Any) -> Any:
@@ -194,20 +194,20 @@ class AsyncToolboxTool(BaseTool):
         params_missing_auth: list[str] = []
 
         # Check each parameter for at least 1 required auth source
-        for param in self.__auth_params:
+        for param in self._auth_params:
             assert param.authSources is not None
             has_auth = False
             for src in param.authSources:
 
                 # Find first auth source that is specified
-                if src in self.__auth_tokens:
+                if src in self._auth_tokens:
                     has_auth = True
                     break
             if not has_auth:
                 params_missing_auth.append(param.name)
 
         if params_missing_auth:
-            message = f"Parameter(s) `{', '.join(params_missing_auth)}` of tool {self.__name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
+            message = f"Parameter(s) `{', '.join(params_missing_auth)}` of tool {self._name} require authentication, but no valid authentication sources are registered. Please register the required sources before use."
 
             if strict:
                 raise PermissionError(message)
@@ -245,7 +245,7 @@ class AsyncToolboxTool(BaseTool):
             A new AsyncToolboxTool instance that is a deep copy of the current
             instance, with added auth tokens or bound params.
         """
-        new_schema = deepcopy(self.__schema)
+        new_schema = deepcopy(self._schema)
 
         # Reconstruct the complete parameter schema by merging the auth
         # parameters back with the non-auth parameters. This is necessary to
@@ -253,14 +253,14 @@ class AsyncToolboxTool(BaseTool):
         # params in the constructor of the new AsyncToolboxTool instance, ensuring
         # that any overlaps or conflicts are correctly identified and reported
         # as errors or warnings, depending on the given `strict` flag.
-        new_schema.parameters += self.__auth_params
+        new_schema.parameters += self._auth_params
         return self.__class__(
-            name=self.__name,
+            name=self._name,
             schema=new_schema,
-            url=self.__url,
-            session=self.__session,
-            auth_tokens={**self.__auth_tokens, **auth_tokens},
-            bound_params={**self.__bound_params, **bound_params},
+            url=self._url,
+            session=self._session,
+            auth_tokens={**self._auth_tokens, **auth_tokens},
+            bound_params={**self._bound_params, **bound_params},
             strict=strict,
         )
 
@@ -290,12 +290,12 @@ class AsyncToolboxTool(BaseTool):
         # Check if the authentication source is already registered.
         dupe_tokens: list[str] = []
         for auth_token, _ in auth_tokens.items():
-            if auth_token in self.__auth_tokens:
+            if auth_token in self._auth_tokens:
                 dupe_tokens.append(auth_token)
 
         if dupe_tokens:
             raise ValueError(
-                f"Authentication source(s) `{', '.join(dupe_tokens)}` already registered in tool `{self.__name}`."
+                f"Authentication source(s) `{', '.join(dupe_tokens)}` already registered in tool `{self._name}`."
             )
 
         return self.__create_copy(auth_tokens=auth_tokens, strict=strict)
@@ -329,12 +329,12 @@ class AsyncToolboxTool(BaseTool):
         # Check if the parameter is already bound.
         dupe_params: list[str] = []
         for param_name, _ in bound_params.items():
-            if param_name in self.__bound_params:
+            if param_name in self._bound_params:
                 dupe_params.append(param_name)
 
         if dupe_params:
             raise ValueError(
-                f"Parameter(s) `{', '.join(dupe_params)}` already bound in tool `{self.__name}`."
+                f"Parameter(s) `{', '.join(dupe_params)}` already bound in tool `{self._name}`."
             )
 
         return self.__create_copy(bound_params=bound_params, strict=strict)

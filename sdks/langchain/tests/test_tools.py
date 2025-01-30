@@ -62,12 +62,12 @@ class TestToolboxTool:
     @pytest.fixture(scope="function")
     def mock_async_tool(self, tool_schema):
         mock_async_tool = Mock(spec=AsyncToolboxTool)
-        mock_async_tool._AsyncToolboxTool__name = "test_tool"
-        mock_async_tool._AsyncToolboxTool__schema = tool_schema
-        mock_async_tool._AsyncToolboxTool__url = "http://test_url"
-        mock_async_tool._AsyncToolboxTool__session = Mock()
-        mock_async_tool._AsyncToolboxTool__auth_tokens = {}
-        mock_async_tool._AsyncToolboxTool__bound_params = {}
+        mock_async_tool._name = "test_tool"
+        mock_async_tool._schema = tool_schema
+        mock_async_tool._url = "http://test_url"
+        mock_async_tool._session = Mock()
+        mock_async_tool._auth_tokens = {}
+        mock_async_tool._bound_params = {}
         return mock_async_tool
 
     @pytest.fixture
@@ -93,7 +93,7 @@ class TestToolboxTool:
             session=Mock(),
         )
         async_tool = tool._ToolboxTool__async_tool
-        assert async_tool._AsyncToolboxTool__name == "test_tool"
+        assert async_tool._name == "test_tool"
 
     @pytest.mark.parametrize(
         "params, expected_bound_params",
@@ -115,7 +115,7 @@ class TestToolboxTool:
         params,
         expected_bound_params,
     ):
-        mock_async_tool._AsyncToolboxTool__bound_params = expected_bound_params
+        mock_async_tool._bound_params = expected_bound_params
         mock_bind_params.return_value = mock_async_tool
 
         tool = toolbox_tool.bind_params(params)
@@ -124,7 +124,7 @@ class TestToolboxTool:
 
         for key, value in expected_bound_params.items():
             async_tool_bound_param_val = (
-                tool._ToolboxTool__async_tool._AsyncToolboxTool__bound_params[key]
+                tool._ToolboxTool__async_tool._bound_params[key]
             )
             if callable(value):
                 assert value() == async_tool_bound_param_val()
@@ -136,14 +136,14 @@ class TestToolboxTool:
         self, mock_bind_params, mock_async_tool, toolbox_tool
     ):
         expected_bound_param = {"param1": "bound-value"}
-        mock_async_tool._AsyncToolboxTool__bound_params = expected_bound_param
+        mock_async_tool._bound_params = expected_bound_param
         mock_bind_params.return_value = mock_async_tool
 
         tool = toolbox_tool.bind_param("param1", "bound-value")
         mock_bind_params.assert_called_once_with(expected_bound_param, True)
 
         assert (
-            tool._ToolboxTool__async_tool._AsyncToolboxTool__bound_params
+            tool._ToolboxTool__async_tool._bound_params
             == expected_bound_param
         )
         assert isinstance(tool, ToolboxTool)
@@ -176,14 +176,14 @@ class TestToolboxTool:
         auth_tokens,
         expected_auth_tokens,
     ):
-        mock_async_tool._AsyncToolboxTool__auth_tokens = expected_auth_tokens
+        mock_async_tool._auth_tokens = expected_auth_tokens
         mock_add_auth_tokens.return_value = mock_async_tool
         tool = auth_toolbox_tool.add_auth_tokens(auth_tokens)
         mock_add_auth_tokens.assert_called_once_with(auth_tokens, True)
 
         for source, getter in expected_auth_tokens.items():
             assert (
-                tool._ToolboxTool__async_tool._AsyncToolboxTool__auth_tokens[source]()
+                tool._ToolboxTool__async_tool._auth_tokens[source]()
                 == getter()
             )
         assert isinstance(tool, ToolboxTool)
@@ -194,7 +194,7 @@ class TestToolboxTool:
     ):
         get_id_token = lambda: "test-token"
         expected_auth_tokens = {"test-auth-source": get_id_token}
-        mock_async_tool._AsyncToolboxTool__auth_tokens = expected_auth_tokens
+        mock_async_tool._auth_tokens = expected_auth_tokens
         mock_add_auth_tokens.return_value = mock_async_tool
 
         tool = auth_toolbox_tool.add_auth_token("test-auth-source", get_id_token)
@@ -203,7 +203,7 @@ class TestToolboxTool:
         )
 
         assert (
-            tool._ToolboxTool__async_tool._AsyncToolboxTool__auth_tokens[
+            tool._ToolboxTool__async_tool._auth_tokens[
                 "test-auth-source"
             ]()
             == "test-token"
