@@ -52,6 +52,7 @@ class AsyncToolboxClient:
                     loop=self.__bg_loop._loop
                 )
             session = AsyncToolboxClient.__default_session
+
         self.__session = session
 
     async def aload_tool(
