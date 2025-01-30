@@ -1,4 +1,4 @@
-ar# Tools
+# Tools
 
 Tools represent an action your agent can take, such as running a SQL statement.
 You can define Tools as a map in the `sources` section of your `tools.yaml`
