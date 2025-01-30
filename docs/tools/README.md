@@ -91,7 +91,8 @@ the parameter.
 ### Array Parameters
 
 The `array` type is a list of items passed in as a single parameter.
-To use the `array` type, you must also specify what kind of items are in the list using the items field:
+To use the `array` type, you must also specify what kind of items are 
+in the list using the items field:
 
 ```yaml
     parameters:
