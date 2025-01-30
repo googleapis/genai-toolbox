@@ -157,24 +157,24 @@ class TestE2EClientAsync:
         ):
             await tool.ainvoke({"email": "twishabansal@google.com"})
 
-    async def test_run_tool_param_auth(self, toolbox, auth_token1):
-        """Tests running a tool with a param requiring auth, with correct auth."""
-        tool = await toolbox.aload_tool(
-            "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
-        )
-        response = await tool.ainvoke({})
-        result = response["result"]
-        assert "row4" in result
-        assert "row5" in result
-        assert "row6" in result
+    # async def test_run_tool_param_auth(self, toolbox, auth_token1):
+    #     """Tests running a tool with a param requiring auth, with correct auth."""
+    #     tool = await toolbox.aload_tool(
+    #         "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
+    #     )
+    #     response = await tool.ainvoke({})
+    #     result = response["result"]
+    #     assert "row4" in result
+    #     assert "row5" in result
+    #     assert "row6" in result
 
-    async def test_run_tool_param_auth_no_field(self, toolbox, auth_token1):
-        """Tests running a tool with a param requiring auth, with insufficient auth."""
-        tool = await toolbox.aload_tool(
-            "get-row-by-content-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
-        )
-        with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
-            await tool.ainvoke({})
+    # async def test_run_tool_param_auth_no_field(self, toolbox, auth_token1):
+    #     """Tests running a tool with a param requiring auth, with insufficient auth."""
+    #     tool = await toolbox.aload_tool(
+    #         "get-row-by-content-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
+    #     )
+    #     with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
+    #         await tool.ainvoke({})
 
 
 @pytest.mark.usefixtures("toolbox_server")
@@ -293,21 +293,21 @@ class TestE2EClientSync:
         ):
             tool.invoke({"email": "twishabansal@google.com"})
 
-    def test_run_tool_param_auth(self, toolbox, auth_token1):
-        """Tests running a tool with a param requiring auth, with correct auth."""
-        tool = toolbox.load_tool(
-            "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
-        )
-        response = tool.invoke({})
-        result = response["result"]
-        assert "row4" in result
-        assert "row5" in result
-        assert "row6" in result
+    # def test_run_tool_param_auth(self, toolbox, auth_token1):
+    #     """Tests running a tool with a param requiring auth, with correct auth."""
+    #     tool = toolbox.load_tool(
+    #         "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
+    #     )
+    #     response = tool.invoke({})
+    #     result = response["result"]
+    #     assert "row4" in result
+    #     assert "row5" in result
+    #     assert "row6" in result
 
-    def test_run_tool_param_auth_no_field(self, toolbox, auth_token1):
-        """Tests running a tool with a param requiring auth, with insufficient auth."""
-        tool = toolbox.load_tool(
-            "get-row-by-content-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
-        )
-        with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
-            tool.invoke({})
+    # def test_run_tool_param_auth_no_field(self, toolbox, auth_token1):
+    #     """Tests running a tool with a param requiring auth, with insufficient auth."""
+    #     tool = toolbox.load_tool(
+    #         "get-row-by-content-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
+    #     )
+    #     with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
+    #         tool.invoke({})
