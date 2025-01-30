@@ -114,7 +114,7 @@ in the list using the items field:
 
 ### Authenticated Parameters
 
-Authenticated parameters automatically are automatically populated with user
+Authenticated parameters are automatically populated with user
 information decoded from [ID tokens](../authSources/README.md#id-token) that
 are passed in request headers. They do not take input values in request bodies
 like other parameters. To use authenticated parameters, you must configure 
