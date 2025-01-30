@@ -50,7 +50,7 @@ class TestE2EClientAsync:
         """Provides a ToolboxClient instance for each test."""
         toolbox = ToolboxClient("http://localhost:5000")
         return toolbox
-    
+
     @pytest_asyncio.fixture(scope="function")
     async def get_n_rows_tool(self, toolbox):
         tool = await toolbox.aload_tool("get-n-rows")
@@ -103,7 +103,7 @@ class TestE2EClientAsync:
         assert "row1" in result
         assert "row2" in result
         assert "row3" not in result
-    
+
     async def test_run_tool_missing_params(self, get_n_rows_tool):
         with pytest.raises(ValidationError, match="Field required"):
             await get_n_rows_tool.ainvoke({})
@@ -185,7 +185,7 @@ class TestE2EClientSync:
         """Provides a ToolboxClient instance for each test."""
         toolbox = ToolboxClient("http://localhost:5000")
         return toolbox
-    
+
     @pytest.fixture(scope="function")
     def get_n_rows_tool(self, toolbox):
         tool = toolbox.load_tool("get-n-rows")
@@ -239,7 +239,7 @@ class TestE2EClientSync:
         assert "row1" in result
         assert "row2" in result
         assert "row3" not in result
-    
+
     def test_run_tool_missing_params(self, get_n_rows_tool):
         with pytest.raises(ValidationError, match="Field required"):
             get_n_rows_tool.invoke({})
