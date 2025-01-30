@@ -57,7 +57,7 @@ We currently support the following types of kinds of tools:
 ## Specifying Parameters
 
 Parameters for each Tool will define what inputs the Agent will need to provide
-to invoke them. Parameters should be pass as a list of Parameter objects:
+to invoke them. Parameters should be passed as a list of Parameter objects.
 
 ```yaml
     parameters:
