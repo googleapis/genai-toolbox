@@ -1,4 +1,4 @@
-# Tools
+ar# Tools
 
 Tools represent an action your agent can take, such as running a SQL statement.
 You can define Tools as a map in the `sources` section of your `tools.yaml`
@@ -90,8 +90,8 @@ the parameter.
 
 ### Array Parameters
 
-The `array` type is a list of items passed in as a single parameter. This `type`
-requires another Parameter to be specified under the `items` field:
+The `array` type is a list of items passed in as a single parameter.
+To use the `array` type, you must also specify what kind of items are in the list using the items field:
 
 ```yaml
     parameters:
