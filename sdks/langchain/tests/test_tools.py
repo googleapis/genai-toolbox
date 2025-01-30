@@ -123,9 +123,9 @@ class TestToolboxTool:
         assert isinstance(tool, ToolboxTool)
 
         for key, value in expected_bound_params.items():
-            async_tool_bound_param_val = (
-                tool._ToolboxTool__async_tool._bound_params[key]
-            )
+            async_tool_bound_param_val = tool._ToolboxTool__async_tool._bound_params[
+                key
+            ]
             if callable(value):
                 assert value() == async_tool_bound_param_val()
             else:
@@ -142,10 +142,7 @@ class TestToolboxTool:
         tool = toolbox_tool.bind_param("param1", "bound-value")
         mock_bind_params.assert_called_once_with(expected_bound_param, True)
 
-        assert (
-            tool._ToolboxTool__async_tool._bound_params
-            == expected_bound_param
-        )
+        assert tool._ToolboxTool__async_tool._bound_params == expected_bound_param
         assert isinstance(tool, ToolboxTool)
 
     @pytest.mark.parametrize(
@@ -182,10 +179,7 @@ class TestToolboxTool:
         mock_add_auth_tokens.assert_called_once_with(auth_tokens, True)
 
         for source, getter in expected_auth_tokens.items():
-            assert (
-                tool._ToolboxTool__async_tool._auth_tokens[source]()
-                == getter()
-            )
+            assert tool._ToolboxTool__async_tool._auth_tokens[source]() == getter()
         assert isinstance(tool, ToolboxTool)
 
     @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool.add_auth_tokens")
@@ -203,9 +197,7 @@ class TestToolboxTool:
         )
 
         assert (
-            tool._ToolboxTool__async_tool._auth_tokens[
-                "test-auth-source"
-            ]()
+            tool._ToolboxTool__async_tool._auth_tokens["test-auth-source"]()
             == "test-token"
         )
         assert isinstance(tool, ToolboxTool)
