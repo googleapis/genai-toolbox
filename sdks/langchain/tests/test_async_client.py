@@ -1,3 +1,17 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import asyncio
 from unittest.mock import AsyncMock, patch
 from warnings import catch_warnings, simplefilter
@@ -39,6 +53,9 @@ MANIFEST_JSON = {
 
 # Mock _BackgroundLoop for testing. A real one is needed for actual use.
 class MockBackgroundLoop:
+    def __init__(self):
+        self._loop = asyncio.new_event_loop()
+
     def run_async(self, coro):
         return asyncio.run(coro)
 
@@ -59,15 +76,13 @@ class TestAsyncToolboxClient:
 
     @pytest.fixture()
     def mock_client(self, mock_session, mock_bg_loop):
-        return AsyncToolboxClient.create(
-            URL, session=mock_session, bg_loop=mock_bg_loop
-        )
+        return AsyncToolboxClient(URL, bg_loop=mock_bg_loop, session=mock_session)
 
     async def test_create_with_existing_session(self, mock_client, mock_session):
         assert mock_client._AsyncToolboxClient__session == mock_session
 
     async def test_create_with_no_session(self, mock_bg_loop):
-        client = AsyncToolboxClient.create(URL, bg_loop=mock_bg_loop)
+        client = AsyncToolboxClient(URL, bg_loop=mock_bg_loop)
         assert isinstance(client._AsyncToolboxClient__session, ClientSession)
         await client._AsyncToolboxClient__session.close()  # Close to avoid warnings
 
@@ -195,8 +210,3 @@ class TestAsyncToolboxClient:
         assert "You can use the ToolboxClient to call synchronous methods." in str(
             excinfo.value
         )
-
-    async def test_constructor_direct_access_raises_exception(self):
-        with pytest.raises(Exception) as excinfo:
-            AsyncToolboxClient(object(), URL, self.mock_session, self.mock_bg_loop)
-        assert str(excinfo.value) == "Only create class through 'create' method!"
