@@ -223,9 +223,11 @@ class TestToolboxTool:
         assert "Parameter(s) `param1` of tool test_tool require authentication" in str(
             e.value
         )
-    
+
     @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
-    def test_toolbox_tool_call_with_callable_bound_params(self, mock_arun, toolbox_tool):
+    def test_toolbox_tool_call_with_callable_bound_params(
+        self, mock_arun, toolbox_tool
+    ):
         mock_arun.return_value = {"result": "test-result"}
         tool = toolbox_tool.bind_param("param1", lambda: "bound-value")
         result = tool.invoke({"param2": 123})
