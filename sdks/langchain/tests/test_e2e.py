@@ -263,7 +263,7 @@ class TestE2EClientSync:
             "get-row-by-id-auth",
         )
         with pytest.raises(ClientResponseError, match="401, message='Unauthorized'"):
-            tool.ainvoke({"id": "2"})
+            tool.invoke({"id": "2"})
 
     def test_run_tool_wrong_auth(self, toolbox, auth_token2):
         """Tests running a tool with incorrect auth."""
