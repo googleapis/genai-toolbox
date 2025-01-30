@@ -25,6 +25,7 @@ import (
 	cloudsqlmssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	mysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	neo4jrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
@@ -159,6 +160,12 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case cloudsqlmysqlsrc.SourceKind:
 			actual := cloudsqlmysqlsrc.Config{Name: name, IPType: "public"}
+			if err := u.Unmarshal(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case mysqlsrc.SourceKind:
+			actual := mysqlsrc.Config{Name: name}
 			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
