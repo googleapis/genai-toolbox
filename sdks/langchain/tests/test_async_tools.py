@@ -195,21 +195,19 @@ class TestAsyncToolboxTool:
     async def test_toolbox_tool_call(self, toolbox_tool):
         result = await toolbox_tool.ainvoke({"param1": "test-value", "param2": 123})
         assert result == {"result": "test-result"}
-
+        toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with('http://test_url/api/tool/test_tool/invoke', json={'param1': 'test-value', 'param2': 123}, headers={})
 
     async def test_toolbox_tool_call_with_bound_params(self, toolbox_tool):
         tool = toolbox_tool.bind_params({"param1": "bound-value"})
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
-        # TODO: Check if call is made with the correct params
-
+        toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with('http://test_url/api/tool/test_tool/invoke', json={'param1': 'bound-value', 'param2': 123}, headers={})
 
     async def test_toolbox_tool_call_with_auth_tokens(self, auth_toolbox_tool):
         tool = auth_toolbox_tool.add_auth_tokens({"test-auth-source": lambda: "test-token"})
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
-        # TODO: Check if call is made with the correct params
-
+        auth_toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with('https://test-url/api/tool/test_tool/invoke', json={'param2': 123}, headers={'test-auth-source_token': 'test-token'})
 
     async def test_toolbox_tool_call_with_auth_tokens_insecure(self, auth_toolbox_tool):
         with pytest.warns(
@@ -222,8 +220,7 @@ class TestAsyncToolboxTool:
             )
             result = await tool.ainvoke({"param2": 123})
             assert result == {"result": "test-result"}
-            # TODO: Check if call is made with the correct params
-
+            auth_toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with('http://test-url/api/tool/test_tool/invoke', json={'param2': 123}, headers={'test-auth-source_token': 'test-token'})
 
     async def test_toolbox_tool_call_with_invalid_input(self, toolbox_tool):
         with pytest.raises(ValidationError) as e:
