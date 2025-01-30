@@ -165,6 +165,8 @@ class AsyncToolboxTool(BaseTool):
         # Merge bound parameters with the provided arguments
         kwargs.update(evaluated_params)
 
+        print(f"DEBUG: Invoking tool {self._name} with kwargs {kwargs} and auth tokens = {self._auth_tokens}")
+
         return await _invoke_tool(
             self._url, self._session, self._name, kwargs, self._auth_tokens
         )
