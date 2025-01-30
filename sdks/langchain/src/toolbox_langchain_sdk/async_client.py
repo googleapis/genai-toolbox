@@ -47,12 +47,14 @@ class AsyncToolboxClient:
         # pooling for better performance by reusing a single session throughout
         # the application's lifetime.
         if session is None:
+            print("DEBUG: No session provided. Creating a new session.")
             if AsyncToolboxClient.__default_session is None:
                 AsyncToolboxClient.__default_session = ClientSession(
                     loop=self.__bg_loop._loop
                 )
             session = AsyncToolboxClient.__default_session
-
+            print("DEBUG: New session created", session)
+        print("DEBUG: Curr client session", session)
         self.__session = session
 
     async def aload_tool(
