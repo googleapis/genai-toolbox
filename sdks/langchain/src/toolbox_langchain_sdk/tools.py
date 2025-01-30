@@ -64,7 +64,7 @@ class ToolboxTool(BaseTool):
         """
         if not isinstance(schema, ToolSchema):
             schema = ToolSchema(**schema)
-        
+
         super().__init__(
             name=name,
             description=schema.description,
