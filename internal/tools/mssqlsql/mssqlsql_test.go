@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysql_test
+package mssqlsql_test
 
 import (
 	"testing"
@@ -21,11 +21,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"gopkg.in/yaml.v3"
 )
 
-func TestParseFromYamlMySQL(t *testing.T) {
+func TestParseFromYamlMssql(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -36,8 +36,8 @@ func TestParseFromYamlMySQL(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mysql
-					source: my-mysql-instance
+					kind: mssql-sql
+					source: my-instance
 					description: some description
 					statement: |
 						SELECT * FROM SQL_STATEMENT;
@@ -55,10 +55,10 @@ func TestParseFromYamlMySQL(t *testing.T) {
 							  field: user_id
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mysql.Config{
+				"example_tool": mssqlsql.Config{
 					Name:         "example_tool",
-					Kind:         mysql.ToolKind,
-					Source:       "my-mysql-instance",
+					Kind:         mssqlsql.ToolKind,
+					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

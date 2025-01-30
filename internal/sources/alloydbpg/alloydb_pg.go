@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/alloydbconn"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -83,15 +84,17 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialOpts(ipType string) ([]alloydbconn.DialOption, error) {
+func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
+	opts := []alloydbconn.Option{alloydbconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {
 	case "private":
-		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()))
 	case "public":
-		return []alloydbconn.DialOption{alloydbconn.WithPublicIP()}, nil
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()))
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
+	return opts, nil
 }
 
 func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
@@ -107,11 +110,12 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ipType)
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	opts, err := getOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}
-	d, err := alloydbconn.NewDialer(context.Background(), alloydbconn.WithDefaultDialOptions(dialOpts...))
+	d, err := alloydbconn.NewDialer(context.Background(), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}

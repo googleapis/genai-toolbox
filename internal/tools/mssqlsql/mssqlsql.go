@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mssql
+package mssqlsql
 
 import (
 	"database/sql"
@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "mssql"
+const ToolKind string = "mssql-sql"
 
 type compatibleSource interface {
 	MSSQLDB() *sql.DB

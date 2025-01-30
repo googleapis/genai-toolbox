@@ -19,11 +19,10 @@ import (
 	"database/sql"
 	"fmt"
 	"slices"
-	"strings"
 
-	"cloud.google.com/go/cloudsqlconn"
 	"cloud.google.com/go/cloudsqlconn/sqlserver/mssql"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -91,17 +90,6 @@ func (s *Source) MSSQLDB() *sql.DB {
 	return s.Db
 }
 
-func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
-	switch strings.ToLower(ipType) {
-	case "private":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
-	case "public":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
-	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
-	}
-}
-
 func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
@@ -111,14 +99,15 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
 
 	// Get dial options
-	dialOpts, err := getDialOpts(ipType)
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}
 
 	// Register sql server driver
 	if !slices.Contains(sql.Drivers(), "cloudsql-sqlserver-driver") {
-		_, err := mssql.RegisterDriver("cloudsql-sqlserver-driver", cloudsqlconn.WithDefaultDialOptions(dialOpts...))
+		_, err := mssql.RegisterDriver("cloudsql-sqlserver-driver", opts...)
 		if err != nil {
 			return nil, err
 		}

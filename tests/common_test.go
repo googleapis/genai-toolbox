@@ -34,6 +34,7 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/cloudsqlconn"
 	yaml "github.com/goccy/go-yaml"
 
 	"github.com/googleapis/genai-toolbox/cmd"
@@ -215,7 +216,7 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 	switch toolKind {
 	case "postgres-sql":
 		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
-	case "mssql":
+	case "mssql-sql":
 		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
 	default:
 		t.Fatalf("invalid tool kind: %s", toolKind)
@@ -224,7 +225,7 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 	// Tools using database/sql interface only outputs `int64` instead of `int32`
 	var wantString string
 	switch toolKind {
-	case "mssql":
+	case "mssql-sql":
 		wantString = "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int64=1) Alice][%!s(int64=3) Sid]"
 	default:
 		wantString = "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int32=1) Alice][%!s(int32=3) Sid]"
@@ -378,5 +379,17 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+}
+
+// GetCloudSQLDialOpts returns cloud sql connector's dial option for ip type.
+func GetCloudSQLDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
+	switch strings.ToLower(ipType) {
+	case "private":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
+	case "public":
+		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
+	default:
+		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
 }

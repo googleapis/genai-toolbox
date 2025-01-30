@@ -78,24 +78,13 @@ func requireCloudSQLMssqlVars(t *testing.T) map[string]any {
 	}
 }
 
-func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
-	switch strings.ToLower(ipType) {
-	case "private":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
-	case "public":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
-	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
-	}
-}
-
 // Copied over from cloud_sql_mssql.go
 func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	// Create dsn
 	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
 
 	// Get dial options
-	dialOpts, err := getDialOpts(ipType)
+	dialOpts, err := GetCloudSQLDialOpts(ipType)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +122,7 @@ func TestCloudSQLMssql(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        "mssql",
+				"kind":        "mssql-sql",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -243,7 +232,7 @@ func TestCloudSQLMssql(t *testing.T) {
 }
 
 // Set up tool calling with parameters test table
-func setupParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
+func setupCloudSQLMssqlParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
 	// Set up Tool invocation with parameters test
 	db, err := initCloudSQLMssqlConnection(CLOUD_SQL_MSSQL_PROJECT, CLOUD_SQL_MSSQL_REGION, CLOUD_SQL_MSSQL_INSTANCE, CLOUD_SQL_MSSQL_IP, "public", CLOUD_SQL_MSSQL_USER, CLOUD_SQL_MSSQL_PASS, CLOUD_SQL_MSSQL_DATABASE)
 	if err != nil {
@@ -285,7 +274,7 @@ func setupParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
 	}, nil
 }
 
-func TestToolInvocationWithParams(t *testing.T) {
+func TestToolInvocationCloudSQLMssqlWithParams(t *testing.T) {
 	// create source config
 	sourceConfig := requireCloudSQLMssqlVars(t)
 
@@ -293,14 +282,14 @@ func TestToolInvocationWithParams(t *testing.T) {
 	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// test setup function reterns teardown function
-	teardownTest, err := setupParamTest(t, tableName)
+	teardownTest, err := setupCloudSQLMssqlParamTest(t, tableName)
 	if err != nil {
 		t.Fatalf("Unable to set up auth test: %s", err)
 	}
 	defer teardownTest(t)
 
 	// call generic invocation test helper
-	RunToolInvocationWithParamsTest(t, sourceConfig, "mssql", tableName)
+	RunToolInvocationWithParamsTest(t, sourceConfig, "mssql-sql", tableName)
 }
 
 // Set up auth test database table
@@ -362,7 +351,7 @@ func TestCloudSQLMssqlGoogleAuthenticatedParameter(t *testing.T) {
 	defer teardownTest(t)
 
 	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mssql", tableName)
+	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mssql-sql", tableName)
 
 }
 
@@ -371,6 +360,6 @@ func TestCloudSQLMssqlAuthRequiredToolInvocation(t *testing.T) {
 	sourceConfig := requireCloudSQLMssqlVars(t)
 
 	// call generic auth test helper
-	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mssql")
+	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mssql-sql")
 
 }
