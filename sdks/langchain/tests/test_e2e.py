@@ -155,7 +155,7 @@ class TestE2EClientAsync:
             PermissionError,
             match="Parameter\(s\) `email` of tool get-row-by-email-auth require authentication\, but no valid authentication sources are registered\. Please register the required sources before use\.",
         ):
-            await tool.ainvoke({})
+            await tool.ainvoke({"email": "twishabansal@google.com"})
 
     async def test_run_tool_param_auth(self, toolbox, auth_token1):
         """Tests running a tool with a param requiring auth, with correct auth."""
@@ -247,7 +247,7 @@ class TestE2EClientSync:
         with pytest.raises(ValidationError, match="Input should be a valid string"):
             get_n_rows_tool.invoke({"num_rows": 2})
 
-    ##### Auth tests
+    #### Auth tests
     @pytest.mark.skip(reason="b/389574566")
     def test_run_tool_unauth_with_auth(self, toolbox, auth_token2):
         """Tests running a tool that doesn't require auth, with auth provided."""
@@ -291,7 +291,7 @@ class TestE2EClientSync:
             PermissionError,
             match="Parameter\(s\) `email` of tool get-row-by-email-auth require authentication\, but no valid authentication sources are registered\. Please register the required sources before use\.",
         ):
-            tool.invoke({})
+            tool.invoke({"email": "twishabansal@google.com"})
 
     def test_run_tool_param_auth(self, toolbox, auth_token1):
         """Tests running a tool with a param requiring auth, with correct auth."""
