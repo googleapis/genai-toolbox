@@ -53,7 +53,8 @@ class ToolboxClient:
         # Rely on AsyncToolboxClient's default session for managing its own
         # connections.
         self.__async_client = AsyncToolboxClient(url, bg_loop, None)
-
+        session = self.__async_client._session
+        print("DEBUG: Checking if session is closed", session.closed)
         self.__class__.__bg_loop = bg_loop
 
     async def aload_tool(
