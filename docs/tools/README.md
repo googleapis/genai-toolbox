@@ -114,12 +114,12 @@ in the list using the items field:
 
 ### Authenticated Parameters
 
-Authenticated parameters automatically populate their values with user
-information decoded from your [ID tokens](../authSources/README.md#id-token)
-passed in from request headers. They do not take input values in request bodies
-like other parameters. Instead, specify your configured
-[authSources](../authSources/README.md) and corresponding claim fields in ID
-tokens to tell Toolbox which values they should be auto-populated with.
+Authenticated parameters automatically are automatically populated with user
+information decoded from [ID tokens](../authSources/README.md#id-token) that
+are passed in request headers. They do not take input values in request bodies
+like other parameters. To use authenticated parameters, you must configure 
+the tool to map the required [authSources](../authSources/README.md) to 
+specific claims within the user's ID token.
 
 ```yaml
   tools:
