@@ -70,14 +70,14 @@ class ToolboxTool(BaseTool):
             description=schema.description,
             args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
         )
-
-        bg_loop = self.__class__.__bg_loop
         if not bg_loop:
-            loop = asyncio.new_event_loop()
-            thread = Thread(target=loop.run_forever, daemon=True)
-            thread.start()
-            bg_loop = _BackgroundLoop(loop, thread)
-
+            if not self.__class__.__bg_loop:
+                loop = asyncio.new_event_loop()
+                thread = Thread(target=loop.run_forever, daemon=True)
+                thread.start()
+                bg_loop = _BackgroundLoop(loop, thread)
+            else:
+                bg_loop = self.__class__.__bg_loop
         self.__async_tool = AsyncToolboxTool(
             name, schema, url, session, auth_tokens, bound_params, strict
         )
