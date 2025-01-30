@@ -148,10 +148,6 @@ class AsyncToolboxTool(BaseTool):
             A dictionary containing the parsed JSON response from the tool
             invocation.
         """
-        print(
-            f"DEBUG: Trying to invoke tool {self._name} with kwargs {kwargs}, bound_params = {self._bound_params}, auth tokens = {self._auth_tokens}"
-        )
-
         # If the tool had parameters that require authentication, then right
         # before invoking that tool, we check whether all these required
         # authentication sources have been registered or not.
@@ -167,10 +163,6 @@ class AsyncToolboxTool(BaseTool):
 
         # Merge bound parameters with the provided arguments
         kwargs.update(evaluated_params)
-
-        print(
-            f"DEBUG: Invoking tool {self._name} with kwargs {kwargs} and auth tokens = {self._auth_tokens}"
-        )
 
         return await _invoke_tool(
             self._url, self._session, self._name, kwargs, self._auth_tokens

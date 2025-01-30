@@ -47,16 +47,12 @@ class AsyncToolboxClient:
         # pooling for better performance by reusing a single session throughout
         # the application's lifetime.
         if session is None:
-            print("DEBUG: No session provided. Creating a new session.")
             if AsyncToolboxClient.__default_session is None:
                 AsyncToolboxClient.__default_session = ClientSession(
                     loop=self.__bg_loop._loop
                 )
             session = AsyncToolboxClient.__default_session
-            print("DEBUG: New session created", session)
-        print("DEBUG: Curr client session", session)
-        print("DEBUG: Checking if session is closed", session.closed)
-        self._session = session
+        self.__session = session
 
     async def aload_tool(
         self,
@@ -97,7 +93,7 @@ class AsyncToolboxClient:
                 auth_tokens = auth_headers
 
         url = f"{self.__url}/api/tool/{tool_name}"
-        manifest: ManifestSchema = await _load_manifest(url, self._session)
+        manifest: ManifestSchema = await _load_manifest(url, self.__session)
 
         if self.__bg_loop is None:
             raise RuntimeError(
@@ -108,7 +104,7 @@ class AsyncToolboxClient:
             tool_name,
             manifest.tools[tool_name],
             self.__url,
-            self._session,
+            self.__session,
             self.__bg_loop,
             auth_tokens,
             bound_params,
@@ -156,7 +152,7 @@ class AsyncToolboxClient:
                 auth_tokens = auth_headers
 
         url = f"{self.__url}/api/toolset/{toolset_name or ''}"
-        manifest: ManifestSchema = await _load_manifest(url, self._session)
+        manifest: ManifestSchema = await _load_manifest(url, self.__session)
         tools: list[ToolboxTool] = []
 
         if self.__bg_loop is None:
@@ -169,7 +165,7 @@ class AsyncToolboxClient:
                     tool_name,
                     tool_schema,
                     self.__url,
-                    self._session,
+                    self.__session,
                     self.__bg_loop,
                     auth_tokens,
                     bound_params,

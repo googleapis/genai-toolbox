@@ -100,7 +100,6 @@ class ToolboxTool(BaseTool):
     def _run(self, **kwargs: Any) -> dict[str, Any]:
         """Synchronous tool invocation."""
         loop = self.__class__.__bg_loop
-        print(f"DEBUG: Trying to invoke a sync tool with name {self.__async_tool._name}")
         if loop is None:
             raise RuntimeError("Background loop is not running.")
         return loop.run_as_sync(self.__async_tool._arun(**kwargs))
