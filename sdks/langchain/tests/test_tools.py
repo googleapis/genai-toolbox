@@ -224,14 +224,13 @@ class TestToolboxTool:
             e.value
         )
     
-    # TODO: Check if call is made with the correct params
-    # @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
-    # def test_toolbox_tool_call_with_callable_bound_params(self, mock_arun, toolbox_tool):
-    #     mock_arun.return_value = {"result": "test-result"}
-    #     tool = toolbox_tool.bind_param("param1", lambda: "bound-value")
-    #     result = tool.invoke({"param2": 123})
-    #     assert result == {"result": "test-result"}
-    #     mock_arun.assert_called_once_with(param1="bound-value", param2=123)
+    @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
+    def test_toolbox_tool_call_with_callable_bound_params(self, mock_arun, toolbox_tool):
+        mock_arun.return_value = {"result": "test-result"}
+        tool = toolbox_tool.bind_param("param1", lambda: "bound-value")
+        result = tool.invoke({"param2": 123})
+        assert result == {"result": "test-result"}
+        mock_arun.assert_called_once_with(param2=123)
 
     @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
     def test_toolbox_tool_call(self, mock_arun, toolbox_tool):
@@ -240,16 +239,14 @@ class TestToolboxTool:
         assert result == {"result": "test-result"}
         mock_arun.assert_called_once_with(param1="test-value", param2=123)
 
-    # TODO: Check if call is made with the correct params
-    # @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
-    # def test_toolbox_tool_call_with_bound_params(self, mock_arun, toolbox_tool):
-    #     mock_arun.return_value = {"result": "test-result"}
-    #     tool = toolbox_tool.bind_params({"param1": "bound-value"})
-    #     result = tool.invoke({"param2": 123})
-    #     assert result == {"result": "test-result"}
-    #     mock_arun.assert_called_once_with(param1="bound-value", param2=123)
+    @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
+    def test_toolbox_tool_call_with_bound_params(self, mock_arun, toolbox_tool):
+        mock_arun.return_value = {"result": "test-result"}
+        tool = toolbox_tool.bind_params({"param1": "bound-value"})
+        result = tool.invoke({"param2": 123})
+        assert result == {"result": "test-result"}
+        mock_arun.assert_called_once_with(param2=123)
 
-    # TODO: Check if call is made with the correct params
     @patch("toolbox_langchain_sdk.tools.AsyncToolboxTool._arun")
     def test_toolbox_tool_call_with_auth_tokens(self, mock_arun, auth_toolbox_tool):
         mock_arun.return_value = {"result": "test-result"}
