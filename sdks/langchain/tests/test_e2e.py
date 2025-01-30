@@ -294,16 +294,16 @@ class TestE2EClientSync:
         ):
             tool.invoke({"email": "twishabansal@google.com"})
 
-    # def test_run_tool_param_auth(self, toolbox, auth_token1):
-    #     """Tests running a tool with a param requiring auth, with correct auth."""
-    #     tool = toolbox.load_tool(
-    #         "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
-    #     )
-    #     response = tool.invoke({})
-    #     result = response["result"]
-    #     assert "row4" in result
-    #     assert "row5" in result
-    #     assert "row6" in result
+    def test_run_tool_param_auth(self, toolbox, auth_token1):
+        """Tests running a tool with a param requiring auth, with correct auth."""
+        tool = toolbox.load_tool(
+            "get-row-by-email-auth", auth_tokens={"my-test-auth": lambda: auth_token1}
+        )
+        response = tool.invoke({})
+        result = response["result"]
+        assert "row4" in result
+        assert "row5" in result
+        assert "row6" in result
 
     # def test_run_tool_param_auth_no_field(self, toolbox, auth_token1):
     #     """Tests running a tool with a param requiring auth, with insufficient auth."""
