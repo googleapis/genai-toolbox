@@ -201,6 +201,7 @@ async def _invoke_tool(
         headers=auth_tokens,
     ) as response:
         # TODO: Remove as it masks error messages.
+        print("DEBUG: Sending post invoke request to tool with headers", auth_tokens)
         response.raise_for_status()
         return await response.json()
 
