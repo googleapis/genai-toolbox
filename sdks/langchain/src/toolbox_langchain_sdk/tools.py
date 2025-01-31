@@ -14,13 +14,12 @@
 
 import asyncio
 from threading import Thread
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union, Awaitable
 
 from aiohttp import ClientSession
 from langchain_core.tools import BaseTool
 
 from .async_tools import AsyncToolboxTool
-from .background_loop import _BackgroundLoop
 from .utils import ToolSchema, _schema_to_model
 
 T = TypeVar("T")
@@ -31,16 +30,13 @@ class ToolboxTool(BaseTool):
     A subclass of LangChain's BaseTool that supports features specific to
     Toolbox, like bound parameters and authenticated tools.
     """
-
-    __bg_loop: Optional[_BackgroundLoop] = None
-
     def __init__(
         self,
         name: str,
         schema: Union[ToolSchema, dict[str, Any]],
         url: str,
         session: ClientSession,
-        bg_loop: Optional[_BackgroundLoop] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
         auth_tokens: dict[str, Callable[[], str]] = {},
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool = True,
@@ -70,18 +66,33 @@ class ToolboxTool(BaseTool):
             description=schema.description,
             args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
         )
-        if not bg_loop:
-            if not self.__class__.__bg_loop:
-                loop = asyncio.new_event_loop()
-                thread = Thread(target=loop.run_forever, daemon=True)
-                thread.start()
-                bg_loop = _BackgroundLoop(loop, thread)
-            else:
-                bg_loop = self.__class__.__bg_loop
+        if not loop:
+            loop = asyncio.new_event_loop()
+            thread = Thread(target=loop.run_forever, daemon=True)
+            thread.start()
+        
+        self.__loop = loop
         self.__async_tool = AsyncToolboxTool(
             name, schema, url, session, auth_tokens, bound_params, strict
         )
-        self.__class__.__bg_loop = bg_loop
+
+    async def _run_as_async(self, coro: Awaitable[T]) -> T:
+        """Run an async coroutine asynchronously"""
+        # If a loop has not been provided, attempt to run in current thread
+        if not self.__loop:
+            return await coro
+        # Otherwise, run in the background thread
+        return await asyncio.wrap_future(
+            asyncio.run_coroutine_threadsafe(coro, self.__loop)
+        )
+
+    def _run_as_sync(self, coro: Awaitable[T]) -> T:
+        """Run an async coroutine synchronously"""
+        if not self.__loop:
+            raise Exception(
+                "Engine was initialized without a background loop and cannot call sync methods."
+            )
+        return asyncio.run_coroutine_threadsafe(coro, self.__loop).result()
 
     def __from_async_tool(
         self, async_tool: AsyncToolboxTool, strict: bool = False
@@ -99,17 +110,11 @@ class ToolboxTool(BaseTool):
 
     def _run(self, **kwargs: Any) -> dict[str, Any]:
         """Synchronous tool invocation."""
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError("Background loop is not running.")
-        return loop.run_as_sync(self.__async_tool._arun(**kwargs))
+        return self._run_as_sync(self.__async_tool._arun(**kwargs))
 
     async def _arun(self, **kwargs: Any) -> Any:
         """async tool invocation."""
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError("Background loop is not running.")
-        return await loop.run_as_async(self.__async_tool._arun(**kwargs))
+        return await self._run_as_async(self.__async_tool._arun(**kwargs))
 
     def add_auth_tokens(
         self, auth_tokens: dict[str, Callable[[], str]], strict: bool = True
@@ -133,10 +138,6 @@ class ToolboxTool(BaseTool):
             ValueError: If the provided auth tokens are already bound and strict
                 is True.
         """
-
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError("Background loop is not running.")
         async_tool = self.__async_tool.add_auth_tokens(auth_tokens, strict)
         return self.__from_async_tool(async_tool)
 
@@ -189,10 +190,6 @@ class ToolboxTool(BaseTool):
             ValueError: if the provided bound params are not defined in the tool's schema, or require
                 authentication, and strict is True.
         """
-
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError("Background loop is not running.")
         async_tool = self.__async_tool.bind_params(bound_params, strict)
         return self.__from_async_tool(async_tool)
 
