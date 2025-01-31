@@ -14,7 +14,7 @@
 
 import asyncio
 from threading import Thread
-from typing import Any, Awaitable, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union, Awaitable
 
 from aiohttp import ClientSession
 from langchain_core.tools import BaseTool
@@ -30,6 +30,8 @@ class ToolboxTool(BaseTool):
     A subclass of LangChain's BaseTool that supports features specific to
     Toolbox, like bound parameters and authenticated tools.
     """
+    _bg_loop : Optional[asyncio.AbstractEventLoop] = None
+    __async_tool: AsyncToolboxTool
 
     def __init__(
         self,
@@ -62,38 +64,40 @@ class ToolboxTool(BaseTool):
         if not isinstance(schema, ToolSchema):
             schema = ToolSchema(**schema)
 
-        super().__init__(
-            name=name,
-            description=schema.description,
-            args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
-        )
         if not loop:
             loop = asyncio.new_event_loop()
             thread = Thread(target=loop.run_forever, daemon=True)
             thread.start()
 
-        self.__loop = loop
-        self.__async_tool = AsyncToolboxTool(
+        ToolboxTool._bg_loop = loop
+        ToolboxTool.__async_tool = AsyncToolboxTool(
             name, schema, url, session, auth_tokens, bound_params, strict
+        )
+        schema = ToolboxTool.__async_tool._schema
+
+        super().__init__(
+            name=name,
+            description=schema.description,
+            args_schema=_schema_to_model(model_name=name, schema=schema.parameters),
         )
 
     async def _run_as_async(self, coro: Awaitable[T]) -> T:
         """Run an async coroutine asynchronously"""
         # If a loop has not been provided, attempt to run in current thread
-        if not self.__loop:
+        if not self._bg_loop:
             return await coro
         # Otherwise, run in the background thread
         return await asyncio.wrap_future(
-            asyncio.run_coroutine_threadsafe(coro, self.__loop)
+            asyncio.run_coroutine_threadsafe(coro, self._bg_loop)
         )
 
     def _run_as_sync(self, coro: Awaitable[T]) -> T:
         """Run an async coroutine synchronously"""
-        if not self.__loop:
+        if not self._bg_loop:
             raise Exception(
                 "Engine was initialized without a background loop and cannot call sync methods."
             )
-        return asyncio.run_coroutine_threadsafe(coro, self.__loop).result()
+        return asyncio.run_coroutine_threadsafe(coro, self._bg_loop).result()
 
     def __from_async_tool(
         self, async_tool: AsyncToolboxTool, strict: bool = False
