@@ -160,6 +160,25 @@ steps:
       - |
         go test -race -v -tags=integration,cloudsqlmysql ./tests
 
+  - id: "mssql"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "MSSQL_DATABASE=$_DATABASE_NAME"
+      - "MSSQL_HOST=$_MSSQL_HOST"
+      - "MSSQL_PORT=$_MSSQL_PORT"
+    secretEnv: ["MSSQL_USER", "MSSQL_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,mssql ./tests
+
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -188,6 +207,10 @@ availableSecrets:
       env: CLOUD_SQL_MYSQL_USER
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_mysql_pass/versions/latest
       env: CLOUD_SQL_MYSQL_PASS
+    - versionName: projects/$PROJECT_ID/secrets/mssql_user/versions/latest
+      env: MSSQL_USER 
+    - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
+      env: MSSQL_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -209,3 +232,5 @@ substitutions:
   _NEO4J_DATABASE: "neo4j"
   _CLOUD_SQL_MSSQL_INSTANCE: "cloud-sql-mssql-testing"
   _CLOUD_SQL_MYSQL_INSTANCE: "cloud-sql-mysql-testing"
+  _MSSQL_HOST: 127.0.0.1
+  _MSSQL_PORT: "1433"
