@@ -17,7 +17,6 @@ from warnings import warn
 
 from aiohttp import ClientSession
 
-from .background_loop import _BackgroundLoop
 from .tools import ToolboxTool
 from .utils import ManifestSchema, _load_manifest
 
@@ -28,7 +27,6 @@ class AsyncToolboxClient:
     def __init__(
         self,
         url: str,
-        bg_loop: _BackgroundLoop,
         session: Optional[ClientSession] = None,
     ):
         """
@@ -41,16 +39,13 @@ class AsyncToolboxClient:
             session: An HTTP client session.
         """
         self.__url = url
-        self.__bg_loop = bg_loop
 
         # Use a default session if none is provided. This leverages connection
         # pooling for better performance by reusing a single session throughout
         # the application's lifetime.
         if session is None:
             if AsyncToolboxClient.__default_session is None:
-                AsyncToolboxClient.__default_session = ClientSession(
-                    loop=self.__bg_loop._loop
-                )
+                AsyncToolboxClient.__default_session = ClientSession()
             session = AsyncToolboxClient.__default_session
 
         self.__session = session
@@ -96,17 +91,12 @@ class AsyncToolboxClient:
         url = f"{self.__url}/api/tool/{tool_name}"
         manifest: ManifestSchema = await _load_manifest(url, self.__session)
 
-        if self.__bg_loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
-            )
-
         return ToolboxTool(
             tool_name,
             manifest.tools[tool_name],
             self.__url,
             self.__session,
-            self.__bg_loop,
+            None,
             auth_tokens,
             bound_params,
             strict,
@@ -156,10 +146,6 @@ class AsyncToolboxClient:
         manifest: ManifestSchema = await _load_manifest(url, self.__session)
         tools: list[ToolboxTool] = []
 
-        if self.__bg_loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
-            )
         for tool_name, tool_schema in manifest.tools.items():
             tools.append(
                 ToolboxTool(
@@ -167,7 +153,7 @@ class AsyncToolboxClient:
                     tool_schema,
                     self.__url,
                     self.__session,
-                    self.__bg_loop,
+                    None,
                     auth_tokens,
                     bound_params,
                     strict,
