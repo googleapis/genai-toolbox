@@ -15,12 +15,14 @@
 package mssqlsql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -32,8 +34,9 @@ type compatibleSource interface {
 
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudsqlmssql.Source{}
+var _ compatibleSource = &mssql.Source{}
 
-var compatibleSources = [...]string{cloudsqlmssql.SourceKind}
+var compatibleSources = [...]string{cloudsqlmssql.SourceKind, mssql.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name"`
@@ -118,7 +121,7 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 			namedArgs = append(namedArgs, v)
 		}
 	}
-	rows, err := t.Db.Query(t.Statement, namedArgs...)
+	rows, err := t.Db.QueryContext(context.Background(), t.Statement, namedArgs...)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute query: %w", err)
 	}
