@@ -1,9 +1,10 @@
-# Cloud SQL Mssql Tool
+# SQL Server Tool
 
-A "mssql-sql" tool executes a pre-defined SQL statement against a Cloud SQL for SQL Server
+A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
 database. It's compatible with any of the following sources:
 
 - [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
+- [mssql](../sources/mssql.md)
 
 Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL
 Server and expects parameters in the SQL query to be in the form of either @Name
