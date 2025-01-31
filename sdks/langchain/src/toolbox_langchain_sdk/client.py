@@ -50,10 +50,12 @@ class ToolboxClient:
                 "Background loop not initialized. ToolboxClient was not properly initialized."
             )
 
-        # Rely on AsyncToolboxClient's default session for managing its own
-        # connections.
-        self.__async_client = AsyncToolboxClient(url, bg_loop, None)
+        async def init_client():
+            return AsyncToolboxClient(url, None)
 
+        coro = init_client()
+
+        self.__async_client = asyncio.run_coroutine_threadsafe(coro, bg_loop._loop).result()
         self.__class__.__bg_loop = bg_loop
 
     async def aload_tool(
