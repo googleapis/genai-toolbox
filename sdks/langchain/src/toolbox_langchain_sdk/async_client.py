@@ -17,7 +17,6 @@ from warnings import warn
 
 from aiohttp import ClientSession
 
-from .background_loop import _BackgroundLoop
 from .tools import ToolboxTool
 from .utils import ManifestSchema, _load_manifest
 
