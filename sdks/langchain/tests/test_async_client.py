@@ -51,15 +51,6 @@ MANIFEST_JSON = {
 }
 
 
-# Mock _BackgroundLoop for testing. A real one is needed for actual use.
-class MockBackgroundLoop:
-    def __init__(self):
-        self._loop = asyncio.new_event_loop()
-
-    def run_async(self, coro):
-        return asyncio.run(coro)
-
-
 @pytest.mark.asyncio
 class TestAsyncToolboxClient:
     @pytest.fixture()
