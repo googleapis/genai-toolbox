@@ -22,6 +22,7 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -33,8 +34,9 @@ type compatibleSource interface {
 
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudsqlmysql.Source{}
+var _ compatibleSource = &mysql.Source{}
 
-var compatibleSources = [...]string{cloudsqlmysql.SourceKind}
+var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name"`

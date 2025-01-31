@@ -12,35 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlmysql
+package mysql
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"slices"
 
-	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "cloud-sql-mysql"
+const SourceKind string = "mysql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string         `yaml:"name"`
-	Kind     string         `yaml:"kind"`
-	Project  string         `yaml:"project"`
-	Region   string         `yaml:"region"`
-	Instance string         `yaml:"instance"`
-	IPType   sources.IPType `yaml:"ipType"`
-	User     string         `yaml:"user"`
-	Password string         `yaml:"password"`
-	Database string         `yaml:"database"`
+	Name     string `yaml:"name"`
+	Kind     string `yaml:"kind"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -48,7 +44,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initCloudSQLMySQLConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -82,33 +78,18 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
-func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
+func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Create a new dialer with options
-	userAgent := ctx.Value(util.UserAgentKey).(string)
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
-	if err != nil {
-		return nil, err
-	}
+	// Configure the driver to connect to the database
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
 
-	if !slices.Contains(sql.Drivers(), "cloudsql-mysql") {
-		_, err = mysql.RegisterDriver("cloudsql-mysql", opts...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to register driver: %w", err)
-		}
-	}
-
-	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
-	db, err := sql.Open(
-		"cloudsql-mysql",
-		dsn,
-	)
+	// Interact with the driver directly as you normally would
+	pool, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sql.Open: %w", err)
 	}
-	return db, nil
+	return pool, nil
 }

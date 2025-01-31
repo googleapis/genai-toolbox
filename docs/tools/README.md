@@ -18,11 +18,11 @@ tools:
       Use this tool to get information for a specific flight.
       Takes an airline code and flight number and returns info on the flight.
       Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      A airline code is a code for an airline service consisting of two-character
-      airline designator and followed by flight number, which is 1 to 4 digit number.
+      An airline code is a code for an airline service consisting of a two-character
+      airline designator and followed by a flight number, which is a 1 to 4 digit number.
       For example, if given CY 0123, the airline is "CY", and flight_number is "123".
       Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
-      If the tool returns more than one option choose the date closes to today.
+      If the tool returns more than one option choose the date closest to today.
       Example:
       {{
           "airline": "CY",
@@ -57,7 +57,7 @@ We currently support the following types of kinds of tools:
 ## Specifying Parameters
 
 Parameters for each Tool will define what inputs the Agent will need to provide
-to invoke them. Parameters should be pass as a list of Parameter objects:
+to invoke them. Parameters should be passed as a list of Parameter objects.
 
 ```yaml
     parameters:
@@ -90,8 +90,9 @@ the parameter.
 
 ### Array Parameters
 
-The `array` type is a list of items passed in as a single parameter. This `type`
-requires another Parameter to be specified under the `items` field:
+The `array` type is a list of items passed in as a single parameter.
+To use the `array` type, you must also specify what kind of items are 
+in the list using the items field:
 
 ```yaml
     parameters:
@@ -113,12 +114,12 @@ requires another Parameter to be specified under the `items` field:
 
 ### Authenticated Parameters
 
-Authenticated parameters automatically populate their values with user
-information decoded from your [ID tokens](../authSources/README.md#id-token)
-passed in from request headers. They do not take input values in request bodies
-like other parameters. Instead, specify your configured
-[authSources](../authSources/README.md) and corresponding claim fields in ID
-tokens to tell Toolbox which values they should be auto-populated with.
+Authenticated parameters are automatically populated with user
+information decoded from [ID tokens](../authSources/README.md#id-token) that
+are passed in request headers. They do not take input values in request bodies
+like other parameters. To use authenticated parameters, you must configure 
+the tool to map the required [authSources](../authSources/README.md) to 
+specific claims within the user's ID token.
 
 ```yaml
   tools:

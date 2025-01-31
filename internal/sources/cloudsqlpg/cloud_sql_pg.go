@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
 
 	"cloud.google.com/go/cloudsqlconn"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -82,17 +82,6 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
-	switch strings.ToLower(ipType) {
-	case "private":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
-	case "public":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
-	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
-	}
-}
-
 func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
@@ -106,11 +95,12 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := getDialOpts(ipType)
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
 	}
-	d, err := cloudsqlconn.NewDialer(context.Background(), cloudsqlconn.WithDefaultDialOptions(dialOpts...))
+	d, err := cloudsqlconn.NewDialer(context.Background(), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}

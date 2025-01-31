@@ -20,6 +20,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -94,7 +95,8 @@ func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, 
 	}
 
 	// Create spanner client
-	client, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig})
+	userAgent := ctx.Value(util.UserAgentKey).(string)
+	client, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig, UserAgent: userAgent})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new client: %w", err)
 	}

@@ -29,6 +29,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -57,6 +58,9 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 
 	parentCtx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
 	defer span.End()
+
+	userAgent := fmt.Sprintf("genai-toolbox/%s", cfg.Version)
+	parentCtx = context.WithValue(parentCtx, util.UserAgentKey, userAgent)
 
 	// set up http serving
 	r := chi.NewRouter()
