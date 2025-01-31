@@ -13,23 +13,20 @@
 # limitations under the License.
 
 import asyncio
-from concurrent.futures import Future
 from threading import Thread
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Awaitable, Callable, Optional, TypeVar, Union
 
 from .async_client import AsyncToolboxClient
-from .background_loop import _BackgroundLoop
 from .tools import ToolboxTool
 
 T = TypeVar("T")
 
 
 class ToolboxClient:
-    __bg_loop: Optional[_BackgroundLoop] = None
-
     def __init__(
         self,
         url: str,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         """
         Initializes the ToolboxClient for the Toolbox service at the given URL.
@@ -37,24 +34,39 @@ class ToolboxClient:
         Args:
             url: The base URL of the Toolbox service.
         """
-        bg_loop = self.__class__.__bg_loop
-
-        if bg_loop is None:
+        if loop is None:
             loop = asyncio.new_event_loop()
             thread = Thread(target=loop.run_forever, daemon=True)
             thread.start()
-            bg_loop = _BackgroundLoop(loop, thread)
 
-        if bg_loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
+        self.__loop = loop
+
+        async def init_client():
+            return AsyncToolboxClient(url, None)
+
+        coro = init_client()
+
+        self.__async_client = asyncio.run_coroutine_threadsafe(
+            coro, self.__loop
+        ).result()
+
+    async def _run_as_async(self, coro: Awaitable[T]) -> T:
+        """Run an async coroutine asynchronously"""
+        # If a loop has not been provided, attempt to run in current thread
+        if not self.__loop:
+            return await coro
+        # Otherwise, run in the background thread
+        return await asyncio.wrap_future(
+            asyncio.run_coroutine_threadsafe(coro, self.__loop)
+        )
+
+    def _run_as_sync(self, coro: Awaitable[T]) -> T:
+        """Run an async coroutine synchronously"""
+        if not self.__loop:
+            raise Exception(
+                "Engine was initialized without a background loop and cannot call sync methods."
             )
-
-        # Rely on AsyncToolboxClient's default session for managing its own
-        # connections.
-        self.__async_client = AsyncToolboxClient(url, bg_loop, None)
-
-        self.__class__.__bg_loop = bg_loop
+        return asyncio.run_coroutine_threadsafe(coro, self.__loop).result()
 
     async def aload_tool(
         self,
@@ -81,12 +93,7 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox.
         """
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
-            )
-        return await loop.run_as_async(
+        return await self._run_as_async(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
             )
@@ -119,12 +126,7 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
-            )
-        return await loop.run_as_async(
+        return await self._run_as_async(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
             )
@@ -155,13 +157,7 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox.
         """
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
-            )
-
-        return loop.run_as_sync(
+        return self._run_as_sync(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
             )
@@ -194,13 +190,7 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        loop = self.__class__.__bg_loop
-        if loop is None:
-            raise RuntimeError(
-                "Background loop not initialized. ToolboxClient was not properly initialized."
-            )
-
-        return loop.run_as_sync(
+        return self._run_as_sync(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
             )

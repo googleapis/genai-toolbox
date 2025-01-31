@@ -31,8 +31,8 @@ class TestToolboxClient:
         assert client._ToolboxClient__async_client is not None
 
         # Check that the background loop was created and started
-        assert client._ToolboxClient__bg_loop is not None
-        assert client._ToolboxClient__bg_loop._loop.is_running()
+        assert client._ToolboxClient__loop is not None
+        assert client._ToolboxClient__loop.is_running()
 
         return client
 
