@@ -172,4 +172,3 @@ class TestE2EClient:
         )
         with pytest.raises(ClientResponseError, match="400, message='Bad Request'"):
             await tool.ainvoke({})
-            
