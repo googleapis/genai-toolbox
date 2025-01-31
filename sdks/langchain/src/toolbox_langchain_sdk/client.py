@@ -17,6 +17,7 @@ from threading import Thread
 from typing import Any, Awaitable, Callable, Optional, TypeVar, Union
 
 from .async_client import AsyncToolboxClient
+from aiohttp import ClientSession
 from .tools import ToolboxTool
 
 T = TypeVar("T")
@@ -41,8 +42,11 @@ class ToolboxClient:
 
         self.__loop = loop
 
+        # Create session
+        self.__session = ClientSession(loop=self.__loop)
+
         async def init_client():
-            return AsyncToolboxClient(url, None)
+            return AsyncToolboxClient(url, self.__session)
 
         coro = init_client()
 
