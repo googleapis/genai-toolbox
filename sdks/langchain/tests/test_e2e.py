@@ -208,7 +208,7 @@ class TestE2EClientSync:
         toolset = toolbox.load_toolset(toolset_name)
         assert len(toolset) == expected_length
         for tool in toolset:
-            name = tool._name
+            name = tool._ToolboxTool__async_tool._name
             assert name in expected_tools
 
     def test_aload_toolset_all(self, toolbox):
