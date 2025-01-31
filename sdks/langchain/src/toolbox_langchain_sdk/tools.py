@@ -14,7 +14,7 @@
 
 import asyncio
 from threading import Thread
-from typing import Any, Callable, Optional, TypeVar, Union, Awaitable
+from typing import Any, Awaitable, Callable, Optional, TypeVar, Union
 
 from aiohttp import ClientSession
 from langchain_core.tools import BaseTool
@@ -30,6 +30,7 @@ class ToolboxTool(BaseTool):
     A subclass of LangChain's BaseTool that supports features specific to
     Toolbox, like bound parameters and authenticated tools.
     """
+
     def __init__(
         self,
         name: str,
@@ -70,7 +71,7 @@ class ToolboxTool(BaseTool):
             loop = asyncio.new_event_loop()
             thread = Thread(target=loop.run_forever, daemon=True)
             thread.start()
-        
+
         self.__loop = loop
         self.__async_tool = AsyncToolboxTool(
             name, schema, url, session, auth_tokens, bound_params, strict
