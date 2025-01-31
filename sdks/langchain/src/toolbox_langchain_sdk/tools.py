@@ -14,7 +14,7 @@
 
 import asyncio
 from threading import Thread
-from typing import Any, Callable, Optional, TypeVar, Union, Awaitable
+from typing import Any, Awaitable, Callable, Optional, TypeVar, Union
 
 from aiohttp import ClientSession
 from langchain_core.tools import BaseTool
