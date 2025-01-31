@@ -14,7 +14,7 @@
 
 import asyncio
 from threading import Thread
-from typing import Any, Callable, Optional, TypeVar, Union, Awaitable
+from typing import Any, Awaitable, Callable, Optional, TypeVar, Union
 
 from .async_client import AsyncToolboxClient
 from .tools import ToolboxTool
