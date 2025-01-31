@@ -59,6 +59,7 @@ class MockBackgroundLoop:
     def run_async(self, coro):
         return asyncio.run(coro)
 
+
 @pytest.mark.asyncio
 class TestAsyncToolboxClient:
     @pytest.fixture()

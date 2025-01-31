@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import asyncio
-from concurrent.futures import Future
 from threading import Thread
 from typing import Any, Callable, Optional, TypeVar, Union
 
@@ -55,7 +54,9 @@ class ToolboxClient:
 
         coro = init_client()
 
-        self.__async_client = asyncio.run_coroutine_threadsafe(coro, bg_loop._loop).result()
+        self.__async_client = asyncio.run_coroutine_threadsafe(
+            coro, bg_loop._loop
+        ).result()
         self.__class__.__bg_loop = bg_loop
 
     async def aload_tool(
