@@ -178,44 +178,50 @@ func (c *Parameters) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // parseParamFromDelayedUnmarshaler is a helper function that is required to parse
 // parameters because there are multiple different types
 func parseParamFromDelayedUnmarshaler(u *util.DelayedUnmarshaler) (Parameter, error) {
-	var p CommonParameter
+	var p map[string]any
 	err := u.Unmarshal(&p)
 	if err != nil {
-		return nil, fmt.Errorf("parameter missing required fields: %w", err)
+		return nil, fmt.Errorf("error parsing parameters: %w", err)
 	}
-	switch p.Type {
+
+	t, ok := p["type"]
+	if !ok {
+		return nil, fmt.Errorf("parameter is missing 'type' field", err)
+	}
+
+	switch t {
 	case typeString:
 		a := &StringParameter{}
 		if err := u.Unmarshal(a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeInt:
 		a := &IntParameter{}
 		if err := u.Unmarshal(a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeFloat:
 		a := &FloatParameter{}
 		if err := u.Unmarshal(a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeBool:
 		a := &BooleanParameter{}
 		if err := u.Unmarshal(a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeArray:
 		a := &ArrayParameter{}
 		if err := u.Unmarshal(a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", p.Type, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	}
-	return nil, fmt.Errorf("%q is not valid type for a parameter!", p.Type)
+	return nil, fmt.Errorf("%q is not valid type for a parameter!", t)
 }
 
 func (ps Parameters) Manifest() []ParameterManifest {
@@ -515,11 +521,9 @@ type ArrayParameter struct {
 }
 
 func (p *ArrayParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&p.CommonParameter); err != nil {
-		return err
-	}
 	var rawItem struct {
-		Items util.DelayedUnmarshaler `yaml:"items"`
+		CommonParameter `yaml:",inline"`
+		Items           util.DelayedUnmarshaler `yaml:"items"`
 	}
 	if err := unmarshal(&rawItem); err != nil {
 		return err
