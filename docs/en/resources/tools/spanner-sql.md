@@ -9,28 +9,35 @@ description: >
 
 ## About
 
-A "spanner-sql" tool executes a pre-defined SQL statement (either `googlesql` or
+A `spanner-sql` tool executes a pre-defined SQL statement (either `googlesql` or
 `postgresql`) against a Cloud Spanner database. It's compatible with any of the
 following sources:
 - [spanner](../sources/spanner.md)
 
-For `googlesql` dialect, the specified SQL statement is executed as a [data
+
+### GoogleSQL
+
+For the `googlesql` dialect, the specified SQL statement is executed as a [data
 manipulation language (DML)][gsql-dml] statements, and specified parameters will
 inserted according to their name: e.g. "@name".
 
-For `postgresql` dialect, the specified SQL statement is executed as a [prepared
+[gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
+
+### PostgreSQL
+
+For the `postgresql` dialect, the specified SQL statement is executed as a [prepared
 statement][pg-prepare], and specified parameters will inserted according to
-their position: e.g. "$1" will be the first parameter specified, "$@" will be
+their position: e.g. `$1` will be the first parameter specified, `$@` will be
 the second parameter, and so on.
 
-
-[gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ## Example
 
-For `googlesql` dialect:
-```yaml
+
+{{< tabpane >}}
+{{< tab header="GoogleSQL" lang="yaml" >}}
+
 tools:
  search_flights_by_number:
     kind: spanner
@@ -66,10 +73,10 @@ tools:
       - name: flight_number
         type: string
         description: 1 to 4 digit number
-```
 
-For `postgresql` dialect:
-```yaml
+{{< /tab >}}
+{{< tab header="PostgreSQL" lang="yaml" >}}
+
 tools:
  search_flights_by_number:
     kind: spanner
@@ -105,7 +112,9 @@ tools:
       - name: flight_number
         type: string
         description: 1 to 4 digit number
-```
+        
+{{< /tab >}}
+{{< /tabpane >}}
 
 ## Reference
 
