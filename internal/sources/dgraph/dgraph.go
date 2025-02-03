@@ -50,9 +50,9 @@ type DgraphClient struct {
 }
 
 type Config struct {
-	Name      string `yaml:"name"`
-	Kind      string `yaml:"kind"`
-	DgraphUrl string `yaml:"dgraphUrl"`
+	Name      string `yaml:"name" validate:"required"`
+	Kind      string `yaml:"kind" validate:"required"`
+	DgraphUrl string `yaml:"dgraphUrl" validate:"required"`
 	User      string `yaml:"user"`
 	Password  string `yaml:"password"`
 	Namespace uint64 `yaml:"namespace"`
@@ -108,7 +108,7 @@ func initDgraphHttpClient(ctx context.Context, tracer trace.Tracer, r Config) (*
 
 	hc := &DgraphClient{
 		httpClient: &http.Client{},
-		baseUrl: r.DgraphUrl,
+		baseUrl:    r.DgraphUrl,
 		HttpToken: &HttpToken{
 			UserId:    r.User,
 			Namespace: r.Namespace,

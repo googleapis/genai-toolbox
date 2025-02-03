@@ -35,14 +35,14 @@ var _ compatibleSource = &dgraph.Source{}
 var compatibleSources = [...]string{dgraph.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name"`
-	Kind        string           `yaml:"kind"`
-	Source      string           `yaml:"source"`
-	Description string           `yaml:"description"`
-	Statement   string           `yaml:"statement"`
+	Name        string           `yaml:"name" validate:"required"`
+	Kind        string           `yaml:"kind" validate:"required"`
+	Source      string           `yaml:"source" validate:"required"`
+	Description string           `yaml:"description" validate:"required"`
+	Statement   string           `yaml:"statement" validate:"required"`
 	IsQuery     bool             `yaml:"isQuery"`
 	Timeout     string           `yaml:"timeout"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Parameters  tools.Parameters `yaml:"parameters" validate:"required"`
 }
 
 // validate interface

@@ -608,12 +608,12 @@ func TestAuthParametersParse(t *testing.T) {
 
 func TestParamValues(t *testing.T) {
 	tcs := []struct {
-		name           string
-		in             tools.ParamValues
-		wantSlice      []any
-		wantMap        map[string]interface{}
-		wantMapOrdered map[string]interface{}
-		wantMapWithDollar  map[string]interface{}
+		name              string
+		in                tools.ParamValues
+		wantSlice         []any
+		wantMap           map[string]interface{}
+		wantMapOrdered    map[string]interface{}
+		wantMapWithDollar map[string]interface{}
 	}{
 		{
 			name:           "string",

@@ -84,16 +84,16 @@ func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
 // Input:  {"role": "admin", "$age": 30}
 // Output: {"$role": "admin", "$age": 30}
 func (p ParamValues) AsMapWithDollarPrefix() map[string]interface{} {
-    params := make(map[string]interface{})
+	params := make(map[string]interface{})
 
-    for _, param := range p {
-        key := param.Name
-        if !strings.HasPrefix(key, "$") {
+	for _, param := range p {
+		key := param.Name
+		if !strings.HasPrefix(key, "$") {
 			key = "$" + key
 		}
-        params[key] = param.Value
-    }
-    return params
+		params[key] = param.Value
+	}
+	return params
 }
 
 func parseFromAuthSource(paramAuthSources []ParamAuthSource, claimsMap map[string]map[string]any) (any, error) {

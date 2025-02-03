@@ -171,14 +171,14 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case cloudsqlmysqlsrc.SourceKind:
 			actual := cloudsqlmysqlsrc.Config{Name: name, IPType: "public"}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mysqlsrc.SourceKind:
 			actual := mysqlsrc.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case spannersrc.SourceKind:
@@ -195,20 +195,20 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case cloudsqlmssqlsrc.SourceKind:
 			actual := cloudsqlmssqlsrc.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mssqlsrc.SourceKind:
 			actual := mssqlsrc.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case dgraphsrc.SourceKind:
 			actual := dgraphsrc.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		default:
@@ -295,14 +295,13 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
 			if err := dec.Decode(&actual); err != nil {
-				fmt.Printf("err is %s\n", err)
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mysqlsql.ToolKind:
 			actual := mysqlsql.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case spanner.ToolKind:
@@ -319,14 +318,14 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case mssqlsql.ToolKind:
 			actual := mssqlsql.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case dgraph.ToolKind:
 			actual := dgraph.Config{Name: name}
-			if err := u.Unmarshal(&actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		default:
