@@ -115,10 +115,11 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 
 }
 
-func FailParseFromYamlSpanner(t *testing.T) {
+func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
+		err  string
 	}{
 		{
 			desc: "invalid dialect",
@@ -128,9 +129,34 @@ func FailParseFromYamlSpanner(t *testing.T) {
 					kind: spanner
 					project: my-project
 					instance: my-instance
-                    dialect: fail
+					dialect: fail
 					database: my_db
 			`,
+			err: "unable to parse as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
+		},
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-spanner-instance:
+					kind: spanner
+					project: my-project
+					instance: my-instance
+					database: my_db
+					foo: bar
+			`,
+			err: "unable to parse as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: spanner\n   5 | project: my-project",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-spanner-instance:
+					kind: spanner
+					project: my-project
+					instance: my-instance
+			`,
+			err: "unable to parse as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
@@ -141,7 +167,11 @@ func FailParseFromYamlSpanner(t *testing.T) {
 			// Parse contents
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
 			if err == nil {
-				t.Fatalf("expect parsing to fail: %s", err)
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}

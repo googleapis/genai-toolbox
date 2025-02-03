@@ -39,6 +39,8 @@ func TestParseFromYamlMssql(t *testing.T) {
 					host: 0.0.0.0
 					port: my-port
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-mssql-instance": mssql.Config{
@@ -47,6 +49,8 @@ func TestParseFromYamlMssql(t *testing.T) {
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -67,4 +71,57 @@ func TestParseFromYamlMssql(t *testing.T) {
 		})
 	}
 
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-mssql-instance:
+					kind: mssql
+					host: 0.0.0.0
+					port: my-port
+					database: my_db
+					user: my_user
+					password: my_pass
+					foo: bar
+			`,
+			err: "unable to parse as \"mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: mssql\n   5 | password: my_pass\n   6 | ",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-mssql-instance:
+					kind: mssql
+					host: 0.0.0.0
+					port: my-port
+					database: my_db
+					user: my_user
+			`,
+			err: "unable to parse as \"mssql\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
 }

@@ -39,6 +39,8 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 					host: 0.0.0.0
 					port: my-host
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-mysql-instance": mysql.Config{
@@ -47,6 +49,8 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 					Host:     "0.0.0.0",
 					Port:     "my-host",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -67,4 +71,57 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		})
 	}
 
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-mysql-instance:
+					kind: mysql
+					host: 0.0.0.0
+					port: my-host
+					database: my_db
+					user: my_user
+					password: my_pass
+					foo: bar
+			`,
+			err: "unable to parse as \"mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: mysql\n   5 | password: my_pass\n   6 | ",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-mysql-instance:
+					kind: mysql
+					port: my-host
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			err: "unable to parse as \"mysql\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
 }

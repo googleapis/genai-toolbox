@@ -42,6 +42,8 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					cluster: my-cluster
 					instance: my-instance
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-pg-instance": alloydbpg.Config{
@@ -53,6 +55,8 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "public",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -68,6 +72,8 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					instance: my-instance
 					ipType: Public
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-pg-instance": alloydbpg.Config{
@@ -79,6 +85,8 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "public",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -94,6 +102,8 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					instance: my-instance
 					ipType: private
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-pg-instance": alloydbpg.Config{
@@ -105,6 +115,8 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "private",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -126,10 +138,11 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 	}
 }
 
-func FailParseFromYamlAlloyDBPg(t *testing.T) {
+func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
+		err  string
 	}{
 		{
 			desc: "invalid ipType",
@@ -143,7 +156,42 @@ func FailParseFromYamlAlloyDBPg(t *testing.T) {
 					instance: my-instance
 					ipType: fail 
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
+			err: "unable to parse as \"alloydb-postgres\": ipType invalid: must be one of \"public\", or \"private\"",
+		},
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: alloydb-postgres
+					project: my-project
+					region: my-region
+					cluster: my-cluster
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+					foo: bar
+			`,
+			err: "unable to parse as \"alloydb-postgres\": [3:1] unknown field \"foo\"\n   1 | cluster: my-cluster\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | instance: my-instance\n   5 | kind: alloydb-postgres\n   6 | password: my_pass\n   7 | ",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: alloydb-postgres
+					region: my-region
+					cluster: my-cluster
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			err: "unable to parse as \"alloydb-postgres\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
@@ -154,7 +202,11 @@ func FailParseFromYamlAlloyDBPg(t *testing.T) {
 			// Parse contents
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
 			if err == nil {
-				t.Fatalf("expect parsing to fail: %s", err)
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}

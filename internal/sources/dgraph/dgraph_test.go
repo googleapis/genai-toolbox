@@ -54,6 +54,22 @@ func TestParseFromYamlDgraph(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "basic example minimal field",
+			in: `
+			sources:
+				my-dgraph-instance:
+					kind: dgraph
+					dgraphUrl: https://localhost:8080
+			`,
+			want: server.SourceConfigs{
+				"my-dgraph-instance": dgraph.Config{
+					Name:      "my-dgraph-instance",
+					Kind:      dgraph.SourceKind,
+					DgraphUrl: "https://localhost:8080",
+				},
+			},
+		},
 	}
 
 	for _, tc := range tcs {
@@ -73,4 +89,49 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		})
 	}
 
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-dgraph-instance:
+					kind: dgraph
+					dgraphUrl: https://localhost:8080
+					foo: bar
+			`,
+			err: "unable to parse as \"dgraph\": [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | kind: dgraph",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-dgraph-instance:
+					kind: dgraph
+			`,
+			err: "unable to parse as \"dgraph\": Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
 }

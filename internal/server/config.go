@@ -194,7 +194,7 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			(*c)[name] = actual
 		case cloudsqlmssqlsrc.SourceKind:
-			actual := cloudsqlmssqlsrc.Config{Name: name}
+			actual := cloudsqlmssqlsrc.Config{Name: name, IPType: "public"}
 			if err := dec.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

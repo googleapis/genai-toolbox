@@ -41,7 +41,8 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 					instance: my-instance
 					database: my_db
 					ipAddress: localhost
-					ipType: public
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-instance": cloudsqlmssql.Config{
@@ -53,6 +54,8 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 					IPAddress: "localhost",
 					IPType:    "public",
 					Database:  "my_db",
+					User:      "my_user",
+					Password:  "my_pass",
 				},
 			},
 		},
@@ -73,4 +76,78 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 		})
 	}
 
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "invalid ipType",
+			in: `
+			sources:
+				my-instance:
+					kind: cloud-sql-mssql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipType: fail
+					database: my_db
+					ipAddress: localhost
+					user: my_user
+					password: my_pass
+			`,
+			err: "unable to parse as \"cloud-sql-mssql\": ipType invalid: must be one of \"public\", or \"private\"",
+		},
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-instance:
+					kind: cloud-sql-mssql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+					ipAddress: localhost
+					user: my_user
+					password: my_pass
+					foo: bar
+			`,
+			err: "unable to parse as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | ipAddress: localhost\n   5 | kind: cloud-sql-mssql\n   6 | ",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-instance:
+					kind: cloud-sql-mssql
+					region: my-region
+					instance: my-instance
+					database: my_db
+					ipAddress: localhost
+					user: my_user
+					password: my_pass
+			`,
+			err: "unable to parse as \"cloud-sql-mssql\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
 }

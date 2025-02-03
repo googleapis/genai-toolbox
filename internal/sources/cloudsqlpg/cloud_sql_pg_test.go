@@ -40,6 +40,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-pg-instance": cloudsqlpg.Config{
@@ -50,6 +52,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "public",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -64,6 +68,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					instance: my-instance
 					ipType: Public
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-pg-instance": cloudsqlpg.Config{
@@ -74,6 +80,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "public",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -88,6 +96,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					instance: my-instance
 					ipType: private 
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-pg-instance": cloudsqlpg.Config{
@@ -98,6 +108,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "private",
 					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -120,10 +132,11 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 
 }
 
-func FailParseFromYamlCloudSQLPg(t *testing.T) {
+func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
+		err  string
 	}{
 		{
 			desc: "invalid ipType",
@@ -136,7 +149,40 @@ func FailParseFromYamlCloudSQLPg(t *testing.T) {
 					instance: my-instance
 					ipType: fail 
 					database: my_db
+					user: my_user
+					password: my_pass
 			`,
+			err: "unable to parse as \"cloud-sql-postgres\": ipType invalid: must be one of \"public\", or \"private\"",
+		},
+		{
+			desc: "extra field",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+					foo: bar
+			`,
+			err: "unable to parse as \"cloud-sql-postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: cloud-sql-postgres\n   5 | password: my_pass\n   6 | ",
+		},
+		{
+			desc: "missing required field",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					region: my-region
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			err: "unable to parse as \"cloud-sql-postgres\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
@@ -147,7 +193,11 @@ func FailParseFromYamlCloudSQLPg(t *testing.T) {
 			// Parse contents
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
 			if err == nil {
-				t.Fatalf("expect parsing to fail: %s", err)
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}
