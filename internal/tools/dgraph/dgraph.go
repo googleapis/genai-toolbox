@@ -42,7 +42,7 @@ type Config struct {
 	Statement   string           `yaml:"statement" validate:"required"`
 	IsQuery     bool             `yaml:"isQuery"`
 	Timeout     string           `yaml:"timeout"`
-	Parameters  tools.Parameters `yaml:"parameters" validate:"required"`
+	Parameters  tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface

@@ -528,6 +528,7 @@ func (p *ArrayParameter) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	if err := unmarshal(&rawItem); err != nil {
 		return err
 	}
+	p.CommonParameter = rawItem.CommonParameter
 	i, err := parseParamFromDelayedUnmarshaler(&rawItem.Items)
 	if err != nil {
 		return fmt.Errorf("unable to parse 'items' field: %w", err)

@@ -275,6 +275,8 @@ func TestParseToolFile(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
+					user: my_user
+					password: my_pass
 			tools:
 				example_tool:
 					kind: postgres-sql
@@ -300,6 +302,8 @@ func TestParseToolFile(t *testing.T) {
 						Instance: "my-instance",
 						IPType:   "public",
 						Database: "my_db",
+						User: "my_user",
+						Password: "my_pass",
 					},
 				},
 				Tools: server.ToolConfigs{
@@ -362,6 +366,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
+					user: my_user
+					password: my_pass
 			authSources:
 				my-google-service:
 					kind: google
@@ -410,6 +416,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Instance: "my-instance",
 						IPType:   "public",
 						Database: "my_db",
+						User: "my_user",
+						Password: "my_pass",
 					},
 				},
 				AuthSources: server.AuthSourceConfigs{
