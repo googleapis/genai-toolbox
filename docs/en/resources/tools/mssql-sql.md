@@ -15,10 +15,10 @@ database. It's compatible with any of the following sources:
 - [mssql](../sources/mssql.md)
 
 Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL
-Server and expects parameters in the SQL query to be in the form of either @Name
-or @p1 to @pN (ordinal position).
+Server and expects parameters in the SQL query to be in the form of either
+`@Name` or `@p1` to `@pN` (ordinal position).
 
-```sql
+```go
 db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
 ```
 

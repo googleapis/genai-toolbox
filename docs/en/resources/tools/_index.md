@@ -8,7 +8,7 @@ description: >
 ---
 
 A tool represents an action your agent can take, such as running a SQL
-statement. You can define Tools as a map in the `sources` section of your
+statement. You can define Tools as a map in the `tools` section of your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
 
