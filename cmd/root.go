@@ -128,7 +128,7 @@ type ToolsFile struct {
 func parseToolsFile(raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
 	// Parse contents
-	err := yaml.Unmarshal(raw, &toolsFile)
+	err := yaml.UnmarshalWithOptions(raw, &toolsFile, yaml.Strict())
 	if err != nil {
 		return toolsFile, err
 	}

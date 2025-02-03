@@ -186,7 +186,7 @@ func parseParamFromDelayedUnmarshaler(u *util.DelayedUnmarshaler) (Parameter, er
 
 	t, ok := p["type"]
 	if !ok {
-		return nil, fmt.Errorf("parameter is missing 'type' field", err)
+		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
 	}
 
 	switch t {
