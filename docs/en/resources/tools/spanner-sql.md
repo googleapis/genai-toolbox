@@ -19,7 +19,7 @@ following sources:
 
 For the `googlesql` dialect, the specified SQL statement is executed as a [data
 manipulation language (DML)][gsql-dml] statements, and specified parameters will
-inserted according to their name: e.g. "@name".
+inserted according to their name: e.g. `@name`.
 
 [gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
 
