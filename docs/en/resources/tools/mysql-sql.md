@@ -7,9 +7,9 @@ description: >
   database.
 ---
 
-# MySQL Tool 
+## About
 
-A "mysql-sql" tool executes a pre-defined SQL statement against a mysql 
+A `mysql-sql` tool executes a pre-defined SQL statement against a mysql 
 database. It's compatible with any of the following sources:
 - [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
 - [mysql](../sources/mysql.md)

@@ -9,7 +9,7 @@ description: >
 
 ## About
 
-A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
+A `mssql-sql` tool executes a pre-defined SQL statement against a SQL Server
 database. It's compatible with any of the following sources:
 - [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
 - [mssql](../sources/mssql.md)

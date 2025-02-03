@@ -9,7 +9,7 @@ description: >
 
 ## About
 
-A "neo4j-cypher" tool executes a pre-defined Cypher statement against a Neo4j
+A `neo4j-cypher` tool executes a pre-defined Cypher statement against a Neo4j
 database. It's compatible with any of the following sources:
 - [neo4j](../sources/neo4j.md)
 
