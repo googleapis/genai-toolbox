@@ -57,51 +57,25 @@ authorized_tool = tools[0].add_auth_tokens({
 {{< /tab >}}
 {{< /tabpane >}}
 
-## Example
+## Examples
 
-The following configuration is placed at the top level of your `tools.yaml`
-file: 
+The following configurations are placed at the top level of your `tools.yaml`
+file.
+
+{{< notice tip >}}
+If you are accessing Toolbox with multiple applications, each
+ application should register their own Client ID even if they use the same
+ "kind" of auth provider.
+{{< /notice >}}
 
 ```yaml
 authSources:
-  my-google-auth:
-    kind: google
-    clientId: YOUR_GOOGLE_CLIENT_ID
+    my_auth_app_1:
+        kind: google
+        clientId: YOUR_CLIENT_ID_1
+    my_auth_app_2:
+        kind: google
+        clientId: YOUR_CLIENT_ID_2
 ```
-
-> [!TIP] If you are accessing Toolbox with multiple applications, each
-> application should register their own Client ID even if they use the same
-> `kind` of auth provider.
->
-> Here's an example:
->
-> ```yaml
-> authSources:
->     my_auth_app_1:
->         kind: google
->         clientId: YOUR_CLIENT_ID_1
->     my_auth_app_2:
->         kind: google
->         clientId: YOUR_CLIENT_ID_2
->
-> tools:
->     my_tool:
->         parameters:
->             - name: user_id
->               type: string
->               authSources:
->                   - name: my_auth_app_1
->                     field: sub
->                   - name: my_auth_app_2
->                     field: sub
->         ...
->
->     my_tool_no_param:
->         authRequired:
->             - my_auth_app_1
->             - my_auth_app_2
->         ...
-> ```
-
 
 ## Kinds of Auth Sources
