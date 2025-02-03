@@ -18,7 +18,7 @@ can primarily be used by [Tools](../tools) for two different features:
   before the call can be invoked. Toolbox will rejected an calls without a valid
   token.
 
-## ID Token
+## Specifying ID Tokens
 
 After configuring your `authSources` section, use a Toolbox SDK to add your `ID
 tokens` to the header of a Tool invocation request. When specifying a token you
@@ -58,6 +58,9 @@ authorized_tool = tools[0].add_auth_tokens({
 {{< /tabpane >}}
 
 ## Example
+
+The following configuration is placed at the top level of your `tools.yaml`
+file: 
 
 ```yaml
 authSources:

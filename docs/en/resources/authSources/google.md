@@ -13,7 +13,7 @@ the option to revoke access to an application at any time. To integrate the
 Google Sign-In workflow to your web app [follow this
 guide](https://developers.google.com/identity/sign-in/web/sign-in).
 
-After setting up the Google sign-in workflow, you should have registered your
+After setting up the Google Sign-In workflow, you should have registered your
 application and retrieved a [Client
 ID](https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials).
 Configure your auth source in with the `Client ID`.
