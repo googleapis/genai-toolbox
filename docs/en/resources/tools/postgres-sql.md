@@ -65,12 +65,12 @@ tools:
 
 ## Reference
 
-| **field**   |                   **type**                   | **required** | **description**                                                                                     |
-|-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "postgres-sql".                                                                             |
-| source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
-| description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
-| statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |
-| parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "postgres-sql".                                                                          |
+| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
+| parameters  | [parameters](_index#specifying-parameters) |     true     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
 
 

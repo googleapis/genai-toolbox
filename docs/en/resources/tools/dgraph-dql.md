@@ -103,12 +103,12 @@ tools:
 ```
 
 ## Reference
-| **field**   |  **type** | **required** | **description**                                                                                    |
-|-------------|----------:|:------------:|----------------------------------------------------------------------------------------------------|
-| kind        |    string |     true     | Must be "dgraph-dql".                                                                              |
-| source      |    string |     true     | Name of the source the dql query should execute on.                                                |
-| description |    string |     true     | Description of the tool                                                                            |
-| statement   |    string |     true     | dql statement to execute                                                                           |
-| isQuery     |   boolean |     false    | To run statment as query set true otherwise false                                                  |
-| timeout     |   string  |     false    | To set timout for query                                                                            |
-| parameters  | parameter |     true     | List of [parameters](README.md#specifying-parameters) that will be used with the dql statement.    |
+| **field**   |                  **type**                  | **required** | **description**                                                                              |
+|-------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "dgraph-dql".                                                                        |
+| source      |                   string                   |     true     | Name of the source the dql query should execute on.                                          |
+| description |                   string                   |     true     | Description of the tool                                                                      |
+| statement   |                   string                   |     true     | dql statement to execute                                                                     |
+| isQuery     |                  boolean                   |    false     | To run statment as query set true otherwise false                                            |
+| timeout     |                   string                   |    false     | To set timout for query                                                                      |
+| parameters  | [parameters](_index#specifying-parameters) |     true     | List of [parameters](_index#specifying-parameters) that will be used with the dql statement. |
