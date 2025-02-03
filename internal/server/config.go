@@ -25,12 +25,14 @@ import (
 	cloudsqlmssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	dgraphsrc "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	mysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	neo4jrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
@@ -195,6 +197,12 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}
 			(*c)[name] = actual
+		case dgraphsrc.SourceKind:
+			actual := dgraphsrc.Config{Name: name}
+			if err := u.Unmarshal(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", k.Kind)
 		}
@@ -288,6 +296,12 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			(*c)[name] = actual
 		case mssqlsql.ToolKind:
 			actual := mssqlsql.Config{Name: name}
+			if err := u.Unmarshal(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
+			}
+			(*c)[name] = actual
+		case dgraph.ToolKind:
+			actual := dgraph.Config{Name: name}
 			if err := u.Unmarshal(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", k.Kind, err)
 			}

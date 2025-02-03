@@ -17,6 +17,7 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -76,6 +77,23 @@ func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
 		params[key] = p.Value
 	}
 	return params
+}
+
+// AsMapWithDollarPrefix ensures all keys are prefixed with a dollar sign for Dgraph.
+// Example:
+// Input:  {"role": "admin", "$age": 30}
+// Output: {"$role": "admin", "$age": 30}
+func (p ParamValues) AsMapWithDollarPrefix() map[string]interface{} {
+    params := make(map[string]interface{})
+
+    for _, param := range p {
+        key := param.Name
+        if !strings.HasPrefix(key, "$") {
+			key = "$" + key
+		}
+        params[key] = param.Value
+    }
+    return params
 }
 
 func parseFromAuthSource(paramAuthSources []ParamAuthSource, claimsMap map[string]map[string]any) (any, error) {

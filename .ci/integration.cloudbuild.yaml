@@ -178,7 +178,6 @@ steps:
       - |
         go test -race -v -tags=integration,mysql ./tests
 
-
   - id: "mssql"
     name: golang:1
     waitFor: ["install-dependencies"]
@@ -196,6 +195,21 @@ steps:
       - -c
       - |
         go test -race -v -tags=integration,mssql ./tests
+
+  - id: "dgraph"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "DGRAPH_URL=$_DGRAPHURL"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,dgraph ./tests
 
 availableSecrets:
   secretManager:
@@ -259,3 +273,4 @@ substitutions:
   _MYSQL_PORT: "3306"
   _MSSQL_HOST: 127.0.0.1
   _MSSQL_PORT: "1433"
+  _DGRAPHURL: "https://play.dgraph.io"

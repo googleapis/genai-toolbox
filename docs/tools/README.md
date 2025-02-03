@@ -52,6 +52,8 @@ We currently support the following types of kinds of tools:
   statement againts Spanner database.
 * [neo4j-cypher](./neo4j-cypher.md) - Run a Cypher statement against a
   Neo4j database.
+* [dgraph-dql](./dgraph-dql.md) - Run a DQL statement against a
+  Dgraph database.
 
 
 ## Specifying Parameters
