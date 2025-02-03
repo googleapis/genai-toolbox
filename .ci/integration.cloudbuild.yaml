@@ -178,6 +178,24 @@ steps:
       - |
         go test -race -v -tags=integration,mysql ./tests
 
+  - id: "mssql"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "MSSQL_DATABASE=$_DATABASE_NAME"
+      - "MSSQL_HOST=$_MSSQL_HOST"
+      - "MSSQL_PORT=$_MSSQL_PORT"
+    secretEnv: ["MSSQL_USER", "MSSQL_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,mssql ./tests
+
   - id: "dgraph"
     name: golang:1
     waitFor: ["install-dependencies"]
@@ -225,6 +243,11 @@ availableSecrets:
       env: MYSQL_USER
     - versionName: projects/$PROJECT_ID/secrets/mysql_pass/versions/latest
       env: MYSQL_PASS
+    - versionName: projects/$PROJECT_ID/secrets/mssql_user/versions/latest
+      env: MSSQL_USER 
+    - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
+      env: MSSQL_PASS
+
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -248,4 +271,6 @@ substitutions:
   _CLOUD_SQL_MYSQL_INSTANCE: "cloud-sql-mysql-testing"
   _MYSQL_HOST: 127.0.0.1
   _MYSQL_PORT: "3306"
+  _MSSQL_HOST: 127.0.0.1
+  _MSSQL_PORT: "1433"
   _DGRAPHURL: "https://play.dgraph.io"
