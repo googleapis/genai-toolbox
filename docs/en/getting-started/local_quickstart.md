@@ -24,7 +24,7 @@ This guide assumes you have already done the following:
 [lc-chat]: https://python.langchain.com/docs/integrations/chat/
 [install-vertexai]: https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup
 [install-genai]: https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup
-[install-claude]: https://python.langchain.com/docs/integrations/chat/anthropic/#setup
+[install-anthropic]: https://python.langchain.com/docs/integrations/chat/anthropic/#setup
 
 ## Step 1: Set up your database
 
@@ -41,9 +41,9 @@ access by our agent, and create a database user for Toolbox to connect with.
 
 1. Create a new database and a new user:
 
-    {{< notice tip >}}
-      For a real application, it's best to follow the principle of
-      least permission and only grant the privileges your application needs. 
+    {{< notice tip >}} 
+  For a real application, it's best to follow the principle of least permission 
+  and only grant the privileges your application needs. 
     {{< /notice >}}
 
     ```sql
@@ -114,16 +114,15 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Download the latest version of Toolbox as a binary:
 
-    {{< notice tip >}}
-    Use the [correct binary][install-toolbox] corresponding to your OS and 
-    CPU architecture.
+    {{< notice tip >}} 
+  Use the [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+  corresponding to your OS and CPU architecture. 
     {{< /notice >}}
+
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
     curl -O https://storage.googleapis.com/genai-toolbox/v0.0.5/$OS/toolbox
     ```
-
-    [install-toolbox]: https://github.com/googleapis/genai-toolbox/releases
 
 1. Make the binary executable:
 
@@ -219,14 +218,14 @@ from Toolbox.
 
 1. In a new terminal,install the `toolbox_langchain_sdk` package.
 
-    {{< notice warning >}} 
+  {{< notice warning >}} 
     `toolbox_langchain_sdk` package is not yet published
     to PyPi. Install it directly from the git repo instead:
     
     ```bash
     pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
     ```
-    {{< /notice >}}
+  {{< /notice >}}
 
     ```bash
     pip install toolbox-langchain-sdk
@@ -273,6 +272,8 @@ from Toolbox.
     async def main():
         # TODO(developer): replace this with another model if needed
         model = ChatVertexAI(model_name="gemini-1.5-pro")
+        # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+        # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
         
         # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
