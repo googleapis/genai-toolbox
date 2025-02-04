@@ -1,4 +1,11 @@
-# Deploy Toolbox to Cloud Run
+---
+title: "Deploy to Cloud Run"
+type: docs
+weight: 2
+description: >
+  How to set up and configure Toolbox to run on Cloud Run.
+---
+
 
 ## Before you begin
 
@@ -36,15 +43,18 @@
     - Cloud Run Developer (roles/run.developer)
     - Service Account User role (roles/iam.serviceAccountUser)
 
-> [!NOTE]
-> If you are under a domain restriction organization policy
-  [restricting](https://cloud.google.com/run/docs/authenticating/public#domain-restricted-sharing)
-  unauthenticated invocations for your project, you will need to access your
-  deployed service as described under [Testing private
-  services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
+{{< notice note >}} 
+If you are under a domain restriction organization policy
+[restricting](https://cloud.google.com/run/docs/authenticating/public#domain-restricted-sharing)
+unauthenticated invocations for your project, you will need to access your
+deployed service as described under [Testing private
+services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
+{{< /notice >}}
 
-> [!NOTE]  
-> If you are using VPC-based sources (such as AlloyDB), make sure your Cloud Run service and the database are in the same VPC network.
+{{< notice note >}}
+If you are using VPC-based sources (such as AlloyDB), make sure your Cloud Run service and the database are in the same VPC network.
+{{< /notice >}}
+
 
 ## Create a service account
 
@@ -66,9 +76,12 @@
     - [AlloyDB for PostgreSQL](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/alloydb-pg.md#iam-identity)
     - [Cloud SQL for PostgreSQL](https://github.com/googleapis/genai-toolbox/blob/main/docs/sources/cloud-sql-pg.md#iam-identity)
 
-## Configuration
+## Configure `tools.yaml` file
 
-Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/README.md#configuration) for `tools.yml`.
+Create a `tools.yaml` file that contains your configuration for Toolbox. For
+details, see the
+[configuration](https://github.com/googleapis/genai-toolbox/blob/main/README.md#configuration)
+section.
 
 ## Deploy to Cloud Run
 
@@ -78,7 +91,8 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
     gcloud secrets create tools --data-file=tools.yaml
     ```
 
-    If you already have a secret and want to update the secret version, execute the following:
+    If you already have a secret and want to update the secret version, execute
+    the following:
 
     ```bash
     gcloud secrets versions add tools --data-file=tools.yaml
@@ -90,8 +104,8 @@ Set up [configuration](https://github.com/googleapis/genai-toolbox/blob/main/REA
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
 
-1. From the root `genai-toolbox` directory, deploy Toolbox
-   to Cloud Run using the following command:
+1. From the root `genai-toolbox` directory, deploy Toolbox to Cloud Run using
+   the following command:
 
     ```bash
     gcloud run deploy toolbox \
