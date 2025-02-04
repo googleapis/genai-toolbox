@@ -19,9 +19,9 @@ query.
 
 ## Example
 
-### Query:
+{{< tabpane >}}
+{{< tab header="Query" lang="yaml" >}}
 
-```yaml
 tools:
   search_user:
     kind: dgraph-dql
@@ -59,11 +59,11 @@ tools:
       - name: $role
         type: string
         description: admin
-```
 
-### Mutation: 
 
-```yaml
+{{< /tab >}}
+{{< tab header="Mutation" lang="yaml" >}}
+
 tools:
   dgraph-manage-user-instance:
     kind: dgraph-dql
@@ -100,7 +100,9 @@ tools:
       - name: email2
         type: string
         description: bob@email.com
-```
+
+{{< /tab >}}
+{{< /tabpane >}}
 
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                              |
