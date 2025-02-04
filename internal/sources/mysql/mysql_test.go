@@ -37,7 +37,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 				my-mysql-instance:
 					kind: mysql
 					host: 0.0.0.0
-					port: my-host
+					port: my-port
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -47,7 +47,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 					Name:     "my-mysql-instance",
 					Kind:     mysql.SourceKind,
 					Host:     "0.0.0.0",
-					Port:     "my-host",
+					Port:     "my-port",
 					Database: "my_db",
 					User:     "my_user",
 					Password: "my_pass",
@@ -86,7 +86,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-mysql-instance:
 					kind: mysql
 					host: 0.0.0.0
-					port: my-host
+					port: my-port
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				my-mysql-instance:
 					kind: mysql
-					port: my-host
+					port: my-port
 					database: my_db
 					user: my_user
 					password: my_pass

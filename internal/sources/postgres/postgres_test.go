@@ -37,7 +37,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 				my-pg-instance:
 					kind: postgres
 					host: my-host
-					port: 0.0.0.0
+					port: my-port
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -47,7 +47,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					Name:     "my-pg-instance",
 					Kind:     postgres.SourceKind,
 					Host:     "my-host",
-					Port:     "0.0.0.0",
+					Port:     "my-port",
 					Database: "my_db",
 					User:     "my_user",
 					Password: "my_pass",
@@ -86,7 +86,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-pg-instance:
 					kind: postgres
 					host: my-host
-					port: 0.0.0.0
+					port: my-port
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -101,7 +101,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-pg-instance:
 					kind: postgres
 					host: my-host
-					port: 0.0.0.0
+					port: my-port
 					database: my_db
 					user: my_user
 			`,
