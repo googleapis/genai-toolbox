@@ -113,9 +113,9 @@ class TestAsyncToolboxTool:
         tool = toolbox_tool.bind_params(params)
         for key, value in expected_bound_params.items():
             if callable(value):
-                assert value() == tool._bound_params[key]()
+                assert value() == tool._AsyncToolboxTool__bound_params[key]()
             else:
-                assert value == tool._bound_params[key]
+                assert value == tool._AsyncToolboxTool__bound_params[key]
 
     @pytest.mark.parametrize("strict", [True, False])
     async def test_toolbox_tool_bind_params_invalid(self, toolbox_tool, strict):
@@ -174,7 +174,7 @@ class TestAsyncToolboxTool:
     ):
         tool = auth_toolbox_tool.add_auth_tokens(auth_tokens)
         for source, getter in expected_auth_tokens.items():
-            assert tool._auth_tokens[source]() == getter()
+            assert tool._AsyncToolboxTool__auth_tokens[source]() == getter()
 
     async def test_toolbox_tool_add_auth_tokens_duplicate(self, auth_toolbox_tool):
         tool = auth_toolbox_tool.add_auth_tokens(
@@ -197,7 +197,7 @@ class TestAsyncToolboxTool:
     async def test_toolbox_tool_call(self, toolbox_tool):
         result = await toolbox_tool.ainvoke({"param1": "test-value", "param2": 123})
         assert result == {"result": "test-result"}
-        toolbox_tool._session.post.assert_called_once_with(
+        toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with(
             "http://test_url/api/tool/test_tool/invoke",
             json={"param1": "test-value", "param2": 123},
             headers={},
@@ -216,7 +216,7 @@ class TestAsyncToolboxTool:
         tool = toolbox_tool.bind_params(bound_param)
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
-        toolbox_tool._session.post.assert_called_once_with(
+        toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with(
             "http://test_url/api/tool/test_tool/invoke",
             json={"param1": expected_value, "param2": 123},
             headers={},
@@ -228,7 +228,7 @@ class TestAsyncToolboxTool:
         )
         result = await tool.ainvoke({"param2": 123})
         assert result == {"result": "test-result"}
-        auth_toolbox_tool._session.post.assert_called_once_with(
+        auth_toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with(
             "https://test-url/api/tool/test_tool/invoke",
             json={"param2": 123},
             headers={"test-auth-source_token": "test-token"},
@@ -239,13 +239,13 @@ class TestAsyncToolboxTool:
             UserWarning,
             match="Sending ID token over HTTP. User data may be exposed. Use HTTPS for secure communication.",
         ):
-            auth_toolbox_tool._url = "http://test-url"
+            auth_toolbox_tool._AsyncToolboxTool__url = "http://test-url"
             tool = auth_toolbox_tool.add_auth_tokens(
                 {"test-auth-source": lambda: "test-token"}
             )
             result = await tool.ainvoke({"param2": 123})
             assert result == {"result": "test-result"}
-            auth_toolbox_tool._session.post.assert_called_once_with(
+            auth_toolbox_tool._AsyncToolboxTool__session.post.assert_called_once_with(
                 "http://test-url/api/tool/test_tool/invoke",
                 json={"param2": 123},
                 headers={"test-auth-source_token": "test-token"},

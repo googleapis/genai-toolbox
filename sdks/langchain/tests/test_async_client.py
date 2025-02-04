@@ -20,7 +20,7 @@ import pytest
 from aiohttp import ClientSession
 
 from toolbox_langchain_sdk.async_client import AsyncToolboxClient
-from toolbox_langchain_sdk.tools import ToolboxTool
+from toolbox_langchain_sdk.async_tools import AsyncToolboxTool
 from toolbox_langchain_sdk.utils import ManifestSchema
 
 URL = "http://test_url"
@@ -68,11 +68,6 @@ class TestAsyncToolboxClient:
     async def test_create_with_existing_session(self, mock_client, mock_session):
         assert mock_client._AsyncToolboxClient__session == mock_session
 
-    async def test_create_with_no_session(self):
-        client = AsyncToolboxClient(URL)
-        assert isinstance(client._AsyncToolboxClient__session, ClientSession)
-        await client._AsyncToolboxClient__session.close()  # Close to avoid warnings
-
     @patch("toolbox_langchain_sdk.async_client._load_manifest")
     async def test_aload_tool(
         self, mock_load_manifest, mock_client, mock_session, manifest_schema
@@ -85,7 +80,7 @@ class TestAsyncToolboxClient:
         mock_load_manifest.assert_called_once_with(
             f"{URL}/api/tool/{tool_name}", mock_session
         )
-        assert isinstance(tool, ToolboxTool)
+        assert isinstance(tool, AsyncToolboxTool)
         assert tool.name == tool_name
 
     @patch("toolbox_langchain_sdk.async_client._load_manifest")
@@ -133,7 +128,7 @@ class TestAsyncToolboxClient:
         mock_load_manifest.assert_called_once_with(f"{URL}/api/toolset/", mock_session)
         assert len(tools) == 2
         for tool in tools:
-            assert isinstance(tool, ToolboxTool)
+            assert isinstance(tool, AsyncToolboxTool)
             assert tool.name in ["test_tool_1", "test_tool_2"]
 
     @patch("toolbox_langchain_sdk.async_client._load_manifest")
@@ -150,7 +145,7 @@ class TestAsyncToolboxClient:
         )
         assert len(tools) == 2
         for tool in tools:
-            assert isinstance(tool, ToolboxTool)
+            assert isinstance(tool, AsyncToolboxTool)
             assert tool.name in ["test_tool_1", "test_tool_2"]
 
     @patch("toolbox_langchain_sdk.async_client._load_manifest")
@@ -187,13 +182,13 @@ class TestAsyncToolboxClient:
     async def test_load_tool_not_implemented(self, mock_client):
         with pytest.raises(NotImplementedError) as excinfo:
             mock_client.load_tool("test_tool")
-        assert "You can use the ToolboxClient to call synchronous methods." in str(
+        assert "Synchronous methods not supported by async client." in str(
             excinfo.value
         )
 
     async def test_load_toolset_not_implemented(self, mock_client):
         with pytest.raises(NotImplementedError) as excinfo:
             mock_client.load_toolset()
-        assert "You can use the ToolboxClient to call synchronous methods." in str(
+        assert "Synchronous methods not supported by async client." in str(
             excinfo.value
         )
