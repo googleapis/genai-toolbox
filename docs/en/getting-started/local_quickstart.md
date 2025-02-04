@@ -118,7 +118,6 @@ In this section, we will download Toolbox, configure our tools in a
   Use the [correct binary](https://github.com/googleapis/genai-toolbox/releases)
   corresponding to your OS and CPU architecture. 
     {{< /notice >}}
-
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
     curl -O https://storage.googleapis.com/genai-toolbox/v0.0.5/$OS/toolbox
@@ -218,14 +217,14 @@ from Toolbox.
 
 1. In a new terminal,install the `toolbox_langchain_sdk` package.
 
-  {{< notice warning >}} 
-    `toolbox_langchain_sdk` package is not yet published
-    to PyPi. Install it directly from the git repo instead:
-    
-    ```bash
-    pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
-    ```
-  {{< /notice >}}
+    {{< notice warning >}} 
+  "toolbox_langchain_sdk" package is not yet published
+  to PyPi. Install it directly from the git repo instead:
+
+  ```bash
+  pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
+  ```
+    {{< /notice >}}
 
     ```bash
     pip install toolbox-langchain-sdk
