@@ -1,5 +1,5 @@
 ---
-title: "Export Telemetry using the Otel Collector"
+title: "Export Telemetry"
 type: docs
 weight: 2
 description: >
