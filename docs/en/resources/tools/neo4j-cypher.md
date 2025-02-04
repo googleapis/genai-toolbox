@@ -66,6 +66,6 @@ tools:
 | source      |                   string                   |     true     | Name of the source the Cypher query should execute on.                                          |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
 | statement   |                   string                   |     true     | Cypher statement to execute                                                                     |
-| parameters  | [parameters](_index#specifying-parameters) |     true     | List of [parameters](_index#specifying-parameters) that will be used with the Cypher statement. |
+| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be used with the Cypher statement. |
 
 
