@@ -33,12 +33,12 @@ If you are accessing Toolbox with multiple applications, each
 
 ```yaml
 authSources:
-    my_auth_app_1:
-        kind: google
-        clientId: YOUR_CLIENT_ID_1
-    my_auth_app_2:
-        kind: google
-        clientId: YOUR_CLIENT_ID_2
+  my_auth_app_1:
+    kind: google
+    clientId: YOUR_CLIENT_ID_1
+  my_auth_app_2:
+    kind: google
+    clientId: YOUR_CLIENT_ID_2
 ```
 
 After you've configured an `authSource` you'll, need to reference it in the
@@ -51,10 +51,11 @@ configuration for each tool that should use it:
 
 ## Specifying ID Tokens from Clients
 
-After configuring your `authSources` section, use a Toolbox SDK to add your `ID
-tokens` to the header of a Tool invocation request. When specifying a token you
-will provide a function (that returns an id). This function is called when the
-tool is invoked. This allows you to cache and refresh the ID token as needed. 
+After [configuring](#example) your `authSources` section, use a Toolbox SDK to
+add your ID tokens to the header of a Tool invocation request. When specifying a
+token you will provide a function (that returns an id). This function is called
+when the tool is invoked. This allows you to cache and refresh the ID token as
+needed. 
 
 ### Specifying tokens during load
 {{< tabpane >}}
