@@ -106,7 +106,7 @@ def _parse_type(type_: str) -> Any:
         return str
     elif type_ == "integer":
         return int
-    elif type_ == "number":
+    elif type_ == "float":
         return float
     elif type_ == "boolean":
         return bool

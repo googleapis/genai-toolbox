@@ -169,7 +169,7 @@ class TestUtils:
         [
             ("string", str),
             ("integer", int),
-            ("number", float),
+            ("float", float),
             ("boolean", bool),
             ("array", list),
         ],
