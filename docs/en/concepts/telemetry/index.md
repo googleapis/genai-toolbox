@@ -148,11 +148,10 @@ Exporter][gcp-trace-exporter].
 
 {{< notice note >}} 
 If you're using Google Cloud Monitoring, the following APIs will need to be 
-enabled. For instructions on how to enable APIs, see [Enabling an API in your 
-Google Cloud project](https://cloud.google.com/endpoints/docs/openapi/enable-api):
-- logging.googleapis.com
-- monitoring.googleapis.com
-- cloudtrace.googleapis.com
+enabled:
+- [Cloud Logging API](https://cloud.google.com/logging/docs/api/enable-api)
+- [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api)
+- [Cloud Trace API](https://cloud.google.com/apis/enableflow?apiid=cloudtrace.googleapis.com)
 {{< /notice >}}
 
 #### OTLP Exporter
