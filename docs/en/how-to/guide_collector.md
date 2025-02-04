@@ -92,7 +92,7 @@ There are a couple of steps to run and use a Collector.
   If you are exporting to Google Cloud monitoring, we recommend that you use
   the Google Cloud Exporter for traces and the Google Managed Service for
   Prometheus Exporter for metrics.
-  {{< notice tip >}}
+  {{< /notice >}}
 
 [google-cloud-exporter]:
     https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
