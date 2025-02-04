@@ -8,15 +8,34 @@ description: >
 
 ## Getting Started
 
-Google Sign-In manages the OAuth 2.0 flow and token lifecycle. A user always has
-the option to revoke access to an application at any time. To integrate the
-Google Sign-In workflow to your web app [follow this
-guide](https://developers.google.com/identity/sign-in/web/sign-in).
+Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the
+Google Sign-In workflow to your web app [follow this guide][gsi-setup].
 
 After setting up the Google Sign-In workflow, you should have registered your
-application and retrieved a [Client
-ID](https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials).
-Configure your auth source in with the `Client ID`.
+application and retrieved a [Client ID][client-id]. Configure your auth source
+in with the `Client ID`.
+
+[gsi-setup]: https://developers.google.com/identity/sign-in/web/sign-in
+[client-id]: https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials
+
+## Behavior
+
+### Authorized Invocations
+
+When using [Authorized Invocations][auth-invoke], a tool will be
+considered authorized if it has a valid Oauth 2.0 token that matches the Client
+ID.
+
+[auth-invoke]: ../tools/#authorized-invocations
+
+### Authenticated Parameters
+
+When using [Authenticated Parameters][auth-params], any [claim provided by the
+id-token][provided-claims] can be used as a source for the parameter.
+
+[auth-params]: ../tools/#authenticated-phugarameters
+[provided-claims]:
+    https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
 
 ## Example
 
