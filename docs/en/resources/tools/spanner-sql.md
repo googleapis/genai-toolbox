@@ -1,27 +1,43 @@
-# Spanner Tool 
+---
+title: "spanner-sql"
+type: docs
+weight: 1
+description: > 
+  A "spanner-sql" tool executes a pre-defined SQL statement against a Google 
+  Cloud Spanner database.
+---
 
-A "spanner-sql" tool executes a pre-defined SQL statement (either
-`googlesql` or `postgresql`) against Spanner  database. It's
-compatible with any of the following sources:
+## About
+
+A `spanner-sql` tool executes a pre-defined SQL statement (either `googlesql` or
+`postgresql`) against a Cloud Spanner database. It's compatible with any of the
+following sources:
 - [spanner](../sources/spanner.md)
 
-For `googlesql` dialect, the specified SQL statement is executed
-as a [data manipulation language (DML)][gsql-dml] statements, and specified parameters will inserted
-according to their name: e.g. "@name".
 
-For `postgresql` dialect, the specified SQL statement is executed as a
-[prepared statement][pg-prepare], and specified parameters will inserted according
-to their position: e.g. "$1" will be the first parameter specified, "$@" will be the
-second parameter, and so on.
+### GoogleSQL
 
+For the `googlesql` dialect, the specified SQL statement is executed as a [data
+manipulation language (DML)][gsql-dml] statements, and specified parameters will
+inserted according to their name: e.g. `@name`.
 
 [gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
+
+### PostgreSQL
+
+For the `postgresql` dialect, the specified SQL statement is executed as a [prepared
+statement][pg-prepare], and specified parameters will inserted according to
+their position: e.g. `$1` will be the first parameter specified, `$@` will be
+the second parameter, and so on.
+
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ## Example
 
-For `googlesql` dialect:
-```yaml
+
+{{< tabpane >}}
+{{< tab header="GoogleSQL" lang="yaml" >}}
+
 tools:
  search_flights_by_number:
     kind: spanner
@@ -57,10 +73,10 @@ tools:
       - name: flight_number
         type: string
         description: 1 to 4 digit number
-```
 
-For `postgresql` dialect:
-```yaml
+{{< /tab >}}
+{{< tab header="PostgreSQL" lang="yaml" >}}
+
 tools:
  search_flights_by_number:
     kind: spanner
@@ -96,15 +112,17 @@ tools:
       - name: flight_number
         type: string
         description: 1 to 4 digit number
-```
+
+{{< /tab >}}
+{{< /tabpane >}}
 
 ## Reference
 
-| **field**   |                   **type**                   | **required** | **description**                                                                                     |
-|-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "postgres-generic".                                                                         |
-| source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
-| description |                    string                    |     true     | Port to connect to (e.g. "5432")                                                                    |
-| statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |
-| parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "spanner-sql".                                                                           |
+| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
+| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
 

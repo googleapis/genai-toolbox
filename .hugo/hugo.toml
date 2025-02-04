@@ -22,6 +22,8 @@ enableRobotsTXT = true
   [[module.imports]]
     path = "github.com/google/docsy"
     disable = false
+  [[module.imports]]
+    path = "github.com/martignoni/hugo-notice"
 
 [params]
   copyright = "Google LLC"

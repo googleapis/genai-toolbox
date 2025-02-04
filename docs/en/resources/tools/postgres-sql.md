@@ -1,14 +1,23 @@
-# Postgres SQL Tool 
+---
+title: "postgres-sql"
+type: docs
+weight: 1
+description: > 
+  A "postgres-sql" tool executes a pre-defined SQL statement against a Postgres
+  database.
+---
 
-A "postgres-sql" tool executes a pre-defined SQL statement against a postgres
+## About
+
+A `postgres-sql` tool executes a pre-defined SQL statement against a Postgres
 database. It's compatible with any of the following sources:
 - [alloydb-postgres](../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../sources/cloud-sql-pg.md)
 - [postgres](../sources/postgres.md)
 
 The specified SQL statement is executed as a [prepared statement][pg-prepare],
-and specified parameters will inserted according to their position: e.g. "$1"
-will be the first parameter specified, "$@" will be the second parameter, and so
+and specified parameters will inserted according to their position: e.g. `1`
+will be the first parameter specified, `$@` will be the second parameter, and so
 on.
 
 
@@ -56,12 +65,12 @@ tools:
 
 ## Reference
 
-| **field**   |                   **type**                   | **required** | **description**                                                                                     |
-|-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "postgres-sql".                                                                             |
-| source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
-| description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
-| statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |
-| parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "postgres-sql".                                                                          |
+| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
+| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
 
 

@@ -1,8 +1,18 @@
-# MySQL Tool 
+---
+title: "mysql-sql"
+type: docs
+weight: 1
+description: > 
+  A "mysql-sql" tool executes a pre-defined SQL statement against a SQL Server
+  database.
+---
 
-A "mysql-sql" tool executes a pre-defined SQL statement against a mysql 
+## About
+
+A `mysql-sql` tool executes a pre-defined SQL statement against a mysql 
 database. It's compatible with any of the following sources:
 - [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
+- [mysql](../sources/mysql.md)
 
 The specified SQL statement is executed as a [prepared statement][mysql-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
@@ -51,12 +61,12 @@ tools:
 
 ## Reference
 
-| **field**   |                   **type**                   | **required** | **description**                                                                                     |
-|-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "mysql-sql".                                                                                |
-| source      |                    string                    |     true     | Name of the source the SQL should execute on.                                                       |
-| description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
-| statement   |                    string                    |     true     | SQL statement to execute on.                                                                        |
-| parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "mysql-sql".                                                                             |
+| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
+| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
 
 

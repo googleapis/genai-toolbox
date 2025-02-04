@@ -1,16 +1,24 @@
-# SQL Server Tool
+---
+title: "mssql-sql"
+type: docs
+weight: 1
+description: > 
+  A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
+  database.
+---
 
-A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
+## About
+
+A `mssql-sql` tool executes a pre-defined SQL statement against a SQL Server
 database. It's compatible with any of the following sources:
-
 - [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
 - [mssql](../sources/mssql.md)
 
 Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL
-Server and expects parameters in the SQL query to be in the form of either @Name
-or @p1 to @pN (ordinal position).
+Server and expects parameters in the SQL query to be in the form of either
+`@Name` or `@p1` to `@pN` (ordinal position).
 
-```sql
+```go
 db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
 ```
 
@@ -58,10 +66,10 @@ tools:
 
 ## Reference
 
-| **field**   |                   **type**                   | **required** | **description**                                                                                     |
-|-------------|:--------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------|
-| kind        |                    string                    |     true     | Must be "mssql-sql".                                                                                |
-| source      |                    string                    |     true     | Name of the source the T-SQL statement should execute on.                                           |
-| description |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                  |
-| statement   |                    string                    |     true     | SQL statement to execute.                                                                           |
-| parameters  | [parameter](README.md#specifying-parameters) |     true     | List of [parameters](README.md#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "mssql-sql".                                                                             |
+| source      |                   string                   |     true     | Name of the source the T-SQL statement should execute on.                                        |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| statement   |                   string                   |     true     | SQL statement to execute.                                                                        |
+| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
