@@ -25,10 +25,13 @@ T = TypeVar("T")
 
 
 class ToolboxClient:
+    __session: Optional[ClientSession] = None
+    __loop: Optional[asyncio.AbstractEventLoop] = None
+    __thread: Optional[Thread] = None
+
     def __init__(
         self,
         url: str,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         """
         Initializes the ToolboxClient for the Toolbox service at the given URL.
@@ -36,42 +39,49 @@ class ToolboxClient:
         Args:
             url: The base URL of the Toolbox service.
         """
-        if loop is None:
+
+        # Running a loop in a background thread allows us to support async
+        # methods from non-async environments.
+        if ToolboxClient.__loop is None:
             loop = asyncio.new_event_loop()
             thread = Thread(target=loop.run_forever, daemon=True)
             thread.start()
+            ToolboxClient.__thread = thread
+            ToolboxClient.__loop = loop
 
-        self.__loop = loop
+        async def __start_session(url: str) -> None:
+            # Use a default session if none is provided. This leverages connection
+            # pooling for better performance by reusing a single session throughout
+            # the application's lifetime.
+            if ToolboxClient.__session is None:
+                ToolboxClient.__session = ClientSession()
 
-        # Create session
-        self.__session = ClientSession(loop=self.__loop)
+        coro = __start_session(url)
 
-        async def init_client():
-            return AsyncToolboxClient(url, self.__session)
+        assert ToolboxClient.__loop
+        asyncio.run_coroutine_threadsafe(coro, ToolboxClient.__loop).result()
 
-        coro = init_client()
+        self.__async_client = AsyncToolboxClient(url, ToolboxClient.__session)
 
-        self.__async_client = asyncio.run_coroutine_threadsafe(
-            coro, self.__loop
-        ).result()
-
-    async def _run_as_async(self, coro: Awaitable[T]) -> T:
-        """Run an async coroutine asynchronously"""
-        # If a loop has not been provided, attempt to run in current thread
-        if not self.__loop:
-            return await coro
-        # Otherwise, run in the background thread
-        return await asyncio.wrap_future(
-            asyncio.run_coroutine_threadsafe(coro, self.__loop)
-        )
-
-    def _run_as_sync(self, coro: Awaitable[T]) -> T:
+    def __run_as_sync(self, coro: Awaitable[T]) -> T:
         """Run an async coroutine synchronously"""
         if not self.__loop:
             raise Exception(
-                "Engine was initialized without a background loop and cannot call sync methods."
+                "Cannot call synchronous methods before the background loop is initialized."
             )
         return asyncio.run_coroutine_threadsafe(coro, self.__loop).result()
+
+    async def __run_as_async(self, coro: Awaitable[T]) -> T:
+        """Run an async coroutine asynchronously"""
+
+        # If a loop has not been provided, attempt to run in current thread.
+        if not self.__loop:
+            return await coro
+
+        # Otherwise, run in the background thread.
+        return await asyncio.wrap_future(
+            asyncio.run_coroutine_threadsafe(coro, self.__loop)
+        )
 
     async def aload_tool(
         self,
@@ -98,11 +108,13 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox.
         """
-        return await self._run_as_async(
+        async_tool = await self.__run_as_async(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
             )
         )
+
+        return ToolboxTool(async_tool, self.__loop, self.__thread)
 
     async def aload_toolset(
         self,
@@ -131,11 +143,16 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        return await self._run_as_async(
+        async_tools = await self.__run_as_async(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
             )
         )
+
+        tools: list[ToolboxTool] = []
+        for async_tool in async_tools:
+            tools.append(ToolboxTool(async_tool, self.__loop, self.__thread))
+        return tools
 
     def load_tool(
         self,
@@ -162,11 +179,13 @@ class ToolboxClient:
         Returns:
             A tool loaded from the Toolbox.
         """
-        return self._run_as_sync(
+        async_tool = self.__run_as_sync(
             self.__async_client.aload_tool(
                 tool_name, auth_tokens, auth_headers, bound_params, strict
             )
         )
+
+        return ToolboxTool(async_tool, self.__loop, self.__thread)
 
     def load_toolset(
         self,
@@ -195,8 +214,13 @@ class ToolboxClient:
         Returns:
             A list of all tools loaded from the Toolbox.
         """
-        return self._run_as_sync(
+        async_tools = self.__run_as_sync(
             self.__async_client.aload_toolset(
                 toolset_name, auth_tokens, auth_headers, bound_params, strict
             )
         )
+
+        tools: list[ToolboxTool] = []
+        for async_tool in async_tools:
+            tools.append(ToolboxTool(async_tool, self.__loop, self.__thread))
+        return tools

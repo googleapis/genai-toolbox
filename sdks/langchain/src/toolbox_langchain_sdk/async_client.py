@@ -17,37 +17,25 @@ from warnings import warn
 
 from aiohttp import ClientSession
 
-from .tools import ToolboxTool
+from .tools import AsyncToolboxTool
 from .utils import ManifestSchema, _load_manifest
 
 
 class AsyncToolboxClient:
-    __default_session: Optional[ClientSession] = None
 
     def __init__(
         self,
         url: str,
-        session: Optional[ClientSession] = None,
+        session: ClientSession,
     ):
         """
         Initializes the AsyncToolboxClient for the Toolbox service at the given URL.
 
         Args:
             url: The base URL of the Toolbox service.
-            bg_loop: Optional background async event loop used to create
-            ToolboxTool.
             session: An HTTP client session.
         """
         self.__url = url
-
-        # Use a default session if none is provided. This leverages connection
-        # pooling for better performance by reusing a single session throughout
-        # the application's lifetime.
-        if session is None:
-            if AsyncToolboxClient.__default_session is None:
-                AsyncToolboxClient.__default_session = ClientSession()
-            session = AsyncToolboxClient.__default_session
-
         self.__session = session
 
     async def aload_tool(
@@ -57,7 +45,7 @@ class AsyncToolboxClient:
         auth_headers: Optional[dict[str, Callable[[], str]]] = None,
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool = True,
-    ) -> ToolboxTool:
+    ) -> AsyncToolboxTool:
         """
         Loads the tool with the given tool name from the Toolbox service.
 
@@ -91,12 +79,11 @@ class AsyncToolboxClient:
         url = f"{self.__url}/api/tool/{tool_name}"
         manifest: ManifestSchema = await _load_manifest(url, self.__session)
 
-        return ToolboxTool(
+        return AsyncToolboxTool(
             tool_name,
             manifest.tools[tool_name],
             self.__url,
             self.__session,
-            None,
             auth_tokens,
             bound_params,
             strict,
@@ -109,7 +96,7 @@ class AsyncToolboxClient:
         auth_headers: Optional[dict[str, Callable[[], str]]] = None,
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool = True,
-    ) -> list[ToolboxTool]:
+    ) -> list[AsyncToolboxTool]:
         """
         Loads tools from the Toolbox service, optionally filtered by toolset
         name.
@@ -144,16 +131,15 @@ class AsyncToolboxClient:
 
         url = f"{self.__url}/api/toolset/{toolset_name or ''}"
         manifest: ManifestSchema = await _load_manifest(url, self.__session)
-        tools: list[ToolboxTool] = []
+        tools: list[AsyncToolboxTool] = []
 
         for tool_name, tool_schema in manifest.tools.items():
             tools.append(
-                ToolboxTool(
+                AsyncToolboxTool(
                     tool_name,
                     tool_schema,
                     self.__url,
                     self.__session,
-                    None,
                     auth_tokens,
                     bound_params,
                     strict,
@@ -168,10 +154,8 @@ class AsyncToolboxClient:
         auth_headers: Optional[dict[str, Callable[[], str]]] = None,
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool = True,
-    ) -> ToolboxTool:
-        raise NotImplementedError(
-            "You can use the ToolboxClient to call synchronous methods."
-        )
+    ) -> AsyncToolboxTool:
+        raise NotImplementedError("Synchronous methods not supported by async client.")
 
     def load_toolset(
         self,
@@ -180,7 +164,5 @@ class AsyncToolboxClient:
         auth_headers: Optional[dict[str, Callable[[], str]]] = None,
         bound_params: dict[str, Union[Any, Callable[[], Any]]] = {},
         strict: bool = True,
-    ) -> list[ToolboxTool]:
-        raise NotImplementedError(
-            "You can use the ToolboxClient to call synchronous methods."
-        )
+    ) -> list[AsyncToolboxTool]:
+        raise NotImplementedError("Synchronous methods not supported by async client.")
