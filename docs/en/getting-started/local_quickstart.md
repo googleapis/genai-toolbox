@@ -13,7 +13,7 @@ This guide assumes you have already done the following:
 
 1. Installed [Python 3.9+][install-python]
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
-1. Completed setup for usage with a [LangChain Chat Model][lc-chat], such as:
+1. Completed setup for usage with a [LangChain chat model][lc-chat], such as:
     - [`langchain-vertexai` package][install-vertexai]
     - [`langchain-google-genai` package][install-genai]
     - [`langchain-anthropic` package][install-anthropic] 
@@ -115,7 +115,8 @@ In this section, we will download Toolbox, configure our tools in a
 1. Download the latest version of Toolbox as a binary:
 
     {{< notice tip >}} 
-  Use the [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+  Select the 
+  [correct binary](https://github.com/googleapis/genai-toolbox/releases) 
   corresponding to your OS and CPU architecture. 
     {{< /notice >}}
     ```bash
@@ -215,10 +216,10 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
-1. In a new terminal,install the `toolbox_langchain_sdk` package.
+1. In a new terminal, install the `toolbox_langchain_sdk` package.
 
     {{< notice warning >}} 
-  The 'toolbox_langchain_sdk' package is not yet published
+  The `toolbox_langchain_sdk` package is not yet published
   to PyPi. Install it directly from the git repo instead:
 
   ```bash
@@ -233,7 +234,10 @@ from Toolbox.
 1. Install other required dependencies:
 
     ```bash
+    # TODO(developer): replace with correct package if needed
     pip install langgraph langchain-google-vertexai
+    # pip install langchain_google_genai
+    # pip install langchain_anthropic
     ```
 
 1. Create a new file named `langgraph_hotel_agent.py` and copy the following
