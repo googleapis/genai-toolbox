@@ -54,7 +54,7 @@ class TestE2EClientAsync:
     @pytest_asyncio.fixture(scope="function")
     async def get_n_rows_tool(self, toolbox):
         tool = await toolbox.aload_tool("get-n-rows")
-        assert tool._ToolboxTool__async_tool.__name == "get-n-rows"
+        assert tool._ToolboxTool__async_tool._AsyncToolboxTool__name == "get-n-rows"
         return tool
 
     #### Basic e2e tests
@@ -71,7 +71,7 @@ class TestE2EClientAsync:
         toolset = await toolbox.aload_toolset(toolset_name)
         assert len(toolset) == expected_length
         for tool in toolset:
-            name = tool._ToolboxTool__async_tool.__name
+            name = tool._ToolboxTool__async_tool._AsyncToolboxTool__name
             assert name in expected_tools
 
     async def test_aload_toolset_all(self, toolbox):
@@ -85,7 +85,7 @@ class TestE2EClientAsync:
             "get-row-by-content-auth",
         ]
         for tool in toolset:
-            name = tool._ToolboxTool__async_tool.__name
+            name = tool._ToolboxTool__async_tool._AsyncToolboxTool__name
             assert name in tool_names
 
     async def test_run_tool_async(self, get_n_rows_tool):
@@ -189,7 +189,7 @@ class TestE2EClientSync:
     @pytest.fixture(scope="function")
     def get_n_rows_tool(self, toolbox):
         tool = toolbox.load_tool("get-n-rows")
-        assert tool._ToolboxTool__async_tool.__name == "get-n-rows"
+        assert tool._ToolboxTool__async_tool._AsyncToolboxTool__name == "get-n-rows"
         return tool
 
     #### Basic e2e tests
@@ -206,7 +206,7 @@ class TestE2EClientSync:
         toolset = toolbox.load_toolset(toolset_name)
         assert len(toolset) == expected_length
         for tool in toolset:
-            name = tool._ToolboxTool__async_tool.__name
+            name = tool._ToolboxTool__async_tool._AsyncToolboxTool__name
             assert name in expected_tools
 
     def test_aload_toolset_all(self, toolbox):
@@ -220,7 +220,7 @@ class TestE2EClientSync:
             "get-row-by-content-auth",
         ]
         for tool in toolset:
-            name = tool._ToolboxTool__async_tool.__name
+            name = tool._ToolboxTool__async_tool._AsyncToolboxTool__name
             assert name in tool_names
 
     @pytest.mark.asyncio
