@@ -51,8 +51,10 @@ deployed service as described under [Testing private
 services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
 {{< /notice >}}
 
-{{< notice note >}}
-If you are using VPC-based sources (such as AlloyDB), make sure your Cloud Run service and the database are in the same VPC network.
+{{< notice note >}} 
+If you are using sources that require VPC-access (such as
+AlloyDB or Cloud SQL over private IP), make sure your Cloud Run service and the
+database are in the same VPC network. 
 {{< /notice >}}
 
 
