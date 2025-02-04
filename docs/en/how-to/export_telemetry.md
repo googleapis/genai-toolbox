@@ -60,8 +60,9 @@ service:
 
 There are a couple of steps to run and use a Collector.
 
-1. Obtain a Collector binary. Pull a binary or Docker image for the
-   OpenTelemetry contrib collector.
+1. [Install the
+   Collector](https://opentelemetry.io/docs/collector/installation/) binary.
+   Pull a binary or Docker image for the OpenTelemetry contrib collector.
 
 1. Set up credentials for telemetry backend.
 
