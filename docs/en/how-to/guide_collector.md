@@ -1,15 +1,23 @@
-# Use collector to export telemetry (trace and metric) data
-Collector receives telemetry data, processes the telemetry, and exports it to a wide variety of observability backends using its components. 
+---
+title: "Export Telemetry using the Otel Collector"
+type: docs
+weight: 1
+description: >
+  How to set up and configure Toolbox to use the Otel Collector. 
+---
 
-## Collector
-The OpenTelemetry Collector removes the need to run, operate, and maintain multiple
-agents/collector. This works well with scalability and supports open source
-observability data formats senidng to one or more open source or commercial
-backends. In addition, collector also provide other benefits such as allowing
-your service to offload data quickly while it take care of additional handling
-like retries, batching, encryption, or even sensitive data filtering.
 
-To run a collector, you will have to provide a configuration file. The
+## About 
+
+The [OpenTelemetry Collector][about-collector] offers a vendor-agnostic
+implementation of how to receive, process and export telemetry data. It removes
+the need to run, operate, and maintain multiple agents/collectors.
+
+[about-collector]: https://opentelemetry.io/docs/collector/
+
+## Configure the Collector
+
+To configure the collector, you will have to provide a configuration file. The
 configuration file consists of four classes of pipeline component that access
 telemetry data.
 - `Receivers`
@@ -48,20 +56,17 @@ service:
       exporters: ["googlecloud"]
 ```
 
-For a conceptual overview of the Collector, see [Collector][collector].
+## Running the Connector
 
-[collector]: https://opentelemetry.io/docs/collector/
-
-## Using a Collector
 There are a couple of steps to run and use a Collector.
 
-1.  Obtain a Collector binary. Pull a binary or Docker image for the
-    OpenTelemetry contrib collector.
+1. Obtain a Collector binary. Pull a binary or Docker image for the
+   OpenTelemetry contrib collector.
 
 1. Set up credentials for telemetry backend.
 
-1. Set up the Collector config.
-    Below are some examples for setting up the Collector config:
+1. Set up the Collector config. Below are some examples for setting up the
+   Collector config:
     - [Google Cloud Exporter][google-cloud-exporter]
     - [Google Managed Service for Prometheus Exporter][google-prometheus-exporter]
 
@@ -83,10 +88,11 @@ There are a couple of steps to run and use a Collector.
    dashboard at [Metrics Explorer][metrics-explorer] and [Trace
    Explorer][trace-explorer].
 
-> [!NOTE]
-> If you are exporting to Google Cloud monitoring, we recommend that you use
-> the Google Cloud Exporter for traces and the Google Managed Service for
-> Prometheus Exporter for metrics.
+  {{< notice note >}}
+  If you are exporting to Google Cloud monitoring, we recommend that you use
+  the Google Cloud Exporter for traces and the Google Managed Service for
+  Prometheus Exporter for metrics.
+  {{< notice tip >}}
 
 [google-cloud-exporter]:
     https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
