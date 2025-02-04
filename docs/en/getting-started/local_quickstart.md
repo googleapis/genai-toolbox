@@ -218,7 +218,7 @@ from Toolbox.
 1. In a new terminal,install the `toolbox_langchain_sdk` package.
 
     {{< notice warning >}} 
-  "toolbox_langchain_sdk" package is not yet published
+  The 'toolbox_langchain_sdk' package is not yet published
   to PyPi. Install it directly from the git repo instead:
 
   ```bash
@@ -244,6 +244,7 @@ from Toolbox.
     import asyncio
 
     from langgraph.prebuilt import create_react_agent
+    # TODO(developer): replace this with another import if needed
     from langchain_google_vertexai import ChatVertexAI
     # from langchain_google_genai import ChatGoogleGenerativeAI
     # from langchain_anthropic import ChatAnthropic
@@ -271,8 +272,8 @@ from Toolbox.
     async def main():
         # TODO(developer): replace this with another model if needed
         model = ChatVertexAI(model_name="gemini-1.5-pro")
-        # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
         # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
+        # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
         
         # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
