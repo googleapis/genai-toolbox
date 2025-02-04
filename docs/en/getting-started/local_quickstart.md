@@ -34,7 +34,7 @@ access by our agent, and create a database user for Toolbox to connect with.
 1. Connect to postgres using the `psql` command:
 
     ```bash
-    psql -U postgres
+    psql -h 127.0.0.1 -U postgres
     ```
 
     Here, `postgres` denotes the default postgres superuser.
@@ -216,10 +216,10 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
-1. In a new terminal, install the `toolbox_langchain_sdk` package.
+1. In a new terminal, install the `toolbox-langchain-sdk` package.
 
     {{< notice warning >}} 
-  The `toolbox_langchain_sdk` package is not yet published
+  The `toolbox-langchain-sdk` package is not yet published
   to PyPi. Install it directly from the git repo instead:
 
   ```bash
