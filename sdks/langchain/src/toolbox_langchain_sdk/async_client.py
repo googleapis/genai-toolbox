@@ -34,8 +34,6 @@ class AsyncToolboxClient:
 
         Args:
             url: The base URL of the Toolbox service.
-            bg_loop: Optional background async event loop used to create
-            ToolboxTool.
             session: An HTTP client session.
         """
         self.__url = url
