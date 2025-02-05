@@ -281,7 +281,7 @@ from Toolbox.
         
         # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
-        tools = await client.load_toolset()
+        tools = await aclient.load_toolset()
 
         agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 

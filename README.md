@@ -120,7 +120,7 @@ from toolbox_langchain_sdk import ToolboxClient
 client = ToolboxClient("http://127.0.0.1:5000")
 
 # these tools can be passed to your application! 
-tools = await client.load_toolset()
+tools = await client.aload_toolset()
 ```
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
@@ -255,10 +255,10 @@ You can load toolsets by name:
 
 ```python
 # This will load all tools
-all_tools = await client.load_toolset()
+all_tools = await client.aload_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = await client.load_toolset("my_second_toolset")
+my_second_toolset = await aclient.load_toolset("my_second_toolset")
 ```
 
 ### AuthSources
