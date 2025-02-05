@@ -50,6 +50,7 @@ class ToolboxClient:
             ToolboxClient.__loop = loop
 
         async def __start_session(url: str) -> None:
+
             # Use a default session if none is provided. This leverages connection
             # pooling for better performance by reusing a single session throughout
             # the application's lifetime.
