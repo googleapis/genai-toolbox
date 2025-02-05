@@ -222,14 +222,7 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 		t.Fatalf("invalid tool kind: %s", toolKind)
 	}
 
-	// Tools using database/sql interface only outputs `int64` instead of `int32`
-	var wantString string
-	switch toolKind {
-	case "mssql-sql":
-		wantString = "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int64=1) Alice][%!s(int64=3) Sid]"
-	default:
-		wantString = "Stub tool call for \"my-tool\"! Parameters parsed: [{\"id\" '\\x03'} {\"name\" \"Alice\"}] \n Output: [%!s(int32=1) Alice][%!s(int32=3) Sid]"
-	}
+	wantString := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
 
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{

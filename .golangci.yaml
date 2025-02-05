@@ -40,3 +40,6 @@ run:
     - cloudsqlmssql
     - cloudsqlmysql
     - neo4j
+    - dgraph
+    - mssql
+    - mysql

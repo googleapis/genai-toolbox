@@ -30,11 +30,11 @@ import (
 )
 
 var (
-	DGRAPH_URL    = os.Getenv("DGRAPH_URL")
+	DGRAPH_URL = os.Getenv("DGRAPH_URL")
 )
 
 func requireDgraphVars(t *testing.T) {
-	if DGRAPH_URL =="" {
+	if DGRAPH_URL == "" {
 		t.Fatal("'DGRAPH_URL' not set")
 	}
 }
@@ -136,8 +136,7 @@ func TestDgraph(t *testing.T) {
 			name:        "invoke my-simple-dql-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-dql-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want: "Stub tool call for \"my-simple-dql-tool\"! Parameters parsed: map[]" +
-				" \n Output: map[result:[map[constant:1]]]",
+			want:        "[{\"result\":[{\"constant\":1}]}]",
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -162,6 +161,7 @@ func TestDgraph(t *testing.T) {
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
+
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}

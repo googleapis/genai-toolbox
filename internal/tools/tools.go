@@ -26,7 +26,7 @@ type ToolConfig interface {
 }
 
 type Tool interface {
-	Invoke(ParamValues) (string, error)
+	Invoke(ParamValues) ([]any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
 	Authorized([]string) bool

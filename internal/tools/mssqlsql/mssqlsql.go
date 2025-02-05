@@ -107,9 +107,7 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) (string, error) {
-	fmt.Printf("Invoked tool %s\n", t.Name)
-
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	namedArgs := make([]any, 0, len(params))
 	paramsMap := params.AsReversedMap()
 	// To support both named args (e.g @id) and positional args (e.g @p1), check if arg name is contained in the statement.
@@ -123,39 +121,44 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 	}
 	rows, err := t.Db.QueryContext(context.Background(), t.Statement, namedArgs...)
 	if err != nil {
-		return "", fmt.Errorf("unable to execute query: %w", err)
+		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
-	types, err := rows.ColumnTypes()
+	cols, err := rows.Columns()
 	if err != nil {
-		return "", fmt.Errorf("unable to fetch column types: %w", err)
-	}
-	v := make([]any, len(types))
-	pointers := make([]any, len(types))
-	for i := range types {
-		pointers[i] = &v[i]
+		return nil, fmt.Errorf("unable to fetch column types: %w", err)
 	}
 
-	// fetch result into a string
-	var out strings.Builder
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
 
+	var out []any
 	for rows.Next() {
-		err = rows.Scan(pointers...)
+		err = rows.Scan(values...)
 		if err != nil {
-			return "", fmt.Errorf("unable to parse row: %w", err)
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		out.WriteString(fmt.Sprintf("%s", v))
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			vMap[name] = rawValues[i]
+		}
+		out = append(out, vMap)
 	}
 	err = rows.Close()
 	if err != nil {
-		return "", fmt.Errorf("unable to close rows: %w", err)
+		return nil, fmt.Errorf("unable to close rows: %w", err)
 	}
 
 	// Check if error occured during iteration
 	if err := rows.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
+
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

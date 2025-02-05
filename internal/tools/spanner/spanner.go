@@ -121,13 +121,13 @@ func getMapParams(params tools.ParamValues, dialect string) (map[string]interfac
 	}
 }
 
-func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	mapParams, err := getMapParams(params, t.dialect)
 	if err != nil {
-		return "", fmt.Errorf("fail to get map params: %w", err)
+		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
 
-	var out strings.Builder
+	var out []any
 
 	_, err = t.Client.ReadWriteTransaction(context.Background(), func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		stmt := spanner.Statement{
@@ -145,14 +145,21 @@ func (t Tool) Invoke(params tools.ParamValues) (string, error) {
 			if err != nil {
 				return fmt.Errorf("unable to parse row: %w", err)
 			}
-			out.WriteString(row.String())
+
+			vMap := make(map[string]any)
+			cols := row.ColumnNames()
+			for i, c := range cols {
+				vMap[c] = row.ColumnValue(i)
+			}
+
+			out = append(out, vMap)
 		}
 	})
 	if err != nil {
-		return "", fmt.Errorf("unable to execute client: %w", err)
+		return nil, fmt.Errorf("unable to execute client: %w", err)
 	}
 
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

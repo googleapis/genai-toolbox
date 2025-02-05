@@ -94,30 +94,29 @@ type Tool struct {
 	manifest     tools.Manifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMapWithDollarPrefix()
 
 	resp, err := t.DgraphClient.ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if err := dgraph.CheckError(resp); err != nil {
-		return "", err
+		return nil, err
 	}
 
+	var out []any
 	var result struct {
 		Data map[string]interface{} `json:"data"`
 	}
 
 	if err := json.Unmarshal(resp, &result); err != nil {
-		return "", fmt.Errorf("error parsing JSON: %v", err)
+		return nil, fmt.Errorf("error parsing JSON: %v", err)
 	}
+	out = append(out, result.Data)
 
-	return fmt.Sprintf(
-		"Stub tool call for %q! Parameters parsed: %q \n Output: %v",
-		t.Name, paramsMap, result.Data,
-	), nil
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {

@@ -39,8 +39,9 @@ type MockTool struct {
 	Params      []tools.Parameter
 }
 
-func (t MockTool) Invoke(tools.ParamValues) (string, error) {
-	return "", nil
+func (t MockTool) Invoke(tools.ParamValues) ([]any, error) {
+	mock := make([]any, 0)
+	return mock, nil
 }
 
 // claims is a map of user info decoded from an auth token

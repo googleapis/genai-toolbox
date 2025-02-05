@@ -30,7 +30,7 @@ import (
 )
 
 var (
-    MSSQL_DATABASE = os.Getenv("MSSQL_DATABASE")
+	MSSQL_DATABASE = os.Getenv("MSSQL_DATABASE")
 	MSSQL_HOST     = os.Getenv("MSSQL_HOST")
 	MSSQL_PORT     = os.Getenv("MSSQL_PORT")
 	MSSQL_USER     = os.Getenv("MSSQL_USER")
@@ -149,7 +149,7 @@ func TestMsSQL(t *testing.T) {
 			name:        "invoke my-simple-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "Stub tool call for \"my-simple-tool\"! Parameters parsed: [] \n Output: [%!s(int64=1)]",
+			want:        "[{\"\":1}]",
 		},
 	}
 	for _, tc := range invokeTcs {

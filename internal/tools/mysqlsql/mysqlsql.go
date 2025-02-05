@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
@@ -107,44 +106,54 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 
 	results, err := t.Pool.QueryContext(context.Background(), t.Statement, sliceParams...)
 	if err != nil {
-		return "", fmt.Errorf("unable to execute query: %w", err)
+		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
 	cols, err := results.Columns()
 	if err != nil {
-		return "", fmt.Errorf("unable to retrieve rows column name: %w", err)
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
 	}
 
-	cl := len(cols)
-	v := make([]any, cl)
-	pointers := make([]any, cl)
-	for i := range v {
-		pointers[i] = &v[i]
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
 	}
-	var out strings.Builder
+
+	var out []any
 	for results.Next() {
-		err := results.Scan(pointers...)
+		err := results.Scan(values...)
 		if err != nil {
-			return "", fmt.Errorf("unable to parse row: %w", err)
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		out.WriteString(fmt.Sprintf("%s", v))
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			b, ok := rawValues[i].([]byte)
+			if ok {
+				vMap[name] = string(b)
+			} else {
+				vMap[name] = rawValues[i]
+			}
+		}
+		out = append(out, vMap)
 	}
 
 	err = results.Close()
 	if err != nil {
-		return "", fmt.Errorf("unable to close rows: %w", err)
+		return nil, fmt.Errorf("unable to close rows: %w", err)
 	}
 
 	if err := results.Err(); err != nil {
-		return "", fmt.Errorf("errors encountered by results.Scan: %w", err)
+		return nil, fmt.Errorf("errors encountered by results.Scan: %w", err)
 	}
 
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

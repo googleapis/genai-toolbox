@@ -220,7 +220,15 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = render.Render(w, r, &resultResponse{Result: res})
+	resMarshal, err := json.Marshal(res)
+	if err != nil {
+		err = fmt.Errorf("unable to marshal result: %w", err)
+		s.logger.DebugContext(context.Background(), err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	_ = render.Render(w, r, &resultResponse{Result: string(resMarshal)})
 }
 
 var _ render.Renderer = &resultResponse{} // Renderer interface for managing response payloads.

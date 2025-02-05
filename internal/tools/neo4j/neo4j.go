@@ -17,7 +17,6 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -95,28 +94,29 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 
-	fmt.Printf("Invoked tool %s\n", t.Name)
 	ctx := context.Background()
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
 	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, t.Statement, paramsMap,
 		neo4j.EagerResultTransformer, config)
 	if err != nil {
-		return "", fmt.Errorf("unable to execute query: %w", err)
+		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
-	var out strings.Builder
+	var out []any
 	keys := results.Keys
 	records := results.Records
 	for _, record := range records {
-		out.WriteString("\n") // fmt.Sprintf("Row: %d\n", row))
+		vMap := make(map[string]any)
 		for col, value := range record.Values {
-			out.WriteString(fmt.Sprintf("\t%s: %s\n", keys[col], value))
+			vMap[keys[col]] = value
 		}
+		out = append(out, vMap)
 	}
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, paramsMap, out.String()), nil
+
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {

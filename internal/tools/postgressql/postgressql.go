@@ -17,7 +17,6 @@ package postgressql
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
@@ -109,23 +108,29 @@ type Tool struct {
 	manifest  tools.Manifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) (string, error) {
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	results, err := t.Pool.Query(context.Background(), t.Statement, sliceParams...)
 	if err != nil {
-		return "", fmt.Errorf("unable to execute query: %w", err)
+		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
-	var out strings.Builder
+	fields := results.FieldDescriptions()
+
+	var out []any
 	for results.Next() {
 		v, err := results.Values()
 		if err != nil {
-			return "", fmt.Errorf("unable to parse row: %w", err)
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		out.WriteString(fmt.Sprintf("%s", v))
+		vMap := make(map[string]any)
+		for i, f := range fields {
+			vMap[f.Name] = v[i]
+		}
+		out = append(out, vMap)
 	}
 
-	return fmt.Sprintf("Stub tool call for %q! Parameters parsed: %q \n Output: %s", t.Name, params, out.String()), nil
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

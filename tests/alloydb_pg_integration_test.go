@@ -210,7 +210,7 @@ func TestAlloyDBSimpleToolEndpoints(t *testing.T) {
 			name:        "invoke my-simple-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "Stub tool call for \"my-simple-tool\"! Parameters parsed: [] \n Output: [%!s(int32=1)]",
+			want:        "[{\"?column?\":1}]",
 		},
 	}
 	for _, tc := range invokeTcs {
