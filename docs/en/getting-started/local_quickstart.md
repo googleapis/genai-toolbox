@@ -254,7 +254,7 @@ from Toolbox.
     # from langchain_anthropic import ChatAnthropic
     from langgraph.checkpoint.memory import MemorySaver
     
-    from toolbox_langchain_sdk import ToolboxClient
+    from toolbox_langchain import ToolboxClient
 
     prompt = """
       You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -281,7 +281,7 @@ from Toolbox.
         
         # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
-        tools = await aclient.load_toolset()
+        tools = await client.aload_toolset()
 
         agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
