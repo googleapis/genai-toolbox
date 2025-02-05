@@ -50,7 +50,7 @@ develop tools focused on interacting with Databases. We believe that there are a
 lot of unique problems when interacting with Databases for Gen AI use cases, and
 want to prioritize solving those first.  
 
-However, we've also received feedback that support some more generic HTTP or
+However, we've also received feedback that supporting more generic HTTP or
 GRPC tools might be helpful in assisting with migrating to Toolbox or in
 accomplishing more complicated workflows. We're looking into what that might
 best look like in Toolbox.
@@ -58,7 +58,7 @@ best look like in Toolbox.
 ## Can I use _$BAR_ orchestration framework to use tools from Toolbox? 
 
 Currently, Toolbox only supports a limited number of client SDKs at our initial
-launch. We are investigating support more frameworks as well as more general
+launch. We are investigating support for more frameworks as well as more general
 approaches for users without a framework -- look forward to seeing an update
 soon.
 
@@ -75,7 +75,7 @@ While a large part of the Gen AI Ecosystem is predominately Python, we opted to
 use Go. We chose Go because it's still easy and simple to use, but also easier
 to write fast, efficient, and concurrent servers. Additionally, given the
 server-client architecture, we can still meet many developers where they are
-with clients in their preferred language. 
+with clients in their preferred language. As Gen AI matures, we want developers to be able to use Toolbox on the serving path of mission critical applications. It's easier to build the needed robustness, performance and scalability in Go than in Python.
 
 
 ## Is Toolbox compatible with Model Context Protocol (MCP)? 
@@ -85,3 +85,4 @@ Toolbox currently uses it's own custom protocol for server-client communication.
 launched towards the end of Toolbox's development, and is currently missing
 functionality to support some of our features. We're currently exploring how
 best to bring Toolbox's functionality to the wider MCP ecosystem.
+
