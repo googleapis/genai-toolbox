@@ -81,7 +81,7 @@ with clients in their preferred language. As Gen AI matures, we want developers 
 ## Is Toolbox compatible with Model Context Protocol (MCP)? 
 
 Toolbox currently uses it's own custom protocol for server-client communication.
-[Anthropic's Model Context Protocol (MCP)][https://modelcontextprotocol.io/]
+[Anthropic's Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 launched towards the end of Toolbox's development, and is currently missing
 functionality to support some of our features. We're currently exploring how
 best to bring Toolbox's functionality to the wider MCP ecosystem.
