@@ -258,7 +258,7 @@ You can load toolsets by name:
 all_tools = await client.aload_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = await aclient.load_toolset("my_second_toolset")
+my_second_toolset = await client.aload_toolset("my_second_toolset")
 ```
 
 ### AuthSources
