@@ -17,27 +17,29 @@
 package tests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
-	"net/http"
+	"fmt"
 	"os"
-	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	POSTGRES_DATABASE = os.Getenv("POSTGRES_DATABASE")
-	POSTGRES_HOST     = os.Getenv("POSTGRES_HOST")
-	POSTGRES_PORT     = os.Getenv("POSTGRES_PORT")
-	POSTGRES_USER     = os.Getenv("POSTGRES_USER")
-	POSTGRES_PASS     = os.Getenv("POSTGRES_PASS")
+	POSTGRES_SOURCE_KIND = "postgres"
+	POSTGRES_TOOL_KIND   = "postgres-sql"
+	POSTGRES_DATABASE    = os.Getenv("POSTGRES_DATABASE")
+	POSTGRES_HOST        = os.Getenv("POSTGRES_HOST")
+	POSTGRES_PORT        = os.Getenv("POSTGRES_PORT")
+	POSTGRES_USER        = os.Getenv("POSTGRES_USER")
+	POSTGRES_PASS        = os.Getenv("POSTGRES_PASS")
 )
 
-func requirePostgresVars(t *testing.T) {
+func getPostgresVars(t *testing.T) map[string]any {
 	switch "" {
 	case POSTGRES_DATABASE:
 		t.Fatal("'POSTGRES_DATABASE' not set")
@@ -50,36 +52,58 @@ func requirePostgresVars(t *testing.T) {
 	case POSTGRES_PASS:
 		t.Fatal("'POSTGRES_PASS' not set")
 	}
+
+	return map[string]any{
+		"kind":     POSTGRES_SOURCE_KIND,
+		"host":     POSTGRES_HOST,
+		"port":     POSTGRES_PORT,
+		"database": POSTGRES_DATABASE,
+		"user":     POSTGRES_USER,
+		"password": POSTGRES_PASS,
+	}
+}
+
+// Copied over from postgres.go
+func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
+	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)
+	pool, err := pgxpool.New(context.Background(), i)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create connection pool: %w", err)
+	}
+
+	return pool, nil
 }
 
 func TestPostgres(t *testing.T) {
-	requirePostgresVars(t)
+	sourceConfig := getPostgresVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-pg-instance": map[string]any{
-				"kind":     "postgres",
-				"host":     POSTGRES_HOST,
-				"port":     POSTGRES_PORT,
-				"database": POSTGRES_DATABASE,
-				"user":     POSTGRES_USER,
-				"password": POSTGRES_PASS,
-			},
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        "postgres-sql",
-				"source":      "my-pg-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
-			},
-		},
+	pool, err := initPostgresConnectionPool(POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASS, POSTGRES_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// set up data for param tool
+	create_statement1, insert_statement1, tool_statement1, params1 := GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := SetupPostgresSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	create_statement2, insert_statement2, tool_statement2, params2 := GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupPostgresSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := GetToolsConfig(sourceConfig, POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
+
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -94,88 +118,8 @@ func TestPostgres(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
+	RunToolGetTest(t)
 
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-	}{
-		{
-			name:        "invoke my-simple-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"?column?\":1}]",
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	select_1_want := "[{\"?column?\":1}]"
+	RunToolInvokeTest(t, select_1_want)
 }

@@ -17,15 +17,10 @@
 package tests
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -38,16 +33,18 @@ import (
 )
 
 var (
-	CLOUD_SQL_MSSQL_PROJECT  = os.Getenv("CLOUD_SQL_MSSQL_PROJECT")
-	CLOUD_SQL_MSSQL_REGION   = os.Getenv("CLOUD_SQL_MSSQL_REGION")
-	CLOUD_SQL_MSSQL_INSTANCE = os.Getenv("CLOUD_SQL_MSSQL_INSTANCE")
-	CLOUD_SQL_MSSQL_DATABASE = os.Getenv("CLOUD_SQL_MSSQL_DATABASE")
-	CLOUD_SQL_MSSQL_IP       = os.Getenv("CLOUD_SQL_MSSQL_IP")
-	CLOUD_SQL_MSSQL_USER     = os.Getenv("CLOUD_SQL_MSSQL_USER")
-	CLOUD_SQL_MSSQL_PASS     = os.Getenv("CLOUD_SQL_MSSQL_PASS")
+	CLOUD_SQL_MSSQL_SOURCE_KIND = "cloud-sql-mssql"
+	CLOUD_SQL_MSSQL_TOOL_KIND   = "mssql-sql"
+	CLOUD_SQL_MSSQL_PROJECT     = os.Getenv("CLOUD_SQL_MSSQL_PROJECT")
+	CLOUD_SQL_MSSQL_REGION      = os.Getenv("CLOUD_SQL_MSSQL_REGION")
+	CLOUD_SQL_MSSQL_INSTANCE    = os.Getenv("CLOUD_SQL_MSSQL_INSTANCE")
+	CLOUD_SQL_MSSQL_DATABASE    = os.Getenv("CLOUD_SQL_MSSQL_DATABASE")
+	CLOUD_SQL_MSSQL_IP          = os.Getenv("CLOUD_SQL_MSSQL_IP")
+	CLOUD_SQL_MSSQL_USER        = os.Getenv("CLOUD_SQL_MSSQL_USER")
+	CLOUD_SQL_MSSQL_PASS        = os.Getenv("CLOUD_SQL_MSSQL_PASS")
 )
 
-func requireCloudSQLMssqlVars(t *testing.T) map[string]any {
+func getCloudSQLMssqlVars(t *testing.T) map[string]any {
 	switch "" {
 	case CLOUD_SQL_MSSQL_PROJECT:
 		t.Fatal("'CLOUD_SQL_MSSQL_PROJECT' not set")
@@ -66,10 +63,9 @@ func requireCloudSQLMssqlVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":      "cloud-sql-mssql",
+		"kind":      CLOUD_SQL_MSSQL_SOURCE_KIND,
 		"project":   CLOUD_SQL_MSSQL_PROJECT,
 		"instance":  CLOUD_SQL_MSSQL_INSTANCE,
-		"ipType":    "public",
 		"ipAddress": CLOUD_SQL_MSSQL_IP,
 		"region":    CLOUD_SQL_MSSQL_REGION,
 		"database":  CLOUD_SQL_MSSQL_DATABASE,
@@ -108,27 +104,35 @@ func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, u
 	return db, nil
 }
 
-func TestCloudSQLMssql(t *testing.T) {
-	sourceConfig := requireCloudSQLMssqlVars(t)
+func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
+	sourceConfig := getCloudSQLMssqlVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        "mssql-sql",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
-			},
-		},
+	db, err := initCloudSQLMssqlConnection(CLOUD_SQL_MSSQL_PROJECT, CLOUD_SQL_MSSQL_REGION, CLOUD_SQL_MSSQL_INSTANCE, CLOUD_SQL_MSSQL_IP, "public", CLOUD_SQL_MSSQL_USER, CLOUD_SQL_MSSQL_PASS, CLOUD_SQL_MSSQL_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// set up data for param tool
+	create_statement1, insert_statement1, tool_statement1, params1 := GetMssqlParamToolInfo(tableNameParam)
+	teardownTable1 := SetupMsSQLTable(t, ctx, db, create_statement1, insert_statement1, tableNameParam, params1)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	create_statement2, insert_statement2, tool_statement2, params2 := GetMssqlLAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupMsSQLTable(t, ctx, db, create_statement2, insert_statement2, tableNameAuth, params2)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := GetToolsConfig(sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
+
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -143,223 +147,22 @@ func TestCloudSQLMssql(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
+	RunToolGetTest(t)
 
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-	}{
-		{
-			name:        "invoke my-simple-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"\":1}]",
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	select_1_want := "[{\"\":1}]"
+	RunToolInvokeTest(t, select_1_want)
 }
 
-// Set up tool calling with parameters test table
-func setupCloudSQLMssqlParamTest(t *testing.T, tableName string) (func(*testing.T), error) {
-	// Set up Tool invocation with parameters test
-	db, err := initCloudSQLMssqlConnection(CLOUD_SQL_MSSQL_PROJECT, CLOUD_SQL_MSSQL_REGION, CLOUD_SQL_MSSQL_INSTANCE, CLOUD_SQL_MSSQL_IP, "public", CLOUD_SQL_MSSQL_USER, CLOUD_SQL_MSSQL_PASS, CLOUD_SQL_MSSQL_DATABASE)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = db.Query(fmt.Sprintf(`
-		CREATE TABLE %s (
-			id INT IDENTITY(1,1) PRIMARY KEY,
-			name VARCHAR(255),
-		);
-	`, tableName))
-	if err != nil {
-		return nil, err
-	}
-
-	// Insert test data
-	statement := fmt.Sprintf(`
-		INSERT INTO %s (name) 
-		VALUES (@alice), (@jane), (@sid);
-	`, tableName)
-	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid")}
-	_, err = db.Query(statement, params...)
-	if err != nil {
-		return nil, err
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err := db.Exec(fmt.Sprintf(`DROP TABLE %s;`, tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}, nil
+// Test connection to public IP
+func TestCloudSQLMssqlPublicIpConnection(t *testing.T) {
+	sourceConfig := getCloudSQLMssqlVars(t)
+	sourceConfig["ipType"] = "public"
+	RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND)
 }
 
-func TestToolInvocationCloudSQLMssqlWithParams(t *testing.T) {
-	// create source config
-	sourceConfig := requireCloudSQLMssqlVars(t)
-
-	// create table name with UUID
-	tableName := "param_test_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-
-	// test setup function reterns teardown function
-	teardownTest, err := setupCloudSQLMssqlParamTest(t, tableName)
-	if err != nil {
-		t.Fatalf("Unable to set up auth test: %s", err)
-	}
-	defer teardownTest(t)
-
-	// call generic invocation test helper
-	RunToolInvocationWithParamsTest(t, sourceConfig, "mssql-sql", tableName)
-}
-
-// Set up auth test database table
-func setupCloudSQLMssqlAuthTest(t *testing.T, tableName string) (func(*testing.T), error) {
-	// set up testt
-	db, err := initCloudSQLMssqlConnection(CLOUD_SQL_MSSQL_PROJECT, CLOUD_SQL_MSSQL_REGION, CLOUD_SQL_MSSQL_INSTANCE, CLOUD_SQL_MSSQL_IP, "public", CLOUD_SQL_MSSQL_USER, CLOUD_SQL_MSSQL_PASS, CLOUD_SQL_MSSQL_DATABASE)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = db.Query(fmt.Sprintf(`
-		CREATE TABLE %s (
-			id INT IDENTITY(1,1) PRIMARY KEY,
-			name VARCHAR(255),
-			email VARCHAR(255)
-		);
-	`, tableName))
-	if err != nil {
-		return nil, err
-	}
-
-	// Insert test data
-	statement := fmt.Sprintf(`
-		INSERT INTO %s (name, email) 
-		VALUES (@alice, @aliceemail), (@jane, @janeemail);
-	`, tableName)
-	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", SERVICE_ACCOUNT_EMAIL), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
-	_, err = db.Query(statement, params...)
-	if err != nil {
-		return nil, err
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err := db.Exec(fmt.Sprintf(`DROP TABLE %s;`, tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}, nil
-}
-
-func TestCloudSQLMssqlGoogleAuthenticatedParameter(t *testing.T) {
-	// create test configs
-	sourceConfig := requireCloudSQLMssqlVars(t)
-
-	// create table name with UUID
-	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-
-	// test setup function reterns teardown function
-	teardownTest, err := setupCloudSQLMssqlAuthTest(t, tableName)
-	if err != nil {
-		t.Fatalf("Unable to set up auth test: %s", err)
-	}
-	defer teardownTest(t)
-
-	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mssql-sql", tableName)
-
-}
-
-func TestCloudSQLMssqlAuthRequiredToolInvocation(t *testing.T) {
-	// create test configs
-	sourceConfig := requireCloudSQLMssqlVars(t)
-
-	// call generic auth test helper
-	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mssql-sql")
-
+// Test connection to private IP
+func TestCloudSQLMssqlPrivateIpConnection(t *testing.T) {
+	sourceConfig := getCloudSQLMssqlVars(t)
+	sourceConfig["ipType"] = "private"
+	RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND)
 }

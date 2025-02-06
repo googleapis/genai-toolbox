@@ -30,12 +30,14 @@ import (
 )
 
 var (
-	SPANNER_PROJECT  = os.Getenv("SPANNER_PROJECT")
-	SPANNER_DATABASE = os.Getenv("SPANNER_DATABASE")
-	SPANNER_INSTANCE = os.Getenv("SPANNER_INSTANCE")
+	SPANNER_SOURCE_KIND = "spanner"
+	SPANNER_TOOL_KIND   = "spanner-sql"
+	SPANNER_PROJECT     = os.Getenv("SPANNER_PROJECT")
+	SPANNER_DATABASE    = os.Getenv("SPANNER_DATABASE")
+	SPANNER_INSTANCE    = os.Getenv("SPANNER_INSTANCE")
 )
 
-func requireSpannerVars(t *testing.T) {
+func getSpannerVars(t *testing.T) map[string]any {
 	switch "" {
 	case SPANNER_PROJECT:
 		t.Fatal("'SPANNER_PROJECT' not set")
@@ -44,10 +46,17 @@ func requireSpannerVars(t *testing.T) {
 	case SPANNER_INSTANCE:
 		t.Fatal("'SPANNER_INSTANCE' not set")
 	}
+
+	return map[string]any{
+		"kind":     SPANNER_SOURCE_KIND,
+		"project":  SPANNER_PROJECT,
+		"instance": SPANNER_INSTANCE,
+		"database": SPANNER_DATABASE,
+	}
 }
 
-func TestSpanner(t *testing.T) {
-	requireSpannerVars(t)
+func TestSpannerToolEndpoints(t *testing.T) {
+	sourceConfig := getSpannerVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -56,12 +65,7 @@ func TestSpanner(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-spanner-instance": map[string]any{
-				"kind":     "spanner",
-				"project":  SPANNER_PROJECT,
-				"instance": SPANNER_INSTANCE,
-				"database": SPANNER_DATABASE,
-			},
+			"my-spanner-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{

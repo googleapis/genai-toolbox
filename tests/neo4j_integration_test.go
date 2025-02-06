@@ -30,13 +30,15 @@ import (
 )
 
 var (
-	NEO4J_DATABASE = os.Getenv("NEO4J_DATABASE")
-	NEO4J_URI      = os.Getenv("NEO4J_URI")
-	NEO4J_USER     = os.Getenv("NEO4J_USER")
-	NEO4J_PASS     = os.Getenv("NEO4J_PASS")
+	NEO4J_SOURCE_KIND = "neo4j"
+	NEO4J_TOOL_KIND   = "neo4j-cypher"
+	NEO4J_DATABASE    = os.Getenv("NEO4J_DATABASE")
+	NEO4J_URI         = os.Getenv("NEO4J_URI")
+	NEO4J_USER        = os.Getenv("NEO4J_USER")
+	NEO4J_PASS        = os.Getenv("NEO4J_PASS")
 )
 
-func requireNeo4jVars(t *testing.T) {
+func getNeo4jVars(t *testing.T) map[string]any {
 	switch "" {
 	case NEO4J_DATABASE:
 		t.Fatal("'NEO4J_DATABASE' not set")
@@ -47,10 +49,18 @@ func requireNeo4jVars(t *testing.T) {
 	case NEO4J_PASS:
 		t.Fatal("'NEO4J_PASS' not set")
 	}
+
+	return map[string]any{
+		"kind":     NEO4J_SOURCE_KIND,
+		"uri":      NEO4J_URI,
+		"database": NEO4J_DATABASE,
+		"user":     NEO4J_USER,
+		"password": NEO4J_PASS,
+	}
 }
 
-func TestNeo4j(t *testing.T) {
-	requireNeo4jVars(t)
+func TestNeo4jToolEndpoints(t *testing.T) {
+	sourceConfig := getNeo4jVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -59,13 +69,7 @@ func TestNeo4j(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-neo4j-instance": map[string]any{
-				"kind":     "neo4j",
-				"uri":      NEO4J_URI,
-				"database": NEO4J_DATABASE,
-				"user":     NEO4J_USER,
-				"password": NEO4J_PASS,
-			},
+			"my-neo4j-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{

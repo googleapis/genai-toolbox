@@ -17,27 +17,29 @@
 package tests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
-	"net/http"
+	"database/sql"
+	"fmt"
 	"os"
-	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var (
-	MYSQL_DATABASE = os.Getenv("MYSQL_DATABASE")
-	MYSQL_HOST     = os.Getenv("MYSQL_HOST")
-	MYSQL_PORT     = os.Getenv("MYSQL_PORT")
-	MYSQL_USER     = os.Getenv("MYSQL_USER")
-	MYSQL_PASS     = os.Getenv("MYSQL_PASS")
+	MYSQL_SOURCE_KIND = "mysql"
+	MYSQL_TOOL_KIND   = "mysql-sql"
+	MYSQL_DATABASE    = os.Getenv("MYSQL_DATABASE")
+	MYSQL_HOST        = os.Getenv("MYSQL_HOST")
+	MYSQL_PORT        = os.Getenv("MYSQL_PORT")
+	MYSQL_USER        = os.Getenv("MYSQL_USER")
+	MYSQL_PASS        = os.Getenv("MYSQL_PASS")
 )
 
-func requireMySQLVars(t *testing.T) {
+func getMySQLVars(t *testing.T) map[string]any {
 	switch "" {
 	case MYSQL_DATABASE:
 		t.Fatal("'MYSQL_DATABASE' not set")
@@ -50,36 +52,58 @@ func requireMySQLVars(t *testing.T) {
 	case MYSQL_PASS:
 		t.Fatal("'MYSQL_PASS' not set")
 	}
+
+	return map[string]any{
+		"kind":     MYSQL_SOURCE_KIND,
+		"host":     MYSQL_HOST,
+		"port":     MYSQL_PORT,
+		"database": MYSQL_DATABASE,
+		"user":     MYSQL_USER,
+		"password": MYSQL_PASS,
+	}
 }
 
-func TestMySQL(t *testing.T) {
-	requireMySQLVars(t)
+// Copied over from mysql.go
+func initMySQLConnectionPool(host, port, user, pass, dbname string) (*sql.DB, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+
+	// Interact with the driver directly as you normally would
+	pool, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("sql.Open: %w", err)
+	}
+	return pool, nil
+}
+
+func TestMySQLToolEndpoints(t *testing.T) {
+	sourceConfig := getMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-mysql-instance": map[string]any{
-				"kind":     "mysql",
-				"host":     MYSQL_HOST,
-				"port":     MYSQL_PORT,
-				"database": MYSQL_DATABASE,
-				"user":     MYSQL_USER,
-				"password": MYSQL_PASS,
-			},
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        "mysql-sql",
-				"source":      "my-mysql-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
-			},
-		},
+	pool, err := initMySQLConnectionPool(MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASS, MYSQL_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create MySQL connection pool: %s", err)
 	}
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// set up data for param tool
+	create_statement1, insert_statement1, tool_statement1, params1 := GetMysqlParamToolInfo(tableNameParam)
+	teardownTable1 := SetupMySQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	create_statement2, insert_statement2, tool_statement2, params2 := GetMysqlLAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupMySQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := GetToolsConfig(sourceConfig, MYSQL_TOOL_KIND, tool_statement1, tool_statement2)
+
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -94,88 +118,8 @@ func TestMySQL(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
+	RunToolGetTest(t)
 
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-	}{
-		{
-			name:        "invoke my-simple-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"1\":1}]",
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	select_1_want := "[{\"1\":1}]"
+	RunToolInvokeTest(t, select_1_want)
 }

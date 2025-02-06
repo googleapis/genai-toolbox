@@ -30,17 +30,25 @@ import (
 )
 
 var (
-	DGRAPH_URL = os.Getenv("DGRAPH_URL")
+	DGRAPH_SOURCE_KIND = "dgraph"
+	DGRAPH_TOOL_KIND   = "dgraph-dql"
+	DGRAPH_API_KEY     = "api-key"
+	DGRAPH_URL         = os.Getenv("DGRAPH_URL")
 )
 
-func requireDgraphVars(t *testing.T) {
+func getDgraphVars(t *testing.T) map[string]any {
 	if DGRAPH_URL == "" {
 		t.Fatal("'DGRAPH_URL' not set")
 	}
+	return map[string]any{
+		"kind":      DGRAPH_SOURCE_KIND,
+		"dgraphUrl": DGRAPH_URL,
+		"apiKey":    DGRAPH_API_KEY,
+	}
 }
 
-func TestDgraph(t *testing.T) {
-	requireDgraphVars(t)
+func TestDgraphToolEndpoints(t *testing.T) {
+	sourceConfig := getDgraphVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -49,11 +57,7 @@ func TestDgraph(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-dgraph-instance": map[string]any{
-				"kind":      "dgraph",
-				"dgraphUrl": DGRAPH_URL,
-				"apiKey":    "api-key",
-			},
+			"my-dgraph-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-dql-tool": map[string]any{

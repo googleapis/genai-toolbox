@@ -1,7 +1,6 @@
 //go:build integration
 
-//
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,220 +20,35 @@
 package tests
 
 import (
-	"bufio"
-	"bytes"
-	"context"
-	"encoding/json"
+	"database/sql"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"regexp"
-	"strings"
-	"testing"
-	"time"
-
-	"cloud.google.com/go/cloudsqlconn"
-	yaml "github.com/goccy/go-yaml"
-
-	"github.com/googleapis/genai-toolbox/cmd"
 )
 
-// tmpFileWithCleanup creates a temporary file with the content and returns the path and
-// a function to clean it up, or any errors encountered instead
-func tmpFileWithCleanup(content []byte) (string, func(), error) {
-	// create a random file in the temp dir
-	f, err := os.CreateTemp("", "*") // * indicates random string
-	if err != nil {
-		return "", nil, err
-	}
-	cleanup := func() { os.Remove(f.Name()) }
-
-	if _, err := f.Write(content); err != nil {
-		cleanup()
-		return "", nil, err
-	}
-	if err := f.Close(); err != nil {
-		cleanup()
-		return "", nil, err
-	}
-	return f.Name(), cleanup, err
-}
-
-// CmdExec represents an invocation of a toolbox command.
-type CmdExec struct {
-	Out io.ReadCloser
-
-	cmd     *cmd.Command
-	cancel  context.CancelFunc
-	closers []io.Closer
-	done    chan bool // closed once the cmd is completed
-	err     error
-}
-
-// StartCmd returns a CmdExec representing a running instance of a toolbox command.
-func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*CmdExec, func(), error) {
-	b, err := yaml.Marshal(toolsFile)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to marshal tools file: %s", err)
-	}
-	path, cleanup, err := tmpFileWithCleanup(b)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to write tools file: %s", err)
-	}
-	args = append(args, "--tools_file", path)
-
-	ctx, cancel := context.WithCancel(ctx)
-	// Open a pipe for tracking the output from the cmd
-	pr, pw, err := os.Pipe()
-	if err != nil {
-		cancel()
-		return nil, nil, fmt.Errorf("unable to open stdout pipe: %w", err)
-	}
-
-	if err != nil {
-		cancel()
-		return nil, nil, fmt.Errorf("unable to initiate logger: %w", err)
-	}
-	c := cmd.NewCommand(cmd.WithStreams(pw, pw))
-	c.SetArgs(args)
-
-	t := &CmdExec{
-		Out:     pr,
-		cmd:     c,
-		cancel:  cancel,
-		closers: []io.Closer{pr, pw},
-		done:    make(chan bool),
-	}
-
-	// Start the command in the background
-	go func() {
-		defer close(t.done)
-		defer cancel()
-		t.err = c.ExecuteContext(ctx)
-	}()
-	return t, cleanup, nil
-
-}
-
-// Stop sends the TERM signal to the cmd and returns.
-func (c *CmdExec) Stop() {
-	c.cancel()
-}
-
-// Waits until the execution is completed and returns any error from the result.
-func (c *CmdExec) Wait(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-c.done:
-		return c.err
-	}
-}
-
-// Done returns true if the command has exited.
-func (c *CmdExec) Done() bool {
-	select {
-	case <-c.done:
-		return true
-	default:
-	}
-	return false
-}
-
-// Close releases any resources associated with the instance.
-func (c *CmdExec) Close() {
-	c.cancel()
-	for _, c := range c.closers {
-		c.Close()
-	}
-}
-
-// WaitForString waits until the server logs a single line that matches the provided regex.
-// returns the output of whatever the server sent so far.
-func (c *CmdExec) WaitForString(ctx context.Context, re *regexp.Regexp) (string, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	in := bufio.NewReader(c.Out)
-
-	// read lines in background, sending result of each read over a channel
-	// this allows us to use in.ReadString without blocking
-	type result struct {
-		s   string
-		err error
-	}
-	output := make(chan result)
-	go func() {
-		defer close(output)
-		for {
-			select {
-			case <-ctx.Done():
-				// if the context is canceled, the orig thread will send back the error
-				// so we can just exit the goroutine here
-				return
-			default:
-				// otherwise read a line from the output
-				s, err := in.ReadString('\n')
-				if err != nil {
-					output <- result{err: err}
-					return
-				}
-				output <- result{s: s}
-				// if that last string matched, exit the goroutine
-				if re.MatchString(s) {
-					return
-				}
-			}
-		}
-	}()
-
-	// collect the output until the ctx is canceled, an error was hit,
-	// or match was found (which is indicated the channel is closed)
-	var sb strings.Builder
-	for {
-		select {
-		case <-ctx.Done():
-			// if ctx is done, return that error
-			return sb.String(), ctx.Err()
-		case o, ok := <-output:
-			if !ok {
-				// match was found!
-				return sb.String(), nil
-			}
-			if o.err != nil {
-				// error was found!
-				return sb.String(), o.err
-			}
-			sb.WriteString(o.s)
-		}
-	}
-}
-
-func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, toolKind string, tableName string) {
-	// Specify query statement for different tool kinds
-	var statement string
-	switch toolKind {
-	case "postgres-sql":
-		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
-	case "mssql-sql":
-		statement = fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
-	default:
-		t.Fatalf("invalid tool kind: %s", toolKind)
-	}
-
-	wantString := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-
+// GetToolsConfig returns a mock tools config file
+func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement, auth_tool_statement string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
+		"authSources": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
 		"tools": map[string]any{
-			"my-tool": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+				"statement":   "SELECT 1;",
+			},
+			"my-param-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
-				"statement":   statement,
+				"statement":   param_tool_statement,
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
@@ -248,141 +62,91 @@ func RunToolInvocationWithParamsTest(t *testing.T, sourceConfig map[string]any, 
 					},
 				},
 			},
-		},
-	}
-
-	// Initialize a test command
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	var args []string
-
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
-	if err != nil {
-		t.Fatalf("command initialization returned an error: %s", err)
-	}
-	defer cleanup()
-
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
-	defer cancel()
-
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
-	if err != nil {
-		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %s", err)
-	}
-
-	// Test Tool invocation with parameters
-	invokeTcs := []struct {
-		name string
-		api  string
-
-		requestBody io.Reader
-		want        string
-		isErr       bool
-	}{
-		{
-			name:        "Invoke my-tool with parameters",
-			api:         "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			isErr:       false,
-			want:        wantString,
-		},
-		{
-			name:        "Invoke my-tool without parameters",
-			api:         "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			isErr:       true,
-		},
-		{
-			name:        "Invoke my-tool without insufficient parameters",
-			api:         "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"id": 1}`)),
-			isErr:       true,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request with parameters
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr == true {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	var args []string
-
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
+			"my-auth-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"statement": auth_tool_statement,
+				"parameters": []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authSources": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
 				"statement":   "SELECT 1;",
+				"authRequired": []string{
+					"my-google-auth",
+				},
 			},
 		},
 	}
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
-	if err != nil {
-		t.Fatalf("command initialization returned an error: %s", err)
-	}
-	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
-	if err != nil {
-		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %s", err)
-	}
+	return toolsFile
 }
 
-// GetCloudSQLDialOpts returns cloud sql connector's dial option for ip type.
-func GetCloudSQLDialOpts(ipType string) ([]cloudsqlconn.DialOption, error) {
-	switch strings.ToLower(ipType) {
-	case "private":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPrivateIP()}, nil
-	case "public":
-		return []cloudsqlconn.DialOption{cloudsqlconn.WithPublicIP()}, nil
-	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
-	}
+// GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
+func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, []any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3);", tableName)
+	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
+	params := []any{"Alice", "Jane", "Sid"}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetPostgresSQLAuthToolInfo returns statements and param of my-auth-tool for postgres-sql kind
+func GetPostgresSQLAuthToolInfo(tableName string) (string, string, string, []any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT, email TEXT);", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES ($1, $2), ($3, $4)", tableName)
+	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
+	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMssqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid);", tableName)
+	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
+	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid")}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMssqlLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
+func GetMssqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
+	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
+	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", SERVICE_ACCOUNT_EMAIL), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMysqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
+	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	params := []any{"Alice", "Jane", "Sid"}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMysqlLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
+func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
+	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
+	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
+	return create_statement, insert_statement, tool_statement, params
 }

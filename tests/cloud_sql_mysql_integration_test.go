@@ -18,15 +18,10 @@
 package tests
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -39,15 +34,17 @@ import (
 )
 
 var (
-	CLOUD_SQL_MYSQL_PROJECT  = os.Getenv("CLOUD_SQL_MYSQL_PROJECT")
-	CLOUD_SQL_MYSQL_REGION   = os.Getenv("CLOUD_SQL_MYSQL_REGION")
-	CLOUD_SQL_MYSQL_INSTANCE = os.Getenv("CLOUD_SQL_MYSQL_INSTANCE")
-	CLOUD_SQL_MYSQL_DATABASE = os.Getenv("CLOUD_SQL_MYSQL_DATABASE")
-	CLOUD_SQL_MYSQL_USER     = os.Getenv("CLOUD_SQL_MYSQL_USER")
-	CLOUD_SQL_MYSQL_PASS     = os.Getenv("CLOUD_SQL_MYSQL_PASS")
+	CLOUD_SQL_MYSQL_SOURCE_KIND = "cloud-sql-mysql"
+	CLOUD_SQL_MYSQL_TOOL_KIND   = "mysql-sql"
+	CLOUD_SQL_MYSQL_PROJECT     = os.Getenv("CLOUD_SQL_MYSQL_PROJECT")
+	CLOUD_SQL_MYSQL_REGION      = os.Getenv("CLOUD_SQL_MYSQL_REGION")
+	CLOUD_SQL_MYSQL_INSTANCE    = os.Getenv("CLOUD_SQL_MYSQL_INSTANCE")
+	CLOUD_SQL_MYSQL_DATABASE    = os.Getenv("CLOUD_SQL_MYSQL_DATABASE")
+	CLOUD_SQL_MYSQL_USER        = os.Getenv("CLOUD_SQL_MYSQL_USER")
+	CLOUD_SQL_MYSQL_PASS        = os.Getenv("CLOUD_SQL_MYSQL_PASS")
 )
 
-func requireCloudSQLMySQLVars(t *testing.T) map[string]any {
+func getCloudSQLMySQLVars(t *testing.T) map[string]any {
 	switch "" {
 	case CLOUD_SQL_MYSQL_PROJECT:
 		t.Fatal("'CLOUD_SQL_MYSQL_PROJECT' not set")
@@ -64,7 +61,7 @@ func requireCloudSQLMySQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     "cloud-sql-mysql",
+		"kind":     CLOUD_SQL_MYSQL_SOURCE_KIND,
 		"project":  CLOUD_SQL_MYSQL_PROJECT,
 		"instance": CLOUD_SQL_MYSQL_INSTANCE,
 		"region":   CLOUD_SQL_MYSQL_REGION,
@@ -102,27 +99,35 @@ func initCloudSQLMySQLConnectionPool(project, region, instance, ipType, user, pa
 	return db, nil
 }
 
-func TestCloudSQLMySQL(t *testing.T) {
-	sourceConfig := requireCloudSQLMySQLVars(t)
+func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
+	sourceConfig := getCloudSQLMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-mysql-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        "mysql-sql",
-				"source":      "my-mysql-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
-			},
-		},
+	pool, err := initCloudSQLMySQLConnectionPool(CLOUD_SQL_MYSQL_PROJECT, CLOUD_SQL_MYSQL_REGION, CLOUD_SQL_MYSQL_INSTANCE, "public", CLOUD_SQL_MYSQL_USER, CLOUD_SQL_MYSQL_PASS, CLOUD_SQL_MYSQL_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// set up data for param tool
+	create_statement1, insert_statement1, tool_statement1, params1 := GetMysqlParamToolInfo(tableNameParam)
+	teardownTable1 := SetupMySQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	create_statement2, insert_statement2, tool_statement2, params2 := GetMysqlLAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupMySQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := GetToolsConfig(sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND, tool_statement1, tool_statement2)
+
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -137,163 +142,22 @@ func TestCloudSQLMySQL(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
+	RunToolGetTest(t)
 
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-	}{
-		{
-			name:        "invoke my-simple-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"1\":1}]",
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	select_1_want := "[{\"1\":1}]"
+	RunToolInvokeTest(t, select_1_want)
 }
 
-// Set up auth test database table
-func setupCloudSQLMySQLAuthTest(t *testing.T, ctx context.Context, tableName string) func(*testing.T) {
-	// set up testt
-	pool, err := initCloudSQLMySQLConnectionPool(CLOUD_SQL_MYSQL_PROJECT, CLOUD_SQL_MYSQL_REGION, CLOUD_SQL_MYSQL_INSTANCE, "public", CLOUD_SQL_MYSQL_USER, CLOUD_SQL_MYSQL_PASS, CLOUD_SQL_MYSQL_DATABASE)
-	if err != nil {
-		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
-	}
-
-	err = pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	_, err = pool.QueryContext(ctx, fmt.Sprintf(`
-		CREATE TABLE %s (
-			id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			name VARCHAR(255),
-			email VARCHAR(255)
-		);
-	`, tableName))
-	if err != nil {
-		t.Fatalf("unable to create test table: %s", err)
-	}
-
-	// Insert test data
-	statement := fmt.Sprintf(`
-		INSERT INTO %s (name, email) 
-		VALUES (?, ?), (?, ?)
-	`, tableName)
-
-	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
-	_, err = pool.QueryContext(ctx, statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err := pool.ExecContext(ctx, fmt.Sprintf(`DROP TABLE %s;`, tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
+// Test connection to public IP
+func TestCloudSQLMysqlPublicIpConnection(t *testing.T) {
+	sourceConfig := getCloudSQLMySQLVars(t)
+	sourceConfig["ipType"] = "public"
+	RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND)
 }
 
-func TestCloudSQLMySQLGoogleAuthenticatedParameter(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	// create test configs
-	sourceConfig := requireCloudSQLMySQLVars(t)
-
-	// create table name with UUID
-	tableName := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-
-	// test setup function reterns teardown function
-	teardownTest := setupCloudSQLMySQLAuthTest(t, ctx, tableName)
-	defer teardownTest(t)
-
-	// call generic auth test helper
-	RunGoogleAuthenticatedParameterTest(t, sourceConfig, "mysql-sql", tableName)
-
-}
-
-func TestCloudSQLMySQLAuthRequiredToolInvocation(t *testing.T) {
-	// create test configs
-	sourceConfig := requireCloudSQLMySQLVars(t)
-
-	// call generic auth test helper
-	RunAuthRequiredToolInvocationTest(t, sourceConfig, "mysql-sql")
-
+// Test connection to private IP
+func TestCloudSQLMysqlPrivateIpConnection(t *testing.T) {
+	sourceConfig := getCloudSQLMySQLVars(t)
+	sourceConfig["ipType"] = "private"
+	RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND)
 }
