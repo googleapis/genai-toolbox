@@ -216,10 +216,10 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
-1. In a new terminal, install the `toolbox-langchain-sdk` package.
+1. In a new terminal, install the `toolbox-langchain` package.
 
     ```bash
-    pip install toolbox-langchain-sdk
+    pip install toolbox-langchain
     ```
 
 1. Install other required dependencies:
@@ -264,7 +264,7 @@ from Toolbox.
         "My check in dates would be from April 10, 2024 to April 19, 2024.",
     ]
 
-    async def main():
+    def main():
         # TODO(developer): replace this with another model if needed
         model = ChatVertexAI(model_name="gemini-1.5-pro")
         # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
@@ -272,17 +272,17 @@ from Toolbox.
         
         # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
-        tools = await client.aload_toolset()
+        tools = client.load_toolset()
 
         agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
         config = {"configurable": {"thread_id": "thread-1"}}
         for query in queries:
             inputs = {"messages": [("user", prompt + query)]}
-            response = await agent.ainvoke(inputs, stream_mode="values", config=config)
+            response = agent.invoke(inputs, stream_mode="values", config=config)
             print(response["messages"][-1].content)
 
-    asyncio.run(main())
+    main()
     ```
 
     [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
