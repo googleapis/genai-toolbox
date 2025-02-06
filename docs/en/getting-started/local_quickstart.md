@@ -218,15 +218,6 @@ from Toolbox.
 
 1. In a new terminal, install the `toolbox-langchain-sdk` package.
 
-    {{< notice warning >}} 
-  The `toolbox-langchain-sdk` package is not yet published
-  to PyPi. Install it directly from the git repo instead:
-
-  ```bash
-  pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
-  ```
-    {{< /notice >}}
-
     ```bash
     pip install toolbox-langchain-sdk
     ```
@@ -254,7 +245,7 @@ from Toolbox.
     # from langchain_anthropic import ChatAnthropic
     from langgraph.checkpoint.memory import MemorySaver
     
-    from toolbox_langchain_sdk import ToolboxClient
+    from toolbox_langchain import ToolboxClient
 
     prompt = """
       You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -281,7 +272,7 @@ from Toolbox.
         
         # Load the tools from the Toolbox server
         client = ToolboxClient("http://127.0.0.1:5000")
-        tools = await aclient.load_toolset()
+        tools = await client.aload_toolset()
 
         agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
