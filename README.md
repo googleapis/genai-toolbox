@@ -11,7 +11,7 @@ tools easier, faster, and more securely by handling the complexities such as
 connection pooling, authentication, and more.
 
 This README provides a brief overview. For comprehensive details, see the full
-[documentation](https://vigilant-guacamole-plnwrm9.pages.github.io/).
+[documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -119,7 +119,7 @@ terminate signal (`ctrl+c` on most platforms).
 
 For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
-section](https://vigilant-guacamole-plnwrm9.pages.github.io/how-to/)
+section](https://googleapis.github.io/genai-toolbox/how-to/)
 
 ### Integrating your application
 
@@ -157,7 +157,7 @@ have multiple files, you can tell toolbox which to load with the `--tools_file
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
-[Resources](https://vigilant-guacamole-plnwrm9.pages.github.io/resources/).
+[Resources](https://googleapis.github.io/genai-toolbox/resources/).
 ### Sources
 
 The `sources` section of your `tools.yaml` defines what data sources your
@@ -176,7 +176,7 @@ sources:
 ```
 
 For more details on configuring different types of sources, see the
-[Sources](https://vigilant-guacamole-plnwrm9.pages.github.io/resources/sources/.
+[Sources](https://googleapis.github.io/genai-toolbox/resources/sources/.
 
 ### Tools
 
@@ -198,7 +198,7 @@ tools:
 ```
 
 For more details on configuring different types of tools, see the
-[Tools](https://vigilant-guacamole-plnwrm9.pages.github.io/resources/tools).
+[Tools](https://googleapis.github.io/genai-toolbox/resources/tools).
 
 
 ### Toolsets

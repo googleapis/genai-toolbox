@@ -65,9 +65,7 @@ jobs:
       - run: npm ci
       - run: hugo --minify
         env:
-          # HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}
-          # While private, GitHub uses an obfuscated url instead: 
-          HUGO_BASEURL: https://vigilant-guacamole-plnwrm9.pages.github.io/
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.repository }}
           HUGO_RELATIVEURLS: false
 
       - name: Deploy
