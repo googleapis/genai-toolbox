@@ -3,14 +3,13 @@ title: "Dgraph"
 type: docs
 weight: 1
 description: >
- Dgraph is a horizontally scalable and distributed graph database.
+ Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
 
 ---
 
 ## About
 
-[Dgraph][dgraph-docs] is a horizontally scalable and distributed graph database.
-It provides ACID transactions, consistent replication, and linearizable reads.
+[Dgraph][dgraph-docs] is an open-source graph database. It is designed for real-time workloads, horizontal scalability, and data flexibility. Implemented as a distributed system, Dgraph processes queries in parallel to deliver the fastest result. 
 
 This source can connect to either a self-managed Dgraph cluster or one hosted on
 Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
