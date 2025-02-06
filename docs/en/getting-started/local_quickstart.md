@@ -218,15 +218,6 @@ from Toolbox.
 
 1. In a new terminal, install the `toolbox-langchain-sdk` package.
 
-    {{< notice warning >}} 
-  The `toolbox-langchain-sdk` package is not yet published
-  to PyPi. Install it directly from the git repo instead:
-
-  ```bash
-  pip install -e "git+https://github.com/googleapis/genai-toolbox#egg=toolbox-langchain-sdk&subdirectory=sdks/langchain"
-  ```
-    {{< /notice >}}
-
     ```bash
     pip install toolbox-langchain-sdk
     ```
