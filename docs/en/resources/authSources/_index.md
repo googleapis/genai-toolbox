@@ -12,10 +12,10 @@ can primarily be used by [Tools](../tools) in two different ways:
 - [**Authorized Invocation**][auth-invoke] is when a tool
   to be validate by the auth service before the call can be invoked. Toolbox
   will rejected an calls that fail to validate or have an invalid token.
-- [**Authenticated Parameters**][auth-paramsgit ] replace the
-  value of a parameter with a field from an [OIDC][openid-claims] claim. Toolbox
-  will automatically resolve the ID token provided by the client and replace the
-  parameter in the tool call.
+- [**Authenticated Parameters**][auth-params] replace the value of a parameter
+  with a field from an [OIDC][openid-claims] claim. Toolbox will automatically
+  resolve the ID token provided by the client and replace the parameter in the
+  tool call.
 
 [openid-claims]: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
 [auth-invoke]: ../tools/#authorized-invocations
