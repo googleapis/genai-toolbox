@@ -5,38 +5,29 @@
 
 ### ⚠ BREAKING CHANGES
 
-* **langchain-sdk:** Migrate existing state and APIs to a tools level class. ([#171](https://github.com/googleapis/genai-toolbox/issues/171))
+* **langchain-sdk:** The SDK for `toolbox-langchain` is now located [here](https://github.com/googleapis/genai-toolbox-langchain-python).
 
 ### Features
 
 * Add Cloud SQL for SQL Server Source and Tool ([#223](https://github.com/googleapis/genai-toolbox/issues/223)) ([9bad952](https://github.com/googleapis/genai-toolbox/commit/9bad9520604aa363a6d73f5ce14686895c2f4333))
-* Add cloudsql mysql source and tool ([#221](https://github.com/googleapis/genai-toolbox/issues/221)) ([f1f61d7](https://github.com/googleapis/genai-toolbox/commit/f1f61d70877a1c7cc9080f6d70112bd0c0533473))
-* Add dgraph tool and source ([#233](https://github.com/googleapis/genai-toolbox/issues/233)) ([617cc87](https://github.com/googleapis/genai-toolbox/commit/617cc872d1d692138a712d39fb7c1a405e9c1876))
+* Add Cloud SQL for MySQL Source and Tool ([#221](https://github.com/googleapis/genai-toolbox/issues/221)) ([f1f61d7](https://github.com/googleapis/genai-toolbox/commit/f1f61d70877a1c7cc9080f6d70112bd0c0533473))
+* Add Dgraph Source and Tool ([#233](https://github.com/googleapis/genai-toolbox/issues/233)) ([617cc87](https://github.com/googleapis/genai-toolbox/commit/617cc872d1d692138a712d39fb7c1a405e9c1876))
 * Add local quickstart ([#232](https://github.com/googleapis/genai-toolbox/issues/232)) ([497fb06](https://github.com/googleapis/genai-toolbox/commit/497fb06fae6d04adaad11fa78eb04282d0225dbd))
-* Add user agent to cloud databases ([#244](https://github.com/googleapis/genai-toolbox/issues/244)) ([8452f8e](https://github.com/googleapis/genai-toolbox/commit/8452f8eb4457dcb0e360a9d9ae5b6e14e78806b1))
-* **langchain-sdk:** Add features for binding parameters to ToolboxTool class. ([#192](https://github.com/googleapis/genai-toolbox/issues/192)) ([e0ee128](https://github.com/googleapis/genai-toolbox/commit/e0ee1286f924c87e9adf66a90ecb5eb0371b154d))
-* **langchain-sdk:** Migrate existing state and APIs to a tools level class. ([#171](https://github.com/googleapis/genai-toolbox/issues/171)) ([a136308](https://github.com/googleapis/genai-toolbox/commit/a136308f5508a4a2dcc4f8ee672eed961cdfcb64))
-* **mysql:** Add source ([#250](https://github.com/googleapis/genai-toolbox/issues/250)) ([378692a](https://github.com/googleapis/genai-toolbox/commit/378692ab50a90dcc1c3353052d0741cfd318c79d))
-* **sqlserver:** Add mssql source ([#255](https://github.com/googleapis/genai-toolbox/issues/255)) ([8fca0a9](https://github.com/googleapis/genai-toolbox/commit/8fca0a95ee5e79e30919b05592af643ba57f3183))
+* Add user agents for cloud sources ([#244](https://github.com/googleapis/genai-toolbox/issues/244)) ([8452f8e](https://github.com/googleapis/genai-toolbox/commit/8452f8eb4457dcb0e360a9d9ae5b6e14e78806b1))
+* Add MySQL Source ([#250](https://github.com/googleapis/genai-toolbox/issues/250)) ([378692a](https://github.com/googleapis/genai-toolbox/commit/378692ab50a90dcc1c3353052d0741cfd318c79d))
+* Add MSSQL source ([#255](https://github.com/googleapis/genai-toolbox/issues/255)) ([8fca0a9](https://github.com/googleapis/genai-toolbox/commit/8fca0a95ee5e79e30919b05592af643ba57f3183))
 
 
 ### Bug Fixes
 
-* Add coverage file to .gitignore ([#228](https://github.com/googleapis/genai-toolbox/issues/228)) ([e2faaf2](https://github.com/googleapis/genai-toolbox/commit/e2faaf2069b370dc1762193896f4a5962234594b))
-* Auth token verification failure should not throw error immedicately ([#234](https://github.com/googleapis/genai-toolbox/issues/234)) ([4639cc6](https://github.com/googleapis/genai-toolbox/commit/4639cc6560f09b6b8203650ccce424ce59aa0c14))
+* Auth token verification failure should not throw error immediately ([#234](https://github.com/googleapis/genai-toolbox/issues/234)) ([4639cc6](https://github.com/googleapis/genai-toolbox/commit/4639cc6560f09b6b8203650ccce424ce59aa0c14))
 * Fix typo in postgres test ([#216](https://github.com/googleapis/genai-toolbox/issues/216)) ([0c3d12a](https://github.com/googleapis/genai-toolbox/commit/0c3d12ae04a752fddcff06e92967910cdd643bbf))
-* **langchain-sdk:** Inherit from BaseTool and implement placeholder _run method. ([779bf6b](https://github.com/googleapis/genai-toolbox/commit/779bf6b9a28ccb2f788ca1c99e8bdf6e15334f75))
 * **mssql:** Fix mssql tool kind to mssql-sql ([#249](https://github.com/googleapis/genai-toolbox/issues/249)) ([1357be2](https://github.com/googleapis/genai-toolbox/commit/1357be2569b5f8d31b2b72fa83749fa8519fc8bd))
 * **mysql:** Fix mysql tool kind to mysql-sql ([#248](https://github.com/googleapis/genai-toolbox/issues/248)) ([669d6b7](https://github.com/googleapis/genai-toolbox/commit/669d6b7239c36f612f02948716cf167c5a2eaa10))
 * Schema float type ([#264](https://github.com/googleapis/genai-toolbox/issues/264)) ([1702f74](https://github.com/googleapis/genai-toolbox/commit/1702f74e9937eb4539c38c7152fe474870e61591))
 * Typos at test cases ([#265](https://github.com/googleapis/genai-toolbox/issues/265)) ([b7c5661](https://github.com/googleapis/genai-toolbox/commit/b7c5661215c431c8590a60e029f3c340132574b7))
 * Update README and quickstart with the correct async APIs. ([#269](https://github.com/googleapis/genai-toolbox/issues/269)) ([21eef2e](https://github.com/googleapis/genai-toolbox/commit/21eef2e198683d2f7fd0e606a4410b4f3a51686e))
 * Update tool invoke to return json ([#266](https://github.com/googleapis/genai-toolbox/issues/266)) ([ad58cd5](https://github.com/googleapis/genai-toolbox/commit/ad58cd5855be9e1b73926e16527fb89ce778b8d9))
-
-
-### Miscellaneous Chores
-
-* **main:** Release 0.1.0 ([#272](https://github.com/googleapis/genai-toolbox/issues/272)) ([c6e3f73](https://github.com/googleapis/genai-toolbox/commit/c6e3f731e2d78b0d1043db6dbd0d69046994051d))
 
 ## [0.0.5](https://github.com/googleapis/genai-toolbox/compare/v0.0.4...v0.0.5) (2025-01-14)
 
