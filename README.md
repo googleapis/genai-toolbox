@@ -176,7 +176,7 @@ sources:
 ```
 
 For more details on configuring different types of sources, see the
-[Sources](https://googleapis.github.io/genai-toolbox/resources/sources/.
+[Sources](https://googleapis.github.io/genai-toolbox/resources/sources).
 
 ### Tools
 
