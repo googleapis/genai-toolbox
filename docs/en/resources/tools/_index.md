@@ -112,10 +112,10 @@ in the list using the items field:
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
-information decoded from [ID tokens](../authSources/README.md#id-token) that
+information decoded from [ID tokens](../authsources/#specifying-id-tokens-from-clients) that
 are passed in request headers. They do not take input values in request bodies
 like other parameters. To use authenticated parameters, you must configure 
-the tool to map the required [authSources](../authSources/README.md) to 
+the tool to map the required [authSources](../authsources) to 
 specific claims within the user's ID token.
 
 ```yaml
@@ -138,14 +138,14 @@ specific claims within the user's ID token.
 
 | **field** | **type** | **required** | **description**                                                                         |
 |-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authSources](../authSources/README.md) used to verify the OIDC auth token. |
+| name      |  string  |     true     | Name of the [authSources](../authsources) used to verify the OIDC auth token. |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
 ## Authorized Invocations
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
-[authSources](../authSources/README.md) defined in the previous section.
+[authSources](../authsources) defined in the previous section.
 
 ```yaml
 tools:
