@@ -51,8 +51,8 @@ type ServerConfig struct {
 	Port int
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
-	// AuthSourceConfigs defines what sources of authentication are available for tools.
-	AuthSourceConfigs AuthSourceConfigs
+	// AuthServiceConfigs defines what sources of authentication are available for tools.
+	AuthServiceConfigs AuthServiceConfigs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
@@ -220,15 +220,15 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	return nil
 }
 
-// AuthSourceConfigs is a type used to allow unmarshal of the data authSource config map
-type AuthSourceConfigs map[string]auth.AuthSourceConfig
+// AuthServiceConfigs is a type used to allow unmarshal of the data authService config map
+type AuthServiceConfigs map[string]auth.AuthServiceConfig
 
 // validate interface
-var _ yaml.InterfaceUnmarshalerContext = &AuthSourceConfigs{}
+var _ yaml.InterfaceUnmarshalerContext = &AuthServiceConfigs{}
 
-func (c *AuthSourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(AuthSourceConfigs)
-	// Parse the 'kind' fields for each authSource
+func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(AuthServiceConfigs)
+	// Parse the 'kind' fields for each authService
 	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
@@ -250,7 +250,7 @@ func (c *AuthSourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(in
 			return fmt.Errorf("error creating decoder: %w", err)
 		}
 		switch kind {
-		case google.AuthSourceKind:
+		case google.AuthServiceKind:
 			actual := google.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)

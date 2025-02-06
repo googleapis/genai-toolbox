@@ -31,7 +31,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
-		"authSources": map[string]any{
+		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"kind":     "google",
 				"clientId": ClientId,
@@ -73,7 +73,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 						"name":        "email",
 						"type":        "string",
 						"description": "user email",
-						"authSources": []map[string]string{
+						"authServices": []map[string]string{
 							{
 								"name":  "my-google-auth",
 								"field": "email",

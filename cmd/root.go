@@ -119,10 +119,11 @@ func NewCommand(opts ...Option) *Command {
 }
 
 type ToolsFile struct {
-	Sources     server.SourceConfigs     `yaml:"sources"`
-	AuthSources server.AuthSourceConfigs `yaml:"authSources"`
-	Tools       server.ToolConfigs       `yaml:"tools"`
-	Toolsets    server.ToolsetConfigs    `yaml:"toolsets"`
+	Sources      server.SourceConfigs      `yaml:"sources"`
+	AuthSources  server.AuthServiceConfigs `yaml:"authSources"` // Deprecated: Kept for compatibility.
+	AuthServices server.AuthServiceConfigs `yaml:"authServices"`
+	Tools        server.ToolConfigs        `yaml:"tools"`
+	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
@@ -202,8 +203,13 @@ func run(cmd *Command) error {
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	toolsFile, err := parseToolsFile(ctx, buf)
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthSources, toolsFile.Tools, toolsFile.Toolsets
+	toolsFile, err := parseToolsFile(buf)
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
+	authSourceConfigs := toolsFile.AuthSources
+	if authSourceConfigs != nil {
+		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
+		cmd.cfg.AuthServiceConfigs = authSourceConfigs
+	}
 	if err != nil {
 		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
