@@ -75,7 +75,8 @@ steps:
       - "POSTGRES_DATABASE=$_DATABASE_NAME"
       - "POSTGRES_HOST=$_POSTGRES_HOST"
       - "POSTGRES_PORT=$_POSTGRES_PORT"
-    secretEnv: ["POSTGRES_USER", "POSTGRES_PASS"]
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["POSTGRES_USER", "POSTGRES_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -169,7 +170,8 @@ steps:
       - "MYSQL_DATABASE=$_DATABASE_NAME"
       - "MYSQL_HOST=$_MYSQL_HOST"
       - "MYSQL_PORT=$_MYSQL_PORT"
-    secretEnv: ["MYSQL_USER", "MYSQL_PASS"]
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["MYSQL_USER", "MYSQL_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -187,7 +189,8 @@ steps:
       - "MSSQL_DATABASE=$_DATABASE_NAME"
       - "MSSQL_HOST=$_MSSQL_HOST"
       - "MSSQL_PORT=$_MSSQL_PORT"
-    secretEnv: ["MSSQL_USER", "MSSQL_PASS"]
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["MSSQL_USER", "MSSQL_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
