@@ -129,20 +129,22 @@ application. See below the list of Client SDKs for using various frameworks:
 <details open>
 <summary>LangChain / LangGraph</summary>
 
-Once you've installed the [Toolbox LangChain][toolbox-langchain], you can load
-tools:
+1. Install [Toolbox LangChain SDK][toolbox-langchain]:
+    ```bash
+    pip install toolbox-langchain
+    ```
+1. Load tools:
+    ```python
+    from toolbox_langchain import ToolboxClient
 
-```python
-from toolbox_langchain import ToolboxClient
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
 
-# update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
+    # these tools can be passed to your application! 
+    tools = await client.aload_toolset()
+    ```
 
-# these tools can be passed to your application! 
-tools = await client.aload_toolset()
-```
-
-For more detailed instructions on using the Toolbox LangChain, see the
+For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README][toolbox-langchain-readme].
 
 [toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
