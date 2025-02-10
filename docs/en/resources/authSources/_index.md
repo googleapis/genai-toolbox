@@ -66,10 +66,10 @@ async def get_auth_token():
     return "YOUR_ID_TOKEN" # Placeholder
 
 # for a single tool use:
-authorized_tool = await toolbox.load_tool("my-tool-name", auth_tokens={"my_auth": get_auth_token})
+authorized_tool = await toolbox.aload_tool("my-tool-name", auth_tokens={"my_auth": get_auth_token})
 
 # for a toolset use: 
-authorized_tools = await toolbox.load_toolset("my-toolset-name", auth_tokens={"my_auth": get_auth_token})
+authorized_tools = await toolbox.aload_toolset("my-toolset-name", auth_tokens={"my_auth": get_auth_token})
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -78,7 +78,7 @@ authorized_tools = await toolbox.load_toolset("my-toolset-name", auth_tokens={"m
 
 {{< tabpane >}}
 {{< tab header="LangChain" lang="Python" >}}
-tools = await toolbox.load_toolset()
+tools = await toolbox.aload_toolset()
 # for a single token
 auth_tools = [tool.add_auth_token("my_auth", get_auth_token) for tool in tools]
 # OR, if multiple tokens are needed
