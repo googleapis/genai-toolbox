@@ -166,16 +166,27 @@ func TestAlloyDBToolEndpoints(t *testing.T) {
 	RunToolInvokeTest(t, select_1_want)
 }
 
-// Test connection to public IP
-func TestAlloyDBPublicIpConnection(t *testing.T) {
+// Test connection with different IP type
+func TestAlloyDBIpConnection(t *testing.T) {
 	sourceConfig := getAlloyDBPgVars(t)
-	sourceConfig["ipType"] = "public"
-	RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
-}
 
-// Test connection to private IP
-func TestAlloyDBPrivateIpConnection(t *testing.T) {
-	sourceConfig := getAlloyDBPgVars(t)
-	sourceConfig["ipType"] = "private"
-	RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+	tcs := []struct {
+		name   string
+		ipType string
+	}{
+		{
+			name:   "public ip",
+			ipType: "public",
+		},
+		{
+			name:   "private ip",
+			ipType: "private",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			sourceConfig["ipType"] = tc.ipType
+			RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+		})
+	}
 }
