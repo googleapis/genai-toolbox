@@ -12,8 +12,7 @@ description: >
 This guide assumes you have already done the following: 
 
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
-   something like [venv][install-venv] for managing dependencies in your
-   environment).
+   something like [venv][install-venv] for managing dependencies)
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
 1. Completed setup for usage with a [LangChain chat model][lc-chat], such as:
     - [`langchain-vertexai` package][install-vertexai]
