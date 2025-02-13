@@ -11,7 +11,9 @@ description: >
 
 This guide assumes you have already done the following: 
 
-1. Installed [Python 3.9+][install-python]
+1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
+   something like [venv][install-venv] for managing dependencies in your
+   environment).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
 1. Completed setup for usage with a [LangChain chat model][lc-chat], such as:
     - [`langchain-vertexai` package][install-vertexai]
@@ -20,6 +22,8 @@ This guide assumes you have already done the following:
 
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
+[install-pip]: https://pip.pypa.io/en/stable/installation/
+[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
 [lc-chat]: https://python.langchain.com/docs/integrations/chat/
 [install-vertexai]: https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup
@@ -66,7 +70,7 @@ access by our agent, and create a database user for Toolbox to connect with.
 1. Connect to your database with your new user:
 
     ```bash
-    psql -U toolbox_user -d toolbox_db
+    psql -h 127.0.0.1 -U toolbox_user -d toolbox_db
     ```
 
 1. Create a table using the following command:
