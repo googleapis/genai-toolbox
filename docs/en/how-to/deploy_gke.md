@@ -172,6 +172,7 @@ description: >
             - name: toolbox
               # Recommend to use the latest version of toolbox
               image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.0.5
+              args: ["--address", "0.0.0.0"]
               ports:
                 - containerPort: 5000
               volumeMounts:
@@ -238,16 +239,17 @@ description: >
     kubectl logs -f deploy/$deployment_name --namespace $namespace
     ```
 
-1. Use port forwarding to access Toolbox in the cluster.
+1. You might have to wait a couple of minutes. It is ready when you can see
+   `EXTERNAL-IP` with the following command:
 
     ```bash
-    kubectl port-forward service/$service_name 5000:5000
+    kubectl get svc -n $namespace
     ```
 
 1. Access toolbox locally.
 
     ```bash
-    curl http://127.0.0.1:5000
+    curl <EXTERNAL-IP>:5000
     ```
 
 ## Clean up resources
