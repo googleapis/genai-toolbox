@@ -234,11 +234,11 @@ func (ps Parameters) Manifest() []ParameterManifest {
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
-	Name        string   `json:"name"`
-	Type        string   `json:"type"`
-	Description string   `json:"description"`
-	AuthSources []string `json:"authSources"`
-	// Parameter   *ParameterManifest `json:"parameter,omitempty"`
+	Name        string             `json:"name"`
+	Type        string             `json:"type"`
+	Description string             `json:"description"`
+	AuthSources []string           `json:"authSources"`
+	Items       *ParameterManifest `json:"items,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
@@ -259,7 +259,7 @@ func (p *CommonParameter) GetType() string {
 	return p.Type
 }
 
-// GetType returns the type specified for the Parameter.
+// Manifest returns the manifest for the Parameter.
 func (p *CommonParameter) Manifest() ParameterManifest {
 	// only list ParamAuthSource names (without fields) in manifest
 	authNames := make([]string, len(p.AuthSources))
@@ -559,4 +559,21 @@ func (p *ArrayParameter) Parse(v any) (any, error) {
 
 func (p *ArrayParameter) GetAuthSources() []ParamAuthSource {
 	return p.AuthSources
+}
+
+// Manifest returns the manifest for the ArrayParameter.
+func (p *ArrayParameter) Manifest() ParameterManifest {
+	// only list ParamAuthSource names (without fields) in manifest
+	authNames := make([]string, len(p.AuthSources))
+	for i, a := range p.AuthSources {
+		authNames[i] = a.Name
+	}
+	items := p.Items.Manifest()
+	return ParameterManifest{
+		Name:        p.Name,
+		Type:        p.Type,
+		Description: p.Desc,
+		AuthSources: authNames,
+		Items:       &items,
+	}
 }
