@@ -661,3 +661,51 @@ func TestParamValues(t *testing.T) {
 		})
 	}
 }
+
+func TestParamManifest(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   tools.Parameter
+		want tools.ParameterManifest
+	}{
+		{
+			name: "string",
+			in:   tools.NewStringParameter("foo-string", "bar"),
+			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Description: "bar", AuthSources: []string{}},
+		},
+		{
+			name: "int",
+			in:   tools.NewIntParameter("foo-int", "bar"),
+			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Description: "bar", AuthSources: []string{}},
+		},
+		{
+			name: "float",
+			in:   tools.NewFloatParameter("foo-float", "bar"),
+			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Description: "bar", AuthSources: []string{}},
+		},
+		{
+			name: "boolean",
+			in:   tools.NewBooleanParameter("foo-bool", "bar"),
+			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Description: "bar", AuthSources: []string{}},
+		},
+		{
+			name: "array",
+			in:   tools.NewArrayParameter("foo-array", "bar", tools.NewStringParameter("foo-string", "bar")),
+			want: tools.ParameterManifest{
+				Name:        "foo-array",
+				Type:        "array",
+				Description: "bar",
+				AuthSources: []string{},
+				Items:       &tools.ParameterManifest{Name: "foo-string", Type: "string", Description: "bar", AuthSources: []string{}},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.in.Manifest()
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
