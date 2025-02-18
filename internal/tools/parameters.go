@@ -189,34 +189,38 @@ func parseParamFromDelayedUnmarshaler(u *util.DelayedUnmarshaler) (Parameter, er
 		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
 	}
 
+	dec, err := util.NewStrictDecoder(p)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %w", err)
+	}
 	switch t {
 	case typeString:
 		a := &StringParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.Decode(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeInt:
 		a := &IntParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.Decode(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeFloat:
 		a := &FloatParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.Decode(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeBool:
 		a := &BooleanParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.Decode(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeArray:
 		a := &ArrayParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.Decode(a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
@@ -243,9 +247,9 @@ type ParameterManifest struct {
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
-	Name        string            `yaml:"name"`
-	Type        string            `yaml:"type"`
-	Desc        string            `yaml:"description"`
+	Name        string            `yaml:"name" validate:"required"`
+	Type        string            `yaml:"type" validate:"required"`
+	Desc        string            `yaml:"description" validate:"required"`
 	AuthSources []ParamAuthSource `yaml:"authSources"`
 }
 

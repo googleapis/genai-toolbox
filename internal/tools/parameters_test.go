@@ -92,12 +92,14 @@ func TestParametersMarshal(t *testing.T) {
 					"type":        "array",
 					"description": "this param is an array of strings",
 					"items": map[string]string{
-						"type": "string",
+						"name":        "my_string",
+						"type":        "string",
+						"description": "string item",
 					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("", "")),
+				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
 			},
 		},
 		{
@@ -108,12 +110,14 @@ func TestParametersMarshal(t *testing.T) {
 					"type":        "array",
 					"description": "this param is an array of floats",
 					"items": map[string]string{
-						"type": "float",
+						"name":        "my_float",
+						"type":        "float",
+						"description": "float item",
 					},
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("", "")),
+				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
 			},
 		},
 	}
@@ -244,7 +248,9 @@ func TestAuthParametersMarshal(t *testing.T) {
 					"type":        "array",
 					"description": "this param is an array of strings",
 					"items": map[string]string{
-						"type": "string",
+						"name":        "my_string",
+						"type":        "string",
+						"description": "string item",
 					},
 					"authSources": []map[string]string{
 						{
@@ -259,7 +265,7 @@ func TestAuthParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of strings", tools.NewStringParameter("", ""), authSources),
+				tools.NewArrayParameterWithAuth("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item"), authSources),
 			},
 		},
 		{
@@ -270,7 +276,9 @@ func TestAuthParametersMarshal(t *testing.T) {
 					"type":        "array",
 					"description": "this param is an array of floats",
 					"items": map[string]string{
-						"type": "float",
+						"name":        "my_float",
+						"type":        "float",
+						"description": "float item",
 					},
 					"authSources": []map[string]string{
 						{
@@ -285,7 +293,7 @@ func TestAuthParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of floats", tools.NewFloatParameter("", ""), authSources),
+				tools.NewArrayParameterWithAuth("my_array", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item"), authSources),
 			},
 		},
 	}
@@ -717,7 +725,37 @@ func TestFailParametersUnmarshal(t *testing.T) {
 		err  string
 	}{
 		{
-			name: "string array",
+			name: "common parameter missing name",
+			in: []map[string]any{
+				{
+					"type":        "string",
+					"description": "this is a param for string",
+				},
+			},
+			err: "unable to parse as \"string\": Key: 'CommonParameter.Name' Error:Field validation for 'Name' failed on the 'required' tag",
+		},
+		{
+			name: "common parameter missing type",
+			in: []map[string]any{
+				{
+					"name":        "string",
+					"description": "this is a param for string",
+				},
+			},
+			err: "parameter is missing 'type' field: %!w(<nil>)",
+		},
+		{
+			name: "common parameter missing description",
+			in: []map[string]any{
+				{
+					"name": "my_string",
+					"type": "string",
+				},
+			},
+			err: "unable to parse as \"string\": Key: 'CommonParameter.Desc' Error:Field validation for 'Desc' failed on the 'required' tag",
+		},
+		{
+			name: "array parameter missing items",
 			in: []map[string]any{
 				{
 					"name":        "my_array",
@@ -726,6 +764,21 @@ func TestFailParametersUnmarshal(t *testing.T) {
 				},
 			},
 			err: "unable to parse as \"array\": unable to parse 'items' field: error parsing parameters: nothing to unmarshal",
+		},
+		{
+			name: "array parameter missing items' name",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"description": "this param is an array of strings",
+					"items": map[string]string{
+						"type":        "string",
+						"description": "string item",
+					},
+				},
+			},
+			err: "unable to parse as \"array\": unable to parse 'items' field: unable to parse as \"string\": Key: 'CommonParameter.Name' Error:Field validation for 'Name' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
