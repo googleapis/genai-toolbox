@@ -36,6 +36,9 @@ func (d *DelayedUnmarshaler) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 func (d *DelayedUnmarshaler) Unmarshal(v interface{}) error {
+	if d.unmarshal == nil {
+		return fmt.Errorf("nothing to unmarshal")
+	}
 	return d.unmarshal(v)
 }
 

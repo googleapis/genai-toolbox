@@ -709,3 +709,42 @@ func TestParamManifest(t *testing.T) {
 		})
 	}
 }
+
+func TestFailParametersUnmarshal(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   []map[string]any
+		err  string
+	}{
+		{
+			name: "string array",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"description": "this param is an array of strings",
+				},
+			},
+			err: "unable to parse as \"array\": unable to parse 'items' field: error parsing parameters: nothing to unmarshal",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			var got tools.Parameters
+			// parse map to bytes
+			data, err := yaml.Marshal(tc.in)
+			if err != nil {
+				t.Fatalf("unable to marshal input to yaml: %s", err)
+			}
+			// parse bytes to object
+			err = yaml.Unmarshal(data, &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
