@@ -26,6 +26,10 @@ import (
 )
 
 func TestParseFromYamlMssql(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		desc string
 		in   string
@@ -77,7 +81,7 @@ func TestParseFromYamlMssql(t *testing.T) {
 				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
 			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

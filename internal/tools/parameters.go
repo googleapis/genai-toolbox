@@ -193,6 +193,10 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)
 	}
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	switch t {
 	case typeString:
 		a := &StringParameter{}
@@ -200,6 +204,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
 			a.AuthSources = nil
 		}
@@ -210,6 +215,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
 			a.AuthSources = nil
 		}
@@ -220,6 +226,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
 			a.AuthSources = nil
 		}
@@ -230,6 +237,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
 			a.AuthSources = nil
 		}
@@ -240,6 +248,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
 			a.AuthSources = nil
 		}
@@ -261,7 +270,7 @@ type ParameterManifest struct {
 	Name         string             `json:"name"`
 	Type         string             `json:"type"`
 	Description  string             `json:"description"`
-	AuthServices []string           `json:"authServices"`
+	AuthServices []string           `json:"authSources"`
 	Items        *ParameterManifest `json:"items,omitempty"`
 }
 

@@ -203,7 +203,7 @@ func run(cmd *Command) error {
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	toolsFile, err := parseToolsFile(buf)
+	toolsFile, err := parseToolsFile(ctx, buf)
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
 	authSourceConfigs := toolsFile.AuthSources
 	if authSourceConfigs != nil {

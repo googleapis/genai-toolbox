@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	_ "embed"
 	"os"
 	"strings"
@@ -261,6 +260,10 @@ func TestDefaultLogLevel(t *testing.T) {
 }
 
 func TestParseToolFile(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		description   string
 		in            string
@@ -330,7 +333,7 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(context.Background(), testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -352,6 +355,10 @@ func TestParseToolFile(t *testing.T) {
 }
 
 func TestParseToolFileWithAuth(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		description   string
 		in            string
@@ -556,7 +563,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(context.Background(), testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}

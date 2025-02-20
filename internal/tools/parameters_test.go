@@ -23,10 +23,15 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 func TestParametersMarshal(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		name string
 		in   []map[string]any
@@ -130,7 +135,7 @@ func TestParametersMarshal(t *testing.T) {
 				t.Fatalf("unable to marshal input to yaml: %s", err)
 			}
 			// parse bytes to object
-			err = yaml.Unmarshal(data, &got)
+			err = yaml.UnmarshalContext(ctx, data, &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -142,6 +147,10 @@ func TestParametersMarshal(t *testing.T) {
 }
 
 func TestAuthParametersMarshal(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	authServices := []tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"}, {Name: "other-auth-service", Field: "user_id"}}
 	tcs := []struct {
 		name string
@@ -426,7 +435,7 @@ func TestAuthParametersMarshal(t *testing.T) {
 				t.Fatalf("unable to marshal input to yaml: %s", err)
 			}
 			// parse bytes to object
-			err = yaml.Unmarshal(data, &got)
+			err = yaml.UnmarshalContext(ctx, data, &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -839,6 +848,10 @@ func TestParamManifest(t *testing.T) {
 }
 
 func TestFailParametersUnmarshal(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		name string
 		in   []map[string]any
@@ -910,7 +923,7 @@ func TestFailParametersUnmarshal(t *testing.T) {
 				t.Fatalf("unable to marshal input to yaml: %s", err)
 			}
 			// parse bytes to object
-			err = yaml.Unmarshal(data, &got)
+			err = yaml.UnmarshalContext(ctx, data, &got)
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
