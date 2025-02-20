@@ -17,11 +17,11 @@ package cloudsqlmssql_test
 import (
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"gopkg.in/yaml.v3"
 )
 
 func TestParseFromYamlCloudSQLMssql(t *testing.T) {
