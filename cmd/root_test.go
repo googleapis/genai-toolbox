@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"os"
 	"strings"
@@ -329,7 +330,7 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -457,7 +458,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}

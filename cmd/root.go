@@ -29,6 +29,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -125,10 +126,10 @@ type ToolsFile struct {
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
-func parseToolsFile(raw []byte) (ToolsFile, error) {
+func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
 	// Parse contents
-	err := yaml.UnmarshalWithOptions(raw, &toolsFile, yaml.Strict())
+	err := yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
 	if err != nil {
 		return toolsFile, err
 	}
@@ -177,6 +178,8 @@ func run(cmd *Command) error {
 		return fmt.Errorf("logging format invalid.")
 	}
 
+	ctx = context.WithValue(ctx, util.LoggerKey, cmd.logger)
+
 	// Set up OpenTelemetry
 	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
 	if err != nil {
@@ -199,7 +202,7 @@ func run(cmd *Command) error {
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	toolsFile, err := parseToolsFile(buf)
+	toolsFile, err := parseToolsFile(ctx, buf)
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthSourceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthSources, toolsFile.Tools, toolsFile.Toolsets
 	if err != nil {
 		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)

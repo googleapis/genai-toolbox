@@ -15,13 +15,14 @@ package util
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
 )
 
-var _ yaml.InterfaceUnmarshaler = &DelayedUnmarshaler{}
+var _ yaml.InterfaceUnmarshalerContext = &DelayedUnmarshaler{}
 
 // DelayedUnmarshaler is struct that saves the provided unmarshal function
 // passed to UnmarshalYAML so it can be re-used later once the target interface
@@ -30,7 +31,7 @@ type DelayedUnmarshaler struct {
 	unmarshal func(interface{}) error
 }
 
-func (d *DelayedUnmarshaler) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (d *DelayedUnmarshaler) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	d.unmarshal = unmarshal
 	return nil
 }
@@ -60,3 +61,6 @@ func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
 	)
 	return dec, nil
 }
+
+// LoggerKey is the key used to store logger within context
+const LoggerKey contextKey = "logger"
