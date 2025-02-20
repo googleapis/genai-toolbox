@@ -143,22 +143,22 @@ func run(cmd *Command) error {
 	// watch for sigterm / sigint signals
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
-	go func() {
+	go func(sCtx context.Context) {
 		var s os.Signal
 		select {
-		case <-ctx.Done():
+		case <-sCtx.Done():
 			// this should only happen when the context supplied when testing is canceled
 			return
 		case s = <-signals:
 		}
 		switch s {
 		case syscall.SIGINT:
-			cmd.logger.DebugContext(ctx, "Received SIGINT signal to shutdown.")
+			cmd.logger.DebugContext(sCtx, "Received SIGINT signal to shutdown.")
 		case syscall.SIGTERM:
-			cmd.logger.DebugContext(ctx, "Sending SIGTERM signal to shutdown.")
+			cmd.logger.DebugContext(sCtx, "Sending SIGTERM signal to shutdown.")
 		}
 		cancel()
-	}()
+	}(ctx)
 
 	// Handle logger separately from config
 	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
