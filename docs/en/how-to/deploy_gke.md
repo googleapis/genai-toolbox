@@ -71,9 +71,9 @@ description: >
         --role roles/cloudsql.client
     ```
 
-    - [AlloyDB IAM Identity](../sources/alloydb-pg.md#iam-identity)
-    - [CloudSQL IAM Identity](../sources/cloud-sql-pg.md#iam-identity)
-    - [Spanner IAM Identity](../sources/spanner.md#iam-identity)
+    - [AlloyDB IAM Identity](../resources/sources/alloydb-pg.md#iam-permissions)
+    - [CloudSQL IAM Identity](../resources/sources/cloud-sql-pg.md#iam-permissions)
+    - [Spanner IAM Identity](../resources/sources/spanner.md#iam-permissions)
 
 ## Deploying to GKE
 
