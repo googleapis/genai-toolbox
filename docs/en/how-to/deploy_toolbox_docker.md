@@ -1,5 +1,5 @@
 ---
-title: "Deploy to Docker"
+title: "Deploy using Docker Compose"
 type: docs
 weight: 2
 description: >
