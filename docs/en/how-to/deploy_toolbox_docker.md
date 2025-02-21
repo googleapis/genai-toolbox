@@ -3,13 +3,13 @@ title: "Deploy using Docker Compose"
 type: docs
 weight: 2
 description: >
-  How to set up and configure Toolbox to run on Docker.
+  How to deploy Toolbox using Docker Compose. 
 ---
 
 
 ## Before you begin
 
-1. [Install](https://docs.docker.com/engine/install/) the Docker engine.
+1. [Install Docker Compose.](https://docs.docker.com/compose/install/)
 
 ## Modify the configurations
 
