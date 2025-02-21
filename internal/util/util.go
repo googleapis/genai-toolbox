@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/log"
 )
 
 var _ yaml.InterfaceUnmarshalerContext = &DelayedUnmarshaler{}
@@ -62,5 +63,18 @@ func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
 	return dec, nil
 }
 
-// LoggerKey is the key used to store logger within context
-const LoggerKey contextKey = "logger"
+// loggerKey is the key used to store logger within context
+const loggerKey contextKey = "logger"
+
+// WithLogger adds a logger into the context as a value
+func WithLogger(ctx context.Context, logger log.Logger) context.Context {
+	return context.WithValue(ctx, loggerKey, logger)
+}
+
+// LoggerFromContext retreives the logger or return an error
+func LoggerFromContext(ctx context.Context) (log.Logger, error) {
+	if logger, ok := ctx.Value(loggerKey).(log.Logger); ok {
+		return logger, nil
+	}
+	return nil, fmt.Errorf("unable to retrieve logger")
+}

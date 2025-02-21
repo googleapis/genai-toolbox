@@ -178,7 +178,7 @@ func run(cmd *Command) error {
 		return fmt.Errorf("logging format invalid.")
 	}
 
-	ctx = context.WithValue(ctx, util.LoggerKey, cmd.logger)
+	ctx = util.WithLogger(ctx, cmd.logger)
 
 	// Set up OpenTelemetry
 	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
