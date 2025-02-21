@@ -16,6 +16,7 @@
 
 services:
   toolbox:
+    # TODO: It is recommended to pin to a specific image version instead of latest.
     image:  us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     hostname: toolbox
     platform: linux/amd64
@@ -30,6 +31,7 @@ services:
     networks:
       - tool-network
   db:
+    # TODO: It is recommended to pin to a specific image version instead of latest.
     image: postgres
     hostname: db
     environment:
