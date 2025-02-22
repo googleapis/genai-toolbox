@@ -1,21 +1,22 @@
 ---
-title: "Deploy to GKE"
+title: "Deploy to Kubernetes"
 type: docs
 weight: 2
 description: >
-  How to set up and configure Toolbox to deploy on Google Kubernetes Engine (GKE).
+  How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 ---
 
 
 ## Before you begin
 
-1. [Install the `gcloud` CLI](https://cloud.google.com/sdk/docs/install).
 
 1. Set the PROJECT_ID environment variable:
 
     ```bash
     export PROJECT_ID="my-project-id"
     ```
+
+1. [Install the `gcloud` CLI](https://cloud.google.com/sdk/docs/install).
 
 1. Initialize gcloud CLI:
 
@@ -75,7 +76,7 @@ description: >
     - [CloudSQL IAM Identity](../resources/sources/cloud-sql-pg.md#iam-permissions)
     - [Spanner IAM Identity](../resources/sources/spanner.md#iam-permissions)
 
-## Deploying to GKE
+## Deploy to Kubernetes 
 
 1. Set environment variables:
 
@@ -142,7 +143,7 @@ description: >
         --namespace $namespace
     ```
 
-1. Prepare the kubernetes Secrets (`tools.yaml` file).
+1. Prepare the Kubernetes secret for your `tools.yaml` file.
 
     ```bash
     kubectl create secret generic $secret_name \
