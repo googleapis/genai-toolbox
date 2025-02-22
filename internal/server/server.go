@@ -43,10 +43,10 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *Instrumentation
 
-	sources     map[string]sources.Source
-	authSources map[string]auth.AuthSource
-	tools       map[string]tools.Tool
-	toolsets    map[string]tools.Toolset
+	sources      map[string]sources.Source
+	authServices map[string]auth.AuthService
+	tools        map[string]tools.Tool
+	toolsets     map[string]tools.Toolset
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -120,29 +120,29 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
-	// initialize and validate the auth sources from configs
-	authSourcesMap := make(map[string]auth.AuthSource)
-	for name, sc := range cfg.AuthSourceConfigs {
-		a, err := func() (auth.AuthSource, error) {
+	// initialize and validate the auth services from configs
+	authServicesMap := make(map[string]auth.AuthService)
+	for name, sc := range cfg.AuthServiceConfigs {
+		a, err := func() (auth.AuthService, error) {
 			_, span := instrumentation.Tracer.Start(
 				parentCtx,
 				"toolbox/server/auth/init",
-				trace.WithAttributes(attribute.String("auth_kind", sc.AuthSourceConfigKind())),
+				trace.WithAttributes(attribute.String("auth_kind", sc.AuthServiceConfigKind())),
 				trace.WithAttributes(attribute.String("auth_name", name)),
 			)
 			defer span.End()
 			a, err := sc.Initialize()
 			if err != nil {
-				return nil, fmt.Errorf("unable to initialize auth source %q: %w", name, err)
+				return nil, fmt.Errorf("unable to initialize auth service %q: %w", name, err)
 			}
 			return a, nil
 		}()
 		if err != nil {
 			return nil, err
 		}
-		authSourcesMap[name] = a
+		authServicesMap[name] = a
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authSources.", len(authSourcesMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices.", len(authServicesMap)))
 
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
@@ -211,10 +211,10 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		logger:          l,
 		instrumentation: instrumentation,
 
-		sources:     sourcesMap,
-		authSources: authSourcesMap,
-		tools:       toolsMap,
-		toolsets:    toolsetsMap,
+		sources:      sourcesMap,
+		authServices: authServicesMap,
+		tools:        toolsMap,
+		toolsets:     toolsetsMap,
 	}
 	// control plane
 	apiR, err := apiRouter(s)

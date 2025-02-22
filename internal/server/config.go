@@ -14,6 +14,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -50,8 +51,8 @@ type ServerConfig struct {
 	Port int
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
-	// AuthSourceConfigs defines what sources of authentication are available for tools.
-	AuthSourceConfigs AuthSourceConfigs
+	// AuthServiceConfigs defines what sources of authentication are available for tools.
+	AuthServiceConfigs AuthServiceConfigs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
@@ -124,9 +125,9 @@ func (s *StringLevel) Type() string {
 type SourceConfigs map[string]sources.SourceConfig
 
 // validate interface
-var _ yaml.InterfaceUnmarshaler = &SourceConfigs{}
+var _ yaml.InterfaceUnmarshalerContext = &SourceConfigs{}
 
-func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(SourceConfigs)
 	// Parse the 'kind' fields for each source
 	var raw map[string]util.DelayedUnmarshaler
@@ -153,61 +154,61 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		switch kind {
 		case alloydbpgsrc.SourceKind:
 			actual := alloydbpgsrc.Config{Name: name, IPType: "public"}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlpgsrc.SourceKind:
 			actual := cloudsqlpgsrc.Config{Name: name, IPType: "public"}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case postgressrc.SourceKind:
 			actual := postgressrc.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlmysqlsrc.SourceKind:
 			actual := cloudsqlmysqlsrc.Config{Name: name, IPType: "public"}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mysqlsrc.SourceKind:
 			actual := mysqlsrc.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case spannersrc.SourceKind:
 			actual := spannersrc.Config{Name: name, Dialect: "googlesql"}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case neo4jrc.SourceKind:
 			actual := neo4jrc.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case cloudsqlmssqlsrc.SourceKind:
 			actual := cloudsqlmssqlsrc.Config{Name: name, IPType: "public"}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mssqlsrc.SourceKind:
 			actual := mssqlsrc.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case dgraphsrc.SourceKind:
 			actual := dgraphsrc.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
@@ -219,15 +220,15 @@ func (c *SourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// AuthSourceConfigs is a type used to allow unmarshal of the data authSource config map
-type AuthSourceConfigs map[string]auth.AuthSourceConfig
+// AuthServiceConfigs is a type used to allow unmarshal of the data authService config map
+type AuthServiceConfigs map[string]auth.AuthServiceConfig
 
 // validate interface
-var _ yaml.InterfaceUnmarshaler = &AuthSourceConfigs{}
+var _ yaml.InterfaceUnmarshalerContext = &AuthServiceConfigs{}
 
-func (c *AuthSourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	*c = make(AuthSourceConfigs)
-	// Parse the 'kind' fields for each authSource
+func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(AuthServiceConfigs)
+	// Parse the 'kind' fields for each authService
 	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
@@ -249,9 +250,9 @@ func (c *AuthSourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) err
 			return fmt.Errorf("error creating decoder: %w", err)
 		}
 		switch kind {
-		case google.AuthSourceKind:
+		case google.AuthServiceKind:
 			actual := google.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
@@ -266,9 +267,9 @@ func (c *AuthSourceConfigs) UnmarshalYAML(unmarshal func(interface{}) error) err
 type ToolConfigs map[string]tools.ToolConfig
 
 // validate interface
-var _ yaml.InterfaceUnmarshaler = &ToolConfigs{}
+var _ yaml.InterfaceUnmarshalerContext = &ToolConfigs{}
 
-func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(ToolConfigs)
 	// Parse the 'kind' fields for each source
 	var raw map[string]util.DelayedUnmarshaler
@@ -294,37 +295,37 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		switch kind {
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mysqlsql.ToolKind:
 			actual := mysqlsql.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case spanner.ToolKind:
 			actual := spanner.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case neo4jtool.ToolKind:
 			actual := neo4jtool.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case mssqlsql.ToolKind:
 			actual := mssqlsql.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
 		case dgraph.ToolKind:
 			actual := dgraph.Config{Name: name}
-			if err := dec.Decode(&actual); err != nil {
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
@@ -340,9 +341,9 @@ func (c *ToolConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type ToolsetConfigs map[string]tools.ToolsetConfig
 
 // validate interface
-var _ yaml.InterfaceUnmarshaler = &ToolsetConfigs{}
+var _ yaml.InterfaceUnmarshalerContext = &ToolsetConfigs{}
 
-func (c *ToolsetConfigs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(ToolsetConfigs)
 
 	var raw map[string][]string
