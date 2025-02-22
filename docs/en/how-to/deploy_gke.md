@@ -81,19 +81,19 @@ description: >
 1. Set environment variables:
 
     ```bash
-    export cluster_name=toolbox-cluster
-    export deployment_name=toolbox
-    export service_name=toolbox-service
-    export region=us-central1
-    export namespace=toolbox-namespace
-    export secret_name=toolbox-config
-    export ksa_name=toolbox-service-account
+    export CLUSTER_NAME=toolbox-cluster
+    export DEPLOYMENT_NAME=toolbox
+    export SERVICE_NAME=toolbox-service
+    export REGION=us-central1
+    export NAMESPACE=toolbox-namespace
+    export SECRET_NAME=toolbox-config
+    export KSA_NAME=toolbox-service-account
     ```
 
 1. Create a [GKE cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture).
 
     ```bash
-    gcloud container clusters create-auto $cluster_name \
+    gcloud container clusters create-auto $CLUSTER_NAME \
         --location=us-central1 
     ```
 
@@ -101,8 +101,8 @@ description: >
    configures `kubectl` to use the cluster.
 
     ```bash
-    gcloud container clusters get-credentials $cluster_name \
-        --region=$region \
+    gcloud container clusters get-credentials $CLUSTER_NAME \
+        --region=$REGION \
         --project=$PROJECT_ID
     ```
 
@@ -115,13 +115,13 @@ description: >
 1. Create namespace for the deployment.
 
     ```bash
-    kubectl create namespace $namespace
+    kubectl create namespace $NAMESPACE
     ```
 
 1. Create a Kubernetes Service Account (KSA).
 
     ```bash
-    kubectl create serviceaccount $ksa_name --namespace $namespace
+    kubectl create serviceaccount $KSA_NAME --namespace $NAMESPACE
     ```
 
 1. Enable the IAM binding between Google Service Account (GSA) and Kubernetes
@@ -130,7 +130,7 @@ description: >
     ```bash
     gcloud iam service-accounts add-iam-policy-binding \
         --role="roles/iam.workloadIdentityUser" \
-        --member="serviceAccount:$PROJECT_ID.svc.id.goog[$namespace/$ksa_name]" \
+        --member="serviceAccount:$PROJECT_ID.svc.id.goog[$NAMESPACE/$KSA_NAME]" \
         $SA_NAME@$PROJECT_ID.iam.gserviceaccount.com
     ```
 
@@ -138,20 +138,20 @@ description: >
 
     ```bash
     kubectl annotate serviceaccount \
-        $ksa_name \
+        $KSA_NAME \
         iam.gke.io/gcp-service-account=$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
-        --namespace $namespace
+        --namespace $NAMESPACE
     ```
 
 1. Prepare the Kubernetes secret for your `tools.yaml` file.
 
     ```bash
-    kubectl create secret generic $secret_name \
+    kubectl create secret generic $SECRET_NAME \
         --from-file=./tools.yaml \
-        --namespace=$namespace
+        --namespace=$NAMESPACE
     ```
 
-1. Create a kubernetes manifest file (`k8s_deployment.yaml`) to build deployment.
+1. Create a Kubernetes manifest file (`k8s_deployment.yaml`) to build deployment.
 
     ```yaml
     apiVersion: apps/v1
@@ -172,7 +172,7 @@ description: >
           containers:
             - name: toolbox
               # Recommend to use the latest version of toolbox
-              image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.0.5
+              image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.1.0
               args: ["--address", "0.0.0.0"]
               ports:
                 - containerPort: 5000
@@ -193,16 +193,16 @@ description: >
 1. Create the deployment.
 
     ```bash
-    kubectl apply -f k8s_deployment.yaml --namespace $namespace
+    kubectl apply -f k8s_deployment.yaml --namespace $NAMESPACE
     ```
 
 1. Check the status of deployment.
 
     ```bash
-    kubectl get deployments --namespace $namespace
+    kubectl get deployments --namespace $NAMESPACE
     ```
 
-1. Create a kubernetes manifest file (`k8s_service.yaml`) to build service.
+1. Create a Kubernetes manifest file (`k8s_service.yaml`) to build service.
 
     ```yaml
     apiVersion: v1
@@ -224,27 +224,27 @@ description: >
 1. Create the service.
 
     ```bash
-    kubectl apply -f k8s_service.yaml --namespace $namespace
+    kubectl apply -f k8s_service.yaml --namespace $NAMESPACE
     ```
 
 1. You can find your IP address created for your service by getting the service
    information through the following.
 
    ```bash
-   kubectl describe services $service_name --namespace $namespace
+   kubectl describe services $SERVICE_NAME --namespace $NAMESPACE
    ```
 
 1. To look at logs, run the following.
 
     ```bash
-    kubectl logs -f deploy/$deployment_name --namespace $namespace
+    kubectl logs -f deploy/$DEPLOYMENT_NAME --namespace $NAMESPACE
     ```
 
 1. You might have to wait a couple of minutes. It is ready when you can see
    `EXTERNAL-IP` with the following command:
 
     ```bash
-    kubectl get svc -n $namespace
+    kubectl get svc -n $NAMESPACE
     ```
 
 1. Access toolbox locally.
@@ -257,24 +257,24 @@ description: >
 1. Delete secret.
 
     ```bash
-    kubectl delete secret $secret_name --namespace $namespace
+    kubectl delete secret $SECRET_NAME --namespace $NAMESPACE
     ```
 
 1. Delete deployment.
 
     ```bash
-    kubectl delete deployment $deployment_name --namespace $namespace
+    kubectl delete deployment $DEPLOYMENT_NAME --namespace $NAMESPACE
     ```
 
 1. Delete the application's service.
 
     ```bash
-    kubectl delete service $service_name --namespace $namespace
+    kubectl delete service $SERVICE_NAME --namespace $NAMESPACE
     ```
 
-1. Delete the kubernetes cluster.
+1. Delete the Kubernetes cluster.
 
     ```bash
-    gcloud container clusters delete $cluster_name \
-        --location=$region
+    gcloud container clusters delete $CLUSTER_NAME \
+        --location=$REGION
     ```
