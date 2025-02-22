@@ -15,13 +15,15 @@ package util
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/log"
 )
 
-var _ yaml.InterfaceUnmarshaler = &DelayedUnmarshaler{}
+var _ yaml.InterfaceUnmarshalerContext = &DelayedUnmarshaler{}
 
 // DelayedUnmarshaler is struct that saves the provided unmarshal function
 // passed to UnmarshalYAML so it can be re-used later once the target interface
@@ -30,12 +32,15 @@ type DelayedUnmarshaler struct {
 	unmarshal func(interface{}) error
 }
 
-func (d *DelayedUnmarshaler) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (d *DelayedUnmarshaler) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	d.unmarshal = unmarshal
 	return nil
 }
 
 func (d *DelayedUnmarshaler) Unmarshal(v interface{}) error {
+	if d.unmarshal == nil {
+		return fmt.Errorf("nothing to unmarshal")
+	}
 	return d.unmarshal(v)
 }
 
@@ -56,4 +61,20 @@ func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
 		yaml.Validator(validator.New()),
 	)
 	return dec, nil
+}
+
+// loggerKey is the key used to store logger within context
+const loggerKey contextKey = "logger"
+
+// WithLogger adds a logger into the context as a value
+func WithLogger(ctx context.Context, logger log.Logger) context.Context {
+	return context.WithValue(ctx, loggerKey, logger)
+}
+
+// LoggerFromContext retreives the logger or return an error
+func LoggerFromContext(ctx context.Context) (log.Logger, error) {
+	if logger, ok := ctx.Value(loggerKey).(log.Logger); ok {
+		return logger, nil
+	}
+	return nil, fmt.Errorf("unable to retrieve logger")
 }

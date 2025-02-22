@@ -15,6 +15,7 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -158,7 +159,7 @@ type Parameter interface {
 // Parameters is a type used to allow unmarshal a list of parameters
 type Parameters []Parameter
 
-func (c *Parameters) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *Parameters) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(Parameters, 0)
 	// Parse the 'kind' fields for each source
 	var rawList []util.DelayedUnmarshaler
@@ -166,7 +167,7 @@ func (c *Parameters) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	for _, u := range rawList {
-		p, err := parseParamFromDelayedUnmarshaler(&u)
+		p, err := parseParamFromDelayedUnmarshaler(ctx, &u)
 		if err != nil {
 			return err
 		}
@@ -177,7 +178,7 @@ func (c *Parameters) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // parseParamFromDelayedUnmarshaler is a helper function that is required to parse
 // parameters because there are multiple different types
-func parseParamFromDelayedUnmarshaler(u *util.DelayedUnmarshaler) (Parameter, error) {
+func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmarshaler) (Parameter, error) {
 	var p map[string]any
 	err := u.Unmarshal(&p)
 	if err != nil {
@@ -189,34 +190,38 @@ func parseParamFromDelayedUnmarshaler(u *util.DelayedUnmarshaler) (Parameter, er
 		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
 	}
 
+	dec, err := util.NewStrictDecoder(p)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %w", err)
+	}
 	switch t {
 	case typeString:
 		a := &StringParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeInt:
 		a := &IntParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeFloat:
 		a := &FloatParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeBool:
 		a := &BooleanParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
 	case typeArray:
 		a := &ArrayParameter{}
-		if err := u.Unmarshal(a); err != nil {
+		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
 		return a, nil
@@ -243,9 +248,9 @@ type ParameterManifest struct {
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
-	Name        string            `yaml:"name"`
-	Type        string            `yaml:"type"`
-	Desc        string            `yaml:"description"`
+	Name        string            `yaml:"name" validate:"required"`
+	Type        string            `yaml:"type" validate:"required"`
+	Desc        string            `yaml:"description" validate:"required"`
 	AuthSources []ParamAuthSource `yaml:"authSources"`
 }
 
@@ -520,7 +525,7 @@ type ArrayParameter struct {
 	Items           Parameter `yaml:"items"`
 }
 
-func (p *ArrayParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (p *ArrayParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	var rawItem struct {
 		CommonParameter `yaml:",inline"`
 		Items           util.DelayedUnmarshaler `yaml:"items"`
@@ -529,7 +534,7 @@ func (p *ArrayParameter) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		return err
 	}
 	p.CommonParameter = rawItem.CommonParameter
-	i, err := parseParamFromDelayedUnmarshaler(&rawItem.Items)
+	i, err := parseParamFromDelayedUnmarshaler(ctx, &rawItem.Items)
 	if err != nil {
 		return fmt.Errorf("unable to parse 'items' field: %w", err)
 	}
