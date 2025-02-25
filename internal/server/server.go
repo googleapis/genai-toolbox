@@ -59,8 +59,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	parentCtx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
 	defer span.End()
 
-	userAgent := fmt.Sprintf("genai-toolbox/%s", cfg.Version)
-	parentCtx = context.WithValue(parentCtx, util.UserAgentKey, userAgent)
+	parentCtx = util.WithUserAgent(parentCtx, cfg.Version)
 
 	// set up http serving
 	r := chi.NewRouter()

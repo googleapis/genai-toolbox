@@ -88,7 +88,10 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	defer span.End()
 
 	// Create a new dialer with options
-	userAgent := ctx.Value(util.UserAgentKey).(string)
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
 	if err != nil {
 		return nil, err
