@@ -1,12 +1,12 @@
 ---
-title: "AuthSources"
+title: "AuthServices"
 type: docs
 weight: 1
 description: >
-  AuthSources represent services that handle authentication and authorization. 
+  AuthServices represent services that handle authentication and authorization. 
 ---
 
-AuthSources represent services that handle authentication and authorization. It
+AuthServices represent services that handle authentication and authorization. It
 can primarily be used by [Tools](../tools) in two different ways: 
 
 - [**Authorized Invocation**][auth-invoke] is when a tool
@@ -32,7 +32,7 @@ If you are accessing Toolbox with multiple applications, each
 {{< /notice >}}
 
 ```yaml
-authSources:
+authServices:
   my_auth_app_1:
     kind: google
     clientId: YOUR_CLIENT_ID_1
@@ -41,17 +41,17 @@ authSources:
     clientId: YOUR_CLIENT_ID_2
 ```
 
-After you've configured an `authSource` you'll, need to reference it in the
+After you've configured an `authService` you'll, need to reference it in the
 configuration for each tool that should use it:
 - **Authorized Invocations** for authorizing a tool call, [use the
   `requiredAuth` field in a tool config][auth-invoke]
 - **Authenticated Parameters** for using the value from a ODIC claim, [use the
-  `authSources` field in a parameter config][auth-params]
+  `authServices` field in a parameter config][auth-params]
 
 
 ## Specifying ID Tokens from Clients
 
-After [configuring](#example) your `authSources` section, use a Toolbox SDK to
+After [configuring](#example) your `authServices` section, use a Toolbox SDK to
 add your ID tokens to the header of a Tool invocation request. When specifying a
 token you will provide a function (that returns an id). This function is called
 when the tool is invoked. This allows you to cache and refresh the ID token as
@@ -89,4 +89,4 @@ authorized_tool = tools[0].add_auth_tokens({
 {{< /tab >}}
 {{< /tabpane >}}
 
-## Kinds of Auth Sources
+## Kinds of Auth Services

@@ -26,6 +26,10 @@ import (
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		desc string
 		in   string
@@ -48,7 +52,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 						- name: country
 						  type: string
 						  description: some description
-						  authSources:
+						  authServices:
 							- name: my-google-auth-service
 							  field: user_id
 							- name: other-auth-service
@@ -64,7 +68,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Parameters: []tools.Parameter{
 						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthSource{{Name: "my-google-auth-service", Field: "user_id"},
+							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
 				},
@@ -77,7 +81,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
 			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

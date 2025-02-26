@@ -82,10 +82,6 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 		return nil, nil, fmt.Errorf("unable to open stdout pipe: %w", err)
 	}
 
-	if err != nil {
-		cancel()
-		return nil, nil, fmt.Errorf("unable to initiate logger: %w", err)
-	}
 	c := cmd.NewCommand(cmd.WithStreams(pw, pw))
 	c.SetArgs(args)
 

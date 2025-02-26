@@ -163,31 +163,31 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Tool authentication
-	// claimsFromAuth maps the name of the authsource to the claims retrieved from it.
+	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
-	for _, aS := range s.authSources {
+	for _, aS := range s.authServices {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
 			s.logger.DebugContext(context.Background(), err.Error())
 			continue
 		}
 		if claims == nil {
-			// authSource not present in header
+			// authService not present in header
 			continue
 		}
 		claimsFromAuth[aS.GetName()] = claims
 	}
 
 	// Tool authorization check
-	verifiedAuthSources := make([]string, len(claimsFromAuth))
+	verifiedAuthServices := make([]string, len(claimsFromAuth))
 	i := 0
 	for k := range claimsFromAuth {
-		verifiedAuthSources[i] = k
+		verifiedAuthServices[i] = k
 		i++
 	}
 
-	// Check if any of the specified auth sources is verified
-	isAuthorized := tool.Authorized(verifiedAuthSources)
+	// Check if any of the specified auth services is verified
+	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
 		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
 		s.logger.DebugContext(context.Background(), err.Error())

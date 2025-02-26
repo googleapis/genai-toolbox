@@ -16,15 +16,15 @@ package auth
 
 import "net/http"
 
-// SourceConfig is the interface for configuring authentication sources.
-type AuthSourceConfig interface {
-	AuthSourceConfigKind() string
-	Initialize() (AuthSource, error)
+// AuthServiceConfig is the interface for configuring authentication services.
+type AuthServiceConfig interface {
+	AuthServiceConfigKind() string
+	Initialize() (AuthService, error)
 }
 
-// AuthSource is the interface for authentication sources.
-type AuthSource interface {
-	AuthSourceKind() string
+// AuthService is the interface for authentication services.
+type AuthService interface {
+	AuthServiceKind() string
 	GetName() string
 	GetClaimsFromHeader(http.Header) (map[string]any, error)
 }

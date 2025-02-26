@@ -169,6 +169,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) Authorized(verifiedAuthSources []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthSources)
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

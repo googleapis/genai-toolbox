@@ -40,7 +40,7 @@ the second parameter, and so on.
 
 tools:
  search_flights_by_number:
-    kind: spanner
+    kind: spanner-sql
     source: my-spanner-instance
     statement: |
       SELECT * FROM flights

@@ -15,6 +15,7 @@
 package sources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -29,7 +30,7 @@ func (i *Dialect) String() string {
 	return "googlesql"
 }
 
-func (i *Dialect) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (i *Dialect) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	var dialect string
 	if err := unmarshal(&dialect); err != nil {
 		return err

@@ -15,7 +15,13 @@
 package testutils
 
 import (
+	"context"
+	"fmt"
+	"os"
 	"strings"
+
+	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 // formatYaml is a utility function for stripping out tabs in multiline strings
@@ -25,4 +31,14 @@ func FormatYaml(in string) []byte {
 	// converts remaining indentation
 	in = strings.ReplaceAll(in, "\t", "  ")
 	return []byte(in)
+}
+
+// ContextWithNewLogger create a new context with new logger
+func ContextWithNewLogger() (context.Context, error) {
+	ctx := context.Background()
+	logger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		return nil, fmt.Errorf("unable to create logger: %s", err)
+	}
+	return util.WithLogger(ctx, logger), nil
 }

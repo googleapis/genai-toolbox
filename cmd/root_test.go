@@ -260,6 +260,10 @@ func TestDefaultLogLevel(t *testing.T) {
 }
 
 func TestParseToolFile(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		description   string
 		in            string
@@ -329,15 +333,15 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
-				t.Fatalf("incorrect authSources parse: diff %v", diff)
+			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
+				t.Fatalf("incorrect authServices parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
@@ -351,6 +355,10 @@ func TestParseToolFile(t *testing.T) {
 }
 
 func TestParseToolFileWithAuth(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		description   string
 		in            string
@@ -358,6 +366,104 @@ func TestParseToolFileWithAuth(t *testing.T) {
 	}{
 		{
 			description: "basic example",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+			authServices:
+				my-google-service:
+					kind: google
+					clientId: my-client-id
+				other-google-service:
+					kind: google
+					clientId: other-client-id
+
+			tools:
+				example_tool:
+					kind: postgres-sql
+					source: my-pg-instance
+					description: some description
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					parameters:
+						- name: country
+						  type: string
+						  description: some description
+						- name: id
+						  type: integer
+						  description: user id
+						  authServices:
+							- name: my-google-service
+								field: user_id
+						- name: email
+							type: string
+							description: user email
+							authServices:
+							- name: my-google-service
+							  field: email
+							- name: other-google-service
+							  field: other_email
+
+			toolsets:
+				example_toolset:
+					- example_tool
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Kind:     cloudsqlpgsrc.SourceKind,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
+						User:     "my_user",
+						Password: "my_pass",
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthServiceKind,
+						ClientID: "my-client-id",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Kind:     google.AuthServiceKind,
+						ClientID: "other-client-id",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Kind:        postgressql.ToolKind,
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description"),
+							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+			},
+		},
+		{
+			description: "basic example with authSources",
 			in: `
 			sources:
 				my-pg-instance:
@@ -420,15 +526,15 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Password: "my_pass",
 					},
 				},
-				AuthSources: server.AuthSourceConfigs{
+				AuthSources: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthSourceKind,
+						Kind:     google.AuthServiceKind,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthSourceKind,
+						Kind:     google.AuthServiceKind,
 						ClientID: "other-client-id",
 					},
 				},
@@ -441,8 +547,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthSource{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthSource{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -457,15 +563,15 @@ func TestParseToolFileWithAuth(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(testutils.FormatYaml(tc.in))
+			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthSources, toolsFile.AuthSources); diff != "" {
-				t.Fatalf("incorrect authSources parse: diff %v", diff)
+			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
+				t.Fatalf("incorrect authServices parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
