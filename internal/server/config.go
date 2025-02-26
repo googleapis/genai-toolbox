@@ -250,6 +250,12 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
+		case couchbasesrc.SourceKind:
+			actual := couchbasesrc.Config{Name: name}
+			if err := dec.Decode(&actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", kind)
 		}
@@ -408,6 +414,12 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 		case postgresexecutesql.ToolKind:
 			actual := postgresexecutesql.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case couchbasetool.ToolKind:
+			actual := couchbasetool.Config{Name: name}
+			if err := dec.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
