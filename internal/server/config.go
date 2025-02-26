@@ -28,6 +28,7 @@ import (
 	cloudsqlmssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	couchbasesrc "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	dgraphsrc "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
@@ -40,6 +41,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	couchbasetool "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
@@ -243,6 +245,9 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 		case sqlitesrc.SourceKind:
 			actual := sqlitesrc.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
+		case couchbasesrc.SourceKind:
+			actual := couchbasesrc.Config{Name: name}
+			if err := dec.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
@@ -395,6 +400,9 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 		case sqlitesql.ToolKind:
 			actual := sqlitesql.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
+		case couchbasetool.ToolKind:
+			actual := couchbasetool.Config{Name: name}
+			if err := dec.Decode(&actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
