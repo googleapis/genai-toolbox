@@ -66,8 +66,15 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			got := struct {
 				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+
+			// Create a context with a logger
+			ctx, err := testutils.ContextWithNewLogger()
+			if err != nil {
+				t.Fatalf("unable to create context with logger: %s", err)
+			}
+
+			// Parse contents with context
+			err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

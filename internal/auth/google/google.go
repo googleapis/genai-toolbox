@@ -17,10 +17,9 @@ package google
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"google.golang.org/api/idtoken"
+	"net/http"
 )
 
 const AuthServiceKind string = "google"

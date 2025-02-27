@@ -36,12 +36,13 @@ var _ compatibleSource = &couchbase.Source{}
 var compatibleSources = [...]string{couchbase.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name" validate:"required"`
-	Kind        string           `yaml:"kind" validate:"required"`
-	Source      string           `yaml:"source" validate:"required"`
-	Description string           `yaml:"description" validate:"required"`
-	Statement   string           `yaml:"statement" validate:"required"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Statement    string           `yaml:"statement" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -66,12 +67,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:       cfg.Name,
-		Kind:       ToolKind,
-		Parameters: cfg.Parameters,
-		Statement:  cfg.Statement,
-		Scope:      s.CouchbaseScope(),
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		Name:         cfg.Name,
+		Kind:         ToolKind,
+		Parameters:   cfg.Parameters,
+		Statement:    cfg.Statement,
+		Scope:        s.CouchbaseScope(),
+		AuthRequired: cfg.AuthRequired,
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
