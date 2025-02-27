@@ -17,11 +17,9 @@
 package tests
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"reflect"
@@ -85,16 +83,20 @@ func initCouchbaseCluster(connectionString, username, password string) (*gocb.Cl
 }
 
 // GetCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
-func GetCouchbaseParamToolInfo(collectionName string) (string, string, string, []any) {
+func GetCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
-	tool_statement := fmt.Sprintf("SELECT "+collectionName+".* FROM %s WHERE id = $id OR name = $name order by id", collectionName)
+	tool_statement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+collectionName+".* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id", collectionName)
 
-	params := []any{"Alice", "Jane", "Sid"}
-	return "", "", tool_statement, params
+	params := []map[string]any{
+		map[string]any{"name": "Alice"},
+		map[string]any{"name": "Jane"},
+		map[string]any{"name": "Sid"},
+	}
+	return tool_statement, params
 }
 
 // GetCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
-func GetCouchbaseAuthToolInfo(collectionName string) (string, string, string, []any) {
+func GetCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
 
 	// Use a placeholder email for testing
@@ -103,13 +105,16 @@ func GetCouchbaseAuthToolInfo(collectionName string) (string, string, string, []
 		testEmail = "test@example.com"
 	}
 
-	params := []any{"Alice", testEmail, "Jane", "janedoe@gmail.com"}
-	return "", "", tool_statement, params
+	params := []map[string]any{
+		map[string]any{"name": "Alice", "email": testEmail},
+		map[string]any{"name": "Jane", "email": "janedoe@gmail.com"},
+	}
+	return tool_statement, params
 }
 
 // SetupCouchbaseCollection creates a scope and collection and inserts test data
 func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.Cluster,
-	collectionName string, params []any) func(t *testing.T) {
+	collectionName string, params []map[string]any) func(t *testing.T) {
 
 	// Get bucket reference
 	bucket := cluster.Bucket(COUCHBASE_BUCKET)
@@ -147,46 +152,8 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 
 	// Insert test documents
 	// For param tool test
-	_, err = collection.Upsert("user1", map[string]interface{}{
-		"id":   1,
-		"name": params[0],
-	}, &gocb.UpsertOptions{})
-	if err != nil {
-		t.Fatalf("failed to insert test data: %v", err)
-	}
-
-	_, err = collection.Upsert("user2", map[string]interface{}{
-		"id":   2,
-		"name": params[1],
-	}, &gocb.UpsertOptions{})
-	if err != nil {
-		t.Fatalf("failed to insert test data: %v", err)
-	}
-
-	_, err = collection.Upsert("user3", map[string]interface{}{
-		"id":   3,
-		"name": params[2],
-	}, &gocb.UpsertOptions{})
-	if err != nil {
-		t.Fatalf("failed to insert test data: %v", err)
-	}
-
-	// For auth tool test (if params length is 4)
-	if len(params) == 4 {
-		_, err = collection.Upsert("user4", map[string]interface{}{
-			"id":    4,
-			"name":  params[0],
-			"email": params[1],
-		}, &gocb.UpsertOptions{})
-		if err != nil {
-			t.Fatalf("failed to insert test data: %v", err)
-		}
-
-		_, err = collection.Upsert("user5", map[string]interface{}{
-			"id":    5,
-			"name":  params[2],
-			"email": params[3],
-		}, &gocb.UpsertOptions{})
+	for i, param := range params {
+		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{})
 		if err != nil {
 			t.Fatalf("failed to insert test data: %v", err)
 		}
@@ -331,50 +298,6 @@ func RunCouchbaseToolGetTest(t *testing.T) {
 	}
 }
 
-// RunCouchbaseToolInvokeTest tests the tool invoke endpoint
-func RunCouchbaseToolInvokeTest(t *testing.T, select_1_want string) {
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-	}{
-		{
-			name:        "invoke my-simple-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        select_1_want,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
 func TestCouchbaseToolEndpoints(t *testing.T) {
 	sourceConfig := getCouchbaseVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -393,12 +316,12 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameAuth := "auth_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// Set up data for param tool
-	_, _, tool_statement1, params1 := GetCouchbaseParamToolInfo(collectionNameParam)
+	tool_statement1, params1 := GetCouchbaseParamToolInfo(collectionNameParam)
 	teardownCollection1 := SetupCouchbaseCollection(t, ctx, cluster, collectionNameParam, params1)
 	defer teardownCollection1(t)
 
 	// Set up data for auth tool
-	_, _, tool_statement2, params2 := GetCouchbaseAuthToolInfo(collectionNameAuth)
+	tool_statement2, params2 := GetCouchbaseAuthToolInfo(collectionNameAuth)
 	teardownCollection2 := SetupCouchbaseCollection(t, ctx, cluster, collectionNameAuth, params2)
 	defer teardownCollection2(t)
 
@@ -422,6 +345,5 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	RunCouchbaseToolGetTest(t)
 
 	select_1_want := "[{\"$1\":1}]"
-	RunCouchbaseToolInvokeTest(t, select_1_want)
 	RunToolInvokeTest(t, select_1_want)
 }
