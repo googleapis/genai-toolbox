@@ -131,6 +131,5 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	RunCouchbaseToolGetTest(t)
 
 	select_1_want := "[{\"$1\":1}]"
-	RunCouchbaseToolInvokeTest(t, select_1_want)
 	RunToolInvokeTest(t, select_1_want)
 }
