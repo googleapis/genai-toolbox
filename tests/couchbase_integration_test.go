@@ -32,37 +32,41 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	COUCHBASE_SOURCE_KIND = "couchbase"
-	COUCHBASE_TOOL_KIND   = "couchbase-sql"
-	COUCHBASE_CONNECTION  = os.Getenv("COUCHBASE_CONNECTION")
-	COUCHBASE_BUCKET      = os.Getenv("COUCHBASE_BUCKET")
-	COUCHBASE_SCOPE       = os.Getenv("COUCHBASE_SCOPE")
-	COUCHBASE_USERNAME    = os.Getenv("COUCHBASE_USERNAME")
-	COUCHBASE_PASSWORD    = os.Getenv("COUCHBASE_PASSWORD")
+const (
+	couchbaseSourceKind = "couchbase"
+	couchbaseToolKind   = "couchbase-sql"
 )
 
+var (
+	couchbaseConnection = os.Getenv("COUCHBASE_CONNECTION")
+	couchbaseBucket     = os.Getenv("COUCHBASE_BUCKET")
+	couchbaseScope      = os.Getenv("COUCHBASE_SCOPE")
+	couchbaseUsername   = os.Getenv("COUCHBASE_USERNAME")
+	couchbasePassword   = os.Getenv("COUCHBASE_PASSWORD")
+)
+
+// getCouchbaseVars validates and returns Couchbase configuration variables
 func getCouchbaseVars(t *testing.T) map[string]any {
 	switch "" {
-	case COUCHBASE_CONNECTION:
+	case couchbaseConnection:
 		t.Fatal("'COUCHBASE_CONNECTION' not set")
-	case COUCHBASE_BUCKET:
+	case couchbaseBucket:
 		t.Fatal("'COUCHBASE_BUCKET' not set")
-	case COUCHBASE_SCOPE:
+	case couchbaseScope:
 		t.Fatal("'COUCHBASE_SCOPE' not set")
-	case COUCHBASE_USERNAME:
+	case couchbaseUsername:
 		t.Fatal("'COUCHBASE_USERNAME' not set")
-	case COUCHBASE_PASSWORD:
+	case couchbasePassword:
 		t.Fatal("'COUCHBASE_PASSWORD' not set")
 	}
 
 	return map[string]any{
-		"kind":              COUCHBASE_SOURCE_KIND,
-		"connection_string": COUCHBASE_CONNECTION,
-		"bucket":            COUCHBASE_BUCKET,
-		"scope":             COUCHBASE_SCOPE,
-		"username":          COUCHBASE_USERNAME,
-		"password":          COUCHBASE_PASSWORD,
+		"kind":              couchbaseSourceKind,
+		"connection_string": couchbaseConnection,
+		"bucket":            couchbaseBucket,
+		"scope":             couchbaseScope,
+		"username":          couchbaseUsername,
+		"password":          couchbasePassword,
 	}
 }
 
@@ -82,22 +86,24 @@ func initCouchbaseCluster(connectionString, username, password string) (*gocb.Cl
 	return cluster, nil
 }
 
-// GetCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
-func GetCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
+// getCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
+func getCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
-	tool_statement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+collectionName+".* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id", collectionName)
+	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
+		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
+		collectionName, collectionName)
 
 	params := []map[string]any{
-		map[string]any{"name": "Alice"},
-		map[string]any{"name": "Jane"},
-		map[string]any{"name": "Sid"},
+		{"name": "Alice"},
+		{"name": "Jane"},
+		{"name": "Sid"},
 	}
-	return tool_statement, params
+	return toolStatement, params
 }
 
-// GetCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
-func GetCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
-	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
+// getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
+func getCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
 
 	// Use a placeholder email for testing
 	testEmail := os.Getenv("SERVICE_ACCOUNT_EMAIL")
@@ -106,18 +112,18 @@ func GetCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) 
 	}
 
 	params := []map[string]any{
-		map[string]any{"name": "Alice", "email": testEmail},
-		map[string]any{"name": "Jane", "email": "janedoe@gmail.com"},
+		{"name": "Alice", "email": testEmail},
+		{"name": "Jane", "email": "janedoe@gmail.com"},
 	}
-	return tool_statement, params
+	return toolStatement, params
 }
 
-// SetupCouchbaseCollection creates a scope and collection and inserts test data
-func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.Cluster,
+// setupCouchbaseCollection creates a scope and collection and inserts test data
+func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.Cluster,
 	collectionName string, params []map[string]any) func(t *testing.T) {
 
 	// Get bucket reference
-	bucket := cluster.Bucket(COUCHBASE_BUCKET)
+	bucket := cluster.Bucket(couchbaseBucket)
 
 	// Wait for bucket to be ready
 	err := bucket.WaitUntilReady(5*time.Second, nil)
@@ -126,32 +132,25 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 
 	// Create scope if it doesn't exist
-	// Note: This might fail if scope already exists, which is fine
 	bucketMgr := bucket.Collections()
-	err = bucketMgr.CreateScope(COUCHBASE_SCOPE, nil)
-	if err != nil {
-		// Ignore error if scope already exists
-		if !strings.Contains(err.Error(), "already exists") {
-			t.Logf("failed to create scope (might already exist): %v", err)
-		}
+	err = bucketMgr.CreateScope(couchbaseScope, nil)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		t.Logf("failed to create scope (might already exist): %v", err)
 	}
 
 	// Create collection if it doesn't exist
 	err = bucketMgr.CreateCollection(gocb.CollectionSpec{
 		Name:      collectionName,
-		ScopeName: COUCHBASE_SCOPE,
+		ScopeName: couchbaseScope,
 	}, nil)
-	if err != nil {
-		if !strings.Contains(err.Error(), "already exists") {
-			t.Fatalf("failed to create collection: %v", err)
-		}
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		t.Fatalf("failed to create collection: %v", err)
 	}
 
 	// Get a reference to the collection
-	collection := bucket.Scope(COUCHBASE_SCOPE).Collection(collectionName)
+	collection := bucket.Scope(couchbaseScope).Collection(collectionName)
 
 	// Insert test documents
-	// For param tool test
 	for i, param := range params {
 		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{})
 		if err != nil {
@@ -164,7 +163,7 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 		// Drop the collection
 		err := bucketMgr.DropCollection(gocb.CollectionSpec{
 			Name:      collectionName,
-			ScopeName: COUCHBASE_SCOPE,
+			ScopeName: couchbaseScope,
 		}, nil)
 		if err != nil {
 			t.Logf("failed to drop collection: %v", err)
@@ -172,16 +171,16 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 }
 
-// GetCouchbaseToolsConfig returns a mock tools config file
-func GetCouchbaseToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement, auth_tool_statement string) map[string]any {
+// getCouchbaseToolsConfig returns a mock tools config file
+func getCouchbaseToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, authToolStatement string) map[string]any {
 	// Get client ID with a default value to avoid validation errors
 	clientID := os.Getenv("CLIENT_ID")
 	if clientID == "" {
 		clientID = "test-client-id" // Default value for testing
 	}
 
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
+	// Create tools configuration
+	return map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
@@ -202,7 +201,7 @@ func GetCouchbaseToolsConfig(sourceConfig map[string]any, toolKind, param_tool_s
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
-				"statement":   param_tool_statement,
+				"statement":   paramToolStatement,
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
@@ -220,8 +219,7 @@ func GetCouchbaseToolsConfig(sourceConfig map[string]any, toolKind, param_tool_s
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
-				// statement to auto-fill authenticated parameter
-				"statement": auth_tool_statement,
+				"statement":   authToolStatement,
 				"parameters": []map[string]any{
 					{
 						"name":        "email",
@@ -247,14 +245,12 @@ func GetCouchbaseToolsConfig(sourceConfig map[string]any, toolKind, param_tool_s
 			},
 		},
 	}
-
-	return toolsFile
 }
 
-// RunCouchbaseToolGetTest tests the tool get endpoint
-func RunCouchbaseToolGetTest(t *testing.T) {
+// runCouchbaseToolGetTest tests the tool get endpoint
+func runCouchbaseToolGetTest(t *testing.T) {
 	// Test tool get endpoint
-	tcs := []struct {
+	testCases := []struct {
 		name string
 		api  string
 		want map[string]any
@@ -270,21 +266,22 @@ func RunCouchbaseToolGetTest(t *testing.T) {
 			},
 		},
 	}
-	for _, tc := range tcs {
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := http.Get(tc.api)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("response status code is %d, expected %d", resp.StatusCode, http.StatusOK)
 			}
 
 			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
+			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+				t.Fatalf("error parsing response body: %v", err)
 			}
 
 			got, ok := body["tools"]
@@ -292,7 +289,7 @@ func RunCouchbaseToolGetTest(t *testing.T) {
 				t.Fatalf("unable to find tools in response body")
 			}
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
+				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -305,7 +302,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	cluster, err := initCouchbaseCluster(COUCHBASE_CONNECTION, COUCHBASE_USERNAME, COUCHBASE_PASSWORD)
+	cluster, err := initCouchbaseCluster(couchbaseConnection, couchbaseUsername, couchbasePassword)
 	if err != nil {
 		t.Fatalf("unable to create Couchbase connection: %s", err)
 	}
@@ -316,17 +313,17 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameAuth := "auth_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// Set up data for param tool
-	tool_statement1, params1 := GetCouchbaseParamToolInfo(collectionNameParam)
-	teardownCollection1 := SetupCouchbaseCollection(t, ctx, cluster, collectionNameParam, params1)
+	paramToolStatement, params1 := getCouchbaseParamToolInfo(collectionNameParam)
+	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, collectionNameParam, params1)
 	defer teardownCollection1(t)
 
 	// Set up data for auth tool
-	tool_statement2, params2 := GetCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := SetupCouchbaseCollection(t, ctx, cluster, collectionNameAuth, params2)
+	authToolStatement, params2 := getCouchbaseAuthToolInfo(collectionNameAuth)
+	teardownCollection2 := setupCouchbaseCollection(t, ctx, cluster, collectionNameAuth, params2)
 	defer teardownCollection2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetCouchbaseToolsConfig(sourceConfig, COUCHBASE_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := getCouchbaseToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, authToolStatement)
 
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -342,8 +339,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunCouchbaseToolGetTest(t)
+	runCouchbaseToolGetTest(t)
 
-	select_1_want := "[{\"$1\":1}]"
-	RunToolInvokeTest(t, select_1_want)
+	select1Want := "[{\"$1\":1}]"
+	RunToolInvokeTest(t, select1Want)
 }
