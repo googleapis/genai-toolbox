@@ -87,7 +87,7 @@ func initCouchbaseCluster(connectionString, username, password string) (*gocb.Cl
 // GetCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
 func GetCouchbaseParamToolInfo(collectionName string) (string, string, string, []any) {
 	// N1QL uses positional or named parameters with $ prefix
-	tool_statement := fmt.Sprintf("SELECT "+collectionName+".* FROM %s WHERE id = $id OR name = $name", collectionName)
+	tool_statement := fmt.Sprintf("SELECT "+collectionName+".* FROM %s WHERE id = $id OR name = $name order by id", collectionName)
 
 	params := []any{"Alice", "Jane", "Sid"}
 	return "", "", tool_statement, params
