@@ -56,11 +56,11 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
 	}
 
-	parentCtx, span := instrumentation.Tracer.Start(context.Background(), "toolbox/server/init")
+	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/init")
 	defer span.End()
 
 	userAgent := fmt.Sprintf("genai-toolbox/%s", cfg.Version)
-	parentCtx = context.WithValue(parentCtx, util.UserAgentKey, userAgent)
+	ctx = context.WithValue(ctx, util.UserAgentKey, userAgent)
 
 	// set up http serving
 	r := chi.NewRouter()
@@ -100,14 +100,14 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
-			ctx, span := instrumentation.Tracer.Start(
-				parentCtx,
+			childCtx, span := instrumentation.Tracer.Start(
+				ctx,
 				"toolbox/server/source/init",
 				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			s, err := sc.Initialize(ctx, instrumentation.Tracer)
+			s, err := sc.Initialize(childCtx, instrumentation.Tracer)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 			}
@@ -125,7 +125,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	for name, sc := range cfg.AuthServiceConfigs {
 		a, err := func() (auth.AuthService, error) {
 			_, span := instrumentation.Tracer.Start(
-				parentCtx,
+				ctx,
 				"toolbox/server/auth/init",
 				trace.WithAttributes(attribute.String("auth_kind", sc.AuthServiceConfigKind())),
 				trace.WithAttributes(attribute.String("auth_name", name)),
@@ -149,7 +149,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
 			_, span := instrumentation.Tracer.Start(
-				parentCtx,
+				ctx,
 				"toolbox/server/tool/init",
 				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
 				trace.WithAttributes(attribute.String("tool_name", name)),
@@ -183,7 +183,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := func() (tools.Toolset, error) {
 			_, span := instrumentation.Tracer.Start(
-				parentCtx,
+				ctx,
 				"toolbox/server/toolset/init",
 				trace.WithAttributes(attribute.String("toolset_name", name)),
 			)
