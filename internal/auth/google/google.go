@@ -23,54 +23,54 @@ import (
 	"google.golang.org/api/idtoken"
 )
 
-const AuthSourceKind string = "google"
+const AuthServiceKind string = "google"
 
 // validate interface
-var _ auth.AuthSourceConfig = Config{}
+var _ auth.AuthServiceConfig = Config{}
 
-// Auth source configuration
+// Auth service configuration
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
 	Kind     string `yaml:"kind" validate:"required"`
 	ClientID string `yaml:"clientId" validate:"required"`
 }
 
-// Returns the auth source kind
-func (cfg Config) AuthSourceConfigKind() string {
-	return AuthSourceKind
+// Returns the auth service kind
+func (cfg Config) AuthServiceConfigKind() string {
+	return AuthServiceKind
 }
 
-// Initialize a Google auth source
-func (cfg Config) Initialize() (auth.AuthSource, error) {
-	a := &AuthSource{
+// Initialize a Google auth service
+func (cfg Config) Initialize() (auth.AuthService, error) {
+	a := &AuthService{
 		Name:     cfg.Name,
-		Kind:     AuthSourceKind,
+		Kind:     AuthServiceKind,
 		ClientID: cfg.ClientID,
 	}
 	return a, nil
 }
 
-var _ auth.AuthSource = AuthSource{}
+var _ auth.AuthService = AuthService{}
 
-// struct used to store auth source info
-type AuthSource struct {
+// struct used to store auth service info
+type AuthService struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
 	ClientID string `yaml:"clientId"`
 }
 
-// Returns the auth source kind
-func (a AuthSource) AuthSourceKind() string {
-	return AuthSourceKind
+// Returns the auth service kind
+func (a AuthService) AuthServiceKind() string {
+	return AuthServiceKind
 }
 
-// Returns the name of the auth source
-func (a AuthSource) GetName() string {
+// Returns the name of the auth service
+func (a AuthService) GetName() string {
 	return a.Name
 }
 
 // Verifies Google ID token and return claims
-func (a AuthSource) GetClaimsFromHeader(h http.Header) (map[string]any, error) {
+func (a AuthService) GetClaimsFromHeader(h http.Header) (map[string]any, error) {
 	if token := h.Get(a.Name + "_token"); token != "" {
 		payload, err := idtoken.Validate(context.Background(), token, a.ClientID)
 		if err != nil {

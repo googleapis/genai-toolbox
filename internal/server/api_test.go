@@ -57,7 +57,7 @@ func (t MockTool) Manifest() tools.Manifest {
 	return tools.Manifest{Description: t.Description, Parameters: pMs}
 }
 
-func (t MockTool) Authorized(verifiedAuthSources []string) bool {
+func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 

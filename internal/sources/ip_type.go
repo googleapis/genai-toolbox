@@ -15,6 +15,7 @@
 package sources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -28,7 +29,7 @@ func (i *IPType) String() string {
 	return "public"
 }
 
-func (i *IPType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (i *IPType) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	var ipType string
 	if err := unmarshal(&ipType); err != nil {
 		return err

@@ -1,7 +1,7 @@
 ---
-title: "Export Telemetry using the Otel Collector"
+title: "Export Telemetry"
 type: docs
-weight: 2
+weight: 4
 description: >
   How to set up and configure Toolbox to use the Otel Collector. 
 ---

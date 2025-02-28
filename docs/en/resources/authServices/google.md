@@ -12,7 +12,7 @@ Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the
 Google Sign-In workflow to your web app [follow this guide][gsi-setup].
 
 After setting up the Google Sign-In workflow, you should have registered your
-application and retrieved a [Client ID][client-id]. Configure your auth source
+application and retrieved a [Client ID][client-id]. Configure your auth service
 in with the `Client ID`.
 
 [gsi-setup]: https://developers.google.com/identity/sign-in/web/sign-in
@@ -31,7 +31,7 @@ ID.
 ### Authenticated Parameters
 
 When using [Authenticated Parameters][auth-params], any [claim provided by the
-id-token][provided-claims] can be used as a source for the parameter.
+id-token][provided-claims] can be used for the parameter.
 
 [auth-params]: ../tools/#authenticated-phugarameters
 [provided-claims]:
@@ -40,7 +40,7 @@ id-token][provided-claims] can be used as a source for the parameter.
 ## Example
 
 ```yaml
-authSources:
+authServices:
   my-google-auth:
     kind: google
     clientId: YOUR_GOOGLE_CLIENT_ID

@@ -1,7 +1,7 @@
 ---
 title: "Deploy to Cloud Run"
 type: docs
-weight: 2
+weight: 1
 description: >
   How to set up and configure Toolbox to run on Cloud Run.
 ---
@@ -160,11 +160,6 @@ Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
 
 Next, we will use Toolbox with client SDK:
 
-1. Below is a list of Client SDKs that are supported:
-
-    - LangChain / LangGraph
-    - LlamaIndex
-
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
     ```bash
@@ -177,5 +172,5 @@ Next, we will use Toolbox with client SDK:
     from toolbox_langchain_sdk import ToolboxClient
 
     # Replace with the cloud run service URL generated above
-    toolbox = ToolboxClient("http://URL")
+    toolbox = ToolboxClient("http://$YOUR_URL")
     ```

@@ -39,13 +39,13 @@ type Manifest struct {
 }
 
 // Helper function that returns if a tool invocation request is authorized
-func IsAuthorized(authRequiredSources []string, verifiedAuthSources []string) bool {
+func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) bool {
 	if len(authRequiredSources) == 0 {
 		// no authorization requirement
 		return true
 	}
 	for _, a := range authRequiredSources {
-		if slices.Contains(verifiedAuthSources, a) {
+		if slices.Contains(verifiedAuthServices, a) {
 			return true
 		}
 	}
