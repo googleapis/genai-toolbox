@@ -5,11 +5,11 @@
 
 ### ⚠ BREAKING CHANGES
 
-* deprecate authsource in favor of authservice ([#297](https://github.com/googleapis/genai-toolbox/issues/297))
+* Rename "AuthSource" in favor of "AuthService" ([#297](https://github.com/googleapis/genai-toolbox/issues/297))
 
 ### Features
 
-* Deprecate authsource in favor of authservice ([#297](https://github.com/googleapis/genai-toolbox/issues/297)) ([04cb5fb](https://github.com/googleapis/genai-toolbox/commit/04cb5fbc3e1876d1cf83d3f3de2c176ee2862d63))
+* Rename "AuthSource" in favor of "AuthService" ([#297](https://github.com/googleapis/genai-toolbox/issues/297)) ([04cb5fb](https://github.com/googleapis/genai-toolbox/commit/04cb5fbc3e1876d1cf83d3f3de2c176ee2862d63))
 
 
 ### Bug Fixes
