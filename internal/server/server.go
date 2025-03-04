@@ -224,7 +224,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	r.Mount("/api", apiR)
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("🧰 Hello world! 🧰"))
+		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
 	})
 
 	return s, nil
