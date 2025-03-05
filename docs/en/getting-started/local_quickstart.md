@@ -124,7 +124,7 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.1.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.2.0/$OS/toolbox
     ```
 
 1. Make the binary executable:
