@@ -227,12 +227,10 @@ from Toolbox.
     {{< tab header="Langchain" lang="yaml" >}}
 
     pip install toolbox-langchain
-   
     {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
 
     pip install toolbox-llamaindex
-    
     {{< /tab >}}
     {{< /tabpane >}}
 
@@ -245,14 +243,12 @@ from Toolbox.
     pip install langgraph langchain-google-vertexai
     # pip install langchain-google-genai
     # pip install langchain-anthropic
-   
     {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
 
     # TODO(developer): replace with correct package if needed
     pip install llama-index-llms-vertex
     # pip install llama-index-llms-anthropic
-    
     {{< /tab >}}
     {{< /tabpane >}}
 
@@ -356,7 +352,6 @@ from Toolbox.
             print(response)
     
      main()
-   
     {{< /tab >}}
     {{< /tabpane >}}
        
