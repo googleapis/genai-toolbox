@@ -226,16 +226,12 @@ from Toolbox.
     {{< tabpane >}}
     {{< tab header="Langchain" lang="yaml" >}}
 
-    ```bash
     pip install toolbox-langchain
-    ```
    
     {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
 
-    ```bash
     pip install toolbox-llamaindex
-    ```
     
     {{< /tab >}}
     {{< /tabpane >}}
@@ -245,21 +241,17 @@ from Toolbox.
     {{< tabpane >}}
     {{< tab header="Langchain" lang="yaml" >}}
 
-    ```bash
     # TODO(developer): replace with correct package if needed
     pip install langgraph langchain-google-vertexai
     # pip install langchain-google-genai
     # pip install langchain-anthropic
-    ```
    
     {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
 
-     ```bash
     # TODO(developer): replace with correct package if needed
     pip install llama-index-llms-vertex
     # pip install llama-index-llms-anthropic
-    ```
     
     {{< /tab >}}
     {{< /tabpane >}}
@@ -269,7 +261,6 @@ from Toolbox.
     {{< tabpane >}}
     {{< tab header="Langchain" lang="yaml" >}}
 
-    ```python
     from langgraph.prebuilt import create_react_agent
     # TODO(developer): replace this with another import if needed
     from langchain_google_vertexai import ChatVertexAI
@@ -315,10 +306,9 @@ from Toolbox.
             print(response["messages"][-1].content)
 
     main()
-    ```
     {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
-    ```python 
+
      from llama_index.core.agent import ReActAgent
      from llama_index.core.memory import ChatMemoryBuffer
 
@@ -366,7 +356,6 @@ from Toolbox.
             print(response)
     
      main()
-    ```
    
     {{< /tab >}}
     {{< /tabpane >}}
