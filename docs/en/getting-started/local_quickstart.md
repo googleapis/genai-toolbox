@@ -230,7 +230,7 @@ from Toolbox.
     pip install toolbox-langchain
     ```
    
-    {{< tabpane >}}
+    {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
 
     ```bash
@@ -252,7 +252,7 @@ from Toolbox.
     # pip install langchain-anthropic
     ```
    
-    {{< tabpane >}}
+    {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
 
      ```bash
@@ -316,7 +316,7 @@ from Toolbox.
 
     main()
     ```
-    {{< tabpane >}}
+    {{< /tab >}}
     {{< tab header="LlamaIndex" lang="yaml" >}}
     ```python 
      from llama_index.core.agent import ReActAgent
