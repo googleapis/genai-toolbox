@@ -72,6 +72,7 @@ following instructions for your OS and CPU architecture.
 
 To install Toolbox as a binary:
 
+<!-- {x-release-please-start-version} -->
 ```sh
 # see releases page for other versions
 export VERSION=0.2.0
@@ -102,6 +103,7 @@ To install from source, ensure you have the latest version of
 ```sh
 go install github.com/googleapis/genai-toolbox@v0.2.0
 ```
+<!-- {x-release-please-end} -->
 
 </details>
 
