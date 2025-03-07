@@ -14,12 +14,21 @@ This guide assumes you have already done the following:
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
-1. Completed setup for usage with a [LangChain chat model][lc-chat] or a [LlamaIndex LLM model][li-llms], such as:
-    - [`langchain-vertexai` package][install-lc-vertexai]
+1. Completed setup for usage with an LLM model such as
+    
+    {{< tabpane >}}
+    {{< tab header="Langchain">}}
+     - [`langchain-vertexai` package][install-lc-vertexai]
     - [`langchain-google-genai` package][install-lc-genai]
     - [`langchain-anthropic` package][install-lc-anthropic]
+    {{< /tab >}}
+    {{< tab header="LlamaIndex">}}
     - [`llama-index-llms-vertex` package][install-llama-vertex]
     - [`llama-index-llms-anthropic` package][install-llama-anthropic]
+    {{< /tab >}}
+    {{< /tabpane >}}
+    
+    
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
@@ -355,10 +364,17 @@ from Toolbox.
     {{< /tab >}}
     {{< /tabpane >}}
        
-    To learn more about agents, refer to [`langgraph agent`][langgraph-agent] or [`llamaindex agent`][llamaindex-agent]
+       To learn more about agents, refer to 
+       {{< tabpane >}}
+       {{< tab header="Langchain">}}
+       [`langgraph agent`][langgraph-agent]
+       {{< /tab >}}
+       {{< tab header="LlamaIndex">}}
+       [`llamaindex agent`][llamaindex-agent]
+       {{< /tab >}}
    
-    [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
-    [llamaindex-agent]: https://docs.llamaindex.ai/en/stable/api_reference/agent/react/
+       [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
+       [llamaindex-agent]: https://docs.llamaindex.ai/en/stable/api_reference/agent/react/
 
 1. Run your agent, and observe the results:
 
