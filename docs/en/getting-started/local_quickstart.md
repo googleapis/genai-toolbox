@@ -18,18 +18,16 @@ This guide assumes you have already done the following:
     
     {{< tabpane >}}
     {{< tab header="Langchain">}}
-s    - [`langchain-vertexai` package][install-lc-vertexai]
-    - [`langchain-google-genai` package][install-lc-genai]
-    - [`langchain-anthropic` package][install-lc-anthropic]
+    `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.
+    `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>.
+    `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
     {{< /tab >}}
     {{< tab header="LlamaIndex">}}
-    - [`llama-index-llms-vertex` package][install-llama-vertex]
-    - [`llama-index-llms-anthropic` package][install-llama-anthropic]
-    - [`llama-index-llms-gemini` package][install-llama-gemini]
+    `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.
+    `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.
+    `llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
     {{< /tab >}}
     {{< /tabpane >}}
-    
-    
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
@@ -37,12 +35,6 @@ s    - [`langchain-vertexai` package][install-lc-vertexai]
 [install-postgres]: https://www.postgresql.org/download/
 [lc-chat]: https://python.langchain.com/docs/integrations/chat/
 [li-llms]: https://docs.llamaindex.ai/en/stable/module_guides/models/llms/modules/
-[install-lc-vertexai]: https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup
-[install-lc-genai]: https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup
-[install-lc-anthropic]: https://python.langchain.com/docs/integrations/chat/anthropic/#setup
-[install-llama-vertex]: https://docs.llamaindex.ai/en/stable/examples/llm/vertex/
-[install-llama-anthropic]: https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/
-[install-llama-gemini]: https://docs.llamaindex.ai/en/stable/examples/llm/gemini/
 
 ## Step 1: Set up your database
 
@@ -321,6 +313,7 @@ from Toolbox.
 
      # TODO(developer): replace this with another import if needed
      from llama_index.llms.vertex import Vertex
+     # from llama_index.llms.gemini import Gemini
      # from llama_index.llms.anthropic import Anthropic
      
      from toolbox_llamaindex import ToolboxClient
@@ -369,15 +362,12 @@ from Toolbox.
    To learn more about agents, refer to 
    {{< tabpane >}}
    {{< tab header="Langchain">}}
-   [`langgraph agent`][langgraph-agent]
+   <a href="https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent">langgraph agent</a>.
    {{< /tab >}}
    {{< tab header="LlamaIndex">}}
-   [`llamaindex agent`][llamaindex-agent]
+   <a href="https://docs.llamaindex.ai/en/stable/api_reference/agent/react/">llamaindex agent</a>.
    {{< /tab >}} 
    {{< /tabpane >}}
-
-   [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
-   [llamaindex-agent]: https://docs.llamaindex.ai/en/stable/api_reference/agent/react/
 
 1. Run your agent, and observe the results:
 
