@@ -244,7 +244,7 @@ from Toolbox.
     # pip install langchain-google-genai
     # pip install langchain-anthropic
     {{< /tab >}}
-    {{< tab header="LlamaIndex" lang="yaml" >}}
+    {{< tab header="LlamaIndex" lang="bash" >}}
 
     # TODO(developer): replace with correct package if needed
     pip install llama-index-llms-vertex
