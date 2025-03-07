@@ -360,7 +360,7 @@ from Toolbox.
     {{< /tabpane >}}
        
    To learn more about agents, refer to 
-   {{% tabpane %}}
+   {{% tabpane text=true %}}
    {{% tab header="Langchain" lang="markdown"%}}
    <a href="https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent">langgraph agent</a>.
    {{% /tab %}}
