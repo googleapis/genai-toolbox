@@ -16,18 +16,18 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
 1. Completed setup for usage with an LLM model such as
     
-    {{< tabpane >}}
-    {{< tab header="Langchain">}}
+    {{% tabpane text=true %}}
+    {{% tab header="Langchain lang="en" %}}
     `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
     `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
     `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
-    {{< /tab >}}
-    {{< tab header="LlamaIndex">}}
+    {{% /tab %}}
+    {{% tab header="LlamaIndex" lang="en" %}}
     `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.<br>
     `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.<br>
     `llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
-    {{< /tab >}}
-    {{< /tabpane >}}
+    {{% /tab %}}
+    {{% /tabpane %}}
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
@@ -359,12 +359,12 @@ from Toolbox.
     {{< /tab >}}
     {{< /tabpane >}}
        
-   To learn more about agents, refer to 
+   To learn more about agents, refer to
    {{% tabpane text=true %}}
-   {{% tab header="Langchain" lang="markdown"%}}
+   {{% tab header="Langchain" lang="en"%}}
    <a href="https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent">langgraph agent</a>.
    {{% /tab %}}
-   {{% tab header="LlamaIndex" lang="markdown"%}}
+   {{% tab header="LlamaIndex" lang="en"%}}
    <a href="https://docs.llamaindex.ai/en/stable/api_reference/agent/react/">llamaindex agent</a>.
    {{% /tab %}} 
    {{% /tabpane %}}
