@@ -303,7 +303,7 @@ from Toolbox.
 
     main()
     {{< /tab >}}
-    {{< tab header="LlamaIndex" lang="yaml" >}}
+    {{< tab header="LlamaIndex" lang="python" >}}
 
      from llama_index.core.agent import ReActAgent
      from llama_index.core.memory import ChatMemoryBuffer
