@@ -224,7 +224,7 @@ from Toolbox.
 1. In a new terminal, install the SDK package.
     
     {{< tabpane >}}
-    {{< tab header="Langchain" lang="yaml" >}}
+    {{< tab header="Langchain" lang="bash" >}}
 
     pip install toolbox-langchain
     {{< /tab >}}
