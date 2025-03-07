@@ -255,7 +255,7 @@ from Toolbox.
 1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
     {{< tabpane >}}
-    {{< tab header="Langchain" lang="yaml" >}}
+    {{< tab header="LangChain" lang="python" >}}
 
     from langgraph.prebuilt import create_react_agent
     # TODO(developer): replace this with another import if needed
