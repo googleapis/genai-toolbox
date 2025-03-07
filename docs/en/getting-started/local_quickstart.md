@@ -115,7 +115,6 @@ access by our agent, and create a database user for Toolbox to connect with.
 In this section, we will download Toolbox, configure our tools in a
 `tools.yaml`, and then run the Toolbox server.
 
-<!-- {x-release-please-start-version} -->
 1. Download the latest version of Toolbox as a binary:
 
     {{< notice tip >}} 
@@ -127,7 +126,6 @@ In this section, we will download Toolbox, configure our tools in a
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
     curl -O https://storage.googleapis.com/genai-toolbox/v0.2.0/$OS/toolbox
     ```
-<!-- {x-release-please-end} -->
 
 1. Make the binary executable:
 

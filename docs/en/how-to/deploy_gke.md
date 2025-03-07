@@ -151,7 +151,6 @@ description: >
         --namespace=$NAMESPACE
     ```
 
-<!-- {x-release-please-start-version} -->
 1. Create a Kubernetes manifest file (`k8s_deployment.yaml`) to build deployment.
 
     ```yaml
@@ -190,7 +189,6 @@ description: >
                 - key: tools.yaml
                   path: tools.yaml
     ```
-<!-- {x-release-please-end} -->
 
 1. Create the deployment.
 
