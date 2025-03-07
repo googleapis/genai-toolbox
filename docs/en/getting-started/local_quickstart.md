@@ -18,13 +18,14 @@ This guide assumes you have already done the following:
     
     {{< tabpane >}}
     {{< tab header="Langchain">}}
-     - [`langchain-vertexai` package][install-lc-vertexai]
+s    - [`langchain-vertexai` package][install-lc-vertexai]
     - [`langchain-google-genai` package][install-lc-genai]
     - [`langchain-anthropic` package][install-lc-anthropic]
     {{< /tab >}}
     {{< tab header="LlamaIndex">}}
     - [`llama-index-llms-vertex` package][install-llama-vertex]
     - [`llama-index-llms-anthropic` package][install-llama-anthropic]
+    - [`llama-index-llms-gemini` package][install-llama-gemini]
     {{< /tab >}}
     {{< /tabpane >}}
     
@@ -41,6 +42,7 @@ This guide assumes you have already done the following:
 [install-lc-anthropic]: https://python.langchain.com/docs/integrations/chat/anthropic/#setup
 [install-llama-vertex]: https://docs.llamaindex.ai/en/stable/examples/llm/vertex/
 [install-llama-anthropic]: https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/
+[install-llama-gemini]: https://docs.llamaindex.ai/en/stable/examples/llm/gemini/
 
 ## Step 1: Set up your database
 
