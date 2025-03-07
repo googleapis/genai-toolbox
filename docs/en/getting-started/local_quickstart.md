@@ -17,12 +17,12 @@ This guide assumes you have already done the following:
 1. Completed setup for usage with an LLM model such as
     
     {{% tabpane text=true %}}
-    {{% tab header="Langchain lang="en" %}}
+    {{% tab header="Langchain %}}
     `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
     `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
     `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
     {{% /tab %}}
-    {{% tab header="LlamaIndex" lang="en" %}}
+    {{% tab header="LlamaIndex" %}}
     `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.<br>
     `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.<br>
     `llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
@@ -361,10 +361,10 @@ from Toolbox.
        
    To learn more about agents, refer to
    {{% tabpane text=true %}}
-   {{% tab header="Langchain" lang="en"%}}
+   {{% tab header="Langchain" %}}
    <a href="https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent">langgraph agent</a>.
    {{% /tab %}}
-   {{% tab header="LlamaIndex" lang="en"%}}
+   {{% tab header="LlamaIndex" %}}
    <a href="https://docs.llamaindex.ai/en/stable/api_reference/agent/react/">llamaindex agent</a>.
    {{% /tab %}} 
    {{% /tabpane %}}
