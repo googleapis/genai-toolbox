@@ -18,13 +18,13 @@ This guide assumes you have already done the following:
     
     {{< tabpane >}}
     {{< tab header="Langchain">}}
-    `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.
-    `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>.
+    `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
+    `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
     `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
     {{< /tab >}}
     {{< tab header="LlamaIndex">}}
-    `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.
-    `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.
+    `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.<br>
+    `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.<br>
     `llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
     {{< /tab >}}
     {{< /tabpane >}}
