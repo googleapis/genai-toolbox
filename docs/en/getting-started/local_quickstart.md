@@ -364,17 +364,18 @@ from Toolbox.
     {{< /tab >}}
     {{< /tabpane >}}
        
-       To learn more about agents, refer to 
-       {{< tabpane >}}
-       {{< tab header="Langchain">}}
-       [`langgraph agent`][langgraph-agent]
-       {{< /tab >}}
-       {{< tab header="LlamaIndex">}}
-       [`llamaindex agent`][llamaindex-agent]
-       {{< /tab >}}
-   
-       [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
-       [llamaindex-agent]: https://docs.llamaindex.ai/en/stable/api_reference/agent/react/
+   To learn more about agents, refer to 
+   {{< tabpane >}}
+   {{< tab header="Langchain">}}
+   [`langgraph agent`][langgraph-agent]
+   {{< /tab >}}
+   {{< tab header="LlamaIndex">}}
+   [`llamaindex agent`][llamaindex-agent]
+   {{< /tab >}} 
+   {{< /tabpane >}}
+
+   [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
+   [llamaindex-agent]: https://docs.llamaindex.ai/en/stable/api_reference/agent/react/
 
 1. Run your agent, and observe the results:
 
