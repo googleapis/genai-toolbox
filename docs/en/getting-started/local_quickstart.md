@@ -228,7 +228,7 @@ from Toolbox.
 
     pip install toolbox-langchain
     {{< /tab >}}
-    {{< tab header="LlamaIndex" lang="yaml" >}}
+    {{< tab header="LlamaIndex" lang="bash" >}}
 
     pip install toolbox-llamaindex
     {{< /tab >}}
