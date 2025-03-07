@@ -17,7 +17,7 @@ This guide assumes you have already done the following:
 1. Completed setup for usage with an LLM model such as
     
     {{% tabpane text=true %}}
-    {{% tab header="Langchain %}}
+    {{% tab header="Langchain" %}}
     `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
     `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
     `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
