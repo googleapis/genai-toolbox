@@ -361,10 +361,10 @@ from Toolbox.
    To learn more about agents, refer to
    {{% tabpane text=true %}}
    {{% tab header="Langchain" %}}
-   <a href="https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent">langgraph agent</a>.
+   [langgraph agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent).
    {{% /tab %}}
    {{% tab header="LlamaIndex" %}}
-   <a href="https://docs.llamaindex.ai/en/stable/api_reference/agent/react/">llamaindex agent</a>.
+   [llamaindex agent](https://docs.llamaindex.ai/en/stable/api_reference/agent/react/).
    {{% /tab %}} 
    {{% /tabpane %}}
 
