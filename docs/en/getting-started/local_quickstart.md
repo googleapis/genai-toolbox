@@ -237,7 +237,7 @@ from Toolbox.
 1. Install other required dependencies:
     
     {{< tabpane >}}
-    {{< tab header="Langchain" lang="yaml" >}}
+    {{< tab header="Langchain" lang="python" >}}
 
     # TODO(developer): replace with correct package if needed
     pip install langgraph langchain-google-vertexai
