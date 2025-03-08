@@ -14,20 +14,26 @@ This guide assumes you have already done the following:
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
-1. Completed setup for usage with a [LangChain chat model][lc-chat], such as:
-    - [`langchain-vertexai` package][install-vertexai]
-    - [`langchain-google-genai` package][install-genai]
-    - [`langchain-anthropic` package][install-anthropic] 
-
+1. Completed setup for usage with an LLM model such as
+    {{< tabpane text=true >}}
+    {{% tab header="LangChain" lang="en" %}}
+    `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
+    `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
+    `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
+    {{% /tab %}}
+    {{% tab header="LangChain" lang="en" %}}
+    `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.<br>
+    `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.<br>
+    `llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
+    {{% /tab %}}
+    {{< /tabpane >}}
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
 [install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
 [lc-chat]: https://python.langchain.com/docs/integrations/chat/
-[install-vertexai]: https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup
-[install-genai]: https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup
-[install-anthropic]: https://python.langchain.com/docs/integrations/chat/anthropic/#setup
+[li-llms]: https://docs.llamaindex.ai/en/stable/module_guides/models/llms/modules/
 
 ## Step 1: Set up your database
 
@@ -149,8 +155,6 @@ In this section, we will download Toolbox, configure our tools in a
         user: toolbox_user
         password: my-password
     tools:
-      # Define the 5 tools we want our agent to have
-      # for more info on tools check out the "Resources" section of the docs
       search-hotels-by-name:
         kind: postgres-sql
         source: my-pg-source
@@ -173,8 +177,7 @@ In this section, we will download Toolbox, configure our tools in a
         kind: postgres-sql
         source: my-pg-source
         description: >-
-          Book a hotel by its ID. Returns a message indicating whether the hotel was
-          successfully booked or not.
+           Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
         parameters:
           - name: hotel_id
             type: string
@@ -209,6 +212,7 @@ In this section, we will download Toolbox, configure our tools in a
             description: The ID of the hotel to cancel.
         statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
     ```
+    For more info on tools, check out the `Resources` section of the docs.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
@@ -221,27 +225,41 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
-1. In a new terminal, install the `toolbox-langchain` package.
+1. In a new terminal, install the SDK package.
+    
+    {{< tabpane >}}
+    {{< tab header="Langchain" lang="bash" >}}
 
-    ```bash
     pip install toolbox-langchain
-    ```
+    {{< /tab >}}
+    {{< tab header="LlamaIndex" lang="bash" >}}
+
+    pip install toolbox-llamaindex
+    {{< /tab >}}
+    {{< /tabpane >}}
 
 1. Install other required dependencies:
+    
+    {{< tabpane >}}
+    {{< tab header="Langchain" lang="python" >}}
 
-    ```bash
     # TODO(developer): replace with correct package if needed
     pip install langgraph langchain-google-vertexai
-    # pip install langchain_google_genai
-    # pip install langchain_anthropic
-    ```
+    # pip install langchain-google-genai
+    # pip install langchain-anthropic
+    {{< /tab >}}
+    {{< tab header="LlamaIndex" lang="bash" >}}
 
-1. Create a new file named `langgraph_hotel_agent.py` and copy the following
-   code to create a [LangGraph agent][langgraph-agent], based on their [Hotels
-   example][langchain-hotels]:
+    # TODO(developer): replace with correct package if needed
+    pip install llama-index-llms-vertex
+    # pip install llama-index-llms-anthropic
+    {{< /tab >}}
+    {{< /tabpane >}}
 
-    ```python
-    import asyncio
+1. Create a new file named `hotel_agent.py` and copy the following
+   code to create an agent:
+    {{< tabpane >}}
+    {{< tab header="LangChain" lang="python" >}}
 
     from langgraph.prebuilt import create_react_agent
     # TODO(developer): replace this with another import if needed
@@ -288,13 +306,72 @@ from Toolbox.
             print(response["messages"][-1].content)
 
     main()
-    ```
+    {{< /tab >}}
+    {{< tab header="LlamaIndex" lang="python" >}}
 
-    [langgraph-agent]:https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent
-    [langchain-hotels]: https://langchain-ai.github.io/langgraph/tutorials/customer-support/customer-support/#hotels
+     from llama_index.core.agent import ReActAgent
+     from llama_index.core.memory import ChatMemoryBuffer
+
+     # TODO(developer): replace this with another import if needed
+     from llama_index.llms.vertex import Vertex
+     # from llama_index.llms.gemini import Gemini
+     # from llama_index.llms.anthropic import Anthropic
+     
+     from toolbox_llamaindex import ToolboxClient
+    
+     prompt = """
+       You're a helpful hotel assistant. You handle hotel searching, booking and
+       cancellations. When the user searches for a hotel, mention it's name, id, 
+       location and price tier. Always mention hotel ids while performing any 
+       searches. This is very important for any operations. For any bookings or 
+       cancellations, please provide the appropriate confirmation. Be sure to 
+       update checkin or checkout dates if mentioned by the user.
+       Don't ask for confirmations from the user.
+     """
+     
+     queries = [
+         "Find hotels in Basel with Basel in it's name.",
+         "Can you book the Hilton Basel for me?",
+         "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+         "My check in dates would be from April 10, 2024 to April 19, 2024.",
+     ]
+    
+     def main():
+         # TODO(developer): replace this with another model if needed
+         model = Vertex(model="gemini-1.5-pro")
+         # llm = Anthropic(
+         #   model="claude-3-7-sonnet-latest",
+         #   api_key=os.getenv("ANTHROPIC_API_KEY")
+         # )
+         
+         # Load the tools from the Toolbox server
+         client = ToolboxClient("http://127.0.0.1:5000")
+         tools = client.load_toolset()
+   
+         memory = ChatMemoryBuffer.from_defaults(token_limit=5000)  # Adjust token_limit as needed
+        
+         agent = ReActAgent.from_tools(tools, llm=model, verbose=True, memory=memory, prompt=prompt)
+        
+         for query in queries:
+            response = agent.chat(query)
+            print(response)
+    
+     main()
+    {{< /tab >}}
+    {{< /tabpane >}}
+       
+   To learn more about agents, refer to
+   {{% tabpane text=true %}}
+   {{% tab header="Langchain" %}}
+   [langgraph agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent).
+   {{% /tab %}}
+   {{% tab header="LlamaIndex" %}}
+   [llamaindex agent](https://docs.llamaindex.ai/en/stable/api_reference/agent/react/).
+   {{% /tab %}} 
+   {{% /tabpane %}}
 
 1. Run your agent, and observe the results:
 
     ```sh
-    python langgraph_hotel_agent.py
+    python hotel_agent.py
     ```
