@@ -1,0 +1,97 @@
+steps:
+  - id: "install-dependencies"
+    name: golang:1
+    waitFor: ["-"]
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    script: |
+      go get -d ./...
+
+  - id: "code coverage"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      # Cloud SQL
+      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
+      - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
+      - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
+      # AlloyDB
+      - "ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
+      - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
+      - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "ALLOYDB_POSTGRES_REGION=$_REGION"
+      # Postgres
+      - "POSTGRES_DATABASE=$_DATABASE_NAME"
+      - "POSTGRES_HOST=$_POSTGRES_HOST"
+      - "POSTGRES_PORT=$_POSTGRES_PORT"
+      # Spanner
+      - "SPANNER_PROJECT=$PROJECT_ID"
+      - "SPANNER_DATABASE=$_DATABASE_NAME"
+      - "SPANNER_INSTANCE=$_SPANNER_INSTANCE"
+    secretEnv:
+      [
+        "CLOUD_SQL_POSTGRES_USER",
+        "CLOUD_SQL_POSTGRES_PASS",
+        "CLIENT_ID",
+        "ALLOYDB_POSTGRES_USER",
+        "ALLOYDB_POSTGRES_PASS",
+        "POSTGRES_USER",
+        "POSTGRES_PASS",
+      ]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,cloudsql,alloydb,postgres,spanner -coverprofile pr_cover.out ./...
+        go tool cover -func pr_cover.out
+        export PR_COVER=$(go tool cover -func pr_cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+        echo "PR_COVER=$PR_COVER" >> $GITHUB_ENV
+        if [ "$PR_COVER" -lt "90" ]; then
+          echo "Code coverage is below 90%. Please add tests to cover your changes."
+          exit 1
+        fi
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
+      env: CLOUD_SQL_POSTGRES_USER
+    - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_pass/versions/latest
+      env: CLOUD_SQL_POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_user/versions/latest
+      env: ALLOYDB_POSTGRES_USER
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_pass/versions/latest
+      env: ALLOYDB_POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/postgres_user/versions/latest
+      env: POSTGRES_USER
+    - versionName: projects/$PROJECT_ID/secrets/postgres_pass/versions/latest
+      env: POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/client_id/versions/latest
+      env: CLIENT_ID
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  automapSubstitutions: true
+  substitutionOption: "ALLOW_LOOSE"
+  dynamicSubstitutions: true
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/integration-testing # Necessary for VPC network connection
+
+substitutions:
+  _DATABASE_NAME: test_database
+  _REGION: "us-central1"
+  _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
+  _ALLOYDB_POSTGRES_CLUSTER: "alloydb-pg-testing"
+  _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"
+  _POSTGRES_HOST: 127.0.0.1
+  _POSTGRES_PORT: "5432"
+  _SPANNER_INSTANCE: "spanner-testing"
