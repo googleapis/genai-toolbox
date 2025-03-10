@@ -24,6 +24,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -45,6 +47,8 @@ func apiRouter(s *Server) (chi.Router, error) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) { toolGetHandler(s, w, r) })
 		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) { toolInvokeHandler(s, w, r) })
 	})
+
+	r.Post("/mcp", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
 
 	return r, nil
 }
@@ -229,6 +233,59 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = render.Render(w, r, &resultResponse{Result: string(resMarshal)})
+}
+
+// mcpHandler handles all mcp messages.
+func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	var message json.RawMessage
+	if err := json.NewDecoder(r.Body).Decode(&message); err != nil {
+		id := uuid.New().String()
+		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
+		return
+	}
+
+	var baseMessage struct {
+		Jsonrpc string        `json:"jsonrpc"`
+		Method  string        `json:"method"`
+		Id      mcp.RequestId `json:"id,omitempty"`
+	}
+	if err := json.Unmarshal(message, &baseMessage); err != nil {
+		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
+		return
+	}
+
+	// Check if method is present
+	if baseMessage.Method == "" {
+		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, "method not found", nil))
+		return
+	}
+
+	// Check for JSON-RPC 2.0
+	if baseMessage.Jsonrpc != mcp.JSONRPC_VERSION {
+		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, "invalid json-rpc version", nil))
+		return
+	}
+
+	// return empty response
+	res := mcp.JSONRPCResponse{
+		Jsonrpc: mcp.JSONRPC_VERSION,
+		Id:      baseMessage.Id,
+		Result:  mcp.EmptyResult{},
+	}
+	render.JSON(w, r, res)
+}
+
+// newJSONRPCError is the response sent back when an error has been encountered in mcp.
+func newJSONRPCError(id mcp.RequestId, code int, message string, data any) mcp.JSONRPCError {
+	return mcp.JSONRPCError{
+		Jsonrpc: mcp.JSONRPC_VERSION,
+		Id:      id,
+		Error: mcp.McpError{
+			Code:    code,
+			Message: message,
+			Data:    data,
+		},
+	}
 }
 
 var _ render.Renderer = &resultResponse{} // Renderer interface for managing response payloads.
