@@ -129,6 +129,6 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	RunToolGetTest(t)
 
-	select_1_want := "[{\"\":\"1\"}]"
+	select_1_want := "[{\"\":1}]"
 	RunToolInvokeTest(t, select_1_want)
 }
