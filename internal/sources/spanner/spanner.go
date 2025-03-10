@@ -16,11 +16,12 @@ package spanner
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
-	"cloud.google.com/go/spanner"
+	_ "github.com/googleapis/go-sql-spanner"
+
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -43,15 +44,22 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	client, err := initSpannerClient(ctx, tracer, r.Name, r.Project, r.Instance, r.Database)
+	// Initializes a Spanner source
+	db, err := initSpannerDb(ctx, tracer, r.Name, r.Project, r.Instance, r.Database)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create client: %w", err)
+		return nil, fmt.Errorf("unable to create db connection: %w", err)
+	}
+
+	// Verify db connection
+	err = db.PingContext(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
 	s := &Source{
 		Name:    r.Name,
 		Kind:    SourceKind,
-		Client:  client,
+		Db:      db,
 		Dialect: r.Dialect.String(),
 	}
 	return s, nil
@@ -62,7 +70,7 @@ var _ sources.Source = &Source{}
 type Source struct {
 	Name    string `yaml:"name"`
 	Kind    string `yaml:"kind"`
-	Client  *spanner.Client
+	Db      *sql.DB
 	Dialect string
 }
 
@@ -70,36 +78,27 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) SpannerClient() *spanner.Client {
-	return s.Client
+func (s *Source) SpannerDb() *sql.DB {
+	return s.Db
 }
 
 func (s *Source) DatabaseDialect() string {
 	return s.Dialect
 }
 
-func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*spanner.Client, error) {
+func initSpannerDb(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Configure the connection to the database
-	db := fmt.Sprintf("projects/%s/instances/%s/databases/%s", project, instance, dbname)
+	// Create DSN
+	dsn := fmt.Sprintf("projects/%s/instances/%s/databases/%s", project, instance, dbname)
 
-	// Configure session pool to automatically clean inactive transactions
-	sessionPoolConfig := spanner.SessionPoolConfig{
-		TrackSessionHandles: true,
-		InactiveTransactionRemovalOptions: spanner.InactiveTransactionRemovalOptions{
-			ActionOnInactiveTransaction: spanner.WarnAndClose,
-		},
-	}
-
-	// Create spanner client
-	userAgent := ctx.Value(util.UserAgentKey).(string)
-	client, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig, UserAgent: userAgent})
+	// Open DB connection
+	db, err := sql.Open("spanner", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create new client: %w", err)
+		return nil, err
 	}
 
-	return client, nil
+	return db, nil
 }

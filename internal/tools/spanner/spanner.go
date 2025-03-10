@@ -16,20 +16,19 @@ package spanner
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
-	"cloud.google.com/go/spanner"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/iterator"
 )
 
 const ToolKind string = "spanner-sql"
 
 type compatibleSource interface {
-	SpannerClient() *spanner.Client
+	SpannerDb() *sql.DB
 	DatabaseDialect() string
 }
 
@@ -75,20 +74,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.SpannerClient(),
+		Db:           s.SpannerDb(),
 		dialect:      s.DatabaseDialect(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 	}
 	return t, nil
 }
 
-func NewGenericTool(name string, stmt string, authRequired []string, desc string, client *spanner.Client, dialect string, parameters tools.Parameters) Tool {
+func NewGenericTool(name string, stmt string, authRequired []string, desc string, db *sql.DB, dialect string, parameters tools.Parameters) Tool {
 	return Tool{
 		Name:         name,
 		Kind:         ToolKind,
 		Statement:    stmt,
 		AuthRequired: authRequired,
-		Client:       client,
+		Db:           db,
 		dialect:      dialect,
 		manifest:     tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
 		Parameters:   parameters,
@@ -104,7 +103,7 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client    *spanner.Client
+	Db        *sql.DB
 	dialect   string
 	Statement string
 	manifest  tools.Manifest
@@ -122,41 +121,55 @@ func getMapParams(params tools.ParamValues, dialect string) (map[string]interfac
 }
 
 func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
-	mapParams, err := getMapParams(params, t.dialect)
+	namedArgs := make([]any, 0, len(params))
+	paramsMap := params.AsReversedMap()
+	// To support both named args (e.g @id) and positional args (e.g @p1), check if arg name is contained in the statement.
+	for _, v := range params.AsSlice() {
+		paramName := paramsMap[v]
+		if strings.Contains(t.Statement, "@"+paramName) {
+			namedArgs = append(namedArgs, sql.Named(paramName, v))
+		} else {
+			namedArgs = append(namedArgs, v)
+		}
+	}
+
+	rows, err := t.Db.QueryContext(context.Background(), t.Statement, namedArgs...)
 	if err != nil {
-		return nil, fmt.Errorf("fail to get map params: %w", err)
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch column types: %w", err)
+	}
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
 	}
 
 	var out []any
-
-	_, err = t.Client.ReadWriteTransaction(context.Background(), func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		stmt := spanner.Statement{
-			SQL:    t.Statement,
-			Params: mapParams,
+	for rows.Next() {
+		err = rows.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		iter := txn.Query(ctx, stmt)
-		defer iter.Stop()
-
-		for {
-			row, err := iter.Next()
-			if err == iterator.Done {
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("unable to parse row: %w", err)
-			}
-
-			vMap := make(map[string]any)
-			cols := row.ColumnNames()
-			for i, c := range cols {
-				vMap[c] = row.ColumnValue(i)
-			}
-
-			out = append(out, vMap)
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			vMap[name] = rawValues[i]
 		}
-	})
+		out = append(out, vMap)
+	}
+	err = rows.Close()
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute client: %w", err)
+		return nil, fmt.Errorf("unable to close rows: %w", err)
+	}
+
+	// Check if error occured during iteration
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return out, nil
