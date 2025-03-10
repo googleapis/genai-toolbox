@@ -17,16 +17,17 @@
 package tests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
-	"net/http"
+	"database/sql"
+	"fmt"
 	"os"
-	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	_ "github.com/googleapis/go-sql-spanner"
 )
 
 var (
@@ -55,6 +56,19 @@ func getSpannerVars(t *testing.T) map[string]any {
 	}
 }
 
+func initSpannerDb(ctx context.Context, project, instance, dbname string) (*sql.DB, error) {
+	// Create DSN
+	dsn := fmt.Sprintf("projects/%s/instances/%s/databases/%s", project, instance, dbname)
+
+	// Open DB connection
+	db, err := sql.Open("spanner", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 func TestSpannerToolEndpoints(t *testing.T) {
 	sourceConfig := getSpannerVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -62,20 +76,29 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-spanner-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        "spanner-sql",
-				"source":      "my-spanner-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
-			},
-		},
+	// Create Spanner DB
+	pool, err := initSpannerDb(ctx, SPANNER_PROJECT, SPANNER_INSTANCE, SPANNER_DATABASE)
+	if err != nil {
+		t.Fatalf("unable to create Spanner db: %s", err)
 	}
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// set up data for param tool
+	create_statement1, insert_statement1, tool_statement1, params1 := GetSpannerParamToolInfo(tableNameParam)
+	teardownTable1 := SetupSpannerTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	create_statement2, insert_statement2, tool_statement2, params2 := GetSpannerAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupSpannerTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := GetToolsConfig(sourceConfig, SPANNER_TOOL_KIND, tool_statement1, tool_statement2)
+
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -90,88 +113,8 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
+	RunToolGetTest(t)
 
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-	}{
-		{
-			name:        "invoke my-simple-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"\":\"1\"}]",
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	select_1_want := "[{\"\":1}]"
+	RunToolInvokeTest(t, select_1_want)
 }
