@@ -23,7 +23,7 @@ This guide assumes you have already done the following:
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
 `llama-index-llms-google-genai`<a href="https://pypi.org/project/llama-index-llms-gemini/">package</a>.<br>
-`llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
+`llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package.</a>
 {{% /tab %}}
 {{< /tabpane >}}
 
