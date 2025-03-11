@@ -17,13 +17,16 @@ This guide assumes you have already done the following:
 1. Completed setup for usage with an LLM model such as
 {{< tabpane text=true >}}
 {{% tab header="LangChain" lang="en" %}}
-`langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
-`langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
-`langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
+[langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
+
+[langchain-google-genai](https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup) package.
+
+[langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
-`llama-index-llms-google-genai`<a href="https://pypi.org/project/llama-index-llms-gemini/">package</a>.<br>
-`llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package.</a>
+[llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-gemini) package.
+
+[llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
 {{% /tab %}}
 {{< /tabpane >}}
 
@@ -31,8 +34,6 @@ This guide assumes you have already done the following:
 [install-pip]: https://pip.pypa.io/en/stable/installation/
 [install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
-[lc-chat]: https://python.langchain.com/docs/integrations/chat/
-[li-llms]: https://docs.llamaindex.ai/en/stable/module_guides/models/llms/modules/
 
 ## Step 1: Set up your database
 
