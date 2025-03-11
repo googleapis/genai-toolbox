@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/googleapis/genai-toolbox/compare/v0.2.0...v0.2.1) (2025-03-11)
+
+
+### Bug Fixes
+
+* **source/alloydb:** Correct user agents not being sent ([#323](https://github.com/googleapis/genai-toolbox/issues/323)) ([ce12a34](https://github.com/googleapis/genai-toolbox/commit/ce12a344ed6290c7c6e36ee117318c20d6fdccc2))
+
 ## [0.2.0](https://github.com/googleapis/genai-toolbox/compare/v0.1.0...v0.2.0) (2025-03-03)
 
 
