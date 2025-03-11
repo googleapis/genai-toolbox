@@ -15,18 +15,17 @@ This guide assumes you have already done the following:
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
 1. Completed setup for usage with an LLM model such as
-    {{< tabpane text=true >}}
-    {{% tab header="LangChain" lang="en" %}}
-    `langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
-    `langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
-    `langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
-    {{% /tab %}}
-    {{% tab header="LangChain" lang="en" %}}
-    `llama-index-llms-vertex`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/vertex/">package</a>.<br>
-    `llama-index-llms-gemini`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/gemini/">package</a>.<br>
-    `llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
-    {{% /tab %}}
-    {{< /tabpane >}}
+{{< tabpane text=true >}}
+{{% tab header="LangChain" lang="en" %}}
+`langchain-vertexai`<a href="https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup">package</a>.<br>
+`langchain-google-genai`<a href="https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup">package</a>. <br>
+`langchain-anthropic`<a href="https://python.langchain.com/docs/integrations/chat/anthropic/#setup">package</a>.
+{{% /tab %}}
+{{% tab header="LangChain" lang="en" %}}
+`llama-index-llms-google-genai`<a href="https://pypi.org/project/llama-index-llms-gemini/">package</a>.<br>
+`llama-index-llms-anthropic`<a href="https://docs.llamaindex.ai/en/stable/examples/llm/anthropic/">package</a>
+{{% /tab %}}
+{{< /tabpane >}}
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
@@ -357,16 +356,16 @@ from Toolbox.
      main()
     {{< /tab >}}
     {{< /tabpane >}}
-       
-   To learn more about agents, refer to
-   {{% tabpane text=true %}}
-   {{% tab header="Langchain" %}}
-   [langgraph agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent).
-   {{% /tab %}}
-   {{% tab header="LlamaIndex" %}}
-   [llamaindex agent](https://docs.llamaindex.ai/en/stable/api_reference/agent/react/).
-   {{% /tab %}} 
-   {{% /tabpane %}}
+    
+    To learn more about agents, refer to
+{{< tabpane text=true >}}
+{{% tab header="Langchain" lang="en" %}}
+[langgraph agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
+{{% /tab %}}
+{{% tab header="Llamaindex" lang="en" %}}
+[llamaindex agent](https://docs.llamaindex.ai/en/stable/api_reference/agent/react/)
+{{% /tab %}}
+{{< /tabpane >}}
 
 1. Run your agent, and observe the results:
 
