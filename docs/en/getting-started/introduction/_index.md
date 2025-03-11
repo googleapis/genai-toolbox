@@ -43,6 +43,7 @@ following instructions for your OS and CPU architecture.
 
 [releases]: https://github.com/googleapis/genai-toolbox/releases
 
+<!-- {x-release-please-start-version} -->
 {{< tabpane text=true >}}
 {{% tab header="Binary" lang="en" %}}
 
@@ -77,6 +78,7 @@ go install github.com/googleapis/genai-toolbox@v0.2.0
 
 {{% /tab %}}
 {{< /tabpane >}}
+<!-- {x-release-please-end} -->
 
 ### Running the server
 
