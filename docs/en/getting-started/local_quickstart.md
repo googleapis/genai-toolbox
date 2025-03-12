@@ -315,8 +315,7 @@ from Toolbox.
 
      from llama_index.core.workflow import Context
      
-     # TODO(developer): replace these with another import if needed 
-     from llama_index.llms.google_genai.base import VertexAIConfig 
+     # TODO(developer): replace this with another import if needed 
      from llama_index.llms.google_genai import GoogleGenAI
      # from llama_index.llms.anthropic import Anthropic
      
@@ -343,7 +342,7 @@ from Toolbox.
          # TODO(developer): replace this with another model if needed
          llm = GoogleGenAI(
              model="gemini-1.5-pro",
-             vertexai_config=VertexAIConfig(project="project-id", location="us-central1"),
+             vertexai_config={"project": "twisha-dev", "location": "us-central1"},
          )
          # llm = GoogleGenAI(
          #     api_key=os.getenv("GOOGLE_API_KEY"),
