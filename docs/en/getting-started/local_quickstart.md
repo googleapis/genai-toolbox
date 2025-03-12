@@ -24,7 +24,7 @@ This guide assumes you have already done the following:
 [langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
-[llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-gemini) package.
+[llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-google-genai/) package.
 
 [llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
 {{% /tab %}}
@@ -251,7 +251,7 @@ from Toolbox.
     {{< tab header="LlamaIndex" lang="bash" >}}
 
     # TODO(developer): replace with correct package if needed
-    pip install llama-index-llms-vertex
+    pip install llama-index-llms-google-genai
     # pip install llama-index-llms-anthropic
     {{< /tab >}}
     {{< /tabpane >}}
@@ -308,13 +308,16 @@ from Toolbox.
     main()
     {{< /tab >}}
     {{< tab header="LlamaIndex" lang="python" >}}
+     import asyncio
+     import os
 
-     from llama_index.core.agent import ReActAgent
-     from llama_index.core.memory import ChatMemoryBuffer
+     from llama_index.core.agent.workflow import AgentWorkflow
 
-     # TODO(developer): replace this with another import if needed
-     from llama_index.llms.vertex import Vertex
-     # from llama_index.llms.gemini import Gemini
+     from llama_index.core.workflow import Context
+     
+     # TODO(developer): replace these with another import if needed 
+     from llama_index.llms.google_genai.base import VertexAIConfig 
+     from llama_index.llms.google_genai import GoogleGenAI
      # from llama_index.llms.anthropic import Anthropic
      
      from toolbox_llamaindex import ToolboxClient
@@ -336,9 +339,16 @@ from Toolbox.
          "My check in dates would be from April 10, 2024 to April 19, 2024.",
      ]
     
-     def main():
+     async def main():
          # TODO(developer): replace this with another model if needed
-         model = Vertex(model="gemini-1.5-pro")
+         llm = GoogleGenAI(
+             model="gemini-1.5-pro",
+             vertexai_config=VertexAIConfig(project="project-id", location="us-central1"),
+         )
+         # llm = GoogleGenAI(
+         #     api_key=os.getenv("GOOGLE_API_KEY"),
+         #     model="gemini-1.5-pro",
+         # )
          # llm = Anthropic(
          #   model="claude-3-7-sonnet-latest",
          #   api_key=os.getenv("ANTHROPIC_API_KEY")
@@ -348,15 +358,18 @@ from Toolbox.
          client = ToolboxClient("http://127.0.0.1:5000")
          tools = client.load_toolset()
    
-         memory = ChatMemoryBuffer.from_defaults(token_limit=5000)  # Adjust token_limit as needed
-        
-         agent = ReActAgent.from_tools(tools, llm=model, verbose=True, memory=memory, prompt=prompt)
-        
+         agent = AgentWorkflow.from_tools_or_functions(
+             tools,
+             llm=vertex_model,
+             system_prompt=prompt,
+         )
+         ctx = Context(agent)
          for query in queries:
-            response = agent.chat(query)
-            print(response)
-    
-     main()
+              response = await agent.run(user_msg=query, ctx=ctx)
+              print(f"---- {query} ----")
+              print(str(response))
+
+     asyncio.run(main())
     {{< /tab >}}
     {{< /tabpane >}}
     
@@ -366,7 +379,7 @@ from Toolbox.
 [langgraph agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="Llamaindex" lang="en" %}}
-[llamaindex agent](https://docs.llamaindex.ai/en/stable/api_reference/agent/react/)
+[llamaindex AgentWorkflow](https://www.llamaindex.ai/blog/introducing-agentworkflow-a-powerful-system-for-building-ai-agent-systems)
 {{% /tab %}}
 {{< /tabpane >}}
 
