@@ -10,8 +10,8 @@ build Gen AI tools for interacting with databases. It enables you to develop
 tools easier, faster, and more securely by handling the complexities such as
 connection pooling, authentication, and more.
 
-This README provides a brief overview. For comprehensive details, see the full
-[documentation](https://googleapis.github.io/genai-toolbox/).
+This README provides a brief overview. For comprehensive details, see the [full
+documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC ignore:true -->
 ## Table of Contents
