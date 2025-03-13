@@ -17,16 +17,16 @@ This guide assumes you have already done the following:
 1. Completed setup for usage with an LLM model such as
 {{< tabpane text=true >}}
 {{% tab header="LangChain" lang="en" %}}
-[langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
+- [langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
 
-[langchain-google-genai](https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup) package.
+- [langchain-google-genai](https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup) package.
 
-[langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
+- [langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
-[llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-google-genai/) package.
+- [llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-google-genai/) package.
 
-[llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
+- [llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
 {{% /tab %}}
 {{< /tabpane >}}
 
