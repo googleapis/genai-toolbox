@@ -227,150 +227,150 @@ from Toolbox.
 
 1. In a new terminal, install the SDK package.
     
-    {{< tabpane >}}
-    {{< tab header="Langchain" lang="bash" >}}
+{{< tabpane >}}
+{{< tab header="Langchain" lang="bash" >}}
 
-    pip install toolbox-langchain
-    {{< /tab >}}
-    {{< tab header="LlamaIndex" lang="bash" >}}
+pip install toolbox-langchain
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
 
-    pip install toolbox-llamaindex
-    {{< /tab >}}
-    {{< /tabpane >}}
+pip install toolbox-llamaindex
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Install other required dependencies:
     
-    {{< tabpane >}}
-    {{< tab header="Langchain" lang="python" >}}
+{{< tabpane >}}
+{{< tab header="Langchain" lang="python" >}}
 
-    # TODO(developer): replace with correct package if needed
-    pip install langgraph langchain-google-vertexai
-    # pip install langchain-google-genai
-    # pip install langchain-anthropic
-    {{< /tab >}}
-    {{< tab header="LlamaIndex" lang="bash" >}}
+# TODO(developer): replace with correct package if needed
+pip install langgraph langchain-google-vertexai
+# pip install langchain-google-genai
+# pip install langchain-anthropic
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
 
-    # TODO(developer): replace with correct package if needed
-    pip install llama-index-llms-google-genai
-    # pip install llama-index-llms-anthropic
-    {{< /tab >}}
-    {{< /tabpane >}}
+# TODO(developer): replace with correct package if needed
+pip install llama-index-llms-google-genai
+# pip install llama-index-llms-anthropic
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
-    {{< tabpane >}}
-    {{< tab header="LangChain" lang="python" >}}
+{{< tabpane >}}
+{{< tab header="LangChain" lang="python" >}}
 
-    from langgraph.prebuilt import create_react_agent
-    # TODO(developer): replace this with another import if needed
-    from langchain_google_vertexai import ChatVertexAI
-    # from langchain_google_genai import ChatGoogleGenerativeAI
-    # from langchain_anthropic import ChatAnthropic
-    from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import create_react_agent
+# TODO(developer): replace this with another import if needed
+from langchain_google_vertexai import ChatVertexAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_anthropic import ChatAnthropic
+from langgraph.checkpoint.memory import MemorySaver
+
+from toolbox_langchain import ToolboxClient
+
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id, 
+  location and price tier. Always mention hotel ids while performing any 
+  searches. This is very important for any operations. For any bookings or 
+  cancellations, please provide the appropriate confirmation. Be sure to 
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
+
+queries = [
+    "Find hotels in Basel with Basel in it's name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
+
+def main():
+    # TODO(developer): replace this with another model if needed
+    model = ChatVertexAI(model_name="gemini-1.5-pro")
+    # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
+    # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
     
-    from toolbox_langchain import ToolboxClient
+    # Load the tools from the Toolbox server
+    client = ToolboxClient("http://127.0.0.1:5000")
+    tools = client.load_toolset()
 
-    prompt = """
-      You're a helpful hotel assistant. You handle hotel searching, booking and
-      cancellations. When the user searches for a hotel, mention it's name, id, 
-      location and price tier. Always mention hotel ids while performing any 
-      searches. This is very important for any operations. For any bookings or 
-      cancellations, please provide the appropriate confirmation. Be sure to 
-      update checkin or checkout dates if mentioned by the user.
-      Don't ask for confirmations from the user.
-    """
-    
-    queries = [
-        "Find hotels in Basel with Basel in it's name.",
-        "Can you book the Hilton Basel for me?",
-        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-        "My check in dates would be from April 10, 2024 to April 19, 2024.",
-    ]
+    agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
-    def main():
-        # TODO(developer): replace this with another model if needed
-        model = ChatVertexAI(model_name="gemini-1.5-pro")
-        # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
-        # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
-        
-        # Load the tools from the Toolbox server
-        client = ToolboxClient("http://127.0.0.1:5000")
-        tools = client.load_toolset()
+    config = {"configurable": {"thread_id": "thread-1"}}
+    for query in queries:
+        inputs = {"messages": [("user", prompt + query)]}
+        response = agent.invoke(inputs, stream_mode="values", config=config)
+        print(response["messages"][-1].content)
 
-        agent = create_react_agent(model, tools, checkpointer=MemorySaver())
+main()
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="python" >}}
+ import asyncio
+ import os
 
-        config = {"configurable": {"thread_id": "thread-1"}}
-        for query in queries:
-            inputs = {"messages": [("user", prompt + query)]}
-            response = agent.invoke(inputs, stream_mode="values", config=config)
-            print(response["messages"][-1].content)
+ from llama_index.core.agent.workflow import AgentWorkflow
 
-    main()
-    {{< /tab >}}
-    {{< tab header="LlamaIndex" lang="python" >}}
-     import asyncio
-     import os
+ from llama_index.core.workflow import Context
+ 
+ # TODO(developer): replace this with another import if needed 
+ from llama_index.llms.google_genai import GoogleGenAI
+ # from llama_index.llms.anthropic import Anthropic
+ 
+ from toolbox_llamaindex import ToolboxClient
 
-     from llama_index.core.agent.workflow import AgentWorkflow
+ prompt = """
+   You're a helpful hotel assistant. You handle hotel searching, booking and
+   cancellations. When the user searches for a hotel, mention it's name, id, 
+   location and price tier. Always mention hotel ids while performing any 
+   searches. This is very important for any operations. For any bookings or 
+   cancellations, please provide the appropriate confirmation. Be sure to 
+   update checkin or checkout dates if mentioned by the user.
+   Don't ask for confirmations from the user.
+ """
+ 
+ queries = [
+     "Find hotels in Basel with Basel in it's name.",
+     "Can you book the Hilton Basel for me?",
+     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+     "My check in dates would be from April 10, 2024 to April 19, 2024.",
+ ]
 
-     from llama_index.core.workflow import Context
+ async def main():
+     # TODO(developer): replace this with another model if needed
+     llm = GoogleGenAI(
+         model="gemini-1.5-pro",
+         vertexai_config={"project": "twisha-dev", "location": "us-central1"},
+     )
+     # llm = GoogleGenAI(
+     #     api_key=os.getenv("GOOGLE_API_KEY"),
+     #     model="gemini-1.5-pro",
+     # )
+     # llm = Anthropic(
+     #   model="claude-3-7-sonnet-latest",
+     #   api_key=os.getenv("ANTHROPIC_API_KEY")
+     # )
      
-     # TODO(developer): replace this with another import if needed 
-     from llama_index.llms.google_genai import GoogleGenAI
-     # from llama_index.llms.anthropic import Anthropic
-     
-     from toolbox_llamaindex import ToolboxClient
-    
-     prompt = """
-       You're a helpful hotel assistant. You handle hotel searching, booking and
-       cancellations. When the user searches for a hotel, mention it's name, id, 
-       location and price tier. Always mention hotel ids while performing any 
-       searches. This is very important for any operations. For any bookings or 
-       cancellations, please provide the appropriate confirmation. Be sure to 
-       update checkin or checkout dates if mentioned by the user.
-       Don't ask for confirmations from the user.
-     """
-     
-     queries = [
-         "Find hotels in Basel with Basel in it's name.",
-         "Can you book the Hilton Basel for me?",
-         "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-         "My check in dates would be from April 10, 2024 to April 19, 2024.",
-     ]
-    
-     async def main():
-         # TODO(developer): replace this with another model if needed
-         llm = GoogleGenAI(
-             model="gemini-1.5-pro",
-             vertexai_config={"project": "twisha-dev", "location": "us-central1"},
-         )
-         # llm = GoogleGenAI(
-         #     api_key=os.getenv("GOOGLE_API_KEY"),
-         #     model="gemini-1.5-pro",
-         # )
-         # llm = Anthropic(
-         #   model="claude-3-7-sonnet-latest",
-         #   api_key=os.getenv("ANTHROPIC_API_KEY")
-         # )
-         
-         # Load the tools from the Toolbox server
-         client = ToolboxClient("http://127.0.0.1:5000")
-         tools = client.load_toolset()
-   
-         agent = AgentWorkflow.from_tools_or_functions(
-             tools,
-             llm=vertex_model,
-             system_prompt=prompt,
-         )
-         ctx = Context(agent)
-         for query in queries:
-              response = await agent.run(user_msg=query, ctx=ctx)
-              print(f"---- {query} ----")
-              print(str(response))
+     # Load the tools from the Toolbox server
+     client = ToolboxClient("http://127.0.0.1:5000")
+     tools = client.load_toolset()
 
-     asyncio.run(main())
-    {{< /tab >}}
-    {{< /tabpane >}}
+     agent = AgentWorkflow.from_tools_or_functions(
+         tools,
+         llm=vertex_model,
+         system_prompt=prompt,
+     )
+     ctx = Context(agent)
+     for query in queries:
+          response = await agent.run(user_msg=query, ctx=ctx)
+          print(f"---- {query} ----")
+          print(str(response))
+
+ asyncio.run(main())
+{{< /tab >}}
+{{< /tabpane >}}
     
     To learn more about agents, refer to
 {{< tabpane text=true >}}
