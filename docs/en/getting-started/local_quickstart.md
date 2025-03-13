@@ -372,16 +372,14 @@ main()
 {{< /tab >}}
 {{< /tabpane >}}
     
-    To learn more about agents, refer to
 {{< tabpane text=true >}}
 {{% tab header="Langchain" lang="en" %}}
-[langgraph agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
+To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="Llamaindex" lang="en" %}}
-[llamaindex AgentWorkflow](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
+To learn more about Agents in LlamaIndex, check out the [AgentWorkflow documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{< /tabpane >}}
-
 1. Run your agent, and observe the results:
 
     ```sh
