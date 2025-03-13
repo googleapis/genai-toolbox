@@ -23,7 +23,7 @@ This guide assumes you have already done the following:
 
 - [langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
 {{% /tab %}}
-{{% tab header="LangChain" lang="en" %}}
+{{% tab header="LlamaIndex" lang="en" %}}
 - [llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-google-genai/) package.
 
 - [llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
