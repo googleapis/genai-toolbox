@@ -1,0 +1,44 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: code coverage
+on: [pull_request]
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: "1.22"
+
+      - name: Checkout PR branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Calculate PR code coverage
+        run: |
+          go test -tags=integration,cloudsql,alloydb,postgres,spanner,neo4j -coverprofile pr_cover.out ./... || true
+          export PR_COVER=$(go tool cover -func pr_cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "PR_COVER=$PR_COVER" >> $GITHUB_ENV
+
+      - name: Verify code coverage. If your reading this and the step has failed, please add tests to cover your changes.
+        run: |
+          go tool cover -func pr_cover.out
+          if [ "${{ env.PR_COVER }}" -gt "90"  ]; then
+            exit 1;
+          fi
