@@ -15,7 +15,7 @@ This guide assumes you have already done the following:
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
 1. Completed setup for usage with an LLM model such as
-{{< tabpane text=true >}}
+{{< tabpane text=true persist=header >}}
 {{% tab header="LangChain" lang="en" %}}
 - [langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
 
@@ -227,7 +227,7 @@ from Toolbox.
 
 1. In a new terminal, install the SDK package.
     
-{{< tabpane >}}
+    {{< tabpane persist=header >}}
 {{< tab header="Langchain" lang="bash" >}}
 
 pip install toolbox-langchain
@@ -240,7 +240,7 @@ pip install toolbox-llamaindex
 
 1. Install other required dependencies:
     
-{{< tabpane >}}
+    {{< tabpane persist=header >}}
 {{< tab header="Langchain" lang="python" >}}
 
 # TODO(developer): replace with correct package if needed
@@ -255,10 +255,10 @@ pip install llama-index-llms-google-genai
 # pip install llama-index-llms-anthropic
 {{< /tab >}}
 {{< /tabpane >}}
-
+    
 1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
-{{< tabpane >}}
+    {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="python" >}}
 
 from langgraph.prebuilt import create_react_agent
@@ -372,7 +372,7 @@ main()
 {{< /tab >}}
 {{< /tabpane >}}
     
-{{< tabpane text=true >}}
+    {{< tabpane text=true persist=header >}}
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
