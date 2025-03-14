@@ -36,6 +36,8 @@ var _ tools.Tool = &MockTool{}
 
 const fakeVersionString = "0.0.0"
 const jsonrpcVersion = "2.0"
+const protocolVersion = "2024-11-05"
+const serverName = "Toolbox"
 
 type MockTool struct {
 	Name        string
@@ -265,16 +267,24 @@ func TestMcpEndpoint(t *testing.T) {
 		want  string
 	}{
 		{
-			name:  "basic mcp",
-			isErr: false,
+			name: "initialize",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
-				Id:      "basic-mcp",
+				Id:      "mcp-initialize",
 				Request: mcp.Request{
-					Method: "foo",
+					Method: "initialize",
 				},
 			},
-            want: `{"jsonrpc":"2.0","id":"basic-mcp","result":{}}`,
+			want: fmt.Sprintf(`{"jsonrpc":"2.0","id":"mcp-initialize","result":{"protocolVersion":"%s","capabilities":{"tools":{"listChanged":false}},"serverInfo":{"name":"%s","version":"%s"}}}`, protocolVersion, serverName, fakeVersionString),
+		},
+		{
+			name: "basic notification",
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Request: mcp.Request{
+					Method: "notification",
+				},
+			},
 		},
 		{
 			name:  "missing method",
@@ -284,7 +294,19 @@ func TestMcpEndpoint(t *testing.T) {
 				Id:      "missing-method",
 				Request: mcp.Request{},
 			},
-            want: `{"jsonrpc":"2.0","id":"missing-method","error":{"code":-32601,"message":"method not found"}}`,
+			want: `{"jsonrpc":"2.0","id":"missing-method","error":{"code":-32601,"message":"method not found"}}`,
+		},
+		{
+			name:  "invalid method",
+			isErr: true,
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "invalid-method",
+				Request: mcp.Request{
+					Method: "foo",
+				},
+			},
+			want: `{"jsonrpc":"2.0","id":"invalid-method","error":{"code":-32601,"message":"invalid method foo"}}`,
 		},
 		{
 			name:  "invalid jsonrpc version",
@@ -296,7 +318,7 @@ func TestMcpEndpoint(t *testing.T) {
 					Method: "foo",
 				},
 			},
-            want: `{"jsonrpc":"2.0","id":"invalid-jsonrpc-version","error":{"code":-32600,"message":"invalid json-rpc version"}}`,
+			want: `{"jsonrpc":"2.0","id":"invalid-jsonrpc-version","error":{"code":-32600,"message":"invalid json-rpc version"}}`,
 		},
 	}
 
@@ -312,12 +334,15 @@ func TestMcpEndpoint(t *testing.T) {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
 
-			if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
-				t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
-			}
+			// Notifications don't expect a response.
+			if tc.want != "" {
+				if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+					t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+				}
 
-			if diff := cmp.Diff(tc.want, string(body)); diff != "" {
-				t.Fatalf("Mismatch (-want +got):\n%s\n", diff)
+				if diff := cmp.Diff(tc.want, string(body)); diff != "" {
+					t.Fatalf("Mismatch (-want +got):\n%s\n", diff)
+				}
 			}
 		})
 	}

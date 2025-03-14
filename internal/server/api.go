@@ -266,12 +266,34 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// return empty response
-	res := mcp.JSONRPCResponse{
-		Jsonrpc: mcp.JSONRPC_VERSION,
-		Id:      baseMessage.Id,
-		Result:  mcp.EmptyResult{},
+	// Check if message is a notification
+	if baseMessage.Id == nil {
+		var notification mcp.JSONRPCNotification
+		if err := json.Unmarshal(message, &notification); err != nil {
+			render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
+		}
+		// Notifications do not expect a response
+		return
 	}
+
+	var res mcp.JSONRPCMessage
+	switch baseMessage.Method {
+	case "initialize":
+		var req mcp.InitializeRequest
+		if err := json.Unmarshal(message, &req); err != nil {
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, fmt.Sprintf("invalid mcp initialize request: %s", err), nil)
+			break
+		}
+		result := mcp.InitializeHandler(s.version)
+		res = mcp.JSONRPCResponse{
+			Jsonrpc: mcp.JSONRPC_VERSION,
+			Id:      baseMessage.Id,
+			Result:  result,
+		}
+	default:
+		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, fmt.Sprintf("invalid method %s", baseMessage.Method), nil)
+	}
+
 	render.JSON(w, r, res)
 }
 
