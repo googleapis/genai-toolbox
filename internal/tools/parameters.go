@@ -40,6 +40,20 @@ type ParamValue struct {
 	Value any
 }
 
+func ValueString(value any, valueType string) string {
+	strValue := ""
+	if valueType == "array" {
+		strValue += "["
+		for _, v := range value.([]any) {
+			strValue += fmt.Sprintf("%v", v)
+		}
+		strValue += "]"
+	} else {
+		strValue += fmt.Sprintf("%v", value)
+	}
+	return strValue
+}
+
 // AsSlice returns a slice of the Param's values (in order).
 func (p ParamValues) AsSlice() []any {
 	params := []any{}

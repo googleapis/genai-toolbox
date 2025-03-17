@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbpg_test
+package http_test
 
 import (
 	"testing"
@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
@@ -39,18 +40,20 @@ func TestParseFromYamlHttp(t *testing.T) {
 					baseUrl: http://test_server/
 					timeout: 10
 					headers:
-						- Authorization:test_header
+						Authorization: test_header
+						Custom-Header: custom
 					queryParams:
-						- api-key:test_api_key
+						api-key: test_api_key
+						param: param-value
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
 					Name:        "my-http-instance",
 					Kind:        http.SourceKind,
-					baseUrl:     "http://test_server/",
-					timeout:     10,
-					headers:     map[string]string{"Authorization": "test_header"},
-					queryParams: map[string]string{"api-key": "test_api_key"},
+					BaseURL:     "http://test_server/",
+					Timeout:     10,
+					Headers:     map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
+					QueryParams: map[string]string{"api-key": "test_api_key", "param": "param-value"},
 				},
 			},
 		},
@@ -79,21 +82,6 @@ func TestFailParseFromYaml(t *testing.T) {
 		err  string
 	}{
 		{
-			desc: "basic example",
-			in: `
-			sources:
-				my-http-instance:
-					kind: http
-					baseUrl: http://test_server/
-					timeout: 10
-					headers:
-						- Authorization:test_header
-					queryParams:
-						- api-key:test_api_key
-			`,
-			err: ``,
-		},
-		{
 			desc: "extra field",
 			in: `
 			sources:
@@ -102,12 +90,12 @@ func TestFailParseFromYaml(t *testing.T) {
 					baseUrl: http://test_server/
 					timeout: 10
 					headers:
-						- Authorization:test_header
+						Authorization: test_header
 					queryParams:
-						- api-key:test_api_key
+						api-key: test_api_key
 					project: test-project
 			`,
-			err: ``,
+			err: "unable to parse as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10",
 		},
 		{
 			desc: "missing required field",
@@ -116,7 +104,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-http-instance:
 					baseUrl: http://test_server/
 			`,
-			err: "unable to parse as \"http\": Key: 'Config.Kind' Error:Field validation for 'Kind' failed on the 'required' tag",
+			err: "missing 'kind' field for \"my-http-instance\"",
 		},
 	}
 	for _, tc := range tcs {
