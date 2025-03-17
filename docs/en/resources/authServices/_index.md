@@ -66,10 +66,10 @@ async def get_auth_token():
     return "YOUR_ID_TOKEN" # Placeholder
 
 # for a single tool use:
-authorized_tool = await toolbox.aload_tool("my-tool-name", auth_tokens={"my_auth": get_auth_token})
+authorized_tool = toolbox.load_tool("my-tool-name", auth_tokens={"my_auth": get_auth_token})
 
 # for a toolset use: 
-authorized_tools = await toolbox.aload_toolset("my-toolset-name", auth_tokens={"my_auth": get_auth_token})
+authorized_tools = toolbox.load_toolset("my-toolset-name", auth_tokens={"my_auth": get_auth_token})
 {{< /tab >}}
 {{< tab header="Llamaindex" lang="Python" >}}
 async def get_auth_token():
