@@ -75,8 +75,8 @@ You can load toolsets by name:
 
 ```python
 # This will load all tools
-all_tools = await client.aload_toolset()
+all_tools = client.load_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = await client.aload_toolset("my_second_toolset")
+my_second_toolset = client.load_toolset("my_second_toolset")
 ```
