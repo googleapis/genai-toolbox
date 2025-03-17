@@ -154,6 +154,32 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 
 </details>
 
+<details open>
+<summary>LlamaIndex</summary>
+
+1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
+    ```bash
+    pip install toolbox-llamaindex
+    ```
+1. Load tools:
+    ```python
+    from toolbox_llamaindex import ToolboxClient
+
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
+
+    # these tools can be passed to your application! 
+    tools = client.load_toolset()
+    ```
+
+For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+[project's README][toolbox-llamaindex-readme].
+
+[toolbox-llamaindex]: https://github.com/googleapis/genai-toolbox-llamaindex-python
+[toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
+
+</details>
+
 ## Configuration
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
