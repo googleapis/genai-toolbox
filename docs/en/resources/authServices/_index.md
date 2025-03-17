@@ -58,7 +58,7 @@ when the tool is invoked. This allows you to cache and refresh the ID token as
 needed. 
 
 ### Specifying tokens during load
-{{< tabpane >}}
+{{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="Python" >}}
 async def get_auth_token():
     # ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
@@ -70,6 +70,18 @@ authorized_tool = await toolbox.aload_tool("my-tool-name", auth_tokens={"my_auth
 
 # for a toolset use: 
 authorized_tools = await toolbox.aload_toolset("my-toolset-name", auth_tokens={"my_auth": get_auth_token})
+{{< /tab >}}
+{{< tab header="Llamaindex" lang="Python" >}}
+async def get_auth_token():
+    # ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+    # This example just returns a placeholder. Replace with your actual token retrieval.
+    return "YOUR_ID_TOKEN" # Placeholder
+
+# for a single tool use:
+authorized_tool = toolbox.load_tool("my-tool-name", auth_tokens={"my_auth": get_auth_token})
+
+# for a toolset use: 
+authorized_tools = toolbox.load_toolset("my-toolset-name", auth_tokens={"my_auth": get_auth_token})
 {{< /tab >}}
 {{< /tabpane >}}
 
