@@ -15,12 +15,11 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceKind string = "http"
@@ -29,12 +28,12 @@ const SourceKind string = "http"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name        string              `yaml:"name" validate:"required"`
-	Kind        string              `yaml:"kind" validate:"required"`
-	BaseURL     string              `yaml:"baseUrl"`
-	timeout     int                 `yaml:"timeout"`
-	headers     []map[string]string `yaml:"headers"`
-	queryParams []map[string]string `yaml:"queryParams"`
+	Name        string            `yaml:"name" validate:"required"`
+	Kind        string            `yaml:"kind" validate:"required"`
+	BaseURL     string            `yaml:"baseUrl"`
+	Timeout     int               `yaml:"timeout"`
+	Headers     map[string]string `yaml:"headers"`
+	QueryParams map[string]string `yaml:"queryParams"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -46,11 +45,14 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Timeout: 30 * time.Second,
 	}
 
-	fmt.Printf("client: status code: %d", res.StatusCode)
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Name:        r.Name,
+		Kind:        SourceKind,
+		BaseURL:     r.BaseURL,
+		Timeout:     r.Timeout,
+		Headers:     r.Headers,
+		QueryParams: r.QueryParams,
+		Client:      &client,
 	}
 	return s, nil
 
@@ -59,11 +61,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name        string `yaml:"name"`
-	Kind        string `yaml:"kind"`
+	Name        string            `yaml:"name"`
+	Kind        string            `yaml:"kind"`
+	BaseURL     string            `yaml:"baseUrl"`
+	Timeout     int               `yaml:"timeout"`
+	Headers     map[string]string `yaml:"headers"`
+	QueryParams map[string]string `yaml:"queryParams"`
 	Client      *http.Client
-	headers     []map[string]string
-	queryParams []map[string]string
 }
 
 func (s *Source) SourceKind() string {
@@ -72,4 +76,16 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) HTTPClient() *http.Client {
 	return s.Client
+}
+
+func (s *Source) GetBaseURL() string {
+	return s.BaseURL
+}
+
+func (s *Source) GetHeaders() map[string]string {
+	return s.Headers
+}
+
+func (s *Source) GetQueryParams() map[string]string {
+	return s.Headers
 }
