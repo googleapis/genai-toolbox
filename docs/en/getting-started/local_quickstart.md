@@ -241,7 +241,7 @@ pip install toolbox-llamaindex
 1. Install other required dependencies:
     
     {{< tabpane persist=header >}}
-{{< tab header="Langchain" lang="python" >}}
+{{< tab header="Langchain" lang="bash" >}}
 
 # TODO(developer): replace with correct package if needed
 pip install langgraph langchain-google-vertexai
