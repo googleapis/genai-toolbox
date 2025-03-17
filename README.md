@@ -10,8 +10,8 @@ build Gen AI tools for interacting with databases. It enables you to develop
 tools easier, faster, and more securely by handling the complexities such as
 connection pooling, authentication, and more.
 
-This README provides a brief overview. For comprehensive details, see the full
-[documentation](https://googleapis.github.io/genai-toolbox/).
+This README provides a brief overview. For comprehensive details, see the [full
+documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -151,6 +151,32 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 
 [toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
 [toolbox-langchain-readme]: https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md
+
+</details>
+
+<details>
+<summary>LlamaIndex</summary>
+
+1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
+    ```bash
+    pip install toolbox-llamaindex
+    ```
+1. Load tools:
+    ```python
+    from toolbox_llamaindex import ToolboxClient
+
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
+
+    # these tools can be passed to your application! 
+    tools = client.load_toolset()
+    ```
+
+For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+[project's README][toolbox-llamaindex-readme].
+
+[toolbox-llamaindex]: https://github.com/googleapis/genai-toolbox-llamaindex-python
+[toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
 
 </details>
 
