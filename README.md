@@ -143,7 +143,7 @@ application. See below the list of Client SDKs for using various frameworks:
     client = ToolboxClient("http://127.0.0.1:5000")
 
     # these tools can be passed to your application! 
-    tools = await client.aload_toolset()
+    tools = client.load_toolset()
     ```
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
@@ -251,10 +251,10 @@ You can load toolsets by name:
 
 ```python
 # This will load all tools
-all_tools = await client.aload_toolset()
+all_tools = client.load_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = await client.aload_toolset("my_second_toolset")
+my_second_toolset = client.load_toolset("my_second_toolset")
 ```
 
 ## Versioning
