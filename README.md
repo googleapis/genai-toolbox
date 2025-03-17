@@ -143,7 +143,7 @@ application. See below the list of Client SDKs for using various frameworks:
     client = ToolboxClient("http://127.0.0.1:5000")
 
     # these tools can be passed to your application! 
-    tools = await client.aload_toolset()
+    tools = client.load_toolset()
     ```
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
@@ -151,6 +151,32 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 
 [toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
 [toolbox-langchain-readme]: https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md
+
+</details>
+
+<details>
+<summary>LlamaIndex</summary>
+
+1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
+    ```bash
+    pip install toolbox-llamaindex
+    ```
+1. Load tools:
+    ```python
+    from toolbox_llamaindex import ToolboxClient
+
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
+
+    # these tools can be passed to your application! 
+    tools = client.load_toolset()
+    ```
+
+For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+[project's README][toolbox-llamaindex-readme].
+
+[toolbox-llamaindex]: https://github.com/googleapis/genai-toolbox-llamaindex-python
+[toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
 
 </details>
 
@@ -225,10 +251,10 @@ You can load toolsets by name:
 
 ```python
 # This will load all tools
-all_tools = await client.aload_toolset()
+all_tools = client.load_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = await client.aload_toolset("my_second_toolset")
+my_second_toolset = client.load_toolset("my_second_toolset")
 ```
 
 ## Versioning
