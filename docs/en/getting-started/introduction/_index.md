@@ -100,7 +100,7 @@ out the resources in the [How-to section](../../how-to/_index.md)
 Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
-{{< tabpane text=true >}}
+{{< tabpane text=true persist=header >}}
 {{% tab header="LangChain" lang="en" %}}
 
 Once you've installed the [Toolbox LangChain
@@ -119,6 +119,26 @@ tools = await client.aload_toolset()
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README](https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md).
+
+{{% /tab %}}
+{{% tab header="Llamaindex" lang="en" %}}
+
+Once you've installed the [Toolbox Llamaindex
+SDK](https://github.com/googleapis/genai-toolbox-llamaindex-python), you can load
+tools:
+
+{{< highlight python >}}
+from toolbox_llamaindex import ToolboxClient
+
+# update the url to point to your server
+client = ToolboxClient("http://127.0.0.1:5000")
+
+# these tools can be passed to your application! 
+tools = client.load_toolset()
+{{< /highlight >}}
+
+For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+[project's README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
 
 {{% /tab %}}
 {{< /tabpane >}}
