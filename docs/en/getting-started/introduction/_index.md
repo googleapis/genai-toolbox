@@ -114,7 +114,7 @@ from toolbox_langchain import ToolboxClient
 client = ToolboxClient("http://127.0.0.1:5000")
 
 # these tools can be passed to your application! 
-tools = await client.aload_toolset()
+tools = client.load_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
