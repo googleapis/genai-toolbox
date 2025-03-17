@@ -154,7 +154,7 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 
 </details>
 
-<details open>
+<details>
 <summary>LlamaIndex</summary>
 
 1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
