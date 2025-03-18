@@ -56,7 +56,7 @@ func TestHTTPToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	toolsFile := GetHTTPToolsConfig(sourceConfig)
+	toolsFile := GetHTTPToolsConfig(sourceConfig, HTTP_TOOL_KIND)
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
