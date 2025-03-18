@@ -21,6 +21,8 @@ import (
 	"net/url"
 	"strings"
 
+	"maps"
+
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -77,7 +79,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Create URL based on BaseURL and Path
 	// Attach query parameters
-	u, err := url.Parse(s.GetBaseURL())
+	u, err := url.Parse(s.GetBaseURL() + cfg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing URL: %s", err)
 	}
@@ -90,13 +92,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Combine Source and Tool headers.
 	// In case of conflict, Tool header overrides Source header
-	var combinedHeaders map[string]string
-	for k, v := range s.GetHeaders() {
-		combinedHeaders[k] = v
-	}
-	for k, v := range cfg.Headers {
-		combinedHeaders[k] = v
-	}
+	combinedHeaders := make(map[string]string)
+	maps.Copy(combinedHeaders, s.GetHeaders())
+	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// finish tool setup
 	t := NewGenericTool(cfg.Name, u.String(), cfg.RequestBody, cfg.Method, cfg.AuthRequired, cfg.Description, combinedHeaders, s.HTTPClient(), cfg.QueryParams, cfg.BodyParams, cfg.HeaderParams)
@@ -159,7 +157,19 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		requestBody = strings.ReplaceAll(requestBody, subName, valueString)
 	}
 
-	req, _ := http.NewRequest(http.MethodPost, t.URL, strings.NewReader(requestBody))
+	// Set Query Parameters
+	u, err := url.Parse(t.URL)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing URL: %s", err)
+	}
+
+	query := u.Query()
+	for _, p := range t.QueryParams {
+		query.Add(p.GetName(), paramsMap[p.GetName()].(string))
+	}
+	u.RawQuery = query.Encode()
+
+	req, _ := http.NewRequest(http.MethodPost, u.String(), strings.NewReader(requestBody))
 
 	// Populate header params
 	for _, p := range t.HeaderParams {
@@ -191,14 +201,13 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	var result []interface{}
-	err = json.Unmarshal(body, &result)
+	var data any
+	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error decoding JSON: %w", err)
 	}
 
-	return result, nil
+	return data.([]any), nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
