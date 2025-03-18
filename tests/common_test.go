@@ -100,7 +100,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 }
 
 // GetHTTPToolsConfig returns a mock HTTP tool's config file
-func GetHTTPToolsConfig(sourceConfig map[string]any) map[string]any {
+func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -114,14 +114,14 @@ func GetHTTPToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        HTTP_TOOL_KIND,
+				"kind":        toolKind,
 				"path":        "/tool1",
 				"method":      "POST",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-param-tool": map[string]any{
-				"kind":        HTTP_TOOL_KIND,
+				"kind":        toolKind,
 				"source":      "my-instance",
 				"method":      "GET",
 				"path":        "/tool1",
@@ -137,7 +137,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any) map[string]any {
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
 			"my-auth-tool": map[string]any{
-				"kind":         HTTP_TOOL_KIND,
+				"kind":         toolKind,
 				"source":       "my-instance",
 				"method":       "GET",
 				"path":         "/tool2",
@@ -150,7 +150,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any) map[string]any {
 			},
 			"my-auth-required-tool": map[string]any{
 				"name":         "simple_tool",
-				"kind":         HTTP_TOOL_KIND,
+				"kind":         toolKind,
 				"source":       "my-instance",
 				"method":       "GET",
 				"path":         "/tool2",
