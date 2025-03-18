@@ -376,7 +376,7 @@ main()
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
-{{% tab header="Llamaindex" lang="en" %}}
+{{% tab header="LlamaIndex" lang="en" %}}
 To learn more about Agents in LlamaIndex, check out the [AgentWorkflow documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{< /tabpane >}}
