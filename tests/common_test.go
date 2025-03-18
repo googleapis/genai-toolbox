@@ -22,6 +22,8 @@ package tests
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // GetToolsConfig returns a mock tools config file
@@ -94,6 +96,69 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 		},
 	}
 
+	return toolsFile
+}
+
+// GetHTTPToolsConfig returns a mock HTTP tool's config file
+func GetHTTPToolsConfig(sourceConfig map[string]any) map[string]any {
+	// Write config into a file and pass it to command
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        HTTP_TOOL_KIND,
+				"path":        "/tool1",
+				"method":      "POST",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"my-param-tool": map[string]any{
+				"kind":        HTTP_TOOL_KIND,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/tool1",
+				"description": "some description",
+				"queryParams": []tools.Parameter{
+					tools.NewIntParameter("id", "user ID")},
+				"requestBody": `{
+"age": 36
+"name": $name
+}
+`,
+				"bodyParams": []tools.Parameter{tools.NewIntParameter("name", "user name")},
+				"headers":    map[string]string{"Content-Type": "application/json"},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":         HTTP_TOOL_KIND,
+				"source":       "my-instance",
+				"method":       "GET",
+				"path":         "/tool2",
+				"description":  "some description",
+				"authRequired": []string{"my-google-auth-service", "other-auth-service"},
+				"queryParams": []tools.Parameter{
+					tools.NewStringParameterWithAuth("email", "some description",
+						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"name":         "simple_tool",
+				"kind":         HTTP_TOOL_KIND,
+				"source":       "my-instance",
+				"method":       "GET",
+				"path":         "/tool2",
+				"description":  "some description",
+				"authRequired": []string{"my-google-auth"},
+			},
+		},
+	}
 	return toolsFile
 }
 
