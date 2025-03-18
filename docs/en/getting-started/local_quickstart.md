@@ -4,7 +4,7 @@ type: docs
 weight: 2
 description: >
   How to get started running Toolbox locally with Python, PostgreSQL, and 
-  LangGraph. 
+  LangGraph or LlamaIndex. 
 ---
 
 ## Before you begin
