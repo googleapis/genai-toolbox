@@ -87,5 +87,5 @@ func (s *Source) GetHeaders() map[string]string {
 }
 
 func (s *Source) GetQueryParams() map[string]string {
-	return s.Headers
+	return s.QueryParams
 }
