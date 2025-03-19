@@ -59,6 +59,14 @@ var tool2 = MockTool{
 	},
 }
 
+var tool3 = MockTool{
+	Name:        "array_param",
+	Description: "some description",
+	Params: tools.Parameters{
+		tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+	},
+}
+
 func (t MockTool) Invoke(tools.ParamValues) ([]any, error) {
 	mock := make([]any, 0)
 	return mock, nil
@@ -86,7 +94,8 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func TestToolsetEndpoint(t *testing.T) {
-	ts, shutdown := setUpServer(t)
+	mockTools := []MockTool{tool1, tool2}
+	ts, shutdown := setUpServer(t, mockTools)
 	defer shutdown()
 
 	// wantResponse is a struct for checks against test cases
@@ -178,7 +187,8 @@ func TestToolsetEndpoint(t *testing.T) {
 	}
 }
 func TestToolGetEndpoint(t *testing.T) {
-	ts, shutdown := setUpServer(t)
+	mockTools := []MockTool{tool1, tool2}
+	ts, shutdown := setUpServer(t, mockTools)
 	defer shutdown()
 
 	// wantResponse is a struct for checks against test cases
@@ -262,7 +272,8 @@ func TestToolGetEndpoint(t *testing.T) {
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	ts, shutdown := setUpServer(t)
+	mockTools := []MockTool{tool1, tool2, tool3}
+	ts, shutdown := setUpServer(t, mockTools)
 	defer shutdown()
 
 	testCases := []struct {
@@ -290,6 +301,25 @@ func TestMcpEndpoint(t *testing.T) {
 					Method: "notification",
 				},
 			},
+		},
+		{
+			name: "tools/list",
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list",
+				Request: mcp.Request{
+					Method: "tools/list",
+				},
+			},
+			want: `{"jsonrpc":"2.0","id":"tools-list","result":{"tools":[` +
+				`{"name":"no_params","inputSchema":{"type":"object","properties":null,"required":null}},` +
+				`{"name":"some_params","inputSchema":{"type":"object","properties":[` +
+				`{"name":"param1","type":"integer","description":"This is the first parameter."},` +
+				`{"name":"param2","type":"integer","description":"This is the second parameter."}],` +
+				`"required":["param1","param2"]}},` +
+				`{"name":"array_param","desciprtion":"some description","inputSchema":{"type":"object","properties":[` +
+				`{"name":"my_array","type":"array","description":"this param is an array of strings","items":{"name":"my_string","type":"string","description":"string item"}}],` +
+				`"required":["my_array"]}}]}}`,
 		},
 		{
 			name:  "missing method",
@@ -353,17 +383,23 @@ func TestMcpEndpoint(t *testing.T) {
 	}
 }
 
-func setUpServer(t *testing.T) (*httptest.Server, func()) {
+func setUpServer(t *testing.T, mockTools []MockTool) (*httptest.Server, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Set up resources to test against
-	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
+	toolsMap := make(map[string]tools.Tool)
+	var allTools []string
+	for _, tool := range mockTools {
+		tool.manifest = tool.Manifest()
+		toolsMap[tool.Name] = tool
+		allTools = append(allTools, tool.Name)
+	}
 
 	toolsets := make(map[string]tools.Toolset)
 	for name, l := range map[string][]string{
-		"":           {tool1.Name, tool2.Name},
-		"tool1_only": {tool1.Name},
-		"tool2_only": {tool2.Name},
+		"":           allTools,
+		"tool1_only": {allTools[0]},
+		"tool2_only": {allTools[1]},
 	} {
 		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
 		m, err := tc.Initialize(fakeVersionString, toolsMap)

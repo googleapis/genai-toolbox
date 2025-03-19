@@ -27,6 +27,7 @@ type Toolset struct {
 	Name     string          `yaml:"name"`
 	Tools    []*Tool         `yaml:",inline"`
 	Manifest ToolsetManifest `yaml:",inline"`
+	MCPTools []MCPTool       `yaml:",inline"`
 }
 
 type ToolsetManifest struct {
@@ -54,6 +55,7 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 		}
 		toolset.Tools = append(toolset.Tools, &tool)
 		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
+		toolset.MCPTools = append(toolset.MCPTools, tool.MCPTool())
 	}
 
 	return toolset, nil
