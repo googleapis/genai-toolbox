@@ -33,9 +33,9 @@ const ToolKind string = "http-json"
 type responseBody []byte
 type compatibleSource interface {
 	HTTPClient() *http.Client
-	GetBaseURL() string
-	GetHeaders() map[string]string
-	GetQueryParams() map[string]string
+	HTTPBaseURL() string
+	HTTPHeaders() map[string]string
+	HTTPQueryParams() map[string]string
 }
 
 // validate compatible sources are still compatible
@@ -50,7 +50,7 @@ type Config struct {
 	Description  string            `yaml:"description" validate:"required"`
 	AuthRequired []string          `yaml:"authRequired"`
 	Path         string            `yaml:"path" validate:"required"`
-	Method       HTTPMethod        `yaml:"method" validate:"required"`
+	Method       tools.HTTPMethod  `yaml:"method" validate:"required"`
 	Headers      map[string]string `yaml:"headers"`
 	RequestBody  string            `yaml:"requestBody"`
 	QueryParams  tools.Parameters  `yaml:"queryParams"`
@@ -80,13 +80,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Create URL based on BaseURL and Path
 	// Attach query parameters
-	u, err := url.Parse(s.GetBaseURL() + cfg.Path)
+	u, err := url.Parse(s.HTTPBaseURL() + cfg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing URL: %s", err)
 	}
 
 	queryParameters := u.Query()
-	for key, value := range s.GetQueryParams() {
+	for key, value := range s.HTTPQueryParams() {
 		queryParameters.Add(key, value)
 	}
 	u.RawQuery = queryParameters.Encode()
@@ -94,33 +94,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Combine Source and Tool headers.
 	// In case of conflict, Tool header overrides Source header
 	combinedHeaders := make(map[string]string)
-	maps.Copy(combinedHeaders, s.GetHeaders())
+	maps.Copy(combinedHeaders, s.HTTPHeaders())
 	combinedHeaders["Content-Type"] = "application/json" // set JSON header
 	maps.Copy(combinedHeaders, cfg.Headers)
 
+	// Create parameter manifest
+	paramManifest := append(append(cfg.QueryParams.Manifest(), cfg.BodyParams.Manifest()...), cfg.HeaderParams.Manifest()...)
+
 	// finish tool setup
-	t := NewGenericTool(cfg.Name, u.String(), cfg.RequestBody, cfg.Method, cfg.AuthRequired, cfg.Description, combinedHeaders, s.HTTPClient(), cfg.QueryParams, cfg.BodyParams, cfg.HeaderParams)
-	return t, nil
-}
-
-func NewGenericTool(name, url, requestBody string, method HTTPMethod, authRequired []string, desc string, headers map[string]string, client *http.Client, queryParams, bodyParams, headerParams tools.Parameters) Tool {
-	// create Tool manifest
-	paramManifest := append(append(queryParams.Manifest(), bodyParams.Manifest()...), headerParams.Manifest()...)
-
 	return Tool{
-		Name:         name,
+		Name:         cfg.Name,
 		Kind:         ToolKind,
-		URL:          url,
-		Method:       method,
-		AuthRequired: authRequired,
-		RequestBody:  requestBody,
-		QueryParams:  queryParams,
-		BodyParams:   bodyParams,
-		HeaderParams: headerParams,
-		Headers:      headers,
-		Client:       client,
-		manifest:     tools.Manifest{Description: desc, Parameters: paramManifest},
-	}
+		URL:          u.String(),
+		Method:       cfg.Method,
+		AuthRequired: cfg.AuthRequired,
+		RequestBody:  cfg.RequestBody,
+		QueryParams:  cfg.QueryParams,
+		BodyParams:   cfg.BodyParams,
+		HeaderParams: cfg.HeaderParams,
+		Headers:      combinedHeaders,
+		Client:       s.HTTPClient(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
+	}, nil
 }
 
 // validate interface
@@ -132,8 +127,8 @@ type Tool struct {
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
-	URL          string            `yaml:"url" validate:"required"`
-	Method       HTTPMethod        `yaml:"method" validate:"required"`
+	URL          string            `yaml:"url"`
+	Method       tools.HTTPMethod  `yaml:"method"`
 	Headers      map[string]string `yaml:"headers"`
 	RequestBody  string            `yaml:"requestBody"`
 	QueryParams  tools.Parameters  `yaml:"queryParams"`
