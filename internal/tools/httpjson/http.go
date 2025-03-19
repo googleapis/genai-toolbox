@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.package http
-package http
+package httpjson
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,8 +28,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "http"
+const ToolKind string = "http-json"
 
+type responseBody []byte
 type compatibleSource interface {
 	HTTPClient() *http.Client
 	GetBaseURL() string
@@ -93,6 +95,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// In case of conflict, Tool header overrides Source header
 	combinedHeaders := make(map[string]string)
 	maps.Copy(combinedHeaders, s.GetHeaders())
+	combinedHeaders["Content-Type"] = "application/json" // set JSON header
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// finish tool setup
@@ -194,7 +197,9 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		return nil, fmt.Errorf("error making HTTP request: %s", err)
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+
+	var body responseBody
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +207,33 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 	}
 
+	result, err := body.UnmarshalResponse()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (body responseBody) UnmarshalResponse() ([]any, error) {
 	// JSON response could be either an array or an object
-	return []any{string(body)}, nil
+	var objectResult []map[string]any
+	var arrayResult []any
+	// Try unmarshal into an object first
+	err := json.Unmarshal(body, &objectResult)
+	if err != nil {
+		// If error, try unmarshal into an array
+		err = json.Unmarshal(body, &arrayResult)
+		if err == nil {
+			return arrayResult, nil
+		}
+		return nil, fmt.Errorf("error unmarshaling JSON: %d. Raw body: %s", err, body)
+	}
+	// Turn []map[string]any into []any type to match function output type
+	sliceResult := make([]any, 0, len(objectResult))
+	for _, v := range objectResult {
+		sliceResult = append(sliceResult, v)
+	}
+	return sliceResult, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

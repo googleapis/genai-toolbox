@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http_test
+package httpjson_test
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/http"
+	http "github.com/googleapis/genai-toolbox/internal/tools/httpjson"
 )
 
 func TestParseFromYamlHTTP(t *testing.T) {
