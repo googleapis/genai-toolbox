@@ -71,5 +71,5 @@ func TestHTTPToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 	RunToolGetTest(t)
-	RunToolInvokeTest(t, "Hello World")
+	RunToolInvokeTest(t, "[\"Hello World!\"]")
 }
