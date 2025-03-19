@@ -164,6 +164,10 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
+func (t Tool) MCPTool() tools.MCPTool {
+	return tools.MCPTool{Name: t.Name, Description: t.manifest.Description, InputSchema: t.manifest.ToolsSchema()}
+}
+
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
