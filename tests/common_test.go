@@ -115,9 +115,10 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
 				"kind":        toolKind,
-				"path":        "/tool1",
+				"path":        "/tool0",
 				"method":      "POST",
 				"source":      "my-instance",
+				"requestBody": "{}",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-param-tool": map[string]any{
@@ -130,10 +131,10 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					tools.NewIntParameter("id", "user ID")},
 				"requestBody": `{
 "age": 36
-"name": $name
+"name": "$name"
 }
 `,
-				"bodyParams": []tools.Parameter{tools.NewIntParameter("name", "user name")},
+				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
 			"my-auth-tool": map[string]any{
@@ -143,18 +144,19 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"path":         "/tool2",
 				"description":  "some description",
 				"authRequired": []string{"my-google-auth-service", "other-auth-service"},
+				"requestBody":  "{}",
 				"queryParams": []tools.Parameter{
 					tools.NewStringParameterWithAuth("email", "some description",
 						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"name":         "simple_tool",
 				"kind":         toolKind,
 				"source":       "my-instance",
 				"method":       "GET",
-				"path":         "/tool2",
+				"path":         "/tool0",
 				"description":  "some description",
+				"requestBody":  "{}",
 				"authRequired": []string{"my-google-auth"},
 			},
 		},

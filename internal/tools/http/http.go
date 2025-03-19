@@ -14,7 +14,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -148,7 +147,8 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	// Populate reqeust body params
 	requestBody := t.RequestBody
 	for _, p := range t.BodyParams {
-		subName := "@" + p.GetName()
+		// parameter placeholder symbol is `$`
+		subName := "$" + p.GetName()
 		if !strings.Contains(requestBody, subName) {
 			return nil, fmt.Errorf("request body parameter placeholder %s is not found in the `Tool.requestBody` string", subName)
 		}
@@ -165,7 +165,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 
 	query := u.Query()
 	for _, p := range t.QueryParams {
-		query.Add(p.GetName(), paramsMap[p.GetName()].(string))
+		query.Add(p.GetName(), fmt.Sprintf("%s", paramsMap[p.GetName()]))
 	}
 	u.RawQuery = query.Encode()
 
@@ -178,7 +178,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 			if strValue, ok := headerValue.(string); ok {
 				t.Headers[p.GetName()] = strValue
 			} else {
-				return nil, fmt.Errorf("header param %s got value of type %t, which cannot be converted to string", p.GetName(), headerValue)
+				return nil, fmt.Errorf("header param %s got value of type %t, not string", p.GetName(), headerValue)
 			}
 		}
 	}
@@ -194,20 +194,16 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		return nil, fmt.Errorf("error making HTTP request: %s", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	var data any
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding JSON: %w", err)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 	}
 
-	return data.([]any), nil
+	// JSON response could be either an array or an object
+	return []any{string(body)}, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
