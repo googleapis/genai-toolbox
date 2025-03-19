@@ -41,15 +41,18 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	timeout := r.Timeout
+	if timeout == 0 {
+		timeout = 30 // default timeout is set to 30
+	}
 	client := http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: time.Duration(timeout) * time.Second,
 	}
 
 	s := &Source{
 		Name:        r.Name,
 		Kind:        SourceKind,
 		BaseURL:     r.BaseURL,
-		Timeout:     r.Timeout,
 		Headers:     r.Headers,
 		QueryParams: r.QueryParams,
 		Client:      &client,
@@ -64,7 +67,6 @@ type Source struct {
 	Name        string            `yaml:"name"`
 	Kind        string            `yaml:"kind"`
 	BaseURL     string            `yaml:"baseUrl"`
-	Timeout     int               `yaml:"timeout"`
 	Headers     map[string]string `yaml:"headers"`
 	QueryParams map[string]string `yaml:"queryParams"`
 	Client      *http.Client
@@ -78,14 +80,14 @@ func (s *Source) HTTPClient() *http.Client {
 	return s.Client
 }
 
-func (s *Source) GetBaseURL() string {
+func (s *Source) HTTPBaseURL() string {
 	return s.BaseURL
 }
 
-func (s *Source) GetHeaders() map[string]string {
+func (s *Source) HTTPHeaders() map[string]string {
 	return s.Headers
 }
 
-func (s *Source) GetQueryParams() map[string]string {
+func (s *Source) HTTPQueryParams() map[string]string {
 	return s.QueryParams
 }

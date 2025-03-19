@@ -42,10 +42,7 @@ func getHTTPVars(t *testing.T) map[string]any {
 	return map[string]any{
 		"kind":    HTTP_SOURCE_KIND,
 		"baseUrl": HTTP_BASE_URL,
-		"timeout": 10,
-		"headers": map[string]string{"Authorization": idToken,
-			"Custom-Header": "application/json"},
-		"queryParams": map[string]string{"Api-key": "test_api_key"},
+		"headers": map[string]string{"Authorization": idToken},
 	}
 }
 
