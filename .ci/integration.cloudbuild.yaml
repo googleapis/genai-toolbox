@@ -265,7 +265,7 @@ availableSecrets:
       env: MSSQL_USER 
     - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
       env: MSSQL_PASS
-    - versionName: projects/$PROJECT_ID/secrets/http_base_url
+    - versionName: projects/$PROJECT_ID/secrets/http_base_url/versions/latest
       env: HTTP_BASE_URL
 
 
