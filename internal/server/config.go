@@ -35,7 +35,7 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
-	"github.com/googleapis/genai-toolbox/internal/tools/http"
+	httptool "github.com/googleapis/genai-toolbox/internal/tools/httpjson"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
@@ -337,8 +337,8 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
-		case http.ToolKind:
-			actual := http.Config{Name: name}
+		case httptool.ToolKind:
+			actual := httptool.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

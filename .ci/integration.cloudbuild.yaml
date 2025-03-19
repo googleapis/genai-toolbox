@@ -214,6 +214,21 @@ steps:
       - |
         go test -race -v -tags=integration,dgraph ./tests
 
+  - id: "http"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    secretEnv: ["HTTP_BASE_URL"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,http ./tests
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -250,6 +265,8 @@ availableSecrets:
       env: MSSQL_USER 
     - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
       env: MSSQL_PASS
+    - versionName: projects/$PROJECT_ID/secrets/http_base_url
+      env: HTTP_BASE_URL
 
 
 options:

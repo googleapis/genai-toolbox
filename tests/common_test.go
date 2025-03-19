@@ -130,7 +130,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"queryParams": []tools.Parameter{
 					tools.NewIntParameter("id", "user ID")},
 				"requestBody": `{
-"age": 36
+"age": 36,
 "name": "$name"
 }
 `,
@@ -138,13 +138,12 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
 			"my-auth-tool": map[string]any{
-				"kind":         toolKind,
-				"source":       "my-instance",
-				"method":       "GET",
-				"path":         "/tool2",
-				"description":  "some description",
-				"authRequired": []string{"my-google-auth-service", "other-auth-service"},
-				"requestBody":  "{}",
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/tool2",
+				"description": "some description",
+				"requestBody": "{}",
 				"queryParams": []tools.Parameter{
 					tools.NewStringParameterWithAuth("email", "some description",
 						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),

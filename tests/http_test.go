@@ -26,7 +26,7 @@ import (
 
 var (
 	HTTP_SOURCE_KIND = "http"
-	HTTP_TOOL_KIND   = "http"
+	HTTP_TOOL_KIND   = "http-json"
 	HTTP_BASE_URL    = os.Getenv("HTTP_BASE_URL")
 )
 
@@ -49,7 +49,7 @@ func getHTTPVars(t *testing.T) map[string]any {
 	}
 }
 
-func TestHTTPToolEndpoints(t *testing.T) {
+func TestJSONToolEndpoints(t *testing.T) {
 	sourceConfig := getHTTPVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -71,5 +71,5 @@ func TestHTTPToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 	RunToolGetTest(t)
-	RunToolInvokeTest(t, "[\"Hello World!\"]")
+	RunToolInvokeTest(t, "[\"Hello\",\"World\"]")
 }
