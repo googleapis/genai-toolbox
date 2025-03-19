@@ -46,8 +46,23 @@ func (d *DelayedUnmarshaler) Unmarshal(v interface{}) error {
 
 type contextKey string
 
-// UserAgentKey is the key used to store userAgent within context
-const UserAgentKey contextKey = "userAgent"
+// userAgentKey is the key used to store userAgent within context
+const userAgentKey contextKey = "userAgent"
+
+// WithUserAgent adds a user agent into the context as a value
+func WithUserAgent(ctx context.Context, versionString string) context.Context {
+	userAgent := "genai-toolbox/" + versionString
+	return context.WithValue(ctx, userAgentKey, userAgent)
+}
+
+// UserAgentFromContext retrieves the user agent or return an error
+func UserAgentFromContext(ctx context.Context) (string, error) {
+	if ua := ctx.Value(userAgentKey); ua != nil {
+		return ua.(string), nil
+	} else {
+		return "", fmt.Errorf("unable to retrieve user agent")
+	}
+}
 
 func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
 	b, err := yaml.Marshal(v)

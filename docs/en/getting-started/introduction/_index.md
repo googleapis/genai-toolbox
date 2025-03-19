@@ -43,6 +43,7 @@ following instructions for your OS and CPU architecture.
 
 [releases]: https://github.com/googleapis/genai-toolbox/releases
 
+<!-- {x-release-please-start-version} -->
 {{< tabpane text=true >}}
 {{% tab header="Binary" lang="en" %}}
 
@@ -50,7 +51,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.1.0
+export VERSION=0.2.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -61,7 +62,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.1.0
+export VERSION=0.2.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -72,11 +73,12 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.1.0
+go install github.com/googleapis/genai-toolbox@v0.2.0
 ```
 
 {{% /tab %}}
 {{< /tabpane >}}
+<!-- {x-release-please-end} -->
 
 ### Running the server
 
@@ -98,7 +100,7 @@ out the resources in the [How-to section](../../how-to/_index.md)
 Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
-{{< tabpane text=true >}}
+{{< tabpane text=true persist=header >}}
 {{% tab header="LangChain" lang="en" %}}
 
 Once you've installed the [Toolbox LangChain
@@ -112,11 +114,31 @@ from toolbox_langchain import ToolboxClient
 client = ToolboxClient("http://127.0.0.1:5000")
 
 # these tools can be passed to your application! 
-tools = await client.aload_toolset()
+tools = client.load_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README](https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md).
+
+{{% /tab %}}
+{{% tab header="Llamaindex" lang="en" %}}
+
+Once you've installed the [Toolbox Llamaindex
+SDK](https://github.com/googleapis/genai-toolbox-llamaindex-python), you can load
+tools:
+
+{{< highlight python >}}
+from toolbox_llamaindex import ToolboxClient
+
+# update the url to point to your server
+client = ToolboxClient("http://127.0.0.1:5000")
+
+# these tools can be passed to your application! 
+tools = client.load_toolset()
+{{< /highlight >}}
+
+For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+[project's README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
 
 {{% /tab %}}
 {{< /tabpane >}}

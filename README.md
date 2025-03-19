@@ -10,8 +10,8 @@ build Gen AI tools for interacting with databases. It enables you to develop
 tools easier, faster, and more securely by handling the complexities such as
 connection pooling, authentication, and more.
 
-This README provides a brief overview. For comprehensive details, see the full
-[documentation](https://googleapis.github.io/genai-toolbox/).
+This README provides a brief overview. For comprehensive details, see the [full
+documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -72,9 +72,10 @@ following instructions for your OS and CPU architecture.
 
 To install Toolbox as a binary:
 
+<!-- {x-release-please-start-version} -->
 ```sh
 # see releases page for other versions
-export VERSION=0.1.0
+export VERSION=0.2.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -87,7 +88,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.1.0
+export VERSION=0.2.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -100,8 +101,9 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.1.0
+go install github.com/googleapis/genai-toolbox@v0.2.0
 ```
+<!-- {x-release-please-end} -->
 
 </details>
 
@@ -141,7 +143,7 @@ application. See below the list of Client SDKs for using various frameworks:
     client = ToolboxClient("http://127.0.0.1:5000")
 
     # these tools can be passed to your application! 
-    tools = await client.aload_toolset()
+    tools = client.load_toolset()
     ```
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
@@ -149,6 +151,32 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 
 [toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
 [toolbox-langchain-readme]: https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md
+
+</details>
+
+<details>
+<summary>LlamaIndex</summary>
+
+1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
+    ```bash
+    pip install toolbox-llamaindex
+    ```
+1. Load tools:
+    ```python
+    from toolbox_llamaindex import ToolboxClient
+
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
+
+    # these tools can be passed to your application! 
+    tools = client.load_toolset()
+    ```
+
+For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+[project's README][toolbox-llamaindex-readme].
+
+[toolbox-llamaindex]: https://github.com/googleapis/genai-toolbox-llamaindex-python
+[toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
 
 </details>
 
@@ -223,10 +251,10 @@ You can load toolsets by name:
 
 ```python
 # This will load all tools
-all_tools = await client.aload_toolset()
+all_tools = client.load_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = await client.aload_toolset("my_second_toolset")
+my_second_toolset = client.load_toolset("my_second_toolset")
 ```
 
 ## Versioning

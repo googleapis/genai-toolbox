@@ -107,7 +107,7 @@
 
 ## Developing Toolbox SDKs
 
-Please refer to the [SDK developer guide](sdks/langchain/DEVELOPER.md)
+Please refer to the [SDK developer guide](https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/DEVELOPER.md)
 
 ## CI/CD Details
 

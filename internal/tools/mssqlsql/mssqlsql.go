@@ -81,18 +81,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-func NewGenericTool(name string, stmt string, authRequired []string, desc string, Db *sql.DB, parameters tools.Parameters) Tool {
-	return Tool{
-		Name:         name,
-		Kind:         ToolKind,
-		Statement:    stmt,
-		AuthRequired: authRequired,
-		Db:           Db,
-		manifest:     tools.Manifest{Description: desc, Parameters: parameters.Manifest()},
-		Parameters:   parameters,
-	}
-}
-
 // validate interface
 var _ tools.Tool = Tool{}
 
