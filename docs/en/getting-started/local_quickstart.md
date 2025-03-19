@@ -359,7 +359,7 @@ main()
 
      agent = AgentWorkflow.from_tools_or_functions(
          tools,
-         llm=vertex_model,
+         llm=llm,
          system_prompt=prompt,
      )
      ctx = Context(agent)
