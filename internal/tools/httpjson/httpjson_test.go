@@ -40,7 +40,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: http
+					kind: http-json
 					source: my-instance
 					method: GET
 					path: "search?name=alice&pet=cat"
