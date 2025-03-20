@@ -174,7 +174,7 @@ description: >
             - name: toolbox
               # Recommend to use the latest version of toolbox
               image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.2.1
-              args: ["--address", "0.2.1.0"]
+              args: ["--address", "0.0.0.0"]
               ports:
                 - containerPort: 5000
               volumeMounts:
