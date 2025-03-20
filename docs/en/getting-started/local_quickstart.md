@@ -377,7 +377,7 @@ asyncio.run(main())
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
-To learn more about Agents in LlamaIndex, check out the [LlamaIndex Agent documentation.](https://docs.llamaindex.ai/en/stable/module_guides/deploying/agents/)
+To learn more about Agents in LlamaIndex, check out the [LlamaIndex AgentWorkflow documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
 {{% /tab %}}
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
