@@ -65,7 +65,6 @@ func (m Manifest) ToolsSchema() ToolsSchema {
 		properties = append(properties, p.McpProperty())
 		required = append(required, p.Name)
 	}
-
 	return ToolsSchema{
 		Type:       "object",
 		Properties: properties,
