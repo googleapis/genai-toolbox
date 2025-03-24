@@ -14,13 +14,13 @@ A `couchbase` source establishes a connection to a Couchbase database cluster, a
 
 ```yaml
 sources:
-  my-couchbase-instance:
-    kind: couchbase
-    connection_string: couchbase://localhost:8091
-    bucket: travel-sample
-    scope: inventory
-    username: Administrator
-    password: password
+    my-couchbase-instance:
+        kind: couchbase
+        connection_string: couchbase://localhost:8091
+        bucket: travel-sample
+        scope: inventory
+        username: Administrator
+        password: password
 ```
 
 ## Reference
@@ -38,7 +38,7 @@ sources:
 | client_key          | string   |    false     | Path to client key file for TLS authentication.                                                                             |
 | client_key_password | string   |    false     | Password for the client key.                                                                                                |
 | ca_cert             | string   |    false     | Path to CA certificate file.                                                                                                |
-| no_ssl_verify       | boolean  |    false     | If true, skip server certificate verification.                                                                              |
+| no_ssl_verify       | boolean  |    false     | If true, skip server certificate verification. **Warning:** This option should only be used in development or testing environments. Disabling SSL verification poses significant security risks in production as it makes your connection vulnerable to man-in-the-middle attacks. |
 | profile             | string   |    false     | Name of the connection profile to apply.                                                                                    |
 
 ## Tools
