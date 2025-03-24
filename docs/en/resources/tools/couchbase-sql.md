@@ -20,36 +20,36 @@ parameters will be used according to their name: e.g. `$id`.
 
 ```yaml
 tools:
-  search_products_by_category:
-    kind: couchbase-sql
-    source: my-couchbase-instance
-    statement: |
-      SELECT p.name, p.price, p.description
-      FROM products p
-      WHERE p.category = $category AND p.price < $max_price
-      ORDER BY p.price DESC
-      LIMIT 10
-    description: |
-      Use this tool to get a list of products for a specific category under a maximum price.
-      Takes a category name, e.g. "Electronics" and a maximum price e.g 500 and returns a list of product names, prices, and descriptions.
-      Do NOT use this tool with invalid category names. Do NOT guess a category name, Do NOT guess a price.
-      Example:
-      {{
-          "category": "Electronics",
-          "max_price": 500
-      }}
-      Example:
-      {{
-          "category": "Furniture",
-          "max_price": 1000
-      }}
-    parameters:
-      - name: category
-        type: string
-        description: Product category name
-      - name: max_price
-        type: number
-        description: Maximum price (positive number)
+    search_products_by_category:
+        kind: couchbase-sql
+        source: my-couchbase-instance
+        statement: |
+            SELECT p.name, p.price, p.description
+            FROM products p
+            WHERE p.category = $category AND p.price < $max_price
+            ORDER BY p.price DESC
+            LIMIT 10
+        description: |
+            Use this tool to get a list of products for a specific category under a maximum price.
+            Takes a category name, e.g. "Electronics" and a maximum price e.g 500 and returns a list of product names, prices, and descriptions.
+            Do NOT use this tool with invalid category names. Do NOT guess a category name, Do NOT guess a price.
+            Example:
+            {{
+                "category": "Electronics",
+                "max_price": 500
+            }}
+            Example:
+            {{
+                "category": "Furniture",
+                "max_price": 1000
+            }}
+        parameters:
+            - name: category
+            type: string
+            description: Product category name
+            - name: max_price
+            type: integer
+            description: Maximum price (positive integer)
 ```
 
 ## Reference
