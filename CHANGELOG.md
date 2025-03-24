@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.2.1](https://github.com/googleapis/genai-toolbox/compare/v0.2.0...v0.2.1) (2025-03-20)
+
+
+### Bug Fixes
+
+* Fix variable name in quickstart ([#336](https://github.com/googleapis/genai-toolbox/issues/336)) ([5400127](https://github.com/googleapis/genai-toolbox/commit/54001278878042aff75ed421b9fbe70008e9dd4d))
+* **source/alloydb:** Correct user agents not being sent ([#323](https://github.com/googleapis/genai-toolbox/issues/323)) ([ce12a34](https://github.com/googleapis/genai-toolbox/commit/ce12a344ed6290c7c6e36ee117318c20d6fdccc2))
+
+## [0.2.0](https://github.com/googleapis/genai-toolbox/compare/v0.1.0...v0.2.0) (2025-03-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename "AuthSource" in favor of "AuthService" ([#297](https://github.com/googleapis/genai-toolbox/issues/297))
+
+### Features
+
+* Rename "AuthSource" in favor of "AuthService" ([#297](https://github.com/googleapis/genai-toolbox/issues/297)) ([04cb5fb](https://github.com/googleapis/genai-toolbox/commit/04cb5fbc3e1876d1cf83d3f3de2c176ee2862d63))
+
+
+### Bug Fixes
+
+* Add items to parameter manifest ([#293](https://github.com/googleapis/genai-toolbox/issues/293)) ([541612d](https://github.com/googleapis/genai-toolbox/commit/541612d72d0123b285bb9f58c9cf1bfd61ebd902))
+* **source/cloud-sql:** Correct user agents not being sent ([#306](https://github.com/googleapis/genai-toolbox/issues/306)) ([584c8ae](https://github.com/googleapis/genai-toolbox/commit/584c8aea438eeb991935b4347c2c3b2cb7144cbf))
+* Throw error when items field is missing from array parameter ([#296](https://github.com/googleapis/genai-toolbox/issues/296)) ([9193836](https://github.com/googleapis/genai-toolbox/commit/9193836effaae79204f73a8c5d26668a95d2cb91))
+* Validate required common fields for parameters ([#298](https://github.com/googleapis/genai-toolbox/issues/298)) ([e494d11](https://github.com/googleapis/genai-toolbox/commit/e494d11e6e1651138dcd527171f63d4fa8604211))
+
+
+### Miscellaneous Chores
+
+* Release 0.2.0 ([#314](https://github.com/googleapis/genai-toolbox/issues/314)) ([d7ccf73](https://github.com/googleapis/genai-toolbox/commit/d7ccf730e7c0c752615f8a7ea162836c5f9950da))
+
 ## [0.1.0](https://github.com/googleapis/genai-toolbox/compare/v0.0.5...v0.1.0) (2025-02-06)
 
 

@@ -84,7 +84,7 @@ You can use this setup quickly set up Toolbox + Postgres to follow along in our
 
 
 
-## Connecting with Toolbox Client SDL
+## Connecting with Toolbox Client SDK
 
 Next, we will use Toolbox with the Client SDKs: 
 
@@ -96,11 +96,19 @@ Next, we will use Toolbox with the Client SDKs:
 
 1. Import and initialize the client with the URL:
 
-    ```bash
-    from toolbox_langchain_sdk import ToolboxClient
+   {{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="Python" >}}
+from toolbox_langchain import ToolboxClient
 
-    # Replace with the cloud run service URL generated above
-    toolbox = ToolboxClient("$YOUR_URL")
-    ```
+# Replace with the cloud run service URL generated above
+toolbox = ToolboxClient("http://$YOUR_URL")
+{{< /tab >}}
+{{< tab header="Llamaindex" lang="Python" >}}
+from toolbox_llamaindex import ToolboxClient
+
+# Replace with the cloud run service URL generated above
+toolbox = ToolboxClient("http://$YOUR_URL")
+{{< /tab >}}
+{{< /tabpane >}}
 
 

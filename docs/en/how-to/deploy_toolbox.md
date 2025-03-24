@@ -168,9 +168,18 @@ Next, we will use Toolbox with client SDK:
 
 1. Import and initialize the toolbox client with the URL retrieved above:
 
-    ```bash
-    from toolbox_langchain_sdk import ToolboxClient
+   {{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="Python" >}}
+from toolbox_langchain import ToolboxClient
 
-    # Replace with the cloud run service URL generated above
-    toolbox = ToolboxClient("http://$YOUR_URL")
-    ```
+# Replace with the cloud run service URL generated above
+toolbox = ToolboxClient("http://$YOUR_URL")
+{{< /tab >}}
+{{< tab header="Llamaindex" lang="Python" >}}
+from toolbox_llamaindex import ToolboxClient
+
+# Replace with the cloud run service URL generated above
+toolbox = ToolboxClient("http://$YOUR_URL")
+{{< /tab >}}
+{{< /tabpane >}}
+
