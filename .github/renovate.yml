@@ -1,0 +1,31 @@
+{
+  extends: [
+    'config:recommended',
+    ':semanticCommits',
+    ':ignoreUnstable',
+    'group:allNonMajor',
+    ':separateMajorReleases',
+    ':prConcurrentLimitNone',
+    ':prHourlyLimitNone',
+    ':preserveSemverRanges',
+  ],
+  minimumReleaseAge: '3',
+  rebaseWhen: 'conflicted',
+  dependencyDashboardLabels: [
+    'type: process',
+  ],
+  packageRules: [
+    {
+      groupName: 'GitHub Actions',
+      matchManagers: [
+        'github-actions',
+      ],
+      pinDigests: true,
+    },
+    {
+      "groupName": "Non-major dependency updates",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+    },
+  ],
+}
