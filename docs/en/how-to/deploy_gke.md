@@ -153,7 +153,6 @@ description: >
 
 1. Create a Kubernetes manifest file (`k8s_deployment.yaml`) to build deployment.
 
-    <!-- {x-release-please-start-version} -->
     ```yaml
     apiVersion: apps/v1
     kind: Deployment
@@ -173,7 +172,7 @@ description: >
           containers:
             - name: toolbox
               # Recommend to use the latest version of toolbox
-              image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.2.0
+              image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
               args: ["--address", "0.0.0.0"]
               ports:
                 - containerPort: 5000
@@ -190,7 +189,6 @@ description: >
                 - key: tools.yaml
                   path: tools.yaml
     ```
-    <!-- {x-release-please-end} -->
 
 1. Create the deployment.
 

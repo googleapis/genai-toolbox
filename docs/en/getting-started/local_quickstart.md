@@ -131,7 +131,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.2.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.2.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -308,67 +308,67 @@ def main():
 main()
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="python" >}}
- import asyncio
- import os
+import asyncio
+import os
 
- from llama_index.core.agent.workflow import AgentWorkflow
+from llama_index.core.agent.workflow import AgentWorkflow
 
- from llama_index.core.workflow import Context
- 
- # TODO(developer): replace this with another import if needed 
- from llama_index.llms.google_genai import GoogleGenAI
- # from llama_index.llms.anthropic import Anthropic
- 
- from toolbox_llamaindex import ToolboxClient
+from llama_index.core.workflow import Context
 
- prompt = """
-   You're a helpful hotel assistant. You handle hotel searching, booking and
-   cancellations. When the user searches for a hotel, mention it's name, id, 
-   location and price tier. Always mention hotel ids while performing any 
-   searches. This is very important for any operations. For any bookings or 
-   cancellations, please provide the appropriate confirmation. Be sure to 
-   update checkin or checkout dates if mentioned by the user.
-   Don't ask for confirmations from the user.
- """
- 
- queries = [
-     "Find hotels in Basel with Basel in it's name.",
-     "Can you book the Hilton Basel for me?",
-     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-     "My check in dates would be from April 10, 2024 to April 19, 2024.",
- ]
+# TODO(developer): replace this with another import if needed 
+from llama_index.llms.google_genai import GoogleGenAI
+# from llama_index.llms.anthropic import Anthropic
 
- async def main():
-     # TODO(developer): replace this with another model if needed
-     llm = GoogleGenAI(
-         model="gemini-1.5-pro",
-         vertexai_config={"project": "twisha-dev", "location": "us-central1"},
-     )
-     # llm = GoogleGenAI(
-     #     api_key=os.getenv("GOOGLE_API_KEY"),
-     #     model="gemini-1.5-pro",
-     # )
-     # llm = Anthropic(
-     #   model="claude-3-7-sonnet-latest",
-     #   api_key=os.getenv("ANTHROPIC_API_KEY")
-     # )
-     
-     # Load the tools from the Toolbox server
-     client = ToolboxClient("http://127.0.0.1:5000")
-     tools = client.load_toolset()
+from toolbox_llamaindex import ToolboxClient
 
-     agent = AgentWorkflow.from_tools_or_functions(
-         tools,
-         llm=llm,
-         system_prompt=prompt,
-     )
-     ctx = Context(agent)
-     for query in queries:
-          response = await agent.run(user_msg=query, ctx=ctx)
-          print(f"---- {query} ----")
-          print(str(response))
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id, 
+  location and price tier. Always mention hotel ids while performing any 
+  searches. This is very important for any operations. For any bookings or 
+  cancellations, please provide the appropriate confirmation. Be sure to 
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
 
- asyncio.run(main())
+queries = [
+    "Find hotels in Basel with Basel in it's name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
+
+async def main():
+    # TODO(developer): replace this with another model if needed
+    llm = GoogleGenAI(
+        model="gemini-1.5-pro",
+        vertexai_config={"project": "project-id", "location": "us-central1"},
+    )
+    # llm = GoogleGenAI(
+    #     api_key=os.getenv("GOOGLE_API_KEY"),
+    #     model="gemini-1.5-pro",
+    # )
+    # llm = Anthropic(
+    #   model="claude-3-7-sonnet-latest",
+    #   api_key=os.getenv("ANTHROPIC_API_KEY")
+    # )
+    
+    # Load the tools from the Toolbox server
+    client = ToolboxClient("http://127.0.0.1:5000")
+    tools = client.load_toolset()
+
+    agent = AgentWorkflow.from_tools_or_functions(
+        tools,
+        llm=llm,
+        system_prompt=prompt,
+    )
+    ctx = Context(agent)
+    for query in queries:
+         response = await agent.run(user_msg=query, ctx=ctx)
+         print(f"---- {query} ----")
+         print(str(response))
+
+asyncio.run(main())
 {{< /tab >}}
 {{< /tabpane >}}
     
@@ -377,7 +377,7 @@ main()
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
-To learn more about Agents in LlamaIndex, check out the [AgentWorkflow documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
+To learn more about Agents in LlamaIndex, check out the [LlamaIndex AgentWorkflow documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
 {{% /tab %}}
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
