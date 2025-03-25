@@ -140,8 +140,11 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 			return nil, fmt.Errorf("request body parameter placeholder %s is not found in the `Tool.requestBody` string", subName)
 		}
 		v := paramsMap[p.GetName()]
-		valueString := tools.ValueAsString(v, p.GetType())
-		requestBody = strings.ReplaceAll(requestBody, subName, valueString)
+		valueString, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling parameter %s: %s", p.GetName(), err)
+		}
+		requestBody = strings.ReplaceAll(requestBody, subName, string(valueString))
 	}
 
 	// Set Query Parameters

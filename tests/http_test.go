@@ -18,8 +18,13 @@ package tests
 
 import (
 	"context"
-	"os"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -27,7 +32,6 @@ import (
 var (
 	HTTP_SOURCE_KIND = "http"
 	HTTP_TOOL_KIND   = "http-json"
-	HTTP_BASE_URL    = os.Getenv("HTTP_BASE_URL")
 )
 
 func getHTTPVars(t *testing.T) map[string]any {
@@ -36,18 +40,97 @@ func getHTTPVars(t *testing.T) map[string]any {
 		t.Fatalf("error getting ID token: %s", err)
 	}
 	idToken = "Bearer " + idToken
-	switch "" {
-	case HTTP_BASE_URL:
-	}
 	return map[string]any{
 		"kind":    HTTP_SOURCE_KIND,
-		"baseUrl": HTTP_BASE_URL,
 		"headers": map[string]string{"Authorization": idToken},
 	}
 }
 
+// handler function for the test server
+func multiTool(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	path = strings.TrimPrefix(path, "/") // Remove leading slash
+
+	switch path {
+	case "tool0":
+		handleTool0(w, r)
+	case "tool1":
+		handleTool1(w, r)
+	case "tool2":
+		handleTool2(w, r)
+	default:
+		http.NotFound(w, r) // Return 404 for unknown paths
+	}
+}
+
+// handler function for the test server
+func handleTool0(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	response := []string{
+		"Hello",
+		"World",
+	}
+	json.NewEncoder(w).Encode(response)
+	return
+}
+
+// handler function for the test server
+func handleTool1(w http.ResponseWriter, r *http.Request) {
+	// Parse request body
+	var requestBody map[string]interface{}
+	bodyBytes, readErr := io.ReadAll(r.Body)
+	if readErr != nil {
+		http.Error(w, "Bad Request: Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	err := json.Unmarshal(bodyBytes, &requestBody)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Bad Request: Error unmarshalling request body: %s, Raw body: %s", err, string(bodyBytes))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
+
+	// Extract name
+	name, ok := requestBody["name"].(string)
+	if !ok || name == "" {
+		http.Error(w, "Bad Request: Missing or invalid name", http.StatusBadRequest)
+		return
+	}
+
+	if name == "Alice" {
+		response := []map[string]interface{}{
+			{"id": 1, "name": "Alice"},
+			{"id": 3, "name": "Sid"},
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+// handler function for the test server
+func handleTool2(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	if email != "" {
+		response := []map[string]interface{}{
+			{"name": "Alice"},
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
 func TestJSONToolEndpoints(t *testing.T) {
+	// start a test server
+	server := httptest.NewServer(http.HandlerFunc(multiTool))
+	defer server.Close()
+
 	sourceConfig := getHTTPVars(t)
+	sourceConfig["baseUrl"] = server.URL
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -67,6 +150,7 @@ func TestJSONToolEndpoints(t *testing.T) {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
+
 	RunToolGetTest(t)
 	RunToolInvokeTest(t, "[\"Hello\",\"World\"]")
 }

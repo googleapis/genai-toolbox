@@ -28,7 +28,7 @@ Both static and dynamic parameters are supported as part of the request.
 ### Request body
 
 The request body payload is a string that supports parameter replacement with the `$` plus vriable name as the placeholders.
-For example, `$id` will be replaced by the value of the parameter with the name `id` and `$age` by the value of the parameter with the name `age`.
+For example, `$id` will be replaced by the value of the parameter with the name `id` and `$age` by the value of the parameter with the name `age`. The parameter values will be JSON encoded and then populated into the request body payload.
 Specify replacement parameters in the `bodyParams` section.
 
 ## Example
@@ -50,7 +50,7 @@ my-http-tool:
     requestBody: |
       {
       "age": $age
-      "city": "$city"
+      "city": $city
       "food": $food
       }
     bodyParams:
@@ -78,7 +78,7 @@ my-http-tool:
 | path        |                   string                   |     true     | The path of the HTTP request.      |
 | method      |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).|
 | headers     |              map[string]string             |    false     | A map of headers to include in the HTTP request (overrides source headers).            |
-| requestBody |                   string                   |    false     | The request body payload. Use `$` with the parameter name as the placeholder (e.g., `$id` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section).|
+| requestBody |                   string                   |    false     | The request body payload. Use `$` with the parameter name as the placeholder (e.g., `$id` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). Values will be JSON encoded before the replacement, therefore no need to wrap the string values with quotes.|
 | queryParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string (overrides source `queryParams` in case of conflict).|
 | bodyParams  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.   |
 | headerParams| [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers (overrides source and tool `headers` in case of conflict).|
