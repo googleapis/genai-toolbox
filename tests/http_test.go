@@ -70,7 +70,11 @@ func handleTool0(w http.ResponseWriter, r *http.Request) {
 		"Hello",
 		"World",
 	}
-	json.NewEncoder(w).Encode(response)
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		return
+	}
 	return
 }
 
@@ -103,7 +107,11 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 			{"id": 1, "name": "Alice"},
 			{"id": 3, "name": "Sid"},
 		}
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
@@ -117,7 +125,11 @@ func handleTool2(w http.ResponseWriter, r *http.Request) {
 		response := []map[string]interface{}{
 			{"name": "Alice"},
 		}
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
