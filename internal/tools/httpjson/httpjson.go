@@ -90,6 +90,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create parameter manifest
 	paramManifest := append(append(cfg.QueryParams.Manifest(), cfg.BodyParams.Manifest()...), cfg.HeaderParams.Manifest()...)
 
+	// Verify there are no duplicate parameter names
+	seenNames := make(map[string]bool)
+	for _, param := range paramManifest {
+		if _, exists := seenNames[param.Name]; exists {
+			return nil, fmt.Errorf("duplicate parameter name: %s", param.Name)
+		}
+		seenNames[param.Name] = true
+	}
+
 	// finish tool setup
 	return Tool{
 		Name:         cfg.Name,
