@@ -22,10 +22,5 @@
       ],
       pinDigests: true,
     },
-    {
-      "groupName": "Non-major dependency updates",
-      "matchManagers": ["gomod"],
-      "matchUpdateTypes": ["minor", "patch"],
-    },
   ],
 }
