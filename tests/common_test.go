@@ -102,9 +102,17 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 // GetHTTPToolsConfig returns a mock HTTP tool's config file
 func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
 	// Write config into a file and pass it to command
+	otherSourceConfig := make(map[string]any)
+	for k, v := range sourceConfig {
+		otherSourceConfig[k] = v
+	}
+	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected"}
+	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
+
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-instance": sourceConfig,
+			"my-instance":    sourceConfig,
+			"other-instance": otherSourceConfig,
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
@@ -157,6 +165,25 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"description":  "some description",
 				"requestBody":  "{}",
 				"authRequired": []string{"my-google-auth"},
+			},
+			"my-advanced-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "other-instance",
+				"method":      "GET",
+				"path":        "/tool3?id=2",
+				"description": "some description",
+				"headers": map[string]string{
+					"X-Custom-Header": "example",
+				},
+				"queryParams": []tools.Parameter{
+					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
+				"requestBody": `{
+"place": "zoo",
+"animals": $animalArray
+}
+`,
+				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
+				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
 			},
 		},
 	}

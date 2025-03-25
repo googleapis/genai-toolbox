@@ -79,6 +79,6 @@ my-http-tool:
 | method      |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).|
 | headers     |              map[string]string             |    false     | A map of headers to include in the HTTP request (overrides source headers).            |
 | requestBody |                   string                   |    false     | The request body payload. Use `$` with the parameter name as the placeholder (e.g., `$id` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). Values will be JSON encoded before the replacement, therefore no need to wrap the string values with quotes.|
-| queryParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string (overrides source `queryParams` in case of conflict).|
+| queryParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string.|
 | bodyParams  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.   |
-| headerParams| [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers (overrides source and tool `headers` in case of conflict).|
+| headerParams| [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers.|

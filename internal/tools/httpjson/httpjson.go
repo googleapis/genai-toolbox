@@ -164,7 +164,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 
 	query := u.Query()
 	for _, p := range t.QueryParams {
-		query.Add(p.GetName(), fmt.Sprintf("%s", paramsMap[p.GetName()]))
+		query.Add(p.GetName(), fmt.Sprintf("%v", paramsMap[p.GetName()]))
 	}
 	u.RawQuery = query.Encode()
 

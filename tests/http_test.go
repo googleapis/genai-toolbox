@@ -17,12 +17,14 @@
 package tests
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -58,6 +60,8 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 		handleTool1(w, r)
 	case "tool2":
 		handleTool2(w, r)
+	case "tool3":
+		handleTool3(w, r)
 	default:
 		http.NotFound(w, r) // Return 404 for unknown paths
 	}
@@ -135,6 +139,87 @@ func handleTool2(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
+// handler function for the test server
+func handleTool3(w http.ResponseWriter, r *http.Request) {
+	// Check request method
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Check request headers
+	expectedHeaders := map[string]string{
+		"Content-Type":    "application/json",
+		"X-Custom-Header": "example",
+		"X-Other-Header":  "test",
+	}
+	for header, expectedValue := range expectedHeaders {
+		if r.Header.Get(header) != expectedValue {
+			errorMessage := fmt.Sprintf("Bad Request: Missing or incorrect header: %s", header)
+			http.Error(w, errorMessage, http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Check query parameters
+	expectedQueryParams := map[string][]string{
+		"id":      []string{"2", "1", "3"},
+		"country": []string{"US"},
+	}
+	query := r.URL.Query()
+	for param, expectedValueSlice := range expectedQueryParams {
+		values, ok := query[param]
+		if ok {
+			if !reflect.DeepEqual(expectedValueSlice, values) {
+				errorMessage := fmt.Sprintf("Bad Request: Incorrect query parameter: %s, actual: %s", param, query[param])
+				http.Error(w, errorMessage, http.StatusBadRequest)
+				return
+			}
+		} else {
+			errorMessage := fmt.Sprintf("Bad Request: Missing query parameter: %s, actual: %s", param, query[param])
+			http.Error(w, errorMessage, http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Parse request body
+	var requestBody map[string]interface{}
+	bodyBytes, readErr := io.ReadAll(r.Body)
+	if readErr != nil {
+		http.Error(w, "Bad Request: Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	err := json.Unmarshal(bodyBytes, &requestBody)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Bad Request: Error unmarshalling request body: %s, Raw body: %s", err, string(bodyBytes))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
+
+	// Check request body
+	expectedBody := map[string]interface{}{
+		"place":   "zoo",
+		"animals": []any{"rabbit", "ostrich", "whale"},
+	}
+
+	if !reflect.DeepEqual(requestBody, expectedBody) {
+		errorMessage := fmt.Sprintf("Bad Request: Incorrect request body. Expected: %v, Got: %v", expectedBody, requestBody)
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
+
+	// Return a JSON array as the response
+	response := []any{
+		"Hello", "World",
+	}
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		return
+	}
+}
+
 func TestJSONToolEndpoints(t *testing.T) {
 	// start a test server
 	server := httptest.NewServer(http.HandlerFunc(multiTool))
@@ -164,4 +249,75 @@ func TestJSONToolEndpoints(t *testing.T) {
 
 	RunToolGetTest(t)
 	RunToolInvokeTest(t, "[\"Hello\",\"World\"]")
+	RunAdvancedHTTPInvokeTest(t)
+}
+
+// RunToolInvoke runs the tool invoke endpoint
+func RunAdvancedHTTPInvokeTest(t *testing.T) {
+	// Test HTTP tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-advanced-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "country": "US", "X-Other-Header": "test"}`)),
+			want:          `["Hello","World"]`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-advanced-tool with wrong params",
+			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "country": "US", "X-Other-Header": "test"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr == true {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
 }
