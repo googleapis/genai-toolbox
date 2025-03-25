@@ -40,7 +40,7 @@ type ParamValue struct {
 	Value any
 }
 
-func ValueString(value any, valueType string) string {
+func ValueAsString(value any, valueType string) string {
 	strValue := ""
 	if valueType == "array" {
 		strValue += "["

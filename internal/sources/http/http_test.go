@@ -38,7 +38,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 				my-http-instance:
 					kind: http
 					baseUrl: http://test_server/
-					timeout: 10
+					timeout: 10s
 					headers:
 						Authorization: test_header
 						Custom-Header: custom
@@ -51,7 +51,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 					Name:        "my-http-instance",
 					Kind:        http.SourceKind,
 					BaseURL:     "http://test_server/",
-					Timeout:     10,
+					Timeout:     "10s",
 					Headers:     map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
 					QueryParams: map[string]string{"api-key": "test_api_key", "param": "param-value"},
 				},

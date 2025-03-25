@@ -220,7 +220,7 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-    secretEnv: ["HTTP_BASE_URL"]
+    secretEnv: ["HTTP_BASE_URL", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"

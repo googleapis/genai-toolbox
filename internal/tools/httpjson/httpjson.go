@@ -31,17 +31,6 @@ import (
 const ToolKind string = "http-json"
 
 type responseBody []byte
-type compatibleSource interface {
-	HTTPClient() *http.Client
-	HTTPBaseURL() string
-	HTTPHeaders() map[string]string
-	HTTPQueryParams() map[string]string
-}
-
-// validate compatible sources are still compatible
-var _ compatibleSource = &httpsrc.Source{}
-
-var compatibleSources = [...]string{httpsrc.SourceKind}
 
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
@@ -73,20 +62,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
+	s, ok := rawS.(*httpsrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", ToolKind)
 	}
 
 	// Create URL based on BaseURL and Path
 	// Attach query parameters
-	u, err := url.Parse(s.HTTPBaseURL() + cfg.Path)
+	u, err := url.Parse(s.BaseURL + cfg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing URL: %s", err)
 	}
 
 	queryParameters := u.Query()
-	for key, value := range s.HTTPQueryParams() {
+	for key, value := range s.QueryParams {
 		queryParameters.Add(key, value)
 	}
 	u.RawQuery = queryParameters.Encode()
@@ -94,7 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Combine Source and Tool headers.
 	// In case of conflict, Tool header overrides Source header
 	combinedHeaders := make(map[string]string)
-	maps.Copy(combinedHeaders, s.HTTPHeaders())
+	maps.Copy(combinedHeaders, s.Headers)
 	combinedHeaders["Content-Type"] = "application/json" // set JSON header
 	maps.Copy(combinedHeaders, cfg.Headers)
 
@@ -113,7 +102,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		BodyParams:   cfg.BodyParams,
 		HeaderParams: cfg.HeaderParams,
 		Headers:      combinedHeaders,
-		Client:       s.HTTPClient(),
+		Client:       s.Client,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
 	}, nil
 }
@@ -151,7 +140,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 			return nil, fmt.Errorf("request body parameter placeholder %s is not found in the `Tool.requestBody` string", subName)
 		}
 		v := paramsMap[p.GetName()]
-		valueString := tools.ValueString(v, p.GetType())
+		valueString := tools.ValueAsString(v, p.GetType())
 		requestBody = strings.ReplaceAll(requestBody, subName, valueString)
 	}
 
