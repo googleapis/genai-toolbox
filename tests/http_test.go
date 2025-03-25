@@ -75,7 +75,6 @@ func handleTool0(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
 		return
 	}
-	return
 }
 
 // handler function for the test server
