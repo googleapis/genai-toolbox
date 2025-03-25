@@ -934,3 +934,58 @@ func TestFailParametersUnmarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestValueAsString(t *testing.T) {
+	tests := []struct {
+		name      string
+		value     any
+		valueType string
+		want      string
+	}{
+		{
+			name:      "string value",
+			value:     "test string",
+			valueType: "string",
+			want:      "test string",
+		},
+		{
+			name:      "int value",
+			value:     123,
+			valueType: "int",
+			want:      "123",
+		},
+		{
+			name:      "float value",
+			value:     3.14,
+			valueType: "float",
+			want:      "3.14",
+		},
+		{
+			name:      "array value",
+			value:     []any{1, "a", 3.14},
+			valueType: "array",
+			want:      "[1a3.14]",
+		},
+		{
+			name:      "empty array value",
+			value:     []any{},
+			valueType: "array",
+			want:      "[]",
+		},
+		{
+			name:      "nil value",
+			value:     nil,
+			valueType: "nil",
+			want:      "<nil>",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tools.ValueAsString(tt.value, tt.valueType)
+			if got != tt.want {
+				t.Errorf("ValueAsString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

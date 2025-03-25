@@ -122,3 +122,78 @@ func TestParseFromYamlHTTP(t *testing.T) {
 	}
 
 }
+
+func TestFailParseFromYamlHTTP(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "Invalid method",
+			in: `
+			tools:
+				example_tool:
+					kind: http-json
+					source: my-instance
+					method: GOT
+					path: "search?name=alice&pet=cat"
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+					queryParams:
+						- name: country
+						  type: string
+						  description: some description
+						  authServices:
+							- name: my-google-auth-service
+							  field: user_id
+							- name: other-auth-service
+							  field: user_id
+					requestBody: |
+							{
+								"age": $age
+								"city": "$city"
+								"food": $food
+							}
+					bodyParams:
+						- name: age
+						  type: integer
+						  description: age num
+						- name: city
+						  type: string
+						  description: city string
+					headers:
+						Authorization: API_KEY
+						Content-Type: application/json
+					headerParams:
+						- name: Language
+						  type: string
+						  description: language string
+			`,
+			err: `unable to parse as "http-json": GOT is not a valid http method`,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+
+}

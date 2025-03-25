@@ -35,9 +35,8 @@ func isValidHTTPMethod(method string) bool {
 		http.MethodPatch, http.MethodHead, http.MethodOptions, http.MethodTrace,
 		http.MethodConnect:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 func (i *HTTPMethod) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {

@@ -15,7 +15,9 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -31,7 +33,7 @@ type Config struct {
 	Name        string            `yaml:"name" validate:"required"`
 	Kind        string            `yaml:"kind" validate:"required"`
 	BaseURL     string            `yaml:"baseUrl"`
-	Timeout     int               `yaml:"timeout"`
+	Timeout     string            `yaml:"timeout"`
 	Headers     map[string]string `yaml:"headers"`
 	QueryParams map[string]string `yaml:"queryParams"`
 }
@@ -41,12 +43,18 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	timeout := r.Timeout
-	if timeout == 0 {
-		timeout = 30 // default timeout is set to 30
+	duration, err := time.ParseDuration(r.Timeout)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse Timeout string as time.Duration: %s", err)
 	}
 	client := http.Client{
-		Timeout: time.Duration(timeout) * time.Second,
+		Timeout: duration,
+	}
+
+	// Validate BaseURL
+	_, err = url.ParseRequestURI(r.BaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse BaseUrl %v", err)
 	}
 
 	s := &Source{
@@ -74,20 +82,4 @@ type Source struct {
 
 func (s *Source) SourceKind() string {
 	return SourceKind
-}
-
-func (s *Source) HTTPClient() *http.Client {
-	return s.Client
-}
-
-func (s *Source) HTTPBaseURL() string {
-	return s.BaseURL
-}
-
-func (s *Source) HTTPHeaders() map[string]string {
-	return s.Headers
-}
-
-func (s *Source) HTTPQueryParams() map[string]string {
-	return s.QueryParams
 }
