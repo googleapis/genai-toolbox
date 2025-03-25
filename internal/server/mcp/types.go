@@ -20,9 +20,19 @@ const LATEST_PROTOCOL_VERSION = "2024-11-05"
 // JSONRPC_VERSION is the version of JSON-RPC used by MCP.
 const JSONRPC_VERSION = "2.0"
 
+// Standard JSON-RPC error codes
+const (
+	PARSE_ERROR      = -32700
+	INVALID_REQUEST  = -32600
+	METHOD_NOT_FOUND = -32601
+	INVALID_PARAMS   = -32602
+	INTERNAL_ERROR   = -32603
+)
+
 // ProgressToken is used to associate progress notifications with the original request.
 type ProgressToken interface{}
 
+// Request represents a bidirectional message with method and parameters expecting a response.
 type Request struct {
 	Method string `json:"method"`
 	Params struct {
@@ -38,8 +48,7 @@ type Request struct {
 	} `json:"params,omitempty"`
 }
 
-type Params map[string]interface{}
-
+// Notification is a one-way message requiring no response.
 type Notification struct {
 	Method string `json:"method"`
 	Params struct {
@@ -47,6 +56,7 @@ type Notification struct {
 	} `json:"params,omitempty"`
 }
 
+// Result represents a response for the request query.
 type Result struct {
 	// This result property is reserved by the protocol to allow clients and
 	// servers to attach additional metadata to their responses.
@@ -96,31 +106,7 @@ type JSONRPCError struct {
 	Error   McpError  `json:"error"`
 }
 
-/* JSON-RPC types*/
-
-// JSONRPCMessage represents either a JSONRPCRequest, JSONRPCNotification, JSONRPCResponse, or JSONRPCError
-type JSONRPCMessage interface{}
-
-var _ JSONRPCMessage = JSONRPCError{}
-var _ JSONRPCMessage = JSONRPCRequest{}
-var _ JSONRPCMessage = JSONRPCResponse{}
-var _ JSONRPCMessage = JSONRPCError{}
-
-// Standard JSON-RPC error codes
-const (
-	PARSE_ERROR      = -32700
-	INVALID_REQUEST  = -32600
-	METHOD_NOT_FOUND = -32601
-	INVALID_PARAMS   = -32602
-	INTERNAL_ERROR   = -32603
-)
-
 /* Empty result */
 
 // EmptyResult represents a response that indicates success but carries no data.
 type EmptyResult Result
-
-// ServerResult represents a EmptyResult.
-type ServerResult interface{}
-
-var _ ServerResult = EmptyResult{}
