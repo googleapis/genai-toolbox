@@ -25,6 +25,8 @@ import (
 )
 
 const jsonrpcVersion = "2.0"
+const protocolVersion = "2024-11-05"
+const serverName = "Toolbox"
 
 func TestMcpEndpoint(t *testing.T) {
 	toolsMap, toolsets := setUpResources(t)
@@ -38,19 +40,33 @@ func TestMcpEndpoint(t *testing.T) {
 		want  map[string]any
 	}{
 		{
-			name:  "basic mcp",
-			isErr: false,
+			name: "initialize",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
-				Id:      "basic-mcp",
+				Id:      "mcp-initialize",
 				Request: mcp.Request{
-					Method: "foo",
+					Method: "initialize",
 				},
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
-				"id":      "basic-mcp",
-				"result":  map[string]any{},
+				"id":      "mcp-initialize",
+				"result": map[string]any{
+					"protocolVersion": protocolVersion,
+					"capabilities": map[string]any{
+						"tools": map[string]any{"listChanged": false},
+					},
+					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+				},
+			},
+		},
+		{
+			name: "basic notification",
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Request: mcp.Request{
+					Method: "notification",
+				},
 			},
 		},
 		{
@@ -67,6 +83,25 @@ func TestMcpEndpoint(t *testing.T) {
 				"error": map[string]any{
 					"code":    -32601.0,
 					"message": "method not found",
+				},
+			},
+		},
+		{
+			name:  "invalid method",
+			isErr: true,
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "invalid-method",
+				Request: mcp.Request{
+					Method: "foo",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "invalid-method",
+				"error": map[string]any{
+					"code":    -32601.0,
+					"message": "invalid method foo",
 				},
 			},
 		},
@@ -90,7 +125,6 @@ func TestMcpEndpoint(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqMarshal, err := json.Marshal(tc.body)
@@ -103,16 +137,19 @@ func TestMcpEndpoint(t *testing.T) {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
 
-			if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
-				t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
-			}
+			// Notifications don't expect a response.
+			if tc.want != nil {
+				if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+					t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+				}
 
-			var got map[string]any
-			if err := json.Unmarshal(body, &got); err != nil {
-				t.Fatalf("unexpected error unmarshalling body: %s", err)
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
+				var got map[string]any
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatalf("unexpected error unmarshalling body: %s", err)
+				}
+				if !reflect.DeepEqual(got, tc.want) {
+					t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
+				}
 			}
 		})
 	}
