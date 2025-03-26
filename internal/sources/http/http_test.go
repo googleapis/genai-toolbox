@@ -48,12 +48,12 @@ func TestParseFromYamlHttp(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
-					Name:        "my-http-instance",
-					Kind:        http.SourceKind,
-					BaseURL:     "http://test_server/",
-					Timeout:     "10s",
-					Headers:     map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
-					QueryParams: map[string]string{"api-key": "test_api_key", "param": "param-value"},
+					Name:           "my-http-instance",
+					Kind:           http.SourceKind,
+					BaseURL:        "http://test_server/",
+					Timeout:        "10s",
+					DefaultHeaders: map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
+					QueryParams:    map[string]string{"api-key": "test_api_key", "param": "param-value"},
 				},
 			},
 		},

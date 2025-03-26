@@ -30,12 +30,12 @@ const SourceKind string = "http"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name        string            `yaml:"name" validate:"required"`
-	Kind        string            `yaml:"kind" validate:"required"`
-	BaseURL     string            `yaml:"baseUrl"`
-	Timeout     string            `yaml:"timeout"`
-	Headers     map[string]string `yaml:"headers"`
-	QueryParams map[string]string `yaml:"queryParams"`
+	Name           string            `yaml:"name" validate:"required"`
+	Kind           string            `yaml:"kind" validate:"required"`
+	BaseURL        string            `yaml:"baseUrl"`
+	Timeout        string            `yaml:"timeout"`
+	DefaultHeaders map[string]string `yaml:"headers"`
+	QueryParams    map[string]string `yaml:"queryParams"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -58,12 +58,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:        r.Name,
-		Kind:        SourceKind,
-		BaseURL:     r.BaseURL,
-		Headers:     r.Headers,
-		QueryParams: r.QueryParams,
-		Client:      &client,
+		Name:           r.Name,
+		Kind:           SourceKind,
+		BaseURL:        r.BaseURL,
+		DefaultHeaders: r.DefaultHeaders,
+		QueryParams:    r.QueryParams,
+		Client:         &client,
 	}
 	return s, nil
 
@@ -72,12 +72,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name        string            `yaml:"name"`
-	Kind        string            `yaml:"kind"`
-	BaseURL     string            `yaml:"baseUrl"`
-	Headers     map[string]string `yaml:"headers"`
-	QueryParams map[string]string `yaml:"queryParams"`
-	Client      *http.Client
+	Name           string            `yaml:"name"`
+	Kind           string            `yaml:"kind"`
+	BaseURL        string            `yaml:"baseUrl"`
+	DefaultHeaders map[string]string `yaml:"headers"`
+	QueryParams    map[string]string `yaml:"queryParams"`
+	Client         *http.Client
 }
 
 func (s *Source) SourceKind() string {
