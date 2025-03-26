@@ -222,7 +222,7 @@ In this section, we will download Toolbox, configure our tools in a
 
 ## Step 3: Connect your agent to Toolbox
 
-In this section, we will write and run a LangGraph agent that will load the Tools
+In this section, we will write and run an agent that will load the Tools
 from Toolbox.
 
 1. In a new terminal, install the SDK package.
