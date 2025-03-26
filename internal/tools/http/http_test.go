@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httpjson_test
+package http_test
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	http "github.com/googleapis/genai-toolbox/internal/tools/httpjson"
+	http "github.com/googleapis/genai-toolbox/internal/tools/http"
 )
 
 func TestParseFromYamlHTTP(t *testing.T) {
@@ -40,7 +40,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: http-json
+					kind: http
 					source: my-instance
 					method: GET
 					path: "search?name=alice&pet=cat"
@@ -138,7 +138,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: http-json
+					kind: http
 					source: my-instance
 					method: GOT
 					path: "search?name=alice&pet=cat"
@@ -176,7 +176,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 						  type: string
 						  description: language string
 			`,
-			err: `unable to parse as "http-json": GOT is not a valid http method`,
+			err: `unable to parse as "http": GOT is not a valid http method`,
 		},
 	}
 	for _, tc := range tcs {

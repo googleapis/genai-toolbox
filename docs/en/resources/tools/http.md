@@ -1,15 +1,15 @@
 ---
-title: "http-json"
+title: "http"
 type: docs
 weight: 1
 description: > 
-  A "http-json" tool sends out an HTTP request with a JSON request body to an HTTP endpoint.
+  A "http" tool sends out an HTTP request to an HTTP endpoint.
 ---
 
 
 ## About
 
-The `http-json` tool allows you to make HTTP requests with JSON content type to APIs and retrieve data.
+The `http` tool allows you to make HTTP requests to APIs and retrieve data.
 Both static and dynamic parameters are supported as part of the request.
 
 - Static parameters stay the same for every Tool invocation.
@@ -28,7 +28,7 @@ Both static and dynamic parameters are supported as part of the request.
 ### Request body
 
 The request body payload is a string that supports parameter replacement with the `$` plus vriable name as the placeholders.
-For example, `$id` will be replaced by the value of the parameter with the name `id` and `$age` by the value of the parameter with the name `age`. The parameter values will be JSON encoded and then populated into the request body payload.
+For example, `$id` will be replaced by the value of the parameter with the name `id` and `$age` by the value of the parameter with the name `age`. The parameter values will be populated into the request body payload upon Tool invocation.
 Specify replacement parameters in the `bodyParams` section.
 
 ## Example
@@ -72,7 +72,7 @@ my-http-tool:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "http-json".                                               |
+| kind        |                   string                   |     true     | Must be "http".                                               |
 | source      |                   string                   |     true     | Name of the source the HTTP request should be sent to.                                 |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                      |
 | path        |                   string                   |     true     | The path of the HTTP request.      |

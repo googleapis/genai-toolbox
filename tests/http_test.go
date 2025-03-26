@@ -33,7 +33,7 @@ import (
 
 var (
 	HTTP_SOURCE_KIND = "http"
-	HTTP_TOOL_KIND   = "http-json"
+	HTTP_TOOL_KIND   = "http"
 )
 
 func getHTTPVars(t *testing.T) map[string]any {
@@ -106,16 +106,12 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if name == "Alice" {
-		response := []map[string]interface{}{
-			{"id": 1, "name": "Alice"},
-			{"id": 3, "name": "Sid"},
-		}
-		err := json.NewEncoder(w).Encode(response)
+		response := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}`
+		_, err := w.Write([]byte(response))
 		if err != nil {
-			http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+			http.Error(w, "Failed to write response", http.StatusInternalServerError)
 			return
 		}
-		return
 	}
 
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -220,7 +216,7 @@ func handleTool3(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TestJSONToolEndpoints(t *testing.T) {
+func TestToolEndpoints(t *testing.T) {
 	// start a test server
 	server := httptest.NewServer(http.HandlerFunc(multiTool))
 	defer server.Close()
@@ -246,9 +242,9 @@ func TestJSONToolEndpoints(t *testing.T) {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
-
+	select_1_want := `["[\"Hello\",\"World\"]\n"]`
 	RunToolGetTest(t)
-	RunToolInvokeTest(t, "[\"Hello\",\"World\"]")
+	RunToolInvokeTest(t, select_1_want)
 	RunAdvancedHTTPInvokeTest(t)
 }
 
@@ -268,7 +264,7 @@ func RunAdvancedHTTPInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "country": "US", "X-Other-Header": "test"}`)),
-			want:          `["Hello","World"]`,
+			want:          `["[\"Hello\",\"World\"]\n"]`,
 			isErr:         false,
 		},
 		{
