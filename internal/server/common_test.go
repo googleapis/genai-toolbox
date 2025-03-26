@@ -23,6 +23,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -95,7 +96,7 @@ func setUpResources(t *testing.T) (map[string]tools.Tool, map[string]tools.Tools
 }
 
 // setUpServer create a new server with tools and toolsets that are given
-func setUpServer(t *testing.T, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (*httptest.Server, func()) {
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (*httptest.Server, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -114,9 +115,20 @@ func setUpServer(t *testing.T, tools map[string]tools.Tool, toolsets map[string]
 	}
 
 	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, tools: tools, toolsets: toolsets}
-	r, err := apiRouter(&server)
-	if err != nil {
-		t.Fatalf("unable to initialize router: %s", err)
+	var r chi.Router
+	switch router {
+	case "api":
+		r, err = apiRouter(&server)
+		if err != nil {
+			t.Fatalf("unable to initialize api router: %s", err)
+		}
+	case "mcp":
+		r, err = mcpRouter(&server)
+		if err != nil {
+			t.Fatalf("unable to initialize mcp router: %s", err)
+		}
+	default:
+		t.Fatalf("unknown router")
 	}
 	ts := httptest.NewServer(r)
 	shutdown := func() {
