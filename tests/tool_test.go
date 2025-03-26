@@ -194,7 +194,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+			want:          `["[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"]`,
 			isErr:         false,
 		},
 		{

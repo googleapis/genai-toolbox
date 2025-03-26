@@ -88,14 +88,14 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-http-instance:
 					kind: http
 					baseUrl: http://test_server/
-					timeout: 10
+					timeout: 10s
 					headers:
 						Authorization: test_header
 					queryParams:
 						api-key: test_api_key
 					project: test-project
 			`,
-			err: "unable to parse as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10",
+			err: "unable to parse as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s",
 		},
 		{
 			desc: "missing required field",

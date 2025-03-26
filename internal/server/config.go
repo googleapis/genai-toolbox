@@ -35,7 +35,7 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
-	httptool "github.com/googleapis/genai-toolbox/internal/tools/httpjson"
+	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"

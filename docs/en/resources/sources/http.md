@@ -23,8 +23,8 @@ sources:
     baseUrl: "https://api.example.com/data"
     timeout: "10s"
     headers:
-      Content-Type: "application/json"
       Authorization: "Bearer YOUR_API_TOKEN"
+      Content-Type: "application/json"
     queryParams:
       param1: value1
       param2: value2
@@ -37,5 +37,5 @@ sources:
 | kind | string | true | Must be "http". |
 | name | string | true | A unique name for this HTTP source. |
 | baseUrl | string | true | The base URL for the HTTP requests (e.g., "<https://api.example.com>"). |
-| timeout | string | true | The timeout for HTTP requests (e.g., "5s", "1m"). |
-| headers | map[string]string | false | Optional headers to include in the HTTP requests.  For example: Content-Type: "application/json"Authorization: "Bearer YOUR_API_TOKEN" |
+| timeout | string | true | The timeout for HTTP requests (e.g., "5s", "1m", refer to this [doc](https://pkg.go.dev/time#ParseDuration) for more info)  . |
+| headers | map[string]string | false | Default headers to include in the HTTP requests.  |

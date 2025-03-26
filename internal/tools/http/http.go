@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.package http
-package httpjson
+package http
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "http-json"
+const ToolKind string = "http"
 
 type responseBody []byte
 
@@ -151,7 +151,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		v := paramsMap[p.GetName()]
 		valueString, err := json.Marshal(v)
 		if err != nil {
-			return nil, fmt.Errorf("error marshalling parameter %s: %s", p.GetName(), err)
+			return nil, fmt.Errorf("error marshallingTestJSONToolEndpoints parameter %s: %s", p.GetName(), err)
 		}
 		requestBody = strings.ReplaceAll(requestBody, subName, string(valueString))
 	}
@@ -203,33 +203,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 	}
 
-	result, err := body.UnmarshalResponse()
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (body responseBody) UnmarshalResponse() ([]any, error) {
-	// JSON response could be either an array or an object
-	var objectResult []map[string]any
-	var arrayResult []any
-	// Try unmarshal into an object first
-	err := json.Unmarshal(body, &objectResult)
-	if err != nil {
-		// If error, try unmarshal into an array
-		err = json.Unmarshal(body, &arrayResult)
-		if err == nil {
-			return arrayResult, nil
-		}
-		return nil, fmt.Errorf("error unmarshaling JSON: %d. Raw body: %s", err, body)
-	}
-	// Turn []map[string]any into []any type to match function output type
-	sliceResult := make([]any, 0, len(objectResult))
-	for _, v := range objectResult {
-		sliceResult = append(sliceResult, v)
-	}
-	return sliceResult, nil
+	return []any{string(body)}, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
