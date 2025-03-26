@@ -106,12 +106,12 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if name == "Alice" {
-		response := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}`
+		response := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-			return
 		}
+		return
 	}
 
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -121,13 +121,10 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 func handleTool2(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	if email != "" {
-		response := []map[string]interface{}{
-			{"name": "Alice"},
-		}
-		err := json.NewEncoder(w).Encode(response)
+		response := `{"name":"Alice"}`
+		_, err := w.Write([]byte(response))
 		if err != nil {
-			http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
-			return
+			http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		}
 		return
 	}

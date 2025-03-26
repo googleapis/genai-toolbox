@@ -106,7 +106,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 	for k, v := range sourceConfig {
 		otherSourceConfig[k] = v
 	}
-	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected"}
+	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
 	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
 
 	toolsFile := map[string]any{
@@ -139,7 +139,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					tools.NewIntParameter("id", "user ID")},
 				"requestBody": `{
 "age": 36,
-"name": $name
+"name": "{{.name}}"
 }
 `,
 				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
@@ -179,7 +179,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
 				"requestBody": `{
 "place": "zoo",
-"animals": $animalArray
+"animals": {{array .animalArray }}
 }
 `,
 				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},

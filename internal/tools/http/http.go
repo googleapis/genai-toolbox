@@ -14,7 +14,7 @@
 package http
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"maps"
+	"text/template"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -29,8 +30,6 @@ import (
 )
 
 const ToolKind string = "http"
-
-type responseBody []byte
 
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
@@ -74,6 +73,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("error parsing URL: %s", err)
 	}
 
+	// Get existing query parameters from the URL
 	queryParameters := u.Query()
 	for key, value := range s.QueryParams {
 		queryParameters.Add(key, value)
@@ -83,8 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Combine Source and Tool headers.
 	// In case of conflict, Tool header overrides Source header
 	combinedHeaders := make(map[string]string)
-	maps.Copy(combinedHeaders, s.Headers)
-	combinedHeaders["Content-Type"] = "application/json" // set JSON header
+	maps.Copy(combinedHeaders, s.DefaultHeaders)
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create parameter manifest
@@ -137,24 +136,50 @@ type Tool struct {
 	manifest tools.Manifest
 }
 
+func addCommaToArray(a []any) string {
+	res := make([]string, len(a))
+	for i, v := range a {
+		switch v.(type) {
+		case string:
+			res[i] = fmt.Sprintf("%q", v)
+		default:
+			res[i] = fmt.Sprint(v)
+		}
+	}
+	return "[" + strings.Join(res, ",") + "]"
+}
+
 func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 
 	// Populate reqeust body params
 	requestBody := t.RequestBody
+
+	// Create a map for request body parameters
+	bodyParams := make(map[string]any)
 	for _, p := range t.BodyParams {
-		// parameter placeholder symbol is `$`
-		subName := "$" + p.GetName()
-		if !strings.Contains(requestBody, subName) {
-			return nil, fmt.Errorf("request body parameter placeholder %s is not found in the `Tool.requestBody` string", subName)
+		k := p.GetName()
+		v, ok := paramsMap[k]
+		if !ok {
+			return nil, fmt.Errorf("missing request body parameter %s", k)
 		}
-		v := paramsMap[p.GetName()]
-		valueString, err := json.Marshal(v)
-		if err != nil {
-			return nil, fmt.Errorf("error marshallingTestJSONToolEndpoints parameter %s: %s", p.GetName(), err)
-		}
-		requestBody = strings.ReplaceAll(requestBody, subName, string(valueString))
+		bodyParams[k] = v
 	}
+
+	// Create a FuncMap to format array parameters
+	funcMap := template.FuncMap{
+		"array": addCommaToArray,
+	}
+	templ, err := template.New("body").Funcs(funcMap).Parse(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing request body: %s", err)
+	}
+	var result bytes.Buffer
+	err = templ.Execute(&result, bodyParams)
+	if err != nil {
+		return nil, fmt.Errorf("error replacing body payload: %s", err)
+	}
+	requestBody = result.String()
 
 	// Set Query Parameters
 	u, err := url.Parse(t.URL)
@@ -194,7 +219,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	}
 	defer resp.Body.Close()
 
-	var body responseBody
+	var body []byte
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
