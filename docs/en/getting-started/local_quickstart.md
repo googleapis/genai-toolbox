@@ -227,6 +227,12 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run a LangGraph agent that will load the Tools
 from Toolbox.
 
+{{< notice tip>}} If you prefer to experiment within a Google Colab environment, 
+you can connect to a 
+[local runtime](https://research.google.com/colaboratory/local-runtimes.html). 
+{{< /notice >}}
+
+
 1. In a new terminal, install the SDK package.
     
     {{< tabpane persist=header >}}
