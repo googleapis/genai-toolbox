@@ -15,111 +15,18 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"net/http/httptest"
-	"os"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-var _ tools.Tool = &MockTool{}
-
-const fakeVersionString = "0.0.0"
-
-type MockTool struct {
-	Name        string
-	Description string
-	Params      []tools.Parameter
-}
-
-func (t MockTool) Invoke(tools.ParamValues) ([]any, error) {
-	mock := make([]any, 0)
-	return mock, nil
-}
-
-// claims is a map of user info decoded from an auth token
-func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Params, data, claimsMap)
-}
-
-func (t MockTool) Manifest() tools.Manifest {
-	pMs := make([]tools.ParameterManifest, 0, len(t.Params))
-	for _, p := range t.Params {
-		pMs = append(pMs, p.Manifest())
-	}
-	return tools.Manifest{Description: t.Description, Parameters: pMs}
-}
-
-func (t MockTool) Authorized(verifiedAuthServices []string) bool {
-	return true
-}
-
 func TestToolsetEndpoint(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Set up resources to test against
-	tool1 := MockTool{
-		Name:   "no_params",
-		Params: []tools.Parameter{},
-	}
-	tool2 := MockTool{
-		Name: "some_params",
-		Params: tools.Parameters{
-			tools.NewIntParameter("param1", "This is the first parameter."),
-			tools.NewIntParameter("param2", "This is the second parameter."),
-		},
-	}
-	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
-
-	toolsets := make(map[string]tools.Toolset)
-	for name, l := range map[string][]string{
-		"":           {tool1.Name, tool2.Name},
-		"tool1_only": {tool1.Name},
-		"tool2_only": {tool2.Name},
-	} {
-		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
-		m, err := tc.Initialize(fakeVersionString, toolsMap)
-		if err != nil {
-			t.Fatalf("unable to initialize toolset %q: %s", name, err)
-		}
-		toolsets[name] = m
-	}
-
-	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
-	if err != nil {
-		t.Fatalf("unable to initialize logger: %s", err)
-	}
-
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
-	if err != nil {
-		t.Fatalf("unable to setup otel: %s", err)
-	}
-	defer func() {
-		err := otelShutdown(ctx)
-		if err != nil {
-			t.Fatalf("error shutting down OpenTelemetry: %s", err)
-		}
-	}()
-	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
-	if err != nil {
-		t.Fatalf("unable to create custom metrics: %s", err)
-	}
-
-	server := Server{logger: testLogger, instrumentation: instrumentation, tools: toolsMap, toolsets: toolsets}
-	r, err := apiRouter(&server)
-	if err != nil {
-		t.Fatalf("unable to initialize router: %s", err)
-	}
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	toolsMap, toolsets := setUpResources(t)
+	ts, shutdown := setUpServer(t, toolsMap, toolsets)
+	defer shutdown()
 
 	// wantResponse is a struct for checks against test cases
 	type wantResponse struct {
@@ -173,7 +80,7 @@ func TestToolsetEndpoint(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, body, err := testRequest(ts, http.MethodGet, fmt.Sprintf("/toolset/%s", tc.toolsetName), nil)
+			resp, body, err := runRequest(ts, http.MethodGet, fmt.Sprintf("/toolset/%s", tc.toolsetName), nil)
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
@@ -209,51 +116,11 @@ func TestToolsetEndpoint(t *testing.T) {
 		})
 	}
 }
+
 func TestToolGetEndpoint(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Set up resources to test against
-	tool1 := MockTool{
-		Name:   "no_params",
-		Params: []tools.Parameter{},
-	}
-	tool2 := MockTool{
-		Name: "some_params",
-		Params: tools.Parameters{
-			tools.NewIntParameter("param1", "This is the first parameter."),
-			tools.NewIntParameter("param2", "This is the second parameter."),
-		},
-	}
-	toolsMap := map[string]tools.Tool{tool1.Name: tool1, tool2.Name: tool2}
-
-	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
-	if err != nil {
-		t.Fatalf("unable to initialize logger: %s", err)
-	}
-
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
-	if err != nil {
-		t.Fatalf("unable to setup otel: %s", err)
-	}
-	defer func() {
-		err := otelShutdown(ctx)
-		if err != nil {
-			t.Fatalf("error shutting down OpenTelemetry: %s", err)
-		}
-	}()
-	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
-	if err != nil {
-		t.Fatalf("unable to create custom metrics: %s", err)
-	}
-
-	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, tools: toolsMap}
-	r, err := apiRouter(&server)
-	if err != nil {
-		t.Fatalf("unable to initialize router: %s", err)
-	}
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	toolsMap, toolsets := setUpResources(t)
+	ts, shutdown := setUpServer(t, toolsMap, toolsets)
+	defer shutdown()
 
 	// wantResponse is a struct for checks against test cases
 	type wantResponse struct {
@@ -298,7 +165,7 @@ func TestToolGetEndpoint(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, body, err := testRequest(ts, http.MethodGet, fmt.Sprintf("/tool/%s", tc.toolName), nil)
+			resp, body, err := runRequest(ts, http.MethodGet, fmt.Sprintf("/tool/%s", tc.toolName), nil)
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
@@ -333,23 +200,4 @@ func TestToolGetEndpoint(t *testing.T) {
 			}
 		})
 	}
-}
-
-func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, []byte, error) {
-	req, err := http.NewRequest(method, ts.URL+path, body)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to create request: %w", err)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to send request: %w", err)
-	}
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to read request body: %w", err)
-	}
-	defer resp.Body.Close()
-
-	return resp, respBody, nil
 }
