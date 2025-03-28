@@ -122,7 +122,7 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		var v any
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
-		if paramAuthServices == nil {
+		if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter
 			var ok bool
 			v, ok = data[name]
@@ -567,8 +567,8 @@ func (p *ArrayParameter) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 	if err != nil {
 		return fmt.Errorf("unable to parse 'items' field: %w", err)
 	}
-	if i.GetAuthServices() != nil {
-		return fmt.Errorf("nested items should not have auth services.")
+	if i.GetAuthServices() != nil && len(i.GetAuthServices()) != 0 {
+		return fmt.Errorf("nested items should not have auth services")
 	}
 	p.Items = i
 
