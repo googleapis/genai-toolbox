@@ -14,6 +14,10 @@
 
 package mcp
 
+import (
+	"github.com/googleapis/genai-toolbox/internal/tools"
+)
+
 func Initialize(version string) InitializeResult {
 	toolsListChanged := false
 	result := InitializeResult{
@@ -27,6 +31,16 @@ func Initialize(version string) InitializeResult {
 			Name:    SERVER_NAME,
 			Version: version,
 		},
+	}
+	return result
+}
+
+// ToolsList return a ListToolsResult
+func ToolsList(toolset tools.Toolset) ListToolsResult {
+	mcpTools := toolset.MCPTools
+
+	result := ListToolsResult{
+		Tools: mcpTools,
 	}
 	return result
 }
