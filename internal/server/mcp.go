@@ -28,6 +28,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 )
 
+type sseSession struct {
+	sessionId string
+	writer    http.ResponseWriter
+	flusher   http.Flusher
+}
+
 // mcpRouter creates a router that represents the routes under /mcp
 func mcpRouter(s *Server) (chi.Router, error) {
 	r := chi.NewRouter()
@@ -36,9 +42,41 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
+	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
 
 	return r, nil
+}
+
+// sseHandler handles sse initialization and message.
+func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		err := fmt.Errorf("error not supported")
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+	}
+	sessionId := uuid.New().String()
+	sseSession := &sseSession{
+		sessionId: sessionId,
+		writer:    w,
+		flusher:   flusher,
+	}
+	s.sseSessions[sessionId] = sseSession
+	defer delete(s.sseSessions, sessionId)
+
+	// send initil endpoint event
+	messageEndpoint := fmt.Sprintf("http://127.0.0.1:5000/mcp?sessionId=%s", sessionId)
+	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
+	flusher.Flush()
+
+	// channel for client disconnection
+	<-r.Context().Done()
+	fmt.Println("client disconnected")
 }
 
 // mcpHandler handles all mcp messages.
@@ -164,6 +202,19 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, fmt.Sprintf("invalid method %s", baseMessage.Method), nil)
 	}
 
+	// retrieve sseSession
+	sessionId := r.URL.Query().Get("sessionId")
+	session, ok := s.sseSessions[sessionId]
+	if !ok {
+		fmt.Printf("sse session not available\n")
+	} else {
+		// send response via sse if sse session is available
+		eventData, _ := json.Marshal(res)
+		fmt.Fprintf(session.writer, "event: message\ndata: %s\n\n", eventData)
+		session.flusher.Flush()
+	}
+
+	// send HTTP response
 	render.JSON(w, r, res)
 }
 
