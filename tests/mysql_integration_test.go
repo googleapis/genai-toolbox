@@ -122,4 +122,5 @@ func TestMySQLToolEndpoints(t *testing.T) {
 
 	select_1_want := "[{\"1\":1}]"
 	RunToolInvokeTest(t, select_1_want)
+	RunMCPToolCallMethod(t)
 }
