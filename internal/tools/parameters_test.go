@@ -847,6 +847,58 @@ func TestParamManifest(t *testing.T) {
 	}
 }
 
+func TestParamMcpProperty(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   tools.ParameterManifest
+		want tools.McpProperty
+	}{
+		{
+			name: "string",
+			in:   tools.ParameterManifest{Name: "foo-string", Type: "string", Description: "bar", AuthServices: []string{}},
+			want: tools.McpProperty{Type: "string", Description: "bar"},
+		},
+		{
+			name: "int",
+			in:   tools.ParameterManifest{Name: "foo-int", Type: "integer", Description: "bar", AuthServices: []string{}},
+			want: tools.McpProperty{Type: "integer", Description: "bar"},
+		},
+		{
+			name: "float",
+			in:   tools.ParameterManifest{Name: "foo-float", Type: "float", Description: "bar", AuthServices: []string{}},
+			want: tools.McpProperty{Type: "float", Description: "bar"},
+		},
+		{
+			name: "boolean",
+			in:   tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Description: "bar", AuthServices: []string{}},
+			want: tools.McpProperty{Type: "boolean", Description: "bar"},
+		},
+		{
+			name: "array",
+			in: tools.ParameterManifest{
+				Name:         "foo-array",
+				Type:         "array",
+				Description:  "bar",
+				AuthServices: []string{},
+				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Description: "bar", AuthServices: []string{}},
+			},
+			want: tools.McpProperty{
+				Type:        "array",
+				Description: "bar",
+				Items:       &tools.McpProperty{Type: "string", Description: "bar"},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.in.McpProperty()
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestFailParametersUnmarshal(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {

@@ -39,6 +39,7 @@ type MockTool struct {
 	Name        string
 	Description string
 	Params      []tools.Parameter
+	manifest    tools.Manifest
 }
 
 func (t MockTool) Invoke(tools.ParamValues) ([]any, error) {
@@ -60,6 +61,10 @@ func (t MockTool) Manifest() tools.Manifest {
 }
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return true
+}
+
+func (t MockTool) MCPTool() tools.MCPTool {
+	return tools.MCPTool{Name: t.Name, Description: t.manifest.Description, InputSchema: t.manifest.ToolsSchema()}
 }
 
 var tool1 = MockTool{

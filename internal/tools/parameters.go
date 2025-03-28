@@ -274,6 +274,28 @@ type ParameterManifest struct {
 	Items        *ParameterManifest `json:"items,omitempty"`
 }
 
+// McpProperty represents properties when sent as part of MCP tools/list request.
+type McpProperty struct {
+	Type        string       `json:"type"`
+	Description string       `json:"description"`
+	Items       *McpProperty `json:"items,omitempty"`
+}
+
+// McpProperty converts ParameterManifest to McpProperty.
+func (m *ParameterManifest) McpProperty() McpProperty {
+	property := McpProperty{
+		Type:        m.Type,
+		Description: m.Description,
+	}
+
+	var items McpProperty
+	if m.Items != nil {
+		items = m.Items.McpProperty()
+		property.Items = &items
+	}
+	return property
+}
+
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
 	Name         string             `yaml:"name" validate:"required"`

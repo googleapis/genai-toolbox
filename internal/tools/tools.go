@@ -30,12 +30,47 @@ type Tool interface {
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
 	Authorized([]string) bool
+	MCPTool() MCPTool
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
 type Manifest struct {
 	Description string              `json:"description"`
 	Parameters  []ParameterManifest `json:"parameters"`
+}
+
+// Definition for a tool the MCP client can call.
+type MCPTool struct {
+	// The name of the tool.
+	Name string `json:"name"`
+	// A human-readable description of the tool.
+	Description string `json:"desciprtion,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	InputSchema ToolsSchema `json:"inputSchema,omitempty"`
+}
+
+// ToolsSchema is the representation of input schema for MCPTool.
+type ToolsSchema struct {
+	Type       string                 `json:"type"`
+	Properties map[string]McpProperty `json:"properties"`
+	Required   []string               `json:"required"`
+}
+
+// ToolsSchema converts Manifest to MCPTool.
+func (m Manifest) ToolsSchema() ToolsSchema {
+	properties := make(map[string]McpProperty)
+	required := make([]string, 0)
+
+	for _, p := range m.Parameters {
+		properties[p.Name] = p.McpProperty()
+		required = append(required, p.Name)
+	}
+
+	return ToolsSchema{
+		Type:       "object",
+		Properties: properties,
+		Required:   required,
+	}
 }
 
 // Helper function that returns if a tool invocation request is authorized
