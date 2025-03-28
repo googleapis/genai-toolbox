@@ -122,4 +122,5 @@ func TestPostgres(t *testing.T) {
 
 	select_1_want := "[{\"?column?\":1}]"
 	RunToolInvokeTest(t, select_1_want)
+	RunMCPToolCallMethod(t)
 }

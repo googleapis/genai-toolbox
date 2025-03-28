@@ -15,6 +15,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -111,6 +112,49 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		result := mcp.ToolsList(toolset)
+		res = mcp.JSONRPCResponse{
+			Jsonrpc: mcp.JSONRPC_VERSION,
+			Id:      baseMessage.Id,
+			Result:  result,
+		}
+	case "tools/call":
+		var req mcp.CallToolRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, fmt.Sprintf("invalid mcp tools call request: %s", err), nil)
+			break
+		}
+		toolName := req.Params.Name
+		toolArgument := req.Params.Arguments
+		tool, ok := s.tools[toolName]
+		if !ok {
+			err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
+			break
+		}
+
+		// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
+		aMarshal, err := json.Marshal(toolArgument)
+		if err != nil {
+			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
+			break
+		}
+		var data map[string]any
+		if err = decodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
+			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
+			break
+		}
+
+		// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
+		// Since MCP doesn't support auth, an empty map will be use every time.
+		claimsFromAuth := make(map[string]map[string]any)
+		params, err := tool.ParseParams(data, claimsFromAuth)
+		if err != nil {
+			err = fmt.Errorf("provided parameters were invalid: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
+			break
+		}
+
+		result := mcp.ToolCall(tool, params)
 		res = mcp.JSONRPCResponse{
 			Jsonrpc: mcp.JSONRPC_VERSION,
 			Id:      baseMessage.Id,
