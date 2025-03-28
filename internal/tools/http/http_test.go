@@ -157,9 +157,8 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 							  field: user_id
 					requestBody: |
 							{
-								"age": {{.age}}
-								"city": "{{.city}}"
-								"food": {{.food}}
+								"age": {{.age}},
+								"city": "{{.city}}",
 							}
 					bodyParams:
 						- name: age
