@@ -1,5 +1,6 @@
 
-# 🧰 Gen AI Toolbox for Databases
+![logo](./logo.png)
+# Gen AI Toolbox for Databases
 
 > [!NOTE] 
 > Gen AI Toolbox for Databases is currently in beta, and may see breaking 
