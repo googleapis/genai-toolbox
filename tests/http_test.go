@@ -36,7 +36,7 @@ var (
 	HTTP_TOOL_KIND   = "http"
 )
 
-func getHTTPVars(t *testing.T) map[string]any {
+func getHTTPSourceConfig(t *testing.T) map[string]any {
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
 		t.Fatalf("error getting ID token: %s", err)
@@ -218,7 +218,7 @@ func TestToolEndpoints(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(multiTool))
 	defer server.Close()
 
-	sourceConfig := getHTTPVars(t)
+	sourceConfig := getHTTPSourceConfig(t)
 	sourceConfig["baseUrl"] = server.URL
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()

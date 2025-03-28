@@ -4,7 +4,7 @@ linkTitle: "HTTP"
 type: docs
 weight: 1
 description: >
-  The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP.
+  The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
 ---
 
 ## About

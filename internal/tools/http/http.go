@@ -87,13 +87,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create parameter manifest
-	paramManifest := append(append(cfg.QueryParams.Manifest(), cfg.BodyParams.Manifest()...), cfg.HeaderParams.Manifest()...)
+	paramManifest := []tools.ParameterManifest{}
+	paramManifest = append(paramManifest, cfg.QueryParams.Manifest()...)
+	paramManifest = append(paramManifest, cfg.BodyParams.Manifest()...)
+	paramManifest = append(paramManifest, cfg.HeaderParams.Manifest()...)
 
 	// Verify there are no duplicate parameter names
 	seenNames := make(map[string]bool)
 	for _, param := range paramManifest {
 		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("duplicate parameter name: %s", param.Name)
+			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
 		}
 		seenNames[param.Name] = true
 	}
@@ -150,66 +153,90 @@ func convertArrayToJSON(a []any) string {
 	return "[" + strings.Join(res, ",") + "]"
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
-	paramsMap := params.AsMap()
-
-	// Populate reqeust body params
-	requestBody := t.RequestBody
-
+func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
 	// Create a map for request body parameters
-	bodyParams := make(map[string]any)
-	for _, p := range t.BodyParams {
+	bodyParamsMap := make(map[string]any)
+	for _, p := range bodyParams {
 		k := p.GetName()
 		v, ok := paramsMap[k]
 		if !ok {
-			return nil, fmt.Errorf("missing request body parameter %s", k)
+			return "", fmt.Errorf("missing request body parameter %s", k)
 		}
-		bodyParams[k] = v
+		bodyParamsMap[k] = v
 	}
 
 	// Create a FuncMap to format array parameters
 	funcMap := template.FuncMap{
 		"json": convertArrayToJSON,
 	}
-	templ, err := template.New("body").Funcs(funcMap).Parse(requestBody)
+	templ, err := template.New("body").Funcs(funcMap).Parse(requestBodyPayload)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing request body: %s", err)
+		return "", fmt.Errorf("error parsing request body: %s", err)
 	}
 	var result bytes.Buffer
-	err = templ.Execute(&result, bodyParams)
+	err = templ.Execute(&result, bodyParamsMap)
 	if err != nil {
-		return nil, fmt.Errorf("error replacing body payload: %s", err)
+		return "", fmt.Errorf("error replacing body payload: %s", err)
 	}
-	requestBody = result.String()
+	return result.String(), nil
+}
 
+func getURL(defaultURL string, queryParams tools.Parameters, paramsMap map[string]any) (string, error) {
 	// Set Query Parameters
-	u, err := url.Parse(t.URL)
+	u, err := url.Parse(defaultURL)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing URL: %s", err)
+		return "", fmt.Errorf("error parsing URL: %s", err)
 	}
 
 	query := u.Query()
-	for _, p := range t.QueryParams {
+	for _, p := range queryParams {
 		query.Add(p.GetName(), fmt.Sprintf("%v", paramsMap[p.GetName()]))
 	}
 	u.RawQuery = query.Encode()
+	return u.String(), nil
+}
 
-	req, _ := http.NewRequest(http.MethodPost, u.String(), strings.NewReader(requestBody))
-
+func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string, paramsMap map[string]any) (map[string]string, error) {
 	// Populate header params
-	for _, p := range t.HeaderParams {
+	allHeaders := make(map[string]string)
+	maps.Copy(allHeaders, defaultHeaders)
+	for _, p := range headerParams {
 		headerValue, ok := paramsMap[p.GetName()]
 		if ok {
 			if strValue, ok := headerValue.(string); ok {
-				t.Headers[p.GetName()] = strValue
+				allHeaders[p.GetName()] = strValue
 			} else {
 				return nil, fmt.Errorf("header param %s got value of type %t, not string", p.GetName(), headerValue)
 			}
 		}
 	}
+	return allHeaders, nil
+}
 
+func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+	paramsMap := params.AsMap()
+
+	// Calculate request body
+	requestBody, err := getRequestBody(t.BodyParams, t.RequestBody, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("error populating request body: %s", err)
+	}
+
+	// Calculate URL
+	urlString, err := getURL(t.URL, t.QueryParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("error populating query parameters: %s", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, urlString, strings.NewReader(requestBody))
+
+	// Calculate request headers
+	allHeaders, err := getHeaders(t.HeaderParams, t.Headers, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("error populating request headers: %s", err)
+	}
 	// Set request headers
-	for k, v := range t.Headers {
+	for k, v := range allHeaders {
 		req.Header.Set(k, v)
 	}
 
