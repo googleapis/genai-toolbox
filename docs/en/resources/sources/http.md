@@ -36,5 +36,7 @@ sources:
 | kind      |      string       |     true     | Must be "http".                                                                                                           |
 | name      |      string       |     true     | A unique name for this HTTP source.                                                                                       |
 | baseUrl   |      string       |     true     | The base URL for the HTTP requests (e.g., "<https://api.example.com>").                                                   |
-| timeout   |      string       |     true     | The timeout for HTTP requests (e.g., "5s", "1m", refer to this [doc](https://pkg.go.dev/time#ParseDuration) for more )  . |
+| timeout   |      string       |     true     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples)  . |
 | headers   | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                          |
+
+[parse-duration-doc]: https://pkg.go.dev/time#ParseDuration

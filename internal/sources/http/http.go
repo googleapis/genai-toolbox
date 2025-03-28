@@ -42,6 +42,10 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
+func DefaultConfig(name string) Config {
+	return Config{Name: name, Timeout: "30s"}
+}
+
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	duration, err := time.ParseDuration(r.Timeout)
 	if err != nil {

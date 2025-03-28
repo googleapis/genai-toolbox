@@ -20,6 +20,7 @@ import (
 	"strings"
 )
 
+// HTTPMethod is a string of a valid HTTP method (e.g "GET")
 type HTTPMethod string
 
 func (i *HTTPMethod) String() string {
@@ -29,6 +30,7 @@ func (i *HTTPMethod) String() string {
 	return ""
 }
 
+// isValidHTTPMethod checks if the input string matches one of the method constants defined in the net/http package
 func isValidHTTPMethod(method string) bool {
 	switch method {
 	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete,

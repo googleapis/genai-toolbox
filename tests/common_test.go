@@ -179,7 +179,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
 				"requestBody": `{
 "place": "zoo",
-"animals": {{array .animalArray }}
+"animals": {{json .animalArray }}
 }
 `,
 				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},

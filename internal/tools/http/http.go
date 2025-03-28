@@ -136,7 +136,8 @@ type Tool struct {
 	manifest tools.Manifest
 }
 
-func addCommaToArray(a []any) string {
+// helper function to convert an array to JSON formatted string
+func convertArrayToJSON(a []any) string {
 	res := make([]string, len(a))
 	for i, v := range a {
 		switch v.(type) {
@@ -168,7 +169,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 
 	// Create a FuncMap to format array parameters
 	funcMap := template.FuncMap{
-		"array": addCommaToArray,
+		"json": convertArrayToJSON,
 	}
 	templ, err := template.New("body").Funcs(funcMap).Parse(requestBody)
 	if err != nil {

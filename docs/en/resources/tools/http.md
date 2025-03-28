@@ -107,9 +107,41 @@ my-http-tool:
 
 ### Request body
 
-The request body payload is a string that supports parameter replacement with the `$` plus vriable name as the placeholders.
-For example, `$id` will be replaced by the value of the parameter with the name `id` and `$age` by the value of the parameter with the name `age`. The parameter values will be populated into the request body payload upon Tool invocation.
-Specify replacement parameters in the `bodyParams` section.
+The request body payload is a string that supports parameter replacement with following [Go template][go-template-doc]'s annotations.
+The parameter names in the `requestBody` should be preceded by "." and enclosed by double curly brackets "{{}}". The values will be populated into the request body payload upon Tool invocation.
+
+Example:
+
+```yaml
+my-http-tool:
+    kind: http
+    source: my-http-source
+    method: GET
+    path: /search
+    description: Tool to search for person with name and age
+    requestBody: |
+          {
+          "age": {{.age}}
+          "name": "{{.name}}"
+          }
+    bodyParams:
+      - name: age
+        description: age number
+        type: integer
+      - name: name
+        description: name string
+        type: string
+```
+
+For array parameters, the default string representation is `[item1 item2 item3]`.
+You could specify different keywords to change its format.
+
+#### JSON formatted array
+
+The `json` keyword converts an array into JSON format.
+
+- Usage: `{{json .arrayParamName}}`
+- Output example: `["str1", "str2", "str3"]`
 
 ## Example
 
@@ -158,7 +190,9 @@ my-http-tool:
 | path         |                   string                   |     true     | The path of the HTTP request.                                                                                                                                                                                                               |
 | method       |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).                                                                                                                                                                                      |
 | headers      |             map[string]string              |    false     | A map of headers to include in the HTTP request (overrides source headers).                                                                                                                                                                 |
-| requestBody  |                   string                   |    false     | The request body payload. Use [go template](https://pkg.go.dev/text/template) with the parameter name as the placeholder (e.g., `{{.id}}` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). |
+| requestBody  |                   string                   |    false     | The request body payload. Use [go template][go-template-doc] with the parameter name as the placeholder (e.g., `{{.id}}` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). |
 | queryParams  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string.                                                                                                                                             |
 | bodyParams   | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.                                                                                                                                     |
 | headerParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers.                                                                                                                                            |
+
+[go-template-doc]: <https://pkg.go.dev/text/template#pkg-overview>
