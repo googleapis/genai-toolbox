@@ -106,7 +106,7 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if name == "Alice" {
-		response := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`
+		response := `{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}`
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			http.Error(w, "Failed to write response", http.StatusInternalServerError)

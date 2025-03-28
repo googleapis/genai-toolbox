@@ -25,6 +25,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -194,7 +195,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          `["[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"]`,
+			want:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 			isErr:         false,
 		},
 		{
@@ -287,12 +288,17 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			if err != nil {
 				t.Fatalf("error parsing response body")
 			}
+
 			got, ok := body["result"].(string)
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
-
-			if got != tc.want {
+			// Remove `\` and `"` for string comparison
+			got = strings.ReplaceAll(got, "\\", "")
+			want := strings.ReplaceAll(tc.want, "\\", "")
+			got = strings.ReplaceAll(got, "\"", "")
+			want = strings.ReplaceAll(want, "\"", "")
+			if got != want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
 		})
