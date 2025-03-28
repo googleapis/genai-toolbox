@@ -42,6 +42,7 @@ type Server struct {
 	root            chi.Router
 	logger          log.Logger
 	instrumentation *Instrumentation
+	sseSessions     map[string]*sseSession
 
 	sources      map[string]sources.Source
 	authServices map[string]auth.AuthService
@@ -203,12 +204,15 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
+	sseSessions := make(map[string]*sseSession)
+
 	s := &Server{
 		version:         cfg.Version,
 		srv:             srv,
 		root:            r,
 		logger:          l,
 		instrumentation: instrumentation,
+		sseSessions:     sseSessions,
 
 		sources:      sourcesMap,
 		authServices: authServicesMap,

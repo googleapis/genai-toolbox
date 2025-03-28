@@ -133,7 +133,9 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, tools: tools, toolsets: toolsets}
+	sseSessions := make(map[string]*sseSession)
+
+	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseSessions: sseSessions, tools: tools, toolsets: toolsets}
 	var r chi.Router
 	switch router {
 	case "api":
