@@ -221,6 +221,11 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		return nil, err
 	}
 	r.Mount("/api", apiR)
+	mcpR, err := mcpRouter(s)
+	if err != nil {
+		return nil, err
+	}
+	r.Mount("/mcp", mcpR)
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
