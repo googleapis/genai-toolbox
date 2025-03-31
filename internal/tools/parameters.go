@@ -154,6 +154,14 @@ type Parameter interface {
 	GetAuthServices() []ParamAuthService
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
+	McpManifest() ParameterMcpManifest
+}
+
+// McpToolsSchema is the representation of input schema for McpManifest.
+type McpToolsSchema struct {
+	Type       string                          `json:"type"`
+	Properties map[string]ParameterMcpManifest `json:"properties"`
+	Required   []string                        `json:"required"`
 }
 
 // Parameters is a type used to allow unmarshal a list of parameters
@@ -265,6 +273,24 @@ func (ps Parameters) Manifest() []ParameterManifest {
 	return rtn
 }
 
+func (ps Parameters) McpManifest() McpToolsSchema {
+	properties := make(map[string]ParameterMcpManifest)
+	required := make([]string, 0)
+
+	for _, p := range ps {
+		name := p.GetName()
+		properties[name] = p.McpManifest()
+		// all parameters are added to the required field
+		required = append(required, name)
+	}
+
+	return McpToolsSchema{
+		Type:       "object",
+		Properties: properties,
+		Required:   required,
+	}
+}
+
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
 	Name         string             `json:"name"`
@@ -272,6 +298,13 @@ type ParameterManifest struct {
 	Description  string             `json:"description"`
 	AuthServices []string           `json:"authSources"`
 	Items        *ParameterManifest `json:"items,omitempty"`
+}
+
+// ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
+type ParameterMcpManifest struct {
+	Type        string                `json:"type"`
+	Description string                `json:"description"`
+	Items       *ParameterMcpManifest `json:"items,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
@@ -305,6 +338,14 @@ func (p *CommonParameter) Manifest() ParameterManifest {
 		Type:         p.Type,
 		Description:  p.Desc,
 		AuthServices: authNames,
+	}
+}
+
+// McpManifest returns the MCP manifest for the Parameter.
+func (p *CommonParameter) McpManifest() ParameterMcpManifest {
+	return ParameterMcpManifest{
+		Type:        p.Type,
+		Description: p.Desc,
 	}
 }
 
@@ -609,5 +650,20 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		Description:  p.Desc,
 		AuthServices: authNames,
 		Items:        &items,
+	}
+}
+
+// McpManifest returns the MCP manifest for the ArrayParameter.
+func (p *ArrayParameter) McpManifest() ParameterMcpManifest {
+	// only list ParamAuthService names (without fields) in manifest
+	authNames := make([]string, len(p.AuthServices))
+	for i, a := range p.AuthServices {
+		authNames[i] = a.Name
+	}
+	items := p.Items.McpManifest()
+	return ParameterMcpManifest{
+		Type:        p.Type,
+		Description: p.Desc,
+		Items:       &items,
 	}
 }
