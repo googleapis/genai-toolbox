@@ -15,6 +15,10 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -39,12 +43,21 @@ func mcpRouter(s *Server) (chi.Router, error) {
 
 // mcpHandler handles all mcp messages.
 func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	// Read and returns a body from io.Reader
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		// Generate a new uuid if unable to decode
+		id := uuid.New().String()
+		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
+	}
+
+	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage struct {
 		Jsonrpc string        `json:"jsonrpc"`
 		Method  string        `json:"method"`
 		Id      mcp.RequestId `json:"id,omitempty"`
 	}
-	if err := decodeJSON(r.Body, &baseMessage); err != nil {
+	if err := decodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
 		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
@@ -63,12 +76,35 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// return empty response
-	res := mcp.JSONRPCResponse{
-		Jsonrpc: mcp.JSONRPC_VERSION,
-		Id:      baseMessage.Id,
-		Result:  mcp.EmptyResult{},
+	// Check if message is a notification
+	if baseMessage.Id == nil {
+		var notification mcp.JSONRPCNotification
+		if err := json.Unmarshal(body, &notification); err != nil {
+			render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
+		}
+		// Notifications do not expect a response
+		// Toolbox doesn't do anything with notifications yet
+		return
 	}
+
+	var res mcp.JSONRPCMessage
+	switch baseMessage.Method {
+	case "initialize":
+		var req mcp.InitializeRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, fmt.Sprintf("invalid mcp initialize request: %s", err), nil)
+			break
+		}
+		result := mcp.Initialize(s.version)
+		res = mcp.JSONRPCResponse{
+			Jsonrpc: mcp.JSONRPC_VERSION,
+			Id:      baseMessage.Id,
+			Result:  result,
+		}
+	default:
+		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, fmt.Sprintf("invalid method %s", baseMessage.Method), nil)
+	}
+
 	render.JSON(w, r, res)
 }
 
