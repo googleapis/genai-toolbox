@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
@@ -212,4 +213,46 @@ func TestMcpEndpoint(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSseEndpoint(t *testing.T) {
+	ts, shutdown := setUpServer(t, "mcp", nil, nil)
+	defer shutdown()
+
+	contentType := "text/event-stream"
+	cacheControl := "no-cache"
+	connection := "keep-alive"
+	accessControlAllowOrigin := "*"
+	wantEvent := "event: endpoint"
+
+	t.Run("test sse endpoint", func(t *testing.T) {
+		resp, err := http.Get(ts.URL + "/sse")
+		if err != nil {
+			t.Fatalf("unexpected error during request: %s", err)
+		}
+		defer resp.Body.Close()
+
+		if gotContentType := resp.Header.Get("Content-type"); gotContentType != contentType {
+			t.Fatalf("unexpected content-type header: want %s, got %s", contentType, gotContentType)
+		}
+		if gotCacheControl := resp.Header.Get("Cache-Control"); gotCacheControl != cacheControl {
+			t.Fatalf("unexpected cache-control header: want %s, got %s", cacheControl, gotCacheControl)
+		}
+		if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
+			t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
+		}
+		if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
+			t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
+		}
+
+		buffer := make([]byte, 1024)
+		n, err := resp.Body.Read(buffer)
+		if err != nil {
+			t.Fatalf("unable to read response: %s", err)
+		}
+		endpointEvent := string(buffer[:n])
+		if !strings.Contains(endpointEvent, wantEvent) {
+			t.Fatalf("unexpected event: got %s", endpointEvent)
+		}
+	})
 }

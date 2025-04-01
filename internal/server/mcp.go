@@ -16,10 +16,12 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -27,6 +29,39 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 )
+
+type sseSession struct {
+	sessionId  string
+	writer     http.ResponseWriter
+	flusher    http.Flusher
+	done       chan struct{}
+	eventQueue chan string
+}
+
+// sseManager manages and control access to sse sessions
+type sseManager struct {
+	mu          sync.RWMutex
+	sseSessions map[string]*sseSession
+}
+
+func (m *sseManager) get(id string) (*sseSession, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	session, ok := m.sseSessions[id]
+	return session, ok
+}
+
+func (m *sseManager) add(id string, session *sseSession) {
+	m.mu.Lock()
+	m.sseSessions[id] = session
+	m.mu.Unlock()
+}
+
+func (m *sseManager) remove(id string) {
+	m.mu.Lock()
+	delete(m.sseSessions, id)
+	m.mu.Unlock()
+}
 
 // mcpRouter creates a router that represents the routes under /mcp
 func mcpRouter(s *Server) (chi.Router, error) {
@@ -36,9 +71,54 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
+	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
 
 	return r, nil
+}
+
+// sseHandler handles sse initialization and message.
+func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		err := fmt.Errorf("unable to retrieve flusher for sse")
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+	}
+	sessionId := uuid.New().String()
+	session := &sseSession{
+		sessionId:  sessionId,
+		writer:     w,
+		flusher:    flusher,
+		done:       make(chan struct{}),
+		eventQueue: make(chan string, 100),
+	}
+	s.sseManager.add(sessionId, session)
+	defer s.sseManager.remove(sessionId)
+
+	// send initil endpoint event
+	messageEndpoint := fmt.Sprintf("http://127.0.0.1:5000/mcp?sessionId=%s", sessionId)
+	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
+	flusher.Flush()
+
+	clientClose := r.Context().Done()
+	for {
+		select {
+		// Ensure that only a single responses are written at once
+		case event := <-session.eventQueue:
+			fmt.Fprint(w, event)
+			flusher.Flush()
+			// channel for client disconnection
+		case <-clientClose:
+			close(session.done)
+			s.logger.DebugContext(context.Background(), "client disconnected")
+			return
+		}
+	}
 }
 
 // mcpHandler handles all mcp messages.
@@ -175,6 +255,25 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, fmt.Sprintf("invalid method %s", baseMessage.Method), nil)
 	}
 
+	// retrieve sse session
+	sessionId := r.URL.Query().Get("sessionId")
+	session, ok := s.sseManager.get(sessionId)
+	if !ok {
+		s.logger.DebugContext(context.Background(), "sse session not available")
+	} else {
+		// queue sse event
+		eventData, _ := json.Marshal(res)
+		select {
+		case session.eventQueue <- fmt.Sprintf("event: message\ndata: %s\n\n", eventData):
+			s.logger.DebugContext(context.Background(), "event queue successful")
+		case <-session.done:
+			s.logger.DebugContext(context.Background(), "session is close")
+		default:
+			s.logger.DebugContext(context.Background(), "unable to add to event queue")
+		}
+	}
+
+	// send HTTP response
 	render.JSON(w, r, res)
 }
 
