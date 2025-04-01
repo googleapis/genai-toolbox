@@ -101,6 +101,23 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			Id:      baseMessage.Id,
 			Result:  result,
 		}
+	case "tools/list":
+		var req mcp.ListToolsRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, fmt.Sprintf("invalid mcp tools list request: %s", err), nil)
+			break
+		}
+		toolset, ok := s.toolsets[""]
+		if !ok {
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, "toolset does not exist", nil)
+			break
+		}
+		result := mcp.ToolsList(toolset)
+		res = mcp.JSONRPCResponse{
+			Jsonrpc: mcp.JSONRPC_VERSION,
+			Id:      baseMessage.Id,
+			Result:  result,
+		}
 	default:
 		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, fmt.Sprintf("invalid method %s", baseMessage.Method), nil)
 	}

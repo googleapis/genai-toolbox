@@ -28,8 +28,36 @@ const jsonrpcVersion = "2.0"
 const protocolVersion = "2024-11-05"
 const serverName = "Toolbox"
 
+var tool1InputSchema = map[string]any{
+	"type":       "object",
+	"properties": map[string]any{},
+	"required":   []any{},
+}
+
+var tool2InputSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"param1": map[string]any{"type": "integer", "description": "This is the first parameter."},
+		"param2": map[string]any{"type": "integer", "description": "This is the second parameter."},
+	},
+	"required": []any{"param1", "param2"},
+}
+
+var tool3InputSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"my_array": map[string]any{
+			"type":        "array",
+			"description": "this param is an array of strings",
+			"items":       map[string]any{"type": "string", "description": "string item"},
+		},
+	},
+	"required": []any{"my_array"},
+}
+
 func TestMcpEndpoint(t *testing.T) {
-	toolsMap, toolsets := setUpResources(t)
+	mockTools := []MockTool{tool1, tool2, tool3}
+	toolsMap, toolsets := setUpResources(t, mockTools)
 	ts, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
 	defer shutdown()
 
@@ -66,6 +94,37 @@ func TestMcpEndpoint(t *testing.T) {
 				Jsonrpc: jsonrpcVersion,
 				Request: mcp.Request{
 					Method: "notification",
+				},
+			},
+		},
+		{
+			name: "tools/list",
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list",
+				Request: mcp.Request{
+					Method: "tools/list",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list",
+				"result": map[string]any{
+					"tools": []any{
+						map[string]any{
+							"name":        "no_params",
+							"inputSchema": tool1InputSchema,
+						},
+						map[string]any{
+							"name":        "some_params",
+							"inputSchema": tool2InputSchema,
+						},
+						map[string]any{
+							"name":        "array_param",
+							"desciprtion": "some description",
+							"inputSchema": tool3InputSchema,
+						},
+					},
 				},
 			},
 		},
