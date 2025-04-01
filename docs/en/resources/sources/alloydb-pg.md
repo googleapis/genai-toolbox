@@ -24,7 +24,6 @@ cluster][alloydb-free-trial].
 
 ## Requirements
 
-
 ### IAM Permissions
 
 By default, AlloyDB for PostgreSQL source uses the [AlloyDB Go
@@ -46,14 +45,14 @@ permissions):
 ### Networking
 
 AlloyDB supports connecting over both from external networks via the internet
-([public IP][public-ip]), and internal networks ([private IP][private-ip]). 
-For more information on choosing between the two options, see the AlloyDB page 
+([public IP][public-ip]), and internal networks ([private IP][private-ip]).
+For more information on choosing between the two options, see the AlloyDB page
 [Connection overview][conn-overview].
 
-You can configure the `ipType` parameter in your source configuration to 
+You can configure the `ipType` parameter in your source configuration to
 `public` or `private` to match your cluster's configuration. Regardless of which
 you choose, all connections use IAM-based authorization and are encrypted with
-mTLS. 
+mTLS.
 
 [private-ip]: https://cloud.google.com/alloydb/docs/private-ip
 [public-ip]: https://cloud.google.com/alloydb/docs/connect-public-ip
@@ -90,7 +89,7 @@ sources:
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").             |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").              |
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                          |
-| instance  |  string  |     true     | Name of the AlloyDB instance within the cluser (e.g. "my-instance").                      |
+| instance  |  string  |     true     | Name of the AlloyDB instance within the cluster (e.g. "my-instance").                      |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                               |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                              |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                                       |

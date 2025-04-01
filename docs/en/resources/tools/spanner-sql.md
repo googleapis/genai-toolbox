@@ -12,8 +12,8 @@ description: >
 A `spanner-sql` tool executes a pre-defined SQL statement (either `googlesql` or
 `postgresql`) against a Cloud Spanner database. It's compatible with any of the
 following sources:
-- [spanner](../sources/spanner.md)
 
+- [spanner](../sources/spanner.md)
 
 ### GoogleSQL
 
@@ -33,7 +33,6 @@ the second parameter, and so on.
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ## Example
-
 
 {{< tabpane >}}
 {{< tab header="GoogleSQL" lang="yaml" >}}
@@ -125,4 +124,3 @@ tools:
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
 | statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
 | parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
-
