@@ -151,6 +151,7 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 
 	select_1_want := "[{\"\":1}]"
 	RunToolInvokeTest(t, select_1_want)
+	RunMCPToolCallMethod(t)
 }
 
 // Test connection with different IP type
