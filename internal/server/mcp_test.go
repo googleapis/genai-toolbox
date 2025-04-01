@@ -121,7 +121,7 @@ func TestMcpEndpoint(t *testing.T) {
 						},
 						map[string]any{
 							"name":        "array_param",
-							"desciprtion": "some description",
+							"description": "some description",
 							"inputSchema": tool3InputSchema,
 						},
 					},
