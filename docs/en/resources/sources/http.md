@@ -23,7 +23,7 @@ sources:
     timeout: 10s # default to 30s
     headers:
       Authorization: Bearer YOUR_API_TOKEN
-      Content-Type: application/json"
+      Content-Type: application/json
     queryParams:
       param1: value1
       param2: value2
@@ -31,12 +31,12 @@ sources:
 
 ## Reference
 
-| **field** |     **type**      | **required** | **description**                                                                                                           |
-|-----------|:-----------------:|:------------:|---------------------------------------------------------------------------------------------------------------------------|
-| kind      |      string       |     true     | Must be "http".                                                                                                           |
-| name      |      string       |     true     | A unique name for this HTTP source.                                                                                       |
-| baseUrl   |      string       |     true     | The base URL for the HTTP requests (e.g., "<https://api.example.com>").                                                   |
-| timeout   |      string       |     true     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples)  . |
-| headers   | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                          |
+| **field**   |     **type**      | **required** | **description**                                                                                                                   |
+|-------------|:-----------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------|
+| kind        |      string       |     true     | Must be "http".                                                                                                                   |
+| baseUrl     |      string       |     true     | The base URL for the HTTP requests (e.g., `https://api.example.com`).                                                             |
+| timeout     |      string       |    false     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples). Defaults to 30s. |
+| headers     | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                  |
+| queryParams | map[string]string |    false     | Default query parameters to include in the HTTP requests.                                                                         |
 
 [parse-duration-doc]: https://pkg.go.dev/time#ParseDuration

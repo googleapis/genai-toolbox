@@ -169,7 +169,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 			"my-advanced-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "other-instance",
-				"method":      "GET",
+				"method":      "get",
 				"path":        "/tool3?id=2",
 				"description": "some description",
 				"headers": map[string]string{

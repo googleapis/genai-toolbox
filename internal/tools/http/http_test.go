@@ -15,6 +15,7 @@
 package http_test
 
 import (
+	"strings"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
@@ -175,7 +176,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 						  type: string
 						  description: language string
 			`,
-			err: `unable to parse as "http": GOT is not a valid http method`,
+			err: `GOT is not a valid http method`,
 		},
 	}
 	for _, tc := range tcs {
@@ -189,8 +190,8 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
-			if errStr != tc.err {
-				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error string: got %q, want substring %q", errStr, tc.err)
 			}
 		})
 	}

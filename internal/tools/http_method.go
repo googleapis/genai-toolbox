@@ -23,15 +23,9 @@ import (
 // HTTPMethod is a string of a valid HTTP method (e.g "GET")
 type HTTPMethod string
 
-func (i *HTTPMethod) String() string {
-	if string(*i) != "" {
-		return strings.ToUpper(string(*i))
-	}
-	return ""
-}
-
 // isValidHTTPMethod checks if the input string matches one of the method constants defined in the net/http package
 func isValidHTTPMethod(method string) bool {
+
 	switch method {
 	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete,
 		http.MethodPatch, http.MethodHead, http.MethodOptions, http.MethodTrace,
@@ -46,9 +40,10 @@ func (i *HTTPMethod) UnmarshalYAML(ctx context.Context, unmarshal func(interface
 	if err := unmarshal(&httpMethod); err != nil {
 		return fmt.Errorf(`error unmarshalling HTTP method: %s`, err)
 	}
+	httpMethod = strings.ToUpper(httpMethod)
 	if !isValidHTTPMethod(httpMethod) {
 		return fmt.Errorf(`%s is not a valid http method`, httpMethod)
 	}
-	*i = HTTPMethod(strings.ToUpper(httpMethod))
+	*i = HTTPMethod(httpMethod)
 	return nil
 }

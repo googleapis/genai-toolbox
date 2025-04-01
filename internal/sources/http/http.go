@@ -42,10 +42,12 @@ func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
 
+// DefaultConfig is a helper function that generates the default configuration for an HTTP Tool Config.
 func DefaultConfig(name string) Config {
 	return Config{Name: name, Timeout: "30s"}
 }
 
+// Initialize initializes an HTTP Source instance.
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	duration, err := time.ParseDuration(r.Timeout)
 	if err != nil {

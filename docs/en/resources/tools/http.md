@@ -15,7 +15,7 @@ Toolbox allows you to configure the request URL, method, headers, query paramete
 
 ### URL
 
-An HTTP request URL identifies the targetthe client wants to access.
+An HTTP request URL identifies the target the client wants to access.
 Toolbox composes the request URL from the HTTP Source's `baseUrl` and the HTTP Tool's `path`.
 For example, the following config allows you to reach different paths of the same server using multiple Tools:
 
@@ -23,7 +23,7 @@ For example, the following config allows you to reach different paths of the sam
 sources:
     my-http-source:
         kind: http
-        BaseUrl: https://api.example.com
+        baseUrl: https://api.example.com
 
 tools:
     my-post-tool:
@@ -45,8 +45,8 @@ tools:
 ### Headers
 
 An HTTP request header is a key-value pair sent by a client to a server, providing additional information about the request, such as the client's preferences, the request body content type, and other metadata.
-Headers specified by the HTTP Tool are combined with its HTTP Source headers for the resulting HTTP request, and overrides the Source headers in case of conflict.
-The HTTP Tool allows you to specify headers in two different way:
+Headers specified by the HTTP Tool are combined with its HTTP Source headers for the resulting HTTP request, and override the Source headers in case of conflict.
+The HTTP Tool allows you to specify headers in two different ways:
 
 - Static headers can be specified using the `headers` field, and will be the same for every invocation:
 
@@ -79,6 +79,8 @@ my-http-tool:
 
 ### Query parameters
 
+Query parameters are key-value pairs appended to a URL after a question mark (?) to provide additional information to the server for processing the request, like filtering or sorting data.
+
 - Static request query parameters should be specified in the `path` as part of the URL itself:
 
 ```yaml
@@ -90,7 +92,7 @@ my-http-tool:
     description: Tool to search for item with ID 1 in English
 ```
 
-- Dynamic request query parameters should be specified as parameters in the `headerParams` section:
+- Dynamic request query parameters should be specified as parameters in the `queryParams` section:
 
 ```yaml
 my-http-tool:
@@ -101,7 +103,7 @@ my-http-tool:
     description: Tool to search for item with ID
     queryParams:
       - name: id
-        description: iteam ID
+        description: item ID
         type: integer
 ```
 
@@ -120,10 +122,10 @@ my-http-tool:
     path: /search
     description: Tool to search for person with name and age
     requestBody: |
-          {
-          "age": {{.age}}
-          "name": "{{.name}}"
-          }
+      {
+        "age": {{.age}},
+        "name": "{{.name}}"
+      }
     bodyParams:
       - name: age
         description: age number
@@ -133,15 +135,37 @@ my-http-tool:
         type: string
 ```
 
-For array parameters, the default string representation is `[item1 item2 item3]`.
-You could specify different keywords to change its format.
+#### Formatting Parameters
 
-#### JSON formatted array
+Some complex parameters (such as arrays) may require additional formatting to match the expected output. For convenience, you can specify one of the following pre-defined functions before the parameter name to format it:
 
-The `json` keyword converts an array into JSON format.
+##### JSON
 
-- Usage: `{{json .arrayParamName}}`
-- Output example: `["str1", "str2", "str3"]`
+The `json` keyword converts a parameter into a JSON format.
+Note: Using JSON may add quotes to the variable name for certain types (such as strings).
+
+Example:
+
+```yaml
+requestBody: |
+  {
+    "age": {{json .age}},
+    "name": {{json .name}},
+    "nickname": "{{json .nickname}}",
+    "nameArray": {{json .nameArray}}
+  }
+```
+
+will send the following output:
+
+```yaml
+{
+  "age": 18,
+  "name": "Katherine",
+  "nickname": ""Kat"", # Duplicate quotes
+  "nameArray": ["A", "B", "C"]
+}
+```
 
 ## Example
 
@@ -161,8 +185,8 @@ my-http-tool:
         type: string
     requestBody: |
       {
-      "age": {{.age}}
-      "city": {{.city}}
+        "age": {{.age}},
+        "city": "{{.city}}"
       }
     bodyParams:
       - name: age
@@ -182,17 +206,17 @@ my-http-tool:
 
 ## Reference
 
-| **field**    |                  **type**                  | **required** | **description**                                                                                                                                                                                                                             |
-|--------------|:------------------------------------------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind         |                   string                   |     true     | Must be "http".                                                                                                                                                                                                                             |
-| source       |                   string                   |     true     | Name of the source the HTTP request should be sent to.                                                                                                                                                                                      |
-| description  |                   string                   |     true     | Description of the tool that is passed to the LLM.                                                                                                                                                                                          |
-| path         |                   string                   |     true     | The path of the HTTP request.                                                                                                                                                                                                               |
-| method       |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).                                                                                                                                                                                      |
-| headers      |             map[string]string              |    false     | A map of headers to include in the HTTP request (overrides source headers).                                                                                                                                                                 |
+| **field**    |                  **type**                  | **required** | **description**                                                                                                                                                                                                            |
+|--------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind         |                   string                   |     true     | Must be "http".                                                                                                                                                                                                            |
+| source       |                   string                   |     true     | Name of the source the HTTP request should be sent to.                                                                                                                                                                     |
+| description  |                   string                   |     true     | Description of the tool that is passed to the LLM.                                                                                                                                                                         |
+| path         |                   string                   |     true     | The path of the HTTP request. You can include static query parameters in the path string.                                                                                                                                  |
+| method       |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).                                                                                                                                                                     |
+| headers      |             map[string]string              |    false     | A map of headers to include in the HTTP request (overrides source headers).                                                                                                                                                |
 | requestBody  |                   string                   |    false     | The request body payload. Use [go template][go-template-doc] with the parameter name as the placeholder (e.g., `{{.id}}` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). |
-| queryParams  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string.                                                                                                                                             |
-| bodyParams   | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.                                                                                                                                     |
-| headerParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers.                                                                                                                                            |
+| queryParams  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string.                                                                                                                            |
+| bodyParams   | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.                                                                                                                    |
+| headerParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers.                                                                                                                           |
 
 [go-template-doc]: <https://pkg.go.dev/text/template#pkg-overview>

@@ -69,6 +69,12 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 
 // handler function for the test server
 func handleTool0(w http.ResponseWriter, r *http.Request) {
+	// expect POST method
+	if r.Method != http.MethodPost {
+		errorMessage := fmt.Sprintf("expected POST method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	response := []string{
 		"Hello",
@@ -83,6 +89,12 @@ func handleTool0(w http.ResponseWriter, r *http.Request) {
 
 // handler function for the test server
 func handleTool1(w http.ResponseWriter, r *http.Request) {
+	// expect GET method
+	if r.Method != http.MethodGet {
+		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
 	// Parse request body
 	var requestBody map[string]interface{}
 	bodyBytes, readErr := io.ReadAll(r.Body)
@@ -119,6 +131,12 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 
 // handler function for the test server
 func handleTool2(w http.ResponseWriter, r *http.Request) {
+	// expect GET method
+	if r.Method != http.MethodGet {
+		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
 	email := r.URL.Query().Get("email")
 	if email != "" {
 		response := `{"name":"Alice"}`
@@ -134,9 +152,10 @@ func handleTool2(w http.ResponseWriter, r *http.Request) {
 
 // handler function for the test server
 func handleTool3(w http.ResponseWriter, r *http.Request) {
-	// Check request method
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	// expect GET method
+	if r.Method != http.MethodGet {
+		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
 		return
 	}
 

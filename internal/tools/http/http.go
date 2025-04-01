@@ -10,15 +10,17 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.package http
+// limitations under the License.
 package http
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"maps"
@@ -86,11 +88,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	maps.Copy(combinedHeaders, s.DefaultHeaders)
 	maps.Copy(combinedHeaders, cfg.Headers)
 
+	// Create a slice for all parameters
+	allParameters := slices.Concat(cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
+
 	// Create parameter manifest
-	paramManifest := []tools.ParameterManifest{}
-	paramManifest = append(paramManifest, cfg.QueryParams.Manifest()...)
-	paramManifest = append(paramManifest, cfg.BodyParams.Manifest()...)
-	paramManifest = append(paramManifest, cfg.HeaderParams.Manifest()...)
+	paramManifest := slices.Concat(
+		cfg.QueryParams.Manifest(),
+		cfg.BodyParams.Manifest(),
+		cfg.HeaderParams.Manifest(),
+	)
 
 	// Verify there are no duplicate parameter names
 	seenNames := make(map[string]bool)
@@ -105,7 +111,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         ToolKind,
-		URL:          u.String(),
+		URL:          u,
 		Method:       cfg.Method,
 		AuthRequired: cfg.AuthRequired,
 		RequestBody:  cfg.RequestBody,
@@ -114,6 +120,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		HeaderParams: cfg.HeaderParams,
 		Headers:      combinedHeaders,
 		Client:       s.Client,
+		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
 	}, nil
 }
@@ -127,32 +134,29 @@ type Tool struct {
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
-	URL          string            `yaml:"url"`
+	URL          *url.URL          `yaml:"url"`
 	Method       tools.HTTPMethod  `yaml:"method"`
 	Headers      map[string]string `yaml:"headers"`
 	RequestBody  string            `yaml:"requestBody"`
 	QueryParams  tools.Parameters  `yaml:"queryParams"`
 	BodyParams   tools.Parameters  `yaml:"bodyParams"`
 	HeaderParams tools.Parameters  `yaml:"headerParams"`
+	AllParams    tools.Parameters  `yaml:"allParams"`
 
 	Client   *http.Client
 	manifest tools.Manifest
 }
 
-// helper function to convert an array to JSON formatted string
-func convertArrayToJSON(a []any) string {
-	res := make([]string, len(a))
-	for i, v := range a {
-		switch v.(type) {
-		case string:
-			res[i] = fmt.Sprintf("%q", v)
-		default:
-			res[i] = fmt.Sprint(v)
-		}
+// helper function to convert a parameter to JSON formatted string.
+func convertParamToJSON(param any) (string, error) {
+	jsonData, err := json.Marshal(param)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal param to JSON: %w", err)
 	}
-	return "[" + strings.Join(res, ",") + "]"
+	return string(jsonData), nil
 }
 
+// Helper function to generate the HTTP request body upon Tool invocation.
 func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
 	// Create a map for request body parameters
 	bodyParamsMap := make(map[string]any)
@@ -167,7 +171,7 @@ func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, para
 
 	// Create a FuncMap to format array parameters
 	funcMap := template.FuncMap{
-		"json": convertArrayToJSON,
+		"json": convertParamToJSON,
 	}
 	templ, err := template.New("body").Funcs(funcMap).Parse(requestBodyPayload)
 	if err != nil {
@@ -181,13 +185,9 @@ func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, para
 	return result.String(), nil
 }
 
-func getURL(defaultURL string, queryParams tools.Parameters, paramsMap map[string]any) (string, error) {
-	// Set Query Parameters
-	u, err := url.Parse(defaultURL)
-	if err != nil {
-		return "", fmt.Errorf("error parsing URL: %s", err)
-	}
-
+// Helper function to generate the HTTP request URL upon Tool invocation.
+func getURL(u *url.URL, queryParams tools.Parameters, paramsMap map[string]any) (string, error) {
+	// Set dynamic query parameters
 	query := u.Query()
 	for _, p := range queryParams {
 		query.Add(p.GetName(), fmt.Sprintf("%v", paramsMap[p.GetName()]))
@@ -196,6 +196,7 @@ func getURL(defaultURL string, queryParams tools.Parameters, paramsMap map[strin
 	return u.String(), nil
 }
 
+// Helper function to generate the HTTP headers upon Tool invocation.
 func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string, paramsMap map[string]any) (map[string]string, error) {
 	// Populate header params
 	allHeaders := make(map[string]string)
@@ -228,7 +229,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		return nil, fmt.Errorf("error populating query parameters: %s", err)
 	}
 
-	req, _ := http.NewRequest(http.MethodPost, urlString, strings.NewReader(requestBody))
+	req, _ := http.NewRequest(string(t.Method), urlString, strings.NewReader(requestBody))
 
 	// Calculate request headers
 	allHeaders, err := getHeaders(t.HeaderParams, t.Headers, paramsMap)
@@ -260,11 +261,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	parameters := []tools.Parameter{}
-	parameters = append(parameters, t.BodyParams...)
-	parameters = append(parameters, t.HeaderParams...)
-	parameters = append(parameters, t.QueryParams...)
-	return tools.ParseParams(parameters, data, claims)
+	return tools.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
