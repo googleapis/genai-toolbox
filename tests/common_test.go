@@ -160,7 +160,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 			"my-auth-required-tool": map[string]any{
 				"kind":         toolKind,
 				"source":       "my-instance",
-				"method":       "GET",
+				"method":       "POST",
 				"path":         "/tool0",
 				"description":  "some description",
 				"requestBody":  "{}",

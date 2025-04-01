@@ -97,6 +97,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		cfg.BodyParams.Manifest(),
 		cfg.HeaderParams.Manifest(),
 	)
+	if paramManifest == nil {
+		paramManifest = make([]tools.ParameterManifest, 0)
+	}
 
 	// Verify there are no duplicate parameter names
 	seenNames := make(map[string]bool)
