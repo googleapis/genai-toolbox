@@ -38,14 +38,13 @@ permissions):
 {{< notice tip >}}
 If you are connecting from Compute Engine, make sure your VM
 also has the [proper
-scope][gce-access-scopes]
+scope](https://cloud.google.com/compute/docs/access/service-accounts#accesscopesiam)
 to connect using the Cloud SQL Admin API.
 {{< /notice >}}
 
 [csql-go-conn]: https://github.com/GoogleCloudPlatform/cloud-sql-go-connector
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[gce-access-scopes]: https://cloud.google.com/compute/docs/access/service-accounts#accesscopesiam
 
 ### Networking
 
