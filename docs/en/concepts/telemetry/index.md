@@ -81,18 +81,22 @@ A metric is a measurement of a service captured at runtime. The collected data
 can be used to provide important insights into the service. Toolbox provides the
 following custom metrics:
 
-| **Metric Name**                    | **Description**                                       |
-|------------------------------------|-------------------------------------------------------|
-| `toolbox.server.toolset.get.count` | Counts the number of toolset manifest requests served |
-| `toolbox.server.tool.get.count`    | Counts the number of tool manifest requests served    |
-| `toolbox.server.tool.get.invoke`   | Counts the number of tool invocation requests served  |
+| **Metric Name**                    | **Description**                                         |
+|------------------------------------|---------------------------------------------------------|
+| `toolbox.server.toolset.get.count` | Counts the number of toolset manifest requests served   |
+| `toolbox.server.tool.get.count`    | Counts the number of tool manifest requests served      |
+| `toolbox.server.tool.get.invoke`   | Counts the number of tool invocation requests served    |
+| `toolbox.server.mcp.sse.count`     | Counts the number of mcp sse connection requests served |
+| `toolbox.server.mcp.post.count`    | Counts the number of mcp post requests served           |
 
 All custom metrics have the following attributes/labels:
 
-| **Metric Attributes** | **Description**                                           |
-|-----------------------|-----------------------------------------------------------|
-| `toolbox.name`        | Name of the toolset or tool, if applicable.               |
-| `toolbox.status`      | Operation status code, for example: `success`, `failure`. |
+| **Metric Attributes**      | **Description**                                           |
+|----------------------------|-----------------------------------------------------------|
+| `toolbox.name`             | Name of the toolset or tool, if applicable.               |
+| `toolbox.operation.status` | Operation status code, for example: `success`, `failure`. |
+| `toolbox.sse.sessionId`    | Session Id for sse connection, if applicable.             |
+| `toolbox.method`           | Method for MCP connection, only MCP POST metrics.         |
 
 ### Traces
 
