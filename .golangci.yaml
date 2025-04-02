@@ -43,3 +43,4 @@ run:
     - dgraph
     - mssql
     - mysql
+    - http

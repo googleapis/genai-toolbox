@@ -27,6 +27,7 @@ import (
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	dgraphsrc "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	mysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	neo4jrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
@@ -34,6 +35,7 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
@@ -212,6 +214,12 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
+		case httpsrc.SourceKind:
+			actual := httpsrc.DefaultConfig(name)
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", kind)
 		}
@@ -325,6 +333,12 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			(*c)[name] = actual
 		case dgraph.ToolKind:
 			actual := dgraph.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case httptool.ToolKind:
+			actual := httptool.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

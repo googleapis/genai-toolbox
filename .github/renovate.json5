@@ -3,7 +3,6 @@
     'config:recommended',
     ':semanticCommits',
     ':ignoreUnstable',
-    'group:allNonMajor',
     ':separateMajorReleases',
     ':prConcurrentLimitNone',
     ':prHourlyLimitNone',
