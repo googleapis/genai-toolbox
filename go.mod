@@ -20,7 +20,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/microsoft/go-mssqldb v1.8.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.0
 	github.com/spf13/cobra v1.8.1
 	go.opentelemetry.io/contrib/propagators/autoprop v0.58.0
 	go.opentelemetry.io/otel v1.35.0
