@@ -18,7 +18,7 @@ require (
 	github.com/goccy/go-yaml v1.15.13
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jackc/pgx/v5 v5.7.4
 	github.com/microsoft/go-mssqldb v1.8.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/spf13/cobra v1.8.1
