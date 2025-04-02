@@ -37,11 +37,11 @@ var _ compatibleSource = &alloydbpg.Source{}
 var compatibleSources = [...]string{alloydbpg.SourceKind}
 
 type Config struct {
-	Name                string          `yaml:"name" validate:"required"`
-	Kind                string          `yaml:"kind" validate:"required"`
-	Source              string          `yaml:"source" validate:"required"`
-	Description         string          `yaml:"description" validate:"required"`
-	NLConfig            string          `yaml:"nlConfig" validate:"required"`
+	Name               string           `yaml:"name" validate:"required"`
+	Kind               string           `yaml:"kind" validate:"required"`
+	Source             string           `yaml:"source" validate:"required"`
+	Description        string           `yaml:"description" validate:"required"`
+	NLConfig           string           `yaml:"nlConfig" validate:"required"`
 	AuthRequired       []string         `yaml:"authRequired"`
 	NLConfigParameters tools.Parameters `yaml:"nlConfigParameters"`
 }
