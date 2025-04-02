@@ -142,7 +142,10 @@ Some complex parameters (such as arrays) may require additional formatting to ma
 ##### JSON
 
 The `json` keyword converts a parameter into a JSON format.
-Note: Using JSON may add quotes to the variable name for certain types (such as strings).
+
+{{< notice note >}}
+Using JSON may add quotes to the variable name for certain types (such as strings).
+{{< /notice >}}
 
 Example:
 
