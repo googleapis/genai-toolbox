@@ -16,8 +16,11 @@ package alloydbpg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"strings"
 
 	"cloud.google.com/go/alloydbconn"
@@ -25,6 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2/google"
 )
 
 const SourceKind string = "alloydb-postgres"
@@ -40,8 +44,8 @@ type Config struct {
 	Cluster  string         `yaml:"cluster" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
+	User     string         `yaml:"user"`
+	Password string         `yaml:"password"`
 	Database string         `yaml:"database" validate:"required"`
 }
 
@@ -97,18 +101,68 @@ func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
 	return opts, nil
 }
 
+// getIAMPrincipalEmailFromADC finds the email associated with Application Default Credentials.
+func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
+	client, err := google.DefaultClient(ctx,
+		"https://www.googleapis.com/auth/userinfo.email")
+	if err != nil {
+		return "", fmt.Errorf("failed to call userinfo endpoint: %w", err)
+	}
+
+	// Call the userinfo endpoint
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		return "", fmt.Errorf("failed to call userinfo endpoint: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("userinfo endpoint returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	// Parse the response
+	var userInfo struct {
+		Email         string `json:"email"`
+		VerifiedEmail bool   `json:"verified_email"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return "", fmt.Errorf("failed to decode userinfo response: %w", err)
+	}
+
+	if userInfo.Email == "" {
+		return "", fmt.Errorf("userinfo response did not contain an email address")
+	}
+
+	return userInfo.Email, nil
+}
+
 func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	var dsn string
+	var err error
+	if user == "" {
+		user, err = getIAMPrincipalEmailFromADC(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("IAM user was not provided and could not be discovered from ADC: %w", err)
+		}
+	}
+	if pass == "" {
+		// Use IAM authentication for db connectionif no password provided
+		dsn = fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+
+	} else {
+		// Use username/password for db connection
+		dsn = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+
+	}
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
-
 	// Create a new dialer with options
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
