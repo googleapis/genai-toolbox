@@ -91,6 +91,6 @@ sources:
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                          |
 | instance  |  string  |     true     | Name of the AlloyDB instance within the cluster (e.g. "my-instance").                      |
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                               |
-| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").                              |
-| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                                       |
+| user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user").                              |
+| password  |  string  |    false     | Password of the Postgres user (e.g. "my-password").                                       |
 | ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`. |
