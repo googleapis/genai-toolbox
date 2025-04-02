@@ -25,7 +25,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const ToolKind string = "alloydb-nla"
+const ToolKind string = "alloydb-ai-nl"
 
 type compatibleSource interface {
 	PostgresPool() *pgxpool.Pool
