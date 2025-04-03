@@ -20,6 +20,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -42,6 +43,7 @@ type Server struct {
 	root            chi.Router
 	logger          log.Logger
 	instrumentation *Instrumentation
+	sseManager      *sseManager
 
 	sources      map[string]sources.Source
 	authServices map[string]auth.AuthService
@@ -203,12 +205,18 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
+	sseManager := &sseManager{
+		mu:          sync.RWMutex{},
+		sseSessions: make(map[string]*sseSession),
+	}
+
 	s := &Server{
 		version:         cfg.Version,
 		srv:             srv,
 		root:            r,
 		logger:          l,
 		instrumentation: instrumentation,
+		sseManager:      sseManager,
 
 		sources:      sourcesMap,
 		authServices: authServicesMap,
