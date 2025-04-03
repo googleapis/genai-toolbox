@@ -62,6 +62,29 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
+func (t MockTool) McpManifest() tools.McpManifest {
+	properties := make(map[string]tools.ParameterMcpManifest)
+	required := make([]string, 0)
+
+	for _, p := range t.Params {
+		name := p.GetName()
+		properties[name] = p.McpManifest()
+		required = append(required, name)
+	}
+
+	toolsSchema := tools.McpToolsSchema{
+		Type:       "object",
+		Properties: properties,
+		Required:   required,
+	}
+
+	return tools.McpManifest{
+		Name:        t.Name,
+		Description: t.Description,
+		InputSchema: toolsSchema,
+	}
+}
+
 var tool1 = MockTool{
 	Name:   "no_params",
 	Params: []tools.Parameter{},
