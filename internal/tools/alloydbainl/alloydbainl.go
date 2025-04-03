@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbnla
+package alloydbainl
 
 import (
 	"context"
@@ -66,39 +66,40 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
-	paramNames := make([]string, 0, len(cfg.NLConfigParameters))
-	for _, paramDef := range cfg.NLConfigParameters {
-		paramNames = append(paramNames, paramDef.GetName())
+	numParams := len(cfg.NLConfigParameters)
+	quotedNameParts := make([]string, 0, numParams)
+	placeholderParts := make([]string, 0, numParams)
+
+	for i, paramDef := range cfg.NLConfigParameters {
+		name := paramDef.GetName()
+		escapedName := strings.ReplaceAll(name, "'", "''") // Escape for SQL literal
+		quotedNameParts = append(quotedNameParts, fmt.Sprintf("'%s'", escapedName))
+		placeholderParts = append(placeholderParts, fmt.Sprintf("$%d", i+2)) // $1 reserved
 	}
-	quotedParamNames := make([]string, len(paramNames))
-	for i, name := range paramNames {
-		// Basic escaping for single quotes within the name itself
-		escapedName := strings.ReplaceAll(name, "'", "''")
-		quotedParamNames[i] = fmt.Sprintf("'%s'", escapedName)
-	}
-	paramNamesSQL := "ARRAY []" // Default for no parameters
-	if len(quotedParamNames) > 0 {
-		paramNamesSQL = fmt.Sprintf("ARRAY [%s]", strings.Join(quotedParamNames, ", "))
-	}
-	paramValuePlaceholders := make([]string, len(paramNames))
-	for i := 0; i < len(paramNames); i++ {
-		// Placeholders start from $2 ($1 is reserved for the natural language query)
-		paramValuePlaceholders[i] = fmt.Sprintf("$%d", i+2)
-	}
-	paramValuesSQL := "ARRAY []" // Default for no parameters
-	if len(paramValuePlaceholders) > 0 {
-		paramValuesSQL = fmt.Sprintf("ARRAY [%s]", strings.Join(paramValuePlaceholders, ", "))
+
+	var paramNamesSQL string
+	var paramValuesSQL string
+
+	if numParams > 0 {
+		paramNamesSQL = fmt.Sprintf("ARRAY[%s]", strings.Join(quotedNameParts, ", "))
+		paramValuesSQL = fmt.Sprintf("ARRAY[%s]", strings.Join(placeholderParts, ", "))
+	} else {
+		paramNamesSQL = "ARRAY[]::TEXT[]"
+		paramValuesSQL = "ARRAY[]::TEXT[]"
 	}
 
 	// execute_nl_query is the AlloyDB AI function that executes the natural language query
 	// The first parameter is the natural language query, which is passed as $1
 	// The second parameter is the NLConfig, which is passed as a string
-	// The third and fourth parameters are the list of nl_config parameter names and values, respectively
+	// The following params are the list of nl_config parameter names and values, respectively
+	// Example SQL statement being executed:
+	// SELECT alloydb_ai_nl.execute_nl_query('How many tickets do I have?', 'cymbal_air_nl_config', param_names => ARRAY ['user_email'], param_values => ARRAY ['hailongli@google.com']);
 	stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query($1, '%s', param_names => %s, param_values => %s);"
 	stmt := fmt.Sprintf(stmtFormat, cfg.NLConfig, paramNamesSQL, paramValuesSQL)
 
+
 	newQuestionParam := tools.NewStringParameter(
-    "question",                      				 // name
+    "question",                              // name
     "The natural language question to ask.", // description
 	)
 
