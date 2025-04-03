@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbnla_test
+package alloydbainl_test
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/alloydbnla"
+	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 )
 
 func TestParseFromYamlAlloyDBNLA(t *testing.T) {
@@ -55,9 +55,9 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 							  field: sub
 			`,
 			want: server.ToolConfigs{
-				"example_tool": alloydbnla.Config{
+				"example_tool": alloydbainl.Config{
 					Name:         "example_tool",
-					Kind:         alloydbnla.ToolKind,
+					Kind:         alloydbainl.ToolKind,
 					Source:       "my-alloydb-instance",
 					Description:  "AlloyDB natural language query tool",
 					NLConfig:     "my_nl_config",
@@ -96,9 +96,9 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 							  field: user_email
 			`,
 			want: server.ToolConfigs{
-				"complex_tool": alloydbnla.Config{
+				"complex_tool": alloydbainl.Config{
 					Name:         "complex_tool",
-					Kind:         alloydbnla.ToolKind,
+					Kind:         alloydbainl.ToolKind,
 					Source:       "my-alloydb-instance",
 					Description:  "AlloyDB natural language query tool with multiple parameters",
 					NLConfig:     "complex_nl_config",
