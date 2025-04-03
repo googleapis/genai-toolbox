@@ -56,7 +56,7 @@ func ToolCall(tool tools.Tool, params tools.ParamValues) CallToolResult {
 			Type: "text",
 			Text: err.Error(),
 		}
-		return CallToolResult{Content: []TextContent{text}}
+		return CallToolResult{Content: []TextContent{text}, IsError: true}
 	}
 
 	content := make([]TextContent, 0)

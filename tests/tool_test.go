@@ -307,7 +307,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T) {
+func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -386,6 +386,23 @@ func RunMCPToolCallMethod(t *testing.T) {
 				},
 			},
 			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"invalid tool name: tool with name \"my-tool\" does not exist"}}`,
+		},
+		{
+			name:          "MCP Invoke my-fail-tool",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: mcp.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke-fail-tool",
+				Request: mcp.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-fail-tool",
+					"arguments": map[string]any{"id": 1},
+				},
+			},
+			want: fail_invocation_want,
 		},
 	}
 	for _, tc := range invokeTcs {

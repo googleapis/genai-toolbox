@@ -93,6 +93,12 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 					"my-google-auth",
 				},
 			},
+			"my-fail-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test statement with incorrect syntax.",
+				"statement":   "SELEC 1;",
+			},
 		},
 	}
 
