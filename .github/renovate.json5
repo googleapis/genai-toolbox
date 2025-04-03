@@ -13,6 +13,9 @@
   dependencyDashboardLabels: [
     'type: process',
   ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
   packageRules: [
     {
       groupName: 'GitHub Actions',
