@@ -10,7 +10,7 @@ description: >
 
 ## About
 
-The "alloydb-ai-nl" tool leverages AlloyDB's next-generation AI natural 
+The `alloydb-ai-nl` tool leverages AlloyDB's next-generation AI natural 
 language feature to allow an Agent the ability to query the database directly 
 using natural language. Natural language streamlines the development of 
 generative AI applications by transferring the complexity of converting 
@@ -49,13 +49,13 @@ the application.
 
 
 `nlConfigParameters` are the list of the parameters and values for the AlloyDB 
-[PSV][alloydb-psv].
+[Parameterized Secure Views (PSVs)][alloydb-psv].
 
 When using this tool, we strongly recommend all the PSV parameters should be 
 from filled with values from an auth service or a bounded param. These 
 parameters should not be visible to the LLM agent.
 
-[Parameterized Secure Views (PSVs)][alloydb-psv] 
+[PSVs][alloydb-psv] 
 are a feature unique to AlloyDB that allow you allow you to require one or 
 more named parameter values passed to the view when querying it, somewhat 
 like bind variables with ordinary database queries. You **must** supply 
