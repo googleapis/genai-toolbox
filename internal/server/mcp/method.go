@@ -15,6 +15,9 @@
 package mcp
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -43,4 +46,29 @@ func ToolsList(toolset tools.Toolset) ListToolsResult {
 		Tools: mcpManifest,
 	}
 	return result
+}
+
+// ToolCall runs tool invocation and return a CallToolResult
+func ToolCall(tool tools.Tool, params tools.ParamValues) CallToolResult {
+	res, err := tool.Invoke(params)
+	if err != nil {
+		text := TextContent{
+			Type: "text",
+			Text: err.Error(),
+		}
+		return CallToolResult{Content: []TextContent{text}}
+	}
+
+	content := make([]TextContent, 0)
+	for _, d := range res {
+		text := TextContent{Type: "text"}
+		dM, err := json.Marshal(d)
+		if err != nil {
+			text.Text = fmt.Sprintf("fail to marshal: %s, result: %s", err, d)
+		} else {
+			text.Text = string(dM)
+		}
+		content = append(content, text)
+	}
+	return CallToolResult{Content: content}
 }

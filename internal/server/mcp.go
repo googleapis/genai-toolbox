@@ -66,13 +66,15 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// Check if method is present
 	if baseMessage.Method == "" {
-		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, "method not found", nil))
+		err := fmt.Errorf("method not found")
+		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil))
 		return
 	}
 
 	// Check for JSON-RPC 2.0
 	if baseMessage.Jsonrpc != mcp.JSONRPC_VERSION {
-		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, "invalid json-rpc version", nil))
+		err := fmt.Errorf("invalid json-rpc version")
+		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil))
 		return
 	}
 
@@ -80,6 +82,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if baseMessage.Id == nil {
 		var notification mcp.JSONRPCNotification
 		if err := json.Unmarshal(body, &notification); err != nil {
+			err := fmt.Errorf("invalid notification request: %w", err)
 			render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
 		}
 		// Notifications do not expect a response
@@ -92,7 +95,8 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	case "initialize":
 		var req mcp.InitializeRequest
 		if err := json.Unmarshal(body, &req); err != nil {
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, fmt.Sprintf("invalid mcp initialize request: %s", err), nil)
+			err := fmt.Errorf("invalid mcp initialize request: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
 		result := mcp.Initialize(s.version)
@@ -104,15 +108,64 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	case "tools/list":
 		var req mcp.ListToolsRequest
 		if err := json.Unmarshal(body, &req); err != nil {
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, fmt.Sprintf("invalid mcp tools list request: %s", err), nil)
+			err := fmt.Errorf("invalid mcp tools list request: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
 		toolset, ok := s.toolsets[""]
 		if !ok {
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, "toolset does not exist", nil)
+			err := fmt.Errorf("toolset does not exist")
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
 		result := mcp.ToolsList(toolset)
+		res = mcp.JSONRPCResponse{
+			Jsonrpc: mcp.JSONRPC_VERSION,
+			Id:      baseMessage.Id,
+			Result:  result,
+		}
+	case "tools/call":
+		var req mcp.CallToolRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			err := fmt.Errorf("invalid mcp tools call request: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
+			break
+		}
+		toolName := req.Params.Name
+		toolArgument := req.Params.Arguments
+		tool, ok := s.tools[toolName]
+		if !ok {
+			err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
+			break
+		}
+
+		// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
+		aMarshal, err := json.Marshal(toolArgument)
+		if err != nil {
+			err := fmt.Errorf("unable to marshal tools argument: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
+			break
+		}
+		var data map[string]any
+		if err = decodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
+			err := fmt.Errorf("unable to decode tools argument: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
+			break
+		}
+
+		// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
+		// Since MCP doesn't support auth, an empty map will be use every time.
+		claimsFromAuth := make(map[string]map[string]any)
+
+		params, err := tool.ParseParams(data, claimsFromAuth)
+		if err != nil {
+			err = fmt.Errorf("provided parameters were invalid: %w", err)
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
+			break
+		}
+
+		result := mcp.ToolCall(tool, params)
 		res = mcp.JSONRPCResponse{
 			Jsonrpc: mcp.JSONRPC_VERSION,
 			Id:      baseMessage.Id,

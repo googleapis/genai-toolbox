@@ -28,6 +28,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -299,6 +300,122 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			got = strings.ReplaceAll(got, "\"", "")
 			want = strings.ReplaceAll(want, "\"", "")
 			if got != want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// RunMCPToolCallMethod runs the tool/call for mcp endpoint
+func RunMCPToolCallMethod(t *testing.T) {
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestBody   mcp.JSONRPCRequest
+		requestHeader map[string]string
+		want          string
+	}{
+		{
+			name:          "MCP Invoke my-param-tool",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: mcp.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "my-param-tool",
+				Request: mcp.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name": "my-param-tool",
+					"arguments": map[string]any{
+						"id":   int(3),
+						"name": "Alice",
+					},
+				},
+			},
+			want: `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+		},
+		{
+			name:          "MCP Invoke invalid tool",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: mcp.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invalid-tool",
+				Request: mcp.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "foo",
+					"arguments": map[string]any{},
+				},
+			},
+			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
+		},
+		{
+			name:          "MCP Invoke my-tool without parameters",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: mcp.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke-without-parameter",
+				Request: mcp.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"invalid tool name: tool with name \"my-tool\" does not exist"}}`,
+		},
+		{
+			name:          "MCP Invoke my-tool with insufficient parameters",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: mcp.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke-insufficient-parameter",
+				Request: mcp.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-tool",
+					"arguments": map[string]any{"id": 1},
+				},
+			},
+			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"invalid tool name: tool with name \"my-tool\" does not exist"}}`,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			reqMarshal, err := json.Marshal(tc.requestBody)
+			if err != nil {
+				t.Fatalf("unexpected error during marshaling of request body")
+			}
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			respBody, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unable to read request body: %s", err)
+			}
+			defer resp.Body.Close()
+			got := string(bytes.TrimSpace(respBody))
+
+			if got != tc.want {
+				fmt.Printf("res is %s\n\n", got)
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
 		})
