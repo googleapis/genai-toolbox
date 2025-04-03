@@ -16,7 +16,6 @@ package server
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -28,6 +27,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 )
 
 type sseSession struct {
@@ -79,17 +81,41 @@ func mcpRouter(s *Server) (chi.Router, error) {
 
 // sseHandler handles sse initialization and message.
 func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp/sse")
+	r = r.WithContext(ctx)
+
+	sessionId := uuid.New().String()
+	span.SetAttributes(attribute.String("session_id", sessionId))
+
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	var err error
+	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		s.instrumentation.McpSse.Add(
+			r.Context(),
+			1,
+			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", sessionId)),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
+		)
+	}()
+
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		err := fmt.Errorf("unable to retrieve flusher for sse")
+		err = fmt.Errorf("unable to retrieve flusher for sse")
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 	}
-	sessionId := uuid.New().String()
 	session := &sseSession{
 		sessionId:  sessionId,
 		writer:     w,
@@ -102,6 +128,7 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// send initial endpoint event
 	messageEndpoint := fmt.Sprintf("http://%s/mcp?sessionId=%s", r.Host, sessionId)
+	s.logger.DebugContext(ctx, fmt.Sprintf("sending endpoint event: %s", messageEndpoint))
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()
 
@@ -111,11 +138,12 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		// Ensure that only a single responses are written at once
 		case event := <-session.eventQueue:
 			fmt.Fprint(w, event)
+			s.logger.DebugContext(ctx, fmt.Sprintf("sending event: %s", event))
 			flusher.Flush()
 			// channel for client disconnection
 		case <-clientClose:
 			close(session.done)
-			s.logger.DebugContext(context.Background(), "client disconnected")
+			s.logger.DebugContext(ctx, "client disconnected")
 			return
 		}
 	}
@@ -123,11 +151,37 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // mcpHandler handles all mcp messages.
 func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
+	r = r.WithContext(ctx)
+
+	var id, toolName, method string
+	var err error
+	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		s.instrumentation.McpPost.Add(
+			r.Context(),
+			1,
+			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", id)),
+			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
+			metric.WithAttributes(attribute.String("toolbox.method", method)),
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
+		)
+	}()
+
 	// Read and returns a body from io.Reader
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		id = uuid.New().String()
+		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
 	}
 
@@ -137,32 +191,37 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		Method  string        `json:"method"`
 		Id      mcp.RequestId `json:"id,omitempty"`
 	}
-	if err := decodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
+	if err = decodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
+		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
 		return
 	}
 
 	// Check if method is present
 	if baseMessage.Method == "" {
-		err := fmt.Errorf("method not found")
+		err = fmt.Errorf("method not found")
+		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil))
 		return
 	}
 
 	// Check for JSON-RPC 2.0
 	if baseMessage.Jsonrpc != mcp.JSONRPC_VERSION {
-		err := fmt.Errorf("invalid json-rpc version")
+		err = fmt.Errorf("invalid json-rpc version")
+		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil))
 		return
 	}
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
+		id = ""
 		var notification mcp.JSONRPCNotification
-		if err := json.Unmarshal(body, &notification); err != nil {
-			err := fmt.Errorf("invalid notification request: %w", err)
+		if err = json.Unmarshal(body, &notification); err != nil {
+			err = fmt.Errorf("invalid notification request: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
 		}
 		// Notifications do not expect a response
@@ -170,13 +229,16 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
+	id = baseMessage.Id.(string)
+	method = baseMessage.Method
 
 	var res mcp.JSONRPCMessage
 	switch baseMessage.Method {
 	case "initialize":
 		var req mcp.InitializeRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			err := fmt.Errorf("invalid mcp initialize request: %w", err)
+		if err = json.Unmarshal(body, &req); err != nil {
+			err = fmt.Errorf("invalid mcp initialize request: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
@@ -188,14 +250,16 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	case "tools/list":
 		var req mcp.ListToolsRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			err := fmt.Errorf("invalid mcp tools list request: %w", err)
+		if err = json.Unmarshal(body, &req); err != nil {
+			err = fmt.Errorf("invalid mcp tools list request: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
 		toolset, ok := s.toolsets[""]
 		if !ok {
-			err := fmt.Errorf("toolset does not exist")
+			err = fmt.Errorf("toolset does not exist")
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
@@ -207,16 +271,18 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	case "tools/call":
 		var req mcp.CallToolRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			err := fmt.Errorf("invalid mcp tools call request: %w", err)
+		if err = json.Unmarshal(body, &req); err != nil {
+			err = fmt.Errorf("invalid mcp tools call request: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
-		toolName := req.Params.Name
+		toolName = req.Params.Name
 		toolArgument := req.Params.Arguments
 		tool, ok := s.tools[toolName]
 		if !ok {
-			err := fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+			err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
 			break
 		}
@@ -224,13 +290,15 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
 		aMarshal, err := json.Marshal(toolArgument)
 		if err != nil {
-			err := fmt.Errorf("unable to marshal tools argument: %w", err)
+			err = fmt.Errorf("unable to marshal tools argument: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
 			break
 		}
 		var data map[string]any
 		if err = decodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
-			err := fmt.Errorf("unable to decode tools argument: %w", err)
+			err = fmt.Errorf("unable to decode tools argument: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
 			break
 		}
@@ -242,6 +310,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		params, err := tool.ParseParams(data, claimsFromAuth)
 		if err != nil {
 			err = fmt.Errorf("provided parameters were invalid: %w", err)
+			s.logger.DebugContext(ctx, err.Error())
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
 			break
 		}
@@ -253,24 +322,26 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			Result:  result,
 		}
 	default:
-		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, fmt.Sprintf("invalid method %s", baseMessage.Method), nil)
+		err = fmt.Errorf("invalid method %s", baseMessage.Method)
+		s.logger.DebugContext(ctx, err.Error())
+		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil)
 	}
 
 	// retrieve sse session
 	sessionId := r.URL.Query().Get("sessionId")
 	session, ok := s.sseManager.get(sessionId)
 	if !ok {
-		s.logger.DebugContext(context.Background(), "sse session not available")
+		s.logger.DebugContext(ctx, "sse session not available")
 	} else {
 		// queue sse event
 		eventData, _ := json.Marshal(res)
 		select {
 		case session.eventQueue <- fmt.Sprintf("event: message\ndata: %s\n\n", eventData):
-			s.logger.DebugContext(context.Background(), "event queue successful")
+			s.logger.DebugContext(ctx, "event queue successful")
 		case <-session.done:
-			s.logger.DebugContext(context.Background(), "session is close")
+			s.logger.DebugContext(ctx, "session is close")
 		default:
-			s.logger.DebugContext(context.Background(), "unable to add to event queue")
+			s.logger.DebugContext(ctx, "unable to add to event queue")
 		}
 	}
 
