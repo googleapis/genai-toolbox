@@ -5,7 +5,7 @@ weight: 1
 description: > 
   The "alloydb-ai-nl" tool leverages AlloyDB's AI next-generation 
   [AI natural language]([alloydb-ai-nl-overview] support to provide the 
-  ability to query the database directly using natural language. 
+  ability to query the database directly using natural language.
 ---
 
 ## About
@@ -26,17 +26,19 @@ of converting natural language to SQL from the application layer to the
 database layer.
 
 ## Requirements
+{{< notice tip >}}
 AlloyDB AI natural language is currently in gated public preview. For more 
 information on availability and limitations, please see 
-[AlloyDB AI natural language overview](!https://cloud.google.com/alloydb/docs/natural-language-questions-overview).
+[AlloyDB AI natural language overview][https://cloud.google.com/alloydb/docs/natural-language-questions-overview].
+{{< /notice >}}
 
 To enable AlloyDB AI natural language for your AlloyDB cluster, please follow 
-the steps listed in the [Generate SQL queries that answer natural language questions](!https://cloud.google.com/alloydb/docs/alloydb/docs/ai/generate-queries-natural-language), including 
-enabling the extension and configuring context for your application.
+the steps listed in the [Generate SQL queries that answer natural language questions][alloydb-ai-gen-nl], including enabling the extension and configuring context for your application.
+
+[alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/alloydb/docs/ai/generate-queries-natural-language
 
 
 ## Configuration
-
 ### Configuration ID
 `nlConfig` is the name of the `nl_config` created in AlloyDB. A `nl_config` 
 is a configuration associates an application to schema objects, examples and 
@@ -47,13 +49,13 @@ the application.
 
 
 `nlConfigParameters` are the list of the parameters and values for the AlloyDB 
-[PSV (parameterized secure views)](!https://cloud.google.com/alloydb/docs/ai/use-psvs#sanitize_queries_with_parameterized_secure_views).
+[PSV][alloydb-psv].
 
 When using this tool, we strongly recommend all the PSV parameters should be 
 from filled with values from an auth service or a bounded param. These 
 parameters should not be visible to the LLM agent.
 
-[Parameterized Secure Views (PSVs)](!https://cloud.google.com/alloydb/docs/ai/use-psvs#parameterized_secure_views) 
+[Parameterized Secure Views (PSVs)][alloydb-psv] 
 are a feature unique to AlloyDB that allow you allow you to require one or 
 more named parameter values passed to the view when querying it, somewhat 
 like bind variables with ordinary database queries. You **must** supply 
@@ -61,6 +63,7 @@ all parameters required for all PSVs in the context. These parameters can be
 used with features like [Authenticated Parameters](../tools/#array-parameters) 
 to provide secure access to queries generated using natural language.
 
+[alloydb-psv]: https://cloud.google.com/alloydb/docs/ai/use-psvs#parameterized_secure_views
 
 ## Example
 
