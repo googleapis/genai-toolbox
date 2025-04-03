@@ -149,8 +149,9 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	RunToolGetTest(t)
 
 	select_1_want := "[{\"?column?\":1}]"
+	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
 	RunToolInvokeTest(t, select_1_want)
-	RunMCPToolCallMethod(t)
+	RunMCPToolCallMethod(t, fail_invocation_want)
 }
 
 // Test connection with different IP type
