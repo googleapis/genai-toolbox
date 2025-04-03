@@ -100,8 +100,8 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	s.sseManager.add(sessionId, session)
 	defer s.sseManager.remove(sessionId)
 
-	// send initil endpoint event
-	messageEndpoint := fmt.Sprintf("http://127.0.0.1:5000/mcp?sessionId=%s", sessionId)
+	// send initial endpoint event
+	messageEndpoint := fmt.Sprintf("http://%s/mcp?sessionId=%s", r.Host, sessionId)
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()
 
@@ -167,6 +167,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
+		w.WriteHeader(http.StatusAccepted)
 		return
 	}
 

@@ -292,5 +292,4 @@ type CallToolResult struct {
 	// Whether the tool call ended in an error.
 	// If not set, this is assumed to be false (the call was successful).
 	IsError bool                `json:"isError,omitempty"`
-	Tools   []tools.McpManifest `json:"tools"`
 }
