@@ -14,6 +14,10 @@
 
 package mcp
 
+import (
+	"github.com/googleapis/genai-toolbox/internal/tools"
+)
+
 // SERVER_NAME is the server name used in Implementation.
 const SERVER_NAME = "Toolbox"
 
@@ -187,4 +191,38 @@ type ServerCapabilities struct {
 type Implementation struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
+}
+
+/* Pagination */
+
+// Cursor is an opaque token used to represent a cursor for pagination.
+type Cursor string
+
+type PaginatedRequest struct {
+	Request
+	Params struct {
+		// An opaque token representing the current pagination position.
+		// If provided, the server should return results starting after this cursor.
+		Cursor Cursor `json:"cursor,omitempty"`
+	} `json:"params,omitempty"`
+}
+
+type PaginatedResult struct {
+	Result
+	// An opaque token representing the pagination position after the last returned result.
+	// If present, there may be more results available.
+	NextCursor Cursor `json:"nextCursor,omitempty"`
+}
+
+/* Tools */
+
+// Sent from the client to request a list of tools the server has.
+type ListToolsRequest struct {
+	PaginatedRequest
+}
+
+// The server's response to a tools/list request from the client.
+type ListToolsResult struct {
+	PaginatedResult
+	Tools []tools.McpManifest `json:"tools"`
 }
