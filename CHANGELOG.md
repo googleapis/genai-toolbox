@@ -1,5 +1,6 @@
 # Changelog
 
+
 ## [0.3.0](https://github.com/googleapis/genai-toolbox/compare/v0.2.1...v0.3.0) (2025-04-04)
 
 
@@ -8,7 +9,7 @@
 * Add 'alloydb-ai-nl' tool ([#358](https://github.com/googleapis/genai-toolbox/issues/358)) ([f02885f](https://github.com/googleapis/genai-toolbox/commit/f02885fd4a919103fdabaa4ca38d975dc8497542))
 * Add HTTP Source and Tool ([#332](https://github.com/googleapis/genai-toolbox/issues/332)) ([64da5b4](https://github.com/googleapis/genai-toolbox/commit/64da5b4efe7d948ceb366c37fdaabd42405bc932))
 * Adding support for Model Context Protocol (MCP). ([#396](https://github.com/googleapis/genai-toolbox/issues/396)) ([a7d1d4e](https://github.com/googleapis/genai-toolbox/commit/a7d1d4eb2ae337b463d1b25ccb25c3c0eb30df6f))
-Added [toolbox-core](https://pypi.org/project/toolbox-core/) SDK – easily integrate Toolbox into any Python function calling framework
+* Added [toolbox-core](https://pypi.org/project/toolbox-core/) SDK – easily integrate Toolbox into any Python function calling framework
 
 
 ### Bug Fixes
