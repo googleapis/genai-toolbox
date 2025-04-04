@@ -7,7 +7,7 @@ description: >
 ---
 
 ## Toolbox SDKs vs Model Context Protocol (MCP)
-Toolbox now supports connect via both our native Toolbox SDKs and via [Model Context Protocol (MCP)](include link). However, Toolbox as several features which are not supported in the MCP specification (such as Authenticated Parameters and Authorized invocation). 
+Toolbox now supports connections via both the native Toolbox SDKs and via [Model Context Protocol (MCP)](include link). However, Toolbox as several features which are not supported in the MCP specification (such as Authenticated Parameters and Authorized invocation). 
 
 We recommend using the native SDKs over MCP clients to leverage these features. The native SDKs can be combined with MCP clients in many cases. 
 
@@ -24,7 +24,7 @@ Toolbox has several features that are not yet supported in the MCP specification
 * **Notifications:** Currently, editing Toolbox Tools requires a server restart. Clients should reload tools on disconnect to get the latest version. 
 
 
-## Connecting to Toolbox with a MCP client
+## Connecting to Toolbox with an MCP client
 ### Before you begin
 
 {{< notice note >}} 
