@@ -74,7 +74,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		name := paramDef.GetName()
 		escapedName := strings.ReplaceAll(name, "'", "''") // Escape for SQL literal
 		quotedNameParts = append(quotedNameParts, fmt.Sprintf("'%s'", escapedName))
-		placeholderParts = append(placeholderParts, fmt.Sprintf("$%d", i+2)) // $1 reserved
+		placeholderParts = append(placeholderParts, fmt.Sprintf("$%d", i + 3)) // $1, $2 reserved
 	}
 
 	var paramNamesSQL string
@@ -90,12 +90,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// execute_nl_query is the AlloyDB AI function that executes the natural language query
 	// The first parameter is the natural language query, which is passed as $1
-	// The second parameter is the NLConfig, which is passed as a string
-	// The following params are the list of nl_config parameter names and values, respectively
+	// The second parameter is the NLConfig, which is passed as a $2
+	// The following params are the list of PSV values passed to the NLConfig
 	// Example SQL statement being executed:
 	// SELECT alloydb_ai_nl.execute_nl_query('How many tickets do I have?', 'cymbal_air_nl_config', param_names => ARRAY ['user_email'], param_values => ARRAY ['hailongli@google.com']);
-	stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query($1, '%s', param_names => %s, param_values => %s);"
-	stmt := fmt.Sprintf(stmtFormat, cfg.NLConfig, paramNamesSQL, paramValuesSQL)
+	stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query($1, $2, param_names => %s, param_values => %s);"
+	stmt := fmt.Sprintf(stmtFormat, paramNamesSQL, paramValuesSQL)
 
 
 	newQuestionParam := tools.NewStringParameter(
@@ -110,6 +110,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         ToolKind,
 		Parameters:   cfg.NLConfigParameters,
 		Statement:    stmt,
+		NLConfig:     cfg.NLConfig,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.PostgresPool(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest()},
@@ -129,14 +130,22 @@ type Tool struct {
 
 	Pool      *pgxpool.Pool
 	Statement string
+	NLConfig  string
 	manifest  tools.Manifest
 }
 
 func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
-	results, err := t.Pool.Query(context.Background(), t.Statement, sliceParams...)
+	allParamValues := make([]any, len(sliceParams)+1)
+	allParamValues[0] = fmt.Sprintf("%s", sliceParams[0]) // nl_question
+	allParamValues[1] = fmt.Sprintf("%s", t.NLConfig)     // nl_config
+	for i, param := range sliceParams[1:] {
+		allParamValues[i+2] = fmt.Sprintf("%s", param)
+	}
+
+	results, err := t.Pool.Query(context.Background(), t.Statement, allParamValues...)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v", err, t.Statement, sliceParams)
+		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v", err, t.Statement, allParamValues)
 	}
 
 	fields := results.FieldDescriptions()
