@@ -66,6 +66,27 @@ steps:
       - |
         go test -race -v -tags=integration,alloydb ./tests
 
+  - id: "alloydb-ai-nl"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "ALLOYDB_AI_NL_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_AI_NL_CLUSTER=$_ALLOYDB_AI_NL_CLUSTER"
+      - "ALLOYDB_AI_NL_INSTANCE=$_ALLOYDB_AI_NL_INSTANCE"
+      - "ALLOYDB_AI_NL_DATABASE=$_DATABASE_NAME"
+      - "ALLOYDB_AI_NL_REGION=$_REGION"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["ALLOYDB_AI_NL_USER", "ALLOYDB_AI_NL_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,alloydb_ai_nl ./tests
+
   - id: "postgres"
     name: golang:1
     waitFor: ["install-dependencies"]
@@ -239,6 +260,10 @@ availableSecrets:
       env: ALLOYDB_POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/alloydb_pg_pass/versions/latest
       env: ALLOYDB_POSTGRES_PASS
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_ai_nl_user/versions/latest
+      env: ALLOYDB_AI_NL_USER
+    - versionName: projects/$PROJECT_ID/secrets/alloydb_ai_nl_pass/versions/latest
+      env: ALLOYDB_AI_NL_PASS
     - versionName: projects/$PROJECT_ID/secrets/postgres_user/versions/latest
       env: POSTGRES_USER
     - versionName: projects/$PROJECT_ID/secrets/postgres_pass/versions/latest
@@ -281,6 +306,8 @@ substitutions:
   _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
   _ALLOYDB_POSTGRES_CLUSTER: "alloydb-pg-testing"
   _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"
+  _ALLOYDB_AI_NL_CLUSTER: "alloydb-ai-nl-testing"
+  _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
