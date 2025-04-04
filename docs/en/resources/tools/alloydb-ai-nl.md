@@ -3,7 +3,7 @@ title: "alloydb-ai-nl"
 type: docs
 weight: 1
 description: > 
-  The "alloydb-ai-nl" tool leverages AlloyDB's AI next-generation 
+  The "alloydb-ai-nl" tool leverages [AlloyDB AI](https://cloud.google.com/alloydb/ai) next-generation 
   AI natural language support to provide the 
   ability to query the database directly using natural language.
 ---
