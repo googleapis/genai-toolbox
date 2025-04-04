@@ -95,8 +95,8 @@ All custom metrics have the following attributes/labels:
 |----------------------------|-----------------------------------------------------------|
 | `toolbox.name`             | Name of the toolset or tool, if applicable.               |
 | `toolbox.operation.status` | Operation status code, for example: `success`, `failure`. |
-| `toolbox.sse.sessionId`    | Session Id for sse connection, if applicable.             |
-| `toolbox.method`           | Method for MCP connection, only MCP POST metrics.         |
+| `toolbox.sse.sessionId`    | Session id for sse connection, if applicable.             |
+| `toolbox.method`           | Method of JSON-RPC request, if applicable.                |
 
 ### Traces
 

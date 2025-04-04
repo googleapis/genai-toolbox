@@ -1,5 +1,5 @@
 ---
-title: "Quickstart"
+title: "Quickstart (Local)"
 type: docs
 weight: 2
 description: >

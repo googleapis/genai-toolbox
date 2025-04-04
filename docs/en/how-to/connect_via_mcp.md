@@ -18,8 +18,8 @@ Toolbox currently supports the following versions of MCP specification:
 ### Unavailable features when using MCP
 Toolbox has several features that are not yet supported in the MCP specification:
 * **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05` specification. This includes:
-  * Authenticated Parameters
-  * Authorized Invocations 
+  * [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
+  * [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
 * **Toolsets**: MCP does not have the concept of toolset. Hence, all tools are automatically loaded when using Toolbox with MCP.
 * **Notifications:** Currently, editing Toolbox Tools requires a server restart. Clients should reload tools on disconnect to get the latest version. 
 
@@ -35,32 +35,30 @@ MCP is only compatible with Toolbox version 0.3.0 and above.
 
 1. Make sure you've set up and initialized your database.
 
-1. Set up your `tools.yaml` file.
+1. [Set up](../getting-started/configure.md) your `tools.yaml` file.
 
 ### Connecting via HTTP
+Toolbox supports the HTTP transport protocol with and without SSE.
 
-To connect with MCP client that supports HTTP transport with SSE, add the following configuration to your MCP client configuration:
+{{< tabpane text=true >}} {{% tab header="HTTP with SSE" lang="en" %}}
+Add the following configuration to your MCP client configuration:
 ```bash
 {
   "mcpServers": {
     "toolbox": {
       "type": "sse",
-      "url": "https://127.0.0.1:5000/mcp/sse",
+      "url": "http://127.0.0.1:5000/mcp/sse",
     }
   }
 }
-
 ```
-
-### Connecting via HTTP
-
-To connect with MCP client that support HTTP transport without SSE, you can
-connect via `https://127.0.0.1:5000/mcp`.
-
+{{% /tab %}} {{% tab header="HTTP POST" lang="en" %}}
+Connect to Toolbox HTTP POST via `http://127.0.0.1:5000/mcp`.
+{{% /tab %}} {{< /tabpane >}}
 
 ### Using the MCP Inspect with Toolbox
 
-Use MCP Inspector for testing and debugging Toolbox server.
+Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testing and debugging Toolbox server.
 
 1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
 

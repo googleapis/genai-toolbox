@@ -1,10 +1,15 @@
 ---
 title: "Quickstart (MCP)"
 type: docs
-weight: 2
+weight: 3
 description: >
   How to get started running Toolbox locally with MCP Inspector. 
 ---
+
+## Overview
+[Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
+that standardizes how applications provide context to LLMs. Check out this page
+on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
 
 ## Step 1: Set up your database
 
