@@ -192,3 +192,57 @@ func TestAlloyDBIpConnection(t *testing.T) {
 		})
 	}
 }
+
+// Test IAM connection
+func TestAlloyDBIAMConnection(t *testing.T) {
+	getAlloyDBPgVars(t)
+	noPassSourceConfig := map[string]any{
+		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+		"user":     SERVICE_ACCOUNT_EMAIL,
+	}
+
+	noUserSourceConfig := map[string]any{
+		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+		"password": "random",
+	}
+	noUserNoPassSourceConfig := map[string]any{
+		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+	}
+	tcs := []struct {
+		name         string
+		sourceConfig map[string]any
+	}{
+		{
+			name:         "no user no pass",
+			sourceConfig: noUserNoPassSourceConfig,
+		},
+		{
+			name:         "no password",
+			sourceConfig: noPassSourceConfig,
+		},
+		{
+			name:         "no user",
+			sourceConfig: noUserSourceConfig,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			RunSourceConnectionTest(t, tc.sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+		})
+	}
+}
