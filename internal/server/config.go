@@ -30,7 +30,7 @@ import (
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	mysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mysql"
-	neo4jrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	neo4jsrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	postgressrc "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -190,8 +190,8 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
-		case neo4jrc.SourceKind:
-			actual := neo4jrc.Config{Name: name}
+		case neo4jsrc.SourceKind:
+			actual := neo4jsrc.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
