@@ -196,6 +196,9 @@ func TestAlloyDBIpConnection(t *testing.T) {
 // Test IAM connection
 func TestAlloyDBIAMConnection(t *testing.T) {
 	getAlloyDBPgVars(t)
+	// service account email used for IAM should trim the suffix
+	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
+
 	noPassSourceConfig := map[string]any{
 		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
 		"project":  ALLOYDB_POSTGRES_PROJECT,
@@ -203,7 +206,7 @@ func TestAlloyDBIAMConnection(t *testing.T) {
 		"instance": ALLOYDB_POSTGRES_INSTANCE,
 		"region":   ALLOYDB_POSTGRES_REGION,
 		"database": ALLOYDB_POSTGRES_DATABASE,
-		"user":     SERVICE_ACCOUNT_EMAIL,
+		"user":     serviceAccountEmail,
 	}
 
 	noUserSourceConfig := map[string]any{
@@ -215,6 +218,7 @@ func TestAlloyDBIAMConnection(t *testing.T) {
 		"database": ALLOYDB_POSTGRES_DATABASE,
 		"password": "random",
 	}
+
 	noUserNoPassSourceConfig := map[string]any{
 		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
 		"project":  ALLOYDB_POSTGRES_PROJECT,
