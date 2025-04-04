@@ -10,7 +10,7 @@ description: >
 
 ## About
 
-The `alloydb-ai-nl` tool leverages [AlloyDB's next-generation AI natural language][alloydb-ai-nl-overview] 
+The `alloydb-ai-nl` tool leverages [AlloyDB AI next-generation natural language][alloydb-ai-nl-overview] 
 to allow an Agent the ability to query the database directly
 using natural language. Natural language streamlines the development of 
 generative AI applications by transferring the complexity of converting 
