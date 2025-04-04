@@ -107,13 +107,14 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 
 // getIAMPrincipalEmailFromADC finds the email associated with ADC
 func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
+	// Finds ADC and returns an HTTP client associated with it
 	client, err := google.DefaultClient(ctx,
 		"https://www.googleapis.com/auth/userinfo.email")
 	if err != nil {
 		return "", fmt.Errorf("failed to call userinfo endpoint: %w", err)
 	}
 
-	// Call the userinfo endpoint
+	// Retrieve the email associated with the token
 	resp, err := client.Get("https://oauth2.googleapis.com/tokeninfo")
 	if err != nil {
 		return "", fmt.Errorf("failed to call tokeninfo endpoint: %w", err)
@@ -128,6 +129,7 @@ func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("tokeninfo endpoint returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
+	// Unmarshal response body and get `email`
 	var responseJSON map[string]any
 	err = json.Unmarshal(bodyBytes, &responseJSON)
 	if err != nil {
@@ -139,11 +141,12 @@ func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("email not found in response: %v", err)
 	}
+	// service account email used for IAM should trim the suffix
 	email := strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com")
 	return email, nil
 }
 
-func getConnnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
+func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
 	useIAM := true
 
 	// username and password both provided, use password authentication
@@ -170,7 +173,7 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	dsn, useIAM, err := getConnnectionConfig(ctx, user, pass, dbname)
+	dsn, useIAM, err := getConnectionConfig(ctx, user, pass, dbname)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get AlloyDB connection config: %w", err)
 	}
