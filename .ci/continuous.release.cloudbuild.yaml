@@ -130,7 +130,6 @@ options:
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
-  machineType: 'E2_HIGHCPU_8'
 
 substitutions:
   _REGION: us-central1
