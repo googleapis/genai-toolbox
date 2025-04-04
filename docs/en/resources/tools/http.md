@@ -109,7 +109,7 @@ my-http-tool:
 
 ### Request body
 
-The request body payload is a string that supports parameter replacement with following [Go template][go-template-doc]'s annotations.
+The request body payload is a string that supports parameter replacement following [Go template][go-template-doc]'s annotations.
 The parameter names in the `requestBody` should be preceded by "." and enclosed by double curly brackets "{{}}". The values will be populated into the request body payload upon Tool invocation.
 
 Example:
