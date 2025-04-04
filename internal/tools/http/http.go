@@ -91,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
 
-	// Create parameter manifest
+	// Create parameter MCP manifest
 	paramManifest := slices.Concat(
 		cfg.QueryParams.Manifest(),
 		cfg.BodyParams.Manifest(),
@@ -101,19 +101,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	// Create parameter manifest
 	queryMcpManifest := cfg.QueryParams.McpManifest()
 	bodyMcpManifest := cfg.BodyParams.McpManifest()
 	headerMcpManifest := cfg.HeaderParams.McpManifest()
 
-	// Concatenate all parameters required field
+	// Concatenate parameters for MCP `required` field
 	concatRequiredManifest := slices.Concat(
 		queryMcpManifest.Required,
 		bodyMcpManifest.Required,
 		headerMcpManifest.Required,
 	)
 
-	// Concatenate all parameters properties field
+	// Concatenate parameters for MCP `properties` field
 	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
 	for name, p := range queryMcpManifest.Properties {
 		concatPropertiesManifest[name] = p
