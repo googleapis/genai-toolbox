@@ -4,14 +4,14 @@ type: docs
 weight: 1
 description: > 
   The "alloydb-ai-nl" tool leverages AlloyDB's AI next-generation 
-  [AI natural language]([alloydb-ai-nl-overview] support to provide the 
+  AI natural language support to provide the 
   ability to query the database directly using natural language.
 ---
 
 ## About
 
-The `alloydb-ai-nl` tool leverages AlloyDB's next-generation AI natural 
-language feature to allow an Agent the ability to query the database directly 
+The `alloydb-ai-nl` tool leverages [AlloyDB's next-generation AI natural language][alloydb-ai-nl-overview] 
+to allow an Agent the ability to query the database directly
 using natural language. Natural language streamlines the development of 
 generative AI applications by transferring the complexity of converting 
 natural language to SQL from the application layer to the database layer. 
@@ -29,39 +29,40 @@ database layer.
 {{< notice tip >}}
 AlloyDB AI natural language is currently in gated public preview. For more 
 information on availability and limitations, please see 
-[AlloyDB AI natural language overview][https://cloud.google.com/alloydb/docs/natural-language-questions-overview].
+[AlloyDB AI naturaloverview language ][alloydb-ai-nl-overview]
 {{< /notice >}}
 
 To enable AlloyDB AI natural language for your AlloyDB cluster, please follow 
 the steps listed in the [Generate SQL queries that answer natural language questions][alloydb-ai-gen-nl], including enabling the extension and configuring context for your application.
 
+[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/natural-language-questions-overview
 [alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/alloydb/docs/ai/generate-queries-natural-language
 
 
 ## Configuration
-### Configuration ID
-`nlConfig` is the name of the `nl_config` created in AlloyDB. A `nl_config` 
-is a configuration associates an application to schema objects, examples and 
-other contexts that can be used. A large application can also use different 
-configurations for different parts of the app, as long as the right 
-configuration can be specified when a question is sent from that part of 
-the application.
+	
+### Specifying an `nl_config`
+A `nl_config` is a configuration associates an application to schema objects, 
+examples and other contexts that can be used. A large application can also 
+use different configurations for different parts of the app, as long as the 
+right configuration can be specified when a question is sent from that part 
+of the application.
+	
+Once you've follow the steps for configuring context, you can use the `context` 
+field when configuring a `alloydb-ai-nl` tool. When this tool is invoked, the 
+SQL will be generated and executed using this context.
 
+### Specifying Parameters to PSV's
 
-`nlConfigParameters` are the list of the parameters and values for the AlloyDB 
-[Parameterized Secure Views (PSVs)][alloydb-psv].
+[Parameterized Secure Views (PSVs)][alloydb-psv] are a feature unique to AlloyDB 
+that allow you allow you to require one or more named parameter values passed 
+to the view when querying it, somewhat like bind variables with ordinary database queries. 
 
-When using this tool, we strongly recommend all the PSV parameters should be 
-from filled with values from an auth service or a bounded param. These 
-parameters should not be visible to the LLM agent.
-
-[PSVs][alloydb-psv] 
-are a feature unique to AlloyDB that allow you allow you to require one or 
-more named parameter values passed to the view when querying it, somewhat 
-like bind variables with ordinary database queries. You **must** supply 
-all parameters required for all PSVs in the context. These parameters can be 
-used with features like [Authenticated Parameters](../tools/#array-parameters) 
-to provide secure access to queries generated using natural language.
+You can use the `nlConfigParameters` to list the parameters required for your 
+`nl_config`. You **must** supply all parameters required for all PSVs in the context. 
+It's strongly recommended to use features like [Authenticated Parameters](../tools/#array-parameters) 
+or Bound Parameters to provide secure access to queries generated using natural language, as these 
+parameters are not visible to the LLM.
 
 [alloydb-psv]: https://cloud.google.com/alloydb/docs/ai/use-psvs#parameterized_secure_views
 

@@ -99,8 +99,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 
 	newQuestionParam := tools.NewStringParameter(
-    "question",                              // name
-    "The natural language question to ask.", // description
+		"question",                              // name
+		"The natural language question to ask.", // description
 	)
 
 	cfg.NLConfigParameters = append([]tools.Parameter{newQuestionParam}, cfg.NLConfigParameters...)
