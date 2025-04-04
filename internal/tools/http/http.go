@@ -101,6 +101,37 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
+	// Create parameter manifest
+	queryMcpManifest := cfg.QueryParams.McpManifest()
+	bodyMcpManifest := cfg.BodyParams.McpManifest()
+	headerMcpManifest := cfg.HeaderParams.McpManifest()
+
+	// Concatenate all parameters required field
+	concatRequiredManifest := slices.Concat(
+		queryMcpManifest.Required,
+		bodyMcpManifest.Required,
+		headerMcpManifest.Required,
+	)
+
+	// Concatenate all parameters properties field
+	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
+	for name, p := range queryMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+	for name, p := range bodyMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+	for name, p := range headerMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+
+	// Create a new McpToolsSchema with all parameters
+	paramMcpManifest := tools.McpToolsSchema{
+		Type:       "object",
+		Properties: concatPropertiesManifest,
+		Required:   concatRequiredManifest,
+	}
+
 	// Verify there are no duplicate parameter names
 	seenNames := make(map[string]bool)
 	for _, param := range paramManifest {
@@ -108,6 +139,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
 		}
 		seenNames[param.Name] = true
+	}
+
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: paramMcpManifest,
 	}
 
 	// finish tool setup
@@ -125,6 +162,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Client:       s.Client,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
+		mcpManifest:  mcpManifest,
 	}, nil
 }
 
@@ -146,8 +184,9 @@ type Tool struct {
 	HeaderParams tools.Parameters  `yaml:"headerParams"`
 	AllParams    tools.Parameters  `yaml:"allParams"`
 
-	Client   *http.Client
-	manifest tools.Manifest
+	Client      *http.Client
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 // helper function to convert a parameter to JSON formatted string.
@@ -269,6 +308,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
+}
+
+func (t Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
