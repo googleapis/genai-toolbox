@@ -3,30 +3,28 @@ title: "Connect via MCP Client"
 type: docs
 weight: 1
 description: >
-  How to connect to Toolbox from MCP Client.
+  How to connect to Toolbox from a MCP Client.
 ---
 
-## Toolbox support for MCP
-To ensure a seamless compatibility between MCP and Toolbox, we provide a native
-integration of MCP.
+## Toolbox SDKs vs Model Context Protocol (MCP)
+Toolbox now supports connect via both our native Toolbox SDKs and via [Model Context Protocol (MCP)](include link). However, Toolbox as several features which are not supported in the MCP specification (such as Authenticated Parameters and Authorized invocation). 
+
+We recommend using the native SDKs over MCP clients to leverage these features. The native SDKs can be combined with MCP clients in many cases. 
 
 ### Protocol Versions
 Toolbox currently supports the following versions of MCP specification:
 * 2024-11-05
 
-### What do we not support with Toolbox MCP
-There are certain features within the MCP specification that we are not/not yet
-supporting:
-* Auth: There are no auth implementation in the `2024-11-05` specification.
-* Toolsets: MCP does not have the concept of toolset. Hence, all tools are
-  automatically loaded when using Toolbox with MCP.
-* Notifications: We do not provide list changed notifications for Tools.
-* Optional Parameters: We have found that LLM performs better without optional
-  parameter, hence it is not currently supported in the beta version of Toolbox.
-  All parameters are treated as required.
+### Unavailable features when using MCP
+Toolbox has several features that are not yet supported in the MCP specification:
+* **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05` specification. This includes:
+  * Authenticated Parameters
+  * Authorized Invocations 
+* **Toolsets**: MCP does not have the concept of toolset. Hence, all tools are automatically loaded when using Toolbox with MCP.
+* **Notifications:** Currently, editing Toolbox Tools requires a server restart. Clients should reload tools on disconnect to get the latest version. 
 
 
-## Using Toolbox with MCP Client
+## Connecting to Toolbox with a MCP client
 ### Before you begin
 
 {{< notice note >}} 
@@ -39,7 +37,7 @@ MCP is only compatible with Toolbox version 0.3.0 and above.
 
 1. Set up your `tools.yaml` file.
 
-### Connecting via HTTP (SSE)
+### Connecting via HTTP
 
 To connect with MCP client that supports HTTP transport with SSE, add the following configuration to your MCP client configuration:
 ```bash
@@ -60,7 +58,7 @@ To connect with MCP client that support HTTP transport without SSE, you can
 connect via `https://127.0.0.1:5000/mcp`.
 
 
-### Debug your Toolbox with the MCP Inspector
+### Using the MCP Inspect with Toolbox
 
 Use MCP Inspector for testing and debugging Toolbox server.
 

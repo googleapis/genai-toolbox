@@ -80,5 +80,5 @@ with clients in their preferred language. As Gen AI matures, we want developers 
 
 ## Is Toolbox compatible with Model Context Protocol (MCP)? 
 
-Yes! Toolbox is compatible with MCP. Please checkout this [guide](../how-to/connect_via_mcp.md) on how to
-use toolbox with your MCP Client.
+Yes! Toolbox is compatible with [Anthropic's Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via MCP](../how-to/connect_via_mcp.md) on how to
+connect to Toolbox with an MCP client.

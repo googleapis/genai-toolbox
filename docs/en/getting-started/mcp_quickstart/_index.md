@@ -1,5 +1,5 @@
 ---
-title: "MCP Quickstart"
+title: "Quickstart (MCP)"
 type: docs
 weight: 2
 description: >
