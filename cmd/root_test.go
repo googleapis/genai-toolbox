@@ -189,13 +189,18 @@ func TestToolFileFlag(t *testing.T) {
 		},
 		{
 			desc: "foo file",
-			args: []string{"--tools_file", "foo.yaml"},
+			args: []string{"--tools-file", "foo.yaml"},
 			want: "foo.yaml",
 		},
 		{
 			desc: "address long",
-			args: []string{"--tools_file", "bar.yaml"},
+			args: []string{"--tools-file", "bar.yaml"},
 			want: "bar.yaml",
+		},
+		{
+			desc: "deprecated flag",
+			args: []string{"--tools_file", "foo.yaml"},
+			want: "foo.yaml",
 		},
 	}
 	for _, tc := range tcs {
