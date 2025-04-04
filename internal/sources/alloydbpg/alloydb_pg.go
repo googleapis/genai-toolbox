@@ -88,7 +88,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
+func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error) {
 	opts := []alloydbconn.Option{alloydbconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {
 	case "private":
@@ -98,10 +98,14 @@ func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
+
+	if useIAM {
+		opts = append(opts, alloydbconn.WithIAMAuthN())
+	}
 	return opts, nil
 }
 
-// getIAMPrincipalEmailFromADC finds the email associated with Application Default Credentials.
+// getIAMPrincipalEmailFromADC finds the email associated with ADC
 func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 	client, err := google.DefaultClient(ctx,
 		"https://www.googleapis.com/auth/userinfo.email")
@@ -110,31 +114,55 @@ func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 	}
 
 	// Call the userinfo endpoint
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	resp, err := client.Get("https://oauth2.googleapis.com/tokeninfo")
 	if err != nil {
-		return "", fmt.Errorf("failed to call userinfo endpoint: %w", err)
+		return "", fmt.Errorf("failed to call tokeninfo endpoint: %w", err)
 	}
 	defer resp.Body.Close()
 
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body %d: %s", resp.StatusCode, string(bodyBytes))
+	}
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("userinfo endpoint returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
+		return "", fmt.Errorf("tokeninfo endpoint returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	// Parse the response
-	var userInfo struct {
-		Email         string `json:"email"`
-		VerifiedEmail bool   `json:"verified_email"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		return "", fmt.Errorf("failed to decode userinfo response: %w", err)
+	var responseJSON map[string]any
+	err = json.Unmarshal(bodyBytes, &responseJSON)
+	if err != nil {
+
+		return "", fmt.Errorf("error parsing JSON: %v", err)
 	}
 
-	if userInfo.Email == "" {
-		return "", fmt.Errorf("userinfo response did not contain an email address")
+	emailValue, ok := responseJSON["email"]
+	if !ok {
+		return "", fmt.Errorf("email not found in response: %v", err)
 	}
+	email := strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com")
+	return email, nil
+}
 
-	return userInfo.Email, nil
+func getConnnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
+	useIAM := true
+
+	// username and password both provided, use password authentication
+	if user != "" && pass != "" {
+		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+		useIAM = false
+		return dsn, useIAM, nil
+	}
+	// use IAM authentication if use/pass are not both provided
+	if user == "" {
+		email, err := getIAMPrincipalEmailFromADC(ctx)
+		if err != nil {
+			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
+		}
+		user = email
+	}
+	// Use IAM authentication for db connectionif no password provided
+	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+	return dsn, useIAM, nil
 }
 
 func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
@@ -142,23 +170,11 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	var dsn string
-	var err error
-	if user == "" {
-		user, err = getIAMPrincipalEmailFromADC(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("IAM user was not provided and could not be discovered from ADC: %w", err)
-		}
+	dsn, useIAM, err := getConnnectionConfig(ctx, user, pass, dbname)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get AlloyDB connection config: %w", err)
 	}
-	if pass == "" {
-		// Use IAM authentication for db connectionif no password provided
-		dsn = fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
 
-	} else {
-		// Use username/password for db connection
-		dsn = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
-
-	}
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
@@ -168,7 +184,7 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	if err != nil {
 		return nil, err
 	}
-	opts, err := getOpts(ipType, userAgent)
+	opts, err := getOpts(ipType, userAgent, useIAM)
 	if err != nil {
 		return nil, err
 	}
