@@ -274,7 +274,6 @@ options:
   dynamicSubstitutions: true
   pool:
     name: projects/$PROJECT_ID/locations/us-central1/workerPools/integration-testing # Necessary for VPC network connection
-  machineType: 'E2_HIGHCPU_8'
 
 substitutions:
   _DATABASE_NAME: test_database
