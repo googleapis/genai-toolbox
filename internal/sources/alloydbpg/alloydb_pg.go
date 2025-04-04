@@ -16,8 +16,11 @@ package alloydbpg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"strings"
 
 	"cloud.google.com/go/alloydbconn"
@@ -25,6 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2/google"
 )
 
 const SourceKind string = "alloydb-postgres"
@@ -40,8 +44,8 @@ type Config struct {
 	Cluster  string         `yaml:"cluster" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
+	User     string         `yaml:"user"`
+	Password string         `yaml:"password"`
 	Database string         `yaml:"database" validate:"required"`
 }
 
@@ -84,7 +88,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
+func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error) {
 	opts := []alloydbconn.Option{alloydbconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {
 	case "private":
@@ -94,7 +98,74 @@ func getOpts(ipType, userAgent string) ([]alloydbconn.Option, error) {
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
+
+	if useIAM {
+		opts = append(opts, alloydbconn.WithIAMAuthN())
+	}
 	return opts, nil
+}
+
+// getIAMPrincipalEmailFromADC finds the email associated with ADC
+func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
+	// Finds ADC and returns an HTTP client associated with it
+	client, err := google.DefaultClient(ctx,
+		"https://www.googleapis.com/auth/userinfo.email")
+	if err != nil {
+		return "", fmt.Errorf("failed to call userinfo endpoint: %w", err)
+	}
+
+	// Retrieve the email associated with the token
+	resp, err := client.Get("https://oauth2.googleapis.com/tokeninfo")
+	if err != nil {
+		return "", fmt.Errorf("failed to call tokeninfo endpoint: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("tokeninfo endpoint returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	// Unmarshal response body and get `email`
+	var responseJSON map[string]any
+	err = json.Unmarshal(bodyBytes, &responseJSON)
+	if err != nil {
+
+		return "", fmt.Errorf("error parsing JSON: %v", err)
+	}
+
+	emailValue, ok := responseJSON["email"]
+	if !ok {
+		return "", fmt.Errorf("email not found in response: %v", err)
+	}
+	// service account email used for IAM should trim the suffix
+	email := strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com")
+	return email, nil
+}
+
+func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
+	useIAM := true
+
+	// username and password both provided, use password authentication
+	if user != "" && pass != "" {
+		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+		useIAM = false
+		return dsn, useIAM, nil
+	}
+	// use IAM authentication if use/pass are not both provided
+	if user == "" {
+		email, err := getIAMPrincipalEmailFromADC(ctx)
+		if err != nil {
+			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
+		}
+		user = email
+	}
+	// Use IAM authentication for db connectionif no password provided
+	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+	return dsn, useIAM, nil
 }
 
 func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
@@ -102,19 +173,21 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	dsn, useIAM, err := getConnectionConfig(ctx, user, pass, dbname)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get AlloyDB connection config: %w", err)
+	}
+
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
-
 	// Create a new dialer with options
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	opts, err := getOpts(ipType, userAgent)
+	opts, err := getOpts(ipType, userAgent, useIAM)
 	if err != nil {
 		return nil, err
 	}
