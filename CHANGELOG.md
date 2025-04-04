@@ -8,24 +8,12 @@
 * Add 'alloydb-ai-nl' tool ([#358](https://github.com/googleapis/genai-toolbox/issues/358)) ([f02885f](https://github.com/googleapis/genai-toolbox/commit/f02885fd4a919103fdabaa4ca38d975dc8497542))
 * Add HTTP Source and Tool ([#332](https://github.com/googleapis/genai-toolbox/issues/332)) ([64da5b4](https://github.com/googleapis/genai-toolbox/commit/64da5b4efe7d948ceb366c37fdaabd42405bc932))
 * Adding support for Model Context Protocol (MCP). ([#396](https://github.com/googleapis/genai-toolbox/issues/396)) ([a7d1d4e](https://github.com/googleapis/genai-toolbox/commit/a7d1d4eb2ae337b463d1b25ccb25c3c0eb30df6f))
+Added [toolbox-core](https://pypi.org/project/toolbox-core/) SDK – easily integrate Toolbox into any Python function calling framework
 
 
 ### Bug Fixes
 
 * Add `tools-file` flag and deprecate `tools_file`  ([#384](https://github.com/googleapis/genai-toolbox/issues/384)) ([34a7263](https://github.com/googleapis/genai-toolbox/commit/34a7263fdce40715de20ef5677f94be29f9f5c98)), closes [#383](https://github.com/googleapis/genai-toolbox/issues/383)
-* **deps:** Update module cloud.google.com/go/cloudsqlconn to v1.16.0 ([#367](https://github.com/googleapis/genai-toolbox/issues/367)) ([007f1bb](https://github.com/googleapis/genai-toolbox/commit/007f1bbfae65adcbad601284238028751c92c906))
-* **deps:** Update module cloud.google.com/go/spanner to v1.78.0 ([#368](https://github.com/googleapis/genai-toolbox/issues/368)) ([0fcad95](https://github.com/googleapis/genai-toolbox/commit/0fcad95e1030f8a88441a0d92b2ff9a7345059f6))
-* **deps:** Update module github.com/go-chi/chi/v5 to v5.2.1 ([#369](https://github.com/googleapis/genai-toolbox/issues/369)) ([8d652e9](https://github.com/googleapis/genai-toolbox/commit/8d652e998daf9fd40f823ba95950464dddaf9ac0))
-* **deps:** Update module github.com/go-playground/validator/v10 to v10.26.0 ([#370](https://github.com/googleapis/genai-toolbox/issues/370)) ([8ca0d1f](https://github.com/googleapis/genai-toolbox/commit/8ca0d1fc15fab3bcf9d582e03758b9ae08808d92))
-* **deps:** Update module github.com/go-sql-driver/mysql to v1.9.1 ([#371](https://github.com/googleapis/genai-toolbox/issues/371)) ([98c6b7f](https://github.com/googleapis/genai-toolbox/commit/98c6b7f83442073ca4383506f6613ced49c6a87d))
-* **deps:** Update module github.com/goccy/go-yaml to v1.17.1 ([#372](https://github.com/googleapis/genai-toolbox/issues/372)) ([2be5387](https://github.com/googleapis/genai-toolbox/commit/2be5387f3fae19e16d976623e0c18d4432983532))
-* **deps:** Update module github.com/googlecloudplatform/opentelemetry-operations-go/exporter/trace to v1.27.0 ([#373](https://github.com/googleapis/genai-toolbox/issues/373)) ([78122e7](https://github.com/googleapis/genai-toolbox/commit/78122e74ec2a9354300e29d13532b0359021dcb2))
-* **deps:** Update module github.com/jackc/pgx/v5 to v5.7.4 ([#365](https://github.com/googleapis/genai-toolbox/issues/365)) ([e0dbb13](https://github.com/googleapis/genai-toolbox/commit/e0dbb133eb1a856a0615f37d349efcf1d4144998))
-* **deps:** Update module github.com/neo4j/neo4j-go-driver/v5 to v5.28.0 ([#374](https://github.com/googleapis/genai-toolbox/issues/374)) ([4cfc169](https://github.com/googleapis/genai-toolbox/commit/4cfc169c8aa0a7a78c37b06569ca3613cbc2ce18))
-* **deps:** Update module github.com/spf13/cobra to v1.9.1 ([#375](https://github.com/googleapis/genai-toolbox/issues/375)) ([2f5a0a7](https://github.com/googleapis/genai-toolbox/commit/2f5a0a72574a5aa620cd2d8110dffda98c70cce6))
-* **deps:** Update module go.opentelemetry.io/contrib/propagators/autoprop to v0.60.0 ([#376](https://github.com/googleapis/genai-toolbox/issues/376)) ([fd6f796](https://github.com/googleapis/genai-toolbox/commit/fd6f796ab80c92f75e028a72326c9328002612c8))
-* **deps:** Update module google.golang.org/api to v0.228.0 ([#377](https://github.com/googleapis/genai-toolbox/issues/377)) ([c6500d2](https://github.com/googleapis/genai-toolbox/commit/c6500d2596bc2064348b7030db187cb3f00a24dc))
-* Renovatebot to run go mod tidy post update ([#385](https://github.com/googleapis/genai-toolbox/issues/385)) ([33cca68](https://github.com/googleapis/genai-toolbox/commit/33cca680235fcd21098700acffb365de2e62f8b7))
 
 ## [0.2.1](https://github.com/googleapis/genai-toolbox/compare/v0.2.0...v0.2.1) (2025-03-20)
 
