@@ -229,7 +229,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
-	id = baseMessage.Id.(string)
+	id = fmt.Sprintf("%s", baseMessage.Id)
 	method = baseMessage.Method
 
 	var res mcp.JSONRPCMessage
