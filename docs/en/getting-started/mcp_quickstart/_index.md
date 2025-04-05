@@ -205,7 +205,7 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Type `y` when it asks to install the inspector package.
 
-1. It should show the folo=lowing when the MCP Inspector is up and runnning:
+1. It should show the following when the MCP Inspector is up and runnning:
 
     ```bash
     🔍 MCP Inspector is up and running at http://127.0.0.1:5173 🚀
