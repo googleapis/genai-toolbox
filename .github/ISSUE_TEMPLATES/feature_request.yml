@@ -21,8 +21,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping us improve! 🙏 Please answer these questions and
-        provide as much information as possible about your feature request. 
+        Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your feature request. 
   
   - id: preamble
     type: checkboxes
