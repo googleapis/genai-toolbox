@@ -30,7 +30,7 @@ body:
       label: Prerequisites
       description: |
         Please run through the following list and make sure you've tried the usual "quick fixes":
-      options: |
+      options: 
         - label: "Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)"
           required: true
         - label: "Update to the latest version of Toolbox (see our releases pages)[https://github.com/googleapis/genai-toolbox/releases]"
@@ -68,10 +68,10 @@ body:
   - id: expected-behavior
     type: textarea
     attributes:
-      - label: Expected Behavior
-        description: |
-          Please enter a detailed description of the behavior you expected, and any information about what behavior you noticed and why it is
-          defective or unintentional.
+      label: Expected Behavior
+      description: |
+        Please enter a detailed description of the behavior you expected, and any information about what behavior you 
+        noticed and why it is defective or unintentional.
     validations:
       required: true
 
