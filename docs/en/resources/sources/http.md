@@ -9,7 +9,7 @@ description: >
 
 ## About
 
-The HTTP Source allows the Gen AI Toolbox to retrieve data from arbitrary HTTP
+The HTTP Source allows Toolbox to retrieve data from arbitrary HTTP
 endpoints. This enables Generative AI applications to access data from web APIs
 and other HTTP-accessible resources.
 

@@ -1,15 +1,14 @@
 
-![logo](./logo.png)
-# Gen AI Toolbox for Databases
+![logo](./logo.svg)
+# MCP Toolbox for Databases
 
 > [!NOTE] 
-> Gen AI Toolbox for Databases is currently in beta, and may see breaking 
+> MCP Toolbox for Databases is currently in beta, and may see breaking 
 > changes until the first stable release (v1.0).
 
-Gen AI Toolbox for Databases is an open source server that makes it easier to
-build Gen AI tools for interacting with databases. It enables you to develop
-tools easier, faster, and more securely by handling the complexities such as
-connection pooling, authentication, and more.
+go/ It enables
+you to develop database tools easier, faster, and more securely by handling
+complexities such as connection pooling, authentication, and more.
 
 This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
