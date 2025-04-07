@@ -231,6 +231,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	id = fmt.Sprintf("%s", baseMessage.Id)
 	method = baseMessage.Method
+	s.logger.DebugContext(ctx, fmt.Sprintf("method is: %s", method))
 
 	var res mcp.JSONRPCMessage
 	switch baseMessage.Method {
@@ -279,6 +280,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 		toolName = req.Params.Name
 		toolArgument := req.Params.Arguments
+		s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 		tool, ok := s.tools[toolName]
 		if !ok {
 			err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
@@ -314,6 +316,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
 			break
 		}
+		s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 		result := mcp.ToolCall(tool, params)
 		res = mcp.JSONRPCResponse{
