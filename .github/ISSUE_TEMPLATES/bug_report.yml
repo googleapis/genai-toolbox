@@ -30,18 +30,22 @@ body:
       label: Prerequisites
       description: |
         Please run through the following list and make sure you've tried the usual "quick fixes":
+        - Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)
+        - Update to the [latest version of Toolbox](https://github.com/googleapis/genai-toolbox/releases)
       options: 
-        - label: "Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)"
+        - label: "I've searched the current open issues"
           required: true
-        - label: "Update to the latest version of Toolbox (see our releases pages)[https://github.com/googleapis/genai-toolbox/releases]"
+        - label: "I've updated to the latest version of Toolbox"
 
   - type: input
     id: version
     attributes:
       label: Toolbox version
       description: |
-        What version of Toolbox are you using (`toolbox --version`)?
-      placeholder: ex. toolbox version 0.3.0 or us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
+        What version of Toolbox are you using (`toolbox --version`)? e.g.
+        - toolbox version 0.3.0 
+        - us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.3.0
+      placeholder: ex. toolbox version 0.3.0 
     validations:
       required: true
 
@@ -63,7 +67,13 @@ body:
       label: Client 
       description: "How are you connecting to Toolbox?"
       value: |
-        Include the client, version, and link to instructions you followed if possible!
+        1. Client: <name and link to the client are you using>
+        2. Version: <what exact version of the client are you using> 
+        3. Example: If possible, please include your code of configuration:
+        
+        ```python
+        # Code goes here! 
+        ```
 
   - id: expected-behavior
     type: textarea
