@@ -5,14 +5,16 @@ weight: 1
 description: An introduction to MCP Toolbox for Databases.
 ---
 
-MCP Toolbox for Databases is an open source MCP server for databases It was
+MCP Toolbox for Databases is an open source MCP server for databases. It was
 designed with enterprise-grade and production-quality in mind. It enables you to
 develop tools easier, faster, and more securely by handling the complexities
 such as connection pooling, authentication, and more.
 
 
-{{< notice info >}} 
-Toolbox for Databases was previously called "Gen AI Toolbox for Databases".
+{{< notice note >}} 
+This product was originally named “Gen AI Toolbox for
+Databases” as its initial development predated MCP, but was renamed to align
+with recently added MCP compatibility. 
 {{< /notice >}}
 
 ##  Why Toolbox?

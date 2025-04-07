@@ -16,7 +16,9 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 
 
 > [!NOTE] 
-> Toolbox for Databases was previously called "Gen AI Toolbox for Databases".
+> This product was originally named “Gen AI Toolbox for Databases” as
+> its initial development predated MCP, but was renamed to align with recently
+> added MCP compatibility. 
 
 <!-- TOC ignore:true -->
 ## Table of Contents
