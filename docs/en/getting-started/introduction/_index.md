@@ -10,6 +10,11 @@ build Gen AI tools for interacting with databases. It enables you to develop
 tools easier, faster, and more securely by handling the complexities such as
 connection pooling, authentication, and more.
 
+
+{{< notice info >}} 
+Toolbox for Databases was previously called "Gen AI Toolbox for Databases".
+{{< /notice >}}
+
 ##  Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your

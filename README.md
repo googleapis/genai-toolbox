@@ -12,6 +12,10 @@ handling complexities such as connection pooling, authentication, and more.
 This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
 
+
+> [!NOTE] 
+> Toolbox for Databases was previously called "Gen AI Toolbox for Databases".
+
 <!-- TOC ignore:true -->
 ## Table of Contents
 
