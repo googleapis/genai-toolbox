@@ -1,0 +1,60 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: ✨ Feature Request
+description: Suggest an idea for new or improved behavior.
+title: "<brief summary of the proposed feature>"
+labels: ["type: feature request"]
+type: feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your feature request. 
+  
+  - id: preamble
+    type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: |
+        Please run through the following list and make sure you've tried the usual "quick fixes":
+      options:
+        - label: "Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)"
+          required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What are you trying to do that currently feels hard or impossible? 
+      description: "A clear and concise description of what the end goal for the feature should be -- avoid generalizing and try to provide a specific use-case."
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-solution
+    attributes:
+      label: Suggested Solution(s)
+      description: "If you have a suggestion for how this use-case can be solved, please feel free to include it."
+
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives Considered
+      description: "Are there any workaround or third party tools to replicate this behavior? Why would adding this feature be preferred over them?"
+
+  - type: textarea
+    id: additional-details
+    attributes:
+      label: Additional Details
+      description: "Any additional information we should know? Please reference it here (issues, PRs, descriptions, or screenshots)"

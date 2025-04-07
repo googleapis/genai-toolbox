@@ -1,0 +1,119 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 🐞 Bug Report
+description: File a report for unexpected or undesired behavior.
+title: "<brief summary of what bug or error was observed>"
+labels: ["type: bug"]
+type: "bug"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your problem.
+  
+  - id: preamble
+    type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: |
+        Please run through the following list and make sure you've tried the usual "quick fixes":
+        - Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)
+        - Update to the [latest version of Toolbox](https://github.com/googleapis/genai-toolbox/releases)
+      options: 
+        - label: "I've searched the current open issues"
+          required: true
+        - label: "I've updated to the latest version of Toolbox"
+
+  - type: input
+    id: version
+    attributes:
+      label: Toolbox version
+      description: |
+        What version of Toolbox are you using (`toolbox --version`)? e.g.
+        - toolbox version 0.3.0 
+        - us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.3.0
+      placeholder: ex. toolbox version 0.3.0 
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "Let us know some details about the environment in which you are seeing the bug!"
+      value: |
+        1. OS type and version: (output of `uname -a`)
+        2. How are you running Toolbox: 
+          - As a downloaded binary (e.g. from `curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox`)
+          - As a container (e.g. from `us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION`)
+          - Compiled from source (include the command used to build)
+
+  - type: textarea
+    id: client
+    attributes:
+      label: Client 
+      description: "How are you connecting to Toolbox?"
+      value: |
+        1. Client: <name and link to the client are you using>
+        2. Version: <what exact version of the client are you using> 
+        3. Example: If possible, please include your code of configuration:
+        
+        ```python
+        # Code goes here! 
+        ```
+
+  - id: expected-behavior
+    type: textarea
+    attributes:
+      label: Expected Behavior
+      description: |
+        Please enter a detailed description of the behavior you expected, and any information about what behavior you 
+        noticed and why it is defective or unintentional.
+    validations:
+      required: true
+
+  - id: current-behavior
+    type: textarea
+    attributes:
+      label: Current Behavior
+      description: "Please enter a detailed description of the behavior you encountered instead."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce?
+      description: |
+        How can we reproduce this bug? Please walk us through it step by step,
+        with as much relevant detail as possible. A 'minimal' reproduction is
+        preferred, which means removing as much of the examples as possible so
+        only the minimum required to run and reproduce the bug is left. 
+      value: |
+        1. ?
+        2. ?
+        3. ?
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-details
+    attributes:
+      label: Additional Details
+      description: |
+        Any other information you want us to know? Things such as tools config,
+        server logs, etc. can be included here.

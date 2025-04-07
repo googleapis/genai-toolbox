@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Google Cloud Support
+    url: https://cloud.google.com/support/
+    about: If you have a support contract with Google, please both open an issue here and open Google Cloud Support portal with a link to the issue.

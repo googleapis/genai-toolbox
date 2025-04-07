@@ -1,0 +1,55 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 💬 Question
+description: Questions on how something works or the best way to do something?
+title: "<brief summary of the question>"
+labels: ["type: question"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve! 🙏 Please provide as much information as possible about your question. 
+  
+  - id: preamble
+    type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: |
+        Please run through the following list and make sure you've tried the usual "quick fixes":
+      options:
+        - label: "Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)"
+          required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: "What's your question? Please provide as much relevant information as possible to reduce turnaround time. Include information like what environment, language, or framework you are using."
+      placeholder: "Example: How do I connect using private IP with the AlloyDB source?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code
+      description: "Please paste any useful application code that might be relevant to your question. (if your code is in a public repo, feel free to paste a link!)"
+      
+  - type: textarea
+    id: additional-details
+    attributes:
+      label: Additional Details
+      description: "Any other information you want us to know that might be helpful in answering your question? (link issues, PRs, descriptions, or screenshots)."

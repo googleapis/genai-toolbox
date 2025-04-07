@@ -145,7 +145,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	allParamValues := make([]any, len(sliceParams)+1)
 	allParamValues[0] = fmt.Sprintf("%s", sliceParams[0]) // nl_question
-	allParamValues[1] = fmt.Sprintf("%s", t.NLConfig)     // nl_config
+	allParamValues[1] = t.NLConfig                        // nl_config
 	for i, param := range sliceParams[1:] {
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}

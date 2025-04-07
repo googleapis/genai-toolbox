@@ -15,7 +15,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -55,6 +54,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	toolsetName := chi.URLParam(r, "toolsetName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 	var err error
 	defer func() {
@@ -78,7 +78,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
 		err = fmt.Errorf("Toolset %q does not exist", toolsetName)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -91,6 +91,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	toolName := chi.URLParam(r, "toolName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 	span.SetAttributes(attribute.String("tool_name", toolName))
 	var err error
 	defer func() {
@@ -113,7 +114,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -134,6 +135,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	toolName := chi.URLParam(r, "toolName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 	span.SetAttributes(attribute.String("tool_name", toolName))
 	var err error
 	defer func() {
@@ -157,7 +159,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	tool, ok := s.tools[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
@@ -168,7 +170,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	for _, aS := range s.authServices {
 		claims, err := aS.GetClaimsFromHeader(r.Header)
 		if err != nil {
-			s.logger.DebugContext(context.Background(), err.Error())
+			s.logger.DebugContext(ctx, err.Error())
 			continue
 		}
 		if claims == nil {
@@ -190,16 +192,17 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
 		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 		return
 	}
+	s.logger.DebugContext(ctx, "tool invocation authorized")
 
 	var data map[string]any
 	if err = decodeJSON(r.Body, &data); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		err = fmt.Errorf("request body was invalid JSON: %w", err)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
@@ -207,15 +210,16 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
+	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	res, err := tool.Invoke(params)
 	if err != nil {
 		err = fmt.Errorf("error while invoking tool: %w", err)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
@@ -223,7 +227,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	resMarshal, err := json.Marshal(res)
 	if err != nil {
 		err = fmt.Errorf("unable to marshal result: %w", err)
-		s.logger.DebugContext(context.Background(), err.Error())
+		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
