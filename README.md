@@ -6,9 +6,8 @@
 > MCP Toolbox for Databases is currently in beta, and may see breaking 
 > changes until the first stable release (v1.0).
 
-go/ It enables
-you to develop database tools easier, faster, and more securely by handling
-complexities such as connection pooling, authentication, and more.
+It enables you to develop database tools easier, faster, and more securely by
+handling complexities such as connection pooling, authentication, and more.
 
 This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
