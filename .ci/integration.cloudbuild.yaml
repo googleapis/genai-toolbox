@@ -314,6 +314,24 @@ steps:
       - -c
       - |
         ./sqlite.test -test.v
+    
+
+  - id: "couchbase"
+    name : golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "COUCHBASE_SCOPE=$_COUCHBASE_SCOPE"
+      - "COUCHBASE_BUCKET=$_COUCHBASE_BUCKET"
+    secretEnv: ["COUCHBASE_CONNECTION", "COUCHBASE_USER", "COUCHBASE_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        ./couchbase.test -test.v
 
 availableSecrets:
   secretManager:
@@ -355,6 +373,12 @@ availableSecrets:
       env: MSSQL_USER 
     - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
       env: MSSQL_PASS
+    - versionName: projects/$PROJECT_ID/secrets/couchbase_connection/versions/latest
+      env: COUCHBASE_CONNECTION
+    - versionName: projects/$PROJECT_ID/secrets/couchbase_user/versions/latest
+      env: COUCHBASE_USER
+    - versionName: projects/$PROJECT_ID/secrets/couchbase_pass/versions/latest
+      env: COUCHBASE_PASS
 
 
 options:
@@ -385,3 +409,5 @@ substitutions:
   _MSSQL_HOST: 127.0.0.1
   _MSSQL_PORT: "1433"
   _DGRAPHURL: "https://play.dgraph.io"
+  _COUCHBASE_BUCKET: "couchbase-bucket"
+  _COUCHBASE_SCOPE: "couchbase-scope"
