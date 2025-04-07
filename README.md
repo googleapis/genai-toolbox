@@ -6,8 +6,10 @@
 > MCP Toolbox for Databases is currently in beta, and may see breaking 
 > changes until the first stable release (v1.0).
 
-It enables you to develop database tools easier, faster, and more securely by
-handling complexities such as connection pooling, authentication, and more.
+MCP Toolbox for Databases is an open source MCP server for databases It was
+designed with enterprise-grade and production-quality in mind. It enables you to
+develop tools easier, faster, and more securely by handling the complexities
+such as connection pooling, authentication, and more.
 
 This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
