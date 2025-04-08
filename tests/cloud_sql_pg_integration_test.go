@@ -188,53 +188,59 @@ func TestCloudSQLIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     CloudSQL_POSTGRES_SOURCE_KIND,
-		"project":  CloudSQL_POSTGRES_PROJECT,
-		"cluster":  CloudSQL_POSTGRES_CLUSTER,
-		"instance": CloudSQL_POSTGRES_INSTANCE,
-		"region":   CloudSQL_POSTGRES_REGION,
-		"database": CloudSQL_POSTGRES_DATABASE,
+		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
+		"project":  CLOUD_SQL_POSTGRES_PROJECT,
+		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
+		"region":   CLOUD_SQL_POSTGRES_REGION,
+		"database": CLOUD_SQL_POSTGRES_DATABASE,
 		"user":     serviceAccountEmail,
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     CloudSQL_POSTGRES_SOURCE_KIND,
-		"project":  CloudSQL_POSTGRES_PROJECT,
-		"cluster":  CloudSQL_POSTGRES_CLUSTER,
-		"instance": CloudSQL_POSTGRES_INSTANCE,
-		"region":   CloudSQL_POSTGRES_REGION,
-		"database": CloudSQL_POSTGRES_DATABASE,
+		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
+		"project":  CLOUD_SQL_POSTGRES_PROJECT,
+		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
+		"region":   CLOUD_SQL_POSTGRES_REGION,
+		"database": CLOUD_SQL_POSTGRES_DATABASE,
 		"password": "random",
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     CloudSQL_POSTGRES_SOURCE_KIND,
-		"project":  CloudSQL_POSTGRES_PROJECT,
-		"cluster":  CloudSQL_POSTGRES_CLUSTER,
-		"instance": CloudSQL_POSTGRES_INSTANCE,
-		"region":   CloudSQL_POSTGRES_REGION,
-		"database": CloudSQL_POSTGRES_DATABASE,
+		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
+		"project":  CLOUD_SQL_POSTGRES_PROJECT,
+		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
+		"region":   CLOUD_SQL_POSTGRES_REGION,
+		"database": CLOUD_SQL_POSTGRES_DATABASE,
 	}
 	tcs := []struct {
 		name         string
 		sourceConfig map[string]any
+		isErr        bool
 	}{
 		{
 			name:         "no user no pass",
 			sourceConfig: noUserNoPassSourceConfig,
+			isErr:        false,
 		},
 		{
 			name:         "no password",
 			sourceConfig: noPassSourceConfig,
+			isErr:        false,
 		},
 		{
 			name:         "no user",
 			sourceConfig: noUserSourceConfig,
+			isErr:        true,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			RunSourceConnectionTest(t, tc.sourceConfig, CloudSQL_POSTGRES_TOOL_KIND)
+			err := RunSourceConnectionTest(t, tc.sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			if err != nil {
+				if !tc.isErr {
+					t.Fatalf("Connection test failure: %s", err)
+				}
+			}
 		})
 	}
 }
