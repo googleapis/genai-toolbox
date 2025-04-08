@@ -38,9 +38,9 @@ type Config struct {
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
 	Database string         `yaml:"database" validate:"required"`
+	User     string         `yaml:"user"`
+	Password string         `yaml:"password"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -82,13 +82,46 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
+func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
+	useIAM := true
+
+	// If username and password both provided, use password authentication
+	if user != "" && pass != "" {
+		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+		useIAM = false
+		return dsn, useIAM, nil
+	}
+
+	// If username is empty, fetch email from ADC
+	// otherwise, use username as IAM email
+	if user == "" {
+		if pass != "" {
+			// If password is provided without an username, raise an error
+			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
+		}
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
+		if err != nil {
+			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
+		}
+		user = email
+	}
+
+	// Construct IAM connection string with username
+	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+	return dsn, useIAM, nil
+}
+
 func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+	dsn, useIAM, err := getConnectionConfig(ctx, user, pass, dbname)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get Cloud SQL connection config: %w", err)
+	}
+
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
@@ -99,7 +132,7 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	if err != nil {
 		return nil, err
 	}
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, useIAM)
 	if err != nil {
 		return nil, err
 	}
