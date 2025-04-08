@@ -241,6 +241,9 @@ func TestCloudSQLIAMConnection(t *testing.T) {
 					t.Fatalf("Connection test failure: %s", err)
 				}
 			}
+			if tc.isErr {
+				t.Fatalf("Expected error but test passed.")
+			}
 		})
 	}
 }
