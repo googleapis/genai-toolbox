@@ -181,3 +181,60 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 		})
 	}
 }
+
+func TestCloudSQLIAMConnection(t *testing.T) {
+	getCloudSQLPgVars(t)
+	// service account email used for IAM should trim the suffix
+	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
+
+	noPassSourceConfig := map[string]any{
+		"kind":     CloudSQL_POSTGRES_SOURCE_KIND,
+		"project":  CloudSQL_POSTGRES_PROJECT,
+		"cluster":  CloudSQL_POSTGRES_CLUSTER,
+		"instance": CloudSQL_POSTGRES_INSTANCE,
+		"region":   CloudSQL_POSTGRES_REGION,
+		"database": CloudSQL_POSTGRES_DATABASE,
+		"user":     serviceAccountEmail,
+	}
+
+	noUserSourceConfig := map[string]any{
+		"kind":     CloudSQL_POSTGRES_SOURCE_KIND,
+		"project":  CloudSQL_POSTGRES_PROJECT,
+		"cluster":  CloudSQL_POSTGRES_CLUSTER,
+		"instance": CloudSQL_POSTGRES_INSTANCE,
+		"region":   CloudSQL_POSTGRES_REGION,
+		"database": CloudSQL_POSTGRES_DATABASE,
+		"password": "random",
+	}
+
+	noUserNoPassSourceConfig := map[string]any{
+		"kind":     CloudSQL_POSTGRES_SOURCE_KIND,
+		"project":  CloudSQL_POSTGRES_PROJECT,
+		"cluster":  CloudSQL_POSTGRES_CLUSTER,
+		"instance": CloudSQL_POSTGRES_INSTANCE,
+		"region":   CloudSQL_POSTGRES_REGION,
+		"database": CloudSQL_POSTGRES_DATABASE,
+	}
+	tcs := []struct {
+		name         string
+		sourceConfig map[string]any
+	}{
+		{
+			name:         "no user no pass",
+			sourceConfig: noUserNoPassSourceConfig,
+		},
+		{
+			name:         "no password",
+			sourceConfig: noPassSourceConfig,
+		},
+		{
+			name:         "no user",
+			sourceConfig: noUserSourceConfig,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			RunSourceConnectionTest(t, tc.sourceConfig, CloudSQL_POSTGRES_TOOL_KIND)
+		})
+	}
+}
