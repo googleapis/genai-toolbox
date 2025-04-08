@@ -256,7 +256,7 @@ func TestAlloyDBIAMConnection(t *testing.T) {
 			err := RunSourceConnectionTest(t, tc.sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
 			if err != nil {
 				if tc.isErr {
-					continue
+					return
 				}
 				t.Fatalf("Connection test failure: %s", err)
 			}

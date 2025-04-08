@@ -238,7 +238,7 @@ func TestCloudSQLIAMConnection(t *testing.T) {
 			err := RunSourceConnectionTest(t, tc.sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
 			if err != nil {
 				if tc.isErr {
-					continue
+					return
 				}
 				t.Fatalf("Connection test failure: %s", err)
 			}
