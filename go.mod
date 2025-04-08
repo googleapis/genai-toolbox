@@ -7,7 +7,7 @@ toolchain go1.23.2
 require (
 	cloud.google.com/go/alloydbconn v1.15.0
 	cloud.google.com/go/cloudsqlconn v1.16.0
-	cloud.google.com/go/spanner v1.78.0
+	cloud.google.com/go/spanner v1.79.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.27.0
 	github.com/go-chi/chi/v5 v5.2.1
