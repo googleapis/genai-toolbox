@@ -38,6 +38,11 @@ permissions):
 - `roles/alloydb.client`
 - `roles/serviceusage.serviceUsageConsumer`
 
+To connect to your AlloyDB Source using IAM authentication:
+
+1. Specify your IAM email as the username or leave it blank for Toolbox to fetch from ADC.
+2. Leave the `password` field blank.
+
 [alloydb-go-conn]: https://github.com/GoogleCloudPlatform/alloydb-go-connector
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
@@ -83,14 +88,14 @@ sources:
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                                                                                |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "alloydb-postgres".                                                                                                                    |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                  |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                                                   |
-| cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                                                                               |
-| instance  |  string  |     true     | Name of the AlloyDB instance within the cluster (e.g. "my-instance").                                                                          |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                                                                    |
-| user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). If not specified, Toolbox defaults to use [Application Default Credentials][adc]. |
-| password  |  string  |    false     | Password of the Postgres user (e.g. "my-password").                                                                                            |
-| ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                                      |
+| **field** | **type** | **required** | **description**                                                                                                          |
+|-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
+| cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                                                         |
+| instance  |  string  |     true     | Name of the AlloyDB instance within the cluster (e.g. "my-instance").                                                    |
+| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                                              |
+| user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
+| password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
+| ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |

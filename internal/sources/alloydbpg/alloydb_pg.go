@@ -149,14 +149,15 @@ func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
 	useIAM := true
 
-	// username and password both provided, use password authentication
+	// If username and password both provided, use password authentication
 	if user != "" && pass != "" {
 		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
 		useIAM = false
 		return dsn, useIAM, nil
 	}
 
-	// Use IAM authentication if username is not provided
+	// If username is empty, fetch email from ADC
+	// otherwise, use username as IAM email
 	if user == "" {
 		if pass != "" {
 			// If password is provided without an username, raise an error
@@ -169,7 +170,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 		user = email
 	}
 
-	// Construct IAM db connection string
+	// Construct IAM connection string with username
 	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
 	return dsn, useIAM, nil
 }
