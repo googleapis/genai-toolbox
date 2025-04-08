@@ -174,7 +174,10 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			err := RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			if err != nil {
+				t.Fatalf("Connection test failure: %s", err)
+			}
 		})
 	}
 }

@@ -188,7 +188,10 @@ func TestAlloyDBIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			err := RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			if err != nil {
+				t.Fatalf("Connection test failure: %s", err)
+			}
 		})
 	}
 }
@@ -230,23 +233,32 @@ func TestAlloyDBIAMConnection(t *testing.T) {
 	tcs := []struct {
 		name         string
 		sourceConfig map[string]any
+		isErr        bool
 	}{
 		{
 			name:         "no user no pass",
 			sourceConfig: noUserNoPassSourceConfig,
+			isErr:        false,
 		},
 		{
 			name:         "no password",
 			sourceConfig: noPassSourceConfig,
+			isErr:        false,
 		},
 		{
 			name:         "no user",
 			sourceConfig: noUserSourceConfig,
+			isErr:        true,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			RunSourceConnectionTest(t, tc.sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			err := RunSourceConnectionTest(t, tc.sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			if err != nil {
+				if !tc.isErr {
+					t.Fatalf("Connection test failure: %s", err)
+				}
+			}
 		})
 	}
 }
