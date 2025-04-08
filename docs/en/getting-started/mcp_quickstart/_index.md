@@ -187,7 +187,7 @@ In this section, we will download Toolbox, configure our tools in a
             description: The ID of the hotel to cancel.
         statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
     ```
-    For more info on tools, check out the [Tools](../../resources/tools/_index.md) section of the docs.
+    For more info on tools, check out the [Tools](../../resources/tools/_index.md) section.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
