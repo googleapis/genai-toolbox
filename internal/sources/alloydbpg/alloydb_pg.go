@@ -16,11 +16,8 @@ package alloydbpg
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
 	"strings"
 
 	"cloud.google.com/go/alloydbconn"
@@ -28,7 +25,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/oauth2/google"
 )
 
 const SourceKind string = "alloydb-postgres"
@@ -105,47 +101,6 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 	return opts, nil
 }
 
-// getIAMPrincipalEmailFromADC finds the email associated with ADC
-func getIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
-	// Finds ADC and returns an HTTP client associated with it
-	client, err := google.DefaultClient(ctx,
-		"https://www.googleapis.com/auth/userinfo.email")
-	if err != nil {
-		return "", fmt.Errorf("failed to call userinfo endpoint: %w", err)
-	}
-
-	// Retrieve the email associated with the token
-	resp, err := client.Get("https://oauth2.googleapis.com/tokeninfo")
-	if err != nil {
-		return "", fmt.Errorf("failed to call tokeninfo endpoint: %w", err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading response body %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("tokeninfo endpoint returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-
-	// Unmarshal response body and get `email`
-	var responseJSON map[string]any
-	err = json.Unmarshal(bodyBytes, &responseJSON)
-	if err != nil {
-
-		return "", fmt.Errorf("error parsing JSON: %v", err)
-	}
-
-	emailValue, ok := responseJSON["email"]
-	if !ok {
-		return "", fmt.Errorf("email not found in response: %v", err)
-	}
-	// service account email used for IAM should trim the suffix
-	email := strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com")
-	return email, nil
-}
-
 func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
 	useIAM := true
 
@@ -163,7 +118,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 			// If password is provided without an username, raise an error
 			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
 		}
-		email, err := getIAMPrincipalEmailFromADC(ctx)
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
 		if err != nil {
 			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}
