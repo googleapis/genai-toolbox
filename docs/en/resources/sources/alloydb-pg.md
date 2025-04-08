@@ -40,7 +40,7 @@ permissions):
 
 To connect to your AlloyDB Source using IAM authentication:
 
-1. Specify your IAM email as the username or leave it blank for Toolbox to fetch from ADC.
+1. Specify your IAM email as the `user` or leave it blank for Toolbox to fetch from ADC.
 2. Leave the `password` field blank.
 
 [alloydb-go-conn]: https://github.com/GoogleCloudPlatform/alloydb-go-connector
