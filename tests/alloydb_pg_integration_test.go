@@ -188,7 +188,81 @@ func TestAlloyDBIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			err := RunSourceConnectionTest(t, sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			if err != nil {
+				t.Fatalf("Connection test failure: %s", err)
+			}
+		})
+	}
+}
+
+// Test IAM connection
+func TestAlloyDBIAMConnection(t *testing.T) {
+	getAlloyDBPgVars(t)
+	// service account email used for IAM should trim the suffix
+	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
+
+	noPassSourceConfig := map[string]any{
+		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+		"user":     serviceAccountEmail,
+	}
+
+	noUserSourceConfig := map[string]any{
+		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+		"password": "random",
+	}
+
+	noUserNoPassSourceConfig := map[string]any{
+		"kind":     ALLOYDB_POSTGRES_SOURCE_KIND,
+		"project":  ALLOYDB_POSTGRES_PROJECT,
+		"cluster":  ALLOYDB_POSTGRES_CLUSTER,
+		"instance": ALLOYDB_POSTGRES_INSTANCE,
+		"region":   ALLOYDB_POSTGRES_REGION,
+		"database": ALLOYDB_POSTGRES_DATABASE,
+	}
+	tcs := []struct {
+		name         string
+		sourceConfig map[string]any
+		isErr        bool
+	}{
+		{
+			name:         "no user no pass",
+			sourceConfig: noUserNoPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no password",
+			sourceConfig: noPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no user",
+			sourceConfig: noUserSourceConfig,
+			isErr:        true,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			err := RunSourceConnectionTest(t, tc.sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND)
+			if err != nil {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("Connection test failure: %s", err)
+			}
+			if tc.isErr {
+				t.Fatalf("Expected error but test passed.")
+			}
 		})
 	}
 }
