@@ -83,14 +83,14 @@ sources:
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                           |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "alloydb-postgres".                                                               |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").             |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").              |
-| cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                          |
-| instance  |  string  |     true     | Name of the AlloyDB instance within the cluster (e.g. "my-instance").                      |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                               |
-| user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user").                              |
-| password  |  string  |    false     | Password of the Postgres user (e.g. "my-password").                                       |
-| ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                                                                |
+|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "alloydb-postgres".                                                                                                                    |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                  |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                                                   |
+| cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                                                                               |
+| instance  |  string  |     true     | Name of the AlloyDB instance within the cluster (e.g. "my-instance").                                                                          |
+| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                                                                    |
+| user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). If not specified, Toolbox defaults to use [Application Default Credentials][adc]. |
+| password  |  string  |    false     | Password of the Postgres user (e.g. "my-password").                                                                                            |
+| ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                                      |

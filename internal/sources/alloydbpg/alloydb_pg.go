@@ -155,15 +155,21 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 		useIAM = false
 		return dsn, useIAM, nil
 	}
-	// use IAM authentication if use/pass are not both provided
+
+	// Use IAM authentication if username is not provided
 	if user == "" {
+		if pass != "" {
+			// If password is provided without an username, raise an error
+			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
+		}
 		email, err := getIAMPrincipalEmailFromADC(ctx)
 		if err != nil {
 			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}
 		user = email
 	}
-	// Use IAM authentication for db connectionif no password provided
+
+	// Construct IAM db connection string
 	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
 	return dsn, useIAM, nil
 }
