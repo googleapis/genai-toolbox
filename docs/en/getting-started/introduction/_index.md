@@ -121,7 +121,7 @@ from toolbox_core import ToolboxClient
 client = ToolboxClient("http://127.0.0.1:5000")
 
 # these tools can be passed to your application! 
-tools = await client.aload_toolset()
+tools = await client.aload_toolset('toolset-name')
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
