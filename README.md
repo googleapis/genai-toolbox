@@ -156,8 +156,8 @@ application. See below the list of Client SDKs for using various frameworks:
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README][toolbox-langchain-readme].
 
-[toolbox-langchain]: https://github.com/googleapis/mcp-toolbox-sdk-python
-[toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/README.md
+[toolbox-langchain]: https://pypi.org/project/toolbox-langchain/
+[toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md
 
 </details>
 
