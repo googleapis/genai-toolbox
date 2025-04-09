@@ -126,8 +126,17 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	s.sseManager.add(sessionId, session)
 	defer s.sseManager.remove(sessionId)
 
+	// https scheme formatting if (forwarded) request is a TLS request
+	proto := r.Header.Get("X-Forwarded-Proto")
+	if (proto == "") {
+		if  r.TLS == nil {
+			proto = "http"
+		} else {
+			proto = "https"
+		}
+	}
 	// send initial endpoint event
-	messageEndpoint := fmt.Sprintf("http://%s/mcp?sessionId=%s", r.Host, sessionId)
+	messageEndpoint := fmt.Sprintf("%s://%s/mcp?sessionId=%s", proto, r.Host, sessionId)
 	s.logger.DebugContext(ctx, fmt.Sprintf("sending endpoint event: %s", messageEndpoint))
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()
