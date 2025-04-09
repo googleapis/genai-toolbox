@@ -1,11 +1,13 @@
 ---
-title: "Quickstart"
+title: "Quickstart (Local)"
 type: docs
 weight: 2
 description: >
   How to get started running Toolbox locally with Python, PostgreSQL, and 
   LangGraph or LlamaIndex. 
 ---
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
 
 ## Before you begin
 
@@ -131,7 +133,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.2.1/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.3.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -222,8 +224,14 @@ In this section, we will download Toolbox, configure our tools in a
 
 ## Step 3: Connect your agent to Toolbox
 
-In this section, we will write and run a LangGraph agent that will load the Tools
+In this section, we will write and run an agent that will load the Tools
 from Toolbox.
+
+{{< notice tip>}} If you prefer to experiment within a Google Colab environment, 
+you can connect to a 
+[local runtime](https://research.google.com/colaboratory/local-runtimes.html). 
+{{< /notice >}}
+
 
 1. In a new terminal, install the SDK package.
     
@@ -342,7 +350,7 @@ async def main():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-1.5-pro",
-        vertexai_config={"project": "twisha-dev", "location": "us-central1"},
+        vertexai_config={"project": "project-id", "location": "us-central1"},
     )
     # llm = GoogleGenAI(
     #     api_key=os.getenv("GOOGLE_API_KEY"),

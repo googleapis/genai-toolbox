@@ -43,3 +43,5 @@ run:
     - dgraph
     - mssql
     - mysql
+    - http
+    - alloydb_ai_nl

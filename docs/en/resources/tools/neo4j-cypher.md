@@ -11,6 +11,7 @@ description: >
 
 A `neo4j-cypher` tool executes a pre-defined Cypher statement against a Neo4j
 database. It's compatible with any of the following sources:
+
 - [neo4j](../sources/neo4j.md)
 
 The specified Cypher statement is executed as a [parameterized
@@ -67,5 +68,3 @@ tools:
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
 | statement   |                   string                   |     true     | Cypher statement to execute                                                                     |
 | parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be used with the Cypher statement. |
-
-

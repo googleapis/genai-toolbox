@@ -7,7 +7,7 @@ description: Frequently asked questions about Toolbox.
 
 ## How can I deploy or run Toolbox?
 
-Gen AI Toolbox for Databases is open-source and can be ran or deployed to a
+MCP Toolbox for Databases is open-source and can be ran or deployed to a
 multitude of environments. For convenience, we release [compiled binaries and
 docker images][release-notes] (but you can always compile yourself as well!). 
 
@@ -75,14 +75,13 @@ While a large part of the Gen AI Ecosystem is predominately Python, we opted to
 use Go. We chose Go because it's still easy and simple to use, but also easier
 to write fast, efficient, and concurrent servers. Additionally, given the
 server-client architecture, we can still meet many developers where they are
-with clients in their preferred language. As Gen AI matures, we want developers to be able to use Toolbox on the serving path of mission critical applications. It's easier to build the needed robustness, performance and scalability in Go than in Python.
+with clients in their preferred language. As Gen AI matures, we want developers
+to be able to use Toolbox on the serving path of mission critical applications.
+It's easier to build the needed robustness, performance and scalability in Go
+than in Python.
 
 
 ## Is Toolbox compatible with Model Context Protocol (MCP)? 
 
-Toolbox currently uses it's own custom protocol for server-client communication.
-[Anthropic's Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
-launched towards the end of Toolbox's development, and is currently missing
-functionality to support some of our features. We're currently exploring how
-best to bring Toolbox's functionality to the wider MCP ecosystem.
-
+Yes! Toolbox is compatible with [Anthropic's Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via MCP](../how-to/connect_via_mcp.md) on how to
+connect to Toolbox with an MCP client.

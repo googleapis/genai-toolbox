@@ -31,7 +31,7 @@ import (
 )
 
 // RunSourceConnection test for source connection
-func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind string) {
+func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -53,7 +53,7 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 	}
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
-		t.Fatalf("command initialization returned an error: %s", err)
+		return fmt.Errorf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
 
@@ -62,8 +62,9 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %s", err)
+		return fmt.Errorf("toolbox didn't start successfully: %s", err)
 	}
+	return nil
 }
 
 // GetCloudSQLDialOpts returns cloud sql connector's dial option for ip type.

@@ -1,17 +1,24 @@
 
-# 🧰 Gen AI Toolbox for Databases
+![logo](./logo.png)
+# MCP Toolbox for Databases
 
 > [!NOTE] 
-> Gen AI Toolbox for Databases is currently in beta, and may see breaking 
+> MCP Toolbox for Databases is currently in beta, and may see breaking 
 > changes until the first stable release (v1.0).
 
-Gen AI Toolbox for Databases is an open source server that makes it easier to
-build Gen AI tools for interacting with databases. It enables you to develop
-tools easier, faster, and more securely by handling the complexities such as
-connection pooling, authentication, and more.
+MCP Toolbox for Databases is an open source MCP server for databases It was
+designed with enterprise-grade and production-quality in mind. It enables you to
+develop tools easier, faster, and more securely by handling the complexities
+such as connection pooling, authentication, and more.
 
 This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
+
+
+> [!NOTE] 
+> This product was originally named “Gen AI Toolbox for Databases” as
+> its initial development predated MCP, but was renamed to align with recently
+> added MCP compatibility. 
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -75,7 +82,7 @@ To install Toolbox as a binary:
 <!-- {x-release-please-start-version} -->
 ```sh
 # see releases page for other versions
-export VERSION=0.2.1
+export VERSION=0.3.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -88,7 +95,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.2.1
+export VERSION=0.3.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -101,7 +108,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.2.1
+go install github.com/googleapis/genai-toolbox@v0.3.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -129,6 +136,31 @@ Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
+<summary>Core</summary>
+
+1. Install [Toolbox Core SDK][toolbox-core]:
+    ```bash
+    pip install toolbox-core
+    ```
+1. Load tools:
+    ```python
+    from toolbox_core import ToolboxClient
+
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
+
+    # these tools can be passed to your application! 
+    tools = await client.load_toolset("toolset_name")
+    ```
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's README][toolbox-core-readme].
+
+[toolbox-core]: https://pypi.org/project/toolbox-core/
+[toolbox-core-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-core/README.md
+
+</details>
+<details>
 <summary>LangChain / LangGraph</summary>
 
 1. Install [Toolbox LangChain SDK][toolbox-langchain]:
@@ -149,8 +181,8 @@ application. See below the list of Client SDKs for using various frameworks:
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README][toolbox-langchain-readme].
 
-[toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
-[toolbox-langchain-readme]: https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md
+[toolbox-langchain]: https://pypi.org/project/toolbox-langchain/
+[toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md
 
 </details>
 
@@ -175,7 +207,7 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 [project's README][toolbox-llamaindex-readme].
 
-[toolbox-llamaindex]: https://github.com/googleapis/genai-toolbox-llamaindex-python
+[toolbox-llamaindex]: https://pypi.org/project/toolbox-llamaindex/
 [toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
 
 </details>
@@ -210,9 +242,8 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of your `tools.yaml` define your the actions your agent can
-take: what kind of tool it is, which source(s) it affects, what parameters it
-uses, etc.
+The `tools` section of a `tools.yaml` define the actions an agent can take: what
+kind of tool it is, which source(s) it affects, what parameters it uses, etc.
 
 ```yaml
 tools:

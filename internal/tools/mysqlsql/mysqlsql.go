@@ -67,6 +67,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: cfg.Parameters.McpManifest(),
+	}
+
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
@@ -76,6 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.MySQLPool(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
@@ -89,9 +96,10 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Pool      *sql.DB
-	Statement string
-	manifest  tools.Manifest
+	Pool        *sql.DB
+	Statement   string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
@@ -150,6 +158,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
+}
+
+func (t Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {

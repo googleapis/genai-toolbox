@@ -2,13 +2,20 @@
 title: "Introduction"
 type: docs
 weight: 1
-description: An introduction to Gen AI Toolbox for Databases.
+description: An introduction to MCP Toolbox for Databases.
 ---
 
-Gen AI Toolbox for Databases is an open source server that makes it easier to
-build Gen AI tools for interacting with databases. It enables you to develop
-tools easier, faster, and more securely by handling the complexities such as
-connection pooling, authentication, and more.
+MCP Toolbox for Databases is an open source MCP server for databases. It was
+designed with enterprise-grade and production-quality in mind. It enables you to
+develop tools easier, faster, and more securely by handling the complexities
+such as connection pooling, authentication, and more.
+
+
+{{< notice note >}} 
+This product was originally named “Gen AI Toolbox for
+Databases” as its initial development predated MCP, but was renamed to align
+with recently added MCP compatibility. 
+{{< /notice >}}
 
 ##  Why Toolbox?
 
@@ -51,7 +58,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.2.1
+export VERSION=0.3.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -62,7 +69,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.2.1
+export VERSION=0.3.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -73,7 +80,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.2.1
+go install github.com/googleapis/genai-toolbox@v0.3.0
 ```
 
 {{% /tab %}}

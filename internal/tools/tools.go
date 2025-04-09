@@ -29,6 +29,7 @@ type Tool interface {
 	Invoke(ParamValues) ([]any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
+	McpManifest() McpManifest
 	Authorized([]string) bool
 }
 
@@ -36,6 +37,16 @@ type Tool interface {
 type Manifest struct {
 	Description string              `json:"description"`
 	Parameters  []ParameterManifest `json:"parameters"`
+}
+
+// Definition for a tool the MCP client can call.
+type McpManifest struct {
+	// The name of the tool.
+	Name string `json:"name"`
+	// A human-readable description of the tool.
+	Description string `json:"description,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	InputSchema McpToolsSchema `json:"inputSchema,omitempty"`
 }
 
 // Helper function that returns if a tool invocation request is authorized

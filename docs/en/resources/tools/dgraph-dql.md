@@ -9,8 +9,9 @@ description: >
 
 ## About
 
-A ` dgraph-dql` tool executes a pre-defined DQL statement against a Dgraph
+A `dgraph-dql` tool executes a pre-defined DQL statement against a Dgraph
 database. It's compatible with any of the following sources:
+
 - [dgraph](../sources/dgraph.md)
 
 To run a statement as a query, you need to set the config `isQuery=true`. For
@@ -60,7 +61,6 @@ tools:
         type: string
         description: admin
 
-
 {{< /tab >}}
 {{< tab header="Mutation" lang="yaml" >}}
 
@@ -105,6 +105,7 @@ tools:
 {{< /tabpane >}}
 
 ## Reference
+
 | **field**   |                  **type**                  | **required** | **description**                                                                              |
 |-------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be "dgraph-dql".                                                                        |

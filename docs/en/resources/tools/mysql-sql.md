@@ -9,8 +9,9 @@ description: >
 
 ## About
 
-A `mysql-sql` tool executes a pre-defined SQL statement against a mysql 
+A `mysql-sql` tool executes a pre-defined SQL statement against a mysql
 database. It's compatible with any of the following sources:
+
 - [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
 - [mysql](../sources/mysql.md)
 
@@ -68,5 +69,3 @@ tools:
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
 | statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
 | parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
-
-

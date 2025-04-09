@@ -847,6 +847,52 @@ func TestParamManifest(t *testing.T) {
 	}
 }
 
+func TestParamMcpManifest(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   tools.Parameter
+		want tools.ParameterMcpManifest
+	}{
+		{
+			name: "string",
+			in:   tools.NewStringParameter("foo-string", "bar"),
+			want: tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+		},
+		{
+			name: "int",
+			in:   tools.NewIntParameter("foo-int", "bar"),
+			want: tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+		},
+		{
+			name: "float",
+			in:   tools.NewFloatParameter("foo-float", "bar"),
+			want: tools.ParameterMcpManifest{Type: "float", Description: "bar"},
+		},
+		{
+			name: "boolean",
+			in:   tools.NewBooleanParameter("foo-bool", "bar"),
+			want: tools.ParameterMcpManifest{Type: "boolean", Description: "bar"},
+		},
+		{
+			name: "array",
+			in:   tools.NewArrayParameter("foo-array", "bar", tools.NewStringParameter("foo-string", "bar")),
+			want: tools.ParameterMcpManifest{
+				Type:        "array",
+				Description: "bar",
+				Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.in.McpManifest()
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestFailParametersUnmarshal(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {

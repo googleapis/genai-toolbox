@@ -157,7 +157,9 @@ Create a Cloud Build trigger via the UI or `gcloud` with the following specs:
 * Service account: set for demo service to enable ID token creation to use to authenticated services
 
 ### Trigger
+To run tests on GitHub from external contributors, ie RenovateBot:
 
-To run Cloud Build tests on GitHub from external contributors, ie RenovateBot, comment: `/gcbrun`.
+* Cloud Build tests: comment `/gcbrun`
+* Unit tests: add `tests:run` label
 
 [cloudsql-proxy]: https://cloud.google.com/sql/docs/mysql/sql-proxy

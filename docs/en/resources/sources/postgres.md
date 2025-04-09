@@ -7,7 +7,7 @@ description: >
 
 ---
 
-##  About
+## About
 
 [PostgreSQL][pg-docs] is a powerful, open source object-relational database
 system with over 35 years of active development that has earned it a strong
@@ -20,7 +20,7 @@ reputation for reliability, feature robustness, and performance.
 ### Database User
 
 This source only uses standard authentication. You will need to [create a
-PostreSQL user][pg-users] to login to the database with. 
+PostgreSQL user][pg-users] to login to the database with.
 
 [pg-users]: https://www.postgresql.org/docs/current/sql-createuser.html
 
@@ -47,5 +47,3 @@ sources:
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
-
-

@@ -92,7 +92,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	if err != nil {
 		return nil, err
 	}
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
 	if err != nil {
 		return nil, err
 	}

@@ -29,6 +29,8 @@ const (
 	toolsetGetCountName = "toolbox.server.toolset.get.count"
 	toolGetCountName    = "toolbox.server.tool.get.count"
 	toolInvokeCountName = "toolbox.server.tool.invoke.count"
+	mcpSseCountName     = "toolbox.server.mcp.sse.count"
+	mcpPostCountName    = "toolbox.server.mcp.post.count"
 )
 
 // Instrumentation defines the telemetry instrumentation for toolbox
@@ -38,6 +40,8 @@ type Instrumentation struct {
 	ToolsetGet metric.Int64Counter
 	ToolGet    metric.Int64Counter
 	ToolInvoke metric.Int64Counter
+	McpSse     metric.Int64Counter
+	McpPost    metric.Int64Counter
 }
 
 func CreateTelemetryInstrumentation(versionString string) (*Instrumentation, error) {
@@ -74,12 +78,32 @@ func CreateTelemetryInstrumentation(versionString string) (*Instrumentation, err
 		return nil, fmt.Errorf("unable to create %s metric: %w", toolInvokeCountName, err)
 	}
 
+	mcpSse, err := meter.Int64Counter(
+		mcpSseCountName,
+		metric.WithDescription("Number of MCP SSE connection requests."),
+		metric.WithUnit("{connection}"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create %s metric: %w", mcpSseCountName, err)
+	}
+
+	mcpPost, err := meter.Int64Counter(
+		mcpPostCountName,
+		metric.WithDescription("Number of MCP Post calls."),
+		metric.WithUnit("{call}"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create %s metric: %w", mcpPostCountName, err)
+	}
+
 	instrumentation := &Instrumentation{
 		Tracer:     tracer,
 		meter:      meter,
 		ToolsetGet: toolsetGet,
 		ToolGet:    toolGet,
 		ToolInvoke: toolInvoke,
+		McpSse:     mcpSse,
+		McpPost:    mcpPost,
 	}
 	return instrumentation, nil
 }

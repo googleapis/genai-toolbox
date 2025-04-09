@@ -150,7 +150,9 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 	RunToolGetTest(t)
 
 	select_1_want := "[{\"\":1}]"
+	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
 	RunToolInvokeTest(t, select_1_want)
+	RunMCPToolCallMethod(t, fail_invocation_want)
 }
 
 // Test connection with different IP type
@@ -173,7 +175,10 @@ func TestCloudSQLMssqlIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND)
+			err := RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND)
+			if err != nil {
+				t.Fatalf("Connection test failure: %s", err)
+			}
 		})
 	}
 }

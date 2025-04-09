@@ -34,26 +34,25 @@ permissions):
 
 - `roles/cloudsql.client`
 
-{{< notice tip >}} 
+{{< notice tip >}}
 If you are connecting from Compute Engine, make sure your VM
 also has the [proper
 scope](https://cloud.google.com/compute/docs/access/service-accounts#accesscopesiam)
-to connect using the Cloud SQL Admin API. 
+to connect using the Cloud SQL Admin API.
 {{< /notice >}}
 
 [csql-go-conn]: https://github.com/GoogleCloudPlatform/cloud-sql-go-connector
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[gce-access-scopes]: https://cloud.google.com/compute/docs/access/service-accounts#accesscopesiam
 
 ### Networking
 
 Cloud SQL supports connecting over both from external networks via the internet
-([public IP][public-ip]), and internal networks ([private IP][private-ip]). 
-For more information on choosing between the two options, see the Cloud SQL page 
+([public IP][public-ip]), and internal networks ([private IP][private-ip]).
+For more information on choosing between the two options, see the Cloud SQL page
 [Connection overview][conn-overview].
 
-You can configure the `ipType` parameter in your source configuration to 
+You can configure the `ipType` parameter in your source configuration to
 `public` or `private` to match your cluster's configuration. Regardless of which
 you choose, all connections use IAM-based authorization and are encrypted with
 mTLS.
@@ -90,7 +89,7 @@ sources:
 | kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluser (e.g. "my-instance").                      |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                      |
 | database  |  string  |     true     | Name of the Cloud SQL database to connect to (e.g. "my_db").                                |
 | ipAddress |  string  |     true     | IP address of the Cloud SQL instance to connect to.                                         |
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |

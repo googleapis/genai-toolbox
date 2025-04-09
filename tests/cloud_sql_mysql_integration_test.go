@@ -145,7 +145,9 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	RunToolGetTest(t)
 
 	select_1_want := "[{\"1\":1}]"
+	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	RunToolInvokeTest(t, select_1_want)
+	RunMCPToolCallMethod(t, fail_invocation_want)
 }
 
 // Test connection with different IP type
@@ -168,7 +170,10 @@ func TestCloudSQLMysqlIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND)
+			err := RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND)
+			if err != nil {
+				t.Fatalf("Connection test failure: %s", err)
+			}
 		})
 	}
 }

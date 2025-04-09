@@ -1,0 +1,28 @@
+{
+  extends: [
+    'config:recommended',
+    ':semanticCommits',
+    ':ignoreUnstable',
+    ':separateMajorReleases',
+    ':prConcurrentLimitNone',
+    ':prHourlyLimitNone',
+    ':preserveSemverRanges',
+  ],
+  minimumReleaseAge: '3',
+  rebaseWhen: 'conflicted',
+  dependencyDashboardLabels: [
+    'type: process',
+  ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+  packageRules: [
+    {
+      groupName: 'GitHub Actions',
+      matchManagers: [
+        'github-actions',
+      ],
+      pinDigests: true,
+    },
+  ],
+}

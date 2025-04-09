@@ -11,7 +11,7 @@ description: >
 ## About
 
 [Cloud SQL for MySQL][csql-mysql-docs] is a fully-managed database service
-that helps you set up, maintain, manage, and administer your MySQL 
+that helps you set up, maintain, manage, and administer your MySQL
 relational databases on Google Cloud Platform.
 
 If you are new to Cloud SQL for MySQL, you can try [creating and connecting
@@ -35,29 +35,28 @@ permissions):
 
 - `roles/cloudsql.client`
 
-{{< notice tip >}} 
+{{< notice tip >}}
 If you are connecting from Compute Engine, make sure your VM
 also has the [proper
 scope](https://cloud.google.com/compute/docs/access/service-accounts#accesscopesiam)
-to connect using the Cloud SQL Admin API. 
+to connect using the Cloud SQL Admin API.
 {{< /notice >}}
 
 [csql-go-conn]: https://github.com/GoogleCloudPlatform/cloud-sql-go-connector
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[gce-access-scopes]: https://cloud.google.com/compute/docs/access/service-accounts#accesscopesiam
 
 ### Networking
 
 Cloud SQL supports connecting over both from external networks via the internet
-([public IP][public-ip]), and internal networks ([private IP][private-ip]). 
-For more information on choosing between the two options, see the Cloud SQL page 
+([public IP][public-ip]), and internal networks ([private IP][private-ip]).
+For more information on choosing between the two options, see the Cloud SQL page
 [Connection overview][conn-overview].
 
-You can configure the `ipType` parameter in your source configuration to 
+You can configure the `ipType` parameter in your source configuration to
 `public` or `private` to match your cluster's configuration. Regardless of which
 you choose, all connections use IAM-based authorization and are encrypted with
-mTLS. 
+mTLS.
 
 [private-ip]: https://cloud.google.com/sql/docs/mysql/configure-private-ip
 [public-ip]: https://cloud.google.com/sql/docs/mysql/configure-ip
@@ -65,7 +64,7 @@ mTLS.
 
 ### Database User
 
-Current, this source only uses standard authentication. You will need to [create
+Currently, this source only uses standard authentication. You will need to [create
 a MySQL user][cloud-sql-users] to login to the database with.
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
