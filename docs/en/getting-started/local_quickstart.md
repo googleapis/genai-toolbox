@@ -317,7 +317,7 @@ async def run_application():
     # The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use 
     # integration. While this example uses Google's genai client, these callables can be adapted for 
     # various function-calling or agent frameworks. For easier integration with supported frameworks 
-    # (https://github.com/googleapis/genai-toolbox-langchain-python/tree/main/packages), use the 
+    # (https://github.com/googleapis/mcp-toolbox-python-sdk/tree/main/packages), use the 
     # provided wrapper packages, which handle framework-specific boilerplate.
     toolbox_tools = await toolbox_client.load_toolset("my-toolset")
     genai_client = genai.Client(
