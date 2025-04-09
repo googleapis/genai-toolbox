@@ -103,7 +103,7 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	if err != nil {
 		return nil, err
 	}
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
 	if err != nil {
 		return nil, err
 	}
