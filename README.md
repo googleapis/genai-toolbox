@@ -207,7 +207,7 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 [project's README][toolbox-llamaindex-readme].
 
-[toolbox-llamaindex]: https://github.com/googleapis/genai-toolbox-llamaindex-python
+[toolbox-llamaindex]: https://pypi.org/project/toolbox-llamaindex/
 [toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
 
 </details>
