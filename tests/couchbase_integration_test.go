@@ -41,8 +41,8 @@ var (
 	couchbaseConnection = os.Getenv("COUCHBASE_CONNECTION")
 	couchbaseBucket     = os.Getenv("COUCHBASE_BUCKET")
 	couchbaseScope      = os.Getenv("COUCHBASE_SCOPE")
-	couchbaseUsername   = os.Getenv("COUCHBASE_USERNAME")
-	couchbasePassword   = os.Getenv("COUCHBASE_PASSWORD")
+	couchbaseUser       = os.Getenv("COUCHBASE_USER")
+	couchbasePass       = os.Getenv("COUCHBASE_PASS")
 )
 
 // getCouchbaseVars validates and returns Couchbase configuration variables
@@ -54,10 +54,10 @@ func getCouchbaseVars(t *testing.T) map[string]any {
 		t.Fatal("'COUCHBASE_BUCKET' not set")
 	case couchbaseScope:
 		t.Fatal("'COUCHBASE_SCOPE' not set")
-	case couchbaseUsername:
-		t.Fatal("'COUCHBASE_USERNAME' not set")
-	case couchbasePassword:
-		t.Fatal("'COUCHBASE_PASSWORD' not set")
+	case couchbaseUser:
+		t.Fatal("'COUCHBASE_USER' not set")
+	case couchbasePass:
+		t.Fatal("'COUCHBASE_PASS' not set")
 	}
 
 	return map[string]any{
@@ -65,8 +65,8 @@ func getCouchbaseVars(t *testing.T) map[string]any {
 		"connection_string": couchbaseConnection,
 		"bucket":            couchbaseBucket,
 		"scope":             couchbaseScope,
-		"username":          couchbaseUsername,
-		"password":          couchbasePassword,
+		"username":          couchbaseUser,
+		"password":          couchbasePass,
 	}
 }
 
@@ -302,7 +302,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	cluster, err := initCouchbaseCluster(couchbaseConnection, couchbaseUsername, couchbasePassword)
+	cluster, err := initCouchbaseCluster(couchbaseConnection, couchbaseUser, couchbasePass)
 	if err != nil {
 		t.Fatalf("unable to create Couchbase connection: %s", err)
 	}
