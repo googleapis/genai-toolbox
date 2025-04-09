@@ -111,7 +111,7 @@ application. See below the list of Client SDKs for using various frameworks:
 {{% tab header="LangChain" lang="en" %}}
 
 Once you've installed the [Toolbox LangChain
-SDK](https://github.com/googleapis/mcp-toolbox-sdk-python](https://pypi.org/project/toolbox-langchain/), you can load
+SDK](https://pypi.org/project/toolbox-langchain/), you can load
 tools:
 
 {{< highlight python >}}
