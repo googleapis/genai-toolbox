@@ -517,7 +517,7 @@ asyncio.run(main())
     
     {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
-To learn more about tool calling with Google GenAI, check out the [Google GenAI Documentation.](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling)
+To learn more about tool calling with Google GenAI, check out the [Google GenAI Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
 {{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
