@@ -27,7 +27,9 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/couchbase/gocb/v2"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -115,6 +117,59 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+}
+
+// SetupCouchbaseCollection creates a scope and collection and inserts test data
+func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.Cluster,
+	collectionName string, params []map[string]any) func(t *testing.T) {
+
+	// Get bucket reference
+	bucket := cluster.Bucket(couchbaseBucket)
+
+	// Wait for bucket to be ready
+	err := bucket.WaitUntilReady(5*time.Second, nil)
+	if err != nil {
+		t.Fatalf("failed to connect to bucket: %v", err)
+	}
+
+	// Create scope if it doesn't exist
+	bucketMgr := bucket.Collections()
+	err = bucketMgr.CreateScope(couchbaseScope, nil)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		t.Logf("failed to create scope (might already exist): %v", err)
+	}
+
+	// Create collection if it doesn't exist
+	err = bucketMgr.CreateCollection(gocb.CollectionSpec{
+		Name:      collectionName,
+		ScopeName: couchbaseScope,
+	}, nil)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		t.Fatalf("failed to create collection: %v", err)
+	}
+
+	// Get a reference to the collection
+	collection := bucket.Scope(couchbaseScope).Collection(collectionName)
+
+	// Insert test documents
+	for i, param := range params {
+		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{})
+		if err != nil {
+			t.Fatalf("failed to insert test data: %v", err)
+		}
+	}
+
+	// Return a cleanup function
+	return func(t *testing.T) {
+		// Drop the collection
+		err := bucketMgr.DropCollection(gocb.CollectionSpec{
+			Name:      collectionName,
+			ScopeName: couchbaseScope,
+		}, nil)
+		if err != nil {
+			t.Logf("failed to drop collection: %v", err)
 		}
 	}
 }
