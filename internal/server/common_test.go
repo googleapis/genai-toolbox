@@ -135,7 +135,7 @@ func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, 
 }
 
 // setUpServer create a new server with tools and toolsets that are given
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (*httptest.Server, func()) {
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -174,7 +174,6 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 	default:
 		t.Fatalf("unknown router")
 	}
-	ts := httptest.NewServer(r)
 	shutdown := func() {
 		// cancel context
 		cancel()
@@ -183,10 +182,19 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		if err != nil {
 			t.Fatalf("error shutting down OpenTelemetry: %s", err)
 		}
-		// close server
-		ts.Close()
 	}
-	return ts, shutdown
+
+	return r, shutdown
+}
+
+func runServer(r chi.Router, tls bool) *httptest.Server {
+	var ts *httptest.Server
+	if tls {
+		ts = httptest.NewTLSServer(r)
+	} else {
+		ts = httptest.NewServer(r)
+	}
+	return ts
 }
 
 func runRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, []byte, error) {

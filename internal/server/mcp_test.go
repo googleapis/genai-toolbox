@@ -60,8 +60,10 @@ var tool3InputSchema = map[string]any{
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3}
 	toolsMap, toolsets := setUpResources(t, mockTools)
-	ts, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
 
 	testCases := []struct {
 		name  string
@@ -267,8 +269,18 @@ func TestMcpEndpoint(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	ts, shutdown := setUpServer(t, "mcp", nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+	if !strings.Contains(ts.URL, "http://127.0.0.1") {
+		t.Fatalf("unexpected url, got %s", ts.URL)
+	}
+	tls := runServer(r, true)
+	defer tls.Close()
+	if !strings.Contains(tls.URL, "https://127.0.0.1") {
+		t.Fatalf("unexpected url, got %s", tls.URL)
+	}
 
 	contentType := "text/event-stream"
 	cacheControl := "no-cache"
@@ -276,25 +288,41 @@ func TestSseEndpoint(t *testing.T) {
 	accessControlAllowOrigin := "*"
 
 	testCases := []struct {
-		name  string
-		url   string
-		event string
+		name     string
+		tls      bool
+		url      string
+		base_url string
+		event    string
 	}{
 		{
 			name:  "basic",
+			tls:   false,
 			url:   "/sse",
 			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", ts.URL),
 		},
 		{
 			name:  "toolset1",
+			tls:   false,
 			url:   "/tool1_only/sse",
 			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp/tool1_only?sessionId=", ts.URL),
+		},
+		{
+			name:  "basic with tls",
+			tls:   true,
+			url:   "/sse",
+			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", tls.URL),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(ts.URL + tc.url)
+			var resp *http.Response
+			var err error
+			if tc.tls {
+				resp, err = tls.Client().Get(tls.URL + tc.url)
+			} else {
+				resp, err = ts.Client().Get(ts.URL + tc.url)
+			}
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
