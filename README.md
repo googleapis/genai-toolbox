@@ -136,6 +136,31 @@ Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
+<summary>Core</summary>
+
+1. Install [Toolbox Core SDK][toolbox-core]:
+    ```bash
+    pip install toolbox-core
+    ```
+1. Load tools:
+    ```python
+    from toolbox_core import ToolboxClient
+
+    # update the url to point to your server
+    client = ToolboxClient("http://127.0.0.1:5000")
+
+    # these tools can be passed to your application! 
+    tools = await client.load_toolset()
+    ```
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's README][toolbox-core-readme].
+
+[toolbox-core]: https://pypi.org/project/toolbox-core/
+[toolbox-core-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-core/README.md
+
+</details>
+<details>
 <summary>LangChain / LangGraph</summary>
 
 1. Install [Toolbox LangChain SDK][toolbox-langchain]:
@@ -156,8 +181,8 @@ application. See below the list of Client SDKs for using various frameworks:
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README][toolbox-langchain-readme].
 
-[toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
-[toolbox-langchain-readme]: https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md
+[toolbox-langchain]: https://pypi.org/project/toolbox-langchain/
+[toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md
 
 </details>
 
