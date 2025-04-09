@@ -150,7 +150,7 @@ application. See below the list of Client SDKs for using various frameworks:
     client = ToolboxClient("http://127.0.0.1:5000")
 
     # these tools can be passed to your application! 
-    tools = await client.load_toolset()
+    tools = await client.load_toolset("toolset_name")
     ```
 
 For more detailed instructions on using the Toolbox Core SDK, see the
