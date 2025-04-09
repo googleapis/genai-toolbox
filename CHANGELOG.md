@@ -53,7 +53,7 @@
 
 ### ⚠ BREAKING CHANGES
 
-* **langchain-sdk:** The SDK for `toolbox-langchain` is now located [here](https://github.com/googleapis/genai-toolbox-langchain-python).
+* **langchain-sdk:** The SDK for `toolbox-langchain` is now located [here](https://github.com/googleapis/mcp-toolbox-sdk-python).
 
 ### Features
 

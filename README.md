@@ -156,8 +156,8 @@ application. See below the list of Client SDKs for using various frameworks:
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README][toolbox-langchain-readme].
 
-[toolbox-langchain]: https://github.com/googleapis/genai-toolbox-langchain-python
-[toolbox-langchain-readme]: https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md
+[toolbox-langchain]: https://github.com/googleapis/mcp-toolbox-sdk-python
+[toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/README.md
 
 </details>
 

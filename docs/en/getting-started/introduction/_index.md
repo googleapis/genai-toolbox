@@ -111,7 +111,7 @@ application. See below the list of Client SDKs for using various frameworks:
 {{% tab header="LangChain" lang="en" %}}
 
 Once you've installed the [Toolbox LangChain
-SDK](https://github.com/googleapis/genai-toolbox-langchain-python), you can load
+SDK](https://github.com/googleapis/mcp-toolbox-sdk-python), you can load
 tools:
 
 {{< highlight python >}}
@@ -125,7 +125,7 @@ tools = client.load_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
-[project's README](https://github.com/googleapis/genai-toolbox-langchain-python/blob/main/README.md).
+[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/README.md).
 
 {{% /tab %}}
 {{% tab header="Llamaindex" lang="en" %}}
