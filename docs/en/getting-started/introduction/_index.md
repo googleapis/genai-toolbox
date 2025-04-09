@@ -125,7 +125,7 @@ tools = await client.aload_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md).
+[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
