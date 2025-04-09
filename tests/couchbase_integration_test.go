@@ -128,7 +128,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runCouchbaseToolGetTest(t)
+	RunToolGetTest(t)
 
 	select1Want := "[{\"$1\":1}]"
 	RunToolInvokeTest(t, select1Want)
