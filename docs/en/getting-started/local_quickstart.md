@@ -295,7 +295,7 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-def main():
+async def run_application():
     # TODO(developer): replace this with another model if needed
     model = ChatVertexAI(model_name="gemini-1.5-pro")
     # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
@@ -303,7 +303,7 @@ def main():
     
     # Load the tools from the Toolbox server
     client = ToolboxClient("http://127.0.0.1:5000")
-    tools = client.load_toolset()
+    tools = await client.aload_toolset()
 
     agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
@@ -313,7 +313,7 @@ def main():
         response = agent.invoke(inputs, stream_mode="values", config=config)
         print(response["messages"][-1].content)
 
-main()
+asyncio.run(run_application())
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="python" >}}
 import asyncio
@@ -346,7 +346,7 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-async def main():
+async def run_application():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-1.5-pro",
@@ -363,7 +363,7 @@ async def main():
     
     # Load the tools from the Toolbox server
     client = ToolboxClient("http://127.0.0.1:5000")
-    tools = client.load_toolset()
+    tools = await client.aload_toolset()
 
     agent = AgentWorkflow.from_tools_or_functions(
         tools,
@@ -376,7 +376,7 @@ async def main():
          print(f"---- {query} ----")
          print(str(response))
 
-asyncio.run(main())
+asyncio.run(run_application())
 {{< /tab >}}
 {{< /tabpane >}}
     
