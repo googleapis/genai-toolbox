@@ -125,7 +125,7 @@ tools = client.load_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
-[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/README.md).
+[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md).
 
 {{% /tab %}}
 {{% tab header="Llamaindex" lang="en" %}}
