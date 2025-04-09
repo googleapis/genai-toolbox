@@ -16,24 +16,6 @@ This guide assumes you have already done the following:
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
-1. Completed setup for usage with an LLM model such as
-{{< tabpane text=true persist=header >}}
-{{% tab header="Core" lang="en" %}}
-- [google-genai](https://cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) package.
-{{% /tab %}}
-{{% tab header="LangChain" lang="en" %}}
-- [langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
-
-- [langchain-google-genai](https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup) package.
-
-- [langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
-{{% /tab %}}
-{{% tab header="LlamaIndex" lang="en" %}}
-- [llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-google-genai/) package.
-
-- [llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
-{{% /tab %}}
-{{< /tabpane >}}
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
@@ -265,7 +247,7 @@ pip install toolbox-llamaindex
     {{< tabpane persist=header >}}
 {{< tab header="Core" lang="bash" >}}
 
-# No other installations needed
+pip install google-genai
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
