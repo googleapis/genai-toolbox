@@ -172,10 +172,10 @@ func SetupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 
 // SetupCouchbaseCollection creates a scope and collection and inserts test data
 func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.Cluster,
-	collectionName string, params []map[string]any) func(t *testing.T) {
+	bucketName, scopeName, collectionName string, params []map[string]any) func(t *testing.T) {
 
 	// Get bucket reference
-	bucket := cluster.Bucket(couchbaseBucket)
+	bucket := cluster.Bucket(bucketName)
 
 	// Wait for bucket to be ready
 	err := bucket.WaitUntilReady(5*time.Second, nil)
@@ -185,7 +185,7 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 
 	// Create scope if it doesn't exist
 	bucketMgr := bucket.Collections()
-	err = bucketMgr.CreateScope(couchbaseScope, nil)
+	err = bucketMgr.CreateScope(scopeName, nil)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Logf("failed to create scope (might already exist): %v", err)
 	}
@@ -193,14 +193,14 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	// Create collection if it doesn't exist
 	err = bucketMgr.CreateCollection(gocb.CollectionSpec{
 		Name:      collectionName,
-		ScopeName: couchbaseScope,
+		ScopeName: scopeName,
 	}, nil)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Fatalf("failed to create collection: %v", err)
 	}
 
 	// Get a reference to the collection
-	collection := bucket.Scope(couchbaseScope).Collection(collectionName)
+	collection := bucket.Scope(scopeName).Collection(collectionName)
 
 	// Insert test documents
 	for i, param := range params {
@@ -215,7 +215,7 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 		// Drop the collection
 		err := bucketMgr.DropCollection(gocb.CollectionSpec{
 			Name:      collectionName,
-			ScopeName: couchbaseScope,
+			ScopeName: scopeName,
 		}, nil)
 		if err != nil {
 			t.Logf("failed to drop collection: %v", err)

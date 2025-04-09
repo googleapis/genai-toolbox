@@ -102,12 +102,12 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	// Set up data for param tool
 	paramToolStatement, params1 := GetCouchbaseParamToolInfo(collectionNameParam)
-	teardownCollection1 := SetupCouchbaseCollection(t, ctx, cluster, collectionNameParam, params1)
+	teardownCollection1 := SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
 	defer teardownCollection1(t)
 
 	// Set up data for auth tool
 	authToolStatement, params2 := GetCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := SetupCouchbaseCollection(t, ctx, cluster, collectionNameAuth, params2)
+	teardownCollection2 := SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
 	defer teardownCollection2(t)
 
 	// Write config into a file and pass it to command
