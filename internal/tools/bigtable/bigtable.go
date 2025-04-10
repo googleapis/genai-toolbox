@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -144,7 +144,6 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		t.Statement,
 		mapParams,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to prepare statement: %w", err)
 	}
@@ -156,7 +155,6 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	}
 
 	var out []any
-
 	err = bs.Execute(context.Background(), func(resultRow bigtable.ResultRow) bool {
 		vMap := make(map[string]any)
 		cols := resultRow.Metadata.Columns
@@ -171,7 +169,6 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 
 		return true
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute client: %w", err)
 	}
