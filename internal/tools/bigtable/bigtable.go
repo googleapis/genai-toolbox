@@ -17,7 +17,6 @@ package bigtable
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"cloud.google.com/go/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -29,7 +28,6 @@ const ToolKind string = "bigtable-sql"
 
 type compatibleSource interface {
 	BigtableClient() *bigtable.Client
-	DatabaseDialect() string
 }
 
 // validate compatible sources are still compatible
@@ -81,7 +79,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.BigtableClient(),
-		dialect:      s.DatabaseDialect(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 		mcpManifest:  mcpManifest,
 	}
@@ -98,43 +95,38 @@ type Tool struct {
 	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Client      *bigtable.Client
-	dialect     string
 	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func getMapParams(tparams tools.Parameters, params tools.ParamValues, dialect string) (map[string]bigtable.SQLType, error) {
+func getMapParamsType(tparams tools.Parameters, params tools.ParamValues) (map[string]bigtable.SQLType, error) {
 	paramTypeMap := make(map[string]string)
 	for _, p := range tparams {
 		paramTypeMap[p.GetName()] = p.GetType()
 	}
 
-	switch strings.ToLower(dialect) {
-	case "googlesql":
-		btParams := make(map[string]bigtable.SQLType)
-		for _, p := range params {
-			switch paramTypeMap[p.Name] {
-			case "boolean":
-				btParams[p.Name] = bigtable.BoolSQLType{}
-			case "string":
-				btParams[p.Name] = bigtable.StringSQLType{}
-			case "integer":
-				btParams[p.Name] = bigtable.Int64SQLType{}
-			case "float":
-				btParams[p.Name] = bigtable.Float64SQLType{}
-			case "array":
-				btParams[p.Name] = bigtable.ArraySQLType{}
-			}
+	btParams := make(map[string]bigtable.SQLType)
+	for _, p := range params {
+		switch paramTypeMap[p.Name] {
+		case "boolean":
+			btParams[p.Name] = bigtable.BoolSQLType{}
+		case "string":
+			btParams[p.Name] = bigtable.StringSQLType{}
+		case "integer":
+			btParams[p.Name] = bigtable.Int64SQLType{}
+		case "float":
+			btParams[p.Name] = bigtable.Float64SQLType{}
+		case "array":
+			btParams[p.Name] = bigtable.ArraySQLType{}
 		}
-		return btParams, nil
-	default:
-		return nil, fmt.Errorf("invalid dialect %s", dialect)
 	}
+
+	return btParams, nil
 }
 
 func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
-	mapParams, err := getMapParams(t.Parameters, params, t.dialect)
+	mapParamsType, err := getMapParamsType(t.Parameters, params)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
@@ -142,14 +134,13 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	ps, err := t.Client.PrepareStatement(
 		context.Background(),
 		t.Statement,
-		mapParams,
+		mapParamsType,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to prepare statement: %w", err)
 	}
 
 	bs, err := ps.Bind(params.AsMap())
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to bind: %w", err)
 	}

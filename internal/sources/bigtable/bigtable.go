@@ -47,10 +47,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:    r.Name,
-		Kind:    SourceKind,
-		Dialect: "googlesql",
-		Client:  client,
+		Name:   r.Name,
+		Kind:   SourceKind,
+		Client: client,
 	}
 	return s, nil
 }
@@ -58,10 +57,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name    string `yaml:"name"`
-	Kind    string `yaml:"kind"`
-	Client  *bigtable.Client
-	Dialect string
+	Name   string `yaml:"name"`
+	Kind   string `yaml:"kind"`
+	Client *bigtable.Client
 }
 
 func (s *Source) SourceKind() string {
@@ -70,10 +68,6 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) BigtableClient() *bigtable.Client {
 	return s.Client
-}
-
-func (s *Source) DatabaseDialect() string {
-	return s.Dialect
 }
 
 func initBigtableClient(ctx context.Context, tracer trace.Tracer, name, project, instance string) (*bigtable.Client, error) {
