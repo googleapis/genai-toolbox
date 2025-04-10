@@ -310,7 +310,7 @@ async def run_application():
     # provided wrapper packages, which handle framework-specific boilerplate.
     toolbox_tools = await toolbox_client.load_toolset("my-toolset")
     genai_client = genai.Client(
-        vertexai=True, project="twisha-dev", location="us-central1"
+        vertexai=True, project="project-id", location="us-central1"
     )
 
     genai_tools = [
