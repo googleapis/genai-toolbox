@@ -83,7 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.SpannerClient(),
 		dialect:      s.DatabaseDialect(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
