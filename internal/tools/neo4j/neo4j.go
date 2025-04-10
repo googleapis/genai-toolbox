@@ -38,12 +38,13 @@ var _ compatibleSource = &neo4jsc.Source{}
 var compatibleSources = [...]string{neo4jsc.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name" validate:"required"`
-	Kind        string           `yaml:"kind" validate:"required"`
-	Source      string           `yaml:"source" validate:"required"`
-	Description string           `yaml:"description" validate:"required"`
-	Statement   string           `yaml:"statement" validate:"required"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Statement    string           `yaml:"statement" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -74,14 +75,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:        cfg.Name,
-		Kind:        ToolKind,
-		Parameters:  cfg.Parameters,
-		Statement:   cfg.Statement,
-		Driver:      s.Neo4jDriver(),
-		Database:    s.Neo4jDatabase(),
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
-		mcpManifest: mcpManifest,
+		Name:         cfg.Name,
+		Kind:         ToolKind,
+		Parameters:   cfg.Parameters,
+		Statement:    cfg.Statement,
+		AuthRequired: cfg.AuthRequired,
+		Driver:       s.Neo4jDriver(),
+		Database:     s.Neo4jDatabase(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
