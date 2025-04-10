@@ -17,6 +17,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -64,12 +65,14 @@ func TestMcpEndpoint(t *testing.T) {
 
 	testCases := []struct {
 		name  string
+		url   string
 		isErr bool
 		body  mcp.JSONRPCRequest
 		want  map[string]any
 	}{
 		{
 			name: "initialize",
+			url:  "/",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "mcp-initialize",
@@ -91,6 +94,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "basic notification",
+			url:  "/",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Request: mcp.Request{
@@ -100,6 +104,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "tools/list",
+			url:  "/",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "tools-list",
@@ -130,7 +135,51 @@ func TestMcpEndpoint(t *testing.T) {
 			},
 		},
 		{
+			name: "tools/list on tool1_only",
+			url:  "/tool1_only",
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list-tool1",
+				Request: mcp.Request{
+					Method: "tools/list",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list-tool1",
+				"result": map[string]any{
+					"tools": []any{
+						map[string]any{
+							"name":        "no_params",
+							"inputSchema": tool1InputSchema,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "tools/list on invalid tool set",
+			url:   "/foo",
+			isErr: true,
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list-invalid-toolset",
+				Request: mcp.Request{
+					Method: "tools/list",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list-invalid-toolset",
+				"error": map[string]any{
+					"code":    -32600.0,
+					"message": "toolset does not exist",
+				},
+			},
+		},
+		{
 			name:  "missing method",
+			url:   "/",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -148,6 +197,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "invalid method",
+			url:   "/",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -167,6 +217,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "invalid jsonrpc version",
+			url:   "/",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: "1.0",
@@ -192,7 +243,7 @@ func TestMcpEndpoint(t *testing.T) {
 				t.Fatalf("unexpected error during marshaling of body")
 			}
 
-			resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(reqMarshal))
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal))
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
@@ -223,36 +274,54 @@ func TestSseEndpoint(t *testing.T) {
 	cacheControl := "no-cache"
 	connection := "keep-alive"
 	accessControlAllowOrigin := "*"
-	wantEvent := "event: endpoint"
 
-	t.Run("test sse endpoint", func(t *testing.T) {
-		resp, err := http.Get(ts.URL + "/sse")
-		if err != nil {
-			t.Fatalf("unexpected error during request: %s", err)
-		}
-		defer resp.Body.Close()
+	testCases := []struct {
+		name  string
+		url   string
+		event string
+	}{
+		{
+			name:  "basic",
+			url:   "/sse",
+			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", ts.URL),
+		},
+		{
+			name:  "toolset1",
+			url:   "/tool1_only/sse",
+			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp/tool1_only?sessionId=", ts.URL),
+		},
+	}
 
-		if gotContentType := resp.Header.Get("Content-type"); gotContentType != contentType {
-			t.Fatalf("unexpected content-type header: want %s, got %s", contentType, gotContentType)
-		}
-		if gotCacheControl := resp.Header.Get("Cache-Control"); gotCacheControl != cacheControl {
-			t.Fatalf("unexpected cache-control header: want %s, got %s", cacheControl, gotCacheControl)
-		}
-		if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
-			t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
-		}
-		if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
-			t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := http.Get(ts.URL + tc.url)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			defer resp.Body.Close()
 
-		buffer := make([]byte, 1024)
-		n, err := resp.Body.Read(buffer)
-		if err != nil {
-			t.Fatalf("unable to read response: %s", err)
-		}
-		endpointEvent := string(buffer[:n])
-		if !strings.Contains(endpointEvent, wantEvent) {
-			t.Fatalf("unexpected event: got %s", endpointEvent)
-		}
-	})
+			if gotContentType := resp.Header.Get("Content-type"); gotContentType != contentType {
+				t.Fatalf("unexpected content-type header: want %s, got %s", contentType, gotContentType)
+			}
+			if gotCacheControl := resp.Header.Get("Cache-Control"); gotCacheControl != cacheControl {
+				t.Fatalf("unexpected cache-control header: want %s, got %s", cacheControl, gotCacheControl)
+			}
+			if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
+				t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
+			}
+			if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
+				t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
+			}
+
+			buffer := make([]byte, 1024)
+			n, err := resp.Body.Read(buffer)
+			if err != nil {
+				t.Fatalf("unable to read response: %s", err)
+			}
+			endpointEvent := string(buffer[:n])
+			if !strings.Contains(endpointEvent, tc.event) {
+				t.Fatalf("unexpected event: got %s, want to contain %s", endpointEvent, tc.event)
+			}
+		})
+	}
 }
