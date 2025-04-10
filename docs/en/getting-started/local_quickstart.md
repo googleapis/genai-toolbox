@@ -4,7 +4,7 @@ type: docs
 weight: 2
 description: >
   How to get started running Toolbox locally with Python, PostgreSQL, and 
-  LangGraph or LlamaIndex. 
+  GoogleGenAI, LangGraph or LlamaIndex. 
 ---
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
