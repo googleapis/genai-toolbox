@@ -1,6 +1,23 @@
 # Changelog
 
 
+## [0.4.0](https://github.com/googleapis/genai-toolbox/compare/v0.3.0...v0.4.0) (2025-04-10)
+
+
+### Features
+
+* Add IAM authentication to AlloyDB Source ([#399](https://github.com/googleapis/genai-toolbox/issues/399)) ([e8ed447](https://github.com/googleapis/genai-toolbox/commit/e8ed447d9153c60a1d6321285587e6e4ca930f87))
+* Add IAM AuthN to Cloud SQL Sources ([#414](https://github.com/googleapis/genai-toolbox/issues/414)) ([be85b82](https://github.com/googleapis/genai-toolbox/commit/be85b820785dbce79133b0cf8788bde75ff25fee))
+
+
+### Bug Fixes
+
+* [#419](https://github.com/googleapis/genai-toolbox/issues/419) TLS https URL for SSE endpoint ([#420](https://github.com/googleapis/genai-toolbox/issues/420)) ([0a7d3ff](https://github.com/googleapis/genai-toolbox/commit/0a7d3ff06b88051c752b6d53bc964ed6e6be400e))
+* **deps:** Update module cloud.google.com/go/spanner to v1.79.0 ([#415](https://github.com/googleapis/genai-toolbox/issues/415)) ([21b82c1](https://github.com/googleapis/genai-toolbox/commit/21b82c10c2aafc2cd8e1050ac7d8943076931004))
+* **deps:** Update module github.com/go-sql-driver/mysql to v1.9.2 ([#408](https://github.com/googleapis/genai-toolbox/issues/408)) ([6638fbb](https://github.com/googleapis/genai-toolbox/commit/6638fbb3a0f5d81654df2882e9edd557adf6d766))
+* **deps:** Update module golang.org/x/oauth2 to v0.29.0 ([#416](https://github.com/googleapis/genai-toolbox/issues/416)) ([92ed74a](https://github.com/googleapis/genai-toolbox/commit/92ed74a4df014c429584a54a806d07d232ee5e06))
+* Run linter ([#410](https://github.com/googleapis/genai-toolbox/issues/410)) ([b81feb6](https://github.com/googleapis/genai-toolbox/commit/b81feb61e68c67d0014d8f3c742320f266118abf))
+
 ## [0.3.0](https://github.com/googleapis/genai-toolbox/compare/v0.2.1...v0.3.0) (2025-04-04)
 
 
