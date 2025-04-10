@@ -45,3 +45,4 @@ run:
     - mysql
     - http
     - alloydb_ai_nl
+    - bigtable
