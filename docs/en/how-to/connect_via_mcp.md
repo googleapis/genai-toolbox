@@ -74,3 +74,13 @@ Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testi
 
 1. Click the `Connect` button. Voila! You should be able to inspect your toolbox
    tools!
+
+### Supported Clients
+
+| Client | SSE Works | MCP Config Docs |
+|--------|--------|--------|
+| Claude Desktop | ❌ | Only supports STDIO servers | 
+| MCP Inspector | ✅ | https://github.com/modelcontextprotocol/inspector |
+| Cursor | ✅ | https://docs.cursor.com/context/model-context-protocol |
+| Windsurf | ✅ | https://docs.windsurf.com/windsurf/mcp | 
+| VS Code (Insiders) | ✅ | https://code.visualstudio.com/docs/copilot/chat/mcp-servers |
