@@ -40,6 +40,7 @@ var tool2InputSchema = map[string]any{
 	"properties": map[string]any{
 		"param1": map[string]any{"type": "integer", "description": "This is the first parameter."},
 		"param2": map[string]any{"type": "integer", "description": "This is the second parameter."},
+		"param3": map[string]any{"type": "integer", "description": "This is the third parameter."},
 	},
 	"required": []any{"param1", "param2"},
 }

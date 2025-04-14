@@ -71,7 +71,9 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	for _, p := range t.Params {
 		name := p.GetName()
 		properties[name] = p.McpManifest()
-		required = append(required, name)
+		if !p.IsOptional() {
+			required = append(required, name)
+		}
 	}
 
 	toolsSchema := tools.McpToolsSchema{
@@ -97,6 +99,7 @@ var tool2 = MockTool{
 	Params: tools.Parameters{
 		tools.NewIntParameter("param1", "This is the first parameter."),
 		tools.NewIntParameter("param2", "This is the second parameter."),
+		tools.NewIntParameterWithOptions("param3", "This is the third parameter.", true),
 	},
 }
 

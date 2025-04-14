@@ -539,6 +539,35 @@ func TestParametersParse(t *testing.T) {
 				"my_bool": 1.5,
 			},
 		},
+		{
+			name: "optional parameter with no value",
+			params: tools.Parameters{
+				tools.NewStringParameterWithOptions("optional_param", "this param is optional", true),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "optional_param", Value: nil}},
+		},
+		{
+			name: "optional parameter with value",
+			params: tools.Parameters{
+				tools.NewStringParameterWithOptions("optional_param", "this param is optional", true),
+			},
+			in: map[string]any{
+				"optional_param": "hello",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "optional_param", Value: "hello"}},
+		},
+		{
+			name: "mixed required and optional parameters",
+			params: tools.Parameters{
+				tools.NewStringParameter("required_param", "this param is required"),
+				tools.NewStringParameterWithOptions("optional_param", "this param is optional", true),
+			},
+			in: map[string]any{
+				"required_param": "hello",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "required_param", Value: "hello"}, tools.ParamValue{Name: "optional_param", Value: nil}},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -976,6 +1005,209 @@ func TestFailParametersUnmarshal(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestOptionalParameter(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	tests := []struct {
+		name     string
+		yamlStr  string
+		wantErr  bool
+		validate func(*testing.T, tools.Parameters)
+	}{
+		{
+			name: "required parameter (default)",
+			yamlStr: `
+- name: required_param
+  type: string
+  description: "A required parameter"
+`,
+			validate: func(t *testing.T, ps tools.Parameters) {
+				if len(ps) != 1 {
+					t.Errorf("got %d parameters, want 1", len(ps))
+				}
+				p := ps[0]
+				if p.IsOptional() {
+					t.Error("parameter should not be optional")
+				}
+
+				// Verify that the parameter is included in the required field of McpManifest
+				manifest := ps.McpManifest()
+				t.Logf("MCPManifest for required parameter: %+v", manifest)
+				if len(manifest.Required) != 1 || manifest.Required[0] != "required_param" {
+					t.Errorf("required parameter not properly reflected in McpManifest, got %v", manifest.Required)
+				}
+			},
+		},
+		{
+			name: "optional parameter",
+			yamlStr: `
+- name: optional_param
+  type: string
+  description: "An optional parameter"
+  optional: true
+`,
+			validate: func(t *testing.T, ps tools.Parameters) {
+				if len(ps) != 1 {
+					t.Errorf("got %d parameters, want 1", len(ps))
+				}
+				p := ps[0]
+				if !p.IsOptional() {
+					t.Error("parameter should be optional")
+				}
+
+				// Verify that the parameter is not included in the required field of McpManifest
+				manifest := ps.McpManifest()
+				t.Logf("MCPManifest for optional parameter: %+v", manifest)
+				if len(manifest.Required) != 0 {
+					t.Errorf("optional parameter should not be in required list, got %v", manifest.Required)
+				}
+			},
+		},
+		{
+			name: "mixed parameters",
+			yamlStr: `
+- name: required_param
+  type: string
+  description: "A required parameter"
+- name: optional_param
+  type: string
+  description: "An optional parameter"
+  optional: true
+`,
+			validate: func(t *testing.T, ps tools.Parameters) {
+				if len(ps) != 2 {
+					t.Errorf("got %d parameters, want 2", len(ps))
+				}
+
+				// Verify McpManifest
+				manifest := ps.McpManifest()
+				t.Logf("MCPManifest for mixed parameters: %+v", manifest)
+				if len(manifest.Required) != 1 || manifest.Required[0] != "required_param" {
+					t.Errorf("incorrect required parameters in McpManifest, got %v", manifest.Required)
+				}
+
+				// Verify each parameter
+				for _, p := range ps {
+					switch p.GetName() {
+					case "required_param":
+						if p.IsOptional() {
+							t.Error("required_param should not be optional")
+						}
+					case "optional_param":
+						if !p.IsOptional() {
+							t.Error("optional_param should be optional")
+						}
+					default:
+						t.Errorf("unexpected parameter name: %s", p.GetName())
+					}
+				}
+			},
+		},
+		{
+			name: "invalid optional value",
+			yamlStr: `
+- name: invalid_param
+  type: string
+  description: "A parameter with invalid optional value"
+  optional: "not_a_boolean"
+`,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ps tools.Parameters
+			err := yaml.UnmarshalContext(ctx, []byte(tt.yamlStr), &ps)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Error("expected error, got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if tt.validate != nil {
+				tt.validate(t, ps)
+			}
+		})
+	}
+}
+
+func TestNewParameterWithOptional(t *testing.T) {
+	tests := []struct {
+		name    string
+		param   tools.Parameter
+		wantOpt bool
+	}{
+		{
+			name:    "new string parameter (default required)",
+			param:   tools.NewStringParameter("test", "description"),
+			wantOpt: false,
+		},
+		{
+			name:    "new optional string parameter",
+			param:   tools.NewStringParameterWithOptions("test", "description", true),
+			wantOpt: true,
+		},
+		{
+			name:    "new int parameter (default required)",
+			param:   tools.NewIntParameter("test", "description"),
+			wantOpt: false,
+		},
+		{
+			name:    "new optional int parameter",
+			param:   tools.NewIntParameterWithOptions("test", "description", true),
+			wantOpt: true,
+		},
+		{
+			name:    "new float parameter (default required)",
+			param:   tools.NewFloatParameter("test", "description"),
+			wantOpt: false,
+		},
+		{
+			name:    "new optional float parameter",
+			param:   tools.NewFloatParameterWithOptions("test", "description", true),
+			wantOpt: true,
+		},
+		{
+			name:    "new boolean parameter (default required)",
+			param:   tools.NewBooleanParameter("test", "description"),
+			wantOpt: false,
+		},
+		{
+			name:    "new optional boolean parameter",
+			param:   tools.NewBooleanParameterWithOptions("test", "description", true),
+			wantOpt: true,
+		},
+		{
+			name:    "new array parameter (default required)",
+			param:   tools.NewArrayParameter("test", "description", tools.NewStringParameter("item", "item description")),
+			wantOpt: false,
+		},
+		{
+			name:    "new optional array parameter",
+			param:   tools.NewArrayParameterWithOptions("test", "description", tools.NewStringParameter("item", "item description"), true),
+			wantOpt: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.param.IsOptional(); got != tt.wantOpt {
+				t.Errorf("IsOptional() = %v, want %v", got, tt.wantOpt)
 			}
 		})
 	}
