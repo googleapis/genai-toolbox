@@ -548,9 +548,6 @@ To learn more about Agents in LlamaIndex, check out the
 {{% /tab %}}
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
-{{< /tab >}}
-{{< /tabpane >}}
-    
     {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
     ```sh
