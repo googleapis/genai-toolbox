@@ -233,6 +233,10 @@ you can connect to a
 
 pip install toolbox-core
 {{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+
+pip install toolbox-langchain
+{{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
 pip install toolbox-langchain
@@ -250,6 +254,10 @@ pip install toolbox-llamaindex
 
 pip install google-genai
 {{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+
+pip install google-adk langchain
+{{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
 # TODO(developer): replace with correct package if needed
@@ -265,7 +273,7 @@ pip install llama-index-llms-google-genai
 {{< /tab >}}
 {{< /tabpane >}}
     
-1. Create a new file named `hotel_agent.py` and copy the following
+1. Create a new file named `agent.py` and copy the following
    code to create an agent:
     {{< tabpane persist=header >}}
 {{< tab header="Core" lang="python" >}}
@@ -380,6 +388,35 @@ async def run_application():
 
 asyncio.run(run_application())
 
+{{< /tab >}}
+{{< tab header="ADK" lang="python" >}}
+from google.adk.agents import Agent
+from google.adk.tools.toolbox_tool import ToolboxTool
+
+toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
+
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id, 
+  location and price tier. Always mention hotel ids while performing any 
+  searches. This is very important for any operations. For any bookings or 
+  cancellations, please provide the appropriate confirmation. Be sure to 
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
+
+root_agent = Agent(
+    model='gemini-2.0-flash',
+    name='hotel_agent',
+    description='A helpful AI assistant.',
+    instruction=prompt,
+    tools=[toolbox_tools.get_tool("search-hotels-by-location"),
+           toolbox_tools.get_tool("search-hotels-by-name"),
+           toolbox_tools.get_tool("book-hotel"),
+           toolbox_tools.get_tool("update-hotel"),
+           toolbox_tools.get_tool("cancel-hotel"),
+           ]
+)
 {{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
 
@@ -499,6 +536,9 @@ asyncio.run(run_application())
 To learn more about tool calling with Google GenAI, check out the 
 [Google GenAI Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
 {{% /tab %}}
+{{% tab header="ADK" lang="en" %}}
+To learn more about Agent Development Kit, check out the [ADK documentation.](https://google.github.io/adk-docs/)
+{{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
@@ -508,7 +548,28 @@ To learn more about Agents in LlamaIndex, check out the
 {{% /tab %}}
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
-
+{{< /tab >}}
+{{< /tabpane >}}
+    
+    {{< tabpane text=true persist=header >}}
+{{% tab header="Core" lang="en" %}}
     ```sh
-    python hotel_agent.py
+    python agent.py
     ```
+{{% /tab %}}
+{{% tab header="ADK" lang="en" %}}
+    ```sh
+    adk run agent.py
+    ```
+{{% /tab %}}
+{{% tab header="Langchain" lang="en" %}}
+    ```sh
+    python agent.py
+    ```
+{{% /tab %}}
+{{% tab header="LlamaIndex" lang="en" %}}
+    ```sh
+    python agent.py
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
