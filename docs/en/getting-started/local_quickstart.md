@@ -410,12 +410,7 @@ root_agent = Agent(
     name='hotel_agent',
     description='A helpful AI assistant.',
     instruction=prompt,
-    tools=[toolbox_tools.get_tool("search-hotels-by-location"),
-           toolbox_tools.get_tool("search-hotels-by-name"),
-           toolbox_tools.get_tool("book-hotel"),
-           toolbox_tools.get_tool("update-hotel"),
-           toolbox_tools.get_tool("cancel-hotel"),
-           ]
+    tools=toolbox_tools.get_toolset("my-toolset"),
 )
 {{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
