@@ -396,6 +396,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 					description: some description
 					statement: |
 						SELECT * FROM SQL_STATEMENT;
+					authRequired:
+						- my-google-service
 					parameters:
 						- name: country
 						  type: string
@@ -447,11 +449,12 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Kind:        postgressql.ToolKind,
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Name:         "example_tool",
+						Kind:         postgressql.ToolKind,
+						Source:       "my-pg-instance",
+						Description:  "some description",
+						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+						AuthRequired: []string{"my-google-service"},
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
 							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -545,11 +548,12 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Kind:        postgressql.ToolKind,
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Name:         "example_tool",
+						Kind:         postgressql.ToolKind,
+						Source:       "my-pg-instance",
+						Description:  "some description",
+						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+						AuthRequired: []string{},
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
 							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
