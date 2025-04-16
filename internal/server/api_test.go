@@ -26,8 +26,10 @@ import (
 func TestToolsetEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2}
 	toolsMap, toolsets := setUpResources(t, mockTools)
-	ts, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
 
 	// wantResponse is a struct for checks against test cases
 	type wantResponse struct {
@@ -121,8 +123,10 @@ func TestToolsetEndpoint(t *testing.T) {
 func TestToolGetEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2}
 	toolsMap, toolsets := setUpResources(t, mockTools)
-	ts, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
 
 	// wantResponse is a struct for checks against test cases
 	type wantResponse struct {
