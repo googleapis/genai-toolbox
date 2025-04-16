@@ -551,7 +551,7 @@ To learn more about Agents in LlamaIndex, check out the
 {{% /tab %}}
 {{% tab header="ADK" lang="en" %}}
     ```sh
-    adk run agent.py
+    adk run .
     ```
 {{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
