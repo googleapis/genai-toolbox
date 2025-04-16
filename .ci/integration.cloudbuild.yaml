@@ -115,6 +115,8 @@ steps:
       - "SPANNER_PROJECT=$PROJECT_ID"
       - "SPANNER_DATABASE=$_DATABASE_NAME"
       - "SPANNER_INSTANCE=$_SPANNER_INSTANCE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
