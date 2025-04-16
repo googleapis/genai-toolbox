@@ -87,6 +87,22 @@ steps:
       - |
         go test -race -v -tags=integration,alloydb_ai_nl ./tests
 
+  - id: "bigtable"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "BIGTABLE_PROJECT=$PROJECT_ID"
+      - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,bigtable ./tests
+
   - id: "postgres"
     name: golang:1
     waitFor: ["install-dependencies"]
@@ -310,6 +326,7 @@ substitutions:
   _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"
   _ALLOYDB_AI_NL_CLUSTER: "alloydb-ai-nl-testing"
   _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
+  _BIGTABLE_INSTANCE: "bigtable-testing-instance"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"

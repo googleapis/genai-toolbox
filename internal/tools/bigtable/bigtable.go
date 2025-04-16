@@ -140,6 +140,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		return nil, fmt.Errorf("unable to prepare statement: %w", err)
 	}
 
+	fmt.Printf("-----------------------: %s\n", params)
 	bs, err := ps.Bind(params.AsMap())
 	if err != nil {
 		return nil, fmt.Errorf("unable to bind: %w", err)
