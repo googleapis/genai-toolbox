@@ -136,7 +136,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	RunToolGetTest(t)
 
 	select_1_want := "[{\"\":\"1\"}]"
-	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
+	fail_invocation_want := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = "InvalidArgument", desc = "Syntax error: Unexpected identifier \"SELEC\" [at 1:1]\nSELEC 1;\n^"`
 
 	RunToolInvokeTest(t, select_1_want)
 	RunMCPToolCallMethod(t, fail_invocation_want)

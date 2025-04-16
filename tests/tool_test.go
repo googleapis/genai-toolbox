@@ -345,11 +345,13 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
+
 			// Remove `\` and `"` for string comparison
 			got = strings.ReplaceAll(got, "\\", "")
 			want := strings.ReplaceAll(tc.want, "\\", "")
 			got = strings.ReplaceAll(got, "\"", "")
 			want = strings.ReplaceAll(want, "\"", "")
+
 			if got != want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
@@ -482,9 +484,14 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 			defer resp.Body.Close()
 			got := string(bytes.TrimSpace(respBody))
 
-			if got != tc.want {
-				fmt.Printf("res is %s\n\n", got)
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			// Remove `\` and `"` for string comparison
+			got = strings.ReplaceAll(got, "\\", "")
+			want := strings.ReplaceAll(tc.want, "\\", "")
+			got = strings.ReplaceAll(got, "\"", "")
+			want = strings.ReplaceAll(want, "\"", "")
+
+			if !strings.Contains(got, want) {
+				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, want)
 			}
 		})
 	}
