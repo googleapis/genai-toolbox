@@ -93,9 +93,9 @@ type Tool struct {
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
 
-	Scope     *gocb.Scope
-	Statement string
-	manifest  tools.Manifest
+	Scope       *gocb.Scope
+	Statement   string
+	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
