@@ -17,7 +17,9 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -59,17 +61,21 @@ var tool3InputSchema = map[string]any{
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3}
 	toolsMap, toolsets := setUpResources(t, mockTools)
-	ts, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
 
 	testCases := []struct {
 		name  string
+		url   string
 		isErr bool
 		body  mcp.JSONRPCRequest
 		want  map[string]any
 	}{
 		{
 			name: "initialize",
+			url:  "/",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "mcp-initialize",
@@ -91,6 +97,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "basic notification",
+			url:  "/",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Request: mcp.Request{
@@ -100,6 +107,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "tools/list",
+			url:  "/",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "tools-list",
@@ -130,7 +138,51 @@ func TestMcpEndpoint(t *testing.T) {
 			},
 		},
 		{
+			name: "tools/list on tool1_only",
+			url:  "/tool1_only",
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list-tool1",
+				Request: mcp.Request{
+					Method: "tools/list",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list-tool1",
+				"result": map[string]any{
+					"tools": []any{
+						map[string]any{
+							"name":        "no_params",
+							"inputSchema": tool1InputSchema,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "tools/list on invalid tool set",
+			url:   "/foo",
+			isErr: true,
+			body: mcp.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list-invalid-toolset",
+				Request: mcp.Request{
+					Method: "tools/list",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list-invalid-toolset",
+				"error": map[string]any{
+					"code":    -32600.0,
+					"message": "toolset does not exist",
+				},
+			},
+		},
+		{
 			name:  "missing method",
+			url:   "/",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -148,6 +200,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "invalid method",
+			url:   "/",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -167,6 +220,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "invalid jsonrpc version",
+			url:   "/",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: "1.0",
@@ -192,7 +246,7 @@ func TestMcpEndpoint(t *testing.T) {
 				t.Fatalf("unexpected error during marshaling of body")
 			}
 
-			resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(reqMarshal))
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal))
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
@@ -216,43 +270,112 @@ func TestMcpEndpoint(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	ts, shutdown := setUpServer(t, "mcp", nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+	if !strings.Contains(ts.URL, "http://127.0.0.1") {
+		t.Fatalf("unexpected url, got %s", ts.URL)
+	}
+	tsPort := strings.TrimPrefix(ts.URL, "http://127.0.0.1:")
+	tls := runServer(r, true)
+	defer tls.Close()
+	if !strings.Contains(tls.URL, "https://127.0.0.1") {
+		t.Fatalf("unexpected url, got %s", tls.URL)
+	}
+	tlsPort := strings.TrimPrefix(tls.URL, "https://127.0.0.1:")
 
 	contentType := "text/event-stream"
 	cacheControl := "no-cache"
 	connection := "keep-alive"
 	accessControlAllowOrigin := "*"
-	wantEvent := "event: endpoint"
 
-	t.Run("test sse endpoint", func(t *testing.T) {
-		resp, err := http.Get(ts.URL + "/sse")
-		if err != nil {
-			t.Fatalf("unexpected error during request: %s", err)
-		}
-		defer resp.Body.Close()
+	testCases := []struct {
+		name   string
+		server *httptest.Server
+		path   string
+		proto  string
+		event  string
+	}{
+		{
+			name:   "basic",
+			server: ts,
+			path:   "/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", ts.URL),
+		},
+		{
+			name:   "toolset1",
+			server: ts,
+			path:   "/tool1_only/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/tool1_only?sessionId=", tsPort),
+		},
+		{
+			name:   "basic with http proto",
+			server: ts,
+			path:   "/sse",
+			proto:  "http",
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp?sessionId=", tsPort),
+		},
+		{
+			name:   "basic tls with https proto",
+			server: ts,
+			path:   "/sse",
+			proto:  "https",
+			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp?sessionId=", tsPort),
+		},
+		{
+			name:   "basic tls",
+			server: tls,
+			path:   "/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp?sessionId=", tlsPort),
+		},
+	}
 
-		if gotContentType := resp.Header.Get("Content-type"); gotContentType != contentType {
-			t.Fatalf("unexpected content-type header: want %s, got %s", contentType, gotContentType)
-		}
-		if gotCacheControl := resp.Header.Get("Cache-Control"); gotCacheControl != cacheControl {
-			t.Fatalf("unexpected cache-control header: want %s, got %s", cacheControl, gotCacheControl)
-		}
-		if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
-			t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
-		}
-		if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
-			t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := runSseRequest(tc.server, tc.path, tc.proto)
+			if err != nil {
+				t.Fatalf("unable to run sse request: %s", err)
+			}
+			defer resp.Body.Close()
 
-		buffer := make([]byte, 1024)
-		n, err := resp.Body.Read(buffer)
-		if err != nil {
-			t.Fatalf("unable to read response: %s", err)
-		}
-		endpointEvent := string(buffer[:n])
-		if !strings.Contains(endpointEvent, wantEvent) {
-			t.Fatalf("unexpected event: got %s", endpointEvent)
-		}
-	})
+			if gotContentType := resp.Header.Get("Content-type"); gotContentType != contentType {
+				t.Fatalf("unexpected content-type header: want %s, got %s", contentType, gotContentType)
+			}
+			if gotCacheControl := resp.Header.Get("Cache-Control"); gotCacheControl != cacheControl {
+				t.Fatalf("unexpected cache-control header: want %s, got %s", cacheControl, gotCacheControl)
+			}
+			if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
+				t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
+			}
+			if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
+				t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
+			}
+
+			buffer := make([]byte, 1024)
+			n, err := resp.Body.Read(buffer)
+			if err != nil {
+				t.Fatalf("unable to read response: %s", err)
+			}
+			endpointEvent := string(buffer[:n])
+			if !strings.Contains(endpointEvent, tc.event) {
+				t.Fatalf("unexpected event: got %s, want to contain %s", endpointEvent, tc.event)
+			}
+		})
+	}
+}
+
+func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, ts.URL+path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create request: %w", err)
+	}
+	if proto != "" {
+		req.Header.Set("X-Forwarded-Proto", proto)
+	}
+	resp, err := ts.Client().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("unable to send request: %w", err)
+	}
+	return resp, nil
 }

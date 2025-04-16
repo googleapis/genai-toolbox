@@ -249,3 +249,26 @@ func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
 	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	return create_statement, insert_statement, tool_statement, params
 }
+
+// GetSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
+func GetSpannerParamToolInfo(tableName string) (string, string, string, map[string]any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3)", tableName)
+	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
+	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid"}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
+func GetSpannerAuthToolInfo(tableName string) (string, string, string, map[string]any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), email STRING(MAX)) PRIMARY KEY (id)", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, @name1, @email1), (2, @name2, @email2)", tableName)
+	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email", tableName)
+	params := map[string]any{
+		"name1":  "Alice",
+		"email1": SERVICE_ACCOUNT_EMAIL,
+		"name2":  "Jane",
+		"email2": "janedoe@gmail.com",
+	}
+	return create_statement, insert_statement, tool_statement, params
+}
