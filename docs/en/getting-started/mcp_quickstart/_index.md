@@ -186,6 +186,13 @@ In this section, we will download Toolbox, configure our tools in a
             type: string
             description: The ID of the hotel to cancel.
         statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
+   toolsets:
+      my-toolset:
+        - search-hotels-by-name
+        - search-hotels-by-location
+        - book-hotel
+        - update-hotel
+        - cancel-hotel
     ```
     For more info on tools, check out the [Tools](../../resources/tools/_index.md) section.
 
