@@ -98,7 +98,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 				"my-simple-dql-tool": map[string]any{
 					"description":  "Simple tool to test end to end functionality.",
 					"parameters":   []any{},
-					"authRequired": []string{},
+					"authRequired": []any{},
 				},
 			},
 		},

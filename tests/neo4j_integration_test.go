@@ -107,7 +107,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"my-simple-cypher-tool": map[string]any{
 					"description":  "Simple tool to test end to end functionality.",
 					"parameters":   []any{},
-					"authRequired": []string{},
+					"authRequired": []any{},
 				},
 			},
 		},
