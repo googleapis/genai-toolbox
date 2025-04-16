@@ -53,10 +53,10 @@ cloud.google.com/go/aiplatform v1.27.0/go.mod h1:Bvxqtl40l0WImSb04d0hXFU7gDOiq9j
 cloud.google.com/go/aiplatform v1.35.0/go.mod h1:7MFT/vCaOyZT/4IIFfxH4ErVg/4ku6lKv3w0+tFTgXQ=
 cloud.google.com/go/aiplatform v1.36.1/go.mod h1:WTm12vJRPARNvJ+v6P52RDHCNe4AhvjcIZ/9/RRHy/k=
 cloud.google.com/go/aiplatform v1.37.0/go.mod h1:IU2Cv29Lv9oCn/9LkFiiuKfwrRTq+QQMbW+hPCxJGZw=
-cloud.google.com/go/alloydb v1.14.1 h1:AGFhE9aRviqGjQHoSDkuRNk5zH/WVjeSy+kCZ4dD3G4=
-cloud.google.com/go/alloydb v1.14.1/go.mod h1:IMzxjuHFQ2InamqY4ohBdM5bDJoYRNiMLQVe+NDmxec=
-cloud.google.com/go/alloydbconn v1.15.0 h1:N/5/bxj322d8bALnLEpacUOZy9ky2CxbOmieZJLFPxo=
-cloud.google.com/go/alloydbconn v1.15.0/go.mod h1:du0j/GI5Cz1WBvtJWbWtnV0S9r3giNoOkave/Hzimkc=
+cloud.google.com/go/alloydb v1.15.0 h1:5+LsnBsORHJLETJTgQAinr5HT3ab5K1HJCDs3THcAG0=
+cloud.google.com/go/alloydb v1.15.0/go.mod h1:6RtKgz/Ljk98Ygp30NRgLm69D8Xer0d2JJI6vRS1NH4=
+cloud.google.com/go/alloydbconn v1.15.1 h1:kt6qSAfngntsiBF+mQEbRFj3MdSpqJP1IDoff8zrPyQ=
+cloud.google.com/go/alloydbconn v1.15.1/go.mod h1:x3KDwyGhQLGFVVs3lVCZ6JS3Tc8TdT0RtV1hi7nUXsQ=
 cloud.google.com/go/analytics v0.11.0/go.mod h1:DjEWCu41bVbYcKyvlws9Er60YE4a//bK6mnhWvQeFNI=
 cloud.google.com/go/analytics v0.12.0/go.mod h1:gkfj9h6XRf9+TS4bmuhPEShsh3hH8PAZzm/41OOhQd4=
 cloud.google.com/go/analytics v0.17.0/go.mod h1:WXFa3WSym4IZ+JiKmavYdJwGG/CvpqiqczmL59bTD9M=

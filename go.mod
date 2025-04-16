@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.2
 
 require (
-	cloud.google.com/go/alloydbconn v1.15.0
+	cloud.google.com/go/alloydbconn v1.15.1
 	cloud.google.com/go/cloudsqlconn v1.16.1
 	cloud.google.com/go/spanner v1.79.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0
@@ -37,7 +37,7 @@ require (
 require (
 	cel.dev/expr v0.19.2 // indirect
 	cloud.google.com/go v0.120.0 // indirect
-	cloud.google.com/go/alloydb v1.14.1 // indirect
+	cloud.google.com/go/alloydb v1.15.0 // indirect
 	cloud.google.com/go/auth v0.16.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
