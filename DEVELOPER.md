@@ -143,23 +143,49 @@ Integration and unit tests are automatically triggered via CloudBuild during eac
 
 Create a Cloud Build trigger via the UI or `gcloud` with the following specs:
 
-* Event: Pull request
-* Region:
-    * global - for default worker pools
-* Source:
-  * Generation: 1st gen
-  * Repo: googleapis/genai-toolbox (GitHub App)
-  * Base branch: `^main$`
-* Comment control: Required except for owners and collaborators
-* Filters: add directory filter
-* Config: Cloud Build configuration file
-  * Location: Repository (add path to file)
-* Service account: set for demo service to enable ID token creation to use to authenticated services
+- Event: Pull request
+- Region:
+  - global - for default worker pools
+- Source:
+  - Generation: 1st gen
+  - Repo: googleapis/genai-toolbox (GitHub App)
+  - Base branch: `^main$`
+- Comment control: Required except for owners and collaborators
+- Filters: add directory filter
+- Config: Cloud Build configuration file
+  - Location: Repository (add path to file)
+- Service account: set for demo service to enable ID token creation to use to authenticated services
 
 ### Trigger
+
 To run tests on GitHub from external contributors, ie RenovateBot:
 
-* Cloud Build tests: comment `/gcbrun`
-* Unit tests: add `tests:run` label
+- Cloud Build tests: comment `/gcbrun`
+- Unit tests: add `tests:run` label
 
 [cloudsql-proxy]: https://cloud.google.com/sql/docs/mysql/sql-proxy
+
+### Local Testing
+
+Run integration tests locally:
+
+1. Set required environment variables. For a complete lists of required
+   vairables for each source, check out the [Cloud Build testing
+   configuration](./.ci/integration.cloudbuild.yaml).
+
+    - Use your own GCP email as the `SERVICE_ACCOUNT_EMAIL`.
+    - Use the Google Cloud SDK application Client ID as the `CLIENT_ID`. Ask the
+      Toolbox owners if you don't know it already.
+
+2. Run the integration test for your target source with the required Go
+   build tags specified at the top of each integration test file:
+
+    ```shell
+        go test -race -v -tags=integration,<YOUR_SOURCE_KIND> ./tests
+    ```
+
+    For example, to the run the AlloyDB integration test, run:
+
+    ```shell
+        go test -race -v -tags=integration,alloydb ./tests
+    ```
