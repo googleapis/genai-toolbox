@@ -33,7 +33,7 @@ var _ sources.SourceConfig = Config{}
 type Config struct {
 	Name               string `yaml:"name" validate:"required"`
 	Kind               string `yaml:"kind" validate:"required"`
-	ConnectionString   string `yaml:"connection_string" validate:"required"`
+	ConnectionString   string `yaml:"connectionString" validate:"required"`
 	Bucket             string `yaml:"bucket" validate:"required"`
 	Scope              string `yaml:"scope" validate:"required"`
 	Username           string `yaml:"username"`

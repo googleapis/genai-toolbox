@@ -11,9 +11,10 @@ description: >
 
 A `couchbase-sql` tool executes a pre-defined SQL statement against a Couchbase
 database. It's compatible with any of the following sources:
+
 - [couchbase](../sources/couchbase.md)
 
-The specified SQL statement is executed as a parameterized statement, and specified 
+The specified SQL statement is executed as a parameterized statement, and specified
 parameters will be used according to their name: e.g. `$id`.
 
 ## Example
@@ -45,11 +46,11 @@ tools:
             }}
         parameters:
             - name: category
-            type: string
-            description: Product category name
+              type: string
+              description: Product category name
             - name: max_price
-            type: integer
-            description: Maximum price (positive integer)
+              type: integer
+              description: Maximum price (positive integer)
 ```
 
 ## Reference
@@ -61,4 +62,4 @@ tools:
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                             |
 | statement   |                   string                   |     true     | SQL statement to execute                                                                       |
 | parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be used with the SQL statement.   |
-| authRequired|                array[string]               |    false     | List of auth services that are required to use this tool.                                      | 
+| authRequired|                array[string]               |    false     | List of auth services that are required to use this tool.                                      |

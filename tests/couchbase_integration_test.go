@@ -58,12 +58,12 @@ func getCouchbaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":              couchbaseSourceKind,
-		"connection_string": couchbaseConnection,
-		"bucket":            couchbaseBucket,
-		"scope":             couchbaseScope,
-		"username":          couchbaseUser,
-		"password":          couchbasePass,
+		"kind":             couchbaseSourceKind,
+		"connectionString": couchbaseConnection,
+		"bucket":           couchbaseBucket,
+		"scope":            couchbaseScope,
+		"username":         couchbaseUser,
+		"password":         couchbasePass,
 	}
 }
 
