@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -60,8 +61,10 @@ var tool3InputSchema = map[string]any{
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3}
 	toolsMap, toolsets := setUpResources(t, mockTools)
-	ts, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
 
 	testCases := []struct {
 		name  string
@@ -267,8 +270,20 @@ func TestMcpEndpoint(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	ts, shutdown := setUpServer(t, "mcp", nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil)
 	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+	if !strings.Contains(ts.URL, "http://127.0.0.1") {
+		t.Fatalf("unexpected url, got %s", ts.URL)
+	}
+	tsPort := strings.TrimPrefix(ts.URL, "http://127.0.0.1:")
+	tls := runServer(r, true)
+	defer tls.Close()
+	if !strings.Contains(tls.URL, "https://127.0.0.1") {
+		t.Fatalf("unexpected url, got %s", tls.URL)
+	}
+	tlsPort := strings.TrimPrefix(tls.URL, "https://127.0.0.1:")
 
 	contentType := "text/event-stream"
 	cacheControl := "no-cache"
@@ -276,27 +291,51 @@ func TestSseEndpoint(t *testing.T) {
 	accessControlAllowOrigin := "*"
 
 	testCases := []struct {
-		name  string
-		url   string
-		event string
+		name   string
+		server *httptest.Server
+		path   string
+		proto  string
+		event  string
 	}{
 		{
-			name:  "basic",
-			url:   "/sse",
-			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", ts.URL),
+			name:   "basic",
+			server: ts,
+			path:   "/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", ts.URL),
 		},
 		{
-			name:  "toolset1",
-			url:   "/tool1_only/sse",
-			event: fmt.Sprintf("event: endpoint\ndata: %s/mcp/tool1_only?sessionId=", ts.URL),
+			name:   "toolset1",
+			server: ts,
+			path:   "/tool1_only/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/tool1_only?sessionId=", tsPort),
+		},
+		{
+			name:   "basic with http proto",
+			server: ts,
+			path:   "/sse",
+			proto:  "http",
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp?sessionId=", tsPort),
+		},
+		{
+			name:   "basic tls with https proto",
+			server: ts,
+			path:   "/sse",
+			proto:  "https",
+			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp?sessionId=", tsPort),
+		},
+		{
+			name:   "basic tls",
+			server: tls,
+			path:   "/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp?sessionId=", tlsPort),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(ts.URL + tc.url)
+			resp, err := runSseRequest(tc.server, tc.path, tc.proto)
 			if err != nil {
-				t.Fatalf("unexpected error during request: %s", err)
+				t.Fatalf("unable to run sse request: %s", err)
 			}
 			defer resp.Body.Close()
 
@@ -324,4 +363,19 @@ func TestSseEndpoint(t *testing.T) {
 			}
 		})
 	}
+}
+
+func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, ts.URL+path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create request: %w", err)
+	}
+	if proto != "" {
+		req.Header.Set("X-Forwarded-Proto", proto)
+	}
+	resp, err := ts.Client().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("unable to send request: %w", err)
+	}
+	return resp, nil
 }
