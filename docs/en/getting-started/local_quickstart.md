@@ -392,6 +392,14 @@ asyncio.run(run_application())
 {{< tab header="ADK" lang="python" >}}
 from google.adk.agents import Agent
 from google.adk.tools.toolbox_tool import ToolboxTool
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+from google.genai import types
+
+import os
+# TODO(developer): replace this with your Google API key
+os.environ['GOOGLE_API_KEY'] = 'your-api-key'
 
 toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
 
@@ -412,6 +420,33 @@ root_agent = Agent(
     instruction=prompt,
     tools=toolbox_tools.get_toolset("my-toolset"),
 )
+
+session_service = InMemorySessionService()
+artifacts_service = InMemoryArtifactService()
+session = session_service.create_session(
+    state={}, app_name='hotel_agent', user_id='123'
+)
+runner = Runner(
+    app_name='hotel_agent',
+    agent=root_agent,
+    artifact_service=artifacts_service,
+    session_service=session_service,
+)
+
+queries = [
+    "Find hotels in Basel with Basel in it's name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
+
+for query in queries:
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    events = runner.run(session_id=session.id,
+                        user_id='123', new_message=content)
+
+    for event in events:
+        print(event)
 {{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
 
@@ -543,25 +578,6 @@ To learn more about Agents in LlamaIndex, check out the
 {{% /tab %}}
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
-    {{< tabpane text=true persist=header >}}
-{{% tab header="Core" lang="en" %}}
     ```sh
     python agent.py
     ```
-{{% /tab %}}
-{{% tab header="ADK" lang="en" %}}
-    ```sh
-    adk run .
-    ```
-{{% /tab %}}
-{{% tab header="Langchain" lang="en" %}}
-    ```sh
-    python agent.py
-    ```
-{{% /tab %}}
-{{% tab header="LlamaIndex" lang="en" %}}
-    ```sh
-    python agent.py
-    ```
-{{% /tab %}}
-{{< /tabpane >}}
