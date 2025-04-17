@@ -273,7 +273,7 @@ pip install llama-index-llms-google-genai
 {{< /tab >}}
 {{< /tabpane >}}
     
-1. Create a new file named `agent.py` and copy the following
+1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
     {{< tabpane persist=header >}}
 {{< tab header="Core" lang="python" >}}
@@ -579,5 +579,5 @@ To learn more about Agents in LlamaIndex, check out the
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
     ```sh
-    python agent.py
+    python hotel_agent.py
     ```
