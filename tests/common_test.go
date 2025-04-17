@@ -271,7 +271,8 @@ func GetSpannerAuthToolInfo(tableName string) (string, string, string, map[strin
 		"email2": "janedoe@gmail.com",
 	}
 	return create_statement, insert_statement, tool_statement, params
-	
+}
+
 // GetCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
 func GetCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
