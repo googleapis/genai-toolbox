@@ -95,6 +95,8 @@ steps:
       - "GOPATH=/gopath"
       - "BIGTABLE_PROJECT=$PROJECT_ID"
       - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
+    secretEnv:
+      ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
