@@ -76,6 +76,11 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
 
+	r.Route("/{toolsetName}", func(r chi.Router) {
+		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
+	})
+
 	return r, nil
 }
 
@@ -85,7 +90,10 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	sessionId := uuid.New().String()
+	toolsetName := chi.URLParam(r, "toolsetName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("session_id", sessionId))
+	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -105,6 +113,7 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		s.instrumentation.McpSse.Add(
 			r.Context(),
 			1,
+			metric.WithAttributes(attribute.String("toolbox.toolset.name", toolsetName)),
 			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", sessionId)),
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
@@ -128,15 +137,20 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// https scheme formatting if (forwarded) request is a TLS request
 	proto := r.Header.Get("X-Forwarded-Proto")
-	if (proto == "") {
-		if  r.TLS == nil {
+	if proto == "" {
+		if r.TLS == nil {
 			proto = "http"
 		} else {
 			proto = "https"
 		}
 	}
+
 	// send initial endpoint event
-	messageEndpoint := fmt.Sprintf("%s://%s/mcp?sessionId=%s", proto, r.Host, sessionId)
+	toolsetURL := ""
+	if toolsetName != "" {
+		toolsetURL = fmt.Sprintf("/%s", toolsetName)
+	}
+	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s?sessionId=%s", proto, r.Host, toolsetURL, sessionId)
 	s.logger.DebugContext(ctx, fmt.Sprintf("sending endpoint event: %s", messageEndpoint))
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()
@@ -163,6 +177,10 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
 	r = r.WithContext(ctx)
 
+	toolsetName := chi.URLParam(r, "toolsetName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
+	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+
 	var id, toolName, method string
 	var err error
 	defer func() {
@@ -179,7 +197,8 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			1,
 			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", id)),
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
+			metric.WithAttributes(attribute.String("toolbox.tool.name", toolName)),
+			metric.WithAttributes(attribute.String("toolbox.toolset.name", toolsetName)),
 			metric.WithAttributes(attribute.String("toolbox.method", method)),
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
@@ -266,7 +285,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
-		toolset, ok := s.toolsets[""]
+		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
 			s.logger.DebugContext(ctx, err.Error())
