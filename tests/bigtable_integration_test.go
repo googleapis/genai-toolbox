@@ -19,13 +19,10 @@ package tests
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/binary"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -43,7 +40,7 @@ var (
 	BIGTABLE_INSTANCE    = os.Getenv("BIGTABLE_INSTANCE")
 )
 
-func getBigtableVars(t *testing.T) map[string]string {
+func getBigtableVars(t *testing.T) map[string]any {
 	switch "" {
 	case BIGTABLE_PROJECT:
 		t.Fatal("'BIGTABLE_PROJECT' not set")
@@ -51,7 +48,7 @@ func getBigtableVars(t *testing.T) map[string]string {
 		t.Fatal("'BIGTABLE_INSTANCE' not set")
 	}
 
-	return map[string]string{
+	return map[string]any{
 		"kind":     BIGTABLE_SOURCE_KIND,
 		"project":  BIGTABLE_PROJECT,
 		"instance": BIGTABLE_INSTANCE,
@@ -71,13 +68,26 @@ func TestBigtableToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	tableName := "bt_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	columnFamilyName, muts, rowKeys := getTestData()
-	teardownTable1 := SetupBtTable(t, ctx, sourceConfig["project"], sourceConfig["instance"], tableName, columnFamilyName, muts, rowKeys)
+	tableName := "param_table" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+	columnFamilyName := "cf"
+	muts, rowKeys := getTestData(columnFamilyName)
+
+	// Do not change the shape of statement without checking tests/common_test.go.
+	// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
+	param_test_statement := fmt.Sprintf("SELECT TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM %s WHERE TO_INT64(cf['id']) = @id OR CAST(cf['name'] AS string) = @name;", tableName)
+	teardownTable1 := SetupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
 	defer teardownTable1(t)
 
+	// Do not change the shape of statement without checking tests/common_test.go.
+	// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
+	auth_tool_statement := fmt.Sprintf("SELECT CAST(cf['name'] AS string) as name FROM %s WHERE CAST(cf['email'] AS string) = @email;", tableNameAuth)
+	teardownTable2 := SetupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
+	defer teardownTable2(t)
+
 	// Write config into a file and pass it to command
-	toolsFile := getToolsConfig(sourceConfig, tableName, "state")
+	toolsFile := GetToolsConfig(sourceConfig, BIGTABLE_TOOL_KIND, param_test_statement, auth_tool_statement)
 	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -92,229 +102,54 @@ func TestBigtableToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runBtToolGetTest(t)
+	RunToolGetTest(t)
 
-	runBtInvokeTest(t)
+	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
+	select_1_want := "[{$col1:1}]"
+	RunToolInvokeTest(t, select_1_want)
 }
 
-func runBtToolGetTest(t *testing.T) {
-
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters": []any{
-						map[string]any{
-							"name":        "state",
-							"type":        "string",
-							"description": "state filter",
-							"authSources": []any{}},
-					},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func runBtInvokeTest(t *testing.T) {
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
-	}{
-		{
-			name:          "provided parameters were invalid: parameter \"state\" is required",
-			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
-		},
-		{
-			name:          "invoke my-simple-tool with filter",
-			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"state": "CA"}`)),
-			want:          "[{state:CA}]",
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-simple-tool - empty result",
-			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"state": "NY"}`)),
-			want:          "null",
-			isErr:         false,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr == true {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-			// Remove `\` and `"` for string comparison
-			got = strings.ReplaceAll(got, "\\", "")
-			want := strings.ReplaceAll(tc.want, "\\", "")
-			got = strings.ReplaceAll(got, "\"", "")
-			want = strings.ReplaceAll(want, "\"", "")
-			if got != want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func getToolsConfig(sourceConfig map[string]string, tableName string, filterField string) map[string]any {
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-bigtable-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        BIGTABLE_TOOL_KIND,
-				"source":      "my-bigtable-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   fmt.Sprintf("SELECT address['%s'] as %s from `%s` WHERE address['%s'] = @%s;", filterField, filterField, tableName, filterField, filterField),
-				"parameters": []map[string]any{
-					{
-						"name":        filterField,
-						"type":        "string",
-						"description": fmt.Sprintf("%s filter", filterField),
-					},
-				},
-			},
-		},
-	}
-	return toolsFile
-}
-
-func getTestData() (string, []*bigtable.Mutation, []string) {
-	columnFamilyName := "address"
+func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
 	muts := []*bigtable.Mutation{}
 	rowKeys := []string{}
-	v1Timestamp := bigtable.Time(time.Now().Add(1 * time.Minute))
-	v2Timestamp := bigtable.Time(time.Now())
 
-	type cell struct {
-		Ts    bigtable.Timestamp // Using bigtable.Timestamp as an example
-		Value []byte
+	var ids [3][]byte
+	for i := range ids {
+		binary1 := new(bytes.Buffer)
+		if err := binary.Write(binary1, binary.BigEndian, int64(i+1)); err != nil {
+			log.Fatalf("Unable to encode id: %v", err)
+		}
+		ids[i] = binary1.Bytes()
 	}
 
-	for rowKey, mutData := range map[string]map[string]any{
+	now := bigtable.Time(time.Now())
+	for rowKey, mutData := range map[string]map[string][]byte{
+		// Do not change the test data without checking tests/common_test.go.
+		// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
+		// Expected values are defined in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L229-L310
 		"row-01": {
-			"state": []cell{
-				{
-					Value: []byte("WA"),
-				},
-				{
-					Ts:    v2Timestamp,
-					Value: []byte("CA"),
-				},
-			},
-			"city": []cell{
-				{
-					Ts:    v2Timestamp,
-					Value: []byte("San Francisco"),
-				},
-			},
+			"name":  []byte("Alice"),
+			"email": []byte(SERVICE_ACCOUNT_EMAIL),
+			"id":    ids[0],
 		},
 		"row-02": {
-			"state": []cell{
-				{
-					Ts:    v1Timestamp,
-					Value: []byte("AZ"),
-				},
-			},
-			"city": []cell{
-				{
-					Ts:    v1Timestamp,
-					Value: []byte("Phoenix"),
-				},
-			},
+			"name":  []byte("Jane"),
+			"email": []byte("janedoe@gmail.com"),
+			"id":    ids[1],
+		},
+		"row-03": {
+			"name": []byte("Sid"),
+			"id":   ids[2],
 		},
 	} {
 		mut := bigtable.NewMutation()
 		for col, v := range mutData {
-			cells, ok := v.([]cell)
-			if ok {
-				for _, cell := range cells {
-					mut.Set(columnFamilyName, col, cell.Ts, cell.Value)
-				}
-			}
+			mut.Set(columnFamilyName, col, now, v)
 		}
 		muts = append(muts, mut)
 		rowKeys = append(rowKeys, rowKey)
 	}
-	return columnFamilyName, muts, rowKeys
+	return muts, rowKeys
 }
 
 func SetupBtTable(t *testing.T, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) func(*testing.T) {
@@ -350,8 +185,7 @@ func SetupBtTable(t *testing.T, ctx context.Context, projectId string, instance 
 
 	// Creating column family
 	if !slices.Contains(tblInfo.Families, columnFamilyName) {
-		if err := adminClient.CreateColumnFamilyWithConfig(ctx, tableName, columnFamilyName, bigtable.Family{ValueType: bigtable.StringType{}}); err != nil {
-
+		if err := adminClient.CreateColumnFamily(ctx, tableName, columnFamilyName); err != nil {
 			log.Fatalf("Could not create column family %s: %v", columnFamilyName, err)
 		}
 	}
