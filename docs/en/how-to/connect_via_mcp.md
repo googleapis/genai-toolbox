@@ -20,7 +20,6 @@ Toolbox has several features that are not yet supported in the MCP specification
 * **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05` specification. This includes:
   * [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
   * [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
-* **Toolsets**: MCP does not have the concept of toolset. Hence, all tools are automatically loaded when using Toolbox with MCP.
 * **Notifications:** Currently, editing Toolbox Tools requires a server restart. Clients should reload tools on disconnect to get the latest version. 
 
 
@@ -52,8 +51,12 @@ Add the following configuration to your MCP client configuration:
   }
 }
 ```
+
+If you would like to connect to a specific toolset, replace `url` with `"http://127.0.0.1:5000/mcp/{toolset_name}/sse"`.
 {{% /tab %}} {{% tab header="HTTP POST" lang="en" %}}
 Connect to Toolbox HTTP POST via `http://127.0.0.1:5000/mcp`.
+
+If you would like to connect to a specific toolset, connect via `http://127.0.0.1:5000/mcp/{toolset_name}`.
 {{% /tab %}} {{< /tabpane >}}
 
 ### Using the MCP Inspector with Toolbox
@@ -70,7 +73,8 @@ Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testi
 
 1. For `Transport Type` dropdown menu, select `SSE`.
 
-1. For `URL`, type in `http://127.0.0.1:5000/mcp/sse`.
+1. For `URL`, type in `http://127.0.0.1:5000/mcp/sse` to use all tool or
+   `http//127.0.0.1:5000/mcp/{toolset_name}/sse` to use a specific toolset.
 
 1. Click the `Connect` button. Voila! You should be able to inspect your toolbox
    tools!
