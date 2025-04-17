@@ -17,9 +17,7 @@
 
 ### Run Toolbox from local source
 
-1. Open a local connection to your database by starting the [Cloud SQL Auth Proxy][cloudsql-proxy].
-
-1. You should already have a `tools.yaml` created with your [sources and tools configurations](./README.md#Configuration).
+1. Create a `tools.yaml` file with your [sources and tools configurations](./README.md#Configuration).
 
 1. You can specify flags for the Toolbox server. Execute the following to list the possible CLI flags:
 
@@ -41,19 +39,46 @@
     curl http://127.0.0.1:5000
     ```
 
-### Run tests locally
+### Testing
 
-1. Run lint with the following:
+- Run the lint check:
 
     ```bash
     golangci-lint run --fix
     ```
 
-1. Run all tests with the following:
+- Run unit tests locally:
 
     ```bash
     go test -race -v ./...
     ```
+
+- Run integration tests locally:
+    1. Set required environment variables. For a complete lists of required
+    vairables for each source, check out the [Cloud Build testing
+    configuration](./.ci/integration.cloudbuild.yaml).
+        - Use your own GCP email as the `SERVICE_ACCOUNT_EMAIL`.
+        - Use the Google Cloud SDK application Client ID as the `CLIENT_ID`. Ask the
+        Toolbox maintainers if you don't know it already.
+
+    2. Run the integration test for your target source with the required Go
+    build tags specified at the top of each integration test file:
+
+        ```shell
+            go test -race -v -tags=integration,<YOUR_SOURCE_KIND> ./tests
+        ```
+
+        For example, to run the AlloyDB integration test, run:
+
+        ```shell
+            go test -race -v -tags=integration,alloydb ./tests
+        ```
+
+- Run integration tests on your PR:
+
+    For internal contributors, the testing workflows should trigger
+    automatically. For external contributors, ask the Toolbox
+    maintainers to trigger the testing workflows on your PR.
 
 ## Compile the app locally
 
@@ -109,9 +134,7 @@
 
 Please refer to the [SDK developer guide](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/DEVELOPER.md)
 
-## CI/CD Details
-
-Cloud Build is used to run tests against Google Cloud resources in test project.
+## (Optional) Maintainer Information
 
 ### Releasing
 
@@ -143,23 +166,22 @@ Integration and unit tests are automatically triggered via CloudBuild during eac
 
 Create a Cloud Build trigger via the UI or `gcloud` with the following specs:
 
-* Event: Pull request
-* Region:
-    * global - for default worker pools
-* Source:
-  * Generation: 1st gen
-  * Repo: googleapis/genai-toolbox (GitHub App)
-  * Base branch: `^main$`
-* Comment control: Required except for owners and collaborators
-* Filters: add directory filter
-* Config: Cloud Build configuration file
-  * Location: Repository (add path to file)
-* Service account: set for demo service to enable ID token creation to use to authenticated services
+- Event: Pull request
+- Region:
+  - global - for default worker pools
+- Source:
+  - Generation: 1st gen
+  - Repo: googleapis/genai-toolbox (GitHub App)
+  - Base branch: `^main$`
+- Comment control: Required except for owners and collaborators
+- Filters: add directory filter
+- Config: Cloud Build configuration file
+  - Location: Repository (add path to file)
+- Service account: set for demo service to enable ID token creation to use to authenticated services
 
 ### Trigger
-To run tests on GitHub from external contributors, ie RenovateBot:
 
-* Cloud Build tests: comment `/gcbrun`
-* Unit tests: add `tests:run` label
+Trigger the PR tests on PRs from external contributors:
 
-[cloudsql-proxy]: https://cloud.google.com/sql/docs/mysql/sql-proxy
+- Cloud Build tests: comment `/gcbrun`
+- Unit tests: add `tests:run` label
