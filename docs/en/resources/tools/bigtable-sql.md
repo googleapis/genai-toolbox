@@ -30,7 +30,14 @@ tools:
     kind: bigtable-sql
     source: my-bigtable-instance
     statement: |
-      SELECT TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM %s WHERE TO_INT64(cf['id']) = @id OR CAST(cf['name'] AS string) = @name;
+      SELECT 
+        TO_INT64(cf[ 'id' ]) as id, 
+        CAST(cf[ 'name' ] AS string) as name, 
+      FROM 
+        % s 
+      WHERE 
+        TO_INT64(cf[ 'id' ]) = @id 
+        OR CAST(cf[ 'name' ] AS string) = @name;
     description: |
       Use this tool to get information for a specific user.
       Takes an id number or a name and returns info on the user.
