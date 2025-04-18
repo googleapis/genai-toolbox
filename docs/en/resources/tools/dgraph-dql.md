@@ -20,7 +20,7 @@ query.
 
 ## Example
 
-{{< tabpane >}}
+{{< tabpane persist="header" >}}
 {{< tab header="Query" lang="yaml" >}}
 
 tools:
