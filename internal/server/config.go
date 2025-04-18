@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbpgsrc "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	bigtablesrc "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	cloudsqlmssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
@@ -35,6 +36,7 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
@@ -157,6 +159,12 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 		switch kind {
 		case alloydbpgsrc.SourceKind:
 			actual := alloydbpgsrc.Config{Name: name, IPType: "public"}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case bigtablesrc.SourceKind:
+			actual := bigtablesrc.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
@@ -302,6 +310,12 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("error creating decoder: %w", err)
 		}
 		switch kind {
+		case bigtable.ToolKind:
+			actual := bigtable.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
 		case postgressql.ToolKind:
 			actual := postgressql.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
