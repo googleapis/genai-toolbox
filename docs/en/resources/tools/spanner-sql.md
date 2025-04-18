@@ -34,7 +34,7 @@ the second parameter, and so on.
 
 ## Example
 
-{{< tabpane >}}
+{{< tabpane persist="header" >}}
 {{< tab header="GoogleSQL" lang="yaml" >}}
 
 tools:
