@@ -105,8 +105,9 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/",
 			want: map[string]any{
 				"my-simple-cypher-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
+					"description":  "Simple tool to test end to end functionality.",
+					"parameters":   []any{},
+					"authRequired": []any{},
 				},
 			},
 		},
