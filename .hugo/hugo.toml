@@ -2,7 +2,6 @@ title = 'MCP Toolbox for Databases'
 relativeURLs = true
 
 languageCode = 'en-us'
-contentDir = "../docs/en"
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = false
 
@@ -19,6 +18,9 @@ enableRobotsTXT = true
   [module.hugoVersion]
     extended = true
     min = "0.73.0"
+  [[module.mounts]]
+    source = "../docs/en"
+    target = 'content'
   [[module.imports]]
     path = "github.com/google/docsy"
     disable = false
