@@ -24,7 +24,7 @@ on:
     paths:
       - 'docs/**'
       - 'github/workflows/docs**'
-      - '.hugo'
+      - '.hugo/**'
 
   # Allow triggering manually.
   workflow_dispatch:
