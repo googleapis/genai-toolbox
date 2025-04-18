@@ -35,14 +35,15 @@ var _ compatibleSource = &dgraph.Source{}
 var compatibleSources = [...]string{dgraph.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name" validate:"required"`
-	Kind        string           `yaml:"kind" validate:"required"`
-	Source      string           `yaml:"source" validate:"required"`
-	Description string           `yaml:"description" validate:"required"`
-	Statement   string           `yaml:"statement" validate:"required"`
-	IsQuery     bool             `yaml:"isQuery"`
-	Timeout     string           `yaml:"timeout"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Statement    string           `yaml:"statement" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired"`
+	IsQuery      bool             `yaml:"isQuery"`
+	Timeout      string           `yaml:"timeout"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -77,6 +78,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         ToolKind,
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
+		AuthRequired: cfg.AuthRequired,
 		DgraphClient: s.DgraphClient(),
 		IsQuery:      cfg.IsQuery,
 		Timeout:      cfg.Timeout,

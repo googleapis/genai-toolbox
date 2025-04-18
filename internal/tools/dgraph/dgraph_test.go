@@ -42,6 +42,9 @@ func TestParseFromYamlDgraph(t *testing.T) {
 					kind: dgraph-dql
 					source: my-dgraph-instance
 					description: some tool description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
 					isQuery: true
 					timeout: 20s
 					statement: |
@@ -49,13 +52,14 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
-					Name:        "example_tool",
-					Kind:        dgraph.ToolKind,
-					Source:      "my-dgraph-instance",
-					Description: "some tool description",
-					IsQuery:     true,
-					Timeout:     "20s",
-					Statement:   "query {q(func: eq(email, \"example@email.com\")) {email}}\n",
+					Name:         "example_tool",
+					Kind:         dgraph.ToolKind,
+					Source:       "my-dgraph-instance",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					Description:  "some tool description",
+					IsQuery:      true,
+					Timeout:      "20s",
+					Statement:    "query {q(func: eq(email, \"example@email.com\")) {email}}\n",
 				},
 			},
 		},
