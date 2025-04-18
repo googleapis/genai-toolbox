@@ -1,0 +1,52 @@
+{{/* cSpell:ignore querify subdir */ -}}
+{{/* Class names ending with `--KIND` are deprecated in favor of `__KIND`, but we're keeping them for a few releases after 0.9.0 */ -}}
+
+{{ if .File -}}
+{{ $path := urls.JoinPath $.Language.Lang $.File.Path -}}
+{{ $gh_repo := $.Param "github_repo" -}}
+{{ $gh_url := $.Param "github_url" -}}
+{{ $gh_subdir := $.Param "github_subdir" | default "" -}}
+{{ $gh_project_repo := $.Param "github_project_repo" -}}
+{{ $gh_branch := $.Param "github_branch" | default "main" -}}
+<div class="td-page-meta ms-2 pb-1 pt-2 mb-0">
+{{ if $gh_url -}}
+  {{ warnf "Warning: use of `github_url` is deprecated. For details, see https://www.docsy.dev/docs/adding-content/repository-links/#github_url-optional" -}}
+  <a href="{{ $gh_url }}" target="_blank"><i class="fa-solid fa-pen-to-square fa-fw"></i> {{ T "post_edit_this" }}</a>
+{{ else if $gh_repo -}}
+
+  {{/* Adjust $path based on path_base_for_github_subdir */ -}}
+  {{ $ghs_base := $.Param "path_base_for_github_subdir" -}}
+  {{ $ghs_rename := "" -}}
+  {{ if reflect.IsMap $ghs_base -}}
+    {{ $ghs_rename = $ghs_base.to -}}
+    {{ $ghs_base = $ghs_base.from -}}
+  {{ end -}}
+  {{ with $ghs_base -}}
+    {{ $path = replaceRE . $ghs_rename $path -}}
+  {{ end -}}
+
+  {{ $gh_repo_path := printf "%s/%s/%s" $gh_branch $gh_subdir $path -}}
+  {{ $gh_repo_path = replaceRE "//+" "/" $gh_repo_path -}}
+
+  {{ $viewURL := printf "%s/tree/%s" $gh_repo $gh_repo_path -}}
+  {{ $editURL := printf "%s/edit/%s" $gh_repo $gh_repo_path -}}
+  {{ $issuesURL := printf "%s/issues/new?title=%s" $gh_repo (safeURL $.Title ) -}}
+  {{ $newPageStub := resources.Get "stubs/new-page-template.md" -}}
+  {{ $newPageQS := querify "value" $newPageStub.Content "filename" "change-me.md" | safeURL -}}
+  {{ $newPageURL := printf "%s/new/%s?%s" $gh_repo (path.Dir $gh_repo_path) $newPageQS -}}
+
+  <a href="{{ $viewURL }}" class="td-page-meta--view td-page-meta__view" target="_blank" rel="noopener"><i class="fa-solid fa-file-lines fa-fw"></i> {{ T "post_view_this" }}</a>
+  <a href="{{ $editURL }}" class="td-page-meta--edit td-page-meta__edit" target="_blank" rel="noopener"><i class="fa-solid fa-pen-to-square fa-fw"></i> {{ T "post_edit_this" }}</a>
+  <a href="{{ $newPageURL }}" class="td-page-meta--child td-page-meta__child" target="_blank" rel="noopener"><i class="fa-solid fa-pen-to-square fa-fw"></i> {{ T "post_create_child_page" }}</a>
+  <a href="{{ $issuesURL }}" class="td-page-meta--issue td-page-meta__issue" target="_blank" rel="noopener"><i class="fa-solid fa-list-check fa-fw"></i> {{ T "post_create_issue" }}</a>
+  {{ with $gh_project_repo -}}
+    {{ $project_issueURL := printf "%s/issues/new" . -}}
+    <a href="{{ $project_issueURL }}" class="td-page-meta--project td-page-meta__project-issue" target="_blank" rel="noopener"><i class="fa-solid fa-list-check fa-fw"></i> {{ T "post_create_project_issue" }}</a>
+  {{ end -}}
+
+{{ end -}}
+{{ with .CurrentSection.AlternativeOutputFormats.Get "print" -}}
+  <a id="print" href="{{ .RelPermalink | safeURL }}"><i class="fa-solid fa-print fa-fw"></i> {{ T "print_entire_section" }}</a>
+{{ end }}
+</div>
+{{ end -}}
