@@ -346,7 +346,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 		s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-		result := mcp.ToolCall(tool, params)
+		result := mcp.ToolCall(ctx, tool, params)
 		res = mcp.JSONRPCResponse{
 			Jsonrpc: mcp.JSONRPC_VERSION,
 			Id:      baseMessage.Id,

@@ -116,7 +116,7 @@ func getMapParams(params tools.ParamValues, dialect string) (map[string]interfac
 	}
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	mapParams, err := getMapParams(params, t.dialect)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)
@@ -124,7 +124,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 
 	var out []any
 
-	_, err = t.Client.ReadWriteTransaction(context.Background(), func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+	_, err = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		stmt := spanner.Statement{
 			SQL:    t.Statement,
 			Params: mapParams,

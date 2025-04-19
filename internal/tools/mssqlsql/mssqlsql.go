@@ -103,7 +103,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	namedArgs := make([]any, 0, len(params))
 	paramsMap := params.AsReversedMap()
 	// To support both named args (e.g @id) and positional args (e.g @p1), check if arg name is contained in the statement.
@@ -115,7 +115,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 			namedArgs = append(namedArgs, v)
 		}
 	}
-	rows, err := t.Db.QueryContext(context.Background(), t.Statement, namedArgs...)
+	rows, err := t.Db.QueryContext(ctx, t.Statement, namedArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

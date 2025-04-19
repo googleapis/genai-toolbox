@@ -102,10 +102,9 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 
-	ctx := context.Background()
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
 	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, t.Statement, paramsMap,
 		neo4j.EagerResultTransformer, config)
