@@ -15,6 +15,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -255,7 +256,7 @@ func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string,
 	return allHeaders, nil
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 
 	// Calculate request body

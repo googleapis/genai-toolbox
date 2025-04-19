@@ -14,7 +14,10 @@
 
 package auth
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 // AuthServiceConfig is the interface for configuring authentication services.
 type AuthServiceConfig interface {
@@ -26,5 +29,5 @@ type AuthServiceConfig interface {
 type AuthService interface {
 	AuthServiceKind() string
 	GetName() string
-	GetClaimsFromHeader(http.Header) (map[string]any, error)
+	GetClaimsFromHeader(context.Context, http.Header) (map[string]any, error)
 }

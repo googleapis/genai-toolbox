@@ -99,7 +99,7 @@ func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, 
 	if err != nil {
 		return nil, err
 	}
-	client, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig, UserAgent: userAgent})
+	client, err := spanner.NewClientWithConfig(ctx, db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig, UserAgent: userAgent})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new client: %w", err)
 	}

@@ -47,7 +47,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("Unable to create driver: %w", err)
 	}
 
-	err = driver.VerifyConnectivity(context.Background())
+	err = driver.VerifyConnectivity(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
 	}

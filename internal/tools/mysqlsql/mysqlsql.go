@@ -102,10 +102,10 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 
-	results, err := t.Pool.QueryContext(context.Background(), t.Statement, sliceParams...)
+	results, err := t.Pool.QueryContext(ctx, t.Statement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

@@ -239,7 +239,7 @@ func run(cmd *Command) error {
 	srvErr := make(chan error)
 	go func() {
 		defer close(srvErr)
-		err = s.Serve()
+		err = s.Serve(ctx)
 		if err != nil {
 			srvErr <- err
 		}

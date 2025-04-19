@@ -125,14 +125,14 @@ func getMapParamsType(tparams tools.Parameters, params tools.ParamValues) (map[s
 	return btParams, nil
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	mapParamsType, err := getMapParamsType(t.Parameters, params)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
 
 	ps, err := t.Client.PrepareStatement(
-		context.Background(),
+		ctx,
 		t.Statement,
 		mapParamsType,
 	)
@@ -146,7 +146,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	}
 
 	var out []any
-	err = bs.Execute(context.Background(), func(resultRow bigtable.ResultRow) bool {
+	err = bs.Execute(ctx, func(resultRow bigtable.ResultRow) bool {
 		vMap := make(map[string]any)
 		cols := resultRow.Metadata.Columns
 

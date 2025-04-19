@@ -15,6 +15,7 @@
 package mcp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -49,8 +50,8 @@ func ToolsList(toolset tools.Toolset) ListToolsResult {
 }
 
 // ToolCall runs tool invocation and return a CallToolResult
-func ToolCall(tool tools.Tool, params tools.ParamValues) CallToolResult {
-	res, err := tool.Invoke(params)
+func ToolCall(ctx context.Context, tool tools.Tool, params tools.ParamValues) CallToolResult {
+	res, err := tool.Invoke(ctx, params)
 	if err != nil {
 		text := TextContent{
 			Type: "text",

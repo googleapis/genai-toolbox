@@ -168,7 +168,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
 	for _, aS := range s.authServices {
-		claims, err := aS.GetClaimsFromHeader(r.Header)
+		claims, err := aS.GetClaimsFromHeader(ctx, r.Header)
 		if err != nil {
 			s.logger.DebugContext(ctx, err.Error())
 			continue
@@ -216,7 +216,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	res, err := tool.Invoke(params)
+	res, err := tool.Invoke(ctx, params)
 	if err != nil {
 		err = fmt.Errorf("error while invoking tool: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
