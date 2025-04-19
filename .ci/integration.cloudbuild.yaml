@@ -271,6 +271,21 @@ steps:
       - |
         go test -race -v -tags=integration,http ./tests
 
+  - id: "sqlite"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CGO_ENABLED=1"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    script: |
+      #!/usr/bin/env bash
+      apt-get update && apt-get install -y gcc
+      go test -race -v -tags=integration,sqlite ./tests
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest

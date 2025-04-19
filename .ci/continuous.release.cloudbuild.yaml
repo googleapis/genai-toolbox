@@ -126,6 +126,7 @@ steps:
         #!/usr/bin/env bash
         gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$REF_NAME/windows/amd64/toolbox
 
+
 options:
   automapSubstitutions: true
   dynamicSubstitutions: true
