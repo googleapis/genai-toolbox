@@ -53,7 +53,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
-	err = pool.Ping(context.Background())
+	err = pool.Ping(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
@@ -136,7 +136,7 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	if err != nil {
 		return nil, err
 	}
-	d, err := cloudsqlconn.NewDialer(context.Background(), opts...)
+	d, err := cloudsqlconn.NewDialer(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
@@ -148,7 +148,7 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	}
 
 	// Interact with the driver directly as you normally would
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, err
 	}

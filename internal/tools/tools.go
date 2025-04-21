@@ -15,6 +15,7 @@
 package tools
 
 import (
+	"context"
 	"slices"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -26,7 +27,7 @@ type ToolConfig interface {
 }
 
 type Tool interface {
-	Invoke(ParamValues) ([]any, error)
+	Invoke(context.Context, ParamValues) ([]any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest

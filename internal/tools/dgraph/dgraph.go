@@ -15,6 +15,7 @@
 package dgraph
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -35,14 +36,15 @@ var _ compatibleSource = &dgraph.Source{}
 var compatibleSources = [...]string{dgraph.SourceKind}
 
 type Config struct {
-	Name        string           `yaml:"name" validate:"required"`
-	Kind        string           `yaml:"kind" validate:"required"`
-	Source      string           `yaml:"source" validate:"required"`
-	Description string           `yaml:"description" validate:"required"`
-	Statement   string           `yaml:"statement" validate:"required"`
-	IsQuery     bool             `yaml:"isQuery"`
-	Timeout     string           `yaml:"timeout"`
-	Parameters  tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Statement    string           `yaml:"statement" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired"`
+	IsQuery      bool             `yaml:"isQuery"`
+	Timeout      string           `yaml:"timeout"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -77,6 +79,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         ToolKind,
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
+		AuthRequired: cfg.AuthRequired,
 		DgraphClient: s.DgraphClient(),
 		IsQuery:      cfg.IsQuery,
 		Timeout:      cfg.Timeout,
@@ -102,7 +105,7 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMapWithDollarPrefix()
 
 	resp, err := t.DgraphClient.ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)

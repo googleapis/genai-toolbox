@@ -43,6 +43,9 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 					kind: neo4j-cypher
 					source: my-neo4j-instance
 					description: some tool description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
 					statement: |
 						MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;
 					parameters:
@@ -52,11 +55,12 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": neo4j.Config{
-					Name:        "example_tool",
-					Kind:        neo4j.ToolKind,
-					Source:      "my-neo4j-instance",
-					Description: "some tool description",
-					Statement:   "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
+					Name:         "example_tool",
+					Kind:         neo4j.ToolKind,
+					Source:       "my-neo4j-instance",
+					Description:  "some tool description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					Statement:    "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
 					Parameters: []tools.Parameter{
 						tools.NewStringParameter("country", "country parameter description"),
 					},
