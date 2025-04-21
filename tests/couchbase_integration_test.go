@@ -108,8 +108,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	// Set up data for auth tool
 	authToolStatement, params2 := GetCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
-	defer teardownCollection2(t)
+	_ = SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
+	//defer teardownCollection2(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, authToolStatement)
@@ -131,6 +131,6 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	RunToolGetTest(t)
 
 	select1Want := "[{\"$1\":1}]"
-	time.Sleep(3 * time.Second)
+	//time.Sleep(3 * time.Second)
 	RunToolInvokeTest(t, select1Want)
 }
