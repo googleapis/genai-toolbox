@@ -60,8 +60,8 @@ func TestParseFromYamlHTTP(t *testing.T) {
 							  field: user_id
 					requestBody: |
 							{
-								"age": {{.age}}
-								"city": "{{.city}}"
+								"age": {{.age}},
+								"city": "{{.city}}",
 								"food": {{.food}}
 							}
 					bodyParams:
@@ -94,8 +94,8 @@ func TestParseFromYamlHTTP(t *testing.T) {
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
 					RequestBody: `{
-  "age": {{.age}}
-  "city": "{{.city}}"
+  "age": {{.age}},
+  "city": "{{.city}}",
   "food": {{.food}}
 }
 `,
@@ -159,7 +159,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 					requestBody: |
 							{
 								"age": {{.age}},
-								"city": "{{.city}}",
+								"city": "{{.city}}"
 							}
 					bodyParams:
 						- name: age
