@@ -31,20 +31,21 @@ const SourceKind string = "couchbase"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name               string `yaml:"name" validate:"required"`
-	Kind               string `yaml:"kind" validate:"required"`
-	ConnectionString   string `yaml:"connectionString" validate:"required"`
-	Bucket             string `yaml:"bucket" validate:"required"`
-	Scope              string `yaml:"scope" validate:"required"`
-	Username           string `yaml:"username"`
-	Password           string `yaml:"password"`
-	ClientCert         string `yaml:"client_cert"`
-	ClientCertPassword string `yaml:"client_cert_password"`
-	ClientKey          string `yaml:"client_key"`
-	ClientKeyPassword  string `yaml:"client_key_password"`
-	CACert             string `yaml:"ca_cert"`
-	NoSSLVerify        bool   `yaml:"no_ssl_verify"`
-	Profile            string `yaml:"profile"`
+	Name                 string `yaml:"name" validate:"required"`
+	Kind                 string `yaml:"kind" validate:"required"`
+	ConnectionString     string `yaml:"connectionString" validate:"required"`
+	Bucket               string `yaml:"bucket" validate:"required"`
+	Scope                string `yaml:"scope" validate:"required"`
+	Username             string `yaml:"username"`
+	Password             string `yaml:"password"`
+	ClientCert           string `yaml:"clientCert"`
+	ClientCertPassword   string `yaml:"clientCertPassword"`
+	ClientKey            string `yaml:"clientKey"`
+	ClientKeyPassword    string `yaml:"clientKeyPassword"`
+	CACert               string `yaml:"caCert"`
+	NoSSLVerify          bool   `yaml:"noSslVerify"`
+	Profile              string `yaml:"profile"`
+	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -73,9 +74,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name  string `yaml:"name"`
-	Kind  string `yaml:"kind"`
-	Scope *gocb.Scope
+	Name                 string `yaml:"name"`
+	Kind                 string `yaml:"kind"`
+	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
+	Scope                *gocb.Scope
 }
 
 func (s *Source) SourceKind() string {
@@ -84,6 +86,10 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) CouchbaseScope() *gocb.Scope {
 	return s.Scope
+}
+
+func (s *Source) CouchbaseQueryScanConsistency() uint {
+	return s.QueryScanConsistency
 }
 
 func (r Config) createCouchbaseOptions() (gocb.ClusterOptions, error) {

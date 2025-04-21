@@ -28,6 +28,7 @@ const ToolKind string = "couchbase-sql"
 
 type compatibleSource interface {
 	CouchbaseScope() *gocb.Scope
+	CouchbaseQueryScanConsistency() uint
 }
 
 // validate compatible sources are still compatible
@@ -72,14 +73,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         ToolKind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
-		Scope:        s.CouchbaseScope(),
-		AuthRequired: cfg.AuthRequired,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
-		mcpManifest:  mcpManifest,
+		Name:                 cfg.Name,
+		Kind:                 ToolKind,
+		Parameters:           cfg.Parameters,
+		Statement:            cfg.Statement,
+		Scope:                s.CouchbaseScope(),
+		QueryScanConsistency: s.CouchbaseQueryScanConsistency(),
+		AuthRequired:         cfg.AuthRequired,
+		manifest:             tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		mcpManifest:          mcpManifest,
 	}
 	return t, nil
 }
@@ -93,16 +95,17 @@ type Tool struct {
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
 
-	Scope       *gocb.Scope
-	Statement   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Scope                *gocb.Scope
+	QueryScanConsistency uint
+	Statement            string
+	manifest             tools.Manifest
+	mcpManifest          tools.McpManifest
 }
 
 func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 	namedParams := params.AsMap()
 	results, err := t.Scope.Query(t.Statement, &gocb.QueryOptions{
-		ScanConsistency: gocb.QueryScanConsistencyRequestPlus,
+		ScanConsistency: gocb.QueryScanConsistency(t.QueryScanConsistency),
 		NamedParameters: namedParams,
 	})
 	if err != nil {

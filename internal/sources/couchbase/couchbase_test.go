@@ -63,12 +63,13 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 					connectionString: couchbases://localhost
 					bucket: travel-sample
 					scope: inventory
-					client_cert: /path/to/cert.pem
-					client_key: /path/to/key.pem
-					client_cert_password: password
-					client_key_password: password
-					ca_cert: /path/to/ca.pem
-					no_ssl_verify: false
+					clientCert: /path/to/cert.pem
+					clientKey: /path/to/key.pem
+					clientCertPassword: password
+					clientKeyPassword: password
+					caCert: /path/to/ca.pem
+					noSslVerify: false
+					queryScanConsistency: 2
 			`,
 			want: server.SourceConfigs{
 				"my-couchbase-instance": couchbase.Config{
@@ -83,6 +84,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 					ClientKeyPassword:  "password",
 					CACert:             "/path/to/ca.pem",
 					NoSSLVerify:        false,
+					QueryScanConsistency: 2,
 				},
 			},
 		},
