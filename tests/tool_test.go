@@ -407,7 +407,7 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 		},
 		{
-			name:          "MCP Invoke my-tool without parameters",
+			name:          "MCP Invoke my-param-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
@@ -417,14 +417,14 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 					Method: "tools/call",
 				},
 				Params: map[string]any{
-					"name":      "my-tool",
+					"name":      "my-param-tool",
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"invalid tool name: tool with name \"my-tool\" does not exist"}}`,
+			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter id is required"}}`,
 		},
 		{
-			name:          "MCP Invoke my-tool with insufficient parameters",
+			name:          "MCP Invoke my-param-tool with insufficient parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
@@ -434,11 +434,11 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 					Method: "tools/call",
 				},
 				Params: map[string]any{
-					"name":      "my-tool",
+					"name":      "my-param-tool",
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"invalid tool name: tool with name \"my-tool\" does not exist"}}`,
+			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter name is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
