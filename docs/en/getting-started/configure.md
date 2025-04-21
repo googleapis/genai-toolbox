@@ -54,7 +54,6 @@ tools:
 For more details on configuring different types of tools, see the
 [Tools](../resources/tools/).
 
-
 ### Toolsets
 
 The `toolsets` section of your `tools.yaml` allows you to define groups of tools
@@ -79,4 +78,20 @@ all_tools = client.load_toolset()
 
 # This will only load the tools listed in 'my_second_toolset'
 my_second_toolset = client.load_toolset("my_second_toolset")
+```
+
+### Using Environment Variables
+
+To avoid hardcoding certain secret fields like passwords, usernames, API keys
+etc., you could use environment variables instead with the format `${ENV_NAME}`.
+
+```yaml
+sources:
+  my-pg-source:
+    kind: postgres
+    host: 127.0.0.1
+    port: 5432
+    database: toolbox_db
+    user: ${USER_NAME}
+    password: ${PASSWORD}
 ```
