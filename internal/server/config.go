@@ -39,7 +39,6 @@ import (
 	sqlitesrc "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	couchbasetool "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
