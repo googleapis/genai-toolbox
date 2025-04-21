@@ -15,6 +15,7 @@
 package dgraph
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -104,7 +105,7 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMapWithDollarPrefix()
 
 	resp, err := t.DgraphClient.ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)

@@ -141,7 +141,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	allParamValues := make([]any, len(sliceParams)+1)
 	allParamValues[0] = fmt.Sprintf("%s", sliceParams[0]) // nl_question
@@ -150,7 +150,7 @@ func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
 
-	results, err := t.Pool.Query(context.Background(), t.Statement, allParamValues...)
+	results, err := t.Pool.Query(ctx, t.Statement, allParamValues...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v", err, t.Statement, allParamValues)
 	}

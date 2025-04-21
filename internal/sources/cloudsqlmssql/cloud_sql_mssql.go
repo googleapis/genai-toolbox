@@ -58,7 +58,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	// Verify db connection
-	err = db.Ping()
+	err = db.PingContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}

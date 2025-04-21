@@ -53,7 +53,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
-	err = pool.PingContext(context.Background())
+	err = pool.PingContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}

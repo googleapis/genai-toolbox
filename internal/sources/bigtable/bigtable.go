@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4j
+package bigtable
 
 import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/api/option"
 )
 
-const SourceKind string = "neo4j"
+const SourceKind string = "bigtable"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -31,10 +32,8 @@ var _ sources.SourceConfig = Config{}
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
 	Kind     string `yaml:"kind" validate:"required"`
-	Uri      string `yaml:"uri" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
+	Project  string `yaml:"project" validate:"required"`
+	Instance string `yaml:"instance" validate:"required"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -42,24 +41,15 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	driver, err := initNeo4jDriver(ctx, tracer, r.Uri, r.User, r.Password, r.Name)
+	client, err := initBigtableClient(ctx, tracer, r.Name, r.Project, r.Instance)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create driver: %w", err)
+		return nil, fmt.Errorf("unable to create client: %w", err)
 	}
 
-	err = driver.VerifyConnectivity(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
-	}
-
-	if r.Database == "" {
-		r.Database = "neo4j"
-	}
 	s := &Source{
-		Name:     r.Name,
-		Kind:     SourceKind,
-		Database: r.Database,
-		Driver:   driver,
+		Name:   r.Name,
+		Kind:   SourceKind,
+		Client: client,
 	}
 	return s, nil
 }
@@ -67,33 +57,31 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Database string `yaml:"database"`
-	Driver   neo4j.DriverWithContext
+	Name   string `yaml:"name"`
+	Kind   string `yaml:"kind"`
+	Client *bigtable.Client
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) Neo4jDriver() neo4j.DriverWithContext {
-	return s.Driver
+func (s *Source) BigtableClient() *bigtable.Client {
+	return s.Client
 }
 
-func (s *Source) Neo4jDatabase() string {
-	return s.Database
-}
-
-func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, password, name string) (neo4j.DriverWithContext, error) {
+func initBigtableClient(ctx context.Context, tracer trace.Tracer, name, project, instance string) (*bigtable.Client, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	auth := neo4j.BasicAuth(user, password, "")
-	driver, err := neo4j.NewDriverWithContext(uri, auth)
+	// Set up Bigtable data operations client.
+	poolSize := 10
+	client, err := bigtable.NewClient(ctx, project, instance, option.WithGRPCConnectionPool(poolSize))
+
 	if err != nil {
-		return nil, fmt.Errorf("unable to create connection driver: %w", err)
+		return nil, fmt.Errorf("unable to create bigtable.NewClient: %w", err)
 	}
-	return driver, nil
+
+	return client, nil
 }

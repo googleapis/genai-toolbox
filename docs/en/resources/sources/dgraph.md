@@ -39,7 +39,7 @@ sources:
         user: "groot"
         password: "password"
         apiKey: abc123
-        namepace : 0
+        namespace : 0
 ```
 
 ## Reference

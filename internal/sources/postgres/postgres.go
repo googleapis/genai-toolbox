@@ -48,7 +48,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("Unable to create pool: %w", err)
 	}
 
-	err = pool.Ping(context.Background())
+	err = pool.Ping(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
 	}
@@ -83,7 +83,7 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	defer span.End()
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)
-	pool, err := pgxpool.New(context.Background(), i)
+	pool, err := pgxpool.New(ctx, i)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create connection pool: %w", err)
 	}

@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,30 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4j
+package bigtable
 
 import (
 	"context"
 	"fmt"
 
-	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-
+	"cloud.google.com/go/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	bigtabledb "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "neo4j-cypher"
+const ToolKind string = "bigtable-sql"
 
 type compatibleSource interface {
-	Neo4jDriver() neo4j.DriverWithContext
-	Neo4jDatabase() string
+	BigtableClient() *bigtable.Client
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &neo4jsc.Source{}
+var _ compatibleSource = &bigtabledb.Source{}
 
-var compatibleSources = [...]string{neo4jsc.SourceKind}
+var compatibleSources = [...]string{bigtabledb.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`
@@ -80,8 +78,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
-		Driver:       s.Neo4jDriver(),
-		Database:     s.Neo4jDatabase(),
+		Client:       s.BigtableClient(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 		mcpManifest:  mcpManifest,
 	}
@@ -94,42 +91,84 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
-	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Driver      neo4j.DriverWithContext
-	Database    string
+	Client      *bigtable.Client
 	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	paramsMap := params.AsMap()
+func getMapParamsType(tparams tools.Parameters, params tools.ParamValues) (map[string]bigtable.SQLType, error) {
+	paramTypeMap := make(map[string]string)
+	for _, p := range tparams {
+		paramTypeMap[p.GetName()] = p.GetType()
+	}
 
-	config := neo4j.ExecuteQueryWithDatabase(t.Database)
-	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, t.Statement, paramsMap,
-		neo4j.EagerResultTransformer, config)
+	btParams := make(map[string]bigtable.SQLType)
+	for _, p := range params {
+		switch paramTypeMap[p.Name] {
+		case "boolean":
+			btParams[p.Name] = bigtable.BoolSQLType{}
+		case "string":
+			btParams[p.Name] = bigtable.StringSQLType{}
+		case "integer":
+			btParams[p.Name] = bigtable.Int64SQLType{}
+		case "float":
+			btParams[p.Name] = bigtable.Float64SQLType{}
+		case "array":
+			btParams[p.Name] = bigtable.ArraySQLType{}
+		}
+	}
+
+	return btParams, nil
+}
+
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+	mapParamsType, err := getMapParamsType(t.Parameters, params)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, fmt.Errorf("fail to get map params: %w", err)
+	}
+
+	ps, err := t.Client.PrepareStatement(
+		ctx,
+		t.Statement,
+		mapParamsType,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to prepare statement: %w", err)
+	}
+
+	bs, err := ps.Bind(params.AsMap())
+	if err != nil {
+		return nil, fmt.Errorf("unable to bind: %w", err)
 	}
 
 	var out []any
-	keys := results.Keys
-	records := results.Records
-	for _, record := range records {
+	err = bs.Execute(ctx, func(resultRow bigtable.ResultRow) bool {
 		vMap := make(map[string]any)
-		for col, value := range record.Values {
-			vMap[keys[col]] = value
+		cols := resultRow.Metadata.Columns
+
+		for _, c := range cols {
+			var columValue any
+			err = resultRow.GetByName(c.Name, &columValue)
+			vMap[c.Name] = columValue
 		}
+
 		out = append(out, vMap)
+
+		return true
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute client: %w", err)
 	}
 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claimsMap)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
