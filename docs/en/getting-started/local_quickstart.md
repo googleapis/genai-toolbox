@@ -445,8 +445,15 @@ for query in queries:
     events = runner.run(session_id=session.id,
                         user_id='123', new_message=content)
 
-    for event in events:
-        print(event)
+    texts_to_print = (
+      part.text
+      for event in events
+      for part in event.content.parts  # Nested loop structure mirrored
+      if part.text is not None        # Filtering condition
+    )
+
+    for text in texts_to_print:
+      print(text)
 {{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
 
