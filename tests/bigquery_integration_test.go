@@ -76,7 +76,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	datasetName := fmt.Sprintf("temp_dataset_%s", strings.Replace(uuid.New().String(), "-", "", -1))
+	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.Replace(uuid.New().String(), "-", "", -1))
 	tableNameParam := fmt.Sprintf("`%s.%s.param_table_%s`",
 		BIGQUERY_PROJECT,
 		datasetName,
