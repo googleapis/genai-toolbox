@@ -33,10 +33,11 @@ sources:
 | scope               | string   |    true      | Name of the scope within the bucket.                                                                                        |
 | username            | string   |    false     | Username for authentication.                                                                                                |
 | password            | string   |    false     | Password for authentication.                                                                                                |
-| client_cert         | string   |    false     | Path to client certificate file for TLS authentication.                                                                     |
-| client_cert_password| string   |    false     | Password for the client certificate.                                                                                        |
-| client_key          | string   |    false     | Path to client key file for TLS authentication.                                                                             |
-| client_key_password | string   |    false     | Password for the client key.                                                                                                |
-| ca_cert             | string   |    false     | Path to CA certificate file.                                                                                                |
-| no_ssl_verify       | boolean  |    false     | If true, skip server certificate verification. **Warning:** This option should only be used in development or testing environments. Disabling SSL verification poses significant security risks in production as it makes your connection vulnerable to man-in-the-middle attacks. |
+| clientCert         | string   |    false     | Path to client certificate file for TLS authentication.                                                                     |
+| clientCertPassword| string   |    false     | Password for the client certificate.                                                                                        |
+| clientKey          | string   |    false     | Path to client key file for TLS authentication.                                                                             |
+| clientKeyPassword | string   |    false     | Password for the client key.                                                                                                |
+| caCert             | string   |    false     | Path to CA certificate file.                                                                                                |
+| noSslVerify       | boolean  |    false     | If true, skip server certificate verification. **Warning:** This option should only be used in development or testing environments. Disabling SSL verification poses significant security risks in production as it makes your connection vulnerable to man-in-the-middle attacks. |
 | profile             | string   |    false     | Name of the connection profile to apply.                                                                                    |
+| queryScanConsistency | integer  |    false     | Query scan consistency. Controls the consistency guarantee for index scanning. Values: 1 for "not_bounded" (fastest option, but results may not include the most recent operations), 2 for "request_plus" (highest consistency level, includes all operations up until the query started, but incurs a performance penalty). If not specified, uses the server's default setting. |
