@@ -88,7 +88,7 @@ jobs:
         run: |
           FILE_TO_EXCLUDE="internal/server/config.go"
           ESCAPED_PATH=$(echo "$FILE_TO_EXCLUDE" | sed 's/\//\\\//g; s/\./\\\./g')
-          sed -i '' "/^${ESCAPED_PATH}:/d" coverage.out
+          sed -i '' -e "/^${ESCAPED_PATH}:/d" coverage.out
           total_coverage=$(go tool cover -func=coverage.out | grep "total:" | awk '{print $3}')
           echo "Total coverage: $total_coverage"
           coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
