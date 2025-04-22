@@ -78,7 +78,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 			JSON:             true,
 			LogLevel:         logLevel,
 			Concise:          true,
-			RequestHeaders:   true,
+			RequestHeaders:   false,
 			MessageFieldName: "message",
 			SourceFieldName:  "logging.googleapis.com/sourceLocation",
 			TimeFieldName:    "timestamp",
@@ -88,7 +88,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		httpOpts = httplog.Options{
 			LogLevel:         logLevel,
 			Concise:          true,
-			RequestHeaders:   true,
+			RequestHeaders:   false,
 			MessageFieldName: "message",
 		}
 	default:
