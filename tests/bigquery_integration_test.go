@@ -60,9 +60,7 @@ func initBigQueryConnection(project, location string) (*bigqueryapi.Client, erro
 	}
 
 	client, err := bigqueryapi.NewClient(ctx, project, option.WithCredentials(cred))
-	// if location != "" {
 	client.Location = location
-	// }
 	if err != nil {
 		return nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
