@@ -37,16 +37,15 @@ var (
 	BIGQUERY_PROJECT     = os.Getenv("BIGQUERY_PROJECT")
 )
 
-func getBigQueryVars(t *testing.T, location *string) map[string]any {
+func getBigQueryVars(t *testing.T) map[string]any {
 	switch "" {
 	case BIGQUERY_PROJECT:
 		t.Fatal("'BIGQUERY_PROJECT' not set")
 	}
 
 	return map[string]any{
-		"kind":     BIGQUERY_SOURCE_KIND,
-		"project":  BIGQUERY_PROJECT,
-		"location": location,
+		"kind":    BIGQUERY_SOURCE_KIND,
+		"project": BIGQUERY_PROJECT,
 	}
 }
 
@@ -65,7 +64,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 }
 
 func TestBigQueryToolEndpoints(t *testing.T) {
-	sourceConfig := getBigQueryVars(t, nil)
+	sourceConfig := getBigQueryVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
