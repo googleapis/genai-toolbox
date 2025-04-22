@@ -30,7 +30,6 @@ const ToolKind string = "bigquery-sql"
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	QueryLocation() string
 }
 
 // validate compatible sources are still compatible
@@ -82,7 +81,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.BigQueryClient(),
-		Location:     s.QueryLocation(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
 		mcpManifest:  mcpManifest,
 	}
@@ -99,7 +97,6 @@ type Tool struct {
 	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Client      *bigqueryapi.Client
-	Location    string
 	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -124,7 +121,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 
 	query := t.Client.Query(t.Statement)
 	query.Parameters = namedArgs
-	query.Location = t.Location
 
 	it, err := query.Read(ctx)
 	if err != nil {

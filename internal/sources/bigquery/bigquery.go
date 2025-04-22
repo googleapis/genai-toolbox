@@ -46,7 +46,7 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a BigQuery Google SQL source
-	client, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project)
+	client, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
 	if err != nil {
 		return nil, err
 	}
@@ -79,15 +79,12 @@ func (s *Source) BigQueryClient() *bigqueryapi.Client {
 	return s.Client
 }
 
-func (s *Source) QueryLocation() string {
-	return s.Location
-}
-
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
 	name string,
 	project string,
+	location string,
 ) (*bigqueryapi.Client, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -98,6 +95,7 @@ func initBigQueryConnection(
 	}
 
 	client, err := bigqueryapi.NewClient(ctx, project, option.WithCredentials(cred))
+	client.Location = location
 	if err != nil {
 		return nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}

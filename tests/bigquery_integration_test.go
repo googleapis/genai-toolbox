@@ -35,6 +35,7 @@ var (
 	BIGQUERY_SOURCE_KIND = "bigquery"
 	BIGQUERY_TOOL_KIND   = "bigquery-sql"
 	BIGQUERY_PROJECT     = os.Getenv("BIGQUERY_PROJECT")
+	BIGQUERY_LOCATION    = os.Getenv("BIGQUERY_LOCATION")
 )
 
 func getBigQueryVars(t *testing.T) map[string]any {
@@ -44,12 +45,14 @@ func getBigQueryVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":    BIGQUERY_SOURCE_KIND,
-		"project": BIGQUERY_PROJECT,
+		"kind":     BIGQUERY_SOURCE_KIND,
+		"project":  BIGQUERY_PROJECT,
+		"location": BIGQUERY_LOCATION,
 	}
 }
 
-func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
+// Copied over from bigquery.go
+func initBigQueryConnection(project, location string) (*bigqueryapi.Client, error) {
 	ctx := context.Background()
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
 	if err != nil {
@@ -57,6 +60,9 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 	}
 
 	client, err := bigqueryapi.NewClient(ctx, project, option.WithCredentials(cred))
+	// if location != "" {
+	client.Location = location
+	// }
 	if err != nil {
 		return nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
@@ -70,7 +76,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initBigQueryConnection(BIGQUERY_PROJECT)
+	client, err := initBigQueryConnection(BIGQUERY_PROJECT, BIGQUERY_LOCATION)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
