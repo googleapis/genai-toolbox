@@ -62,7 +62,7 @@ tools:
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be "bigquery-sql".                                                                          |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
+| source      |                   string                   |     true     | Name of the source the GoogleSQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
 | statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
 | parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
