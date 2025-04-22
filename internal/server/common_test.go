@@ -44,7 +44,7 @@ type MockTool struct {
 }
 
 func (t MockTool) Invoke(context.Context, tools.ParamValues) ([]any, error) {
-	mock := make([]any, 0)
+	mock := []any{t.Name}
 	return mock, nil
 }
 

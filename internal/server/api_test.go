@@ -15,9 +15,12 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -203,6 +206,77 @@ func TestToolGetEndpoint(t *testing.T) {
 				if !ok {
 					t.Errorf("%q tool not found in manfiest", name)
 				}
+			}
+		})
+	}
+}
+
+func TestToolInvokeEndpoint(t *testing.T) {
+	mockTools := []MockTool{tool1, tool2}
+	toolsMap, toolsets := setUpResources(t, mockTools)
+	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	testCases := []struct {
+		name        string
+		toolName    string
+		requestBody io.Reader
+		want        string
+		isErr       bool
+	}{
+		{
+			name:        "tool1",
+			toolName:    tool1.Name,
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "{result:[no_params]}\n",
+			isErr:       false,
+		},
+		{
+			name:        "tool2",
+			toolName:    tool2.Name,
+			requestBody: bytes.NewBuffer([]byte(`{"param1": 1, "param2": 2}`)),
+			want:        "{result:[some_params]}\n",
+			isErr:       false,
+		},
+		{
+			name:        "invalid tool",
+			toolName:    "some_imaginary_tool",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "",
+			isErr:       true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, body, err := runRequest(ts, http.MethodPost, fmt.Sprintf("/tool/%s/invoke", tc.toolName), tc.requestBody)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+
+			if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+				t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr == true {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d, %s", resp.StatusCode, string(body))
+			}
+
+			got := string(body)
+
+			// Remove `\` and `"` for string comparison
+			got = strings.ReplaceAll(got, "\\", "")
+			want := strings.ReplaceAll(tc.want, "\\", "")
+			got = strings.ReplaceAll(got, "\"", "")
+			want = strings.ReplaceAll(want, "\"", "")
+
+			if got != want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
 		})
 	}
