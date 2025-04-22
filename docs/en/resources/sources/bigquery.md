@@ -50,15 +50,6 @@ permissions to run jobs and read data) or `roles/bigquery.dataViewer`. See
 [Introduction to BigQuery IAM][grant-permissions] for more information on 
 applying IAM permissions and roles to an identity.
 
-In addition to [setting the ADC for your server][set-adc], you need to ensure 
-the IAM identity has been given the correct IAM permissions for the queries 
-you intend to run. Common predefined roles include `roles/bigquery.user` 
-(which grants permissions to run jobs, including queries, and enumerate 
-datasets) or `roles/bigquery.dataViewer` (for read-only access to datasets). 
-Refer to the [BigQuery access control documentation][grant-permissions] for 
-a comprehensive overview of available roles and how to grant permissions at 
-different resource levels.
-
 [iam-overview]: https://cloud.google.com/bigquery/docs/access-control
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
