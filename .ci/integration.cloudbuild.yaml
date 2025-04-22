@@ -106,6 +106,23 @@ steps:
       - |
         go test -race -v -tags=integration,bigtable ./tests
 
+  - id: "bigquery"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "BIGQUERY_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        go test -race -v -tags=integration,bigquery ./tests
+
   - id: "postgres"
     name: golang:1
     waitFor: ["install-dependencies"]

@@ -28,11 +28,14 @@ import (
 	"strings"
 	"testing"
 
+	bigqueryapi "cloud.google.com/go/bigquery"
 	"cloud.google.com/go/spanner"
 	database "cloud.google.com/go/spanner/admin/database/apiv1"
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iterator"
 )
 
 // SetupPostgresSQLTable creates and inserts data into a table of tool
@@ -166,6 +169,83 @@ func SetupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 		err = op.Wait(ctx)
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+}
+
+func SetupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, create_statement, insert_statement, datasetName string, tableName string, params []bigqueryapi.QueryParameter) func(*testing.T) {
+	// Create dataset
+	dataset := client.Dataset(datasetName)
+	_, err := dataset.Metadata(ctx)
+
+	if err != nil {
+		apiErr, ok := err.(*googleapi.Error)
+		if !ok || apiErr.Code != 404 {
+			t.Fatalf("Failed to check dataset %q existence: %v", datasetName, err)
+		}
+		metadataToCreate := &bigqueryapi.DatasetMetadata{Name: datasetName}
+		if err := dataset.Create(ctx, metadataToCreate); err != nil {
+			t.Fatalf("Failed to create dataset %q: %v", datasetName, err)
+		}
+	}
+
+	// Create table
+	createJob, err := client.Query(create_statement).Run(ctx)
+
+	if err != nil {
+		t.Fatalf("Failed to start create table job for %s: %v", tableName, err)
+	}
+	createStatus, err := createJob.Wait(ctx)
+	if err != nil {
+		t.Fatalf("Failed to wait for create table job for %s: %v", tableName, err)
+	}
+	if err := createStatus.Err(); err != nil {
+		t.Fatalf("Create table job for %s failed: %v", tableName, err)
+	}
+
+	// Insert test data
+	insertQuery := client.Query(insert_statement)
+	insertQuery.Parameters = params
+	insertJob, err := insertQuery.Run(ctx)
+	if err != nil {
+		t.Fatalf("Failed to start insert job for %s: %v", tableName, err)
+	}
+	insertStatus, err := insertJob.Wait(ctx)
+	if err != nil {
+		t.Fatalf("Failed to wait for insert job for %s: %v", tableName, err)
+	}
+	if err := insertStatus.Err(); err != nil {
+		t.Fatalf("Insert job for %s failed: %v", tableName, err)
+	}
+
+	return func(t *testing.T) {
+		// tear down table
+		dropSQL := fmt.Sprintf("drop table %s", tableName)
+		dropJob, err := client.Query(dropSQL).Run(ctx)
+		if err != nil {
+			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
+			return
+		}
+		dropStatus, err := dropJob.Wait(ctx)
+		if err != nil {
+			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
+			return
+		}
+		if err := dropStatus.Err(); err != nil {
+			t.Errorf("Error dropping table %s: %v", tableName, err)
+		}
+
+		// tear down dataset
+		datasetToTeardown := client.Dataset(datasetName)
+		tablesIterator := datasetToTeardown.Tables(ctx)
+		_, err = tablesIterator.Next()
+
+		if err == iterator.Done {
+			if err := datasetToTeardown.Delete(ctx); err != nil {
+				t.Errorf("Failed to delete dataset %s: %v", datasetName, err)
+			}
+		} else if err != nil {
+			t.Errorf("Failed to list tables in dataset %s to check emptiness: %v.", datasetName, err)
 		}
 	}
 }
