@@ -27,7 +27,7 @@ BigQuery uses [GoogleSQL][bigquery-googlesql] for querying data. GoogleSQL
 is an ANSI-compliant structured query language (SQL) that is also implemented 
 for other Google Cloud services. SQL queries are handled by cluster nodes 
 in the same way as NoSQL data requests. Therefore, the same best practices 
-apply when creating SQL queries to run against your Bigtable data, such as 
+apply when creating SQL queries to run against your BigQuery data, such as 
 avoiding full table scans or complex filters.
 
 [bigquery-docs]: https://cloud.google.com/bigquery/docs
