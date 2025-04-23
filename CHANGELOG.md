@@ -1,37 +1,25 @@
 # Changelog
 
-
 ## [0.4.0](https://github.com/googleapis/genai-toolbox/compare/v0.3.0...v0.4.0) (2025-04-23)
 
 
 ### Features
 
-* Add `AuthRequired` to neo4j & dgraph Tools ([#434](https://github.com/googleapis/genai-toolbox/issues/434)) ([afbf4b2](https://github.com/googleapis/genai-toolbox/commit/afbf4b2daeb01119a22ce18469bffb9e9f57d2f8))
-* Add `AuthRequired` to Tool Manifest ([#433](https://github.com/googleapis/genai-toolbox/issues/433)) ([d9388ad](https://github.com/googleapis/genai-toolbox/commit/d9388ad57e832570aab56b9b357c1fb0ba994852))
+* Add `AuthRequired` to Neo4j & Dgraph Tools ([#434](https://github.com/googleapis/genai-toolbox/issues/434)) ([afbf4b2](https://github.com/googleapis/genai-toolbox/commit/afbf4b2daeb01119a22ce18469bffb9e9f57d2f8))
+* Add `AuthRequired` to tool manifest ([#433](https://github.com/googleapis/genai-toolbox/issues/433)) ([d9388ad](https://github.com/googleapis/genai-toolbox/commit/d9388ad57e832570aab56b9b357c1fb0ba994852))
 * Add BigQuery source and tool ([#463](https://github.com/googleapis/genai-toolbox/issues/463)) ([8055aa5](https://github.com/googleapis/genai-toolbox/commit/8055aa519fe6e7993ba524f8f7e684fbfdecc1b9))
 * Add Bigtable source and tool ([#418](https://github.com/googleapis/genai-toolbox/issues/418)) ([ae53b8e](https://github.com/googleapis/genai-toolbox/commit/ae53b8eeff9d0e9ec14d9c6d4286c856cc8f1811))
-* Add IAM authentication to AlloyDB Source ([#399](https://github.com/googleapis/genai-toolbox/issues/399)) ([e8ed447](https://github.com/googleapis/genai-toolbox/commit/e8ed447d9153c60a1d6321285587e6e4ca930f87))
+* Add IAM AuthN to AlloyDB Source ([#399](https://github.com/googleapis/genai-toolbox/issues/399)) ([e8ed447](https://github.com/googleapis/genai-toolbox/commit/e8ed447d9153c60a1d6321285587e6e4ca930f87))
 * Add IAM AuthN to Cloud SQL Sources ([#414](https://github.com/googleapis/genai-toolbox/issues/414)) ([be85b82](https://github.com/googleapis/genai-toolbox/commit/be85b820785dbce79133b0cf8788bde75ff25fee))
 * Add toolset feature to mcp ([#425](https://github.com/googleapis/genai-toolbox/issues/425)) ([e307857](https://github.com/googleapis/genai-toolbox/commit/e307857085ac4c8c2ee8292c914daa5534ba74bf)), closes [#403](https://github.com/googleapis/genai-toolbox/issues/403)
-* Sqlite implementation ([#438](https://github.com/googleapis/genai-toolbox/issues/438)) ([fc14cbf](https://github.com/googleapis/genai-toolbox/commit/fc14cbfd078d465591e4fefb80542759e82a2731))
-* Support env replacement for tool.yaml ([#462](https://github.com/googleapis/genai-toolbox/issues/462)) ([eadb678](https://github.com/googleapis/genai-toolbox/commit/eadb678a7bd4ce74a3b1160f5ed8966ffbb13c61))
+* Add Sqllite source and tool ([#438](https://github.com/googleapis/genai-toolbox/issues/438)) ([fc14cbf](https://github.com/googleapis/genai-toolbox/commit/fc14cbfd078d465591e4fefb80542759e82a2731))
+* Support env replacement for tools.yaml ([#462](https://github.com/googleapis/genai-toolbox/issues/462)) ([eadb678](https://github.com/googleapis/genai-toolbox/commit/eadb678a7bd4ce74a3b1160f5ed8966ffbb13c61))
 
 
 ### Bug Fixes
 
 * [#419](https://github.com/googleapis/genai-toolbox/issues/419) TLS https URL for SSE endpoint ([#420](https://github.com/googleapis/genai-toolbox/issues/420)) ([0a7d3ff](https://github.com/googleapis/genai-toolbox/commit/0a7d3ff06b88051c752b6d53bc964ed6e6be400e))
-* **deps:** Update module cloud.google.com/go/alloydbconn to v1.15.1 ([#440](https://github.com/googleapis/genai-toolbox/issues/440)) ([6cb4079](https://github.com/googleapis/genai-toolbox/commit/6cb407969b96bd3f853bb58692f06c1bbd3e45b4))
-* **deps:** Update module cloud.google.com/go/bigquery to v1.67.0 ([#469](https://github.com/googleapis/genai-toolbox/issues/469)) ([aade563](https://github.com/googleapis/genai-toolbox/commit/aade563c86657e47ba13087af1ec3e48ae38f97d))
-* **deps:** Update module cloud.google.com/go/bigtable to v1.37.0 ([#452](https://github.com/googleapis/genai-toolbox/issues/452)) ([b690f5d](https://github.com/googleapis/genai-toolbox/commit/b690f5ddc2838943598f5659aa49df52d3cb4fb9))
-* **deps:** Update module cloud.google.com/go/cloudsqlconn to v1.16.1 ([#448](https://github.com/googleapis/genai-toolbox/issues/448)) ([a64e7c1](https://github.com/googleapis/genai-toolbox/commit/a64e7c1e1ad939292f7f816a7ff1edc3fbac2d44))
-* **deps:** Update module cloud.google.com/go/spanner to v1.79.0 ([#415](https://github.com/googleapis/genai-toolbox/issues/415)) ([21b82c1](https://github.com/googleapis/genai-toolbox/commit/21b82c10c2aafc2cd8e1050ac7d8943076931004))
-* **deps:** Update module github.com/go-sql-driver/mysql to v1.9.2 ([#408](https://github.com/googleapis/genai-toolbox/issues/408)) ([6638fbb](https://github.com/googleapis/genai-toolbox/commit/6638fbb3a0f5d81654df2882e9edd557adf6d766))
-* **deps:** Update module golang.org/x/oauth2 to v0.29.0 ([#416](https://github.com/googleapis/genai-toolbox/issues/416)) ([92ed74a](https://github.com/googleapis/genai-toolbox/commit/92ed74a4df014c429584a54a806d07d232ee5e06))
-* **deps:** Update module google.golang.org/api to v0.229.0 ([#442](https://github.com/googleapis/genai-toolbox/issues/442)) ([b3be1ff](https://github.com/googleapis/genai-toolbox/commit/b3be1ffa3c1dcfcf68c6d23706b33419a0db05e9))
-* **deps:** Update module google.golang.org/api to v0.230.0 ([#467](https://github.com/googleapis/genai-toolbox/issues/467)) ([b61ae8f](https://github.com/googleapis/genai-toolbox/commit/b61ae8f02f2be797587f1be692208b6d9991cc6d))
-* **deps:** Update module modernc.org/sqlite to v1.37.0 ([#471](https://github.com/googleapis/genai-toolbox/issues/471)) ([8014eea](https://github.com/googleapis/genai-toolbox/commit/8014eea03329aa82f0aea617712966c30c6fbfa6))
 * **docs:** Fix link 'Edit this page' ([#454](https://github.com/googleapis/genai-toolbox/issues/454)) ([969065e](https://github.com/googleapis/genai-toolbox/commit/969065e561f28ddb9755d99bbe0b288040198296)), closes [#427](https://github.com/googleapis/genai-toolbox/issues/427)
-* Run linter ([#410](https://github.com/googleapis/genai-toolbox/issues/410)) ([b81feb6](https://github.com/googleapis/genai-toolbox/commit/b81feb61e68c67d0014d8f3c742320f266118abf))
 * Update http error code from invocation ([#468](https://github.com/googleapis/genai-toolbox/issues/468)) ([ff7c0ff](https://github.com/googleapis/genai-toolbox/commit/ff7c0ffc65172a335e8d3321e5a6b92d38dc7e6d)), closes [#465](https://github.com/googleapis/genai-toolbox/issues/465)
 
 ## [0.3.0](https://github.com/googleapis/genai-toolbox/compare/v0.2.1...v0.3.0) (2025-04-04)
