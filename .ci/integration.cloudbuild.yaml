@@ -24,9 +24,20 @@ steps:
     script: |
       go get -d ./...
 
-  - id: "cloud-sql-pg"
+  - id: "compile-test-binary"
     name: golang:1
     waitFor: ["install-dependencies"]
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    script: |
+      go test -race -c -tags=integration -o int-test ./tests
+
+  - id: "cloud-sql-pg"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -43,11 +54,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,cloudsqlpg ./tests
+        tests=TestCloudSQLPg
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "alloydb-pg"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -64,11 +81,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,alloydb ./tests
+        tests=TestAlloyDBPg
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "alloydb-ai-nl"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -85,11 +108,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,alloydb_ai_nl ./tests
+        tests=TestAlloyDBAiNl
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "bigtable"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -104,11 +133,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,bigtable ./tests
+        tests=TestBigtable
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "bigquery"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -121,11 +156,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,bigquery ./tests
+        tests=TestBigQuery
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "postgres"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -140,11 +181,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,postgres ./tests
+        tests=TestPostgres
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "spanner"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -159,11 +206,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,spanner ./tests
+        tests=TestSpanner
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "neo4j"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -176,11 +229,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,neo4j ./tests
+        tests=TestNeo4j
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "cloud-sql-mssql"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -197,11 +256,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,cloudsqlmssql ./tests
+        tests=TestCloudSQLMssql
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "cloud-sql-mysql"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -218,11 +283,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,cloudsqlmysql ./tests
+        tests=TestCloudSQLMysql
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "mysql"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -237,11 +308,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,mysql ./tests
+        tests=TestMysql
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "mssql"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -256,11 +333,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,mssql ./tests
+        tests=TestMssql
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "dgraph"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -271,11 +354,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,dgraph ./tests
+        tests=TestDgraph
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "http"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -286,11 +375,17 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,http ./tests
+        tests=TestHttp
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
   - id: "sqlite"
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -302,7 +397,13 @@ steps:
     args:
       - -c
       - |
-        go test -race -v -tags=integration,sqlite ./tests
+        tests=TestSQLite
+        list=$(./int-test -test.list $tests)
+        if [[ -z "$list" ]]; then
+            echo "No test found."
+            exit 1
+        fi
+        ./int-test -test.v -test.run $tests
 
 availableSecrets:
   secretManager:

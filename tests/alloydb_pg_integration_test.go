@@ -1,4 +1,4 @@
-//go:build integration && alloydb
+//go:build integration
 
 // Copyright 2024 Google LLC
 //
@@ -117,7 +117,7 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, ip_type, us
 	return pool, nil
 }
 
-func TestAlloyDBToolEndpoints(t *testing.T) {
+func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	sourceConfig := getAlloyDBPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -169,7 +169,7 @@ func TestAlloyDBToolEndpoints(t *testing.T) {
 }
 
 // Test connection with different IP type
-func TestAlloyDBIpConnection(t *testing.T) {
+func TestAlloyDBPgIpConnection(t *testing.T) {
 	sourceConfig := getAlloyDBPgVars(t)
 
 	tcs := []struct {
@@ -197,7 +197,7 @@ func TestAlloyDBIpConnection(t *testing.T) {
 }
 
 // Test IAM connection
-func TestAlloyDBIAMConnection(t *testing.T) {
+func TestAlloyDBPgIAMConnection(t *testing.T) {
 	getAlloyDBPgVars(t)
 	// service account email used for IAM should trim the suffix
 	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")

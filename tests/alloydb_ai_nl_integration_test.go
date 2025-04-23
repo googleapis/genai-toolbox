@@ -1,4 +1,4 @@
-//go:build integration && alloydb_ai_nl
+//go:build integration
 
 // Copyright 2025 Google LLC
 //

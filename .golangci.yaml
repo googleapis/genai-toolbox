@@ -33,18 +33,3 @@ issues:
 run:
   build-tags:
     - integration
-    - cloudsqlpg
-    - postgres
-    - alloydb
-    - spanner
-    - cloudsqlmssql
-    - cloudsqlmysql
-    - neo4j
-    - dgraph
-    - mssql
-    - mysql
-    - http
-    - alloydb_ai_nl
-    - bigtable
-    - bigquery
-    - sqlite

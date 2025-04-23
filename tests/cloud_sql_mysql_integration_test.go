@@ -1,4 +1,4 @@
-//go:build integration && cloudsqlmysql
+//go:build integration
 
 //
 // Copyright 2024 Google LLC
@@ -99,7 +99,7 @@ func initCloudSQLMySQLConnectionPool(project, region, instance, ipType, user, pa
 	return db, nil
 }
 
-func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
+func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()

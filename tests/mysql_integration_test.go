@@ -1,4 +1,4 @@
-//go:build integration && mysql
+//go:build integration
 
 // Copyright 2025 Google LLC
 //
@@ -75,7 +75,7 @@ func initMySQLConnectionPool(host, port, user, pass, dbname string) (*sql.DB, er
 	return pool, nil
 }
 
-func TestMySQLToolEndpoints(t *testing.T) {
+func TestMysqlToolEndpoints(t *testing.T) {
 	sourceConfig := getMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()

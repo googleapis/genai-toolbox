@@ -1,4 +1,4 @@
-//go:build integration && http
+//go:build integration
 
 // Copyright 2025 Google LLC
 //
@@ -232,7 +232,7 @@ func handleTool3(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TestToolEndpoints(t *testing.T) {
+func TestHttpToolEndpoints(t *testing.T) {
 	// start a test server
 	server := httptest.NewServer(http.HandlerFunc(multiTool))
 	defer server.Close()

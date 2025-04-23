@@ -1,4 +1,4 @@
-//go:build integration && neo4j
+//go:build integration
 
 // Copyright 2024 Google LLC
 //

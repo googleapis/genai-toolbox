@@ -1,4 +1,4 @@
-//go:build integration && cloudsqlmssql
+//go:build integration
 
 // Copyright 2025 Google LLC
 //

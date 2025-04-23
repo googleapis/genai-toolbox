@@ -1,4 +1,4 @@
-//go:build integration && cloudsqlpg
+//go:build integration
 
 //
 // Copyright 2024 Google LLC
@@ -182,7 +182,7 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 	}
 }
 
-func TestCloudSQLIAMConnection(t *testing.T) {
+func TestCloudSQLPgIAMConnection(t *testing.T) {
 	getCloudSQLPgVars(t)
 	// service account email used for IAM should trim the suffix
 	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")

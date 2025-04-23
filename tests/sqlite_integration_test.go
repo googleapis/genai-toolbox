@@ -1,4 +1,4 @@
-//go:build integration && sqlite
+//go:build integration
 
 // Copyright 2025 Google LLC
 //

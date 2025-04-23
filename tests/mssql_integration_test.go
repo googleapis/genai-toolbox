@@ -1,4 +1,4 @@
-//go:build integration && mssql
+//go:build integration
 
 // Copyright 2025 Google LLC
 //
@@ -76,7 +76,7 @@ func initMssqlConnection(host, port, user, pass, dbname string) (*sql.DB, error)
 	return db, nil
 }
 
-func TestMsSQLToolEndpoints(t *testing.T) {
+func TestMssqlToolEndpoints(t *testing.T) {
 	sourceConfig := getMsSQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
