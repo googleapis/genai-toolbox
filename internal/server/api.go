@@ -220,7 +220,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = fmt.Errorf("error while invoking tool: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
-		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 
