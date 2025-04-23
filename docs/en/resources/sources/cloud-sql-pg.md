@@ -90,8 +90,8 @@ sources:
 ```
 
 {{< notice tip >}}
-It is highly recommended to use environment variable replacement with the
-format ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 ## Reference
