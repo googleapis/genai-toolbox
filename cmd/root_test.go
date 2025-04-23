@@ -327,6 +327,7 @@ func TestParseToolFile(t *testing.T) {
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
 						},
+						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -449,11 +450,12 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Kind:        postgressql.ToolKind,
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Name:         "example_tool",
+						Kind:         postgressql.ToolKind,
+						Source:       "my-pg-instance",
+						Description:  "some description",
+						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+						AuthRequired: []string{},
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
 							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -547,11 +549,113 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Kind:        postgressql.ToolKind,
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Name:         "example_tool",
+						Kind:         postgressql.ToolKind,
+						Source:       "my-pg-instance",
+						Description:  "some description",
+						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+						AuthRequired: []string{},
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description"),
+							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+			},
+		},
+		{
+			description: "basic example with authRequired",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+			authServices:
+				my-google-service:
+					kind: google
+					clientId: my-client-id
+				other-google-service:
+					kind: google
+					clientId: other-client-id
+
+			tools:
+				example_tool:
+					kind: postgres-sql
+					source: my-pg-instance
+					description: some description
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					authRequired:
+						- my-google-service
+					parameters:
+						- name: country
+						  type: string
+						  description: some description
+						- name: id
+						  type: integer
+						  description: user id
+						  authServices:
+							- name: my-google-service
+								field: user_id
+						- name: email
+							type: string
+							description: user email
+							authServices:
+							- name: my-google-service
+							  field: email
+							- name: other-google-service
+							  field: other_email
+
+			toolsets:
+				example_toolset:
+					- example_tool
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Kind:     cloudsqlpgsrc.SourceKind,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
+						User:     "my_user",
+						Password: "my_pass",
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthServiceKind,
+						ClientID: "my-client-id",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Kind:     google.AuthServiceKind,
+						ClientID: "other-client-id",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:         "example_tool",
+						Kind:         postgressql.ToolKind,
+						Source:       "my-pg-instance",
+						Description:  "some description",
+						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+						AuthRequired: []string{"my-google-service"},
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
 							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),

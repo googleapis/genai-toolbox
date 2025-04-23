@@ -52,11 +52,12 @@ func TestParseFromYamlSpanner(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": bigquery.Config{
-					Name:        "example_tool",
-					Kind:        bigquery.ToolKind,
-					Source:      "my-instance",
-					Description: "some description",
-					Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+					Name:         "example_tool",
+					Kind:         bigquery.ToolKind,
+					Source:       "my-instance",
+					Description:  "some description",
+					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+					AuthRequired: []string{},
 					Parameters: []tools.Parameter{
 						tools.NewStringParameter("country", "some description"),
 					},

@@ -316,6 +316,11 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
 
+		// Make `authRequired` an empty list instead of nil for Tool manifest
+		if v["authRequired"] == nil {
+			v["authRequired"] = []string{}
+		}
+
 		kind, ok := v["kind"]
 		if !ok {
 			return fmt.Errorf("missing 'kind' field for %q", name)

@@ -96,8 +96,9 @@ func TestDgraphToolEndpoints(t *testing.T) {
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-dql-tool/",
 			want: map[string]any{
 				"my-simple-dql-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters":  []any{},
+					"description":  "Simple tool to test end to end functionality.",
+					"parameters":   []any{},
+					"authRequired": []any{},
 				},
 			},
 		},
