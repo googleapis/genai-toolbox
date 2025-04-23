@@ -1,6 +1,3 @@
-//go:build integration
-
-//
 // Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package cloudsqlpg
 
 import (
 	"context"
@@ -29,6 +26,7 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -80,7 +78,7 @@ func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass
 	}
 
 	// Create a new dialer with options
-	dialOpts, err := GetCloudSQLDialOpts(ip_type)
+	dialOpts, err := tests.GetCloudSQLDialOpts(ip_type)
 	if err != nil {
 		return nil, err
 	}
@@ -120,19 +118,19 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := GetPostgresSQLParamToolInfo(tableNameParam)
-	teardownTable1 := SetupPostgresSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := GetPostgresSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := SetupPostgresSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetToolsConfig(sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
 
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -146,12 +144,12 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunToolGetTest(t)
+	tests.RunToolGetTest(t)
 
 	select_1_want := "[{\"?column?\":1}]"
 	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
-	RunToolInvokeTest(t, select_1_want)
-	RunMCPToolCallMethod(t, fail_invocation_want)
+	tests.RunToolInvokeTest(t, select_1_want)
+	tests.RunMCPToolCallMethod(t, fail_invocation_want)
 }
 
 // Test connection with different IP type
@@ -174,7 +172,7 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
@@ -185,7 +183,7 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 func TestCloudSQLPgIAMConnection(t *testing.T) {
 	getCloudSQLPgVars(t)
 	// service account email used for IAM should trim the suffix
-	serviceAccountEmail := strings.TrimSuffix(SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
+	serviceAccountEmail := strings.TrimSuffix(tests.SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
 		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
@@ -235,7 +233,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := RunSourceConnectionTest(t, tc.sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
 			if err != nil {
 				if tc.isErr {
 					return

@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package sqlite
 
 import (
 	"context"
@@ -27,6 +25,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
@@ -93,7 +92,7 @@ func getSQLiteAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT)", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?,?) RETURNING id, name, email;", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
-	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
+	params := []any{"Alice", tests.SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	return create_statement, insert_statement, tool_statement, params
 }
 
@@ -125,9 +124,9 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	setupSQLiteTestDB(t, ctx, db, create_statement2, insert_statement2, tableNameAuth, params2)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetToolsConfig(sourceConfig, SQLITE_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SQLITE_TOOL_KIND, tool_statement1, tool_statement2)
 
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -141,10 +140,10 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunToolGetTest(t)
+	tests.RunToolGetTest(t)
 
 	select_1_want := "[{\"1\":1}]"
 	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near SELEC: syntax error (1)"}],"isError":true}}`
-	RunToolInvokeTest(t, select_1_want)
-	RunMCPToolCallMethod(t, fail_invocation_want)
+	tests.RunToolInvokeTest(t, select_1_want)
+	tests.RunMCPToolCallMethod(t, fail_invocation_want)
 }

@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package http
 
 import (
 	"bytes"
@@ -29,6 +27,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 )
 
 func getHTTPSourceConfig(t *testing.T) map[string]any {
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
 		t.Fatalf("error getting ID token: %s", err)
 	}
@@ -244,8 +244,8 @@ func TestHttpToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	toolsFile := GetHTTPToolsConfig(sourceConfig, HTTP_TOOL_KIND)
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	toolsFile := tests.GetHTTPToolsConfig(sourceConfig, HTTP_TOOL_KIND)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -259,13 +259,13 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 	select_1_want := `["[\"Hello\",\"World\"]\n"]`
-	RunToolGetTest(t)
-	RunToolInvokeTest(t, select_1_want)
-	RunAdvancedHTTPInvokeTest(t)
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select_1_want)
+	runAdvancedHTTPInvokeTest(t)
 }
 
-// RunToolInvoke runs the tool invoke endpoint
-func RunAdvancedHTTPInvokeTest(t *testing.T) {
+// runToolInvoke runs the tool invoke endpoint
+func runAdvancedHTTPInvokeTest(t *testing.T) {
 	// Test HTTP tool invoke endpoint
 	invokeTcs := []struct {
 		name          string

@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -408,7 +406,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				if tc.isErr == true {
+				if tc.isErr {
 					return
 				}
 				bodyBytes, _ := io.ReadAll(resp.Body)

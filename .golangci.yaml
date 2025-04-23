@@ -30,6 +30,3 @@ linters-settings:
         replacement: 'a[b:]'
 issues:
   fix: true
-run:
-  build-tags:
-    - integration

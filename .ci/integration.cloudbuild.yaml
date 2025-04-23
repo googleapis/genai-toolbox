@@ -33,7 +33,7 @@ steps:
       - name: "go"
         path: "/gopath"
     script: |
-      go test -race -c -tags=integration -o int-test ./tests
+      go test -c -race ./tests/...
 
   - id: "cloud-sql-pg"
     name: golang:1
@@ -54,13 +54,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestCloudSQLPg
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./cloudsqlpg.test -test.v
 
   - id: "alloydb-pg"
     name: golang:1
@@ -81,13 +75,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestAlloyDBPg
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./alloydbpg.test -test.v
 
   - id: "alloydb-ai-nl"
     name: golang:1
@@ -108,13 +96,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestAlloyDBAiNl
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./alloydbainl.test -test.v
 
   - id: "bigtable"
     name: golang:1
@@ -133,13 +115,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestBigtable
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./bigtable.test -test.v
 
   - id: "bigquery"
     name: golang:1
@@ -156,13 +132,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestBigQuery
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./bigquery.test -test.v
 
   - id: "postgres"
     name: golang:1
@@ -181,13 +151,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestPostgres
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./postgres.test -test.v
 
   - id: "spanner"
     name: golang:1
@@ -206,13 +170,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestSpanner
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./spanner.test -test.v
 
   - id: "neo4j"
     name: golang:1
@@ -229,13 +187,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestNeo4j
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./neo4j.test -test.v
 
   - id: "cloud-sql-mssql"
     name: golang:1
@@ -256,13 +208,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestCloudSQLMssql
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./cloudsqlmssql.test -test.v
 
   - id: "cloud-sql-mysql"
     name: golang:1
@@ -283,13 +229,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestCloudSQLMysql
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./cloudsqlmysql.test -test.v
 
   - id: "mysql"
     name: golang:1
@@ -308,13 +248,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestMysql
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./mysql.test -test.v
 
   - id: "mssql"
     name: golang:1
@@ -333,13 +267,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestMssql
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./mssql.test -test.v
 
   - id: "dgraph"
     name: golang:1
@@ -354,13 +282,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestDgraph
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./dgraph.test -test.v
 
   - id: "http"
     name: golang:1
@@ -375,13 +297,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestHttp
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./http.test -test.v
 
   - id: "sqlite"
     name: golang:1
@@ -397,13 +313,7 @@ steps:
     args:
       - -c
       - |
-        tests=TestSQLite
-        list=$(./int-test -test.list $tests)
-        if [[ -z "$list" ]]; then
-            echo "No test found."
-            exit 1
-        fi
-        ./int-test -test.v -test.run $tests
+        ./sqlite.test -test.v
 
 availableSecrets:
   secretManager:

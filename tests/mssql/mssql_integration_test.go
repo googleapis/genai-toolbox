@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package mssql
 
 import (
 	"context"
@@ -27,6 +25,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
@@ -93,19 +92,19 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := GetMssqlParamToolInfo(tableNameParam)
-	teardownTable1 := SetupMsSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMssqlParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupMsSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := GetMssqlLAuthToolInfo(tableNameAuth)
-	teardownTable2 := SetupMsSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupMsSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetToolsConfig(sourceConfig, MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
 
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -119,10 +118,10 @@ func TestMssqlToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunToolGetTest(t)
+	tests.RunToolGetTest(t)
 
 	select_1_want := "[{\"\":1}]"
 	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
-	RunToolInvokeTest(t, select_1_want)
-	RunMCPToolCallMethod(t, fail_invocation_want)
+	tests.RunToolInvokeTest(t, select_1_want)
+	tests.RunMCPToolCallMethod(t, fail_invocation_want)
 }

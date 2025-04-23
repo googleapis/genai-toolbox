@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package bigtable
 
 import (
 	"bytes"
@@ -31,6 +29,7 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
@@ -77,18 +76,18 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	// Do not change the shape of statement without checking tests/common_test.go.
 	// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
 	param_test_statement := fmt.Sprintf("SELECT TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM %s WHERE TO_INT64(cf['id']) = @id OR CAST(cf['name'] AS string) = @name;", tableName)
-	teardownTable1 := SetupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
+	teardownTable1 := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
 	defer teardownTable1(t)
 
 	// Do not change the shape of statement without checking tests/common_test.go.
 	// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
 	auth_tool_statement := fmt.Sprintf("SELECT CAST(cf['name'] AS string) as name FROM %s WHERE CAST(cf['email'] AS string) = @email;", tableNameAuth)
-	teardownTable2 := SetupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
+	teardownTable2 := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetToolsConfig(sourceConfig, BIGTABLE_TOOL_KIND, param_test_statement, auth_tool_statement)
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BIGTABLE_TOOL_KIND, param_test_statement, auth_tool_statement)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -102,13 +101,13 @@ func TestBigtableToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunToolGetTest(t)
+	tests.RunToolGetTest(t)
 
 	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
 	select_1_want := "[{$col1:1}]"
 	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier SELEC [at 1:1]"}],"isError":true}}`
-	RunToolInvokeTest(t, select_1_want)
-	RunMCPToolCallMethod(t, fail_invocation_want)
+	tests.RunToolInvokeTest(t, select_1_want)
+	tests.RunMCPToolCallMethod(t, fail_invocation_want)
 }
 
 func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
@@ -131,7 +130,7 @@ func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
 		// Expected values are defined in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L229-L310
 		"row-01": {
 			"name":  []byte("Alice"),
-			"email": []byte(SERVICE_ACCOUNT_EMAIL),
+			"email": []byte(tests.SERVICE_ACCOUNT_EMAIL),
 			"id":    ids[0],
 		},
 		"row-02": {
@@ -154,7 +153,7 @@ func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
 	return muts, rowKeys
 }
 
-func SetupBtTable(t *testing.T, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) func(*testing.T) {
+func setupBtTable(t *testing.T, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) func(*testing.T) {
 	// Creating clients
 	adminClient, err := bigtable.NewAdminClient(ctx, projectId, instance)
 	if err != nil {

@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package bigquery
 
 import (
 	"context"
@@ -27,6 +25,7 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
@@ -92,19 +91,19 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		strings.Replace(uuid.New().String(), "-", "", -1),
 	)
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := GetBigQueryParamToolInfo(BIGQUERY_PROJECT, datasetName, tableNameParam)
-	teardownTable1 := SetupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
+	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetBigQueryParamToolInfo(BIGQUERY_PROJECT, datasetName, tableNameParam)
+	teardownTable1 := tests.SetupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := GetBigQueryAuthToolInfo(BIGQUERY_PROJECT, datasetName, tableNameAuth)
-	teardownTable2 := SetupBigQueryTable(t, ctx, client, create_statement2, insert_statement2, datasetName, tableNameAuth, params2)
+	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetBigQueryAuthToolInfo(BIGQUERY_PROJECT, datasetName, tableNameAuth)
+	teardownTable2 := tests.SetupBigQueryTable(t, ctx, client, create_statement2, insert_statement2, datasetName, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetToolsConfig(sourceConfig, BIGQUERY_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BIGQUERY_TOOL_KIND, tool_statement1, tool_statement2)
 
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -118,11 +117,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunToolGetTest(t)
+	tests.RunToolGetTest(t)
 
 	select_1_want := "[{\"f0_\":1}]"
 	// Partial message; the full error message is too long.
 	fail_invocation_want := "{jsonrpc:2.0,id:invoke-fail-tool,result:{content:[{type:text,text:unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier SELEC at [1:1]"
-	RunToolInvokeTest(t, select_1_want)
-	RunMCPToolCallMethod(t, fail_invocation_want)
+	tests.RunToolInvokeTest(t, select_1_want)
+	tests.RunMCPToolCallMethod(t, fail_invocation_want)
 }
