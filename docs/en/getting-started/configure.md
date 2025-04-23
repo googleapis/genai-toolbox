@@ -6,11 +6,21 @@ description: How to configure Toolbox's tools.yaml file.
 ---
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools_file
+have multiple files, you can tell toolbox which to load with the `--tools-file
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
 [Resources](../resources/).
+
+### Using Environment Variables
+
+To avoid hardcoding certain secret fields like passwords, usernames, API keys
+etc., you could use environment variables instead with the format `${ENV_NAME}`.
+
+```yaml
+  user: ${USER_NAME}
+  password: ${PASSWORD}
+```
 
 ### Sources
 
@@ -25,8 +35,8 @@ sources:
     host: 127.0.0.1
     port: 5432
     database: toolbox_db
-    user: toolbox_user
-    password: my-password
+    user: ${USER_NAME}
+    password: ${PASSWORD}
 ```
 
 For more details on configuring different types of sources, see the
@@ -53,7 +63,6 @@ tools:
 
 For more details on configuring different types of tools, see the
 [Tools](../resources/tools/).
-
 
 ### Toolsets
 

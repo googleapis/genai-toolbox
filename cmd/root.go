@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -129,9 +130,31 @@ type ToolsFile struct {
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
 }
 
+// parseEnv replaces environment variables ${ENV_NAME} with their values.
+func parseEnv(input string) string {
+	re := regexp.MustCompile(`\$\{(\w+)\}`)
+
+	return re.ReplaceAllStringFunc(input, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) < 2 {
+			// technically shouldn't happen
+			return match
+		}
+
+		// extract the variable name
+		variableName := parts[1]
+		if value, found := os.LookupEnv(variableName); found {
+			return value
+		}
+		return match
+	})
+}
+
 // parseToolsFile parses the provided yaml into appropriate configs.
 func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
+	// Replace environment variables if found
+	raw = []byte(parseEnv(string(raw)))
 	// Parse contents
 	err := yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
 	if err != nil {

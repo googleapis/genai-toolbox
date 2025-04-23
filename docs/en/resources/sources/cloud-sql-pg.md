@@ -79,15 +79,20 @@ a PostgreSQL user][cloud-sql-users] to login to the database with.
 ```yaml
 sources:
     my-cloud-sql-pg-source:
-        kind: "cloud-sql-postgres"
-        project: "my-project-id"
-        region: "us-central1"
-        instance: "my-instance"
-        database: "my_db"
-        user: "my-user"
-        password: "my-password"
+        kind: cloud-sql-postgres
+        project: my-project-id
+        region: us-central1
+        instance: my-instance
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
         # ipType: "private"
 ```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 

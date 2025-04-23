@@ -11,7 +11,7 @@ description: >
 
 [MySQL][mysql-docs] is a relational database management system (RDBMS) that
 stores and manages data. It's a popular choice for developers because of its
-reliability, performance, and ease of use. 
+reliability, performance, and ease of use.
 
 [mysql-docs]: https://www.mysql.com/
 
@@ -20,7 +20,7 @@ reliability, performance, and ease of use.
 ### Database User
 
 This source only uses standard authentication. You will need to [create a
-MySQL user][mysql-users] to login to the database with. 
+MySQL user][mysql-users] to login to the database with.
 
 [mysql-users]: https://dev.mysql.com/doc/refman/8.4/en/user-names.html
 
@@ -29,13 +29,18 @@ MySQL user][mysql-users] to login to the database with.
 ```yaml
 sources:
     my-mysql-source:
-        kind: "mysql"
-        host: "127.0.0.1"
-        port: "3306"
-        database: "my_db"
-        user: "my-user"
-        password: "my-password"
+        kind: mysql
+        host: 127.0.0.1
+        port: 3306
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
 ```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 

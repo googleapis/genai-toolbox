@@ -26,8 +26,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/spf13/cobra"
 )
@@ -560,6 +562,170 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Toolsets: server.ToolsetConfigs{
 					"example_toolset": tools.ToolsetConfig{
 						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
+				t.Fatalf("incorrect sources parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
+				t.Fatalf("incorrect authServices parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+		})
+	}
+
+}
+
+func TestEnvVarReplacement(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	os.Setenv("TestHeader", "ACTUAL_HEADER")
+	os.Setenv("API_KEY", "ACTUAL_API_KEY")
+	os.Setenv("clientId", "ACTUAL_CLIENT_ID")
+	os.Setenv("clientId2", "ACTUAL_CLIENT_ID_2")
+	os.Setenv("toolset_name", "ACTUAL_TOOLSET_NAME")
+	os.Setenv("cat_string", "cat")
+	os.Setenv("food_string", "food")
+
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		description   string
+		in            string
+		wantToolsFile ToolsFile
+	}{
+		{
+			description: "file with env var example",
+			in: `
+			sources:
+				my-http-instance:
+					kind: http
+					baseUrl: http://test_server/
+					timeout: 10s
+					headers:
+						Authorization: ${TestHeader}
+					queryParams:
+						api-key: ${API_KEY}
+			authServices:
+				my-google-service:
+					kind: google
+					clientId: ${clientId}
+				other-google-service:
+					kind: google
+					clientId: ${clientId2}
+
+			tools:
+				example_tool:
+					kind: http
+					source: my-instance
+					method: GET
+					path: "search?name=alice&pet=${cat_string}"
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+					queryParams:
+						- name: country
+						  type: string
+						  description: some description
+						  authServices:
+							- name: my-google-auth-service
+							  field: user_id
+							- name: other-auth-service
+							  field: user_id
+					requestBody: |
+							{
+								"age": {{.age}},
+								"city": "{{.city}}",
+								"food": "${food_string}",
+								"other": "$OTHER"
+							}
+					bodyParams:
+						- name: age
+						  type: integer
+						  description: age num
+						- name: city
+						  type: string
+						  description: city string
+					headers:
+						Authorization: API_KEY
+						Content-Type: application/json
+					headerParams:
+						- name: Language
+						  type: string
+						  description: language string
+
+			toolsets:
+				${toolset_name}:
+					- example_tool
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-http-instance": httpsrc.Config{
+						Name:           "my-http-instance",
+						Kind:           httpsrc.SourceKind,
+						BaseURL:        "http://test_server/",
+						Timeout:        "10s",
+						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
+						QueryParams:    map[string]string{"api-key": "ACTUAL_API_KEY"},
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Kind:     google.AuthServiceKind,
+						ClientID: "ACTUAL_CLIENT_ID",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Kind:     google.AuthServiceKind,
+						ClientID: "ACTUAL_CLIENT_ID_2",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": http.Config{
+						Name:         "example_tool",
+						Kind:         http.ToolKind,
+						Source:       "my-instance",
+						Method:       "GET",
+						Path:         "search?name=alice&pet=cat",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						QueryParams: []tools.Parameter{
+							tools.NewStringParameterWithAuth("country", "some description",
+								[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+									{Name: "other-auth-service", Field: "user_id"}}),
+						},
+						RequestBody: `{
+  "age": {{.age}},
+  "city": "{{.city}}",
+  "food": "food",
+  "other": "$OTHER"
+}
+`,
+						BodyParams:   []tools.Parameter{tools.NewIntParameter("age", "age num"), tools.NewStringParameter("city", "city string")},
+						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
+						HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", "language string")},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
+						Name:      "ACTUAL_TOOLSET_NAME",
 						ToolNames: []string{"example_tool"},
 					},
 				},
