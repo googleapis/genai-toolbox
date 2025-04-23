@@ -20,6 +20,7 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/api/option"
 )
@@ -77,7 +78,12 @@ func initBigtableClient(ctx context.Context, tracer trace.Tracer, name, project,
 
 	// Set up Bigtable data operations client.
 	poolSize := 10
-	client, err := bigtable.NewClient(ctx, project, instance, option.WithGRPCConnectionPool(poolSize))
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := bigtable.NewClient(ctx, project, instance, option.WithUserAgent(userAgent), option.WithGRPCConnectionPool(poolSize))
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to create bigtable.NewClient: %w", err)
