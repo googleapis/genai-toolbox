@@ -123,7 +123,7 @@ func runAiNlToolGetTest(t *testing.T) {
 							"authSources": []any{},
 						},
 					},
-					"authRequired": []string{},
+					"authRequired": []any{},
 				},
 			},
 		},
