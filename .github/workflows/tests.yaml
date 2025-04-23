@@ -86,7 +86,7 @@ jobs:
 
       - name: Check coverage
         run: |
-          FILE_TO_EXCLUDE="github.com/googleapis/genai-toolbox/internal/server/
+          FILE_TO_EXCLUDE="github.com/googleapis/genai-toolbox/internal/server/"
           ESCAPED_PATH=$(echo "$FILE_TO_EXCLUDE" | sed 's/\//\\\//g; s/\./\\\./g')
           sed -i "/^${ESCAPED_PATH}:/d" coverage.out
           total_coverage=$(go tool cover -func=coverage.out | grep "total:" | awk '{print $3}')
