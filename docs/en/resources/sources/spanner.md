@@ -8,7 +8,7 @@ description: >
 
 ---
 
-# Spanner Source 
+# Spanner Source
 
 [Spanner][spanner-docs] is a fully managed, mission-critical database service
 that brings together relational, graph, key-value, and search. It offers
@@ -23,7 +23,7 @@ the Google Cloud console][spanner-quickstart].
 [spanner-quickstart]:
     https://cloud.google.com/spanner/docs/create-query-database-console
 
-## Requirements 
+## Requirements
 
 ### IAM Permissions
 
