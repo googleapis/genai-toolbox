@@ -23,6 +23,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -94,7 +95,12 @@ func initBigQueryConnection(
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
 	}
 
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithCredentials(cred))
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	client.Location = location
 	if err != nil {
 		return nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
