@@ -12,7 +12,7 @@
 * Add IAM AuthN to AlloyDB Source ([#399](https://github.com/googleapis/genai-toolbox/issues/399)) ([e8ed447](https://github.com/googleapis/genai-toolbox/commit/e8ed447d9153c60a1d6321285587e6e4ca930f87))
 * Add IAM AuthN to Cloud SQL Sources ([#414](https://github.com/googleapis/genai-toolbox/issues/414)) ([be85b82](https://github.com/googleapis/genai-toolbox/commit/be85b820785dbce79133b0cf8788bde75ff25fee))
 * Add toolset feature to mcp ([#425](https://github.com/googleapis/genai-toolbox/issues/425)) ([e307857](https://github.com/googleapis/genai-toolbox/commit/e307857085ac4c8c2ee8292c914daa5534ba74bf)), closes [#403](https://github.com/googleapis/genai-toolbox/issues/403)
-* Add Sqllite source and tool ([#438](https://github.com/googleapis/genai-toolbox/issues/438)) ([fc14cbf](https://github.com/googleapis/genai-toolbox/commit/fc14cbfd078d465591e4fefb80542759e82a2731))
+* Add SQLite source and tool ([#438](https://github.com/googleapis/genai-toolbox/issues/438)) ([fc14cbf](https://github.com/googleapis/genai-toolbox/commit/fc14cbfd078d465591e4fefb80542759e82a2731))
 * Support env replacement for tools.yaml ([#462](https://github.com/googleapis/genai-toolbox/issues/462)) ([eadb678](https://github.com/googleapis/genai-toolbox/commit/eadb678a7bd4ce74a3b1160f5ed8966ffbb13c61))
 
 
