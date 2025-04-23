@@ -75,16 +75,21 @@ a PostgreSQL user][alloydb-users] to login to the database with.
 ```yaml
 sources:
     my-alloydb-pg-source:
-        kind: "alloydb-postgres"
-        project: "my-project-id"
-        region: "us-central1"
-        cluster: "my-cluster"
-        instance: "my-instance"
-        database: "my_db"
-        user: "my-user"
-        password: "my-password"
+        kind: alloydb-postgres
+        project: my-project-id
+        region: us-central1
+        cluster: my-cluster
+        instance: my-instance
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
         # ipType: "public"
 ```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 

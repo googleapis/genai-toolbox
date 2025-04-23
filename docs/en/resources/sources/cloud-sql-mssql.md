@@ -79,8 +79,15 @@ sources:
      instance: my-instance
      database: my_db
      ipAddress: localhost
+     user: ${USER_NAME}
+     password: ${PASSWORD}
      # ipType: private
 ```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 

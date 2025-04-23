@@ -13,13 +13,13 @@ reliability, feature robustness, and performance.
 
 [neo4j-docs]: https://neo4j.com/docs
 
-## Requirements 
+## Requirements
 
 ### Database User
 
 This source only uses standard authentication. You will need to [create a Neo4j
 user][neo4j-users] to log in to the database with, or use the default `neo4j`
-user if available. 
+user if available.
 
 [neo4j-users]: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-users/
 
@@ -28,12 +28,17 @@ user if available.
 ```yaml
 sources:
     my-neo4j-source:
-        kind: "neo4j"
-        uri: "neo4j+s://xxxx.databases.neo4j.io:7687"
-        user: "neo4j"
-        password: "my-password"
+        kind: neo4j
+        uri: neo4j+s://xxxx.databases.neo4j.io:7687
+        user: ${USER_NAME}
+        password: ${PASSWORD}
         database: "neo4j"
 ```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 
@@ -44,5 +49,3 @@ sources:
 | user      |  string  |     true     | Name of the Neo4j user to connect as (e.g. "neo4j").                 |
 | password  |  string  |     true     | Password of the Neo4j user (e.g. "my-password").                     |
 | database  |  string  |     true     | Name of the Neo4j database to connect to (e.g. "neo4j").             |
-
-
