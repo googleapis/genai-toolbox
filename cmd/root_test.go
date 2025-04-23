@@ -455,7 +455,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{"my-google-service"},
+						AuthRequired: []string{},
 						Parameters: []tools.Parameter{
 							tools.NewStringParameter("country", "some description"),
 							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
