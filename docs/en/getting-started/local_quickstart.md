@@ -12,7 +12,7 @@ description: >
 
 ## Before you begin
 
-This guide assumes you have already done the following: 
+This guide assumes you have already done the following:
 
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
@@ -26,7 +26,7 @@ This guide assumes you have already done the following:
 ## Step 1: Set up your database
 
 In this section, we will create a database, insert some data that needs to be
-access by our agent, and create a database user for Toolbox to connect with. 
+access by our agent, and create a database user for Toolbox to connect with.
 
 1. Connect to postgres using the `psql` command:
 
@@ -38,9 +38,9 @@ access by our agent, and create a database user for Toolbox to connect with.
 
 1. Create a new database and a new user:
 
-    {{< notice tip >}} 
-  For a real application, it's best to follow the principle of least permission 
-  and only grant the privileges your application needs. 
+    {{< notice tip >}}
+  For a real application, it's best to follow the principle of least permission
+  and only grant the privileges your application needs.
     {{< /notice >}}
 
     ```sql
@@ -51,8 +51,6 @@ access by our agent, and create a database user for Toolbox to connect with.
 
       ALTER DATABASE toolbox_db OWNER TO toolbox_user;
     ```
-
-
 
 1. End the database session:
 
@@ -103,7 +101,6 @@ access by our agent, and create a database user for Toolbox to connect with.
     \q
     ```
 
-
 ## Step 2: Install and configure Toolbox
 
 In this section, we will download Toolbox, configure our tools in a
@@ -111,10 +108,10 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Download the latest version of Toolbox as a binary:
 
-    {{< notice tip >}} 
-  Select the 
-  [correct binary](https://github.com/googleapis/genai-toolbox/releases) 
-  corresponding to your OS and CPU architecture. 
+    {{< notice tip >}}
+  Select the
+  [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+  corresponding to your OS and CPU architecture.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
@@ -133,6 +130,11 @@ In this section, we will download Toolbox, configure our tools in a
    such as `user`, `password`, or `database` that you may have customized in the
    previous step.
 
+    {{< notice tip >}}
+    In practice, it is highly recommended to use environment variable replacement with the
+    format ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
+    {{< /notice >}}
+
     ```yaml
     sources:
       my-pg-source:
@@ -140,8 +142,8 @@ In this section, we will download Toolbox, configure our tools in a
         host: 127.0.0.1
         port: 5432
         database: toolbox_db
-        user: toolbox_user
-        password: my-password
+        user: ${USER_NAME}
+        password: ${PASSWORD}
     tools:
       search-hotels-by-name:
         kind: postgres-sql
@@ -207,6 +209,7 @@ In this section, we will download Toolbox, configure our tools in a
         - update-hotel
         - cancel-hotel
     ```
+
     For more info on tools, check out the `Resources` section of the docs.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
@@ -220,14 +223,13 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run an agent that will load the Tools
 from Toolbox.
 
-{{< notice tip>}} If you prefer to experiment within a Google Colab environment, 
-you can connect to a 
-[local runtime](https://research.google.com/colaboratory/local-runtimes.html). 
+{{< notice tip>}} If you prefer to experiment within a Google Colab environment,
+you can connect to a
+[local runtime](https://research.google.com/colaboratory/local-runtimes.html).
 {{< /notice >}}
 
-
 1. In a new terminal, install the SDK package.
-    
+
     {{< tabpane persist=header >}}
 {{< tab header="Core" lang="bash" >}}
 
@@ -248,7 +250,7 @@ pip install toolbox-llamaindex
 {{< /tabpane >}}
 
 1. Install other required dependencies:
-    
+
     {{< tabpane persist=header >}}
 {{< tab header="Core" lang="bash" >}}
 
@@ -261,18 +263,25 @@ pip install google-adk langchain
 {{< tab header="Langchain" lang="bash" >}}
 
 # TODO(developer): replace with correct package if needed
+
 pip install langgraph langchain-google-vertexai
+
 # pip install langchain-google-genai
+
 # pip install langchain-anthropic
+
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="bash" >}}
 
 # TODO(developer): replace with correct package if needed
+
 pip install llama-index-llms-google-genai
+
 # pip install llama-index-llms-anthropic
+
 {{< /tab >}}
 {{< /tabpane >}}
-    
+
 1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
     {{< tabpane persist=header >}}
@@ -308,9 +317,8 @@ queries = [
     "My check in dates for my booking would be from April 10, 2024 to April 19, 2024.",
 ]
 
-
 async def run_application():
-    toolbox_client = ToolboxClient("http://127.0.0.1:5000")
+    toolbox_client = ToolboxClient("<http://127.0.0.1:5000>")
 
     # The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use
     # integration. While this example uses Google's genai client, these callables can be adapted for
@@ -385,7 +393,6 @@ async def run_application():
         history.append(final_model_response_content)
         print(response2.text)
 
-
 asyncio.run(run_application())
 
 {{< /tab >}}
@@ -398,17 +405,19 @@ from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactServ
 from google.genai import types
 
 import os
+
 # TODO(developer): replace this with your Google API key
+
 os.environ['GOOGLE_API_KEY'] = 'your-api-key'
 
-toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
+toolbox_tools = ToolboxTool("<http://127.0.0.1:5000>")
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id, 
-  location and price tier. Always mention hotel ids while performing any 
-  searches. This is very important for any operations. For any bookings or 
-  cancellations, please provide the appropriate confirmation. Be sure to 
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
   update checkin or checkout dates if mentioned by the user.
   Don't ask for confirmations from the user.
 """
@@ -458,20 +467,25 @@ for query in queries:
 {{< tab header="LangChain" lang="python" >}}
 
 from langgraph.prebuilt import create_react_agent
+
 # TODO(developer): replace this with another import if needed
+
 from langchain_google_vertexai import ChatVertexAI
+
 # from langchain_google_genai import ChatGoogleGenerativeAI
+
 # from langchain_anthropic import ChatAnthropic
+
 from langgraph.checkpoint.memory import MemorySaver
 
 from toolbox_langchain import ToolboxClient
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id, 
-  location and price tier. Always mention hotel ids while performing any 
-  searches. This is very important for any operations. For any bookings or 
-  cancellations, please provide the appropriate confirmation. Be sure to 
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
   update checkin or checkout dates if mentioned by the user.
   Don't ask for confirmations from the user.
 """
@@ -488,7 +502,7 @@ async def run_application():
     model = ChatVertexAI(model_name="gemini-1.5-pro")
     # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
     # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
-    
+
     # Load the tools from the Toolbox server
     client = ToolboxClient("http://127.0.0.1:5000")
     tools = await client.aload_toolset()
@@ -511,18 +525,20 @@ from llama_index.core.agent.workflow import AgentWorkflow
 
 from llama_index.core.workflow import Context
 
-# TODO(developer): replace this with another import if needed 
+# TODO(developer): replace this with another import if needed
+
 from llama_index.llms.google_genai import GoogleGenAI
+
 # from llama_index.llms.anthropic import Anthropic
 
 from toolbox_llamaindex import ToolboxClient
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id, 
-  location and price tier. Always mention hotel ids while performing any 
-  searches. This is very important for any operations. For any bookings or 
-  cancellations, please provide the appropriate confirmation. Be sure to 
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
   update checkin or checkout dates if mentioned by the user.
   Don't ask for confirmations from the user.
 """
@@ -548,7 +564,7 @@ async def run_application():
     #   model="claude-3-7-sonnet-latest",
     #   api_key=os.getenv("ANTHROPIC_API_KEY")
     # )
-    
+
     # Load the tools from the Toolbox server
     client = ToolboxClient("http://127.0.0.1:5000")
     tools = await client.aload_toolset()
@@ -567,10 +583,10 @@ async def run_application():
 asyncio.run(run_application())
 {{< /tab >}}
 {{< /tabpane >}}
-    
+
     {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
-To learn more about tool calling with Google GenAI, check out the 
+To learn more about tool calling with Google GenAI, check out the
 [Google GenAI Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
 {{% /tab %}}
 {{% tab header="ADK" lang="en" %}}
@@ -580,11 +596,13 @@ To learn more about Agent Development Kit, check out the [ADK documentation.](ht
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
-To learn more about Agents in LlamaIndex, check out the 
+To learn more about Agents in LlamaIndex, check out the
 [LlamaIndex AgentWorkflow documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
 {{% /tab %}}
 {{< /tabpane >}}
+
 1. Run your agent, and observe the results:
+
     ```sh
     python hotel_agent.py
     ```

@@ -7,7 +7,7 @@ description: >
 
 ---
 
-##  About
+## About
 
 [SQL Server][mssql-docs] is a relational database management system (RDBMS)
 developed by Microsoft that allows users to store, retrieve, and manage large
@@ -20,7 +20,7 @@ amount of data through a structured format.
 ### Database User
 
 This source only uses standard authentication. You will need to [create a
-SQL Server user][mssql-users] to login to the database with. 
+SQL Server user][mssql-users] to login to the database with.
 
 [mssql-users]: https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/create-a-database-user?view=sql-server-ver16
 
@@ -29,13 +29,18 @@ SQL Server user][mssql-users] to login to the database with.
 ```yaml
 sources:
     my-mssql-source:
-        kind: "mssql"
-        host: "127.0.0.1"
-        port: "1433"
-        database: "my_db"
-        user: "my-user"
-        password: "my-password"
+        kind: mssql
+        host: 127.0.0.1
+        port: 1433
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
 ```
+
+{{< notice tip >}}
+It is highly recommended to use environment variable replacement with the
+format ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 

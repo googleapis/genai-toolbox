@@ -7,6 +7,7 @@ description: >
 ---
 
 ## Overview
+
 [Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
 on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
@@ -14,7 +15,7 @@ on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
 ## Step 1: Set up your database
 
 In this section, we will create a database, insert some data that needs to be
-access by our agent, and create a database user for Toolbox to connect with. 
+access by our agent, and create a database user for Toolbox to connect with.
 
 1. Connect to postgres using the `psql` command:
 
@@ -26,9 +27,9 @@ access by our agent, and create a database user for Toolbox to connect with.
 
 1. Create a new database and a new user:
 
-    {{< notice tip >}} 
-  For a real application, it's best to follow the principle of least permission 
-  and only grant the privileges your application needs. 
+    {{< notice tip >}}
+  For a real application, it's best to follow the principle of least permission
+  and only grant the privileges your application needs.
     {{< /notice >}}
 
     ```sql
@@ -39,8 +40,6 @@ access by our agent, and create a database user for Toolbox to connect with.
 
       ALTER DATABASE toolbox_db OWNER TO toolbox_user;
     ```
-
-
 
 1. End the database session:
 
@@ -98,10 +97,10 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Download the latest version of Toolbox as a binary:
 
-    {{< notice tip >}} 
-  Select the 
-  [correct binary](https://github.com/googleapis/genai-toolbox/releases) 
-  corresponding to your OS and CPU architecture. 
+    {{< notice tip >}}
+  Select the
+  [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+  corresponding to your OS and CPU architecture.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
@@ -119,6 +118,11 @@ In this section, we will download Toolbox, configure our tools in a
 1. Write the following into a `tools.yaml` file. Be sure to update any fields
    such as `user`, `password`, or `database` that you may have customized in the
    previous step.
+
+    {{< notice tip >}}
+    In practice, it is highly recommended to use environment variable replacement with the
+    format ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
+    {{< /notice >}}
 
     ```yaml
     sources:
@@ -194,6 +198,7 @@ In this section, we will download Toolbox, configure our tools in a
         - update-hotel
         - cancel-hotel
     ```
+
     For more info on tools, check out the [Tools](../../resources/tools/_index.md) section.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:

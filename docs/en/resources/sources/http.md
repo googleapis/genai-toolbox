@@ -22,12 +22,17 @@ sources:
     baseUrl: https://api.example.com/data
     timeout: 10s # default to 30s
     headers:
-      Authorization: Bearer YOUR_API_TOKEN
+      Authorization: Bearer ${API_KEY}
       Content-Type: application/json
     queryParams:
       param1: value1
       param2: value2
 ```
+
+{{< notice tip >}}
+It is highly recommended to use environment variable replacement with the
+format ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 

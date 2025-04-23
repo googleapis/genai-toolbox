@@ -29,13 +29,18 @@ PostgreSQL user][pg-users] to login to the database with.
 ```yaml
 sources:
     my-pg-source:
-        kind: "postgres"
-        host: "127.0.0.1"
-        port: "5432"
-        database: "my_db"
-        user: "my-user"
-        password: "my-password"
+        kind: postgres
+        host: 127.0.0.1
+        port: 5432
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
 ```
+
+{{< notice tip >}}
+It is highly recommended to use environment variable replacement with the
+format ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
 
 ## Reference
 
