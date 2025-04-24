@@ -283,7 +283,6 @@ steps:
       - -c
       - |
         ./dgraph.test -test.v
-        go test -race -v -tags=integration,dgraph ./tests
   
   - id: "couchbase"
     name : golang:1

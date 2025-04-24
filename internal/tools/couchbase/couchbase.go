@@ -15,6 +15,7 @@
 package couchbase
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -80,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Scope:                s.CouchbaseScope(),
 		QueryScanConsistency: s.CouchbaseQueryScanConsistency(),
 		AuthRequired:         cfg.AuthRequired,
-		manifest:             tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest()},
+		manifest:             tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:          mcpManifest,
 	}
 	return t, nil
@@ -102,7 +103,7 @@ type Tool struct {
 	mcpManifest          tools.McpManifest
 }
 
-func (t Tool) Invoke(params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	namedParams := params.AsMap()
 	results, err := t.Scope.Query(t.Statement, &gocb.QueryOptions{
 		ScanConsistency: gocb.QueryScanConsistency(t.QueryScanConsistency),

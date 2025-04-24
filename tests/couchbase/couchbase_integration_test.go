@@ -1,5 +1,3 @@
-//go:build integration && couchbase
-
 // Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +25,7 @@ import (
 
 	"github.com/couchbase/gocb/v2"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/tests"
 )
 
 const (
@@ -102,19 +101,19 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameAuth := "auth_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// Set up data for param tool
-	paramToolStatement, params1 := GetCouchbaseParamToolInfo(collectionNameParam)
-	teardownCollection1 := SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
+	paramToolStatement, params1 := tests.GetCouchbaseParamToolInfo(collectionNameParam)
+	teardownCollection1 := tests.SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
 	defer teardownCollection1(t)
 
 	// Set up data for auth tool
-	authToolStatement, params2 := GetCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
+	authToolStatement, params2 := tests.GetCouchbaseAuthToolInfo(collectionNameAuth)
+	teardownCollection2 := tests.SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
 	defer teardownCollection2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, authToolStatement)
 
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -128,9 +127,9 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	RunToolGetTest(t)
+	tests.RunToolGetTest(t)
 
 	select1Want := "[{\"$1\":1}]"
 	//time.Sleep(3 * time.Second)
-	RunToolInvokeTest(t, select1Want)
+	tests.RunToolInvokeTest(t, select1Want)
 }
