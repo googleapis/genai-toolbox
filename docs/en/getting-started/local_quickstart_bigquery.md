@@ -97,16 +97,16 @@ In this section, we will create a BigQuery dataset and a table, then insert some
     ```sql
     INSERT INTO `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (id, name, location, price_tier, checkin_date, checkout_date, booked)
     VALUES
-      (1, 'Hilton Basel', 'Basel', 'Luxury', DATE('2024-04-22'), DATE('2024-04-20'), FALSE),
-      (2, 'Marriott Zurich', 'Zurich', 'Upscale', DATE('2024-04-14'), DATE('2024-04-21'), FALSE),
-      (3, 'Hyatt Regency Basel', 'Basel', 'Upper Upscale', DATE('2024-04-02'), DATE('2024-04-20'), FALSE),
-      (4, 'Radisson Blu Lucerne', 'Lucerne', 'Midscale', DATE('2024-04-24'), DATE('2024-04-05'), FALSE),
-      (5, 'Best Western Bern', 'Bern', 'Upper Midscale', DATE('2024-04-23'), DATE('2024-04-01'), FALSE),
-      (6, 'InterContinental Geneva', 'Geneva', 'Luxury', DATE('2024-04-23'), DATE('2024-04-28'), FALSE),
-      (7, 'Sheraton Zurich', 'Zurich', 'Upper Upscale', DATE('2024-04-27'), DATE('2024-04-02'), FALSE),
-      (8, 'Holiday Inn Basel', 'Basel', 'Upper Midscale', DATE('2024-04-24'), DATE('2024-04-09'), FALSE),
-      (9, 'Courtyard Zurich', 'Zurich', 'Upscale', DATE('2024-04-03'), DATE('2024-04-13'), FALSE),
-      (10, 'Comfort Inn Bern', 'Bern', 'Midscale', DATE('2024-04-04'), DATE('2024-04-16'), FALSE);
+      (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', FALSE),
+      (2, 'Marriott Zurich', 'Zurich', 'Upscale', '2024-04-14', '2024-04-21', FALSE),
+      (3, 'Hyatt Regency Basel', 'Basel', 'Upper Upscale', '2024-04-02', '2024-04-20', FALSE),
+      (4, 'Radisson Blu Lucerne', 'Lucerne', 'Midscale', '2024-04-24', '2024-04-05', FALSE),
+      (5, 'Best Western Bern', 'Bern', 'Upper Midscale', '2024-04-23', '2024-04-01', FALSE),
+      (6, 'InterContinental Geneva', 'Geneva', 'Luxury', '2024-04-23', '2024-04-28', FALSE),
+      (7, 'Sheraton Zurich', 'Zurich', 'Upper Upscale', '2024-04-27', '2024-04-02', FALSE),
+      (8, 'Holiday Inn Basel', 'Basel', 'Upper Midscale', '2024-04-24', '2024-04-09', FALSE),
+      (9, 'Courtyard Zurich', 'Zurich', 'Upscale', '2024-04-03', '2024-04-13', FALSE),
+      (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', FALSE);
     ```
     Save this as `insert_hotels_data.sql` and run:
     ```bash
@@ -401,12 +401,6 @@ from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactServ
 from google.genai import types # For constructing message content
 
 import os
-
-# --- Setup for Google GenAI with Vertex AI backend ---
-# Ensure you have authenticated with Google Cloud:
-# $ gcloud auth application-default login
-# Ensure the necessary APIs (e.g., Vertex AI API) are enabled for your project.
-
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
 # TODO(developer): Replace 'YOUR_PROJECT_ID' with your Google Cloud Project ID.
 os.environ['GOOGLE_CLOUD_PROJECT'] = 'YOUR_PROJECT_ID'
@@ -429,14 +423,9 @@ prompt = """
 """
 
 # --- Configure the Agent ---
-# TODO(developer): Replace "my-toolset" with the actual ID of your toolset
-# as configured in your GenAI Toolbox server. If your tools are not in a named
-# toolset, you might need to adjust how tools are loaded (e.g., using `get_tools()`).
+# TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your GenAI Toolbox server.
 agent_toolset = toolbox_tools.get_toolset("my-toolset")
 
-# TODO(developer): Verify 'gemini-2.0-flash' is a valid and available model
-# in your Vertex AI project and location. Consider using models like
-# 'gemini-1.5-flash-001', 'gemini-1.5-pro-001', or 'gemini-1.0-pro'.
 root_agent = Agent(
     model='gemini-2.0-flash',
     name='hotel_agent',
@@ -468,34 +457,20 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-if __name__ == '__main__':
-    for query in queries:
-        print(f"\n--- User Query: {query} ---")
-        # Construct the message content using google.genai.types
-        content = types.Content(role='user', parts=[types.Part(text=query)])
-        
-        # Run the agent with the new message.
-        events = runner.run(session_id=session.id,
-                            user_id='user_123', # Should match the user_id used in session creation or be consistent
-                            new_message=content)
+for query in queries:
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    events = runner.run(session_id=session.id,
+                        user_id='123', new_message=content)
 
-        # Extract and print text responses from the agent events.
-        print("Agent Response(s):")
-        responses = (
-          part.text
-          for event in events
-          if event.content and event.content.parts # Check if content and parts exist
-          for part in event.content.parts
-          if hasattr(part, 'text') and part.text is not None
-        )
+    responses = (
+      part.text
+      for event in events
+      for part in event.content.parts
+      if part.text is not None
+    )
 
-        has_printed_response = False
-        for text_response in responses:
-          print(text_response)
-          has_printed_response = True
-        
-        if not has_printed_response:
-            print("(No textual response extracted from events for this query)")
+    for text in responses:
+      print(text)
 {{< /tab >}}
 {{< /tabpane >}}
     
