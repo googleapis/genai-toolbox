@@ -540,8 +540,8 @@ cloud.google.com/go/shell v1.6.0/go.mod h1:oHO8QACS90luWgxP3N9iZVuEiSF84zNyLytb+
 cloud.google.com/go/spanner v1.41.0/go.mod h1:MLYDBJR/dY4Wt7ZaMIQ7rXOTLjYrmxLE/5ve9vFfWos=
 cloud.google.com/go/spanner v1.44.0/go.mod h1:G8XIgYdOK+Fbcpbs7p2fiprDw4CaZX63whnSMLVBxjk=
 cloud.google.com/go/spanner v1.45.0/go.mod h1:FIws5LowYz8YAE1J8fOS7DJup8ff7xJeetWEo5REA2M=
-cloud.google.com/go/spanner v1.79.0 h1:HSg+P01K6I1ZFxvLGYToLdZkp+noM7P777Hd/ZHFvdk=
-cloud.google.com/go/spanner v1.79.0/go.mod h1:224ub0ngSaiy7SJI7QZ1pu9zoVPt6CgfwDGBNhUUuzU=
+cloud.google.com/go/spanner v1.80.0 h1:4B2hoN1TF0qghiK7CYjYzjRt0/EEacIlS/UJl0k2hKA=
+cloud.google.com/go/spanner v1.80.0/go.mod h1:XQWUqx9r8Giw6gNh0Gu8xYfz7O+dAKouAkFCxG/mZC8=
 cloud.google.com/go/speech v1.6.0/go.mod h1:79tcr4FHCimOp56lwC01xnt/WPJZc4v3gzyT7FoBkCM=
 cloud.google.com/go/speech v1.7.0/go.mod h1:KptqL+BAQIhMsj1kOP2la5DSEEerPDuOP/2mmkhHhZQ=
 cloud.google.com/go/speech v1.8.0/go.mod h1:9bYIl1/tjsAnMgKGHKmBZzXKEkGgtU+MpdDPTE9f7y0=
