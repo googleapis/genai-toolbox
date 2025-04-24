@@ -251,7 +251,7 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 			}
 			(*c)[name] = actual
 		case couchbasesrc.SourceKind:
-			actual := couchbasesrc.Config{Name: name}
+			actual := couchbasesrc.DefaultConfig(name)
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

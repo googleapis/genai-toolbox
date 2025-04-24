@@ -48,6 +48,10 @@ type Config struct {
 	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
 }
 
+func DefaultConfig(name string) Config {
+	return Config{Name: name, QueryScanConsistency: 2}
+}
+
 func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
@@ -62,11 +66,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	if err != nil {
 		return nil, err
 	}
+
 	scope := cluster.Bucket(r.Bucket).Scope(r.Scope)
 	s := &Source{
-		Name:  r.Name,
-		Kind:  SourceKind,
-		Scope: scope,
+		Name:                 r.Name,
+		Kind:                 SourceKind,
+		QueryScanConsistency: r.QueryScanConsistency,
+		Scope:                scope,
 	}
 	return s, nil
 }

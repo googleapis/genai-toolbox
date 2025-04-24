@@ -130,6 +130,5 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want := "[{\"$1\":1}]"
-	time.Sleep(3 * time.Second)
 	tests.RunToolInvokeTest(t, select1Want)
 }
