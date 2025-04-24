@@ -4,7 +4,7 @@ type: docs
 weight: 2
 description: >
   How to get started running Toolbox locally with Python, BigQuery, and 
-  LangGraph or LlamaIndex. 
+  LangGraph, LlamaIndex, or ADK.
 ---
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart_bigquery.ipynb)
@@ -44,6 +44,9 @@ This guide assumes you have already done the following:
 - [llama-index-llms-google-genai](https://pypi.org/project/llama-index-llms-google-genai/) package.
 
 - [llama-index-llms-anthropic](https://docs.llamaindex.ai/en/stable/examples/llm/anthropic) package.
+{{% /tab %}}
+{{% tab header="ADK" lang="en" %}}
+- [google-adk](https://pypi.org/project/google-adk/) package.
 {{% /tab %}}
 {{< /tabpane >}}
 
@@ -197,6 +200,13 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
             type: integer
             description: The ID of the hotel to cancel.
         statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
+    toolsets: # For ADK
+      my-toolset:
+        - search-hotels-by-name
+        - search-hotels-by-location
+        - book-hotel
+        - update-hotel
+        - cancel-hotel
     ```
 
     **Important Note on `toolsets`**: The `tools.yaml` content above does not include a `toolsets` section. The Python agent examples in Step 3 (e.g., `await toolbox_client.load_toolset("my-toolset")`) rely on a toolset named `my-toolset`. To make those examples work, you will need to add a `toolsets` section to your `tools.yaml` file, for example:
@@ -243,6 +253,11 @@ pip install toolbox-langchain
 
 pip install toolbox-llamaindex
 {{< /tab >}}
+{{% tab header="ADK" lang="en" %}}
+
+pip install google-adk
+{{% /tab %}}
+
 {{< /tabpane >}}
 
 1. Install other required dependencies:
@@ -376,6 +391,111 @@ async def main():
          print(str(response))
 
 asyncio.run(main())
+{{< /tab >}}
+{{< tab header="ADK" lang="python" >}}
+from google.adk.agents import Agent
+from google.adk.tools.toolbox_tool import ToolboxTool
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+from google.genai import types # For constructing message content
+
+import os
+
+# --- Setup for Google GenAI with Vertex AI backend ---
+# Ensure you have authenticated with Google Cloud:
+# $ gcloud auth application-default login
+# Ensure the necessary APIs (e.g., Vertex AI API) are enabled for your project.
+
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+# TODO(developer): Replace 'YOUR_PROJECT_ID' with your Google Cloud Project ID.
+os.environ['GOOGLE_CLOUD_PROJECT'] = 'YOUR_PROJECT_ID'
+# TODO(developer): Replace 'us-central1' with your Google Cloud Location (region).
+os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
+
+# --- Load Tools from Toolbox ---
+# TODO(developer): Ensure the Toolbox server is running at http://127.0.0.1:5000
+toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
+
+# --- Define the Agent's Prompt ---
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
+
+# --- Configure the Agent ---
+# TODO(developer): Replace "my-toolset" with the actual ID of your toolset
+# as configured in your GenAI Toolbox server. If your tools are not in a named
+# toolset, you might need to adjust how tools are loaded (e.g., using `get_tools()`).
+agent_toolset = toolbox_tools.get_toolset("my-toolset")
+
+# TODO(developer): Verify 'gemini-2.0-flash' is a valid and available model
+# in your Vertex AI project and location. Consider using models like
+# 'gemini-1.5-flash-001', 'gemini-1.5-pro-001', or 'gemini-1.0-pro'.
+root_agent = Agent(
+    model='gemini-2.0-flash',
+    name='hotel_agent',
+    description='A helpful AI assistant that can search and book hotels.',
+    instruction=prompt,
+    tools=agent_toolset, # Pass the loaded toolset
+)
+
+# --- Initialize Services for Running the Agent ---
+session_service = InMemorySessionService()
+artifacts_service = InMemoryArtifactService()
+# Create a new session for the interaction.
+session = session_service.create_session(
+    state={}, app_name='hotel_agent', user_id='user_123'
+)
+
+runner = Runner(
+    app_name='hotel_agent',
+    agent=root_agent,
+    artifact_service=artifacts_service,
+    session_service=session_service,
+)
+
+# --- Define Queries and Run the Agent ---
+queries = [
+    "Find hotels in Basel with Basel in it's name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
+
+if __name__ == '__main__':
+    for query in queries:
+        print(f"\n--- User Query: {query} ---")
+        # Construct the message content using google.genai.types
+        content = types.Content(role='user', parts=[types.Part(text=query)])
+        
+        # Run the agent with the new message.
+        events = runner.run(session_id=session.id,
+                            user_id='user_123', # Should match the user_id used in session creation or be consistent
+                            new_message=content)
+
+        # Extract and print text responses from the agent events.
+        print("Agent Response(s):")
+        responses = (
+          part.text
+          for event in events
+          if event.content and event.content.parts # Check if content and parts exist
+          for part in event.content.parts
+          if hasattr(part, 'text') and part.text is not None
+        )
+
+        has_printed_response = False
+        for text_response in responses:
+          print(text_response)
+          has_printed_response = True
+        
+        if not has_printed_response:
+            print("(No textual response extracted from events for this query)")
 {{< /tab >}}
 {{< /tabpane >}}
     
