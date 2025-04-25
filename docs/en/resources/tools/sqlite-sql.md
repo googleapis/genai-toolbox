@@ -1,5 +1,5 @@
 ---
-title: "SQLite SQL"
+title: "sqlite-sql"
 type: docs
 weight: 1
 description: >
