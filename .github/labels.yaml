@@ -69,14 +69,14 @@
   color: 3DED97
   description: Label to trigger Github Action tests.
 
-- name: 'stat: contribution welcome'
+- name: 'status: contribution welcome'
   color: 8befd7
   description: Status - Contributions welcome.
 
-- name: 'stat: awaiting response'
+- name: 'status: awaiting response'
   color: 8befd7
   description: Status - Awaiting response from author.
 
-- name: 'stat: awaiting codeowners'
+- name: 'status: awaiting codeowners'
   color: 8befd7
   description: Status - Awaiting response from code owners.
