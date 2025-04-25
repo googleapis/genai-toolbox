@@ -39,7 +39,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: pg-execute-sql
+					kind: postgres-execute-sql
 					source: my-instance
 					description: some description
 					authRequired:
