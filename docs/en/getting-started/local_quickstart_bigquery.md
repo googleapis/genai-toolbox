@@ -223,7 +223,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     ```
     Alternatively, you can modify the agent code to load tools individually (e.g., using `await toolbox_client.load_tool("search-hotels-by-name")`).
 
-    For more info on tools, check out the [`Resources`](../resources/) section of the docs.
+    For more info on tools, check out the [Resources](../resources/) section of the docs.
 
 4.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
