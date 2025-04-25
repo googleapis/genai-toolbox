@@ -1,5 +1,5 @@
 ---
-title: "BigQuery-sql"
+title: "bigquery-sql"
 type: docs
 weight: 1
 description: >
