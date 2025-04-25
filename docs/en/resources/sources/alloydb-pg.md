@@ -61,7 +61,7 @@ mTLS.
 ### Authentication
 
 This source supports both password-based authentication and IAM
-authentication (using your [Application Default Credentials][set-adc]).
+authentication (using your [Application Default Credentials][adc]).
 
 #### Standard Authentication
 
@@ -82,7 +82,7 @@ To connect using IAM authentication:
 2. You could choose one of the two ways to log in:
     - Specify your IAM email as the `user`.
     - Leave your `user` field blank. Toolbox
-            will fetch the [ADC][set-adc] automatically and log in using the email associated with it.
+            will fetch the [ADC][adc] automatically and log in using the email associated with it.
 3. Leave the `password` field blank.
 
 [iam-guide]: https://cloud.google.com/alloydb/docs/database-users/manage-iam-auth
