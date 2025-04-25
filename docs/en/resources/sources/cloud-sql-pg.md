@@ -42,14 +42,9 @@ scope](https://cloud.google.com/compute/docs/access/service-accounts#accesscopes
 to connect using the Cloud SQL Admin API.
 {{< /notice >}}
 
-To connect to your Cloud SQL Source using IAM authentication:
-
-1. Specify your IAM email as the `user` or leave it blank for Toolbox to fetch from ADC.
-2. Leave the `password` field blank.
-
-[csql-go-conn]: https://github.com/GoogleCloudPlatform/cloud-sql-go-connector
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[csql-go-conn]: <https://github.com/GoogleCloudPlatform/cloud-sql-go-connector>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ### Networking
 
@@ -67,12 +62,36 @@ mTLS.
 [public-ip]: https://cloud.google.com/sql/docs/postgres/configure-ip
 [conn-overview]: https://cloud.google.com/sql/docs/postgres/connect-overview
 
-### Database User
+### Authentication
 
-Currently, this source only uses standard authentication. You will need to [create
-a PostgreSQL user][cloud-sql-users] to login to the database with.
+This source supports both password-based authentication and IAM
+authentication (using your [Application Default Credentials][adc]).
 
-[cloud-sql-users]: https://cloud.google.com/sql/docs/postgres/create-manage-users
+#### Standard Authentication
+
+To connect using user/password, [create
+a PostgreSQL user][cloudsql-users] and input your credentials in the `user` and
+`password` fields.
+
+```yaml
+user: ${USER_NAME}
+password: ${PASSWORD}
+```
+
+#### IAM Authentication
+
+To connect using IAM authentication:
+
+1. Prepare your database instance and user following this [guide][iam-guide].
+2. You could choose one of the two ways to log in:
+    - Specify your IAM email as the `user`.
+    - Leave your `user` field blank. Toolbox
+            will fetch the [ADC][adc] automatically and log in using the email associated with it.
+
+3. Leave the `password` field blank.
+
+[iam-guide]: https://cloud.google.com/sql/docs/postgres/iam-logins
+[cloudsql-users]: https://cloud.google.com/sql/docs/postgres/create-manage-users
 
 ## Example
 
