@@ -26,7 +26,7 @@ This guide assumes you have already done the following:
     export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
     ```
     Toolbox and the client libraries will use this project for BigQuery, unless overridden in configurations.
-1.  Enabled the BigQuery API in your Google Cloud project.
+1.  [Enabled the BigQuery API][enable-bq-api] in your Google Cloud project.
 1.  Installed the BigQuery client library for Python:
     ```bash
     pip install google-cloud-bigquery
@@ -54,6 +54,7 @@ This guide assumes you have already done the following:
 [install-pip]: https://pip.pypa.io/en/stable/installation/
 [install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-gcloud]: https://cloud.google.com/sdk/docs/install
+[enable-bq-api]: https://cloud.google.com/bigquery/docs/quickstarts/query-public-dataset-console#before-you-begin
 
 ## Step 1: Set up your BigQuery Dataset and Table
 
@@ -73,7 +74,7 @@ In this section, we will create a BigQuery dataset and a table, then insert some
  For a real application, ensure that the service account or user running Toolbox has the necessary IAM permissions (e.g., BigQuery Data Editor, BigQuery User) on the dataset or project. For this local quickstart with user credentials, your own permissions will apply.
     {{< /notice >}}
 
-2.  Create a `hotels` table within your new dataset using the `bq query` command. The schema is adapted for BigQuery data types:
+2.  The hotels table needs to be defined in your new dataset for use with the bq query command. First, create a file named `create_hotels_table.sql` with the following content:
 
     ```sql
     CREATE TABLE IF NOT EXISTS `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (
@@ -86,13 +87,15 @@ In this section, we will create a BigQuery dataset and a table, then insert some
       booked        BOOLEAN NOT NULL
     );
     ```
-    Save this as `create_hotels_table.sql` and run:
+    > **Note:** Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL with your actual project ID and dataset name.
+
+    Then run the command below to execute the sql query:
     ```bash
     bq query --project_id=$GOOGLE_CLOUD_PROJECT --dataset_id=$BQ_DATASET_NAME --use_legacy_sql=false < create_hotels_table.sql
     ```
-    Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL with your actual project ID and dataset name if you are not using environment variables for them directly in the SQL. Or, ensure your `bq` CLI is configured with the default project and dataset if you omit them from the table name like `hotels`. For clarity, fully qualifying is safer: `\`$GOOGLE_CLOUD_PROJECT.$BQ_DATASET_NAME.hotels\``.
 
-3.  Insert data into the `hotels` table. Note that `BOOLEAN` values are `TRUE` or `FALSE`.
+
+3.  Next, populate the hotels table with some initial data. To do this, create a file named `insert_hotels_data.sql` and add the following SQL INSERT statement to it.
 
     ```sql
     INSERT INTO `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (id, name, location, price_tier, checkin_date, checkout_date, booked)
@@ -108,7 +111,9 @@ In this section, we will create a BigQuery dataset and a table, then insert some
       (9, 'Courtyard Zurich', 'Zurich', 'Upscale', '2024-04-03', '2024-04-13', FALSE),
       (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', FALSE);
     ```
-    Save this as `insert_hotels_data.sql` and run:
+    > **Note:** Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL with your actual project ID and dataset name.
+
+    Then run the command below to execute the sql query:
     ```bash
     bq query --project_id=$GOOGLE_CLOUD_PROJECT --dataset_id=$BQ_DATASET_NAME --use_legacy_sql=false < insert_hotels_data.sql
     ```
@@ -202,13 +207,6 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
             type: integer
             description: The ID of the hotel to cancel.
         statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
-    toolsets: # For ADK
-      my-toolset:
-        - search-hotels-by-name
-        - search-hotels-by-location
-        - book-hotel
-        - update-hotel
-        - cancel-hotel
     ```
 
     **Important Note on `toolsets`**: The `tools.yaml` content above does not include a `toolsets` section. The Python agent examples in Step 3 (e.g., `await toolbox_client.load_toolset("my-toolset")`) rely on a toolset named `my-toolset`. To make those examples work, you will need to add a `toolsets` section to your `tools.yaml` file, for example:
@@ -255,10 +253,10 @@ pip install toolbox-langchain
 
 pip install toolbox-llamaindex
 {{< /tab >}}
-{{% tab header="ADK" lang="en" %}}
+{{< tab header="ADK" lang="bash" >}}
 
 pip install google-adk
-{{% /tab %}}
+{{< /tab >}}
 
 {{< /tabpane >}}
 
@@ -482,6 +480,9 @@ To learn more about Agents in LangChain, check out the [LangGraph Agent document
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
 To learn more about Agents in LlamaIndex, check out the [LlamaIndex AgentWorkflow documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
+{{% /tab %}}
+{{% tab header="ADK" lang="en" %}}
+To learn more about Agents in ADK, check out the [ADK documentation.](https://google.github.io/adk-docs/)
 {{% /tab %}}
 {{< /tabpane >}}
 1. Run your agent, and observe the results:
