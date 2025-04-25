@@ -14,7 +14,7 @@ This guide assumes you have already done the following:
 
 1.  Installed [Python 3.9+][install-python] (including [pip][install-pip] and
     your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
-1.  Installed and configured the [Google Cloud SDK (`gcloud` CLI)][install-gcloud].
+1.  Installed and configured the [Google Cloud SDK (gcloud CLI)][install-gcloud].
 1.  Authenticated with Google Cloud for Application Default Credentials (ADC):
     ```bash
     gcloud auth login
