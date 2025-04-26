@@ -102,6 +102,7 @@ func TestPostgres(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -122,5 +123,6 @@ func TestPostgres(t *testing.T) {
 	select1Want, failInvocationWant := tests.GetPostgresWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunPgExecuteSqlToolInvokeTest(t, select_1_want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
