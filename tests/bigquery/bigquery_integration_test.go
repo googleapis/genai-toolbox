@@ -119,9 +119,10 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select_1_want := "[{\"f0_\":1}]"
+	select1Want := "[{\"f0_\":1}]"
 	// Partial message; the full error message is too long.
-	fail_invocation_want := "{jsonrpc:2.0,id:invoke-fail-tool,result:{content:[{type:text,text:unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier SELEC at [1:1]"
-	tests.RunToolInvokeTest(t, select_1_want)
-	tests.RunMCPToolCallMethod(t, fail_invocation_want)
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1], invalidQuery"}],"isError":true}}`
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }

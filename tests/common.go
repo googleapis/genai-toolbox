@@ -302,3 +302,30 @@ func GetBigQueryAuthToolInfo(projectID, datasetID, tableName string) (string, st
 	}
 	return createStatement, insertStatement, toolStatement, params
 }
+
+func GetNonSpannerInvokeParamWant() (string, string) {
+	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
+	return invokeParamWant, mcpInvokeParamWant
+}
+
+// GetPostgresWants return the expected wants for postgres
+func GetPostgresWants() (string, string) {
+	select1Want := "[{\"?column?\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
+	return select1Want, failInvocationWant
+}
+
+// GetMssqlWants return the expected wants for mssql
+func GetMssqlWants() (string, string) {
+	select1Want := "[{\"\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
+	return select1Want, failInvocationWant
+}
+
+// GetMysqlWants return the expected wants for mysql
+func GetMysqlWants() (string, string) {
+	select1Want := "[{\"1\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	return select1Want, failInvocationWant
+}

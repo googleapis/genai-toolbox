@@ -161,10 +161,10 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select_1_want := "[{\"?column?\":1}]"
-	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
-	tests.RunToolInvokeTest(t, select_1_want)
-	tests.RunMCPToolCallMethod(t, fail_invocation_want)
+	select1Want, failInvocationWant := tests.GetPostgresWants()
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 // Test connection with different IP type

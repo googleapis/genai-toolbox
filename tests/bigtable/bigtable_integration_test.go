@@ -104,10 +104,11 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
-	select_1_want := "[{$col1:1}]"
-	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier SELEC [at 1:1]"}],"isError":true}}`
-	tests.RunToolInvokeTest(t, select_1_want)
-	tests.RunMCPToolCallMethod(t, fail_invocation_want)
+	select1Want := "[{\"$col1\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {

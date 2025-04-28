@@ -142,10 +142,10 @@ func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select_1_want := "[{\"1\":1}]"
-	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
-	tests.RunToolInvokeTest(t, select_1_want)
-	tests.RunMCPToolCallMethod(t, fail_invocation_want)
+	select1Want, failInvocationWant := tests.GetMysqlWants()
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 // Test connection with different IP type

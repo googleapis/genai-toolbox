@@ -297,7 +297,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select_1_want string) {
+func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -326,7 +326,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+			want:          invoke_param_want,
 			isErr:         false,
 		},
 		{
@@ -425,13 +425,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 				t.Fatalf("unable to find result in response body")
 			}
 
-			// Remove `\` and `"` for string comparison
-			got = strings.ReplaceAll(got, "\\", "")
-			want := strings.ReplaceAll(tc.want, "\\", "")
-			got = strings.ReplaceAll(got, "\"", "")
-			want = strings.ReplaceAll(want, "\"", "")
-
-			if got != want {
+			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
 		})
@@ -439,7 +433,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want string) {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
+func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -466,7 +460,7 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 					},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+			want: invoke_param_want,
 		},
 		{
 			name:          "MCP Invoke invalid tool",
@@ -500,7 +494,7 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter id is required"}}`,
+			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-param-tool with insufficient parameters",
@@ -517,7 +511,7 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter name is required"}}`,
+			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
@@ -563,14 +557,8 @@ func RunMCPToolCallMethod(t *testing.T, fail_invocation_want string) {
 			defer resp.Body.Close()
 			got := string(bytes.TrimSpace(respBody))
 
-			// Remove `\` and `"` for string comparison
-			got = strings.ReplaceAll(got, "\\", "")
-			want := strings.ReplaceAll(tc.want, "\\", "")
-			got = strings.ReplaceAll(got, "\"", "")
-			want = strings.ReplaceAll(want, "\"", "")
-
-			if !strings.Contains(got, want) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, want)
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.want)
 			}
 		})
 	}

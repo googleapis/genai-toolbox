@@ -120,8 +120,8 @@ func TestMssqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select_1_want := "[{\"\":1}]"
-	fail_invocation_want := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
-	tests.RunToolInvokeTest(t, select_1_want)
-	tests.RunMCPToolCallMethod(t, fail_invocation_want)
+	select1Want, failInvocationWant := tests.GetMssqlWants()
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
