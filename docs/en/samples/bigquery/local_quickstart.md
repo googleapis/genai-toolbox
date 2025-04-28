@@ -74,7 +74,7 @@ In this section, we will create a BigQuery dataset and a table, then insert some
  For a real application, ensure that the service account or user running Toolbox has the necessary IAM permissions (e.g., BigQuery Data Editor, BigQuery User) on the dataset or project. For this local quickstart with user credentials, your own permissions will apply.
     {{< /notice >}}
 
-2.  The hotels table needs to be defined in your new dataset for use with the bq query command. First, create a file named `create_hotels_table.sql` with the following content:
+1.  The hotels table needs to be defined in your new dataset for use with the bq query command. First, create a file named `create_hotels_table.sql` with the following content:
 
     ```sql
     CREATE TABLE IF NOT EXISTS `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (
@@ -95,7 +95,7 @@ In this section, we will create a BigQuery dataset and a table, then insert some
     ```
 
 
-3.  Next, populate the hotels table with some initial data. To do this, create a file named `insert_hotels_data.sql` and add the following SQL INSERT statement to it.
+1.  Next, populate the hotels table with some initial data. To do this, create a file named `insert_hotels_data.sql` and add the following SQL INSERT statement to it.
 
     ```sql
     INSERT INTO `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (id, name, location, price_tier, checkin_date, checkout_date, booked)
@@ -135,13 +135,14 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
-    2.  Make the binary executable:
+
+1.  Make the binary executable:
 
     ```bash
     chmod +x toolbox
     ```
 
-3.  Write the following into a `tools.yaml` file. You must replace the `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your actual BigQuery project and dataset name. The table name `hotels` is used directly in the statements.
+1. Write the following into a `tools.yaml` file. You must replace the `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your actual BigQuery project and dataset name. The `location` field is optional; if not specified, it defaults to 'us'. The table name `hotels` is used directly in the statements. 
 
     {{< notice tip >}}
  Authentication with BigQuery is handled via Application Default Credentials (ADC). Ensure you have run `gcloud auth application-default login`.
@@ -152,6 +153,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
       my-bigquery-source:
         kind: bigquery
         project: YOUR_PROJECT_ID
+        location: us
     tools:
       search-hotels-by-name:
         kind: bigquery-sql
@@ -225,7 +227,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
 
     For more info on tools, check out the [Resources](../../resources/) section of the docs.
 
-4.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
+1.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
     ./toolbox --tools_file "tools.yaml"

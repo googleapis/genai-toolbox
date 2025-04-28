@@ -94,7 +94,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     chmod +x toolbox
     ```
 
-1. Write the following into a `tools.yaml` file. You must replace the `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your actual BigQuery project and dataset name. The table name `hotels` is used directly in the statements.
+1. Write the following into a `tools.yaml` file. You must replace the `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your actual BigQuery project and dataset name. The `location` field is optional; if not specified, it defaults to 'us'. The table name `hotels` is used directly in the statements. 
 
     {{< notice tip >}}
   Authentication with BigQuery is handled via Application Default Credentials (ADC). Ensure you have run `gcloud auth application-default login`.
@@ -105,6 +105,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
       my-bigquery-source:
         kind: bigquery
         project: YOUR_PROJECT_ID
+        location: us
     tools:
       search-hotels-by-name:
         kind: bigquery-sql
@@ -169,7 +170,9 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
         - cancel-hotel
     ```
 
-    For more info on tools, check out the [Tools](../../resources/tools/_index.md) section. 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
+    For more info on tools, check out the [Tools](../../resources/tools/_index.md) section. 
+    
+1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
     ./toolbox --tools_file "tools.yaml"
