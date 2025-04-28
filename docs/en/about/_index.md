@@ -1,6 +1,6 @@
 ---
 title: "About"
 type: docs
-weight: 5
+weight: 6
 description: A list of other information related to Toolbox.
 ---

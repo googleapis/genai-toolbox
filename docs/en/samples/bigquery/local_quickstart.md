@@ -1,13 +1,13 @@
 ---
 title: "Quickstart (Local with BigQuery)"
 type: docs
-weight: 2
+weight: 1
 description: >
   How to get started running Toolbox locally with Python, BigQuery, and 
   LangGraph, LlamaIndex, or ADK.
 ---
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart_bigquery.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb)
 ## Before you begin
 
 This guide assumes you have already done the following:
@@ -141,10 +141,10 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     chmod +x toolbox
     ```
 
-3.  Write the following into a `tools.yaml` file. The `project` in the `sources` section will use the `GOOGLE_CLOUD_PROJECT` environment variable you set earlier. You must replace the `YOUR_DATASET_NAME` placeholder in the SQL `statement` fields with your actual BigQuery dataset name (e.g., the value of `$BQ_DATASET_NAME` from Step 1). The table name `hotels` is used directly in the statements.
+3.  Write the following into a `tools.yaml` file. You must replace the `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your actual BigQuery project and dataset name. The table name `hotels` is used directly in the statements.
 
     {{< notice tip >}}
- Authentication with BigQuery is handled via Application Default Credentials (ADC). Ensure you have run `gcloud auth application-default login`. Avoid hardcoding secrets.
+ Authentication with BigQuery is handled via Application Default Credentials (ADC). Ensure you have run `gcloud auth application-default login`.
     {{< /notice >}}
 
     ```yaml
@@ -223,7 +223,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     ```
     Alternatively, you can modify the agent code to load tools individually (e.g., using `await toolbox_client.load_tool("search-hotels-by-name")`).
 
-    For more info on tools, check out the [Resources](../resources/) section of the docs.
+    For more info on tools, check out the [Resources](../../resources/) section of the docs.
 
 4.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
