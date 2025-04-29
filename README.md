@@ -6,8 +6,8 @@
 > MCP Toolbox for Databases is currently in beta, and may see breaking 
 > changes until the first stable release (v1.0).
 
-MCP Toolbox for Databases is an open source MCP server for databases.  It enables you to
-develop tools easier, faster, and more securely by handling the complexities
+MCP Toolbox for Databases is an open source MCP server for databases. It enables
+you to develop tools easier, faster, and more securely by handling the complexities
 such as connection pooling, authentication, and more.
 
 This README provides a brief overview. For comprehensive details, see the [full
