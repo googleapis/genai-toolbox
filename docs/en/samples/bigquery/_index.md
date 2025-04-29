@@ -1,5 +1,5 @@
 ---
-title: "Getting Started"
+title: "BigQuery"
 type: docs
 weight: 1
 description: >
