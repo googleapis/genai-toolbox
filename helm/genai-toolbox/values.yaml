@@ -1,0 +1,101 @@
+replicas: 1
+namespace: toolbox
+name: toolbox
+
+options:
+  address: "0.0.0.0"
+  port: 5000
+  log_level: "INFO"
+  logging_format: "standard"
+  telemetry_gcp: false
+  telemetry_otlp: ""
+  telemetry_service_name: "toolbox"
+
+config: |
+  authServices:
+  #   my_auth_app_1:
+  #     kind: google
+  #     clientId: ${YOUR_CLIENT_ID_1}
+  #   my_auth_app_2:
+  #     kind: microsoft
+  #     clientId: ${YOUR_CLIENT_ID_2}
+  #   tenantId: ${YOUR_TENANT_ID_2}
+  
+  sources:
+  #   my-sqlite-db:
+  #     kind: sqlite
+  #     database: ":memory:"
+
+  tools:
+  #   get-user:
+  #     kind: sqlite-sql
+  #     source: my-sqlite-db
+  #     description: Get a user by id.
+  #     parameters:
+  #       - name: id
+  #         type: integer
+  #         description: User ID
+  #     statement: SELECT * FROM users WHERE id = ?
+
+  toolsets:
+  #   my_toolset:
+  #     - get-user
+
+serviceAccount:
+  create: true
+  name: genai-toolbox
+  annotations: {}
+    # iam.gke.io/gcp-service-account: "genai-toolbox@toolbox.iam.gserviceaccount.com"
+    # eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/genai-toolbox"
+
+imagePullSecrets: []
+image:
+  repository: us-central1-docker.pkg.dev/database-toolbox/toolbox/
+  name: toolbox
+  tag: latest
+  pullPolicy: IfNotPresent
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 5000
+  initialDelaySeconds: 10
+  periodSeconds: 60
+readinessProbe:
+  httpGet:
+    path: /
+    port: 5000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+podDistribution:
+  antiAffinity:
+    enabled: false
+    weight: 100
+  topologySpread:
+    enabled: false
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway

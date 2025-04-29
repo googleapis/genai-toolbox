@@ -1,5 +1,5 @@
 ---
-title: "Deploy to Kubernetes"
+title: "Deploy to Kubernetes (GKE)"
 type: docs
 weight: 2
 description: >

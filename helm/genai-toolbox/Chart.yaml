@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: genai-toolbox
+description: MCP Toolbox for Databases (formerly "Gen AI Toolbox for Databases")
+type: application
+version: 0.1.0
+appVersion: "v0.4.0"
+icon: https://github.com/googleapis/genai-toolbox/blob/main/logo.png

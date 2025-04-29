@@ -1,0 +1,9 @@
+You've successfully installed the MCP Toolbox for Databases (formerly `genai-toolbox`)!
+
+To get started, you can access the toolbox at http://localhost:{{ .Values.options.port }}/mcp/sse by running the following commands:
+
+```bash
+kubectl port-forward svc/{{ .Values.name }} {{ .Values.options.port }}:{{ .Values.options.port }} -n {{ .Values.namespace }}
+
+npx @modelcontextprotocol/inspector http://localhost:{{ .Values.options.port }}/mcp/sse
+```
