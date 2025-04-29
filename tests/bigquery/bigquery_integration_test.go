@@ -27,6 +27,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/tests"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -91,13 +93,13 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		strings.Replace(uuid.New().String(), "-", "", -1),
 	)
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetBigQueryParamToolInfo(BIGQUERY_PROJECT, datasetName, tableNameParam)
-	teardownTable1 := tests.SetupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
+	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(BIGQUERY_PROJECT, datasetName, tableNameParam)
+	teardownTable1 := setupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetBigQueryAuthToolInfo(BIGQUERY_PROJECT, datasetName, tableNameAuth)
-	teardownTable2 := tests.SetupBigQueryTable(t, ctx, client, create_statement2, insert_statement2, datasetName, tableNameAuth, params2)
+	create_statement2, insert_statement2, tool_statement2, params2 := getBigQueryAuthToolInfo(BIGQUERY_PROJECT, datasetName, tableNameAuth)
+	teardownTable2 := setupBigQueryTable(t, ctx, client, create_statement2, insert_statement2, datasetName, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
@@ -125,4 +127,111 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+}
+
+// getBigQueryParamToolInfo returns statements and param for my-param-tool for bigquery kind
+func getBigQueryParamToolInfo(projectID, datasetID, tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
+	createStatement := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING);`, tableName)
+	insertStatement := fmt.Sprintf(`
+		INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?);`, tableName)
+	toolStatement := fmt.Sprintf(`SELECT * FROM %s WHERE id = ? OR name = ? ORDER BY id;`, tableName)
+	params := []bigqueryapi.QueryParameter{
+		{Value: int64(1)}, {Value: "Alice"},
+		{Value: int64(2)}, {Value: "Jane"},
+		{Value: int64(3)}, {Value: "Sid"},
+	}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+// getBigQueryAuthToolInfo returns statements and param of my-auth-tool for bigquery kind
+func getBigQueryAuthToolInfo(projectID, datasetID, tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
+	createStatement := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING, email STRING)`, tableName)
+	insertStatement := fmt.Sprintf(`
+		INSERT INTO %s (id, name, email) VALUES (?, ?, ?), (?, ?, ?)`, tableName)
+	toolStatement := fmt.Sprintf(`
+		SELECT name FROM %s WHERE email = ?`, tableName)
+	params := []bigqueryapi.QueryParameter{
+		{Value: int64(1)}, {Value: "Alice"}, {Value: tests.SERVICE_ACCOUNT_EMAIL},
+		{Value: int64(2)}, {Value: "Jane"}, {Value: "janedoe@gmail.com"},
+	}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, create_statement, insert_statement, datasetName string, tableName string, params []bigqueryapi.QueryParameter) func(*testing.T) {
+	// Create dataset
+	dataset := client.Dataset(datasetName)
+	_, err := dataset.Metadata(ctx)
+
+	if err != nil {
+		apiErr, ok := err.(*googleapi.Error)
+		if !ok || apiErr.Code != 404 {
+			t.Fatalf("Failed to check dataset %q existence: %v", datasetName, err)
+		}
+		metadataToCreate := &bigqueryapi.DatasetMetadata{Name: datasetName}
+		if err := dataset.Create(ctx, metadataToCreate); err != nil {
+			t.Fatalf("Failed to create dataset %q: %v", datasetName, err)
+		}
+	}
+
+	// Create table
+	createJob, err := client.Query(create_statement).Run(ctx)
+
+	if err != nil {
+		t.Fatalf("Failed to start create table job for %s: %v", tableName, err)
+	}
+	createStatus, err := createJob.Wait(ctx)
+	if err != nil {
+		t.Fatalf("Failed to wait for create table job for %s: %v", tableName, err)
+	}
+	if err := createStatus.Err(); err != nil {
+		t.Fatalf("Create table job for %s failed: %v", tableName, err)
+	}
+
+	// Insert test data
+	insertQuery := client.Query(insert_statement)
+	insertQuery.Parameters = params
+	insertJob, err := insertQuery.Run(ctx)
+	if err != nil {
+		t.Fatalf("Failed to start insert job for %s: %v", tableName, err)
+	}
+	insertStatus, err := insertJob.Wait(ctx)
+	if err != nil {
+		t.Fatalf("Failed to wait for insert job for %s: %v", tableName, err)
+	}
+	if err := insertStatus.Err(); err != nil {
+		t.Fatalf("Insert job for %s failed: %v", tableName, err)
+	}
+
+	return func(t *testing.T) {
+		// tear down table
+		dropSQL := fmt.Sprintf("drop table %s", tableName)
+		dropJob, err := client.Query(dropSQL).Run(ctx)
+		if err != nil {
+			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
+			return
+		}
+		dropStatus, err := dropJob.Wait(ctx)
+		if err != nil {
+			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
+			return
+		}
+		if err := dropStatus.Err(); err != nil {
+			t.Errorf("Error dropping table %s: %v", tableName, err)
+		}
+
+		// tear down dataset
+		datasetToTeardown := client.Dataset(datasetName)
+		tablesIterator := datasetToTeardown.Tables(ctx)
+		_, err = tablesIterator.Next()
+
+		if err == iterator.Done {
+			if err := datasetToTeardown.Delete(ctx); err != nil {
+				t.Errorf("Failed to delete dataset %s: %v", datasetName, err)
+			}
+		} else if err != nil {
+			t.Errorf("Failed to list tables in dataset %s to check emptiness: %v.", datasetName, err)
+		}
+	}
 }

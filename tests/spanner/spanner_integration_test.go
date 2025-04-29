@@ -25,6 +25,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	database "cloud.google.com/go/spanner/admin/database/apiv1"
+	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/tests"
 )
@@ -100,19 +101,19 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetSpannerParamToolInfo(tableNameParam)
+	create_statement1, insert_statement1, tool_statement1, params1 := getSpannerParamToolInfo(tableNameParam)
 	dbString := fmt.Sprintf(
 		"projects/%s/instances/%s/databases/%s",
 		SPANNER_PROJECT,
 		SPANNER_INSTANCE,
 		SPANNER_DATABASE,
 	)
-	teardownTable1 := tests.SetupSpannerTable(t, ctx, adminClient, dataClient, create_statement1, insert_statement1, tableNameParam, dbString, params1)
+	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, create_statement1, insert_statement1, tableNameParam, dbString, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetSpannerAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupSpannerTable(t, ctx, adminClient, dataClient, create_statement2, insert_statement2, tableNameAuth, dbString, params2)
+	create_statement2, insert_statement2, tool_statement2, params2 := getSpannerAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, create_statement2, insert_statement2, tableNameAuth, dbString, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
@@ -141,4 +142,75 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+}
+
+// getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
+func getSpannerParamToolInfo(tableName string) (string, string, string, map[string]any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3)", tableName)
+	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
+	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid"}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
+func getSpannerAuthToolInfo(tableName string) (string, string, string, map[string]any) {
+	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), email STRING(MAX)) PRIMARY KEY (id)", tableName)
+	insert_statement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, @name1, @email1), (2, @name2, @email2)", tableName)
+	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email", tableName)
+	params := map[string]any{
+		"name1":  "Alice",
+		"email1": tests.SERVICE_ACCOUNT_EMAIL,
+		"name2":  "Jane",
+		"email2": "janedoe@gmail.com",
+	}
+	return create_statement, insert_statement, tool_statement, params
+}
+
+// setupSpannerTable creates and inserts data into a table of tool
+// compatible with spanner-sql tool
+func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, create_statement, insert_statement, tableName, dbString string, params map[string]any) func(*testing.T) {
+
+	// Create table
+	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		Database:   dbString,
+		Statements: []string{create_statement},
+	})
+	if err != nil {
+		t.Fatalf("unable to start create table operation %s: %s", tableName, err)
+	}
+	err = op.Wait(ctx)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	_, err = dataClient.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		stmt := spanner.Statement{
+			SQL:    insert_statement,
+			Params: params,
+		}
+		_, err := txn.Update(ctx, stmt)
+		return err
+	})
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   dbString,
+			Statements: []string{fmt.Sprintf("DROP TABLE %s", tableName)},
+		})
+		if err != nil {
+			t.Errorf("unable to start drop table operation: %s", err)
+			return
+		}
+
+		err = op.Wait(ctx)
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
 }
