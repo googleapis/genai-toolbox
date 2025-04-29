@@ -299,7 +299,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 	}
 
-	return []any{string(body)}, nil
+	var data any
+	if err = json.Unmarshal(body, &data); err != nil {
+		// if unable to unmarshal data, return result as string.
+		return []any{string(body)}, nil
+	}
+	// if data is a list, return as is.
+	dataList, ok := data.([]any)
+	if ok {
+		return dataList, nil
+	}
+	// if data is not a list (e.g. single map), return data in list.
+	return []any{data}, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

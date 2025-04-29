@@ -118,7 +118,7 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if name == "Alice" {
-		response := `{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}`
+		response := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			http.Error(w, "Failed to write response", http.StatusInternalServerError)
@@ -258,7 +258,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
-	select_1_want := `["[\"Hello\",\"World\"]\n"]`
+	select_1_want := `["Hello","World"]`
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select_1_want)
 	runAdvancedHTTPInvokeTest(t)
@@ -280,7 +280,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "country": "US", "X-Other-Header": "test"}`)),
-			want:          `["[\"Hello\",\"World\"]\n"]`,
+			want:          `["Hello","World"]`,
 			isErr:         false,
 		},
 		{
