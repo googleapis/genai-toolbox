@@ -49,11 +49,12 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
-					Name:        "example_tool",
-					Kind:        couchbase.ToolKind,
-					Source:      "my-couchbase-instance",
-					Description: "some tool description",
-					Statement:   "select * from hotel WHERE name = $hotel;\n",
+					Name:         "example_tool",
+					Kind:         couchbase.ToolKind,
+					AuthRequired: []string{},
+					Source:       "my-couchbase-instance",
+					Description:  "some tool description",
+					Statement:    "select * from hotel WHERE name = $hotel;\n",
 					Parameters: []tools.Parameter{
 						tools.NewStringParameter("hotel", "hotel parameter description"),
 					},
