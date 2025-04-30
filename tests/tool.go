@@ -257,7 +257,9 @@ func SetupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 
 	// Insert test documents
 	for i, param := range params {
-		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{})
+		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{
+			DurabilityLevel: gocb.DurabilityLevelMajorityAndPersistOnMaster,
+		})
 		if err != nil {
 			t.Fatalf("failed to insert test data: %v", err)
 		}
