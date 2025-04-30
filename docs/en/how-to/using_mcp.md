@@ -1,5 +1,5 @@
 ---
-title: "Using Model Context Protocol (MCP)"
+title: "Connect Toolbox to AI tools using MCP"
 type: docs
 weight: 2
 description: >
@@ -23,7 +23,7 @@ description: >
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
 
-## Before you begin:
+## Before you begin
 
 1. In the Google Cloud console, on the [project selector page](https://console.cloud.google.com/projectselector2/home/dashboard), select or create a Google Cloud project.
 
@@ -49,19 +49,27 @@ description: >
     <!-- {x-release-please-start-version} -->
     {{< tabpane persist=header >}}
     {{% tab header="linux/amd64" lang="bash" %}}
+
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/linux/amd64/toolbox
+
     {{< /tab >}}
 
     {{% tab header="darwin/arm64" lang="bash" %}}
+
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/arm64/toolbox
+
     {{< /tab >}}
 
     {{% tab header="darwin/amd64" lang="bash" %}}
+
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/amd64/toolbox
+
     {{< /tab >}}
 
     {{% tab header="windows/amd64" lang="bash" %}}
+
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/windows/amd64/toolbox
+
     {{< /tab >}}
     {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -72,7 +80,7 @@ description: >
     chmod +x toolbox
     ```
 
-3. Verify the installation:
+1. Verify the installation:
 
     ```bash
     ./toolbox --version
@@ -85,7 +93,7 @@ This section will create a `tools.yaml` file, which will define which tools your
 This will configure the following tools:
 <!-- TODO: update -->
 1. **list_tables**: lists all tables in your PostgreSQL instance
-2. **list_schema:** Lists the schema for a particular db table
+2. **list_schema:** lists the schema for a particular db table
 3. **execute_sql**: execute queries to retrieve data from your database.
 4. **create_table**: create a new table in your database.
 5. **drop_table**: drop an existing table in your database.

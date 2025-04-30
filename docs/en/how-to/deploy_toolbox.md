@@ -1,7 +1,7 @@
 ---
 title: "Deploy to Cloud Run"
 type: docs
-weight: 1
+weight: 3
 description: >
   How to set up and configure Toolbox to run on Cloud Run.
 ---
@@ -33,7 +33,7 @@ description: >
                            cloudbuild.googleapis.com \
                            artifactregistry.googleapis.com \
                            iam.googleapis.com \
-                           secretmanager.googleapis.com 
+                           secretmanager.googleapis.com
 
     ```
 
@@ -48,7 +48,7 @@ description: >
     - Cloud Run Developer (roles/run.developer)
     - Service Account User role (roles/iam.serviceAccountUser)
 
-{{< notice note >}} 
+{{< notice note >}}
 If you are under a domain restriction organization policy
 [restricting](https://cloud.google.com/run/docs/authenticating/public#domain-restricted-sharing)
 unauthenticated invocations for your project, you will need to access your
@@ -56,10 +56,10 @@ deployed service as described under [Testing private
 services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
 {{< /notice >}}
 
-{{< notice note >}} 
+{{< notice note >}}
 If you are using sources that require VPC-access (such as
 AlloyDB or Cloud SQL over private IP), make sure your Cloud Run service and the
-database are in the same VPC network. 
+database are in the same VPC network.
 {{< /notice >}}
 
 
@@ -132,7 +132,7 @@ section.
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--tools_file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
-        # TODO(dev): update the following to match your VPC if necessary 
+        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
@@ -154,7 +154,7 @@ Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
 
     ```bash
     curl http://127.0.0.1:8080
-    ``` 
+    ```
 
 ## Connecting with Toolbox Client SDK
 
