@@ -16,6 +16,9 @@ database. It's compatible with any of the following sources:
 - [cloud-sql-postgres](../sources/cloud-sql-pg.md)
 - [postgres](../sources/postgres.md)
 
+`postgres-execute-sql` takes one input parameter `sql` and run the sql
+statement against the `source`.
+
 ## Example
 
 ```yaml
@@ -23,8 +26,7 @@ tools:
  execute_sql_tool:
     kind: postgres-execute-sql
     source: my-pg-instance
-    description: |
-      Use this tool to execute sql statement.
+    description: Use this tool to execute sql statement.
 ```
 
 ## Reference
