@@ -274,29 +274,3 @@ func GetMysqlWants() (string, string) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	return select1Want, failInvocationWant
 }
-
-// GetCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
-func GetCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
-	// N1QL uses positional or named parameters with $ prefix
-	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
-		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
-		collectionName, collectionName)
-
-	params := []map[string]any{
-		{"name": "Alice"},
-		{"name": "Jane"},
-		{"name": "Sid"},
-	}
-	return toolStatement, params
-}
-
-// GetCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
-func GetCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
-	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
-
-	params := []map[string]any{
-		{"name": "Alice", "email": SERVICE_ACCOUNT_EMAIL},
-		{"name": "Jane", "email": "janedoe@gmail.com"},
-	}
-	return toolStatement, params
-}

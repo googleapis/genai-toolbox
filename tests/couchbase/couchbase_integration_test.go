@@ -34,11 +34,12 @@ const (
 )
 
 var (
-	couchbaseConnection = os.Getenv("COUCHBASE_CONNECTION")
-	couchbaseBucket     = os.Getenv("COUCHBASE_BUCKET")
-	couchbaseScope      = os.Getenv("COUCHBASE_SCOPE")
-	couchbaseUser       = os.Getenv("COUCHBASE_USER")
-	couchbasePass       = os.Getenv("COUCHBASE_PASS")
+	couchbaseConnection   = os.Getenv("COUCHBASE_CONNECTION")
+	couchbaseBucket       = os.Getenv("COUCHBASE_BUCKET")
+	couchbaseScope        = os.Getenv("COUCHBASE_SCOPE")
+	couchbaseUser         = os.Getenv("COUCHBASE_USER")
+	couchbasePass         = os.Getenv("COUCHBASE_PASS")
+	SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 )
 
 // getCouchbaseVars validates and returns Couchbase configuration variables
@@ -101,13 +102,13 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameAuth := "auth_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// Set up data for param tool
-	paramToolStatement, params1 := tests.GetCouchbaseParamToolInfo(collectionNameParam)
-	teardownCollection1 := tests.SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
+	paramToolStatement, params1 := getCouchbaseParamToolInfo(collectionNameParam)
+	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
 	defer teardownCollection1(t)
 
 	// Set up data for auth tool
-	authToolStatement, params2 := tests.GetCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := tests.SetupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
+	authToolStatement, params2 := getCouchbaseAuthToolInfo(collectionNameAuth)
+	teardownCollection2 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
 	defer teardownCollection2(t)
 
 	// Write config into a file and pass it to command
@@ -130,5 +131,89 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want := "[{\"$1\":1}]"
-	tests.RunToolInvokeTest(t, select1Want)
+	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	failInvocationWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: parsing failure | {\\\"statement\\\":\\\"SELEC 1;\\\""
+
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+}
+
+// setupCouchbaseCollection creates a scope and collection and inserts test data
+func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.Cluster,
+	bucketName, scopeName, collectionName string, params []map[string]any) func(t *testing.T) {
+
+	// Get bucket reference
+	bucket := cluster.Bucket(bucketName)
+
+	// Wait for bucket to be ready
+	err := bucket.WaitUntilReady(5*time.Second, nil)
+	if err != nil {
+		t.Fatalf("failed to connect to bucket: %v", err)
+	}
+
+	// Create scope if it doesn't exist
+	bucketMgr := bucket.Collections()
+	err = bucketMgr.CreateScope(scopeName, nil)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		t.Logf("failed to create scope (might already exist): %v", err)
+	}
+
+	// Create collection if it doesn't exist
+	err = bucketMgr.CreateCollection(gocb.CollectionSpec{
+		Name:      collectionName,
+		ScopeName: scopeName,
+	}, nil)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		t.Fatalf("failed to create collection: %v", err)
+	}
+
+	// Get a reference to the collection
+	collection := bucket.Scope(scopeName).Collection(collectionName)
+
+	// Insert test documents
+	for i, param := range params {
+		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{})
+		if err != nil {
+			t.Fatalf("failed to insert test data: %v", err)
+		}
+	}
+
+	// Return a cleanup function
+	return func(t *testing.T) {
+		// Drop the collection
+		err := bucketMgr.DropCollection(gocb.CollectionSpec{
+			Name:      collectionName,
+			ScopeName: scopeName,
+		}, nil)
+		if err != nil {
+			t.Logf("failed to drop collection: %v", err)
+		}
+	}
+}
+
+// getCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
+func getCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
+	// N1QL uses positional or named parameters with $ prefix
+	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
+		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
+		collectionName, collectionName)
+
+	params := []map[string]any{
+		{"name": "Alice"},
+		{"name": "Jane"},
+		{"name": "Sid"},
+	}
+	return toolStatement, params
+}
+
+// getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
+func getCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
+
+	params := []map[string]any{
+		{"name": "Alice", "email": SERVICE_ACCOUNT_EMAIL},
+		{"name": "Jane", "email": "janedoe@gmail.com"},
+	}
+	return toolStatement, params
 }
