@@ -3,10 +3,10 @@ title: "Using Model Context Protocol (MCP)"
 type: docs
 weight: 2
 description: >
-  Connect your AI Developer Assistant tools to MCP Toolbox using MCP.
+  Connect your AI developer assistant tools to Toolbox using MCP.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Cloud SQL for Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your Developer Assistant tools to a Cloud SQL instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Cloud SQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for Postgres instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -16,12 +16,12 @@ description: >
 * [Claude code][claudecode]
 
 [toolbox]: https://github.com/googleapis/genai-toolbox
-[cursor]: #cursor
-[windsurf]: #windsurf
-[vscode]: #visual-studio-code-copilot
-[cline]: #cline
-[claudedesktop]: #claude-desktop
-[claudecode]: #claude-code
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
 
 ## Before you begin:
 
@@ -34,13 +34,13 @@ description: >
 
 1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
-1. [Create a Cloud SQL for MySQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
+1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
 
 1. Configure the required roles and permissions to complete this task. You will need [Cloud SQL > Client](https://cloud.google.com/sql/docs/postgres/roles-and-permissions#proxy-roles-permissions) role (`roles/cloudsql.client`) or equivalent IAM permissions to connect to the instance.
 
 1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
 
-1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users), and have the username and password ready.
+1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users) and have the username and password ready.
 
 
 ## Install MCP Toolbox
@@ -56,33 +56,25 @@ description: >
   {{< tabpane persist=header >}}
   {{% tab header="linux/amd64" lang="bash" %}}
     <!-- {x-release-please-start-version} -->
-    ```bash
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/linux/amd64/toolbox
-    ```
     <!-- {x-release-please-end} -->
   {{< /tab >}}
 
   {{% tab header="darwin/arm64" lang="bash" %}}
     <!-- {x-release-please-start-version} -->
-    ```bash
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/arm64/toolbox
-    ```
     <!-- {x-release-please-end} -->
   {{< /tab >}}
 
   {{% tab header="darwin/amd64" lang="bash" %}}
     <!-- {x-release-please-start-version} -->
-    ```bash
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/amd64/toolbox
-    ```
     <!-- {x-release-please-end} -->
   {{< /tab >}}
 
   {{% tab header="windows/amd64" lang="bash" %}}
     <!-- {x-release-please-start-version} -->
-    ```bash
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/windows/amd64/toolbox
-    ```
     <!-- {x-release-please-end} -->
   {{< /tab >}}
   {{< /tabpane >}}
@@ -95,9 +87,9 @@ description: >
 
 3. Verify the installation:
 
-  ```bash
-  ./toolbox --version
-  ```
+    ```bash
+    ./toolbox --version
+    ```
 
 ## Configure and run Toolbox
 
@@ -115,48 +107,49 @@ To configure Toolbox, run the following steps:
 
 1. Set the following environment variables:
 
-  ```bash
-  # The ID of your Google Cloud Project where the Cloud SQL instance is located.
-  export CLOUD_SQL_PROJECT="your-gcp-project-id"
+    ```bash
+    # The ID of your Google Cloud Project where the Cloud SQL instance is located.
+    export CLOUD_SQL_PROJECT="your-gcp-project-id"
 
-  # The region where your Cloud SQL instance is located (e.g., us-central1).
-  export CLOUD_SQL_REGION="your-instance-region"
+    # The region where your Cloud SQL instance is located (e.g., us-central1).
+    export CLOUD_SQL_REGION="your-instance-region"
 
-  # The name of your Cloud SQL instance.
-  export CLOUD_SQL_INSTANCE="your-instance-name"
+    # The name of your Cloud SQL instance.
+    export CLOUD_SQL_INSTANCE="your-instance-name"
 
-  # The name of the database you want to connect to within the instance.
-  export CLOUD_SQL_DB="your-database-name"
+    # The name of the database you want to connect to within the instance.
+    export CLOUD_SQL_DB="your-database-name"
 
-  # The username for connecting to the database.
-  export CLOUD_SQL_USER="your-database-user"
+    # The username for connecting to the database.
+    export CLOUD_SQL_USER="your-database-user"
 
-  # The password for the specified database user.
-  export CLOUD_SQL_PASS="your-database-password"
-  ```
+    # The password for the specified database user.
+    export CLOUD_SQL_PASS="your-database-password"
+    ```
 
 2. Create a `tools.yaml` file (`touch tools.yaml`)
-3. Copy the following contents:
+
+3. Copy and paste the following contents into the `tools.yaml`:
 <!-- TODO: update -->
-  ```yaml
-  sources:
-    my-cloud-sql-pg-source:
-      kind: cloud-sql-postgres
-      project: ${CLOUD_SQL_PROJECT}
-      region: ${CLOUD_SQL_REGION}
-      instance: ${CLOUD_SQL_INSTANCE}
-      database: ${CLOUD_SQL_DB}
-      user: ${CLOUD_SQL_USER}
-      password: ${CLOUD_SQL_PASS}
-  tools:
-    TOOLS GO HERE
-  ```
+    ```yaml
+    sources:
+      my-cloud-sql-pg-source:
+        kind: cloud-sql-postgres
+        project: ${CLOUD_SQL_PROJECT}
+        region: ${CLOUD_SQL_REGION}
+        instance: ${CLOUD_SQL_INSTANCE}
+        database: ${CLOUD_SQL_DB}
+        user: ${CLOUD_SQL_USER}
+        password: ${CLOUD_SQL_PASS}
+    tools:
+      TOOLS GO HERE
+    ```
 
 4. Start Toolbox to listen on `127.0.0.1:5000`:
 
-  ```bash
-  ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
-  ```
+    ```bash
+    ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
+    ```
 
 5. When you are done, use `ctrl+c` to send the terminate signal to Toolbox.
 
@@ -164,8 +157,9 @@ To configure Toolbox, run the following steps:
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
-1. Create a `.mcp.json` file in your project root if it doesn't exist.
-2. Add the following configuration and save:
+1. Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+2. Create a `.mcp.json` file in your project root if it doesn't exist.
+3. Add the following configuration and save:
 
     ```json
     {
@@ -178,7 +172,7 @@ To configure Toolbox, run the following steps:
     }
     ```
 
-3. Restart [Claude code](https://claude.ai/code) to apply the new configuration.
+4. Restart Claude code to apply the new configuration.
 {{< /tab >}}
 
 {{% tab header="Claude desktop" lang="en" %}}
