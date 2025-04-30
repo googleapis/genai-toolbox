@@ -47,37 +47,37 @@ description: >
 
 1. Download the latest version of Toolbox as a binary:
 
-  {{< notice tip >}}
-  Select the
-  [correct binary](https://github.com/googleapis/genai-toolbox/releases)
-  corresponding to your OS and CPU architecture.
-  {{< /notice >}}
+    {{< notice tip >}}
+    Select the
+    [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+    corresponding to your OS and CPU architecture.
+    {{< /notice >}}
 
-  {{< tabpane persist=header >}}
-  {{% tab header="linux/amd64" lang="bash" %}}
-    <!-- {x-release-please-start-version} -->
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/linux/amd64/toolbox
-    <!-- {x-release-please-end} -->
-  {{< /tab >}}
+    {{< tabpane persist=header >}}
+    {{% tab header="linux/amd64" lang="bash" %}}
+      <!-- {x-release-please-start-version} -->
+      curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/linux/amd64/toolbox
+      <!-- {x-release-please-end} -->
+    {{< /tab >}}
 
-  {{% tab header="darwin/arm64" lang="bash" %}}
-    <!-- {x-release-please-start-version} -->
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/arm64/toolbox
-    <!-- {x-release-please-end} -->
-  {{< /tab >}}
+    {{% tab header="darwin/arm64" lang="bash" %}}
+      <!-- {x-release-please-start-version} -->
+      curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/arm64/toolbox
+      <!-- {x-release-please-end} -->
+    {{< /tab >}}
 
-  {{% tab header="darwin/amd64" lang="bash" %}}
-    <!-- {x-release-please-start-version} -->
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/amd64/toolbox
-    <!-- {x-release-please-end} -->
-  {{< /tab >}}
+    {{% tab header="darwin/amd64" lang="bash" %}}
+      <!-- {x-release-please-start-version} -->
+      curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/amd64/toolbox
+      <!-- {x-release-please-end} -->
+    {{< /tab >}}
 
-  {{% tab header="windows/amd64" lang="bash" %}}
-    <!-- {x-release-please-start-version} -->
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/windows/amd64/toolbox
-    <!-- {x-release-please-end} -->
-  {{< /tab >}}
-  {{< /tabpane >}}
+    {{% tab header="windows/amd64" lang="bash" %}}
+      <!-- {x-release-please-start-version} -->
+      curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/windows/amd64/toolbox
+      <!-- {x-release-please-end} -->
+    {{< /tab >}}
+    {{< /tabpane >}}
 
 1. Make the binary executable:
 
@@ -130,7 +130,7 @@ To configure Toolbox, run the following steps:
 2. Create a `tools.yaml` file (`touch tools.yaml`)
 
 3. Copy and paste the following contents into the `tools.yaml`:
-<!-- TODO: update -->
+
     ```yaml
     sources:
       my-cloud-sql-pg-source:
@@ -142,7 +142,7 @@ To configure Toolbox, run the following steps:
         user: ${CLOUD_SQL_USER}
         password: ${CLOUD_SQL_PASS}
     tools:
-      TOOLS GO HERE
+      TODO - TOOLS GO HERE
     ```
 
 4. Start Toolbox to listen on `127.0.0.1:5000`:
@@ -151,7 +151,9 @@ To configure Toolbox, run the following steps:
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
 
-5. When you are done, use `ctrl+c` to send the terminate signal to Toolbox.
+{{< notice tip >}}
+To stop the Toolbox server when you're finished, press `ctrl+c` to send the terminate signal.
+{{< /notice >}}
 
 ## Configure your MCP Client
 {{< tabpane text=true >}}
