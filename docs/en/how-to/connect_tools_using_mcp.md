@@ -45,46 +45,26 @@ description: >
 
 ## Install MCP Toolbox
 
-1. Download the latest version of Toolbox as a binary:
-    {{< notice tip >}}
-    Select the
-    [correct binary](https://github.com/googleapis/genai-toolbox/releases)
-    corresponding to your OS and CPU architecture.
-    {{< /notice >}}
-
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture:
+    <!-- {x-release-please-start-version} -->
     {{< tabpane persist=header >}}
-    {{% tab header="linux/amd64" %}}
-    <!-- {x-release-please-start-version} -->
-    ```bash
+    {{< tab header="linux/amd64" lang="bash" >}}
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/linux/amd64/toolbox
-    ```
-    <!-- {x-release-please-end} -->
     {{< /tab >}}
 
-    {{% tab header="darwin/arm64" %}}
-    <!-- {x-release-please-start-version} -->
-    ```bash
+    {{< tab header="darwin/arm64" lang="bash" >}}
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/arm64/toolbox
-    ```
-    <!-- {x-release-please-end} -->
     {{< /tab >}}
 
-    {{% tab header="darwin/amd64" %}}
-    <!-- {x-release-please-start-version} -->
-    ```bash
+    {{< tab header="darwin/amd64" lang="bash" >}}
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/darwin/amd64/toolbox
-    ```
-    <!-- {x-release-please-end} -->
     {{< /tab >}}
 
-    {{% tab header="windows/amd64"  %}}
-    <!-- {x-release-please-start-version} -->
-    ```bash
+    {{< tab header="windows/amd64" lang="bash" >}}
     curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/windows/amd64/toolbox
-    ```
-    <!-- {x-release-please-end} -->
     {{< /tab >}}
     {{< /tabpane >}}
+    <!-- {x-release-please-end} -->
 
 
 1. Make the binary executable:
