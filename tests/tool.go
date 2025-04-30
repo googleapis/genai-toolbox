@@ -26,9 +26,6 @@ import (
 	"strings"
 	"testing"
 
-	"cloud.google.com/go/spanner"
-	database "cloud.google.com/go/spanner/admin/database/apiv1"
-	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -114,54 +111,6 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 	return func(t *testing.T) {
 		// tear down test
 		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
-
-// SetupSpannerTable creates and inserts data into a table of tool
-// compatible with spanner-sql tool
-func SetupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, create_statement, insert_statement, tableName, dbString string, params map[string]any) func(*testing.T) {
-
-	// Create table
-	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
-		Database:   dbString,
-		Statements: []string{create_statement},
-	})
-	if err != nil {
-		t.Fatalf("unable to start create table operation %s: %s", tableName, err)
-	}
-	err = op.Wait(ctx)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = dataClient.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		stmt := spanner.Statement{
-			SQL:    insert_statement,
-			Params: params,
-		}
-		_, err := txn.Update(ctx, stmt)
-		return err
-	})
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
-			Database:   dbString,
-			Statements: []string{fmt.Sprintf("DROP TABLE %s", tableName)},
-		})
-		if err != nil {
-			t.Errorf("unable to start drop table operation: %s", err)
-			return
-		}
-
-		err = op.Wait(ctx)
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
