@@ -17,6 +17,7 @@ name: "docs"
 permissions:
   contents: write
   pull-requests: write
+  
 
 # This Workflow depends on 'github.event.number',
 # not compatible with branch or manual triggers.
@@ -26,10 +27,20 @@ on:
     paths:
       - 'docs/**'
       - 'github/workflows/docs**'
-      - '.hugo/**'
+      - '.hugo'
+  pull_request_target:
+    types: [labeled]
+    paths:
+      - 'docs/**'
+      - 'github/workflows/docs**'
+      - '.hugo'
 
 jobs:
   preview:
+    # run job on proper workflow event triggers (skip job for pull_request event
+    # from forks and only run pull_request_target for "docs: deploy preview"
+    # label)
+    if: "${{ (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) || github.event.label.name == 'docs: deploy preview' }}"
     runs-on: ubuntu-24.04
     defaults:
       run:
