@@ -30,6 +30,8 @@ import (
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	dgraphsrc "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	memorystoreredissrc "github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
+	memorystorevalkeysrc "github.com/googleapis/genai-toolbox/internal/sources/memorystorevalkey"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	mysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	neo4jsrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
@@ -47,6 +49,7 @@ import (
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	"github.com/googleapis/genai-toolbox/internal/tools/redis"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -246,6 +249,18 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
+		case memorystoreredissrc.SourceKind:
+			actual := memorystoreredissrc.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case memorystorevalkeysrc.SourceKind:
+			actual := memorystorevalkeysrc.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", kind)
 		}
@@ -400,6 +415,12 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			(*c)[name] = actual
 		case postgresexecutesql.ToolKind:
 			actual := postgresexecutesql.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case redis.ToolKind:
+			actual := redis.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
