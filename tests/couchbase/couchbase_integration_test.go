@@ -163,7 +163,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Fatalf("failed to create collection: %v", err)
 	}
-	time.Sleep(10 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Get a reference to the collection
 	collection := bucket.Scope(scopeName).Collection(collectionName)
