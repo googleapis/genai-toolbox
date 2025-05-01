@@ -49,7 +49,7 @@ type Config struct {
 }
 
 func DefaultConfig(name string) Config {
-	return Config{Name: name, QueryScanConsistency: 2}
+	return Config{Name: name}
 }
 
 func (r Config) SourceConfigKind() string {
