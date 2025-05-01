@@ -18,7 +18,6 @@ permissions:
   contents: write
   pull-requests: write
   
-
 # This Workflow depends on 'github.event.number',
 # not compatible with branch or manual triggers.
 on:
