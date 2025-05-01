@@ -152,7 +152,6 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunPgExecuteSqlToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunMCPToolCallMethod(t, fail_invocation_want)
 }
 
 // Test connection with different IP type

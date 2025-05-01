@@ -165,7 +165,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	select1Want, failInvocationWant := tests.GetPostgresWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
-    tests.RunPgExecuteSqlToolInvokeTest(t, select1Want)
+	tests.RunPgExecuteSqlToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
