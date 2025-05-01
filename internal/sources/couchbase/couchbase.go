@@ -48,10 +48,6 @@ type Config struct {
 	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
 }
 
-func DefaultConfig(name string) Config {
-	return Config{Name: name}
-}
-
 func (r Config) SourceConfigKind() string {
 	return SourceKind
 }
