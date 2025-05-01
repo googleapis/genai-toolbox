@@ -51,7 +51,6 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 					Password:             "password",
 					Bucket:               "travel-sample",
 					Scope:                "inventory",
-					QueryScanConsistency: 2,
 				},
 			},
 		},

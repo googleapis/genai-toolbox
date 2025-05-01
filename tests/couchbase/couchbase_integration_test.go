@@ -167,6 +167,18 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 		t.Fatalf("failed to create collection: %v", err)
 	}
 
+	// Create primary index if it doesn't exist
+	primaryIndexQuery := fmt.Sprintf("CREATE PRIMARY INDEX IF NOT EXISTS ON `%s`.`%s`.`%s`", bucketName, scopeName, collectionName)
+	_, err = cluster.Query(primaryIndexQuery, &gocb.QueryOptions{ScanConsistency: gocb.QueryScanConsistencyRequestPlus})
+	if err != nil {
+		// Don't fatal if primary index already exists, log instead
+		if !strings.Contains(err.Error(), "already exist") {
+			t.Fatalf("failed to create primary index: %v", err)
+		} else {
+			t.Logf("Primary index may already exist: %v", err)
+		}
+	}
+
 	// Get a reference to the collection
 	collection := bucket.Scope(scopeName).Collection(collectionName)
 
