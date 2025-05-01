@@ -164,17 +164,18 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 		t.Fatalf("failed to create collection: %v", err)
 	}
 
+	// Get a reference to the collection
+	collection := bucket.Scope(scopeName).Collection(collectionName)
+
 	// Create primary index if it doesn't exist
-	err = bucket.Scope(scopeName).Collection(collectionName).QueryIndexes().CreatePrimaryIndex(
+	err = collection.QueryIndexes().CreatePrimaryIndex(
 		&gocb.CreatePrimaryQueryIndexOptions{
 			IgnoreIfExists: true,
+			RetryStrategy:  gocb.NewBestEffortRetryStrategy(nil),
 		})
 	if err != nil {
 		t.Fatalf("failed to create primary index collection: %v", err)
 	}
-
-	// Get a reference to the collection
-	collection := bucket.Scope(scopeName).Collection(collectionName)
 
 	// Insert test documents
 	for i, param := range params {
