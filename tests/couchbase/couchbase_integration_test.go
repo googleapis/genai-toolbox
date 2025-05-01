@@ -152,31 +152,25 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 
 	// Create scope if it doesn't exist
-	bucketMgr := bucket.Collections()
+	bucketMgr := bucket.CollectionsV2()
 	err = bucketMgr.CreateScope(scopeName, nil)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Logf("failed to create scope (might already exist): %v", err)
 	}
 
-	// Create collection if it doesn't exist
-	err = bucketMgr.CreateCollection(gocb.CollectionSpec{
-		Name:      collectionName,
-		ScopeName: scopeName,
-	}, nil)
+	// Create a collection if it doesn't exist
+	err = bucketMgr.CreateCollection(scopeName, collectionName, nil, nil)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Fatalf("failed to create collection: %v", err)
 	}
 
 	// Create primary index if it doesn't exist
-	primaryIndexQuery := fmt.Sprintf("CREATE PRIMARY INDEX IF NOT EXISTS ON `%s`.`%s`.`%s`", bucketName, scopeName, collectionName)
-	_, err = cluster.Query(primaryIndexQuery, &gocb.QueryOptions{ScanConsistency: gocb.QueryScanConsistencyRequestPlus})
+	err = bucket.Scope(scopeName).Collection(collectionName).QueryIndexes().CreatePrimaryIndex(
+		&gocb.CreatePrimaryQueryIndexOptions{
+			IgnoreIfExists: true,
+		})
 	if err != nil {
-		// Don't fatal if primary index already exists, log instead
-		if !strings.Contains(err.Error(), "already exist") {
-			t.Fatalf("failed to create primary index: %v", err)
-		} else {
-			t.Logf("Primary index may already exist: %v", err)
-		}
+		t.Fatalf("failed to create primary index collection: %v", err)
 	}
 
 	// Get a reference to the collection
@@ -185,7 +179,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	// Insert test documents
 	for i, param := range params {
 		_, err = collection.Upsert(fmt.Sprintf("%d", i+1), param, &gocb.UpsertOptions{
-			DurabilityLevel: gocb.DurabilityLevelMajorityAndPersistOnMaster,
+			DurabilityLevel: gocb.DurabilityLevelMajority,
 		})
 		if err != nil {
 			t.Fatalf("failed to insert test data: %v", err)
@@ -195,10 +189,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	// Return a cleanup function
 	return func(t *testing.T) {
 		// Drop the collection
-		err := bucketMgr.DropCollection(gocb.CollectionSpec{
-			Name:      collectionName,
-			ScopeName: scopeName,
-		}, nil)
+		err := bucketMgr.DropCollection(scopeName, collectionName, nil)
 		if err != nil {
 			t.Logf("failed to drop collection: %v", err)
 		}
