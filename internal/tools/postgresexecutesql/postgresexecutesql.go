@@ -105,7 +105,10 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
-	sql, _ := sliceParams[0].(string)
+	sql, ok := sliceParams[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+	}
 
 	results, err := t.Pool.Query(ctx, sql)
 	if err != nil {
