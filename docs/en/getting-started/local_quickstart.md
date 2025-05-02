@@ -37,13 +37,15 @@ access by our agent, and create a database user for Toolbox to connect with.
     Here, `postgres` denotes the default postgres superuser.
 
     {{< notice info >}}
-### Having trouble connecting?
+#### **Having trouble connecting?**
 
 * **Password Prompt:** If you are prompted for a password for the `postgres` user and do not know it (or a blank password doesn't work), your PostgreSQL installation might require a password or a different authentication method.
 * **`FATAL: role "postgres" does not exist`:** This error means the default `postgres` superuser role isn't available under that name on your system.
 * **`Connection refused`:** Ensure your PostgreSQL server is actually running. You can typically check with `sudo systemctl status postgresql` and start it with `sudo systemctl start postgresql` on Linux systems.
 
-### Common Solution
+<br/>
+
+#### **Common Solution**
 
 For password issues or if the `postgres` role seems inaccessible directly, try switching to the `postgres` operating system user first. This user often has permission to connect without a password for local connections (this is called peer authentication).
 ```bash
@@ -53,12 +55,6 @@ psql
 Once you are in the `psql` shell using this method, you can proceed with the database creation steps below. Afterwards, type `\q` to exit `psql`, and then `exit` to return to your normal user shell.
 
 If desired, once connected to `psql` as the `postgres` OS user, you can set a password for the `postgres` *database* user using: `ALTER USER postgres WITH PASSWORD 'your_chosen_password';`. This would allow direct connection with `-U postgres` and a password next time.
-    {{< /notice >}}
-
-    {{< notice tip >}}
-To enable direct password login for `postgres` next time, set a password in `psql`:
-`ALTER USER postgres WITH PASSWORD 'your_chosen_password';`
-
     {{< /notice >}}
 
 1. Create a new database and a new user:
