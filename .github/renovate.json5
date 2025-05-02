@@ -1,7 +1,7 @@
 {
   extends: [
     'config:recommended',
-    ':semanticCommits',
+    ':semanticCommitTypeAll(chore)',
     ':ignoreUnstable',
     ':separateMajorReleases',
     ':prConcurrentLimitNone',
@@ -19,7 +19,6 @@
   packageRules: [
     {
       groupName: 'GitHub Actions',
-      commitMessagePrefix: 'chore(deps):',
       matchManagers: [
         'github-actions',
       ],
