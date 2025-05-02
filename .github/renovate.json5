@@ -19,6 +19,7 @@
   packageRules: [
     {
       groupName: 'GitHub Actions',
+      commitMessagePrefix: 'chore(deps):',
       matchManagers: [
         'github-actions',
       ],
