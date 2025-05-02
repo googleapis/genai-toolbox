@@ -37,13 +37,13 @@ access by our agent, and create a database user for Toolbox to connect with.
     Here, `postgres` denotes the default postgres superuser.
 
     {{< notice info >}}
-#### Having trouble connecting?
+### Having trouble connecting?
 
 * **Password Prompt:** If you are prompted for a password for the `postgres` user and do not know it (or a blank password doesn't work), your PostgreSQL installation might require a password or a different authentication method.
 * **`FATAL: role "postgres" does not exist`:** This error means the default `postgres` superuser role isn't available under that name on your system.
 * **`Connection refused`:** Ensure your PostgreSQL server is actually running. You can typically check with `sudo systemctl status postgresql` and start it with `sudo systemctl start postgresql` on Linux systems.
 
-#### Common Solution
+### Common Solution
 
 For password issues or if the `postgres` role seems inaccessible directly, try switching to the `postgres` operating system user first. This user often has permission to connect without a password for local connections (this is called peer authentication).
 ```bash
