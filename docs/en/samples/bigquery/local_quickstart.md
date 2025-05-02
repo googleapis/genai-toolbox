@@ -278,6 +278,9 @@ pip install langgraph langchain-google-vertexai
 pip install llama-index-llms-google-genai
 # pip install llama-index-llms-anthropic
 {{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+pip install langchain toolbox-langchain
+{{< /tab >}}
 {{< /tabpane >}}
     
 1. Create a new file named `hotel_agent.py` and copy the following
@@ -441,7 +444,7 @@ session_service = InMemorySessionService()
 artifacts_service = InMemoryArtifactService()
 # Create a new session for the interaction.
 session = session_service.create_session(
-    state={}, app_name='hotel_agent', user_id='user_123'
+    state={}, app_name='hotel_agent', user_id='123'
 )
 
 runner = Runner(

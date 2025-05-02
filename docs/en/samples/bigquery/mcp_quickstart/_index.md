@@ -202,10 +202,10 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
 
 1. Click Connect.
 
-    ![inspector](../../getting-started/mcp_quickstart/inspector.png) 
+    ![inspector](./inspector.png)
 
 1. Select `List Tools`, you will see a list of tools configured in `tools.yaml`.
 
-    ![inspector_tools](../../getting-started/mcp_quickstart/inspector_tools.png) 
+    ![inspector_tools](./inspector_tools.png)
 
 1. Test out your tools here!
