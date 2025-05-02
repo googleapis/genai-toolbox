@@ -163,7 +163,6 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Fatalf("failed to create collection: %v", err)
 	}
-	time.Sleep(1 * time.Second)
 
 	// Get a reference to the collection
 	collection := bucket.Scope(scopeName).Collection(collectionName)
@@ -171,15 +170,16 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	// Create primary index if it doesn't exist
 	// Create primary index with retry logic
 	maxRetries := 5
-	retryDelay := 1 * time.Second
+	retryDelay := 50 * time.Millisecond
+	actualRetries := 0
 	var lastErr error
-
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		err = collection.QueryIndexes().CreatePrimaryIndex(
 			&gocb.CreatePrimaryQueryIndexOptions{
 				IgnoreIfExists: true,
 			})
 		if err == nil {
+			lastErr = err // clear previous error
 			break
 		}
 
@@ -188,10 +188,11 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 		time.Sleep(retryDelay)
 		// Exponential backoff
 		retryDelay *= 2
+		actualRetries += 1
 	}
 
 	if lastErr != nil {
-		t.Fatalf("failed to create primary index collection after %d attempts: %v", maxRetries, lastErr)
+		t.Fatalf("failed to create primary index collection after %d attempts: %v", actualRetries, lastErr)
 	}
 
 	// Insert test documents
