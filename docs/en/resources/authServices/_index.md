@@ -51,7 +51,7 @@ configuration for each tool that should use it:
 
 - **Authorized Invocations** for authorizing a tool call, [use the
   `authRequired` field in a tool config][auth-invoke]
-- **Authenticated Parameters** for using the value from a ODIC claim, [use the
+- **Authenticated Parameters** for using the value from a OIDC claim, [use the
   `authServices` field in a parameter config][auth-params]
 
 ## Specifying ID Tokens from Clients
