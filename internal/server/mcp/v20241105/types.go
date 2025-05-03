@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mcp
+package v20241105
 
 import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -21,8 +21,8 @@ import (
 // SERVER_NAME is the server name used in Implementation.
 const SERVER_NAME = "Toolbox"
 
-// LATEST_PROTOCOL_VERSION is the most recent version of the MCP protocol.
-const LATEST_PROTOCOL_VERSION = "2024-11-05"
+// PROTOCOL_VERSION is the version of the MCP protocol in this package.
+const PROTOCOL_VERSION = "2024-11-05"
 
 // JSONRPC_VERSION is the version of JSON-RPC used by MCP.
 const JSONRPC_VERSION = "2.0"
