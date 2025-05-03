@@ -11,7 +11,7 @@ can primarily be used by [Tools](../tools) in two different ways:
 
 - [**Authorized Invocation**][auth-invoke] is when a tool
   is validated by the auth service before the call can be invoked. Toolbox
-  will reject an calls that fail to validate or have an invalid token.
+  will reject any calls that fail to validate or have an invalid token.
 - [**Authenticated Parameters**][auth-params] replace the value of a parameter
   with a field from an [OIDC][openid-claims] claim. Toolbox will automatically
   resolve the ID token provided by the client and replace the parameter in the
