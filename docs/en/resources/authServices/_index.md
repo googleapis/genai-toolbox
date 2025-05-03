@@ -50,7 +50,7 @@ After you've configured an `authService` you'll, need to reference it in the
 configuration for each tool that should use it:
 
 - **Authorized Invocations** for authorizing a tool call, [use the
-  `requiredAuth` field in a tool config][auth-invoke]
+  `authRequired` field in a tool config][auth-invoke]
 - **Authenticated Parameters** for using the value from a ODIC claim, [use the
   `authServices` field in a parameter config][auth-params]
 
