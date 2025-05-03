@@ -92,7 +92,7 @@ go install github.com/googleapis/genai-toolbox@v0.4.0
 execute `toolbox` to start the server:
 
 ```sh
-./toolbox --tools_file "tools.yaml"
+./toolbox --tools-file "tools.yaml"
 ```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
