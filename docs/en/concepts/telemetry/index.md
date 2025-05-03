@@ -28,7 +28,7 @@ The following flags can be used to customize Toolbox logging:
 
 __Example:__
 ```bash
-./toolbox --tools_file "tools.yaml" --log-level warn --logging-format json
+./toolbox --tools-file "tools.yaml" --log-level warn --logging-format json
 ```
 
 ### Level
