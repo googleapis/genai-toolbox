@@ -3,13 +3,13 @@ title: "mysql-sql"
 type: docs
 weight: 1
 description: > 
-  A "mysql-sql" tool executes a pre-defined SQL statement against a SQL Server
+  A "mysql-sql" tool executes a pre-defined SQL statement against a MySQL
   database.
 ---
 
 ## About
 
-A `mysql-sql` tool executes a pre-defined SQL statement against a mysql
+A `mysql-sql` tool executes a pre-defined SQL statement against a MySQL
 database. It's compatible with any of the following sources:
 
 - [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
