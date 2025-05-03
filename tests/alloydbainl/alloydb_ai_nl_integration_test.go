@@ -27,7 +27,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -333,7 +332,7 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 	invokeTcs := []struct {
 		name          string
 		api           string
-		requestBody   mcp.JSONRPCRequest
+		requestBody   map[string]any
 		requestHeader map[string]string
 		want          string
 	}{
@@ -341,13 +340,11 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 			name:          "MCP Invoke my-simple-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "my-simple-tool",
-				Request: mcp.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
+			requestBody: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "my-simple-tool",
+				"method":  "tools/call",
+				"params": map[string]any{
 					"name": "my-simple-tool",
 					"arguments": map[string]any{
 						"question": "return 1",
@@ -360,13 +357,11 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 			name:          "MCP Invoke invalid tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invalid-tool",
-				Request: mcp.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
+			requestBody: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "invalid-tool",
+				"method":  "tools/call",
+				"params": map[string]any{
 					"name":      "foo",
 					"arguments": map[string]any{},
 				},
@@ -377,13 +372,11 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 			name:          "MCP Invoke my-auth-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-without-parameter",
-				Request: mcp.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
+			requestBody: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "invoke-without-parameter",
+				"method":  "tools/call",
+				"params": map[string]any{
 					"name":      "my-auth-tool",
 					"arguments": map[string]any{},
 				},

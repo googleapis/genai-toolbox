@@ -23,8 +23,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 )
 
 const jsonrpcVersion = "2.0"
@@ -70,18 +68,16 @@ func TestMcpEndpoint(t *testing.T) {
 		name  string
 		url   string
 		isErr bool
-		body  mcp.JSONRPCRequest
+		body  map[string]any
 		want  map[string]any
 	}{
 		{
 			name: "initialize",
 			url:  "/",
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "mcp-initialize",
-				Request: mcp.Request{
-					Method: "initialize",
-				},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "mcp-initialize",
+				"method":  "initialize",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
@@ -98,22 +94,18 @@ func TestMcpEndpoint(t *testing.T) {
 		{
 			name: "basic notification",
 			url:  "/",
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Request: mcp.Request{
-					Method: "notification",
-				},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"method":  "notification",
 			},
 		},
 		{
 			name: "tools/list",
 			url:  "/",
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "tools-list",
-				Request: mcp.Request{
-					Method: "tools/list",
-				},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "tools-list",
+				"method":  "tools/list",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
@@ -140,12 +132,10 @@ func TestMcpEndpoint(t *testing.T) {
 		{
 			name: "tools/list on tool1_only",
 			url:  "/tool1_only",
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "tools-list-tool1",
-				Request: mcp.Request{
-					Method: "tools/list",
-				},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "tools-list-tool1",
+				"method":  "tools/list",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
@@ -164,12 +154,10 @@ func TestMcpEndpoint(t *testing.T) {
 			name:  "tools/list on invalid tool set",
 			url:   "/foo",
 			isErr: true,
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "tools-list-invalid-toolset",
-				Request: mcp.Request{
-					Method: "tools/list",
-				},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "tools-list-invalid-toolset",
+				"method":  "tools/list",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
@@ -184,10 +172,9 @@ func TestMcpEndpoint(t *testing.T) {
 			name:  "missing method",
 			url:   "/",
 			isErr: true,
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "missing-method",
-				Request: mcp.Request{},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "missing-method",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
@@ -202,12 +189,10 @@ func TestMcpEndpoint(t *testing.T) {
 			name:  "invalid method",
 			url:   "/",
 			isErr: true,
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "invalid-method",
-				Request: mcp.Request{
-					Method: "foo",
-				},
+			body: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "invalid-method",
+				"method":  "foo",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",
@@ -222,12 +207,10 @@ func TestMcpEndpoint(t *testing.T) {
 			name:  "invalid jsonrpc version",
 			url:   "/",
 			isErr: true,
-			body: mcp.JSONRPCRequest{
-				Jsonrpc: "1.0",
-				Id:      "invalid-jsonrpc-version",
-				Request: mcp.Request{
-					Method: "foo",
-				},
+			body: map[string]any{
+				"jsonrpc": "1.0",
+				"id":      "invalid-jsonrpc-version",
+				"method":  "foo",
 			},
 			want: map[string]any{
 				"jsonrpc": "2.0",

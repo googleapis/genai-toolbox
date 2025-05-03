@@ -177,6 +177,8 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
 	r = r.WithContext(ctx)
 
+	mcpProtocolVersion := "2024-11-05"
+
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
@@ -210,20 +212,20 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		// Generate a new uuid if unable to decode
 		id = uuid.New().String()
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, mcp.NewJSONRPCError(mcpProtocolVersion, id, mcp.PARSE_ERROR, err.Error(), nil))
 	}
 
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage struct {
-		Jsonrpc string        `json:"jsonrpc"`
-		Method  string        `json:"method"`
-		Id      mcp.RequestId `json:"id,omitempty"`
+		Jsonrpc string `json:"jsonrpc"`
+		Method  string `json:"method"`
+		Id      any    `json:"id,omitempty"`
 	}
 	if err = decodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		id = uuid.New().String()
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, mcp.NewJSONRPCError(mcpProtocolVersion, id, mcp.PARSE_ERROR, err.Error(), nil))
 		return
 	}
 
@@ -231,7 +233,7 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if baseMessage.Method == "" {
 		err = fmt.Errorf("method not found")
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil))
+		render.JSON(w, r, mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil))
 		return
 	}
 
@@ -239,81 +241,55 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if baseMessage.Jsonrpc != mcp.JSONRPC_VERSION {
 		err = fmt.Errorf("invalid json-rpc version")
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil))
+		render.JSON(w, r, mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil))
 		return
 	}
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
-		id = ""
-		var notification mcp.JSONRPCNotification
-		if err = json.Unmarshal(body, &notification); err != nil {
-			err = fmt.Errorf("invalid notification request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
+		if errRes := mcp.ProcessNotifications(body, mcpProtocolVersion); errRes != nil {
+			errResMarshal, _ := json.Marshal(errRes)
+			s.logger.DebugContext(ctx, fmt.Sprintf("response: %s", errResMarshal))
+			render.JSON(w, r, errResMarshal)
 		}
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
-	id = fmt.Sprintf("%s", baseMessage.Id)
+	id = fmt.Sprintf("%v", baseMessage.Id)
 	method = baseMessage.Method
 	s.logger.DebugContext(ctx, fmt.Sprintf("method is: %s", method))
 
-	var res mcp.JSONRPCMessage
+	var res any
 	switch baseMessage.Method {
 	case "initialize":
-		var req mcp.InitializeRequest
-		if err = json.Unmarshal(body, &req); err != nil {
-			err = fmt.Errorf("invalid mcp initialize request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
-			break
-		}
-		result := mcp.Initialize(s.version)
-		res = mcp.JSONRPCResponse{
-			Jsonrpc: mcp.JSONRPC_VERSION,
-			Id:      baseMessage.Id,
-			Result:  result,
-		}
+		res = mcp.NewInitializeResponse(mcpProtocolVersion, baseMessage.Id, body, s.version)
 	case "tools/list":
-		var req mcp.ListToolsRequest
-		if err = json.Unmarshal(body, &req); err != nil {
-			err = fmt.Errorf("invalid mcp tools list request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
+		if res = mcp.GetToolsListParam(mcpProtocolVersion, baseMessage.Id, body); res != nil {
 			break
 		}
+
 		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
+			res = mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
-		result := mcp.ToolsList(toolset)
-		res = mcp.JSONRPCResponse{
-			Jsonrpc: mcp.JSONRPC_VERSION,
-			Id:      baseMessage.Id,
-			Result:  result,
-		}
+
+		mcpManifest := toolset.McpManifest
+		res = mcp.NewToolsListResponse(mcpProtocolVersion, baseMessage.Id, mcpManifest)
 	case "tools/call":
-		var req mcp.CallToolRequest
-		if err = json.Unmarshal(body, &req); err != nil {
-			err = fmt.Errorf("invalid mcp tools call request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
+		var toolArgument map[string]any
+		toolName, toolArgument, res = mcp.GetToolParam(mcpProtocolVersion, baseMessage.Id, body)
+		if res != nil {
 			break
 		}
-		toolName = req.Params.Name
-		toolArgument := req.Params.Arguments
 		s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 		tool, ok := s.tools[toolName]
 		if !ok {
 			err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
+			res = mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
 			break
 		}
 
@@ -321,15 +297,13 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		aMarshal, err := json.Marshal(toolArgument)
 		if err != nil {
 			err = fmt.Errorf("unable to marshal tools argument: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
+			res = mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
 			break
 		}
 		var data map[string]any
 		if err = decodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
 			err = fmt.Errorf("unable to decode tools argument: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
+			res = mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
 			break
 		}
 
@@ -340,23 +314,19 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		params, err := tool.ParseParams(data, claimsFromAuth)
 		if err != nil {
 			err = fmt.Errorf("provided parameters were invalid: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
+			res = mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
 			break
 		}
 		s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-		result := mcp.ToolCall(ctx, tool, params)
-		res = mcp.JSONRPCResponse{
-			Jsonrpc: mcp.JSONRPC_VERSION,
-			Id:      baseMessage.Id,
-			Result:  result,
-		}
+		results, err := tool.Invoke(ctx, params)
+		res = mcp.NewToolsCallResponse(mcpProtocolVersion, baseMessage.Id, results, err)
 	default:
 		err = fmt.Errorf("invalid method %s", baseMessage.Method)
-		s.logger.DebugContext(ctx, err.Error())
-		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil)
+		res = mcp.NewJSONRPCError(mcpProtocolVersion, baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil)
 	}
+	resMarshal, _ := json.Marshal(res)
+	s.logger.DebugContext(ctx, fmt.Sprintf("response: %s", resMarshal))
 
 	// retrieve sse session
 	sessionId := r.URL.Query().Get("sessionId")
@@ -365,9 +335,8 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		s.logger.DebugContext(ctx, "sse session not available")
 	} else {
 		// queue sse event
-		eventData, _ := json.Marshal(res)
 		select {
-		case session.eventQueue <- fmt.Sprintf("event: message\ndata: %s\n\n", eventData):
+		case session.eventQueue <- fmt.Sprintf("event: message\ndata: %s\n\n", resMarshal):
 			s.logger.DebugContext(ctx, "event queue successful")
 		case <-session.done:
 			s.logger.DebugContext(ctx, "session is close")
@@ -378,17 +347,4 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// send HTTP response
 	render.JSON(w, r, res)
-}
-
-// newJSONRPCError is the response sent back when an error has been encountered in mcp.
-func newJSONRPCError(id mcp.RequestId, code int, message string, data any) mcp.JSONRPCError {
-	return mcp.JSONRPCError{
-		Jsonrpc: mcp.JSONRPC_VERSION,
-		Id:      id,
-		Error: mcp.McpError{
-			Code:    code,
-			Message: message,
-			Data:    data,
-		},
-	}
 }
