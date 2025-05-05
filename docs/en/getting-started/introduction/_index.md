@@ -11,7 +11,7 @@ such as connection pooling, authentication, and more.
 
 
 {{< notice note >}} 
-This product was originally named “Gen AI Toolbox for
+This solution was originally named “Gen AI Toolbox for
 Databases” as its initial development predated MCP, but was renamed to align
 with recently added MCP compatibility. 
 {{< /notice >}}
@@ -92,7 +92,7 @@ go install github.com/googleapis/genai-toolbox@v0.4.0
 execute `toolbox` to start the server:
 
 ```sh
-./toolbox --tools_file "tools.yaml"
+./toolbox --tools-file "tools.yaml"
 ```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a

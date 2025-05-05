@@ -93,7 +93,7 @@ in the list using the items field:
 
 ```yaml
     parameters:
-      - name: preffered_airlines
+      - name: preferred_airlines
         type: array
         description: A list of airline, ordered by preference. 
         items:
