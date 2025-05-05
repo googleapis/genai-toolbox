@@ -119,7 +119,7 @@ go install github.com/googleapis/genai-toolbox@v0.4.0
 execute `toolbox` to start the server:
 
 ```sh
-./toolbox --tools_file "tools.yaml"
+./toolbox --tools-file "tools.yaml"
 ```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
@@ -214,7 +214,7 @@ For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 ## Configuration
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools_file
+have multiple files, you can tell toolbox which to load with the `--tools-file
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
