@@ -332,6 +332,23 @@ steps:
       - -c
       - |
         ./couchbase.test -test.v
+
+  - id: "memorystore-valkey"
+    name : golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "MEMORYSTORE_VALKEY_DATABASE=$_MEMORYSTORE_VALKEY_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["MEMORYSTORE_VALKEY_ADDRESS", "MEMORYSTORE_VALKEY_USER", "MEMORYSTORE_VALKEY_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        ./memorystorevalkey.test -test.v
     
 
 availableSecrets:
@@ -412,3 +429,4 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
+  _MEMORYSTORE_VALKEY_DATABASE: "valkey-db"
