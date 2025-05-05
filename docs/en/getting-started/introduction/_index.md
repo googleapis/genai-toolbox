@@ -11,7 +11,7 @@ such as connection pooling, authentication, and more.
 
 
 {{< notice note >}} 
-This product was originally named “Gen AI Toolbox for
+This solution was originally named “Gen AI Toolbox for
 Databases” as its initial development predated MCP, but was renamed to align
 with recently added MCP compatibility. 
 {{< /notice >}}

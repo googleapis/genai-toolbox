@@ -28,6 +28,7 @@ import (
 	cloudsqlmssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	cloudsqlmysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	couchbasesrc "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	dgraphsrc "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
@@ -40,6 +41,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	couchbasetool "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
@@ -246,6 +248,12 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
 			(*c)[name] = actual
+		case couchbasesrc.SourceKind:
+			actual := couchbasesrc.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
 		default:
 			return fmt.Errorf("%q is not a valid kind of data source", kind)
 		}
@@ -400,6 +408,12 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			(*c)[name] = actual
 		case postgresexecutesql.ToolKind:
 			actual := postgresexecutesql.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case couchbasetool.ToolKind:
+			actual := couchbasetool.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
