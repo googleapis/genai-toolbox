@@ -10,8 +10,8 @@ AuthServices represent services that handle authentication and authorization. It
 can primarily be used by [Tools](../tools) in two different ways:
 
 - [**Authorized Invocation**][auth-invoke] is when a tool
-  to be validate by the auth service before the call can be invoked. Toolbox
-  will rejected an calls that fail to validate or have an invalid token.
+  is validated by the auth service before the call can be invoked. Toolbox
+  will reject any calls that fail to validate or have an invalid token.
 - [**Authenticated Parameters**][auth-params] replace the value of a parameter
   with a field from an [OIDC][openid-claims] claim. Toolbox will automatically
   resolve the ID token provided by the client and replace the parameter in the
@@ -50,8 +50,8 @@ After you've configured an `authService` you'll, need to reference it in the
 configuration for each tool that should use it:
 
 - **Authorized Invocations** for authorizing a tool call, [use the
-  `requiredAuth` field in a tool config][auth-invoke]
-- **Authenticated Parameters** for using the value from a ODIC claim, [use the
+  `authRequired` field in a tool config][auth-invoke]
+- **Authenticated Parameters** for using the value from a OIDC claim, [use the
   `authServices` field in a parameter config][auth-params]
 
 ## Specifying ID Tokens from Clients
