@@ -50,7 +50,7 @@ access by our agent, and create a database user for Toolbox to connect with.
 For password issues or if the `postgres` role seems inaccessible directly, try switching to the `postgres` operating system user first. This user often has permission to connect without a password for local connections (this is called peer authentication).
 ```bash
 sudo -i -u postgres
-psql
+psql -h 127.0.0.1
 ```
 Once you are in the `psql` shell using this method, you can proceed with the database creation steps below. Afterwards, type `\q` to exit `psql`, and then `exit` to return to your normal user shell.
 
