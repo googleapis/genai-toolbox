@@ -249,6 +249,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 
 {{% tab header="Claude desktop" lang="en" %}}
 
+0. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
 1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 2. Under the Developer tab, tap Edit Config to open the configuration file.
 3. Add the following configuration and save:
@@ -257,8 +258,12 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     {
       "mcpServers": {
         "cloud-sql-postgres": {
-          "type": "sse",
-          "url": "http://127.0.0.1:5000/mcp/sse"
+          "command": "npx",
+          "args": [
+            "-y",
+            "mcp-remote",
+            "http://127.0.0.1:5000/mcp/sse"
+          ]
         }
       }
     }
@@ -336,11 +341,11 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     {
       "mcpServers": {
         "cloud-sql-postgres": {
-          "type": "sse",
-          "url": "http://127.0.0.1:5000/mcp/sse"
+          "serverUrl": "http://127.0.0.1:5000/mcp/sse"
         }
       }
     }
+
     ```
 {{< /tab >}}
 {{< /tabpane >}}
