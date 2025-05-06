@@ -16,13 +16,14 @@ package memorystorevalkey
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/valkey-io/valkey-go"
 )
@@ -51,20 +52,35 @@ func getValkeyVars(t *testing.T) map[string]any {
 }
 
 func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
+
+	// Pass in an access token getter fn for IAM auth
+	authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+		token, err := sources.GetIAMAccessToken(ctx)
+		if err != nil {
+			log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
+			return valkey.AuthCredentials{}, err
+		}
+		return valkey.AuthCredentials{
+			Username: "",
+			Password: token,
+		}, nil
+	}
+
 	client, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress: []string{addr},
-		SelectDB:    db,
+		InitAddress:       []string{addr},
+		SelectDB:          db,
+		AuthCredentialsFn: authFn,
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating client: %v", err)
+		log.Fatalf("error creating client: %v", err)
 	}
 
 	// Ping the server to check connectivity (using Do)
 	pingCmd := client.B().Ping().Build()
 	_, err = client.Do(ctx, pingCmd).ToString()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to execute PING command: %v", err)
+		log.Fatalf("Failed to execute PING command: %v", err)
 	}
 	return client, nil
 }

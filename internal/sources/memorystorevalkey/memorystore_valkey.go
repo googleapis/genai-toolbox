@@ -70,7 +70,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		log.Fatalf("error creating client: %v", err)
 	}
 
-	// Ping the server to check connectivity (using Do)
+	// Ping the server to check connectivity\
 	pingCmd := client.B().Ping().Build()
 	_, err = client.Do(ctx, pingCmd).ToString()
 	if err != nil {
