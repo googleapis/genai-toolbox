@@ -1,9 +1,9 @@
 ---
 title: "Deploy using Docker Compose"
 type: docs
-weight: 3
+weight: 4
 description: >
-  How to deploy Toolbox using Docker Compose. 
+  How to deploy Toolbox using Docker Compose.
 ---
 
 <!-- Contributor: Sujith R Pillai <sujithrpillai@gmail.com> -->
@@ -35,7 +35,7 @@ services:
       - "5000:5000"
     volumes:
       - ./config:/config
-    command: [ "toolbox", "--tools_file", "/config/tools.yaml", "--address", "0.0.0.0"]
+    command: [ "toolbox", "--tools-file", "/config/tools.yaml", "--address", "0.0.0.0"]
     depends_on:
       db:
         condition: service_healthy
@@ -75,18 +75,18 @@ networks:
     ```
 
 
-{{< notice tip >}} 
+{{< notice tip >}}
 
 You can use this setup quickly set up Toolbox + Postgres to follow along in our
 [Quickstart](../getting-started/local_quickstart.md)
 
-{{< /notice >}} 
+{{< /notice >}}
 
 
 
 ## Connecting with Toolbox Client SDK
 
-Next, we will use Toolbox with the Client SDKs: 
+Next, we will use Toolbox with the Client SDKs:
 
 1. The url for the Toolbox server running using docker-compose will be:
 

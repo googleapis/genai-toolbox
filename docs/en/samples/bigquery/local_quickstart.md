@@ -230,7 +230,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
 1.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools_file "tools.yaml"
+    ./toolbox --tools-file "tools.yaml"
     ```
 
 ## Step 3: Connect your agent to Toolbox
@@ -369,7 +369,7 @@ async def main():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-1.5-pro",
-        vertexai_config={"project": "project-id", "location": "us-central1"},
+        vertexai_config={"location": "us-central1"},
     )
     # llm = GoogleGenAI(
     #     api_key=os.getenv("GOOGLE_API_KEY"),
