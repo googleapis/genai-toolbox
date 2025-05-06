@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.0](https://github.com/googleapis/genai-toolbox/compare/v0.4.0...v0.5.0) (2025-05-06)
+
+
+### Features
+
+* Add Couchbase as Source and Tool ([#307](https://github.com/googleapis/genai-toolbox/issues/307)) ([d7390b0](https://github.com/googleapis/genai-toolbox/commit/d7390b06b7bcb15411388e9a4dbcfe75afcca1ee))
+* Add postgres-execute-sql tool ([#490](https://github.com/googleapis/genai-toolbox/issues/490)) ([11ea7bc](https://github.com/googleapis/genai-toolbox/commit/11ea7bc584aa4ca8e8b0e7a355f6666ccbea2883))
+
+
+### Bug Fixes
+
+* **deps:** Update module cloud.google.com/go/cloudsqlconn to v1.17.0 ([#500](https://github.com/googleapis/genai-toolbox/issues/500)) ([ad040cf](https://github.com/googleapis/genai-toolbox/commit/ad040cfb8be586b8d6d1c8ea711cf73d79ea6366))
+* **deps:** Update module cloud.google.com/go/spanner to v1.80.0 ([#481](https://github.com/googleapis/genai-toolbox/issues/481)) ([1e1348f](https://github.com/googleapis/genai-toolbox/commit/1e1348f5f080948a10df9f9d416ffb8c06e99f10))
+* **deps:** Update module google.golang.org/api to v0.231.0 ([#505](https://github.com/googleapis/genai-toolbox/issues/505)) ([50ec7f4](https://github.com/googleapis/genai-toolbox/commit/50ec7f4a065042d58714b2757a22a8c6538e4ffc))
+
 ## [0.4.0](https://github.com/googleapis/genai-toolbox/compare/v0.3.0...v0.4.0) (2025-04-23)
 
 
