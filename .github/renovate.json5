@@ -1,7 +1,7 @@
 {
   extends: [
     'config:recommended',
-    ':semanticCommits',
+    ':semanticCommitTypeAll(chore)',
     ':ignoreUnstable',
     ':separateMajorReleases',
     ':prConcurrentLimitNone',

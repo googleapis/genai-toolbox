@@ -119,7 +119,7 @@ section.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools_file=/app/tools.yaml","--address=0.0.0.0","--port=8080"
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080"
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
@@ -131,7 +131,7 @@ section.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools_file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
         # TODO(dev): update the following to match your VPC if necessary 
         --network default \
         --subnet default
