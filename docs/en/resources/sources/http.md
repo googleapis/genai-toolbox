@@ -1,6 +1,6 @@
 ---
-title: "HTTP"
-linkTitle: "HTTP"
+title: 'HTTP'
+linkTitle: 'HTTP'
 type: docs
 weight: 1
 description: >
@@ -37,12 +37,12 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**   |     **type**      | **required** | **description**                                                                                                                   |
-|-------------|:-----------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------|
-| kind        |      string       |     true     | Must be "http".                                                                                                                   |
-| baseUrl     |      string       |     true     | The base URL for the HTTP requests (e.g., `https://api.example.com`).                                                             |
+| **field**   |     **type**      | **required** | **description**                                                                                                                    |
+| ----------- | :---------------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| kind        |      string       |     true     | Must be "http".                                                                                                                    |
+| baseUrl     |      string       |     true     | The base URL for the HTTP requests (e.g., `https://api.example.com`).                                                              |
 | timeout     |      string       |    false     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples). Defaults to 30s. |
-| headers     | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                  |
-| queryParams | map[string]string |    false     | Default query parameters to include in the HTTP requests.                                                                         |
+| headers     | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                   |
+| queryParams | map[string]string |    false     | Default query parameters to include in the HTTP requests.                                                                          |
 
 [parse-duration-doc]: https://pkg.go.dev/time#ParseDuration

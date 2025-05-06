@@ -1,10 +1,9 @@
 ---
-title: "PostgreSQL"
+title: 'PostgreSQL'
 type: docs
 weight: 1
 description: >
   PostgreSQL is a powerful, open source object-relational database.
-
 ---
 
 ## About
@@ -28,13 +27,13 @@ PostgreSQL user][pg-users] to login to the database with.
 
 ```yaml
 sources:
-    my-pg-source:
-        kind: postgres
-        host: 127.0.0.1
-        port: 5432
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+  my-pg-source:
+    kind: postgres
+    host: 127.0.0.1
+    port: 5432
+    database: my_db
+    user: ${USER_NAME}
+    password: ${PASSWORD}
 ```
 
 {{< notice tip >}}
@@ -44,11 +43,11 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "postgres".                                                    |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
-| port      |  string  |     true     | Port to connect to (e.g. "5432")                                       |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
-| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
-| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
+| **field** | **type** | **required** | **description**                                              |
+| --------- | :------: | :----------: | ------------------------------------------------------------ |
+| kind      |  string  |     true     | Must be "postgres".                                          |
+| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                  |
+| port      |  string  |     true     | Port to connect to (e.g. "5432")                             |
+| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").  |
+| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user"). |
+| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").          |

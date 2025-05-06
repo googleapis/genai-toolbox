@@ -14,16 +14,16 @@
 
 name: 🐞 Bug Report
 description: File a report for unexpected or undesired behavior.
-title: "<brief summary of what bug or error was observed>"
-labels: ["type: bug"]
-type: "bug"
+title: '<brief summary of what bug or error was observed>'
+labels: ['type: bug']
+type: 'bug'
 
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your problem.
-  
+
   - id: preamble
     type: checkboxes
     attributes:
@@ -32,7 +32,7 @@ body:
         Please run through the following list and make sure you've tried the usual "quick fixes":
         - Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)
         - Update to the [latest version of Toolbox](https://github.com/googleapis/genai-toolbox/releases)
-      options: 
+      options:
         - label: "I've searched the current open issues"
           required: true
         - label: "I've updated to the latest version of Toolbox"
@@ -45,7 +45,7 @@ body:
         What version of Toolbox are you using (`toolbox --version`)? e.g.
         - toolbox version 0.3.0 
         - us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.3.0
-      placeholder: ex. toolbox version 0.3.0 
+      placeholder: ex. toolbox version 0.3.0
     validations:
       required: true
 
@@ -53,7 +53,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: "Let us know some details about the environment in which you are seeing the bug!"
+      description: 'Let us know some details about the environment in which you are seeing the bug!'
       value: |
         1. OS type and version: (output of `uname -a`)
         2. How are you running Toolbox: 
@@ -64,13 +64,13 @@ body:
   - type: textarea
     id: client
     attributes:
-      label: Client 
-      description: "How are you connecting to Toolbox?"
+      label: Client
+      description: 'How are you connecting to Toolbox?'
       value: |
         1. Client: <name and link to the client are you using>
         2. Version: <what exact version of the client are you using> 
         3. Example: If possible, please include your code of configuration:
-        
+
         ```python
         # Code goes here! 
         ```
@@ -89,7 +89,7 @@ body:
     type: textarea
     attributes:
       label: Current Behavior
-      description: "Please enter a detailed description of the behavior you encountered instead."
+      description: 'Please enter a detailed description of the behavior you encountered instead.'
     validations:
       required: true
 
@@ -101,7 +101,7 @@ body:
         How can we reproduce this bug? Please walk us through it step by step,
         with as much relevant detail as possible. A 'minimal' reproduction is
         preferred, which means removing as much of the examples as possible so
-        only the minimum required to run and reproduce the bug is left. 
+        only the minimum required to run and reproduce the bug is left.
       value: |
         1. ?
         2. ?

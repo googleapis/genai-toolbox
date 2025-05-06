@@ -12,132 +12,132 @@
 # limitations under the License.
 
 steps:
-  - id: "build-docker"
-    name: "gcr.io/cloud-builders/docker"
+  - id: 'build-docker'
+    name: 'gcr.io/cloud-builders/docker'
     waitFor: ['-']
     script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        docker buildx build --build-arg METADATA_TAGS=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$VERSION -t ${_DOCKER_URI}:latest .
+      #!/usr/bin/env bash
+      export VERSION=$(cat ./cmd/version.txt)
+      docker buildx build --build-arg METADATA_TAGS=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$VERSION -t ${_DOCKER_URI}:latest .
 
-  - id: "push-docker"
-    name: "gcr.io/cloud-builders/docker"
+  - id: 'push-docker'
+    name: 'gcr.io/cloud-builders/docker'
     waitFor:
-      - "build-docker"
+      - 'build-docker'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        docker push ${_DOCKER_URI}:$VERSION
-        if [[ $_PUSH_LATEST == 'true' ]]; then
-          docker push ${_DOCKER_URI}:latest
-        fi
+      #!/usr/bin/env bash
+      export VERSION=$(cat ./cmd/version.txt)
+      docker push ${_DOCKER_URI}:$VERSION
+      if [[ $_PUSH_LATEST == 'true' ]]; then
+        docker push ${_DOCKER_URI}:latest
+      fi
 
-  - id: "install-dependencies"
+  - id: 'install-dependencies'
     name: golang:1
     waitFor: ['-']
-    env: 
+    env:
       - 'GOPATH=/gopath'
     volumes:
       - name: 'go'
         path: '/gopath'
     script: |
-        go get -d ./...
+      go get -d ./...
 
-  - id: "build-linux-amd64"
+  - id: 'build-linux-amd64'
     name: golang:1
-    waitFor: 
-      - "install-dependencies"
-    env: 
+    waitFor:
+      - 'install-dependencies'
+    env:
       - 'GOPATH=/gopath'
     volumes:
       - name: 'go'
         path: '/gopath'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.linux.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.linux.amd64
+      #!/usr/bin/env bash
+      export VERSION=$(cat ./cmd/version.txt)
+      CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.linux.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.linux.amd64
 
-  - id: "store-linux-amd64"
-    name: "gcr.io/cloud-builders/gcloud:latest"
+  - id: 'store-linux-amd64'
+    name: 'gcr.io/cloud-builders/gcloud:latest'
     waitFor:
-      - "build-linux-amd64"
+      - 'build-linux-amd64'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      gcloud storage cp toolbox.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
 
-  - id: "build-darwin-arm64"
+  - id: 'build-darwin-arm64'
     name: golang:1
-    waitFor: 
-      - "install-dependencies"
-    env: 
+    waitFor:
+      - 'install-dependencies'
+    env:
       - 'GOPATH=/gopath'
     volumes:
       - name: 'go'
         path: '/gopath'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.arm64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.arm64
+      #!/usr/bin/env bash
+      export VERSION=$(cat ./cmd/version.txt)
+      CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.arm64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.arm64
 
-  - id: "store-darwin-arm64"
-    name: "gcr.io/cloud-builders/gcloud:latest"
+  - id: 'store-darwin-arm64'
+    name: 'gcr.io/cloud-builders/gcloud:latest'
     waitFor:
-      - "build-darwin-arm64"
+      - 'build-darwin-arm64'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
 
-  - id: "build-darwin-amd64"
+  - id: 'build-darwin-amd64'
     name: golang:1
-    waitFor: 
-      - "install-dependencies"
-    env: 
+    waitFor:
+      - 'install-dependencies'
+    env:
       - 'GOPATH=/gopath'
     volumes:
       - name: 'go'
         path: '/gopath'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.amd64
+      #!/usr/bin/env bash
+      export VERSION=$(cat ./cmd/version.txt)
+      CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.amd64
 
-  - id: "store-darwin-amd64"
-    name: "gcr.io/cloud-builders/gcloud:latest"
+  - id: 'store-darwin-amd64'
+    name: 'gcr.io/cloud-builders/gcloud:latest'
     waitFor:
-      - "build-darwin-amd64"
+      - 'build-darwin-amd64'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
 
-  - id: "build-windows-amd64"
+  - id: 'build-windows-amd64'
     name: golang:1
-    waitFor: 
-      - "install-dependencies"
-    env: 
+    waitFor:
+      - 'install-dependencies'
+    env:
       - 'GOPATH=/gopath'
     volumes:
       - name: 'go'
         path: '/gopath'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.windows.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.windows.amd64
+      #!/usr/bin/env bash
+      export VERSION=$(cat ./cmd/version.txt)
+      CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.windows.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.windows.amd64
 
-  - id: "store-windows-amd64"
-    name: "gcr.io/cloud-builders/gcloud:latest"
+  - id: 'store-windows-amd64'
+    name: 'gcr.io/cloud-builders/gcloud:latest'
     waitFor:
-      - "build-windows-amd64"
+      - 'build-windows-amd64'
     script: |
-        #!/usr/bin/env bash
-        export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox
 
 options:
   automapSubstitutions: true
@@ -150,4 +150,4 @@ substitutions:
   _AR_REPO_NAME: toolbox
   _BUCKET_NAME: genai-toolbox
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
-  _PUSH_LATEST: "true"
+  _PUSH_LATEST: 'true'

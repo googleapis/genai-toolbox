@@ -1,11 +1,10 @@
 ---
-title: "Spanner"
+title: 'Spanner'
 type: docs
 weight: 1
 description: >
   Spanner is a fully managed database service from Google Cloud that combines 
   relational, key-value, graph, and search capabilities.
-
 ---
 
 # Spanner Source
@@ -20,8 +19,7 @@ If you are new to Spanner, you can try to [create and query a database using
 the Google Cloud console][spanner-quickstart].
 
 [spanner-docs]: https://cloud.google.com/spanner/docs
-[spanner-quickstart]:
-    https://cloud.google.com/spanner/docs/create-query-database-console
+[spanner-quickstart]: https://cloud.google.com/spanner/docs/create-query-database-console
 
 ## Requirements
 
@@ -46,18 +44,18 @@ applying IAM permissions and roles to an identity.
 
 ```yaml
 sources:
-    my-spanner-source:
-        kind: "spanner"
-        project: "my-project-id"
-        instance: "my-instance"
-        database: "my_db"
-        # dialect: "googlesql"
+  my-spanner-source:
+    kind: 'spanner'
+    project: 'my-project-id'
+    instance: 'my-instance'
+    database: 'my_db'
+    # dialect: "googlesql"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                                     |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
+| --------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------------- |
 | kind      |  string  |     true     | Must be "spanner".                                                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                       |
 | instance  |  string  |     true     | Name of the Spanner instance.                                                                                       |

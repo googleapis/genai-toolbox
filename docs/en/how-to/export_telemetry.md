@@ -1,11 +1,10 @@
 ---
-title: "Export Telemetry"
+title: 'Export Telemetry'
 type: docs
 weight: 4
 description: >
-  How to set up and configure Toolbox to use the Otel Collector. 
+  How to set up and configure Toolbox to use the Otel Collector.
 ---
-
 
 ## About
 
@@ -34,7 +33,7 @@ receivers:
   otlp:
     protocols:
       http:
-        endpoint: "127.0.0.1:4553"
+        endpoint: '127.0.0.1:4553'
 
 exporters:
   googlecloud:
@@ -52,9 +51,9 @@ After each pipeline component is configured, you will enable it within the
 service:
   pipelines:
     traces:
-      receivers: ["otlp"]
-      processors: ["batch"]
-      exporters: ["googlecloud"]
+      receivers: ['otlp']
+      processors: ['batch']
+      exporters: ['googlecloud']
 ```
 
 ## Running the Connector
@@ -69,36 +68,35 @@ There are a couple of steps to run and use a Collector.
 
 1. Set up the Collector config. Below are some examples for setting up the
    Collector config:
-    - [Google Cloud Exporter][google-cloud-exporter]
-    - [Google Managed Service for Prometheus Exporter][google-prometheus-exporter]
+
+   - [Google Cloud Exporter][google-cloud-exporter]
+   - [Google Managed Service for Prometheus Exporter][google-prometheus-exporter]
 
 1. Run the Collector with the configuration file.
 
-    ```bash
-    ./otelcol-contrib --config=collector-config.yaml
-    ```
+   ```bash
+   ./otelcol-contrib --config=collector-config.yaml
+   ```
 
 1. Run toolbox with the `--telemetry-otlp` flag. Configure it to send them to
    `http://127.0.0.1:4553` (for HTTP) or the Collector's URL.
 
-    ```bash
-    ./toolbox --telemetry-otlp=http://127.0.0.1:4553
-    ```
+   ```bash
+   ./toolbox --telemetry-otlp=http://127.0.0.1:4553
+   ```
 
 1. Once telemetry datas are collected, you can view them in your telemetry
    backend. If you are using GCP exporters, telemetry will be visible in GCP
    dashboard at [Metrics Explorer][metrics-explorer] and [Trace
    Explorer][trace-explorer].
 
-  {{< notice note >}}
-  If you are exporting to Google Cloud monitoring, we recommend that you use
-  the Google Cloud Exporter for traces and the Google Managed Service for
-  Prometheus Exporter for metrics.
-  {{< /notice >}}
+{{< notice note >}}
+If you are exporting to Google Cloud monitoring, we recommend that you use
+the Google Cloud Exporter for traces and the Google Managed Service for
+Prometheus Exporter for metrics.
+{{< /notice >}}
 
-[google-cloud-exporter]:
-    https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
-[google-prometheus-exporter]:
-    https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter#example-configuration
+[google-cloud-exporter]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
+[google-prometheus-exporter]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter#example-configuration
 [metrics-explorer]: https://console.cloud.google.com/monitoring/metrics-explorer
 [trace-explorer]: https://console.cloud.google.com/traces

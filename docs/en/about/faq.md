@@ -1,8 +1,8 @@
 ---
-title: "FAQ"
+title: 'FAQ'
 type: docs
 weight: 2
-description: Frequently asked questions about Toolbox. 
+description: Frequently asked questions about Toolbox.
 ---
 
 ## How can I deploy or run Toolbox?
@@ -47,7 +47,7 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 Currently, Toolbox is primarily focused on making it easier to create and
 develop tools focused on interacting with Databases. We believe that there are a
 lot of unique problems when interacting with Databases for Gen AI use cases, and
-want to prioritize solving those first.  
+want to prioritize solving those first.
 
 However, we've also received feedback that supporting more generic HTTP or
 GRPC tools might be helpful in assisting with migrating to Toolbox or in

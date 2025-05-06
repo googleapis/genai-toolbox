@@ -1,8 +1,8 @@
 ---
-title: "Sources"
+title: 'Sources'
 type: docs
 weight: 1
-description: > 
+description: >
   Sources represent your different data sources that a tool can interact with.
 ---
 
@@ -18,14 +18,14 @@ instead of hardcoding your secrets into the configuration file.
 
 ```yaml
 sources:
-    my-cloud-sql-source:
-        kind: cloud-sql-postgres
-        project: my-project-id
-        region: us-central1
-        instance: my-instance-name
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+  my-cloud-sql-source:
+    kind: cloud-sql-postgres
+    project: my-project-id
+    region: us-central1
+    instance: my-instance-name
+    database: my_db
+    user: ${USER_NAME}
+    password: ${PASSWORD}
 ```
 
 In implementation, each source is a different connection pool or client that used

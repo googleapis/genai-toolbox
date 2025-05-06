@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-handleGHRelease: true
-packageName: genai-toolbox
-releaseType: simple
-versionFile: 'cmd/version.txt'
-extraFiles:
-  [
-    'README.md',
-    'docs/en/getting-started/introduction/_index.md',
-    'docs/en/getting-started/local_quickstart.md',
-    'docs/en/getting-started/mcp_quickstart/_index.md',
-    'docs/en/how-to/deploy_gke.md',
-    'docs/en/samples/bigquery/local_quickstart.md',
-    'docs/en/samples/bigquery/mcp_quickstart.md',
-  ]
+singleQuote: true

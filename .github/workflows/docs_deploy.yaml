@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "docs"
+name: 'docs'
 
 permissions:
   contents: write
@@ -46,13 +46,13 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
         with:
-          hugo-version: "0.145.0"
+          hugo-version: '0.145.0'
           extended: true
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Cache dependencies
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
@@ -76,4 +76,4 @@ jobs:
           # Do not delete previews on each production deploy.
           # CSS or JS changes will require manual clean-up.
           keep_files: true
-          commit_message: "deploy: ${{ github.event.head_commit.message }}"
+          commit_message: 'deploy: ${{ github.event.head_commit.message }}'

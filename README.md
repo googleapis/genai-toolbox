@@ -21,6 +21,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 > added MCP compatibility.
 
 <!-- TOC ignore:true -->
+
 ## Table of Contents
 
 <!-- TOC -->
@@ -80,6 +81,7 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary:
 
 <!-- {x-release-please-start-version} -->
+
 ```sh
 # see releases page for other versions
 export VERSION=0.4.0
@@ -110,6 +112,7 @@ To install from source, ensure you have the latest version of
 ```sh
 go install github.com/googleapis/genai-toolbox@v0.4.0
 ```
+
 <!-- {x-release-please-end} -->
 
 </details>
@@ -140,21 +143,21 @@ application. See below the list of Client SDKs for using various frameworks:
 
 1. Install [Toolbox Core SDK][toolbox-core]:
 
-    ```bash
-    pip install toolbox-core
-    ```
+   ```bash
+   pip install toolbox-core
+   ```
 
 1. Load tools:
 
-    ```python
-    from toolbox_core import ToolboxClient
+   ```python
+   from toolbox_core import ToolboxClient
 
-    # update the url to point to your server
-    client = ToolboxClient("http://127.0.0.1:5000")
+   # update the url to point to your server
+   client = ToolboxClient("http://127.0.0.1:5000")
 
-    # these tools can be passed to your application! 
-    tools = await client.load_toolset("toolset_name")
-    ```
+   # these tools can be passed to your application!
+   tools = await client.load_toolset("toolset_name")
+   ```
 
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's README][toolbox-core-readme].
@@ -168,21 +171,21 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
 1. Install [Toolbox LangChain SDK][toolbox-langchain]:
 
-    ```bash
-    pip install toolbox-langchain
-    ```
+   ```bash
+   pip install toolbox-langchain
+   ```
 
 1. Load tools:
 
-    ```python
-    from toolbox_langchain import ToolboxClient
+   ```python
+   from toolbox_langchain import ToolboxClient
 
-    # update the url to point to your server
-    client = ToolboxClient("http://127.0.0.1:5000")
+   # update the url to point to your server
+   client = ToolboxClient("http://127.0.0.1:5000")
 
-    # these tools can be passed to your application! 
-    tools = client.load_toolset()
-    ```
+   # these tools can be passed to your application!
+   tools = client.load_toolset()
+   ```
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
 [project's README][toolbox-langchain-readme].
@@ -197,21 +200,21 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 
 1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
 
-    ```bash
-    pip install toolbox-llamaindex
-    ```
+   ```bash
+   pip install toolbox-llamaindex
+   ```
 
 1. Load tools:
 
-    ```python
-    from toolbox_llamaindex import ToolboxClient
+   ```python
+   from toolbox_llamaindex import ToolboxClient
 
-    # update the url to point to your server
-    client = ToolboxClient("http://127.0.0.1:5000")
+   # update the url to point to your server
+   client = ToolboxClient("http://127.0.0.1:5000")
 
-    # these tools can be passed to your application! 
-    tools = client.load_toolset()
-    ```
+   # these tools can be passed to your application!
+   tools = client.load_toolset()
+   ```
 
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 [project's README][toolbox-llamaindex-readme].
@@ -279,12 +282,12 @@ different groups based on agent or application.
 
 ```yaml
 toolsets:
-    my_first_toolset:
-        - my_first_tool
-        - my_second_tool
-    my_second_toolset:
-        - my_second_tool
-        - my_third_tool
+  my_first_toolset:
+    - my_first_tool
+    - my_second_tool
+  my_second_toolset:
+    - my_second_tool
+    - my_third_tool
 ```
 
 You can load toolsets by name:

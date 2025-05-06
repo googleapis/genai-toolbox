@@ -1,5 +1,5 @@
 ---
-title: "BigQuery"
+title: 'BigQuery'
 type: docs
 weight: 1
 description: >
@@ -60,14 +60,14 @@ applying IAM permissions and roles to an identity.
 ```yaml
 sources:
   my-bigquery-source:
-    kind: "bigquery"
-    project: "my-project-id"
+    kind: 'bigquery'
+    project: 'my-project-id'
 ```
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                               |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigquery".                                                           |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
+| **field** | **type** | **required** | **description**                                                                                                                                                                                                                         |
+| --------- | :------: | :----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| kind      |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                                                                                                           |
 | location  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |

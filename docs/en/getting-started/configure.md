@@ -1,5 +1,5 @@
 ---
-title: "Configuration"
+title: 'Configuration'
 type: docs
 weight: 4
 description: How to configure Toolbox's tools.yaml file.
@@ -18,8 +18,8 @@ To avoid hardcoding certain secret fields like passwords, usernames, API keys
 etc., you could use environment variables instead with the format `${ENV_NAME}`.
 
 ```yaml
-  user: ${USER_NAME}
-  password: ${PASSWORD}
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 ### Sources

@@ -1,9 +1,9 @@
 ---
-title: "Google Sign-In"
+title: 'Google Sign-In'
 type: docs
 weight: 1
 description: >
-  Use Google Sign-In for Oauth 2.0 flow and token lifecycle. 
+  Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
 ---
 
 ## Getting Started
@@ -16,8 +16,7 @@ application and retrieved a [Client ID][client-id]. Configure your auth service
 in with the `Client ID`.
 
 [gsi-setup]: https://developers.google.com/identity/sign-in/web/sign-in
-[client-id]:
-    https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials
+[client-id]: https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials
 
 ## Behavior
 
@@ -35,8 +34,7 @@ When using [Authenticated Parameters][auth-params], any [claim provided by the
 id-token][provided-claims] can be used for the parameter.
 
 [auth-params]: ../tools/#authenticated-phugarameters
-[provided-claims]:
-    https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
+[provided-claims]: https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
 
 ## Example
 
@@ -55,6 +53,6 @@ instead of hardcoding your secrets into the configuration file.
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                  |
-|-----------|:--------:|:------------:|------------------------------------------------------------------|
+| --------- | :------: | :----------: | ---------------------------------------------------------------- |
 | kind      |  string  |     true     | Must be "google".                                                |
 | clientId  |  string  |     true     | Client ID of your application from registering your application. |

@@ -1,8 +1,8 @@
 ---
-title: "Introduction"
+title: 'Introduction'
 type: docs
 weight: 1
-description: An introduction to MCP Toolbox for Databases. 
+description: An introduction to MCP Toolbox for Databases.
 ---
 
 MCP Toolbox for Databases is an open source MCP server for databases. It enables
@@ -50,6 +50,7 @@ following instructions for your OS and CPU architecture.
 [releases]: https://github.com/googleapis/genai-toolbox/releases
 
 <!-- {x-release-please-start-version} -->
+
 {{< tabpane text=true >}}
 {{% tab header="Binary" lang="en" %}}
 
@@ -84,6 +85,7 @@ go install github.com/googleapis/genai-toolbox@v0.4.0
 
 {{% /tab %}}
 {{< /tabpane >}}
+
 <!-- {x-release-please-end} -->
 
 ### Running the server

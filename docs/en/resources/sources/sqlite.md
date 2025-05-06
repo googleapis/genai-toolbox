@@ -1,6 +1,6 @@
 ---
-title: "SQLite"
-linkTitle: "SQLite"
+title: 'SQLite'
+linkTitle: 'SQLite'
 type: docs
 weight: 1
 description: >
@@ -36,18 +36,18 @@ You need a SQLite database file. This can be:
 
 ```yaml
 sources:
-    my-sqlite-db:
-        kind: "sqlite"
-        database: "/path/to/database.db"
+  my-sqlite-db:
+    kind: 'sqlite'
+    database: '/path/to/database.db'
 ```
 
 For an in-memory database:
 
 ```yaml
 sources:
-    my-sqlite-memory-db:
-        kind: "sqlite"
-        database: ":memory:"
+  my-sqlite-memory-db:
+    kind: 'sqlite'
+    database: ':memory:'
 ```
 
 ## Reference
@@ -55,7 +55,7 @@ sources:
 ### Configuration Fields
 
 | **field** | **type** | **required** | **description**                                                       |
-|-----------|:--------:|:------------:|-----------------------------------------------------------------------|
+| --------- | :------: | :----------: | --------------------------------------------------------------------- |
 | kind      |  string  |     true     | Must be "sqlite".                                                     |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database |
 

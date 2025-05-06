@@ -8,10 +8,10 @@
 
 1. Locate and download dependencies:
 
-    ```bash
-    go get
-    go mod tidy
-    ```
+   ```bash
+   go get
+   go mod tidy
+   ```
 
 ## Developing Toolbox
 
@@ -22,71 +22,73 @@
 1. You can specify flags for the Toolbox server. Execute the following to list
    the possible CLI flags:
 
-    ```bash
-    go run . --help
-    ```
+   ```bash
+   go run . --help
+   ```
 
 1. To run the server, execute the following (with any flags, if applicable):
 
-    ```bash
-    go run .
-    ```
+   ```bash
+   go run .
+   ```
 
-    The server will listen on port 5000 (by default).
+   The server will listen on port 5000 (by default).
 
 1. Test endpoint using the following:
 
-    ```bash
-    curl http://127.0.0.1:5000
-    ```
+   ```bash
+   curl http://127.0.0.1:5000
+   ```
 
 ### Testing
 
 - Run the lint check:
 
-    ```bash
-    golangci-lint run --fix
-    ```
+  ```bash
+  golangci-lint run --fix
+  ```
 
 - Run the [markdownlint](https://github.com/DavidAnson/markdownlint-cli2) check:
 
-    ```bash
-    markdownlint-cli2 --fix "*.md" "#node_modules"
-    markdownlint-cli2 --fix "docs/**/*.md" "#node_modules"
-    ```
+  ```bash
+  markdownlint-cli2 --fix "*.md" "#node_modules"
+  markdownlint-cli2 --fix "docs/**/*.md" "#node_modules"
+  ```
 
 - Run unit tests locally:
 
-    ```bash
-    go test -race -v ./...
-    ```
+  ```bash
+  go test -race -v ./...
+  ```
 
 - Run integration tests locally:
-    1. Set required environment variables. For a complete lists of required
-    vairables for each source, check out the [Cloud Build testing
-    configuration](./.ci/integration.cloudbuild.yaml).
-        - Use your own GCP email as the `SERVICE_ACCOUNT_EMAIL`.
-        - Use the Google Cloud SDK application Client ID as the `CLIENT_ID`. Ask
-          the Toolbox maintainers if you don't know it already.
 
-    2. Run the integration test for your target source with the required Go
-    build tags specified at the top of each integration test file:
+  1. Set required environment variables. For a complete lists of required
+     vairables for each source, check out the [Cloud Build testing
+     configuration](./.ci/integration.cloudbuild.yaml).
 
-        ```shell
-            go test -race -v -tags=integration,<YOUR_SOURCE_KIND> ./tests
-        ```
+     - Use your own GCP email as the `SERVICE_ACCOUNT_EMAIL`.
+     - Use the Google Cloud SDK application Client ID as the `CLIENT_ID`. Ask
+       the Toolbox maintainers if you don't know it already.
 
-        For example, to run the AlloyDB integration test, run:
+  2. Run the integration test for your target source with the required Go
+     build tags specified at the top of each integration test file:
 
-        ```shell
-            go test -race -v -tags=integration,alloydb ./tests
-        ```
+     ```bash
+     go test -race -v -tags=integration,<YOUR_SOURCE_KIND> ./tests
+     ```
+
+     For example, to run the AlloyDB integration test, run:
+
+     ```bash
+     go test -race -v -tags=integration,alloydb ./tests
+     ```
 
 - Run integration tests on your PR:
 
-    For internal contributors, the testing workflows should trigger
-    automatically. For external contributors, ask the Toolbox
-    maintainers to trigger the testing workflows on your PR.
+  For internal contributors, the testing workflows should trigger
+  automatically. For external contributors, ask the Toolbox
+  maintainers to trigger the testing workflows on your PR.
 
 ## Compile the app locally
 
@@ -94,50 +96,50 @@
 
 1. Run build to compile binary:
 
-    ```bash
-    go build -o toolbox
-    ```
+   ```bash
+   go build -o toolbox
+   ```
 
 1. You can specify flags for the Toolbox server. Execute the following to list
    the possible CLI flags:
 
-    ```bash
-    ./toolbox --help
-    ```
+   ```bash
+   ./toolbox --help
+   ```
 
 1. To run the binary, execute the following (with any flags, if applicable):
 
-    ```bash
-    ./toolbox
-    ```
+   ```bash
+   ./toolbox
+   ```
 
-    The server will listen on port 5000 (by default).
+   The server will listen on port 5000 (by default).
 
 1. Test endpoint using the following:
 
-    ```bash
-    curl http://127.0.0.1:5000
-    ```
+   ```bash
+   curl http://127.0.0.1:5000
+   ```
 
 ### Compile Toolbox container images
 
 1. Run build to compile container image:
 
-    ```bash
-    docker build -t toolbox:dev .
-    ```
+   ```bash
+   docker build -t toolbox:dev .
+   ```
 
 1. Execute the following to view image:
 
-    ```bash
-    docker images
-    ```
+   ```bash
+   docker images
+   ```
 
 1. Run container image with Docker:
 
-    ```bash
-    docker run -d toolbox:dev
-    ```
+   ```bash
+   docker run -d toolbox:dev
+   ```
 
 ## Developing Toolbox SDKs
 

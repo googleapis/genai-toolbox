@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "docs"
+name: 'docs'
 
 permissions:
   contents: write
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-24.04
     concurrency:
       # Shared concurrency group wih preview staging.
-      group: "preview-${{ github.event.number }}"
+      group: 'preview-${{ github.event.number }}'
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4

@@ -1,10 +1,9 @@
 ---
-title: "Dgraph"
+title: 'Dgraph'
 type: docs
 weight: 1
 description: >
- Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
-
+  Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads.
 ---
 
 ## About
@@ -36,13 +35,13 @@ and user credentials for that namespace.
 
 ```yaml
 sources:
-    my-dgraph-source:
-        kind: dgraph
-        dgraphUrl: https://xxxx.cloud.dgraph.io
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        apiKey: ${API_KEY}
-        namespace : 0
+  my-dgraph-source:
+    kind: dgraph
+    dgraphUrl: https://xxxx.cloud.dgraph.io
+    user: ${USER_NAME}
+    password: ${PASSWORD}
+    apiKey: ${API_KEY}
+    namespace: 0
 ```
 
 {{< notice tip >}}
@@ -52,11 +51,11 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **Field**   | **Type** | **Required** | **Description**                                                                                  |
-|-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "dgraph".                                                                                |
-| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").                   |
-| user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
-| password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
-| apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |
-| namespace   |  uint64  |     false    | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                                |
+| **Field** | **Type** | **Required** | **Description**                                                                    |
+| --------- | :------: | :----------: | ---------------------------------------------------------------------------------- |
+| kind      |  string  |     true     | Must be "dgraph".                                                                  |
+| dgraphUrl |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>"). |
+| user      |  string  |    false     | Name of the Dgraph user to connect as (e.g., "groot").                             |
+| password  |  string  |    false     | Password of the Dgraph user (e.g., "password").                                    |
+| apiKey    |  string  |    false     | API key to connect to a Dgraph Cloud instance.                                     |
+| namespace |  uint64  |    false     | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                  |

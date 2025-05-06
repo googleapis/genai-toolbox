@@ -25,14 +25,14 @@ branchProtectionRules:
   - pattern: main
     isAdminEnforced: true
     requiredStatusCheckContexts:
-      - "cla/google"
-      - "lint"
-      - "super-linter"
-      - "conventionalcommits.org"
-      - "header-check"
-    # - Add required status checks like presubmit tests
-      - "unit tests (ubuntu-latest)"
-      - "integration-test-pr (toolbox-testing-438616)"
+      - 'cla/google'
+      - 'lint'
+      - 'super-linter'
+      - 'conventionalcommits.org'
+      - 'header-check'
+      # - Add required status checks like presubmit tests
+      - 'unit tests (ubuntu-latest)'
+      - 'integration-test-pr (toolbox-testing-438616)'
     requiredApprovingReviewCount: 1
     requiresCodeOwnerReviews: true
     requiresStrictStatusChecks: true

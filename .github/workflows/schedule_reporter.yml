@@ -16,14 +16,14 @@ name: Schedule Reporter
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Runs at 6 AM every morning
+    - cron: '0 6 * * *' # Runs at 6 AM every morning
 
 jobs:
   run_reporter:
     permissions:
-        issues: 'write'
-        checks: 'read'
-        contents: 'read'
+      issues: 'write'
+      checks: 'read'
+      contents: 'read'
     uses: ./.github/workflows/cloud_build_failure_reporter.yml
     with:
-      trigger_names: "toolbox-test-nightly,toolbox-test-on-merge"
+      trigger_names: 'toolbox-test-nightly,toolbox-test-on-merge'

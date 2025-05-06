@@ -1,8 +1,8 @@
 ---
-title: "mysql-sql"
+title: 'mysql-sql'
 type: docs
 weight: 1
-description: > 
+description: >
   A "mysql-sql" tool executes a pre-defined SQL statement against a MySQL
   database.
 ---
@@ -18,14 +18,13 @@ database. It's compatible with any of the following sources:
 The specified SQL statement is executed as a [prepared statement][mysql-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
 
-[mysql-prepare]:
-    https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
+[mysql-prepare]: https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 
 ## Example
 
 ```yaml
 tools:
- search_flights_by_number:
+  search_flights_by_number:
     kind: mysql-sql
     source: my-mysql-instance
     statement: |
@@ -64,7 +63,7 @@ tools:
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------ |
 | kind        |                   string                   |     true     | Must be "mysql-sql".                                                                             |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

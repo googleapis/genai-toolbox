@@ -1,8 +1,8 @@
 ---
-title: "alloydb-ai-nl"
+title: 'alloydb-ai-nl'
 type: docs
 weight: 1
-description: > 
+description: >
   The "alloydb-ai-nl" tool leverages 
   [AlloyDB AI](https://cloud.google.com/alloydb/ai) next-generation Natural 
   Language support to provide the ability to query the database directly using
@@ -41,10 +41,8 @@ the steps listed in the [Generate SQL queries that answer natural language
 questions][alloydb-ai-gen-nl], including enabling the extension and configuring
 context for your application.
 
-[alloydb-ai-nl-overview]:
-    https://cloud.google.com/alloydb/docs/natural-language-questions-overview
-[alloydb-ai-gen-nl]:
-    https://cloud.google.com/alloydb/docs/alloydb/docs/ai/generate-queries-natural-language
+[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/natural-language-questions-overview
+[alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/alloydb/docs/ai/generate-queries-natural-language
 
 ## Configuration
 
@@ -74,8 +72,7 @@ Parameters](../tools/#array-parameters) or Bound Parameters to provide secure
 access to queries generated using natural language, as these parameters are not
 visible to the LLM.
 
-[alloydb-psv]:
-    https://cloud.google.com/alloydb/docs/ai/use-psvs#parameterized_secure_views
+[alloydb-psv]: https://cloud.google.com/alloydb/docs/ai/use-psvs#parameterized_secure_views
 
 ## Example
 
@@ -84,14 +81,14 @@ tools:
   ask_questions:
     kind: alloydb-ai-nl
     source: my-alloydb-source
-    description: "Ask questions to check information about flights"
-    nlConfig: "cymbal_air_nl_config"
+    description: 'Ask questions to check information about flights'
+    nlConfig: 'cymbal_air_nl_config'
     nlConfigParameters:
       - name: user_email
         type: string
         description: User ID of the logged in user.
-        # note: we strongly recommend using features like Authenticated or 
-        # Bound parameters to prevent the LLM from seeing these params and 
+        # note: we strongly recommend using features like Authenticated or
+        # Bound parameters to prevent the LLM from seeing these params and
         # specifying values it shouldn't in the tool input
         authServices:
           - name: my_google_service
@@ -101,9 +98,9 @@ tools:
 ## Reference
 
 | **field**          |                  **type**                  | **required** | **description**                                                          |
-|--------------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------|
+| ------------------ | :----------------------------------------: | :----------: | ------------------------------------------------------------------------ |
 | kind               |                   string                   |     true     | Must be "alloydb-ai-nl".                                                 |
 | source             |                   string                   |     true     | Name of the AlloyDB source the natural language query should execute on. |
 | description        |                   string                   |     true     | Description of the tool that is passed to the LLM.                       |
-| nlConfig           |                   string                   |     true     | The name of the  `nl_config` in AlloyDB                                  |
+| nlConfig           |                   string                   |     true     | The name of the `nl_config` in AlloyDB                                   |
 | nlConfigParameters | [parameters](_index#specifying-parameters) |     true     | List of PSV parameters defined in the `nl_config`                        |

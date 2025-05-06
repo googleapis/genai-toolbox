@@ -1,0 +1,5 @@
+# existing PR to combine both prettierignore and prettier config
+# https://github.com/prettier/prettier/pull/16286
+.hugo/
+
+CHANGELOG.md

@@ -58,4 +58,4 @@ MD040: false
 # MD055/table-pipe-style : Table pipe style : https://github.com/DavidAnson/markdownlint/blob/v0.38.0/doc/md055.md
 MD055:
   # Table pipe style
-  style: "leading_and_trailing"
+  style: 'leading_and_trailing'

@@ -1,11 +1,10 @@
 ---
-title: "Cloud SQL for MySQL"
-linkTitle: "Cloud SQL (MySQL)"
+title: 'Cloud SQL for MySQL'
+linkTitle: 'Cloud SQL (MySQL)'
 type: docs
 weight: 1
 description: >
   Cloud SQL for MySQL is a fully-managed database service for MySQL.
-
 ---
 
 ## About
@@ -18,8 +17,7 @@ If you are new to Cloud SQL for MySQL, you can try [creating and connecting
 to a database by following these instructions][csql-mysql-quickstart].
 
 [csql-mysql-docs]: https://cloud.google.com/sql/docs/mysql
-[csql-mysql-quickstart]:
-    https://cloud.google.com/sql/docs/mysql/connect-instance-local-computer
+[csql-mysql-quickstart]: https://cloud.google.com/sql/docs/mysql/connect-instance-local-computer
 
 ## Requirements
 
@@ -74,15 +72,15 @@ a MySQL user][cloud-sql-users] to login to the database with.
 
 ```yaml
 sources:
-    my-cloud-sql-mysql-source:
-        kind: cloud-sql-mysql
-        project: my-project-id
-        region: us-central1
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "private"
+  my-cloud-sql-mysql-source:
+    kind: cloud-sql-mysql
+    project: my-project-id
+    region: us-central1
+    instance: my-instance
+    database: my_db
+    user: ${USER_NAME}
+    password: ${PASSWORD}
+    # ipType: "private"
 ```
 
 {{< notice tip >}}
@@ -93,7 +91,7 @@ instead of hardcoding your secrets into the configuration file.
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
+| --------- | :------: | :----------: | ------------------------------------------------------------------------------------------- |
 | kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |

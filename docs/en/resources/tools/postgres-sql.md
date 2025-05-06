@@ -1,8 +1,8 @@
 ---
-title: "postgres-sql"
+title: 'postgres-sql'
 type: docs
 weight: 1
-description: > 
+description: >
   A "postgres-sql" tool executes a pre-defined SQL statement against a Postgres
   database.
 ---
@@ -27,7 +27,7 @@ on.
 
 ```yaml
 tools:
- search_flights_by_number:
+  search_flights_by_number:
     kind: postgres-sql
     source: my-pg-instance
     statement: |
@@ -66,7 +66,7 @@ tools:
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------ |
 | kind        |                   string                   |     true     | Must be "postgres-sql".                                                                          |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

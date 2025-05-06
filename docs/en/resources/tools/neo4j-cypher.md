@@ -1,8 +1,8 @@
 ---
-title: "neo4j-cypher"
+title: 'neo4j-cypher'
 type: docs
 weight: 1
-description: > 
+description: >
   A "neo4j-cypher" tool executes a pre-defined cypher statement against a Neo4j
   database.
 ---
@@ -18,14 +18,13 @@ The specified Cypher statement is executed as a [parameterized
 statement][neo4j-parameters], and specified parameters will be used according to
 their name: e.g. `$id`.
 
-[neo4j-parameters]:
-    https://neo4j.com/docs/cypher-manual/current/syntax/parameters/
+[neo4j-parameters]: https://neo4j.com/docs/cypher-manual/current/syntax/parameters/
 
 ## Example
 
 ```yaml
 tools:
- search_movies_by_actor:
+  search_movies_by_actor:
     kind: neo4j-cypher
     source: my-neo4j-movies-instance
     statement: |
@@ -58,13 +57,13 @@ tools:
         description: Full actor name, "firstname lastname"
       - name: year
         type: integer
-        description: 4 digit number starting in 1900 up to the current year 
+        description: 4 digit number starting in 1900 up to the current year
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                 |
-|-------------|:------------------------------------------:|:------------:|-------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ----------------------------------------------------------------------------------------------- |
 | kind        |                   string                   |     true     | Must be "neo4j-cypher".                                                                         |
 | source      |                   string                   |     true     | Name of the source the Cypher query should execute on.                                          |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |

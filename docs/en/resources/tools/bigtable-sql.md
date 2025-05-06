@@ -1,8 +1,8 @@
 ---
-title: "bigtable-sql"
+title: 'bigtable-sql'
 type: docs
 weight: 1
-description: > 
+description: >
   A "bigtable-sql" tool executes a pre-defined SQL statement against a Google 
   Cloud Bigtable instance.
 ---
@@ -27,7 +27,7 @@ inserted according to their name: e.g. `@name`.
 
 ```yaml
 tools:
- search_user_by_id_or_name:
+  search_user_by_id_or_name:
     kind: bigtable-sql
     source: my-bigtable-instance
     statement: |
@@ -60,7 +60,7 @@ tools:
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------ |
 | kind        |                   string                   |     true     | Must be "bigtable-sql".                                                                          |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

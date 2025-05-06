@@ -1,9 +1,9 @@
 ---
-title: "AuthServices"
+title: 'AuthServices'
 type: docs
 weight: 1
 description: >
-  AuthServices represent services that handle authentication and authorization. 
+  AuthServices represent services that handle authentication and authorization.
 ---
 
 AuthServices represent services that handle authentication and authorization. It
@@ -27,8 +27,8 @@ The following configurations are placed at the top level of a `tools.yaml` file.
 
 {{< notice tip >}}
 If you are accessing Toolbox with multiple applications, each
- application should register their own Client ID even if they use the same
- "kind" of auth provider.
+application should register their own Client ID even if they use the same
+"kind" of auth provider.
 {{< /notice >}}
 
 ```yaml
@@ -64,6 +64,7 @@ needed.
 
 ### Specifying tokens during load
 
+<!-- prettier-ignore-start -->
 {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="Python" >}}
 async def get_auth_token():
@@ -132,5 +133,6 @@ authorized_tool = tools[0].add_auth_tokens({
 })
 {{< /tab >}}
 {{< /tabpane >}}
+<!-- prettier-ignore-end -->
 
 ## Kinds of Auth Services

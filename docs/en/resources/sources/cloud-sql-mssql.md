@@ -1,6 +1,6 @@
 ---
-title: "Cloud SQL for SQL Server"
-linkTitle: "Cloud SQL (SQL Server)"
+title: 'Cloud SQL for SQL Server'
+linkTitle: 'Cloud SQL (SQL Server)'
 type: docs
 weight: 1
 description: >
@@ -72,16 +72,16 @@ Currently, this source only uses standard authentication. You will need to
 
 ```yaml
 sources:
-    my-cloud-sql-mssql-instance:
-     kind: cloud-sql-mssql
-     project: my-project
-     region: my-region
-     instance: my-instance
-     database: my_db
-     ipAddress: localhost
-     user: ${USER_NAME}
-     password: ${PASSWORD}
-     # ipType: private
+  my-cloud-sql-mssql-instance:
+    kind: cloud-sql-mssql
+    project: my-project
+    region: my-region
+    instance: my-instance
+    database: my_db
+    ipAddress: localhost
+    user: ${USER_NAME}
+    password: ${PASSWORD}
+    # ipType: private
 ```
 
 {{< notice tip >}}
@@ -92,11 +92,11 @@ instead of hardcoding your secrets into the configuration file.
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
+| --------- | :------: | :----------: | ------------------------------------------------------------------------------------------- |
 | kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                      |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
 | database  |  string  |     true     | Name of the Cloud SQL database to connect to (e.g. "my_db").                                |
 | ipAddress |  string  |     true     | IP address of the Cloud SQL instance to connect to.                                         |
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |

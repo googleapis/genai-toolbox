@@ -1,5 +1,5 @@
 ---
-title: "Bigtable"
+title: 'Bigtable'
 type: docs
 weight: 1
 description: >
@@ -8,7 +8,6 @@ description: >
   store that can scale to billions of rows and thousands of columns. With Bigtable,
   you can replicate your data to regions across the world for high availability
   and data resiliency.
-
 ---
 
 # Bigtable Source
@@ -30,11 +29,8 @@ practices apply when creating SQL queries to run against your Bigtable data,
 such as avoiding full table scans or complex filters.
 
 [bigtable-docs]: https://cloud.google.com/bigtable/docs
-[bigtable-quickstart-with-cli]:
-    https://cloud.google.com/bigtable/docs/create-instance-write-data-cbt-cli
-
-[bigtable-googlesql]:
-    https://cloud.google.com/bigtable/docs/googlesql-overview
+[bigtable-quickstart-with-cli]: https://cloud.google.com/bigtable/docs/create-instance-write-data-cbt-cli
+[bigtable-googlesql]: https://cloud.google.com/bigtable/docs/googlesql-overview
 
 ## Requirements
 
@@ -53,23 +49,22 @@ applying IAM permissions and roles to an identity.
 [iam-overview]: https://cloud.google.com/bigtable/docs/access-control
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[grant-permissions]:
-    https://cloud.google.com/bigtable/docs/access-control#iam-management-instance
+[grant-permissions]: https://cloud.google.com/bigtable/docs/access-control#iam-management-instance
 
 ## Example
 
 ```yaml
 sources:
   my-bigtable-source:
-    kind: "bigtable"
-    project: "my-project-id"
-    instance: "test-instance"
+    kind: 'bigtable'
+    project: 'my-project-id'
+    instance: 'test-instance'
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                               |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
+| --------- | :------: | :----------: | ----------------------------------------------------------------------------- |
 | kind      |  string  |     true     | Must be "bigtable".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | instance  |  string  |     true     | Name of the Bigtable instance.                                                |

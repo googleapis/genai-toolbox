@@ -13,326 +13,324 @@
 # limitations under the License.
 
 steps:
-  - id: "install-dependencies"
+  - id: 'install-dependencies'
     name: golang:1
-    waitFor: ["-"]
+    waitFor: ['-']
     env:
-      - "GOPATH=/gopath"
+      - 'GOPATH=/gopath'
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     script: |
       go get -d ./...
 
-  - id: "compile-test-binary"
+  - id: 'compile-test-binary'
     name: golang:1
-    waitFor: ["install-dependencies"]
+    waitFor: ['install-dependencies']
     env:
-      - "GOPATH=/gopath"
+      - 'GOPATH=/gopath'
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     script: |
       go test -c -race ./tests/...
 
-  - id: "cloud-sql-pg"
+  - id: 'cloud-sql-pg'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
-      - "CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE"
-      - "CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - 'GOPATH=/gopath'
+      - 'CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID'
+      - 'CLOUD_SQL_POSTGRES_INSTANCE=$_CLOUD_SQL_POSTGRES_INSTANCE'
+      - 'CLOUD_SQL_POSTGRES_DATABASE=$_DATABASE_NAME'
+      - 'CLOUD_SQL_POSTGRES_REGION=$_REGION'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
     secretEnv:
-      ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS", "CLIENT_ID"]
+      ['CLOUD_SQL_POSTGRES_USER', 'CLOUD_SQL_POSTGRES_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./cloudsqlpg.test -test.v
 
-  - id: "alloydb-pg"
+  - id: 'alloydb-pg'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID"
-      - "ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
-      - "ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
-      - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
-      - "ALLOYDB_POSTGRES_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'ALLOYDB_POSTGRES_PROJECT=$PROJECT_ID'
+      - 'ALLOYDB_POSTGRES_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER'
+      - 'ALLOYDB_POSTGRES_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE'
+      - 'ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME'
+      - 'ALLOYDB_POSTGRES_REGION=$_REGION'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['ALLOYDB_POSTGRES_USER', 'ALLOYDB_POSTGRES_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./alloydbpg.test -test.v
 
-  - id: "alloydb-ai-nl"
+  - id: 'alloydb-ai-nl'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "ALLOYDB_AI_NL_PROJECT=$PROJECT_ID"
-      - "ALLOYDB_AI_NL_CLUSTER=$_ALLOYDB_AI_NL_CLUSTER"
-      - "ALLOYDB_AI_NL_INSTANCE=$_ALLOYDB_AI_NL_INSTANCE"
-      - "ALLOYDB_AI_NL_DATABASE=$_DATABASE_NAME"
-      - "ALLOYDB_AI_NL_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["ALLOYDB_AI_NL_USER", "ALLOYDB_AI_NL_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'ALLOYDB_AI_NL_PROJECT=$PROJECT_ID'
+      - 'ALLOYDB_AI_NL_CLUSTER=$_ALLOYDB_AI_NL_CLUSTER'
+      - 'ALLOYDB_AI_NL_INSTANCE=$_ALLOYDB_AI_NL_INSTANCE'
+      - 'ALLOYDB_AI_NL_DATABASE=$_DATABASE_NAME'
+      - 'ALLOYDB_AI_NL_REGION=$_REGION'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['ALLOYDB_AI_NL_USER', 'ALLOYDB_AI_NL_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./alloydbainl.test -test.v
 
-  - id: "bigtable"
+  - id: 'bigtable'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "BIGTABLE_PROJECT=$PROJECT_ID"
-      - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      ["CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'BIGTABLE_PROJECT=$PROJECT_ID'
+      - 'BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./bigtable.test -test.v
 
-  - id: "bigquery"
+  - id: 'bigquery'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "BIGQUERY_PROJECT=$PROJECT_ID"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'BIGQUERY_PROJECT=$PROJECT_ID'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./bigquery.test -test.v
 
-  - id: "postgres"
+  - id: 'postgres'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "POSTGRES_DATABASE=$_DATABASE_NAME"
-      - "POSTGRES_HOST=$_POSTGRES_HOST"
-      - "POSTGRES_PORT=$_POSTGRES_PORT"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["POSTGRES_USER", "POSTGRES_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'POSTGRES_DATABASE=$_DATABASE_NAME'
+      - 'POSTGRES_HOST=$_POSTGRES_HOST'
+      - 'POSTGRES_PORT=$_POSTGRES_PORT'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['POSTGRES_USER', 'POSTGRES_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./postgres.test -test.v
 
-  - id: "spanner"
+  - id: 'spanner'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "SPANNER_PROJECT=$PROJECT_ID"
-      - "SPANNER_DATABASE=$_DATABASE_NAME"
-      - "SPANNER_INSTANCE=$_SPANNER_INSTANCE"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'SPANNER_PROJECT=$PROJECT_ID'
+      - 'SPANNER_DATABASE=$_DATABASE_NAME'
+      - 'SPANNER_INSTANCE=$_SPANNER_INSTANCE'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./spanner.test -test.v
 
-  - id: "neo4j"
+  - id: 'neo4j'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "NEO4J_DATABASE=$_NEO4J_DATABASE"
-      - "NEO4J_URI=$_NEO4J_URI"
-    secretEnv: ["NEO4J_USER", "NEO4J_PASS"]
+      - 'GOPATH=/gopath'
+      - 'NEO4J_DATABASE=$_NEO4J_DATABASE'
+      - 'NEO4J_URI=$_NEO4J_URI'
+    secretEnv: ['NEO4J_USER', 'NEO4J_PASS']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./neo4j.test -test.v
 
-  - id: "cloud-sql-mssql"
+  - id: 'cloud-sql-mssql'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "CLOUD_SQL_MSSQL_PROJECT=$PROJECT_ID"
-      - "CLOUD_SQL_MSSQL_INSTANCE=$_CLOUD_SQL_MSSQL_INSTANCE"
-      - "CLOUD_SQL_MSSQL_IP=$_CLOUD_SQL_MSSQL_IP"
-      - "CLOUD_SQL_MSSQL_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_MSSQL_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLOUD_SQL_MSSQL_USER", "CLOUD_SQL_MSSQL_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'CLOUD_SQL_MSSQL_PROJECT=$PROJECT_ID'
+      - 'CLOUD_SQL_MSSQL_INSTANCE=$_CLOUD_SQL_MSSQL_INSTANCE'
+      - 'CLOUD_SQL_MSSQL_IP=$_CLOUD_SQL_MSSQL_IP'
+      - 'CLOUD_SQL_MSSQL_DATABASE=$_DATABASE_NAME'
+      - 'CLOUD_SQL_MSSQL_REGION=$_REGION'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['CLOUD_SQL_MSSQL_USER', 'CLOUD_SQL_MSSQL_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./cloudsqlmssql.test -test.v
 
-  - id: "cloud-sql-mysql"
+  - id: 'cloud-sql-mysql'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "CLOUD_SQL_MYSQL_PROJECT=$PROJECT_ID"
-      - "CLOUD_SQL_MYSQL_INSTANCE=$_CLOUD_SQL_MYSQL_INSTANCE"
-      - "CLOUD_SQL_MYSQL_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_MYSQL_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'CLOUD_SQL_MYSQL_PROJECT=$PROJECT_ID'
+      - 'CLOUD_SQL_MYSQL_INSTANCE=$_CLOUD_SQL_MYSQL_INSTANCE'
+      - 'CLOUD_SQL_MYSQL_DATABASE=$_DATABASE_NAME'
+      - 'CLOUD_SQL_MYSQL_REGION=$_REGION'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['CLOUD_SQL_MYSQL_USER', 'CLOUD_SQL_MYSQL_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./cloudsqlmysql.test -test.v
 
-  - id: "mysql"
+  - id: 'mysql'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "MYSQL_DATABASE=$_DATABASE_NAME"
-      - "MYSQL_HOST=$_MYSQL_HOST"
-      - "MYSQL_PORT=$_MYSQL_PORT"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["MYSQL_USER", "MYSQL_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'MYSQL_DATABASE=$_DATABASE_NAME'
+      - 'MYSQL_HOST=$_MYSQL_HOST'
+      - 'MYSQL_PORT=$_MYSQL_PORT'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['MYSQL_USER', 'MYSQL_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./mysql.test -test.v
 
-  - id: "mssql"
+  - id: 'mssql'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "MSSQL_DATABASE=$_DATABASE_NAME"
-      - "MSSQL_HOST=$_MSSQL_HOST"
-      - "MSSQL_PORT=$_MSSQL_PORT"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["MSSQL_USER", "MSSQL_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'MSSQL_DATABASE=$_DATABASE_NAME'
+      - 'MSSQL_HOST=$_MSSQL_HOST'
+      - 'MSSQL_PORT=$_MSSQL_PORT'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv: ['MSSQL_USER', 'MSSQL_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./mssql.test -test.v
 
-  - id: "dgraph"
+  - id: 'dgraph'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "DGRAPH_URL=$_DGRAPHURL"
+      - 'GOPATH=/gopath'
+      - 'DGRAPH_URL=$_DGRAPHURL'
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./dgraph.test -test.v
 
-  - id: "http"
+  - id: 'http'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-    secretEnv: ["CLIENT_ID"]
+      - 'GOPATH=/gopath'
+    secretEnv: ['CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./http.test -test.v
 
-  - id: "sqlite"
+  - id: 'sqlite'
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - 'GOPATH=/gopath'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
     volumes:
-      - name: "go"
-        path: "/gopath"
-    secretEnv: ["CLIENT_ID"]
+      - name: 'go'
+        path: '/gopath'
+    secretEnv: ['CLIENT_ID']
     args:
       - -c
       - |
         ./sqlite.test -test.v
 
-  - id: "couchbase"
-    name : golang:1
-    waitFor: ["compile-test-binary"]
+  - id: 'couchbase'
+    name: golang:1
+    waitFor: ['compile-test-binary']
     entrypoint: /bin/bash
     env:
-      - "GOPATH=/gopath"
-      - "COUCHBASE_SCOPE=$_COUCHBASE_SCOPE"
-      - "COUCHBASE_BUCKET=$_COUCHBASE_BUCKET"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["COUCHBASE_CONNECTION", "COUCHBASE_USER", "COUCHBASE_PASS", "CLIENT_ID"]
+      - 'GOPATH=/gopath'
+      - 'COUCHBASE_SCOPE=$_COUCHBASE_SCOPE'
+      - 'COUCHBASE_BUCKET=$_COUCHBASE_BUCKET'
+      - 'SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL'
+    secretEnv:
+      ['COUCHBASE_CONNECTION', 'COUCHBASE_USER', 'COUCHBASE_PASS', 'CLIENT_ID']
     volumes:
-      - name: "go"
-        path: "/gopath"
+      - name: 'go'
+        path: '/gopath'
     args:
       - -c
       - |
         ./couchbase.test -test.v
-    
 
 availableSecrets:
   secretManager:
@@ -371,7 +369,7 @@ availableSecrets:
     - versionName: projects/$PROJECT_ID/secrets/mysql_pass/versions/latest
       env: MYSQL_PASS
     - versionName: projects/$PROJECT_ID/secrets/mssql_user/versions/latest
-      env: MSSQL_USER 
+      env: MSSQL_USER
     - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
       env: MSSQL_PASS
     - versionName: projects/$PROJECT_ID/secrets/couchbase_connection/versions/latest
@@ -381,34 +379,33 @@ availableSecrets:
     - versionName: projects/$PROJECT_ID/secrets/couchbase_pass/versions/latest
       env: COUCHBASE_PASS
 
-
 options:
   logging: CLOUD_LOGGING_ONLY
   automapSubstitutions: true
-  substitutionOption: "ALLOW_LOOSE"
+  substitutionOption: 'ALLOW_LOOSE'
   dynamicSubstitutions: true
   pool:
     name: projects/$PROJECT_ID/locations/us-central1/workerPools/integration-testing # Necessary for VPC network connection
 
 substitutions:
   _DATABASE_NAME: test_database
-  _REGION: "us-central1"
-  _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
-  _ALLOYDB_POSTGRES_CLUSTER: "alloydb-pg-testing"
-  _ALLOYDB_POSTGRES_INSTANCE: "alloydb-pg-testing-instance"
-  _ALLOYDB_AI_NL_CLUSTER: "alloydb-ai-nl-testing"
-  _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
-  _BIGTABLE_INSTANCE: "bigtable-testing-instance"
+  _REGION: 'us-central1'
+  _CLOUD_SQL_POSTGRES_INSTANCE: 'cloud-sql-pg-testing'
+  _ALLOYDB_POSTGRES_CLUSTER: 'alloydb-pg-testing'
+  _ALLOYDB_POSTGRES_INSTANCE: 'alloydb-pg-testing-instance'
+  _ALLOYDB_AI_NL_CLUSTER: 'alloydb-ai-nl-testing'
+  _ALLOYDB_AI_NL_INSTANCE: 'alloydb-ai-nl-testing-instance'
+  _BIGTABLE_INSTANCE: 'bigtable-testing-instance'
   _POSTGRES_HOST: 127.0.0.1
-  _POSTGRES_PORT: "5432"
-  _SPANNER_INSTANCE: "spanner-testing"
-  _NEO4J_DATABASE: "neo4j"
-  _CLOUD_SQL_MSSQL_INSTANCE: "cloud-sql-mssql-testing"
-  _CLOUD_SQL_MYSQL_INSTANCE: "cloud-sql-mysql-testing"
+  _POSTGRES_PORT: '5432'
+  _SPANNER_INSTANCE: 'spanner-testing'
+  _NEO4J_DATABASE: 'neo4j'
+  _CLOUD_SQL_MSSQL_INSTANCE: 'cloud-sql-mssql-testing'
+  _CLOUD_SQL_MYSQL_INSTANCE: 'cloud-sql-mysql-testing'
   _MYSQL_HOST: 127.0.0.1
-  _MYSQL_PORT: "3306"
+  _MYSQL_PORT: '3306'
   _MSSQL_HOST: 127.0.0.1
-  _MSSQL_PORT: "1433"
-  _DGRAPHURL: "https://play.dgraph.io"
-  _COUCHBASE_BUCKET: "couchbase-bucket"
-  _COUCHBASE_SCOPE: "couchbase-scope"
+  _MSSQL_PORT: '1433'
+  _DGRAPHURL: 'https://play.dgraph.io'
+  _COUCHBASE_BUCKET: 'couchbase-bucket'
+  _COUCHBASE_SCOPE: 'couchbase-scope'

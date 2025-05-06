@@ -1,8 +1,8 @@
 ---
-title: "postgres-execute-sql"
+title: 'postgres-execute-sql'
 type: docs
 weight: 1
-description: > 
+description: >
   A "postgres-execute-sql" tool executes a SQL statement against a Postgres
   database.
 ---
@@ -23,7 +23,7 @@ statement against the `source`.
 
 ```yaml
 tools:
- execute_sql_tool:
+  execute_sql_tool:
     kind: postgres-execute-sql
     source: my-pg-instance
     description: Use this tool to execute sql statement.
@@ -31,8 +31,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "postgres-execute-sql".                                                                          |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | :------: | :----------: | -------------------------------------------------- |
+| kind        |  string  |     true     | Must be "postgres-execute-sql".                    |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

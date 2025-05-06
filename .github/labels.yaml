@@ -14,11 +14,12 @@
 
 - name: duplicate
   color: ededed
-  description: ""
+  description: ''
 
 - name: 'type: bug'
   color: db4437
-  description: Error or flaw in code with unintended results or allowing sub-optimal
+  description:
+    Error or flaw in code with unintended results or allowing sub-optimal
     usage patterns.
 - name: 'type: cleanup'
   color: c5def5
@@ -41,7 +42,8 @@
   description: Highest priority. Critical issue. P0 implies highest priority.
 - name: 'priority: p1'
   color: ffa03e
-  description: Important issue which blocks shipping the next release. Will be fixed
+  description:
+    Important issue which blocks shipping the next release. Will be fixed
     prior to next release.
 - name: 'priority: p2'
   color: fef2c0
@@ -52,7 +54,8 @@
 
 - name: do not merge
   color: d93f0b
-  description: Indicates a pull request not ready for merge, due to either quality
+  description:
+    Indicates a pull request not ready for merge, due to either quality
     or timing.
 
 - name: 'autorelease: pending'

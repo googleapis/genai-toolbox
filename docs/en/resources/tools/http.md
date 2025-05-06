@@ -1,11 +1,10 @@
 ---
-title: "http"
+title: 'http'
 type: docs
 weight: 1
-description: > 
+description: >
   A "http" tool sends out an HTTP request to an HTTP endpoint.
 ---
-
 
 ## About
 
@@ -23,25 +22,24 @@ the same server using multiple Tools:
 
 ```yaml
 sources:
-    my-http-source:
-        kind: http
-        baseUrl: https://api.example.com
+  my-http-source:
+    kind: http
+    baseUrl: https://api.example.com
 
 tools:
-    my-post-tool:
-        kind: http
-        source: my-http-source
-        method: POST
-        path: /update
-        description: Tool to update information to the example API
+  my-post-tool:
+    kind: http
+    source: my-http-source
+    method: POST
+    path: /update
+    description: Tool to update information to the example API
 
-    my-get-tool:
-        kind: http
-        source: my-http-source
-        method: GET
-        path: /search
-        description: Tool to search information from the example API
-
+  my-get-tool:
+    kind: http
+    source: my-http-source
+    method: GET
+    path: /search
+    description: Tool to search information from the example API
 ```
 
 ### Headers
@@ -58,14 +56,14 @@ HTTP Tool allows you to specify headers in two different ways:
 
 ```yaml
 my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: Tool to search data from API
-    headers:
-      Authorization: API_KEY
-      Content-Type: application/json
+  kind: http
+  source: my-http-source
+  method: GET
+  path: /search
+  description: Tool to search data from API
+  headers:
+    Authorization: API_KEY
+    Content-Type: application/json
 ```
 
 - Dynamic headers can be specified as parameters in the `headerParams` field.
@@ -74,15 +72,15 @@ my-http-tool:
 
 ```yaml
 my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: some description
-    headerParams:
-      - name: Content-Type # Example LLM input: "application/json"
-        description: request content type
-        type: string
+  kind: http
+  source: my-http-source
+  method: GET
+  path: /search
+  description: some description
+  headerParams:
+    - name: Content-Type # Example LLM input: "application/json"
+      description: request content type
+      type: string
 ```
 
 ### Query parameters
@@ -96,11 +94,11 @@ filtering or sorting data.
 
 ```yaml
 my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search?language=en&id=1
-    description: Tool to search for item with ID 1 in English
+  kind: http
+  source: my-http-source
+  method: GET
+  path: /search?language=en&id=1
+  description: Tool to search for item with ID 1 in English
 ```
 
 - Dynamic request query parameters should be specified as parameters in the
@@ -108,15 +106,15 @@ my-http-tool:
 
 ```yaml
 my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: Tool to search for item with ID
-    queryParams:
-      - name: id
-        description: item ID
-        type: integer
+  kind: http
+  source: my-http-source
+  method: GET
+  path: /search
+  description: Tool to search for item with ID
+  queryParams:
+    - name: id
+      description: item ID
+      type: integer
 ```
 
 ### Request body
@@ -131,23 +129,23 @@ Example:
 
 ```yaml
 my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: Tool to search for person with name and age
-    requestBody: |
-      {
-        "age": {{.age}},
-        "name": "{{.name}}"
-      }
-    bodyParams:
-      - name: age
-        description: age number
-        type: integer
-      - name: name
-        description: name string
-        type: string
+  kind: http
+  source: my-http-source
+  method: GET
+  path: /search
+  description: Tool to search for person with name and age
+  requestBody: |
+    {
+      "age": {{.age}},
+      "name": "{{.name}}"
+    }
+  bodyParams:
+    - name: age
+      description: age number
+      type: integer
+    - name: name
+      description: name string
+      type: string
 ```
 
 #### Formatting Parameters
@@ -192,43 +190,43 @@ will send the following output:
 
 ```yaml
 my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: some description
-    authRequired:
-      - my-google-auth-service
-      - other-auth-service
-    queryParams:
-      - name: country
-        description: some description
-        type: string
-    requestBody: |
-      {
-        "age": {{.age}},
-        "city": "{{.city}}"
-      }
-    bodyParams:
-      - name: age
-        description: age number
-        type: integer
-      - name: city
-        description: city string
-        type: string
-    headers:
-      Authorization: API_KEY
-      Content-Type: application/json
-    headerParams:
-      - name: Language
-        description: language string
-        type: string
+  kind: http
+  source: my-http-source
+  method: GET
+  path: /search
+  description: some description
+  authRequired:
+    - my-google-auth-service
+    - other-auth-service
+  queryParams:
+    - name: country
+      description: some description
+      type: string
+  requestBody: |
+    {
+      "age": {{.age}},
+      "city": "{{.city}}"
+    }
+  bodyParams:
+    - name: age
+      description: age number
+      type: integer
+    - name: city
+      description: city string
+      type: string
+  headers:
+    Authorization: API_KEY
+    Content-Type: application/json
+  headerParams:
+    - name: Language
+      description: language string
+      type: string
 ```
 
 ## Reference
 
 | **field**    |                  **type**                  | **required** | **description**                                                                                                                                                                                                            |
-|--------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------ | :----------------------------------------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | kind         |                   string                   |     true     | Must be "http".                                                                                                                                                                                                            |
 | source       |                   string                   |     true     | Name of the source the HTTP request should be sent to.                                                                                                                                                                     |
 | description  |                   string                   |     true     | Description of the tool that is passed to the LLM.                                                                                                                                                                         |
@@ -240,4 +238,4 @@ my-http-tool:
 | bodyParams   | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.                                                                                                                    |
 | headerParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers.                                                                                                                           |
 
-[go-template-doc]: <https://pkg.go.dev/text/template#pkg-overview>
+[go-template-doc]: https://pkg.go.dev/text/template#pkg-overview

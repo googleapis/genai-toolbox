@@ -1,8 +1,8 @@
 ---
-title: "Telemetry"
+title: 'Telemetry'
 type: docs
 weight: 2
-description: An overview of telemetry and observability in Toolbox. 
+description: An overview of telemetry and observability in Toolbox.
 ---
 
 ## About
@@ -21,7 +21,7 @@ through a specific [exporter](#exporter).
 The following flags can be used to customize Toolbox logging:
 
 | **Flag**           | **Description**                                                                         |
-|--------------------|-----------------------------------------------------------------------------------------|
+| ------------------ | --------------------------------------------------------------------------------------- |
 | `--log-level`      | Preferred log level, allowed values: `debug`, `info`, `warn`, `error`. Default: `info`. |
 | `--logging-format` | Preferred logging format, allowed values: `standard`, `json`. Default: `standard`.      |
 
@@ -36,7 +36,7 @@ The following flags can be used to customize Toolbox logging:
 Toolbox supports the following log levels, including:
 
 | **Log level** | **Description**                                                                                                                                                                    |
-|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Debug         | Debug logs typically contain information that is only useful during the debugging phase and may be of little value during production.                                              |
 | Info          | Info logs include information about successful operations within the application, such as a successful start, pause, or exit of the application.                                   |
 | Warn          | Warning logs are slightly less severe than error conditions. While it does not cause an error, it indicates that an operation might fail in the future if action is not taken now. |
@@ -84,7 +84,7 @@ can be used to provide important insights into the service. Toolbox provides the
 following custom metrics:
 
 | **Metric Name**                    | **Description**                                         |
-|------------------------------------|---------------------------------------------------------|
+| ---------------------------------- | ------------------------------------------------------- |
 | `toolbox.server.toolset.get.count` | Counts the number of toolset manifest requests served   |
 | `toolbox.server.tool.get.count`    | Counts the number of tool manifest requests served      |
 | `toolbox.server.tool.get.invoke`   | Counts the number of tool invocation requests served    |
@@ -94,7 +94,7 @@ following custom metrics:
 All custom metrics have the following attributes/labels:
 
 | **Metric Attributes**      | **Description**                                           |
-|----------------------------|-----------------------------------------------------------|
+| -------------------------- | --------------------------------------------------------- |
 | `toolbox.name`             | Name of the toolset or tool, if applicable.               |
 | `toolbox.operation.status` | Operation status code, for example: `success`, `failure`. |
 | `toolbox.sse.sessionId`    | Session id for sse connection, if applicable.             |
@@ -117,7 +117,7 @@ All metrics and traces generated within Toolbox will be associated with a
 unified [resource][resource]. The list of resource attributes included are:
 
 | **Resource Name**                                                                         | **Description**                                                                                                                                               |
-|-------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [TelemetrySDK](https://pkg.go.dev/go.opentelemetry.io/otel/sdk/resource#WithTelemetrySDK) | TelemetrySDK version info.                                                                                                                                    |
 | [OS](https://pkg.go.dev/go.opentelemetry.io/otel/sdk/resource#WithOS)                     | OS attributes including OS description and OS type.                                                                                                           |
 | [Container](https://pkg.go.dev/go.opentelemetry.io/otel/sdk/resource#WithContainer)       | Container attributes including container ID, if applicable.                                                                                                   |
@@ -146,10 +146,8 @@ The Google Cloud Exporter directly exports telemetry to Google Cloud Monitoring.
 It utilizes the [GCP Metric Exporter][gcp-metric-exporter] and [GCP Trace
 Exporter][gcp-trace-exporter].
 
-[gcp-metric-exporter]:
-    https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/metric
-[gcp-trace-exporter]:
-    https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/trace
+[gcp-metric-exporter]: https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/metric
+[gcp-trace-exporter]: https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/trace
 
 {{< notice note >}}
 If you're using Google Cloud Monitoring, the following APIs will need to be
@@ -158,6 +156,7 @@ enabled:
 - [Cloud Logging API](https://cloud.google.com/logging/docs/api/enable-api)
 - [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api)
 - [Cloud Trace API](https://cloud.google.com/apis/enableflow?apiid=cloudtrace.googleapis.com)
+
 {{< /notice >}}
 
 #### OTLP Exporter
@@ -183,7 +182,7 @@ Protocol (OTLP). If you would like to use a collector, please refer to this
 The following flags are used to determine Toolbox's telemetry configuration:
 
 | **flag**                   | **type** | **description**                                                                                                  |
-|----------------------------|----------|------------------------------------------------------------------------------------------------------------------|
+| -------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
 | `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                        |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "<http://127.0.0.1:4318>"). |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                   |
@@ -192,8 +191,7 @@ In addition to the flags noted above, you can also make additional configuration
 for OpenTelemetry via the [General SDK Configuration][sdk-configuration] through
 environmental variables.
 
-[sdk-configuration]:
-    https://opentelemetry.io/docs/languages/sdk-configuration/general/
+[sdk-configuration]: https://opentelemetry.io/docs/languages/sdk-configuration/general/
 
 **Examples:**
 

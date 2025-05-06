@@ -1,8 +1,8 @@
 ---
-title: "Tools"
+title: 'Tools'
 type: docs
 weight: 2
-description: > 
+description: >
   Tools define actions an agent can take -- such as reading and writing to a 
   source.
 ---
@@ -13,7 +13,7 @@ statement. You can define Tools as a map in the `tools` section of your
 
 ```yaml
 tools:
- search_flights_by_number:
+  search_flights_by_number:
     kind: postgres-sql
     source: my-pg-instance
     statement: |
@@ -55,13 +55,13 @@ Parameters for each Tool will define what inputs the agent will need to provide
 to invoke them. Parameters should be pass as a list of Parameter objects:
 
 ```yaml
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
 ```
 
 ### Basic Parameters
@@ -71,14 +71,14 @@ most cases, the description will be provided to the LLM as context on specifying
 the parameter.
 
 ```yaml
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
 ```
 
 | **field**   | **type** | **required** | **description**                                                            |
-|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
+| ----------- | :------: | :----------: | -------------------------------------------------------------------------- |
 | name        |  string  |     true     | Name of the parameter.                                                     |
 | type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
 | description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
@@ -90,18 +90,18 @@ To use the `array` type, you must also specify what kind of items are
 in the list using the items field:
 
 ```yaml
-    parameters:
-      - name: preferred_airlines
-        type: array
-        description: A list of airline, ordered by preference. 
-        items:
-          name: name 
-          type: string
-          description: Name of the airline. 
+parameters:
+  - name: preferred_airlines
+    type: array
+    description: A list of airline, ordered by preference.
+    items:
+      name: name
+      type: string
+      description: Name of the airline.
 ```
 
 | **field**   |     **type**     | **required** | **description**                                                            |
-|-------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| ----------- | :--------------: | :----------: | -------------------------------------------------------------------------- |
 | name        |      string      |     true     | Name of the parameter.                                                     |
 | type        |      string      |     true     | Must be "array"                                                            |
 | description |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
@@ -118,27 +118,27 @@ the required [authServices](../authservices) to specific claims within the
 user's ID token.
 
 ```yaml
-  tools:
-    search_flights_by_user_id:
-        kind: postgres-sql
-        source: my-pg-instance
-        statement: |
-          SELECT * FROM flights WHERE user_id = $1
-        parameters:
-          - name: user_id
-            type: string
-            description: Auto-populated from Google login
-            authServices:
-              # Refer to one of the `authServices` defined
-              - name: my-google-auth
-              # `sub` is the OIDC claim field for user ID
-                field: sub
+tools:
+  search_flights_by_user_id:
+    kind: postgres-sql
+    source: my-pg-instance
+    statement: |
+      SELECT * FROM flights WHERE user_id = $1
+    parameters:
+      - name: user_id
+        type: string
+        description: Auto-populated from Google login
+        authServices:
+          # Refer to one of the `authServices` defined
+          - name: my-google-auth
+            # `sub` is the OIDC claim field for user ID
+            field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                         |
-|-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
+| **field** | **type** | **required** | **description**                                                                 |
+| --------- | :------: | :----------: | ------------------------------------------------------------------------------- |
 | name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token. |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.   |
 
 ## Authorized Invocations
 
@@ -149,14 +149,14 @@ specifying an `authRequired` field. Specify a list of
 ```yaml
 tools:
   search_all_flight:
-      kind: postgres-sql
-      source: my-pg-instance
-      statement: |
-        SELECT * FROM flights
-      # A list of `authServices` defined previously
-      authRequired:
-        - my-google-auth
-        - other-auth-service
+    kind: postgres-sql
+    source: my-pg-instance
+    statement: |
+      SELECT * FROM flights
+    # A list of `authServices` defined previously
+    authRequired:
+      - my-google-auth
+      - other-auth-service
 ```
 
 ## Kinds of tools

@@ -1,8 +1,8 @@
 ---
-title: "mssql-sql"
+title: 'mssql-sql'
 type: docs
 weight: 1
-description: > 
+description: >
   A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
   database.
 ---
@@ -23,14 +23,13 @@ Server and expects parameters in the SQL query to be in the form of either
 db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
 ```
 
-[prepare-statement]:
-    https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
+[prepare-statement]: https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
 
 ## Example
 
 ```yaml
 tools:
- search_flights_by_number:
+  search_flights_by_number:
     kind: mssql-sql
     source: my-instance
     statement: |
@@ -69,7 +68,7 @@ tools:
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------ |
 | kind        |                   string                   |     true     | Must be "mssql-sql".                                                                             |
 | source      |                   string                   |     true     | Name of the source the T-SQL statement should execute on.                                        |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

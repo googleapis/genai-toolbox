@@ -1,8 +1,8 @@
 ---
-title: "spanner-sql"
+title: 'spanner-sql'
 type: docs
 weight: 1
-description: > 
+description: >
   A "spanner-sql" tool executes a pre-defined SQL statement against a Google 
   Cloud Spanner database.
 ---
@@ -21,8 +21,7 @@ For the `googlesql` dialect, the specified SQL statement is executed as a [data
 manipulation language (DML)][gsql-dml] statements, and specified parameters will
 inserted according to their name: e.g. `@name`.
 
-[gsql-dml]:
-    https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
+[gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
 
 ### PostgreSQL
 
@@ -35,6 +34,7 @@ according to their position: e.g. `$1` will be the first parameter specified,
 
 ## Example
 
+<!-- prettier-ignore-start -->
 {{< tabpane persist="header" >}}
 {{< tab header="GoogleSQL" lang="yaml" >}}
 
@@ -124,11 +124,12 @@ tools:
 
 {{< /tab >}}
 {{< /tabpane >}}
+<!-- prettier-ignore-end -->
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------ |
 | kind        |                   string                   |     true     | Must be "spanner-sql".                                                                           |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

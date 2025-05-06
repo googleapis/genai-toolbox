@@ -1,5 +1,5 @@
 ---
-title: "Connect via MCP Client"
+title: 'Connect via MCP Client'
 type: docs
 weight: 1
 description: >
@@ -20,17 +20,17 @@ The native SDKs can be combined with MCP clients in many cases.
 
 Toolbox currently supports the following versions of MCP specification:
 
-* [2024-11-05](https://spec.modelcontextprotocol.io/specification/2024-11-05/)
+- [2024-11-05](https://spec.modelcontextprotocol.io/specification/2024-11-05/)
 
 ### Features Not Supported by MCP
 
 Toolbox has several features that are not yet supported in the MCP specification:
 
-* **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05`
+- **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05`
   specification. This includes:
-  * [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
-  * [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
-* **Notifications:** Currently, editing Toolbox Tools requires a server restart.
+  - [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
+  - [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
+- **Notifications:** Currently, editing Toolbox Tools requires a server restart.
   Clients should reload tools on disconnect to get the latest version.
 
 ## Connecting to Toolbox with an MCP client
@@ -84,9 +84,9 @@ testing and debugging Toolbox server.
 
 1. In a separate terminal, run Inspector directly through `npx`:
 
-    ```bash
-    npx @modelcontextprotocol/inspector
-    ```
+   ```bash
+   npx @modelcontextprotocol/inspector
+   ```
 
 1. For `Transport Type` dropdown menu, select `SSE`.
 
@@ -99,7 +99,7 @@ testing and debugging Toolbox server.
 ### Tested Clients
 
 | Client             | SSE Works | MCP Config Docs                                                                                              |
-|--------------------|-----------|--------------------------------------------------------------------------------------------------------------|
+| ------------------ | --------- | ------------------------------------------------------------------------------------------------------------ |
 | Claude Desktop     | ❗        | Claude Desktop only supports STDIO -- use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) to proxy. |
 | MCP Inspector      | ✅        | <https://github.com/modelcontextprotocol/inspector>                                                          |
 | Cursor             | ✅        | <https://docs.cursor.com/context/model-context-protocol>                                                     |

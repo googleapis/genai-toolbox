@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "docs"
+name: 'docs'
 
 permissions:
   contents: write
@@ -36,7 +36,7 @@ jobs:
         working-directory: .hugo
     concurrency:
       # Shared concurrency group wih preview cleanup.
-      group: "preview-${{ github.event.number }}"
+      group: 'preview-${{ github.event.number }}'
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -46,13 +46,13 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
         with:
-          hugo-version: "0.145.0"
+          hugo-version: '0.145.0'
           extended: true
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Cache dependencies
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
@@ -77,7 +77,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .hugo/public
           destination_dir: ./previews/PR-${{ github.event.number }}
-          commit_message: "stage: PR-${{ github.event.number }}: ${{ github.event.head_commit.message }}"
+          commit_message: 'stage: PR-${{ github.event.number }}: ${{ github.event.head_commit.message }}'
 
       - name: Comment
         # If run from a fork, GitHub write operations will fail.

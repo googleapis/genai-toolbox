@@ -10,18 +10,12 @@
   ],
   minimumReleaseAge: '3',
   rebaseWhen: 'conflicted',
-  dependencyDashboardLabels: [
-    'type: process',
-  ],
-  "postUpdateOptions": [
-    "gomodTidy"
-  ],
+  dependencyDashboardLabels: ['type: process'],
+  postUpdateOptions: ['gomodTidy'],
   packageRules: [
     {
       groupName: 'GitHub Actions',
-      matchManagers: [
-        'github-actions',
-      ],
+      matchManagers: ['github-actions'],
       pinDigests: true,
     },
   ],

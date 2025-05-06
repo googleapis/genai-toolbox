@@ -14,15 +14,15 @@
 
 name: 💬 Question
 description: Questions on how something works or the best way to do something?
-title: "<brief summary of the question>"
-labels: ["type: question"]
+title: '<brief summary of the question>'
+labels: ['type: question']
 
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping us improve! 🙏 Please provide as much information as possible about your question. 
-  
+        Thanks for helping us improve! 🙏 Please provide as much information as possible about your question.
+
   - id: preamble
     type: checkboxes
     attributes:
@@ -30,7 +30,7 @@ body:
       description: |
         Please run through the following list and make sure you've tried the usual "quick fixes":
       options:
-        - label: "Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)"
+        - label: 'Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)'
           required: true
 
   - type: textarea
@@ -38,7 +38,7 @@ body:
     attributes:
       label: Question
       description: "What's your question? Please provide as much relevant information as possible to reduce turnaround time. Include information like what environment, language, or framework you are using."
-      placeholder: "Example: How do I connect using private IP with the AlloyDB source?"
+      placeholder: 'Example: How do I connect using private IP with the AlloyDB source?'
     validations:
       required: true
 
@@ -46,10 +46,10 @@ body:
     id: code
     attributes:
       label: Code
-      description: "Please paste any useful application code that might be relevant to your question. (if your code is in a public repo, feel free to paste a link!)"
-      
+      description: 'Please paste any useful application code that might be relevant to your question. (if your code is in a public repo, feel free to paste a link!)'
+
   - type: textarea
     id: additional-details
     attributes:
       label: Additional Details
-      description: "Any other information you want us to know that might be helpful in answering your question? (link issues, PRs, descriptions, or screenshots)."
+      description: 'Any other information you want us to know that might be helpful in answering your question? (link issues, PRs, descriptions, or screenshots).'

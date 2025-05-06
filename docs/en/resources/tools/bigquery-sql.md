@@ -1,5 +1,5 @@
 ---
-title: "bigquery-sql"
+title: 'bigquery-sql'
 type: docs
 weight: 1
 description: >
@@ -21,8 +21,7 @@ parameters can be inserted into the query. BigQuery supports both named paramete
 (e.g., `@name`) and positional parameters (`?`), but they cannot be mixed in the
 same query.
 
-[bigquery-googlesql]:
-    https://cloud.google.com/bigquery/docs/reference/standard-sql/
+[bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Example
 
@@ -62,7 +61,7 @@ tools:
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| ----------- | :----------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------ |
 | kind        |                   string                   |     true     | Must be "bigquery-sql".                                                                          |
 | source      |                   string                   |     true     | Name of the source the GoogleSQL should execute on.                                              |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

@@ -1,5 +1,5 @@
 ---
-title: "sqlite-sql"
+title: 'sqlite-sql'
 type: docs
 weight: 1
 description: >
@@ -40,10 +40,10 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind | string | Yes | Must be "sqlite-sql" |
-| source | string | Yes | Name of a SQLite source configuration |
-| description | string | Yes | Description of what the tool does |
-| parameters | array | No | List of parameters for the SQL statement |
-| statement | string | Yes | The SQL statement to execute |
+| **field**   | **type** | **required** | **description**                          |
+| ----------- | :------: | :----------: | ---------------------------------------- |
+| kind        |  string  |     Yes      | Must be "sqlite-sql"                     |
+| source      |  string  |     Yes      | Name of a SQLite source configuration    |
+| description |  string  |     Yes      | Description of what the tool does        |
+| parameters  |  array   |      No      | List of parameters for the SQL statement |
+| statement   |  string  |     Yes      | The SQL statement to execute             |
