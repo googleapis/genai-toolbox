@@ -249,10 +249,10 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 
 {{% tab header="Claude desktop" lang="en" %}}
 
-0. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
-1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-2. Under the Developer tab, tap Edit Config to open the configuration file.
-3. Add the following configuration and save:
+1. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
+2. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+3. Under the Developer tab, tap Edit Config to open the configuration file.
+4. Add the following configuration and save:
 
     ```json
     {
@@ -269,8 +269,8 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     }
     ```
 
-4. Restart Claude desktop.
-5. From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+5. Restart Claude desktop.
+6. From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
 {{< /tab >}}
 
 {{% tab header="Cline" lang="en" %}}
