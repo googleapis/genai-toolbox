@@ -28,12 +28,12 @@ const SourceKind string = "memorystore-valkey"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Address  string `yaml:"address" validate:"required"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Database int    `yaml:"database"`
+	Name     string   `yaml:"name" validate:"required"`
+	Kind     string   `yaml:"kind" validate:"required"`
+	Address  []string `yaml:"address" validate:"required"`
+	Password string   `yaml:"password"`
+	Database int      `yaml:"database"`
+	UseIAM   bool     `yaml:"useIam"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -41,14 +41,37 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	// Create a new Valkey client
-	client, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress: []string{r.Address},
-		Password:    r.Password,
-		Username:    r.Username,
-		SelectDB:    r.Database,
-	})
 
+	var client valkey.Client
+	var err error
+	if r.UseIAM {
+		// Pass in an access token getter fn for IAM auth
+		authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+			token, err := sources.GetIAMAccessToken(ctx)
+			if err != nil {
+				log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
+				return valkey.AuthCredentials{}, err
+			}
+			return valkey.AuthCredentials{
+				Username: "",
+				Password: token,
+			}, nil
+		}
+		client, err = valkey.NewClient(valkey.ClientOption{
+			InitAddress:       r.Address,
+			AuthCredentialsFn: authFn,
+			SelectDB:          r.Database,
+		})
+
+	} else {
+		// For AUTH string authentication
+		client, err = valkey.NewClient(valkey.ClientOption{
+			InitAddress: r.Address,
+			Password:    r.Password,
+			SelectDB:    r.Database,
+		})
+
+	}
 	if err != nil {
 		log.Fatalf("error creating client: %v", err)
 	}

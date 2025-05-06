@@ -38,13 +38,15 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 			sources:
 				my-valkey-instance:
 					kind: memorystore-valkey
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": memorystorevalkey.Config{
 					Name:    "my-valkey-instance",
 					Kind:    memorystorevalkey.SourceKind,
-					Address: "127.0.0.1",
+					Address: []string{"127.0.0.1"},
+					UseIAM:  false,
 				},
 			},
 		},
@@ -54,19 +56,20 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 			sources:
 				my-valkey-instance:
 					kind: memorystore-valkey
-					address: 127.0.0.1
-					username: my-user
+					address:
+					  - 127.0.0.1
 					password: my-pass
 					database: 1
+					useIam: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": memorystorevalkey.Config{
 					Name:     "my-valkey-instance",
 					Kind:     memorystorevalkey.SourceKind,
-					Address:  "127.0.0.1",
-					Username: "my-user",
+					Address:  []string{"127.0.0.1"},
 					Password: "my-pass",
 					Database: 1,
+					UseIAM:   true,
 				},
 			},
 		},
@@ -102,10 +105,11 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-valkey-instance:
 					kind: memorystore-valkey
 					project: my-project
-					address: 127.0.0.1
-					username: my-user
+					address:
+					  - 127.0.0.1
 					password: my-pass
 					database: my-db
+					useIam: false
 			`,
 			err: "cannot unmarshal string into Go struct field .Sources of type int",
 		},
@@ -116,8 +120,8 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-valkey-instance:
 					kind: memorystore-valkey
 					project: my-project
-					address: 127.0.0.1
-					username: my-user
+					address:
+					  - 127.0.0.1
 					password: my-pass
 					database: 1
 			`,
