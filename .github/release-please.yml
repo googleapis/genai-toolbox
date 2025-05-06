@@ -24,4 +24,6 @@ extraFiles: [
     "docs/en/how-to/deploy_gke.md",
     "docs/en/samples/bigquery/local_quickstart.md",
     "docs/en/samples/bigquery/mcp_quickstart.md",
+    "docs/en/getting-started/colab_quickstart.ipynb",
+    "docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb",
 ]
