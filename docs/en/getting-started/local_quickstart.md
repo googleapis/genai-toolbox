@@ -26,7 +26,7 @@ This guide assumes you have already done the following:
 ## Step 1: Set up your database
 
 In this section, we will create a database, insert some data that needs to be
-access by our agent, and create a database user for Toolbox to connect with.
+accessed by our agent, and create a database user for Toolbox to connect with.
 
 1. Connect to postgres using the `psql` command:
 
