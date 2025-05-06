@@ -429,4 +429,4 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
-  _MEMORYSTORE_VALKEY_DATABASE: 0
+  _MEMORYSTORE_VALKEY_DATABASE: "0"
