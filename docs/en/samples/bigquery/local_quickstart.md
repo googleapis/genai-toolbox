@@ -369,7 +369,7 @@ async def main():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-1.5-pro",
-        vertexai_config={"project": "project-id", "location": "us-central1"},
+        vertexai_config={"location": "us-central1"},
     )
     # llm = GoogleGenAI(
     #     api_key=os.getenv("GOOGLE_API_KEY"),

@@ -1,13 +1,13 @@
 ---
 title: "Export Telemetry"
 type: docs
-weight: 4
+weight: 5
 description: >
-  How to set up and configure Toolbox to use the Otel Collector. 
+  How to set up and configure Toolbox to use the Otel Collector.
 ---
 
 
-## About 
+## About
 
 The [OpenTelemetry Collector][about-collector] offers a vendor-agnostic
 implementation of how to receive, process and export telemetry data. It removes
