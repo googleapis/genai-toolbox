@@ -46,8 +46,9 @@ description: >
 ## Install MCP Toolbox
 
 1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.5.0+:
-    <!-- {x-release-please-start-version} -->
-    {{< tabpane persist=header >}}
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/linux/amd64/toolbox
 {{< /tab >}}
