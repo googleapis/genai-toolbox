@@ -341,7 +341,7 @@ steps:
       - "GOPATH=/gopath"
       - "MEMORYSTORE_VALKEY_DATABASE=$_MEMORYSTORE_VALKEY_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["MEMORYSTORE_VALKEY_ADDRESS", "MEMORYSTORE_VALKEY_PASS", "CLIENT_ID"]
+    secretEnv: ["MEMORYSTORE_VALKEY_ADDRESS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"

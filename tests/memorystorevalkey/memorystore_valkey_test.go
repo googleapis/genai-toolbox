@@ -32,7 +32,6 @@ var (
 	MEMORYSTORE_VALKEY_TOOL_KIND   = "redis"
 	MEMORYSTORE_VALKEY_ADDRESS     = os.Getenv("MEMORYSTORE_VALKEY_ADDRESS")
 	MEMORYSTORE_VALKEY_DATABASE    = os.Getenv("MEMORYSTORE_VALKEY_DATABASE")
-	MEMORYSTORE_VALKEY_PASS        = os.Getenv("MEMORYSTORE_VALKEY_PASS")
 )
 
 func getValkeyVars(t *testing.T) map[string]any {
@@ -41,23 +40,19 @@ func getValkeyVars(t *testing.T) map[string]any {
 		t.Fatal("'MEMORYSTORE_VALKEY_ADDRESS' not set")
 	case MEMORYSTORE_VALKEY_DATABASE:
 		t.Fatal("'MEMORYSTORE_VALKEY_DATABASE' not set")
-	case MEMORYSTORE_VALKEY_PASS:
-		t.Fatal("'MEMORYSTORE_VALKEY_PASS' not set")
 	}
 
 	return map[string]any{
 		"kind":     MEMORYSTORE_VALKEY_SOURCE_KIND,
 		"address":  []string{MEMORYSTORE_VALKEY_ADDRESS},
 		"database": MEMORYSTORE_VALKEY_DATABASE,
-		"password": MEMORYSTORE_VALKEY_PASS,
 		"useIAM":   true,
 	}
 }
 
-func initMemorystoreValkeyClient(ctx context.Context, addr, pass string, db int) (valkey.Client, error) {
+func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress: []string{addr},
-		Password:    pass,
 		SelectDB:    db,
 	})
 
@@ -85,7 +80,7 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to convert `VALKEY_DATABASE` str to int: %s", err)
 	}
-	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS, MEMORYSTORE_VALKEY_PASS, db)
+	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS, db)
 	if err != nil {
 		t.Fatalf("unable to create SQL Server connection pool: %s", err)
 	}

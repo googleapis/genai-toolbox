@@ -58,7 +58,6 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 					kind: memorystore-valkey
 					address:
 					  - 127.0.0.1
-					password: my-pass
 					database: 1
 					useIam: true
 			`,
@@ -67,7 +66,6 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 					Name:     "my-valkey-instance",
 					Kind:     memorystorevalkey.SourceKind,
 					Address:  []string{"127.0.0.1"},
-					Password: "my-pass",
 					Database: 1,
 					UseIAM:   true,
 				},
@@ -107,7 +105,6 @@ func TestFailParseFromYaml(t *testing.T) {
 					project: my-project
 					address:
 					  - 127.0.0.1
-					password: my-pass
 					database: my-db
 					useIam: false
 			`,

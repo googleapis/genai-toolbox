@@ -31,7 +31,6 @@ type Config struct {
 	Name     string   `yaml:"name" validate:"required"`
 	Kind     string   `yaml:"kind" validate:"required"`
 	Address  []string `yaml:"address" validate:"required"`
-	Password string   `yaml:"password"`
 	Database int      `yaml:"database"`
 	UseIAM   bool     `yaml:"useIam"`
 }
@@ -44,9 +43,11 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	var client valkey.Client
 	var err error
+	var authFn func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error)
+
 	if r.UseIAM {
 		// Pass in an access token getter fn for IAM auth
-		authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+		authFn = func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
 			token, err := sources.GetIAMAccessToken(ctx)
 			if err != nil {
 				log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
@@ -57,21 +58,14 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				Password: token,
 			}, nil
 		}
-		client, err = valkey.NewClient(valkey.ClientOption{
-			InitAddress:       r.Address,
-			AuthCredentialsFn: authFn,
-			SelectDB:          r.Database,
-		})
-
-	} else {
-		// For AUTH string authentication
-		client, err = valkey.NewClient(valkey.ClientOption{
-			InitAddress: r.Address,
-			Password:    r.Password,
-			SelectDB:    r.Database,
-		})
-
 	}
+
+	client, err = valkey.NewClient(valkey.ClientOption{
+		InitAddress:       r.Address,
+		SelectDB:          r.Database,
+		AuthCredentialsFn: authFn,
+	})
+
 	if err != nil {
 		log.Fatalf("error creating client: %v", err)
 	}
