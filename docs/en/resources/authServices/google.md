@@ -16,7 +16,8 @@ application and retrieved a [Client ID][client-id]. Configure your auth service
 in with the `Client ID`.
 
 [gsi-setup]: https://developers.google.com/identity/sign-in/web/sign-in
-[client-id]: https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials
+[client-id]:
+    https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials
 
 ## Behavior
 

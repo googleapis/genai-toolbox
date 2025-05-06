@@ -11,7 +11,6 @@ A tool represents an action your agent can take, such as running a SQL
 statement. You can define Tools as a map in the `tools` section of your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
-
 ```yaml
 tools:
  search_flights_by_number:
@@ -50,7 +49,6 @@ tools:
         description: 1 to 4 digit number
 ```
 
-
 ## Specifying Parameters
 
 Parameters for each Tool will define what inputs the agent will need to provide
@@ -88,7 +86,7 @@ the parameter.
 ### Array Parameters
 
 The `array` type is a list of items passed in as a single parameter.
-To use the `array` type, you must also specify what kind of items are 
+To use the `array` type, you must also specify what kind of items are
 in the list using the items field:
 
 ```yaml
@@ -112,11 +110,12 @@ in the list using the items field:
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
-information decoded from [ID tokens](../authsources/#specifying-id-tokens-from-clients) that
-are passed in request headers. They do not take input values in request bodies
-like other parameters. To use authenticated parameters, you must configure 
-the tool to map the required [authServices](../authservices) to 
-specific claims within the user's ID token.
+information decoded from [ID
+tokens](../authsources/#specifying-id-tokens-from-clients) that are passed in
+request headers. They do not take input values in request bodies like other
+parameters. To use authenticated parameters, you must configure the tool to map
+the required [authServices](../authservices) to specific claims within the
+user's ID token.
 
 ```yaml
   tools:

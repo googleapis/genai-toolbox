@@ -21,14 +21,15 @@ For the `googlesql` dialect, the specified SQL statement is executed as a [data
 manipulation language (DML)][gsql-dml] statements, and specified parameters will
 inserted according to their name: e.g. `@name`.
 
-[gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
+[gsql-dml]:
+    https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
 
 ### PostgreSQL
 
-For the `postgresql` dialect, the specified SQL statement is executed as a [prepared
-statement][pg-prepare], and specified parameters will inserted according to
-their position: e.g. `$1` will be the first parameter specified, `$@` will be
-the second parameter, and so on.
+For the `postgresql` dialect, the specified SQL statement is executed as a
+[prepared statement][pg-prepare], and specified parameters will inserted
+according to their position: e.g. `$1` will be the first parameter specified,
+`$@` will be the second parameter, and so on.
 
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
@@ -49,11 +50,16 @@ tools:
     description: |
       Use this tool to get information for a specific flight.
       Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      A airline code is a code for an airline service consisting of two-character
-      airline designator and followed by flight number, which is 1 to 4 digit number.
-      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
-      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+      Do NOT use this tool with a flight id. Do NOT guess an airline code or
+      flight number.
+      A airline code is a code for an airline service consisting of
+      two-character
+      airline designator and followed by flight number, which is 1 to 4 digit
+      number.
+      For example, if given CY 0123, the airline is "CY", and flight_number is
+      "123".
+      Another example for this is DL 1234, the airline is "DL", and
+      flight_number is "1234".
       If the tool returns more than one option choose the date closes to today.
       Example:
       {{
@@ -88,11 +94,15 @@ tools:
     description: |
       Use this tool to get information for a specific flight.
       Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      A airline code is a code for an airline service consisting of two-character
-      airline designator and followed by flight number, which is 1 to 4 digit number.
-      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
-      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+      Do NOT use this tool with a flight id. Do NOT guess an airline code or
+      flight number.
+      A airline code is a code for an airline service consisting of
+      two-character airline designator and followed by flight number, which is 1
+      to 4 digit number.
+      For example, if given CY 0123, the airline is "CY", and flight_number is
+      "123".
+      Another example for this is DL 1234, the airline is "DL", and
+      flight_number is "1234".
       If the tool returns more than one option choose the date closes to today.
       Example:
       {{

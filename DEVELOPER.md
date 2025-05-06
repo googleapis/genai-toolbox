@@ -19,7 +19,8 @@
 
 1. Create a `tools.yaml` file with your [sources and tools configurations](./README.md#Configuration).
 
-1. You can specify flags for the Toolbox server. Execute the following to list the possible CLI flags:
+1. You can specify flags for the Toolbox server. Execute the following to list
+   the possible CLI flags:
 
     ```bash
     go run . --help
@@ -47,6 +48,13 @@
     golangci-lint run --fix
     ```
 
+- Run the [markdownlint](https://github.com/DavidAnson/markdownlint-cli2) check:
+
+    ```bash
+    markdownlint-cli2 --fix "*.md" "#node_modules"
+    markdownlint-cli2 --fix "docs/**/*.md" "#node_modules"
+    ```
+
 - Run unit tests locally:
 
     ```bash
@@ -58,8 +66,8 @@
     vairables for each source, check out the [Cloud Build testing
     configuration](./.ci/integration.cloudbuild.yaml).
         - Use your own GCP email as the `SERVICE_ACCOUNT_EMAIL`.
-        - Use the Google Cloud SDK application Client ID as the `CLIENT_ID`. Ask the
-        Toolbox maintainers if you don't know it already.
+        - Use the Google Cloud SDK application Client ID as the `CLIENT_ID`. Ask
+          the Toolbox maintainers if you don't know it already.
 
     2. Run the integration test for your target source with the required Go
     build tags specified at the top of each integration test file:
@@ -90,7 +98,8 @@
     go build -o toolbox
     ```
 
-1. You can specify flags for the Toolbox server. Execute the following to list the possible CLI flags:
+1. You can specify flags for the Toolbox server. Execute the following to list
+   the possible CLI flags:
 
     ```bash
     ./toolbox --help
@@ -138,10 +147,14 @@ Please refer to the [SDK developer guide](https://github.com/googleapis/mcp-tool
 
 ### Releasing
 
-There are two types of release for Toolbox, including a versioned release and continuous release.
+There are two types of release for Toolbox, including a versioned release and
+continuous release.
 
-- Versioned release: Official supported distributions with the `latest` tag. The release process for versioned release is in [versioned.release.cloudbuild.yaml](https://github.com/googleapis/genai-toolbox/blob/main/versioned.release.cloudbuild.yaml).
-- Continuous release: Used for early testing features between official supported releases and end-to-end testings.
+- Versioned release: Official supported distributions with the `latest` tag. The
+  release process for versioned release is in
+  [versioned.release.cloudbuild.yaml](https://github.com/googleapis/genai-toolbox/blob/main/versioned.release.cloudbuild.yaml).
+- Continuous release: Used for early testing features between official supported
+  releases and end-to-end testings.
 
 #### Supported OS and Architecture binaries
 
@@ -160,7 +173,8 @@ The following base container images is supported within the container image rele
 
 ### Automated tests
 
-Integration and unit tests are automatically triggered via CloudBuild during each PR creation.
+Integration and unit tests are automatically triggered via CloudBuild during
+each PR creation.
 
 #### Trigger Setup
 
@@ -177,7 +191,8 @@ Create a Cloud Build trigger via the UI or `gcloud` with the following specs:
 - Filters: add directory filter
 - Config: Cloud Build configuration file
   - Location: Repository (add path to file)
-- Service account: set for demo service to enable ID token creation to use to authenticated services
+- Service account: set for demo service to enable ID token creation to use to
+  authenticated services
 
 ### Trigger
 

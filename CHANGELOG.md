@@ -1,7 +1,7 @@
+<!-- markdownlint-disable -->
 # Changelog
 
 ## [0.4.0](https://github.com/googleapis/genai-toolbox/compare/v0.3.0...v0.4.0) (2025-04-23)
-
 
 ### Features
 
@@ -15,7 +15,6 @@
 * Add SQLite source and tool ([#438](https://github.com/googleapis/genai-toolbox/issues/438)) ([fc14cbf](https://github.com/googleapis/genai-toolbox/commit/fc14cbfd078d465591e4fefb80542759e82a2731))
 * Support env replacement for tools.yaml ([#462](https://github.com/googleapis/genai-toolbox/issues/462)) ([eadb678](https://github.com/googleapis/genai-toolbox/commit/eadb678a7bd4ce74a3b1160f5ed8966ffbb13c61))
 
-
 ### Bug Fixes
 
 * [#419](https://github.com/googleapis/genai-toolbox/issues/419) TLS https URL for SSE endpoint ([#420](https://github.com/googleapis/genai-toolbox/issues/420)) ([0a7d3ff](https://github.com/googleapis/genai-toolbox/commit/0a7d3ff06b88051c752b6d53bc964ed6e6be400e))
@@ -24,7 +23,6 @@
 
 ## [0.3.0](https://github.com/googleapis/genai-toolbox/compare/v0.2.1...v0.3.0) (2025-04-04)
 
-
 ### Features
 
 * Add 'alloydb-ai-nl' tool ([#358](https://github.com/googleapis/genai-toolbox/issues/358)) ([f02885f](https://github.com/googleapis/genai-toolbox/commit/f02885fd4a919103fdabaa4ca38d975dc8497542))
@@ -32,13 +30,11 @@
 * Adding support for Model Context Protocol (MCP). ([#396](https://github.com/googleapis/genai-toolbox/issues/396)) ([a7d1d4e](https://github.com/googleapis/genai-toolbox/commit/a7d1d4eb2ae337b463d1b25ccb25c3c0eb30df6f))
 * Added [toolbox-core](https://pypi.org/project/toolbox-core/) SDK – easily integrate Toolbox into any Python function calling framework
 
-
 ### Bug Fixes
 
 * Add `tools-file` flag and deprecate `tools_file`  ([#384](https://github.com/googleapis/genai-toolbox/issues/384)) ([34a7263](https://github.com/googleapis/genai-toolbox/commit/34a7263fdce40715de20ef5677f94be29f9f5c98)), closes [#383](https://github.com/googleapis/genai-toolbox/issues/383)
 
 ## [0.2.1](https://github.com/googleapis/genai-toolbox/compare/v0.2.0...v0.2.1) (2025-03-20)
-
 
 ### Bug Fixes
 
@@ -46,7 +42,6 @@
 * **source/alloydb:** Correct user agents not being sent ([#323](https://github.com/googleapis/genai-toolbox/issues/323)) ([ce12a34](https://github.com/googleapis/genai-toolbox/commit/ce12a344ed6290c7c6e36ee117318c20d6fdccc2))
 
 ## [0.2.0](https://github.com/googleapis/genai-toolbox/compare/v0.1.0...v0.2.0) (2025-03-03)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -56,7 +51,6 @@
 
 * Rename "AuthSource" in favor of "AuthService" ([#297](https://github.com/googleapis/genai-toolbox/issues/297)) ([04cb5fb](https://github.com/googleapis/genai-toolbox/commit/04cb5fbc3e1876d1cf83d3f3de2c176ee2862d63))
 
-
 ### Bug Fixes
 
 * Add items to parameter manifest ([#293](https://github.com/googleapis/genai-toolbox/issues/293)) ([541612d](https://github.com/googleapis/genai-toolbox/commit/541612d72d0123b285bb9f58c9cf1bfd61ebd902))
@@ -64,13 +58,11 @@
 * Throw error when items field is missing from array parameter ([#296](https://github.com/googleapis/genai-toolbox/issues/296)) ([9193836](https://github.com/googleapis/genai-toolbox/commit/9193836effaae79204f73a8c5d26668a95d2cb91))
 * Validate required common fields for parameters ([#298](https://github.com/googleapis/genai-toolbox/issues/298)) ([e494d11](https://github.com/googleapis/genai-toolbox/commit/e494d11e6e1651138dcd527171f63d4fa8604211))
 
-
 ### Miscellaneous Chores
 
 * Release 0.2.0 ([#314](https://github.com/googleapis/genai-toolbox/issues/314)) ([d7ccf73](https://github.com/googleapis/genai-toolbox/commit/d7ccf730e7c0c752615f8a7ea162836c5f9950da))
 
 ## [0.1.0](https://github.com/googleapis/genai-toolbox/compare/v0.0.5...v0.1.0) (2025-02-06)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -86,7 +78,6 @@
 * Add MySQL Source ([#250](https://github.com/googleapis/genai-toolbox/issues/250)) ([378692a](https://github.com/googleapis/genai-toolbox/commit/378692ab50a90dcc1c3353052d0741cfd318c79d))
 * Add MSSQL source ([#255](https://github.com/googleapis/genai-toolbox/issues/255)) ([8fca0a9](https://github.com/googleapis/genai-toolbox/commit/8fca0a95ee5e79e30919b05592af643ba57f3183))
 
-
 ### Bug Fixes
 
 * Auth token verification failure should not throw error immediately ([#234](https://github.com/googleapis/genai-toolbox/issues/234)) ([4639cc6](https://github.com/googleapis/genai-toolbox/commit/4639cc6560f09b6b8203650ccce424ce59aa0c14))
@@ -99,7 +90,6 @@
 * Update tool invoke to return json ([#266](https://github.com/googleapis/genai-toolbox/issues/266)) ([ad58cd5](https://github.com/googleapis/genai-toolbox/commit/ad58cd5855be9e1b73926e16527fb89ce778b8d9))
 
 ## [0.0.5](https://github.com/googleapis/genai-toolbox/compare/v0.0.4...v0.0.5) (2025-01-14)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -114,7 +104,6 @@
 * Replace Source field `ip_type` with `ipType` for consistency ([#197](https://github.com/googleapis/genai-toolbox/issues/197)) ([e069520](https://github.com/googleapis/genai-toolbox/commit/e069520bb79d086dbdd37ebc3ad9bb39b31c8fac))
 * Update log with given context ([#147](https://github.com/googleapis/genai-toolbox/issues/147)) ([809e547](https://github.com/googleapis/genai-toolbox/commit/809e547a481bd4af351bbaa2dcfd203b086bb51d))
 
-
 ### Bug Fixes
 
 * Correct parsing of floats/ints from json ([#180](https://github.com/googleapis/genai-toolbox/issues/180)) ([387a5b5](https://github.com/googleapis/genai-toolbox/commit/387a5b56b53ccfe0637a0f44c0ddbec8e991cc39))
@@ -124,13 +113,11 @@
 * Improve return error for parameters  ([#206](https://github.com/googleapis/genai-toolbox/issues/206)) ([346c57d](https://github.com/googleapis/genai-toolbox/commit/346c57da2394e398ee8cc527b84973aa2bcde642))
 * **toolbox-sdk:** Deprecate 'add_auth_headers' in favor of 'add_auth_tokens'  ([#170](https://github.com/googleapis/genai-toolbox/issues/170)) ([b56fa68](https://github.com/googleapis/genai-toolbox/commit/b56fa685e379c3515025ed76d9abe61f93365a65))
 
-
 ### Miscellaneous Chores
 
 * Release 0.0.5 ([#210](https://github.com/googleapis/genai-toolbox/issues/210)) ([bd407c0](https://github.com/googleapis/genai-toolbox/commit/bd407c0ab749c9a72523122a2212652f9d97ab03))
 
 ## [0.0.4](https://github.com/googleapis/genai-toolbox/compare/v0.0.3...v0.0.4) (2024-12-18)
-
 
 ### Features
 
@@ -140,20 +127,17 @@
 * **langchain-sdk:** Correctly parse Manifest API response as JSON ([#143](https://github.com/googleapis/genai-toolbox/issues/143)) ([2c8633c](https://github.com/googleapis/genai-toolbox/commit/2c8633c3eb2d936b62fe24c87a6385d5898f4370))
 * **langchain-sdk:** Support authentication in LangChain Toolbox SDK. ([#133](https://github.com/googleapis/genai-toolbox/issues/133)) ([23fa912](https://github.com/googleapis/genai-toolbox/commit/23fa912a80e7e02f53a5ad27781e32a5cfa05458))
 
-
 ### Bug Fixes
 
 * Fix release image version tag ([#136](https://github.com/googleapis/genai-toolbox/issues/136)) ([6d19ff9](https://github.com/googleapis/genai-toolbox/commit/6d19ff96e4004c97739ad6a064ef72e57f8da2f2))
 * **langchain-sdk:** Correct test name to ensure execution and full coverage. ([#145](https://github.com/googleapis/genai-toolbox/issues/145)) ([d820ac3](https://github.com/googleapis/genai-toolbox/commit/d820ac3767127058dc726b44e469a7adec26783b))
 * Set server version ([#150](https://github.com/googleapis/genai-toolbox/issues/150)) ([abd1eb7](https://github.com/googleapis/genai-toolbox/commit/abd1eb702c1ab75d76be624d2f0decd34548f93f))
 
-
 ### Miscellaneous Chores
 
 * Release 0.0.4 ([#152](https://github.com/googleapis/genai-toolbox/issues/152)) ([86ec12f](https://github.com/googleapis/genai-toolbox/commit/86ec12f8c5d67ced5bcd52c9d8e80b17aa11b514))
 
 ## [0.0.3](https://github.com/googleapis/genai-toolbox/compare/v0.0.2...v0.0.3) (2024-12-10)
-
 
 ### Features
 
@@ -165,7 +149,6 @@
 * **source/alloydb-pg:** Add configuration for public and private IP ([#103](https://github.com/googleapis/genai-toolbox/issues/103)) ([e88ec40](https://github.com/googleapis/genai-toolbox/commit/e88ec409d14c85d6b0896c45d9957cce9097912a))
 * **source/cloudsql-pg:** Add configuration for public and private IP ([#114](https://github.com/googleapis/genai-toolbox/issues/114)) ([6479c1d](https://github.com/googleapis/genai-toolbox/commit/6479c1dbe26f05438df9c2289118da558eee0a0d))
 
-
 ### Bug Fixes
 
 * Fix go test workflow ([#84](https://github.com/googleapis/genai-toolbox/issues/84)) ([8c2c373](https://github.com/googleapis/genai-toolbox/commit/8c2c373d359b718b2182f566bc245a2a8fa03333))
@@ -174,13 +157,11 @@
 * Fix the errors showing up after setting up mypy type checker. ([#74](https://github.com/googleapis/genai-toolbox/issues/74)) ([522bbef](https://github.com/googleapis/genai-toolbox/commit/522bbefa7b305a1695bb21ce4a9c92429cde4ee9))
 * **llamaindex-sdk:** Fix issue causing client session to not close properly while closing SDK. ([#82](https://github.com/googleapis/genai-toolbox/issues/82)) ([fa03376](https://github.com/googleapis/genai-toolbox/commit/fa03376bbc4b9dba93a471b13225c8f1a37187c2))
 
-
 ### Miscellaneous Chores
 
 * Release 0.0.3 ([#122](https://github.com/googleapis/genai-toolbox/issues/122)) ([626e12f](https://github.com/googleapis/genai-toolbox/commit/626e12fdb3e27996e9e4a8c9661563ec3c3bcc5c))
 
 ## [0.0.2](https://github.com/googleapis/genai-toolbox/compare/v0.0.1...v0.0.2) (2024-11-12)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -194,20 +175,17 @@
 * **sdk:** Make ClientSession optional when initializing ToolboxClient ([#55](https://github.com/googleapis/genai-toolbox/issues/55)) ([26347b5](https://github.com/googleapis/genai-toolbox/commit/26347b5a5e71434d7bd2b7a9e6458247e75e3969))
 * Support requesting a single tool ([#56](https://github.com/googleapis/genai-toolbox/issues/56)) ([efafba9](https://github.com/googleapis/genai-toolbox/commit/efafba9033e046905552f149f59893a4fad41afb))
 
-
 ### Bug Fixes
 
 * Correct source type validation for postgres-sql tool ([#47](https://github.com/googleapis/genai-toolbox/issues/47)) ([52ebb43](https://github.com/googleapis/genai-toolbox/commit/52ebb431b784d160508273492d904d3b101afeb9))
 * **docs:** Correct outdated references to tool kinds ([#49](https://github.com/googleapis/genai-toolbox/issues/49)) ([972888b](https://github.com/googleapis/genai-toolbox/commit/972888b9d64e1fea1d9a56b13268235ea55b9d66))
 * Handle content-type correctly ([#33](https://github.com/googleapis/genai-toolbox/issues/33)) ([cf8112f](https://github.com/googleapis/genai-toolbox/commit/cf8112f85610833f2f4f2817a65fc4f7cf2322d8))
 
-
 ### Miscellaneous Chores
 
 * Release 0.0.2 ([#65](https://github.com/googleapis/genai-toolbox/issues/65)) ([beea3c3](https://github.com/googleapis/genai-toolbox/commit/beea3c32d94d605973ba06b71a37b7c1bd4787bf))
 
 ## 0.0.1 (2024-10-28)
-
 
 ### Features
 
@@ -225,11 +203,9 @@
 * **langchain-sdk:** Add Toolbox SDK for LangChain ([#22](https://github.com/googleapis/genai-toolbox/issues/22)) ([0bcd4b6](https://github.com/googleapis/genai-toolbox/commit/0bcd4b6e418a8e43f2b7b74a0969da171e2081bf))
 * Stub basic control plane functionality  ([#9](https://github.com/googleapis/genai-toolbox/issues/9)) ([336bdc4](https://github.com/googleapis/genai-toolbox/commit/336bdc4d56580637afff2313bef64b50b148faca))
 
-
 ### Miscellaneous Chores
 
 * Release 0.0.1 ([#31](https://github.com/googleapis/genai-toolbox/issues/31)) ([1f24ddd](https://github.com/googleapis/genai-toolbox/commit/1f24dddb4b24ff4336998bf43acaf4607a48ff66))
-
 
 ### Continuous Integration
 

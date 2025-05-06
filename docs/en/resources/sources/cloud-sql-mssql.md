@@ -63,8 +63,8 @@ mTLS.
 
 ### Database User
 
-Currently, this source only uses standard authentication. You will need to [create a
-SQL Server user][cloud-sql-users] to login to the database with.
+Currently, this source only uses standard authentication. You will need to
+[create a SQL Server user][cloud-sql-users] to login to the database with.
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/sqlserver/create-manage-users
 

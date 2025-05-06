@@ -9,17 +9,17 @@ MCP Toolbox for Databases is an open source MCP server for databases. It enables
 you to develop tools easier, faster, and more securely by handling the complexities
 such as connection pooling, authentication, and more.
 
-
-{{< notice note >}} 
+{{< notice note >}}
 This solution was originally named “Gen AI Toolbox for
 Databases” as its initial development predated MCP, but was renamed to align
-with recently added MCP compatibility. 
+with recently added MCP compatibility.
 {{< /notice >}}
 
-##  Why Toolbox?
+## Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your
 database. Toolbox provides:
+
 - **Simplified development**: Integrate tools to your agent in less than 10
   lines of code, reuse tools between multiple agents or frameworks, and deploy
   new versions of tools more easily.
@@ -28,7 +28,6 @@ database. Toolbox provides:
 - **Enhanced security**: Integrated auth for more secure access to your data
 - **End-to-end observability**: Out of the box metrics and tracing with built-in
   support for OpenTelemetry.
-
 
 ## General Architecture
 
@@ -44,6 +43,7 @@ redeploying your application.
 ## Getting Started
 
 ### Installing the server
+
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
@@ -117,9 +117,11 @@ tools:
 from toolbox_core import ToolboxClient
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
 
-# these tools can be passed to your application! 
+client = ToolboxClient("<http://127.0.0.1:5000>")
+
+# these tools can be passed to your application
+
 tools = await client.load_toolset("toolset_name")
 {{< /highlight >}}
 
@@ -137,9 +139,11 @@ tools:
 from toolbox_langchain import ToolboxClient
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
 
-# these tools can be passed to your application! 
+client = ToolboxClient("<http://127.0.0.1:5000>")
+
+# these tools can be passed to your application
+
 tools = client.load_toolset()
 {{< /highlight >}}
 
@@ -157,9 +161,11 @@ tools:
 from toolbox_llamaindex import ToolboxClient
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
 
-# these tools can be passed to your application! 
+client = ToolboxClient("<http://127.0.0.1:5000>")
+
+# these tools can be passed to your application
+
 tools = client.load_toolset()
 {{< /highlight >}}
 

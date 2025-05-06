@@ -4,14 +4,15 @@ linkTitle: "HTTP"
 type: docs
 weight: 1
 description: >
-  The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
+  The HTTP source enables the Toolbox to retrieve data from a remote server
+  using HTTP requests.
 ---
 
 ## About
 
-The HTTP Source allows Toolbox to retrieve data from arbitrary HTTP
-endpoints. This enables Generative AI applications to access data from web APIs
-and other HTTP-accessible resources.
+The HTTP Source allows Toolbox to retrieve data from arbitrary HTTP endpoints.
+This enables Generative AI applications to access data from web APIs and other
+HTTP-accessible resources.
 
 ## Example
 

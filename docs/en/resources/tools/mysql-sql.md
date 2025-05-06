@@ -18,7 +18,8 @@ database. It's compatible with any of the following sources:
 The specified SQL statement is executed as a [prepared statement][mysql-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
 
-[mysql-prepare]: https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
+[mysql-prepare]:
+    https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 
 ## Example
 

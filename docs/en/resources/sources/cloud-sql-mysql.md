@@ -18,7 +18,8 @@ If you are new to Cloud SQL for MySQL, you can try [creating and connecting
 to a database by following these instructions][csql-mysql-quickstart].
 
 [csql-mysql-docs]: https://cloud.google.com/sql/docs/mysql
-[csql-mysql-quickstart]: https://cloud.google.com/sql/docs/mysql/connect-instance-local-computer
+[csql-mysql-quickstart]:
+    https://cloud.google.com/sql/docs/mysql/connect-instance-local-computer
 
 ## Requirements
 

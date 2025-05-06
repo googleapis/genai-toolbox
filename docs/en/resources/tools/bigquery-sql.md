@@ -7,7 +7,8 @@ description: >
 ---
 
 ## About
-A `bigquery-sql` tool executes a pre-defined SQL statement. It's compatible with 
+
+A `bigquery-sql` tool executes a pre-defined SQL statement. It's compatible with
 the following sources:
 
 - [bigquery](../sources/bigquery.md)
@@ -20,7 +21,8 @@ parameters can be inserted into the query. BigQuery supports both named paramete
 (e.g., `@name`) and positional parameters (`?`), but they cannot be mixed in the
 same query.
 
-[bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
+[bigquery-googlesql]:
+    https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Example
 

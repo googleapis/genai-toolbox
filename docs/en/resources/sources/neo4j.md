@@ -21,7 +21,8 @@ This source only uses standard authentication. You will need to [create a Neo4j
 user][neo4j-users] to log in to the database with, or use the default `neo4j`
 user if available.
 
-[neo4j-users]: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-users/
+[neo4j-users]:
+    https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-users/
 
 ## Example
 

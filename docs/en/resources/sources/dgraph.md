@@ -9,7 +9,10 @@ description: >
 
 ## About
 
-[Dgraph][dgraph-docs] is an open-source graph database. It is designed for real-time workloads, horizontal scalability, and data flexibility. Implemented as a distributed system, Dgraph processes queries in parallel to deliver the fastest result.
+[Dgraph][dgraph-docs] is an open-source graph database. It is designed for
+real-time workloads, horizontal scalability, and data flexibility. Implemented
+as a distributed system, Dgraph processes queries in parallel to deliver the
+fastest result.
 
 This source can connect to either a self-managed Dgraph cluster or one hosted on
 Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to

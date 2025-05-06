@@ -3,7 +3,11 @@ title: "Bigtable"
 type: docs
 weight: 1
 description: >
-  Bigtable is a low-latency NoSQL database service for machine learning, operational analytics, and user-facing operations. It's a wide-column, key-value store that can scale to billions of rows and thousands of columns. With Bigtable, you can replicate your data to regions across the world for high availability and data resiliency.
+  Bigtable is a low-latency NoSQL database service for machine learning,
+  operational analytics, and user-facing operations. It's a wide-column, key-value
+  store that can scale to billions of rows and thousands of columns. With Bigtable,
+  you can replicate your data to regions across the world for high availability
+  and data resiliency.
 
 ---
 
@@ -49,7 +53,8 @@ applying IAM permissions and roles to an identity.
 [iam-overview]: https://cloud.google.com/bigtable/docs/access-control
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[grant-permissions]: https://cloud.google.com/bigtable/docs/access-control#iam-management-instance
+[grant-permissions]:
+    https://cloud.google.com/bigtable/docs/access-control#iam-management-instance
 
 ## Example
 

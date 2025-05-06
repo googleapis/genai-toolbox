@@ -3,12 +3,14 @@ title: "Quickstart (Local)"
 type: docs
 weight: 2
 description: >
-  How to get started running Toolbox locally with Python, PostgreSQL, and 
-  [GoogleGenAI](https://pypi.org/project/google-genai/), 
-  [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [Agent Development Kit](https://google.github.io/adk-docs/). 
+  How to get started running Toolbox locally with Python, PostgreSQL, and
+  [GoogleGenAI](https://pypi.org/project/google-genai/),
+  [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [Agent Development Kit](https://google.github.io/adk-docs/)
 ---
+<!-- markdownlint-disable MD041 MD046 -->
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
+[![Open In
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
 
 ## Before you begin
 
@@ -303,6 +305,7 @@ pip install llama-index-llms-google-genai
 
 {{< /tab >}}
 {{< /tabpane >}}
+<!-- markdownlint-disable MD013 -->
 
 1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
@@ -609,17 +612,21 @@ asyncio.run(run_application())
     {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
 To learn more about tool calling with Google GenAI, check out the
-[Google GenAI Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
+[Google GenAI
+Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
 {{% /tab %}}
 {{% tab header="ADK" lang="en" %}}
-To learn more about Agent Development Kit, check out the [ADK documentation.](https://google.github.io/adk-docs/)
+To learn more about Agent Development Kit, check out the [ADK
+documentation.](https://google.github.io/adk-docs/)
 {{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
-To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
+To learn more about Agents in LangChain, check out the [LangGraph Agent
+documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
 To learn more about Agents in LlamaIndex, check out the
-[LlamaIndex AgentWorkflow documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
+[LlamaIndex AgentWorkflow
+documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
 {{% /tab %}}
 {{< /tabpane >}}
 

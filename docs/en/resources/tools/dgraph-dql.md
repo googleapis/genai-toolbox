@@ -19,7 +19,7 @@ upserts or mutations, set `isQuery=false`. You can also configure timeout for a
 query.
 
 ## Example
-
+<!-- markdownlint-disable MD013 -->
 {{< tabpane persist="header" >}}
 {{< tab header="Query" lang="yaml" >}}
 
@@ -40,9 +40,10 @@ tools:
     isQuery: true
     timeout: 20s
     description: |
-     Use this tool to retrieve the details of users who are admins and are between 30 and 50 years old.
-     The query returns the user's name, email, role, and age.
-     This can be helpful when you want to fetch admin users within a specific age range.
+     Use this tool to retrieve the details of users who are admins and are
+     between 30 and 50 years old. The query returns the user's name, email,
+     role, and age. This can be helpful when you want to fetch admin users
+     within a specific age range.
      Example: Fetch admins aged between 30 and 50:
       [
         {
@@ -103,6 +104,7 @@ tools:
 
 {{< /tab >}}
 {{< /tabpane >}}
+<!-- markdownlint-enable MD013 -->
 
 ## Reference
 

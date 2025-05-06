@@ -22,7 +22,8 @@ amount of data through a structured format.
 This source only uses standard authentication. You will need to [create a
 SQL Server user][mssql-users] to login to the database with.
 
-[mssql-users]: https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/create-a-database-user?view=sql-server-ver16
+[mssql-users]:
+    https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/create-a-database-user?view=sql-server-ver16
 
 ## Example
 

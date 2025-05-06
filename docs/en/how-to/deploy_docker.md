@@ -8,7 +8,6 @@ description: >
 
 <!-- Contributor: Sujith R Pillai <sujithrpillai@gmail.com> -->
 
-
 ## Before you begin
 
 1. [Install Docker Compose.](https://docs.docker.com/compose/install/)
@@ -74,19 +73,16 @@ networks:
     docker-compose up -d
     ```
 
-
-{{< notice tip >}} 
+{{< notice tip >}}
 
 You can use this setup quickly set up Toolbox + Postgres to follow along in our
 [Quickstart](../getting-started/local_quickstart.md)
 
-{{< /notice >}} 
-
-
+{{< /notice >}}
 
 ## Connecting with Toolbox Client SDK
 
-Next, we will use Toolbox with the Client SDKs: 
+Next, we will use Toolbox with the Client SDKs:
 
 1. The url for the Toolbox server running using docker-compose will be:
 
@@ -101,14 +97,14 @@ Next, we will use Toolbox with the Client SDKs:
 from toolbox_langchain import ToolboxClient
 
 # Replace with the cloud run service URL generated above
+
 toolbox = ToolboxClient("http://$YOUR_URL")
 {{< /tab >}}
 {{< tab header="Llamaindex" lang="Python" >}}
 from toolbox_llamaindex import ToolboxClient
 
 # Replace with the cloud run service URL generated above
+
 toolbox = ToolboxClient("http://$YOUR_URL")
 {{< /tab >}}
 {{< /tabpane >}}
-
-

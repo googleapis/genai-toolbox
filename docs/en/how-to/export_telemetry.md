@@ -7,7 +7,7 @@ description: >
 ---
 
 
-## About 
+## About
 
 The [OpenTelemetry Collector][about-collector] offers a vendor-agnostic
 implementation of how to receive, process and export telemetry data. It removes
@@ -20,6 +20,7 @@ the need to run, operate, and maintain multiple agents/collectors.
 To configure the collector, you will have to provide a configuration file. The
 configuration file consists of four classes of pipeline component that access
 telemetry data.
+
 - `Receivers`
 - `Processors`
 - `Exporters`

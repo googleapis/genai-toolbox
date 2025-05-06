@@ -48,7 +48,7 @@ description: >
     - Cloud Run Developer (roles/run.developer)
     - Service Account User role (roles/iam.serviceAccountUser)
 
-{{< notice note >}} 
+{{< notice note >}}
 If you are under a domain restriction organization policy
 [restricting](https://cloud.google.com/run/docs/authenticating/public#domain-restricted-sharing)
 unauthenticated invocations for your project, you will need to access your
@@ -56,12 +56,11 @@ deployed service as described under [Testing private
 services](https://cloud.google.com/run/docs/triggering/https-request#testing-private).
 {{< /notice >}}
 
-{{< notice note >}} 
+{{< notice note >}}
 If you are using sources that require VPC-access (such as
 AlloyDB or Cloud SQL over private IP), make sure your Cloud Run service and the
-database are in the same VPC network. 
+database are in the same VPC network.
 {{< /notice >}}
-
 
 ## Create a service account
 
@@ -71,7 +70,7 @@ database are in the same VPC network.
     gcloud iam service-accounts create toolbox-identity
     ```
 
-1.  Grant permissions to use secret manager:
+1. Grant permissions to use secret manager:
 
     ```bash
     gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -79,7 +78,8 @@ database are in the same VPC network.
         --role roles/secretmanager.secretAccessor
     ```
 
-1. Grant additional permissions to the service account that are specific to the source, e.g.:
+1. Grant additional permissions to the service account that are specific to the
+   source, e.g.:
     - [AlloyDB for PostgreSQL](../resources/sources/alloydb-pg.md#iam-permissions)
     - [Cloud SQL for PostgreSQL](../resources/sources/cloud-sql-pg.md#iam-permissions)
 
@@ -105,7 +105,8 @@ section.
     gcloud secrets versions add tools --data-file=tools.yaml
     ```
 
-1. Set an environment variable to the container image that you want to use for cloud run:
+1. Set an environment variable to the container image that you want to use for
+   cloud run:
 
     ```bash
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
@@ -154,7 +155,7 @@ Next, we will use `gcloud` to authenticate requests to our Cloud Run instance:
 
     ```bash
     curl http://127.0.0.1:8080
-    ``` 
+    ```
 
 ## Connecting with Toolbox Client SDK
 
@@ -173,13 +174,14 @@ Next, we will use Toolbox with client SDK:
 from toolbox_langchain import ToolboxClient
 
 # Replace with the cloud run service URL generated above
+
 toolbox = ToolboxClient("http://$YOUR_URL")
 {{< /tab >}}
 {{< tab header="Llamaindex" lang="Python" >}}
 from toolbox_llamaindex import ToolboxClient
 
 # Replace with the cloud run service URL generated above
+
 toolbox = ToolboxClient("http://$YOUR_URL")
 {{< /tab >}}
 {{< /tabpane >}}
-

@@ -1,9 +1,11 @@
+<!-- markdownlint-disable MD033 MD041 -->
 
 ![logo](./logo.png)
+
 # MCP Toolbox for Databases
 
-> [!NOTE] 
-> MCP Toolbox for Databases is currently in beta, and may see breaking 
+> [!NOTE]
+> MCP Toolbox for Databases is currently in beta, and may see breaking
 > changes until the first stable release (v1.0).
 
 MCP Toolbox for Databases is an open source MCP server for databases. It enables
@@ -13,11 +15,10 @@ such as connection pooling, authentication, and more.
 This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
 
-
-> [!NOTE] 
+> [!NOTE]
 > This solution was originally named “Gen AI Toolbox for Databases” as
 > its initial development predated MCP, but was renamed to align with recently
-> added MCP compatibility. 
+> added MCP compatibility.
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -27,23 +28,23 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 - [Why Toolbox?](#why-toolbox)
 - [General Architecture](#general-architecture)
 - [Getting Started](#getting-started)
-    - [Installing the server](#installing-the-server)
-    - [Running the server](#running-the-server)
-    - [Integrating your application](#integrating-your-application)
+  - [Installing the server](#installing-the-server)
+  - [Running the server](#running-the-server)
+  - [Integrating your application](#integrating-your-application)
 - [Configuration](#configuration)
-    - [Sources](#sources)
-    - [Tools](#tools)
-    - [Toolsets](#toolsets)
+  - [Sources](#sources)
+  - [Tools](#tools)
+  - [Toolsets](#toolsets)
 - [Versioning](#versioning)
 - [Contributing](#contributing)
 
 <!-- /TOC -->
 
-
-##  Why Toolbox?
+## Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your
 database. Toolbox provides:
+
 - **Simplified development**: Integrate tools to your agent in less than 10
   lines of code, reuse tools between multiple agents or frameworks, and deploy
   new versions of tools more easily.
@@ -52,7 +53,6 @@ database. Toolbox provides:
 - **Enhanced security**: Integrated auth for more secure access to your data
 - **End-to-end observability**: Out of the box metrics and tracing with built-in
   support for OpenTelemetry.
-
 
 ## General Architecture
 
@@ -68,6 +68,7 @@ redeploying your application.
 ## Getting Started
 
 ### Installing the server
+
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
@@ -138,10 +139,13 @@ application. See below the list of Client SDKs for using various frameworks:
 <summary>Core</summary>
 
 1. Install [Toolbox Core SDK][toolbox-core]:
+
     ```bash
     pip install toolbox-core
     ```
+
 1. Load tools:
+
     ```python
     from toolbox_core import ToolboxClient
 
@@ -163,10 +167,13 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 <summary>LangChain / LangGraph</summary>
 
 1. Install [Toolbox LangChain SDK][toolbox-langchain]:
+
     ```bash
     pip install toolbox-langchain
     ```
+
 1. Load tools:
+
     ```python
     from toolbox_langchain import ToolboxClient
 
@@ -189,10 +196,13 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 <summary>LlamaIndex</summary>
 
 1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
+
     ```bash
     pip install toolbox-llamaindex
     ```
+
 1. Load tools:
+
     ```python
     from toolbox_llamaindex import ToolboxClient
 
@@ -219,6 +229,7 @@ tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
 [Resources](https://googleapis.github.io/genai-toolbox/resources/).
+
 ### Sources
 
 The `sources` section of your `tools.yaml` defines what data sources your
@@ -260,7 +271,6 @@ tools:
 For more details on configuring different types of tools, see the
 [Tools](https://googleapis.github.io/genai-toolbox/resources/tools).
 
-
 ### Toolsets
 
 The `toolsets` section of your `tools.yaml` allows you to define groups of tools
@@ -297,7 +307,7 @@ This project uses [semantic versioning](https://semver.org/), including a
 - PATCH version when we make backward compatible bug fixes
 
 The public API that this applies to is the CLI associated with Toolbox, the
-interactions with official SDKs, and the definitions in the `tools.yaml` file. 
+interactions with official SDKs, and the definitions in the `tools.yaml` file.
 
 ## Contributing
 

@@ -7,40 +7,54 @@ description: >
 ---
 
 ## Toolbox SDKs vs Model Context Protocol (MCP)
-Toolbox now supports connections via both the native Toolbox SDKs and via [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). However, Toolbox has several features which are not supported in the MCP specification (such as Authenticated Parameters and Authorized invocation). 
 
-We recommend using the native SDKs over MCP clients to leverage these features. The native SDKs can be combined with MCP clients in many cases. 
+Toolbox now supports connections via both the native Toolbox SDKs and via [Model
+Context Protocol (MCP)](https://modelcontextprotocol.io/). However, Toolbox has
+several features which are not supported in the MCP specification (such as
+Authenticated Parameters and Authorized invocation).
+
+We recommend using the native SDKs over MCP clients to leverage these features.
+The native SDKs can be combined with MCP clients in many cases.
 
 ### Protocol Versions
+
 Toolbox currently supports the following versions of MCP specification:
+
 * [2024-11-05](https://spec.modelcontextprotocol.io/specification/2024-11-05/)
 
 ### Features Not Supported by MCP
+
 Toolbox has several features that are not yet supported in the MCP specification:
-* **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05` specification. This includes:
+
+* **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05`
+  specification. This includes:
   * [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
   * [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
-* **Notifications:** Currently, editing Toolbox Tools requires a server restart. Clients should reload tools on disconnect to get the latest version. 
-
+* **Notifications:** Currently, editing Toolbox Tools requires a server restart.
+  Clients should reload tools on disconnect to get the latest version.
 
 ## Connecting to Toolbox with an MCP client
+
 ### Before you begin
 
-{{< notice note >}} 
+{{< notice note >}}
 MCP is only compatible with Toolbox version 0.3.0 and above.
 {{< /notice >}}
 
-1. [Install](../getting-started/introduction/_index.md#installing-the-server) Toolbox version 0.3.0+.
+1. [Install](../getting-started/introduction/_index.md#installing-the-server)
+   Toolbox version 0.3.0+.
 
 1. Make sure you've set up and initialized your database.
 
 1. [Set up](../getting-started/configure.md) your `tools.yaml` file.
 
 ### Connecting via HTTP
+
 Toolbox supports the HTTP transport protocol with and without SSE.
 
 {{< tabpane text=true >}} {{% tab header="HTTP with SSE" lang="en" %}}
 Add the following configuration to your MCP client configuration:
+
 ```bash
 {
   "mcpServers": {
@@ -52,16 +66,19 @@ Add the following configuration to your MCP client configuration:
 }
 ```
 
-If you would like to connect to a specific toolset, replace `url` with `"http://127.0.0.1:5000/mcp/{toolset_name}/sse"`.
+If you would like to connect to a specific toolset, replace `url` with
+`"http://127.0.0.1:5000/mcp/{toolset_name}/sse"`.
 {{% /tab %}} {{% tab header="HTTP POST" lang="en" %}}
 Connect to Toolbox HTTP POST via `http://127.0.0.1:5000/mcp`.
 
-If you would like to connect to a specific toolset, connect via `http://127.0.0.1:5000/mcp/{toolset_name}`.
+If you would like to connect to a specific toolset, connect via
+`http://127.0.0.1:5000/mcp/{toolset_name}`.
 {{% /tab %}} {{< /tabpane >}}
 
 ### Using the MCP Inspector with Toolbox
 
-Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testing and debugging Toolbox server.
+Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for
+testing and debugging Toolbox server.
 
 1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
 
@@ -81,10 +98,10 @@ Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testi
 
 ### Tested Clients
 
-| Client | SSE Works | MCP Config Docs |
-|--------|--------|--------|
-| Claude Desktop | ❗ | Claude Desktop only supports STDIO -- use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) to proxy. | 
-| MCP Inspector | ✅ | https://github.com/modelcontextprotocol/inspector |
-| Cursor | ✅ | https://docs.cursor.com/context/model-context-protocol |
-| Windsurf | ✅ | https://docs.windsurf.com/windsurf/mcp | 
-| VS Code (Insiders) | ✅ | https://code.visualstudio.com/docs/copilot/chat/mcp-servers |
+| Client             | SSE Works | MCP Config Docs                                                                                              |
+|--------------------|-----------|--------------------------------------------------------------------------------------------------------------|
+| Claude Desktop     | ❗        | Claude Desktop only supports STDIO -- use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) to proxy. |
+| MCP Inspector      | ✅        | <https://github.com/modelcontextprotocol/inspector>                                                          |
+| Cursor             | ✅        | <https://docs.cursor.com/context/model-context-protocol>                                                     |
+| Windsurf           | ✅        | <https://docs.windsurf.com/windsurf/mcp>                                                                     |
+| VS Code (Insiders) | ✅        | <https://code.visualstudio.com/docs/copilot/chat/mcp-servers>                                                |
