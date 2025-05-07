@@ -1,7 +1,7 @@
 ---
 title: "Deploy to Kubernetes"
 type: docs
-weight: 2
+weight: 4
 description: >
   How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 ---
@@ -40,7 +40,7 @@ description: >
     ```bash
     kubectl version --client
     ```
-   
+
 
 1. If needed, install `kubectl` component using the Google Cloud CLI:
 
@@ -76,7 +76,7 @@ description: >
     - [CloudSQL IAM Identity](../resources/sources/cloud-sql-pg.md#iam-permissions)
     - [Spanner IAM Identity](../resources/sources/spanner.md#iam-permissions)
 
-## Deploy to Kubernetes 
+## Deploy to Kubernetes
 
 1. Set environment variables:
 
@@ -94,7 +94,7 @@ description: >
 
     ```bash
     gcloud container clusters create-auto $CLUSTER_NAME \
-        --location=us-central1 
+        --location=us-central1
     ```
 
 1. Get authentication credentials to interact with the cluster. This also

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.0](https://github.com/googleapis/genai-toolbox/compare/v0.4.0...v0.5.0) (2025-05-06)
+
+
+### Features
+
+* Add Couchbase as Source and Tool ([#307](https://github.com/googleapis/genai-toolbox/issues/307)) ([d7390b0](https://github.com/googleapis/genai-toolbox/commit/d7390b06b7bcb15411388e9a4dbcfe75afcca1ee))
+* Add postgres-execute-sql tool ([#490](https://github.com/googleapis/genai-toolbox/issues/490)) ([11ea7bc](https://github.com/googleapis/genai-toolbox/commit/11ea7bc584aa4ca8e8b0e7a355f6666ccbea2883))
+
+
 ## [0.4.0](https://github.com/googleapis/genai-toolbox/compare/v0.3.0...v0.4.0) (2025-04-23)
 
 

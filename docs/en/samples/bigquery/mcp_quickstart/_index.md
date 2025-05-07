@@ -76,17 +76,17 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
 
 1. Download the latest version of Toolbox as a binary:
 
-    {{< notice tip >}}
-  Select the
-  [correct binary](https://github.com/googleapis/genai-toolbox/releases)
-  corresponding to your OS and CPU architecture.
-    {{< /notice >}}
-    <!-- {x-release-please-start-version} -->
-    ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.4.0/$OS/toolbox
-    ```
-    <!-- {x-release-please-end} -->
+   {{< notice tip >}}
+   Select the
+   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+   corresponding to your OS and CPU architecture.
+   {{< /notice >}}
+   <!-- {x-release-please-start-version} -->
+   ```bash
+   export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+   curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/$OS/toolbox
+   ```
+   <!-- {x-release-please-end} -->
 
 1. Make the binary executable:
 
