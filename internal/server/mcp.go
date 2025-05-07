@@ -346,6 +346,13 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 		s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
+		if !tool.Authorized([]string{}) {
+			err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool")
+			s.logger.DebugContext(ctx, err.Error())
+			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
+			break
+		}
+
 		result := mcp.ToolCall(ctx, tool, params)
 		res = mcp.JSONRPCResponse{
 			Jsonrpc: mcp.JSONRPC_VERSION,

@@ -505,6 +505,23 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
 		},
 		{
+			name:          "MCP Invoke my-auth-required-tool",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: mcp.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-auth-required-tool",
+				Request: mcp.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-auth-required-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			want: "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool\"}}",
+		},
+		{
 			name:          "MCP Invoke my-fail-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
