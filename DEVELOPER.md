@@ -130,6 +130,27 @@
     docker run -d toolbox:dev
     ```
 
+## Developing Documentation
+
+1. [Install Hugo](https://gohugo.io/installation/macos/)
+1. Move into the `.hugo` directory
+
+    ```bash
+    cd .hugo
+    ```
+
+1. Install dependencies
+
+    ```bash
+    npm ci
+    ```
+
+1. Run the server
+
+    ```bash
+    hugo server
+    ```
+
 ## Developing Toolbox SDKs
 
 Please refer to the [SDK developer guide](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/DEVELOPER.md)
