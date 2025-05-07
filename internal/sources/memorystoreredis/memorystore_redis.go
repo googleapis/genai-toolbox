@@ -17,6 +17,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/valkey-io/valkey-go"
 	"go.opentelemetry.io/otel/trace"
@@ -42,12 +43,9 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Create a new Redis client
-	client, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress: []string{r.Address},
-		Password:    r.Password,
-		Username:    r.Username,
-		SelectDB:    r.Database,
-	})
+	pool = &redis.Pool{
+		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", r.Address) },
+	}
 
 	if err != nil {
 		log.Fatalf("error creating client: %v", err)
