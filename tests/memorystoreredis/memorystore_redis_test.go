@@ -15,96 +15,96 @@
 package memorystoreredis
 
 import (
+	"context"
 	"os"
 	"testing"
+	"time"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
-	// VALKEY_SOURCE_KIND = "memorystore-redis"
-	// VALKEY_TOOL_KIND   = "redis"
-	REDIS_ADDRESS = os.Getenv("MEMORYSTORE_REDIS_ADDRESS")
-	// VALKEY_DATABASE    = os.Getenv("MEMORYSTORE_VALKEY_DATABASE")
-	// VALKEY_USER        = os.Getenv("MEMORYSTORE_VALKEY_USER")
-	// VALKEY_PASS        = os.Getenv("MEMORYSTORE_VALKEY_PASS")
+	REDIS_SOURCE_KIND = "memorystore-redis"
+	REDIS_TOOL_KIND   = "redis"
+	REDIS_ADDRESS     = os.Getenv("MEMORYSTORE_REDIS_ADDRESS")
+	REDIS_DATABASE    = os.Getenv("MEMORYSTORE_REDIS_DATABASE")
+	REDIS_PASS        = os.Getenv("MEMORYSTORE_REDIS_PASS")
 )
 
-// func getRedisVars(t *testing.T) map[string]any {
-// 	switch "" {
-// 	case VALKEY_ADDRESS:
-// 		t.Fatal("'VALKEY_ADDRESS' not set")
-// 	case VALKEY_DATABASE:
-// 		t.Fatal("'VALKEY_DATABASE' not set")
-// 	case VALKEY_USER:
-// 		t.Fatal("'VALKEY_USER' not set")
-// 	case VALKEY_PASS:
-// 		t.Fatal("'VALKEY_PASS' not set")
-// 	}
-
-// 	return map[string]any{
-// 		"kind":     VALKEY_SOURCE_KIND,
-// 		"address":  VALKEY_ADDRESS,
-// 		"database": VALKEY_DATABASE,
-// 		"user":     VALKEY_USER,
-// 		"password": VALKEY_PASS,
-// 	}
-// }
-
-func TestMemorystoreRedisClient(t *testing.T) {
-	// ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	// defer cancel()
-	pool := &redis.Pool{
-		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", REDIS_ADDRESS) },
+func getRedisVars(t *testing.T) map[string]any {
+	switch "" {
+	case REDIS_ADDRESS:
+		t.Fatal("'REDIS_ADDRESS' not set")
+	case REDIS_DATABASE:
+		t.Fatal("'REDIS_DATABASE' not set")
+	case REDIS_PASS:
+		t.Fatal("'REDIS_PASS' not set")
 	}
-	conn := pool.Get()
-	rep, err := conn.Do("GET", "v")
-	if err != nil {
-		t.Fatalf("unable to create pool: %s", err)
+
+	return map[string]any{
+		"kind":     REDIS_SOURCE_KIND,
+		"address":  REDIS_ADDRESS,
+		"database": REDIS_DATABASE,
+		"password": REDIS_PASS,
 	}
-	t.Fatalf("success: %s", rep)
 }
 
-// func TestMemorystoreRedisToolEndpoints(t *testing.T) {
-// 	sourceConfig := getRedisVars(t)
-// 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-// 	defer cancel()
+func initMemorystoreRedisClient(ctx context.Context, addr string) (*redis.ClusterClient, error) {
+	client := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: []string{addr},
+		// PoolSize applies per cluster node and not for the whole cluster.
+		PoolSize:        10,
+		ConnMaxIdleTime: 60 * time.Second,
+		MinIdleConns:    1,
+	})
 
-// 	var args []string
+	err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
+		return shard.Ping(ctx).Err()
+	})
+	return client, err
+}
 
-// 	db, err := strconv.Atoi(VALKEY_DATABASE)
-// 	if err != nil {
-// 		t.Fatalf("unable to convert `VALKEY_DATABASE` str to int: %s", err)
-// 	}
-// 	client, err := initMemorystoreRedisClient(ctx, VALKEY_ADDRESS, VALKEY_USER, VALKEY_PASS, db)
-// 	if err != nil {
-// 		t.Fatalf("unable to create SQL Server connection pool: %s", err)
-// 	}
-// 	// set up data for param tool
-// 	teardownDB := tests.SetupRedisDB(t, ctx, client)
-// 	defer teardownDB(t)
+func TestMemorystoreRedisToolEndpoints(t *testing.T) {
+	//sourceConfig := getRedisVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
-// 	// Write config into a file and pass it to command
-// 	toolsFile := tests.GetToolsConfig(sourceConfig, VALKEY_TOOL_KIND, tool_statement1, tool_statement2)
+	//var args []string
 
-// 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
-// 	if err != nil {
-// 		t.Fatalf("command initialization returned an error: %s", err)
-// 	}
-// 	defer cleanup()
+	//db, err := strconv.Atoi(REDIS_DATABASE)
+	// if err != nil {
+	// 	t.Fatalf("unable to convert `REDIS_DATABASE` str to int: %s", err)
+	// }
+	_, err := initMemorystoreRedisClient(ctx, REDIS_ADDRESS)
+	if err != nil {
+		t.Fatalf("unable to create Redis connection: %s", err)
+	}
+	t.Fatalf("success")
+	// set up data for param tool
+	// teardownDB := tests.SetupRedisDB(t, ctx, client)
+	// defer teardownDB(t)
 
-// 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-// 	defer cancel()
-// 	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
-// 	if err != nil {
-// 		t.Logf("toolbox command logs: \n%s", out)
-// 		t.Fatalf("toolbox didn't start successfully: %s", err)
-// 	}
+	// // Write config into a file and pass it to command
+	// toolsFile := tests.GetToolsConfig(sourceConfig, REDIS_TOOL_KIND, tool_statement1, tool_statement2)
 
-// 	tests.RunToolGetTest(t)
+	// cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	// if err != nil {
+	// 	t.Fatalf("command initialization returned an error: %s", err)
+	// }
+	// defer cleanup()
 
-// 	select1Want, failInvocationWant := tests.GetRedisWants()
-// 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-// 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
-// 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-// }
+	// waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	// defer cancel()
+	// out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	// if err != nil {
+	// 	t.Logf("toolbox command logs: \n%s", out)
+	// 	t.Fatalf("toolbox didn't start successfully: %s", err)
+	// }
+
+	// tests.RunToolGetTest(t)
+
+	// select1Want, failInvocationWant := tests.GetRedisWants()
+	// invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	// tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	// tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+}

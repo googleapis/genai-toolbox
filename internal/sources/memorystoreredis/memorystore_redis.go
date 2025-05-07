@@ -15,13 +15,11 @@ package memorystoreredis
 
 import (
 	"context"
-	"crypto/tls"
 	"log"
 	"time"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/valkey-io/valkey-go"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -34,7 +32,6 @@ type Config struct {
 	Name     string `yaml:"name" validate:"required"`
 	Kind     string `yaml:"kind" validate:"required"`
 	Address  string `yaml:"address" validate:"required"`
-	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Database int    `yaml:"database"`
 }
@@ -45,25 +42,21 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Create a new Redis client
-	client := redis.NewClient(&redis.ClusterOptions{
-		Addrs: []string{clusterDicEpAddr},
+	client := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: []string{r.Address},
 		// PoolSize applies per cluster node and not for the whole cluster.
-		PoolSize:            10,
-		ConnMaxIdleTime:     60 * time.Second,
-		MinIdleConns:        1,
-		CredentialsProvider: retrieveTokenFunc,
-		TLSConfig: &tls.Config{
-			RootCAs: caCertPool,
-		},
+		PoolSize:        10,
+		ConnMaxIdleTime: 60 * time.Second,
+		MinIdleConns:    1,
 	})
 
-	// Ping the server to check connectivity (using Do)
-	pingCmd := client.B().Ping().Build()
-	pingResult, err := client.Do(ctx, pingCmd).ToString()
+	err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
+		return shard.Ping(ctx).Err()
+	})
+
 	if err != nil {
-		log.Fatalf("Failed to execute PING command: %v", err)
+		log.Fatalf("Failed to ping one or more Redis cluster nodes: %v", err)
 	}
-	log.Printf("PING response: %s\n", pingResult)
 
 	s := &Source{
 		Name:   r.Name,
@@ -78,13 +71,13 @@ var _ sources.Source = &Source{}
 type Source struct {
 	Name   string `yaml:"name"`
 	Kind   string `yaml:"kind"`
-	Client valkey.Client
+	Client *redis.ClusterClient
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) RedisClient() valkey.Client {
+func (s *Source) RedisClient() *redis.ClusterClient {
 	return s.Client
 }
