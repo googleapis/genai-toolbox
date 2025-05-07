@@ -116,13 +116,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				my-valkey-instance:
 					kind: memorystore-valkey
-					project: my-project
 					address:
 					  - 127.0.0.1
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"memorystore-valkey\": [6:1] unknown field \"project\"",
+			err: "unable to parse as \"memorystore-valkey\": [5:1] unknown field \"password\"",
 		},
 		{
 			desc: "missing required field",

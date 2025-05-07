@@ -444,7 +444,7 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 	}
 }
 
-func SetupRedisDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {
+func SetupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {
 	keys := []string{"Alice", "3", SERVICE_ACCOUNT_EMAIL}
 	commands := [][]string{
 		{"HSET", "Alice", "name", "Alice"},

@@ -23,14 +23,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/valkey-io/valkey-go"
 )
 
 var (
 	MEMORYSTORE_VALKEY_SOURCE_KIND = "memorystore-valkey"
-	MEMORYSTORE_VALKEY_TOOL_KIND   = "redis"
+	MEMORYSTORE_VALKEY_TOOL_KIND   = "valkey"
 	MEMORYSTORE_VALKEY_ADDRESS     = os.Getenv("MEMORYSTORE_VALKEY_ADDRESS")
 	MEMORYSTORE_VALKEY_DATABASE    = os.Getenv("MEMORYSTORE_VALKEY_DATABASE")
 )
@@ -54,22 +53,23 @@ func getValkeyVars(t *testing.T) map[string]any {
 func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
 
 	// Pass in an access token getter fn for IAM auth
-	authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
-		token, err := sources.GetIAMAccessToken(ctx)
-		if err != nil {
-			log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
-			return valkey.AuthCredentials{}, err
-		}
-		return valkey.AuthCredentials{
-			Username: "",
-			Password: token,
-		}, nil
-	}
+	// authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+	// 	token, err := sources.GetIAMAccessToken(ctx)
+	// 	if err != nil {
+	// 		log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
+	// 		return valkey.AuthCredentials{}, err
+	// 	}
+	// 	return valkey.AuthCredentials{
+	// 		Username: "",
+	// 		Password: token,
+	// 	}, nil
+	// }
 
 	client, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress:       []string{addr},
-		SelectDB:          db,
-		AuthCredentialsFn: authFn,
+		InitAddress: []string{addr},
+		SelectDB:    db,
+		//AuthCredentialsFn: authFn,
+		ForceSingleClient: true,
 	})
 
 	if err != nil {
@@ -101,7 +101,7 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create SQL Server connection pool: %s", err)
 	}
 	// set up data for param tool
-	teardownDB := tests.SetupRedisDB(t, ctx, client)
+	teardownDB := setupValkeyDB(t, ctx, client)
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
@@ -128,4 +128,34 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+}
+
+func setupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {
+	keys := []string{"Alice", "3", tests.SERVICE_ACCOUNT_EMAIL}
+	commands := [][]string{
+		{"HSET", "Alice", "name", "Alice"},
+		{"HSET", "3", "name", "Sid", "id", "3"},
+		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", "Alice"},
+	}
+	builtCmds := make(valkey.Commands, len(commands))
+
+	for i, cmd := range commands {
+		builtCmds[i] = client.B().Arbitrary(cmd...).Build()
+	}
+
+	responses := client.DoMulti(ctx, builtCmds...)
+	for _, resp := range responses {
+		if err := resp.Error(); err != nil {
+			t.Fatalf("unable to insert test data: %s", err)
+		}
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err := client.Do(ctx, client.B().Del().Key(keys...).Build()).AsInt64()
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+
 }

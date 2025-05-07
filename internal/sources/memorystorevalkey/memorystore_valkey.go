@@ -67,7 +67,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	})
 
 	if err != nil {
-		log.Fatalf("error creating client: %v", err)
+		log.Fatalf("error creating Valkey client: %v", err)
 	}
 
 	// Ping the server to check connectivity\
