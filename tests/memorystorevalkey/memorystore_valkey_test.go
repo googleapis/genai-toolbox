@@ -82,6 +82,7 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valk
 	if err != nil {
 		log.Fatalf("Failed to execute PING command: %v", err)
 	}
+	log.Fatalf("success!")
 	return client, nil
 }
 

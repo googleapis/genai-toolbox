@@ -43,27 +43,27 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	var client valkey.Client
 	var err error
-	var authFn func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error)
+	//var authFn func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error)
 
-	if r.UseIAM {
-		// Pass in an access token getter fn for IAM auth
-		authFn = func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
-			token, err := sources.GetIAMAccessToken(ctx)
-			if err != nil {
-				log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
-				return valkey.AuthCredentials{}, err
-			}
-			return valkey.AuthCredentials{
-				Username: "",
-				Password: token,
-			}, nil
-		}
-	}
+	// if r.UseIAM {
+	// 	// Pass in an access token getter fn for IAM auth
+	// 	authFn = func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+	// 		token, err := sources.GetIAMAccessToken(ctx)
+	// 		if err != nil {
+	// 			log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
+	// 			return valkey.AuthCredentials{}, err
+	// 		}
+	// 		return valkey.AuthCredentials{
+	// 			Username: "",
+	// 			Password: token,
+	// 		}, nil
+	// 	}
+	// }
 
 	client, err = valkey.NewClient(valkey.ClientOption{
-		InitAddress:       r.Address,
-		SelectDB:          r.Database,
-		AuthCredentialsFn: authFn,
+		InitAddress: r.Address,
+		//SelectDB:          r.Database,
+		//AuthCredentialsFn: authFn,
 	})
 
 	if err != nil {
