@@ -32,7 +32,7 @@ description: >
 
 ## Set up the database
 
-{{< tabpane persist=header text=true lang="en">}}
+{{< tabpane persist=header text=true lang="en" >}}
   {{% tab header="Cloud SQL for Postgres" lang="en" %}}
   1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
@@ -106,8 +106,8 @@ This will configure the following tools:
 
 To configure Toolbox, run the following steps:
 
-{{< tabpane persist=header text=true lang="en">}}
-{{< tab header="Cloud SQL for Postgres" >}}
+{{< tabpane persist=header text=true lang="en" >}}
+{{% tab header="Cloud SQL for Postgres" lang="en" %}}
 1. Set the following environment variables:
 
     ```bash
@@ -238,9 +238,9 @@ To configure Toolbox, run the following steps:
     ```bash
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
-{{< /tab >}}
+{{% /tab %}}
 
-{{< tab header="AlloyDB for Postgres" >}}
+{{% tab header="AlloyDB for Postgres" lang="en" %}}
 1. Set the following environment variables:
 
     ```bash
@@ -378,7 +378,7 @@ To configure Toolbox, run the following steps:
     ```bash
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
-{{< /tab >}}
+{{% /tab %}}
 {{< /tabpane >}}
 
 {{< notice tip >}}
