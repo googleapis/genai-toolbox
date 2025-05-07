@@ -30,7 +30,7 @@ description: >
 1. [Make sure that billing is enabled for your Google Cloud project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
 
 
-## Set up the databases
+## Set up the database
 
 {{< tabpane persist=header lang="en">}}
 {{% tab "Cloud SQL" %}}
