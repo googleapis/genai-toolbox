@@ -379,6 +379,7 @@ To configure Toolbox, run the following steps:
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
 {{% /tab %}}
+{{< /tabpane >}}
 
 {{< notice tip >}}
 To stop the Toolbox server when you're finished, press `ctrl+c` to send the terminate signal.
