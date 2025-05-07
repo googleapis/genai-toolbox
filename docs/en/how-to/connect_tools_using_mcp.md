@@ -33,7 +33,7 @@ description: >
 ## Set up the database
 
 {{< tabpane persist=header lang="en">}}
-{{% tab "Cloud SQL" %}}
+{{< tab "Cloud SQL" >}}
 1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
 1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
@@ -43,9 +43,9 @@ description: >
 1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
 
 1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users) and have the username and password ready.
-{{% /tab %}}
+{{< /tab >}}
 
-{{% tab "AlloyDB" %}}
+{{< tab "AlloyDB" >}}
 1. [Enable the AlloyDB, Compute Engine, Cloud Resource Manager, and Service Networking APIs in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=alloydb.googleapis.com,compute.googleapis.com,cloudresourcemanager.googleapis.com,servicenetworking.googleapis.com).
 
 1. [Create a cluster and its primary instance](https://cloud.google.com/alloydb/docs/quickstart/create-and-connect). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/alloydb/docs/connect-public-ip). By default, AlloyDB assigns a private IP address to a new instance. Toolbox will connect securely using the [AlloyDB Language Connectors](https://cloud.google.com/alloydb/docs/language-connectors-overview).
@@ -55,7 +55,7 @@ description: >
 1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
 
 1. Create or reuse [a database user](https://cloud.google.com/alloydb/docs/database-users/manage-roles) and have the username and password ready.
-{{% /tab %}}
+{{< /tab >}}
 {{< /tabpane >}}
 
 ## Install MCP Toolbox
@@ -107,7 +107,7 @@ This will configure the following tools:
 To configure Toolbox, run the following steps:
 
 {{< tabpane persist=header lang="en">}}
-{{% tab "Cloud SQL" %}}
+{{< tab "Cloud SQL" >}}
 1. Set the following environment variables:
 
     ```bash
@@ -238,9 +238,9 @@ To configure Toolbox, run the following steps:
     ```bash
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
-{{% /tab %}}
+{{< /tab >}}
 
-{{% tab "AlloyDB" %}}
+{{< tab "AlloyDB" >}}
 1. Set the following environment variables:
 
     ```bash
@@ -378,7 +378,7 @@ To configure Toolbox, run the following steps:
     ```bash
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
-{{% /tab %}}
+{{< /tab >}}
 {{< /tabpane >}}
 
 {{< notice tip >}}
@@ -387,7 +387,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 
 ## Configure your MCP Client
 {{< tabpane persist=header >}}
-{{% tab header="Cloud SQL" lang="en" %}}
+{{< tab header="Cloud SQL" lang="en" >}}
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
@@ -407,7 +407,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```
 
 4. Restart Claude code to apply the new configuration.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Claude desktop" lang="en" %}}
 
@@ -433,7 +433,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 
 5. Restart Claude desktop.
 6. From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
 
@@ -453,7 +453,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```
 
 4. You should see a green active status after the server is successfully connected.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Cursor" lang="en" %}}
 
@@ -473,7 +473,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```
 
 4. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
@@ -491,7 +491,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
       }
     }
     ```
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Windsurf" lang="en" %}}
 
@@ -509,10 +509,11 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     }
 
     ```
-{{< /tab >}}
-{{< /tabpane >}}
 {{% /tab %}}
-{{% tab header="Cloud SQL" lang="en" %}}
+{{< /tabpane >}}
+{{< /tab >}}
+
+{{< tab header="AlloyDB" lang="en" >}}
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
@@ -532,7 +533,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```
 
 4. Restart Claude code to apply the new configuration.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Claude desktop" lang="en" %}}
 
@@ -558,7 +559,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 
 5. Restart Claude desktop.
 6. From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
 
@@ -578,7 +579,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```
 
 4. You should see a green active status after the server is successfully connected.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Cursor" lang="en" %}}
 
@@ -598,7 +599,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```
 
 4. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
@@ -616,7 +617,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
       }
     }
     ```
-{{< /tab >}}
+{{% /tab %}}
 
 {{% tab header="Windsurf" lang="en" %}}
 
@@ -634,7 +635,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     }
 
     ```
-{{< /tab >}}
-{{< /tabpane >}}
 {{% /tab %}}
+{{< /tabpane >}}
+{{< /tab >}}
 {{< /tabpane >}}
