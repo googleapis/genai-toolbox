@@ -32,30 +32,30 @@ description: >
 
 ## Set up the database
 
-{{< tabpane persist=header lang="en">}}
-{{< tab "Cloud SQL" >}}
-1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
+{{< tabpane persist=header text=true lang="en">}}
+  {{% tab header="Cloud SQL for Postgres" lang="en" %}}
+  1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
-1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
+  1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
 
-1. Configure the required roles and permissions to complete this task. You will need [Cloud SQL > Client](https://cloud.google.com/sql/docs/postgres/roles-and-permissions#proxy-roles-permissions) role (`roles/cloudsql.client`) or equivalent IAM permissions to connect to the instance.
+  1. Configure the required roles and permissions to complete this task. You will need [Cloud SQL > Client](https://cloud.google.com/sql/docs/postgres/roles-and-permissions#proxy-roles-permissions) role (`roles/cloudsql.client`) or equivalent IAM permissions to connect to the instance.
 
-1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
+  1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
 
-1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users) and have the username and password ready.
-{{< /tab >}}
+  1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users) and have the username and password ready.
+  {{% /tab %}}
 
-{{< tab "AlloyDB" >}}
-1. [Enable the AlloyDB, Compute Engine, Cloud Resource Manager, and Service Networking APIs in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=alloydb.googleapis.com,compute.googleapis.com,cloudresourcemanager.googleapis.com,servicenetworking.googleapis.com).
+  {{% tab header="AlloyDB for Postgres"  lang="en"%}}
+  1. [Enable the AlloyDB, Compute Engine, Cloud Resource Manager, and Service Networking APIs in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=alloydb.googleapis.com,compute.googleapis.com,cloudresourcemanager.googleapis.com,servicenetworking.googleapis.com).
 
-1. [Create a cluster and its primary instance](https://cloud.google.com/alloydb/docs/quickstart/create-and-connect). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/alloydb/docs/connect-public-ip). By default, AlloyDB assigns a private IP address to a new instance. Toolbox will connect securely using the [AlloyDB Language Connectors](https://cloud.google.com/alloydb/docs/language-connectors-overview).
+  1. [Create a cluster and its primary instance](https://cloud.google.com/alloydb/docs/quickstart/create-and-connect). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/alloydb/docs/connect-public-ip). By default, AlloyDB assigns a private IP address to a new instance. Toolbox will connect securely using the [AlloyDB Language Connectors](https://cloud.google.com/alloydb/docs/language-connectors-overview).
 
-1. Configure the required roles and permissions to complete this task. You will need [Cloud AlloyDB Client](https://cloud.google.com/alloydb/docs/auth-proxy/connect#required-iam-permissions) (`roles/alloydb.client`)  and Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`) roles or equivalent IAM permissions to connect to the instance.
+  1. Configure the required roles and permissions to complete this task. You will need [Cloud AlloyDB Client](https://cloud.google.com/alloydb/docs/auth-proxy/connect#required-iam-permissions) (`roles/alloydb.client`)  and Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`) roles or equivalent IAM permissions to connect to the instance.
 
-1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
+  1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
 
-1. Create or reuse [a database user](https://cloud.google.com/alloydb/docs/database-users/manage-roles) and have the username and password ready.
-{{< /tab >}}
+  1. Create or reuse [a database user](https://cloud.google.com/alloydb/docs/database-users/manage-roles) and have the username and password ready.
+  {{% /tab %}}
 {{< /tabpane >}}
 
 ## Install MCP Toolbox
@@ -106,8 +106,8 @@ This will configure the following tools:
 
 To configure Toolbox, run the following steps:
 
-{{< tabpane persist=header lang="en">}}
-{{< tab "Cloud SQL" >}}
+{{< tabpane persist=header text=true lang="en">}}
+{{< tab header="Cloud SQL for Postgres" >}}
 1. Set the following environment variables:
 
     ```bash
@@ -240,7 +240,7 @@ To configure Toolbox, run the following steps:
     ```
 {{< /tab >}}
 
-{{< tab "AlloyDB" >}}
+{{< tab header="AlloyDB for Postgres" >}}
 1. Set the following environment variables:
 
     ```bash
@@ -386,8 +386,8 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 {{< /notice >}}
 
 ## Configure your MCP Client
-{{< tabpane persist=header >}}
-{{< tab header="Cloud SQL" lang="en" >}}
+{{< tabpane persist=header text=true lang="en" >}}
+{{< tab header="Cloud SQL for Postgres" lang="en" >}}
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
@@ -513,7 +513,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 {{< /tabpane >}}
 {{< /tab >}}
 
-{{< tab header="AlloyDB" lang="en" >}}
+{{< tab header="AlloyDB for Postgres" lang="en" >}}
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
