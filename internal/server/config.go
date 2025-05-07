@@ -31,7 +31,6 @@ import (
 	dgraphsrc "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	memorystoreredissrc "github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
-	memorystorevalkeysrc "github.com/googleapis/genai-toolbox/internal/sources/memorystorevalkey"
 	mssqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	mysqlsrc "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	neo4jsrc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
@@ -251,12 +250,6 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 			(*c)[name] = actual
 		case memorystoreredissrc.SourceKind:
 			actual := memorystoreredissrc.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case memorystorevalkeysrc.SourceKind:
-			actual := memorystorevalkeysrc.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

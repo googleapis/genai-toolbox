@@ -13,174 +13,183 @@
 // limitations under the License.
 package redis
 
-// const ToolKind string = "redis"
+import (
+	"context"
+	"fmt"
 
-// type compatibleSource interface {
-// 	RedisClient() valkey.Client
-// }
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/redis/go-redis/v9"
+)
 
-// // validate compatible sources are still compatible
-// var _ compatibleSource = &memorystoreredis.Source{}
-// var _ compatibleSource = &memorystorevalkey.Source{}
+const ToolKind string = "redis"
 
-// var compatibleSources = [...]string{memorystoreredis.SourceKind, memorystorevalkey.SourceKind}
+type compatibleSource interface {
+	RedisClient() *redis.ClusterClient
+}
 
-// type Config struct {
-// 	Name         string           `yaml:"name" validate:"required"`
-// 	Kind         string           `yaml:"kind" validate:"required"`
-// 	Source       string           `yaml:"source" validate:"required"`
-// 	Description  string           `yaml:"description" validate:"required"`
-// 	Commands     [][]string       `yaml:"commands" validate:"required"`
-// 	AuthRequired []string         `yaml:"authRequired"`
-// 	Parameters   tools.Parameters `yaml:"parameters"`
-// }
+// validate compatible sources are still compatible
+var _ compatibleSource = &memorystoreredis.Source{}
 
-// // validate interface
-// var _ tools.ToolConfig = Config{}
+var compatibleSources = [...]string{memorystoreredis.SourceKind}
 
-// func (cfg Config) ToolConfigKind() string {
-// 	return ToolKind
-// }
+type Config struct {
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Commands     [][]string       `yaml:"commands" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
+}
 
-// func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-// 	// verify source exists
-// 	rawS, ok := srcs[cfg.Source]
-// 	if !ok {
-// 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-// 	}
+// validate interface
+var _ tools.ToolConfig = Config{}
 
-// 	// verify the source is compatible
-// 	s, ok := rawS.(compatibleSource)
-// 	if !ok {
-// 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
-// 	}
+func (cfg Config) ToolConfigKind() string {
+	return ToolKind
+}
 
-// 	mcpManifest := tools.McpManifest{
-// 		Name:        cfg.Name,
-// 		Description: cfg.Description,
-// 		InputSchema: cfg.Parameters.McpManifest(),
-// 	}
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	// verify source exists
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	}
 
-// 	// finish tool setup
-// 	t := Tool{
-// 		Name:         cfg.Name,
-// 		Kind:         ToolKind,
-// 		Parameters:   cfg.Parameters,
-// 		Commands:     cfg.Commands,
-// 		AuthRequired: cfg.AuthRequired,
-// 		Client:       s.RedisClient(),
-// 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-// 		mcpManifest:  mcpManifest,
-// 	}
-// 	return t, nil
-// }
+	// verify the source is compatible
+	s, ok := rawS.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
+	}
 
-// // validate interface
-// var _ tools.Tool = Tool{}
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: cfg.Parameters.McpManifest(),
+	}
 
-// type Tool struct {
-// 	Name         string           `yaml:"name"`
-// 	Kind         string           `yaml:"kind"`
-// 	AuthRequired []string         `yaml:"authRequired"`
-// 	Parameters   tools.Parameters `yaml:"parameters"`
+	// finish tool setup
+	t := Tool{
+		Name:         cfg.Name,
+		Kind:         ToolKind,
+		Parameters:   cfg.Parameters,
+		Commands:     cfg.Commands,
+		AuthRequired: cfg.AuthRequired,
+		Client:       s.RedisClient(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:  mcpManifest,
+	}
+	return t, nil
+}
 
-// 	Client      valkey.Client
-// 	Commands    [][]string
-// 	manifest    tools.Manifest
-// 	mcpManifest tools.McpManifest
-// }
+// validate interface
+var _ tools.Tool = Tool{}
 
-// func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-// 	// Replace parameters
-// 	commands, err := replaceCommandsParams(t.Commands, t.Parameters, params)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
-// 	}
+type Tool struct {
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
-// 	// Create command strings for error logging
-// 	cmdStrings := make([]string, len(commands))
+	Client      *redis.ClusterClient
+	Commands    [][]string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
+}
 
-// 	// Build commands
-// 	builtCmds := make(valkey.Commands, len(commands))
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+	// Replace parameters
+	// commands, err := replaceCommandsParams(t.Commands, t.Parameters, params)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
+	// }
 
-// 	for i, cmd := range t.Commands {
-// 		builtCmds[i] = t.Client.B().Arbitrary(cmd...).Build()
-// 		cmdStrings[i] = strings.Join(cmd, " ")
-// 	}
+	// Create command strings for error logging
+	//cmdStrings := make([]string, len(commands))
 
-// 	if len(builtCmds) == 0 {
-// 		return nil, fmt.Errorf("no valid commands were built to execute")
-// 	}
+	// Build commands
+	// builtCmds := make(valkey.Commands, len(commands))
 
-// 	// Execute commands
-// 	responses := t.Client.DoMulti(ctx, builtCmds...)
+	// for i, cmd := range t.Commands {
+	// 	builtCmds[i] = t.Client.B().Arbitrary(cmd...).Build()
+	// 	cmdStrings[i] = strings.Join(cmd, " ")
+	// }
 
-// 	// Parse responses
-// 	out := make([]any, len(t.Commands))
-// 	for i, resp := range responses {
-// 		if err := resp.Error(); err != nil {
-// 			// Add error from each command to `errSum`
-// 			errString := fmt.Sprintf("Error from executing command `%s`: %s", cmdStrings[i], err)
-// 			out[i] = errString
-// 			continue
-// 		}
-// 		resp, err := resp.ToString()
-// 		if err != nil {
-// 			errString := fmt.Sprintf("Error parsing response from command `%s`: %s", cmdStrings[i], err)
-// 			out[i] = errString
-// 			continue
-// 		}
-// 		out[i] = resp
-// 	}
+	// if len(builtCmds) == 0 {
+	// 	return nil, fmt.Errorf("no valid commands were built to execute")
+	// }
 
-// 	return out, nil
-// }
+	// Execute commands
+	//responses := t.Client.DoMulti(ctx, builtCmds...)
 
-// // Helper function to replace parameters in the commands
-// func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
-// 	paramMap := paramValues.AsMapWithDollarPrefix()
-// 	typeMap := make(map[string]string, len(params))
-// 	for _, p := range params {
-// 		placeholder := "$" + p.GetName()
-// 		typeMap[placeholder] = p.GetType()
-// 	}
-// 	newCommands := make([][]string, len(commands))
-// 	for i, cmd := range commands {
-// 		newCmd := make([]string, len(cmd))
-// 		for _, part := range cmd {
-// 			v, ok := paramMap[part]
-// 			if !ok {
-// 				// Command part is not a Parameter placeholder
-// 				newCmd = append(newCmd, part)
-// 				continue
-// 			}
-// 			if typeMap[part] == "array" {
-// 				for _, item := range v.([]any) {
-// 					// Nested arrays will only be expanded once
-// 					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
-// 					newCmd = append(newCmd, fmt.Sprintf("%s", item))
-// 				}
-// 				continue
-// 			}
-// 			newCmd = append(newCmd, fmt.Sprintf("%s", v))
-// 		}
-// 		newCommands[i] = newCmd
-// 	}
-// 	return newCommands, nil
-// }
+	// Parse responses
+	out := make([]any, len(t.Commands))
+	// for i, resp := range responses {
+	// 	if err := resp.Error(); err != nil {
+	// 		// Add error from each command to `errSum`
+	// 		errString := fmt.Sprintf("Error from executing command `%s`: %s", cmdStrings[i], err)
+	// 		out[i] = errString
+	// 		continue
+	// 	}
+	// 	resp, err := resp.ToString()
+	// 	if err != nil {
+	// 		errString := fmt.Sprintf("Error parsing response from command `%s`: %s", cmdStrings[i], err)
+	// 		out[i] = errString
+	// 		continue
+	// 	}
+	// 	out[i] = resp
+	// }
 
-// func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-// 	return tools.ParseParams(t.Parameters, data, claims)
-// }
+	return out, nil
+}
 
-// func (t Tool) Manifest() tools.Manifest {
-// 	return t.manifest
-// }
+// Helper function to replace parameters in the commands
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
+	paramMap := paramValues.AsMapWithDollarPrefix()
+	typeMap := make(map[string]string, len(params))
+	for _, p := range params {
+		placeholder := "$" + p.GetName()
+		typeMap[placeholder] = p.GetType()
+	}
+	newCommands := make([][]string, len(commands))
+	for i, cmd := range commands {
+		newCmd := make([]string, len(cmd))
+		for _, part := range cmd {
+			v, ok := paramMap[part]
+			if !ok {
+				// Command part is not a Parameter placeholder
+				newCmd = append(newCmd, part)
+				continue
+			}
+			if typeMap[part] == "array" {
+				for _, item := range v.([]any) {
+					// Nested arrays will only be expanded once
+					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
+					newCmd = append(newCmd, fmt.Sprintf("%s", item))
+				}
+				continue
+			}
+			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+		}
+		newCommands[i] = newCmd
+	}
+	return newCommands, nil
+}
 
-// func (t Tool) McpManifest() tools.McpManifest {
-// 	return t.mcpManifest
-// }
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
+}
 
-// func (t Tool) Authorized(verifiedAuthServices []string) bool {
-// 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-// }
+func (t Tool) Manifest() tools.Manifest {
+	return t.manifest
+}
+
+func (t Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
+}
+
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
