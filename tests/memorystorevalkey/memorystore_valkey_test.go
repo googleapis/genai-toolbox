@@ -17,6 +17,7 @@ package memorystorevalkey
 import (
 	"context"
 	"log"
+	"net"
 	"os"
 	"regexp"
 	"strconv"
@@ -64,9 +65,10 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valk
 	// 		Password: token,
 	// 	}, nil
 	// }
-
+	dialer := net.Dialer{Timeout: time.Minute}
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress: []string{addr},
+		Dialer:      dialer,
 		//SelectDB:    db,
 		//AuthCredentialsFn: authFn,
 		//ForceSingleClient: true,
@@ -82,7 +84,6 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valk
 	if err != nil {
 		log.Fatalf("Failed to execute PING command: %v", err)
 	}
-	log.Fatalf("success!")
 	return client, nil
 }
 
