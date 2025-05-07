@@ -15,7 +15,9 @@ package memorystoreredis
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
+	"time"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -43,13 +45,17 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Create a new Redis client
-	pool = &redis.Pool{
-		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", r.Address) },
-	}
-
-	if err != nil {
-		log.Fatalf("error creating client: %v", err)
-	}
+	client := redis.NewClient(&redis.ClusterOptions{
+		Addrs: []string{clusterDicEpAddr},
+		// PoolSize applies per cluster node and not for the whole cluster.
+		PoolSize:            10,
+		ConnMaxIdleTime:     60 * time.Second,
+		MinIdleConns:        1,
+		CredentialsProvider: retrieveTokenFunc,
+		TLSConfig: &tls.Config{
+			RootCAs: caCertPool,
+		},
+	})
 
 	// Ping the server to check connectivity (using Do)
 	pingCmd := client.B().Ping().Build()
