@@ -67,9 +67,9 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valk
 
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress: []string{addr},
-		SelectDB:    db,
+		//SelectDB:    db,
 		//AuthCredentialsFn: authFn,
-		ForceSingleClient: true,
+		//ForceSingleClient: true,
 	})
 
 	if err != nil {
@@ -98,7 +98,7 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 	}
 	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS, db)
 	if err != nil {
-		t.Fatalf("unable to create SQL Server connection pool: %s", err)
+		t.Fatalf("unable to create Valkey connection: %s", err)
 	}
 	// set up data for param tool
 	teardownDB := setupValkeyDB(t, ctx, client)
