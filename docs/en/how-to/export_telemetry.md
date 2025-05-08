@@ -56,7 +56,7 @@ service:
       exporters: ["googlecloud"]
 ```
 
-## Running the Connector
+## Running the Collector
 
 There are a couple of steps to run and use a Collector.
 
