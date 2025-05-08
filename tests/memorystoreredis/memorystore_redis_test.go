@@ -57,8 +57,12 @@ func initMemorystoreRedisClient(ctx context.Context, addr string) (*redis.Cluste
 		PoolSize:        10,
 		ConnMaxIdleTime: 60 * time.Second,
 		MinIdleConns:    1,
+		DialTimeout:     60 * time.Second,
+		ReadTimeout:     60 * time.Second,
+		WriteTimeout:    60 * time.Second,
+		PoolTimeout:     60 * time.Second,
 	})
-
+	fmt.Printf("all shards: %v", client.ClusterShards(ctx))
 	err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
 		fmt.Printf("shard name: %v", shard)
 		return shard.Ping(ctx).Err()
