@@ -16,7 +16,6 @@ package memorystoreredis
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -50,9 +49,9 @@ func getRedisVars(t *testing.T) map[string]any {
 	}
 }
 
-func initMemorystoreRedisClient(ctx context.Context, addr string) (*redis.ClusterClient, error) {
-	client := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: []string{addr},
+func initMemorystoreRedisClient(ctx context.Context, addr string) (*redis.Client, error) {
+	client := redis.NewClient(&redis.Options{
+		Addr: addr,
 		// PoolSize applies per cluster node and not for the whole cluster.
 		PoolSize:        10,
 		ConnMaxIdleTime: 60 * time.Second,
@@ -62,12 +61,12 @@ func initMemorystoreRedisClient(ctx context.Context, addr string) (*redis.Cluste
 		WriteTimeout:    60 * time.Second,
 		PoolTimeout:     60 * time.Second,
 	})
-	fmt.Printf("all shards: %v", client.ClusterShards(ctx))
-	err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
-		fmt.Printf("shard name: %v", shard)
-		return shard.Ping(ctx).Err()
-	})
-	return client, err
+	//fmt.Printf("all shards: %v", client.ClusterShards(ctx))
+	// err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
+	// 	fmt.Printf("shard name: %v", shard)
+	// 	return shard.Ping(ctx).Err()
+	// })
+	return client, nil
 }
 
 func TestMemorystoreRedisToolEndpoints(t *testing.T) {
