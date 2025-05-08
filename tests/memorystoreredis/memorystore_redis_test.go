@@ -16,6 +16,7 @@ package memorystoreredis
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -59,6 +60,7 @@ func initMemorystoreRedisClient(ctx context.Context, addr string) (*redis.Cluste
 	})
 
 	err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
+		fmt.Printf("shard name: %v", shard)
 		return shard.Ping(ctx).Err()
 	})
 	return client, err
