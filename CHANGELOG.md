@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/googleapis/genai-toolbox/compare/v0.5.0...v0.5.1) (2025-05-09)
+
+
+### Bug Fixes
+
+* Prevent tool calls through MCP when auth is required ([#544](https://github.com/googleapis/genai-toolbox/issues/544)) ([e747b6e](https://github.com/googleapis/genai-toolbox/commit/e747b6e289730c17f68be8dec0c6fa6021bb23bd))
+
 ## [0.5.0](https://github.com/googleapis/genai-toolbox/compare/v0.4.0...v0.5.0) (2025-05-06)
 
 
