@@ -6,11 +6,15 @@ description: >
   Connect your AI developer assistant tools to Toolbox using MCP.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Cloud SQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for Postgres instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like Cloud SQL and AlloyDB. This guide covers how to use [MCP Toolbox for
+Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for
+Postgres or AlloyDB for Postgres instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
-* [Visual Studio Code ][vscode] (Copilot)
+* [Visual Studio Code][vscode] (Copilot)
 * [Cline][cline]  (VS Code extension)
 * [Claude desktop][claudedesktop]
 * [Claude code][claudecode]
@@ -29,11 +33,11 @@ description: >
 
 1. [Make sure that billing is enabled for your Google Cloud project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
 
-
 ## Set up the database
 
 {{< tabpane persist=header text=true lang="en" >}}
   {{% tab header="Cloud SQL for Postgres" lang="en" %}}
+
   1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
   1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
@@ -46,6 +50,7 @@ description: >
   {{% /tab %}}
 
   {{% tab header="AlloyDB for Postgres"  lang="en"%}}
+
   1. [Enable the AlloyDB, Compute Engine, Cloud Resource Manager, and Service Networking APIs in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=alloydb.googleapis.com,compute.googleapis.com,cloudresourcemanager.googleapis.com,servicenetworking.googleapis.com).
 
   1. [Create a cluster and its primary instance](https://cloud.google.com/alloydb/docs/quickstart/create-and-connect). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/alloydb/docs/connect-public-ip). By default, AlloyDB assigns a private IP address to a new instance. Toolbox will connect securely using the [AlloyDB Language Connectors](https://cloud.google.com/alloydb/docs/language-connectors-overview).
@@ -65,23 +70,22 @@ description: >
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/linux/amd64/toolbox
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.5.0/linux/amd64/toolbox>
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/darwin/arm64/toolbox
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.5.0/darwin/arm64/toolbox>
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/darwin/amd64/toolbox
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.5.0/darwin/amd64/toolbox>
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/windows/amd64/toolbox
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.5.0/windows/amd64/toolbox>
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
-
 
 1. Make the binary executable:
 
@@ -102,12 +106,13 @@ This section will create a `tools.yaml` file, which will define which tools your
 This will configure the following tools:
 
 1. **list_tables**: lists tables and descriptions
-3. **execute_sql**: execute any SQL statement
+1. **execute_sql**: execute any SQL statement
 
 To configure Toolbox, run the following steps:
 
 {{< tabpane persist=header text=true lang="en" >}}
 {{% tab header="Cloud SQL for Postgres" lang="en" %}}
+
 1. Set the following environment variables:
 
     ```bash
@@ -238,9 +243,11 @@ To configure Toolbox, run the following steps:
     ```bash
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
+
 {{% /tab %}}
 
 {{% tab header="AlloyDB for Postgres" lang="en" %}}
+
 1. Set the following environment variables:
 
     ```bash
@@ -378,6 +385,7 @@ To configure Toolbox, run the following steps:
     ```bash
     ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 
@@ -386,6 +394,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
 {{< /notice >}}
 
 ## Configure your MCP Client
+
 {{< tabpane persist=header text=true lang="en" >}}
 {{< tab header="Cloud SQL for Postgres" lang="en" >}}
 {{< tabpane text=true >}}
@@ -491,6 +500,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
       }
     }
     ```
+
 {{% /tab %}}
 
 {{% tab header="Windsurf" lang="en" %}}
@@ -509,6 +519,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     }
 
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 {{< /tab >}}
@@ -617,6 +628,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
       }
     }
     ```
+
 {{% /tab %}}
 
 {{% tab header="Windsurf" lang="en" %}}
@@ -635,6 +647,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     }
 
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 {{< /tab >}}
