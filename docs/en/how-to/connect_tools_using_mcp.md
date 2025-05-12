@@ -13,7 +13,7 @@ Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for
 Postgres or AlloyDB for Postgres instance:
 
 * [Cursor][cursor]
-* [Windsurf][windsurf] (Codium)
+* [Windsurf][windsurf] (Codeium)
 * [Visual Studio Code][vscode] (Copilot)
 * [Cline][cline]  (VS Code extension)
 * [Claude desktop][claudedesktop]
