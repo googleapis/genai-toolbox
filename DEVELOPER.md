@@ -65,13 +65,13 @@
     build tags specified at the top of each integration test file:
 
         ```shell
-            go test -race -v -tags=integration,<YOUR_SOURCE_KIND> ./tests
+            go test -race -v ./tests/<YOUR_TEST_DIR>
         ```
 
         For example, to run the AlloyDB integration test, run:
 
         ```shell
-            go test -race -v -tags=integration,alloydb ./tests
+            go test -race -v ./tests/alloydbpg
         ```
 
 - Run integration tests on your PR:
@@ -128,6 +128,27 @@
 
     ```bash
     docker run -d toolbox:dev
+    ```
+
+## Developing Documentation
+
+1. [Install Hugo](https://gohugo.io/installation/macos/)
+1. Move into the `.hugo` directory
+
+    ```bash
+    cd .hugo
+    ```
+
+1. Install dependencies
+
+    ```bash
+    npm ci
+    ```
+
+1. Run the server
+
+    ```bash
+    hugo server
     ```
 
 ## Developing Toolbox SDKs
