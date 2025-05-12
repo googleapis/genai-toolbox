@@ -65,13 +65,13 @@
     build tags specified at the top of each integration test file:
 
         ```shell
-            go test -race -v -tags=integration,<YOUR_SOURCE_KIND> ./tests
+            go test -race -v ./tests/<YOUR_TEST_DIR>
         ```
 
         For example, to run the AlloyDB integration test, run:
 
         ```shell
-            go test -race -v -tags=integration,alloydb ./tests
+            go test -race -v ./tests/alloydbpg
         ```
 
 - Run integration tests on your PR:
