@@ -160,6 +160,39 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	return out, nil
 }
 
+// Helper function to replace parameters in the commands
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
+	paramMap := paramValues.AsMapWithDollarPrefix()
+	typeMap := make(map[string]string, len(params))
+	for _, p := range params {
+		placeholder := "$" + p.GetName()
+		typeMap[placeholder] = p.GetType()
+	}
+	newCommands := make([][]string, len(commands))
+	for i, cmd := range commands {
+		newCmd := make([]string, len(cmd))
+		for _, part := range cmd {
+			v, ok := paramMap[part]
+			if !ok {
+				// Command part is not a Parameter placeholder
+				newCmd = append(newCmd, part)
+				continue
+			}
+			if typeMap[part] == "array" {
+				for _, item := range v.([]any) {
+					// Nested arrays will only be expanded once
+					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
+					newCmd = append(newCmd, fmt.Sprintf("%s", item))
+				}
+				continue
+			}
+			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+		}
+		newCommands[i] = newCmd
+	}
+	return newCommands, nil
+}
+
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }
