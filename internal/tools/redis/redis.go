@@ -20,22 +20,20 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
-	"github.com/googleapis/genai-toolbox/internal/sources/memorystorevalkey"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/valkey-io/valkey-go"
+	"github.com/redis/go-redis/v9"
 )
 
 const ToolKind string = "redis"
 
 type compatibleSource interface {
-	RedisClient() valkey.Client
+	RedisClient() memorystoreredis.RedisClient
 }
 
 // validate compatible sources are still compatible
 var _ compatibleSource = &memorystoreredis.Source{}
-var _ compatibleSource = &memorystorevalkey.Source{}
 
-var compatibleSources = [...]string{memorystoreredis.SourceKind, memorystorevalkey.SourceKind}
+var compatibleSources = [...]string{memorystoreredis.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`
@@ -96,50 +94,74 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client      valkey.Client
+	Client      memorystoreredis.RedisClient
 	Commands    [][]string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	// Create command strings for error logging
-	cmdStrings := make([]string, len(t.Commands))
-
-	// Build commands
-	builtCmds := make(valkey.Commands, len(t.Commands))
-
-	for i, cmd := range t.Commands {
-		builtCmds[i] = t.Client.B().Arbitrary(cmd...).Build()
-		cmdStrings[i] = strings.Join(cmd, " ")
-	}
-
-	if len(builtCmds) == 0 {
-		return nil, fmt.Errorf("no valid commands were built to execute")
+	cmds, err := replaceCommandsParams(t.Commands, t.Parameters, params)
+	if err != nil {
+		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
 	}
 
 	// Execute commands
-	responses := t.Client.DoMulti(ctx, builtCmds...)
-
+	responses := make([]*redis.Cmd, len(cmds))
+	for i, cmd := range cmds {
+		c := make([]any, len(cmd))
+		for i, v := range cmd {
+			c[i] = v
+		}
+		responses[i] = t.Client.Do(ctx, c...)
+	}
 	// Parse responses
 	out := make([]any, len(t.Commands))
 	for i, resp := range responses {
-		if err := resp.Error(); err != nil {
+		if err := resp.Err(); err != nil {
 			// Add error from each command to `errSum`
-			errString := fmt.Sprintf("Error from executing command `%s`: %s", cmdStrings[i], err)
+			cmdString := strings.Join(cmds[i], " ")
+			errString := fmt.Sprintf("Error from executing command `%s`: %s", cmdString, err)
 			out[i] = errString
 			continue
 		}
-		resp, err := resp.ToString()
-		if err != nil {
-			errString := fmt.Sprintf("Error parsing response from command `%s`: %s", cmdStrings[i], err)
-			out[i] = errString
-			continue
-		}
-		out[i] = resp
+		out[i] = resp.String()
 	}
 
 	return out, nil
+}
+
+// Helper function to replace parameters in the commands
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
+	paramMap := paramValues.AsMapWithDollarPrefix()
+	typeMap := make(map[string]string, len(params))
+	for _, p := range params {
+		placeholder := "$" + p.GetName()
+		typeMap[placeholder] = p.GetType()
+	}
+	newCommands := make([][]string, len(commands))
+	for i, cmd := range commands {
+		newCmd := make([]string, len(cmd))
+		for _, part := range cmd {
+			v, ok := paramMap[part]
+			if !ok {
+				// Command part is not a Parameter placeholder
+				newCmd = append(newCmd, part)
+				continue
+			}
+			if typeMap[part] == "array" {
+				for _, item := range v.([]any) {
+					// Nested arrays will only be expanded once
+					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
+					newCmd = append(newCmd, fmt.Sprintf("%s", item))
+				}
+				continue
+			}
+			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+		}
+		newCommands[i] = newCmd
+	}
+	return newCommands, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
