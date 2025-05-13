@@ -149,7 +149,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("unable to close rows: %w", err)
 	}
 
-	// Check if error occured during iteration
+	// Check if error occurred during iteration
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
