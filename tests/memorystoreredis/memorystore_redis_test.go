@@ -42,7 +42,7 @@ func getRedisVars(t *testing.T) map[string]any {
 	return map[string]any{
 		"kind":     REDIS_SOURCE_KIND,
 		"address":  REDIS_ADDRESS,
-		"database": REDIS_DATABASE,
+		"password": REDIS_PASS,
 	}
 }
 
@@ -50,7 +50,7 @@ type RedisClient interface {
 	Do(context.Context, ...any) *redis.Cmd
 }
 
-func initMemorystoreRedisClient(ctx context.Context, address string) (RedisClient, error) {
+func initMemorystoreRedisClient(ctx context.Context, address, pass string) (RedisClient, error) {
 
 	var client RedisClient
 	var err error
@@ -61,7 +61,7 @@ func initMemorystoreRedisClient(ctx context.Context, address string) (RedisClien
 		PoolSize:        10,
 		ConnMaxIdleTime: 60 * time.Second,
 		MinIdleConns:    1,
-		Password:        REDIS_PASS,
+		Password:        pass,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {
@@ -75,13 +75,10 @@ func TestMemorystoreRedisToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	//var args []string
-
-	//db, err := strconv.Atoi(REDIS_DATABASE)
 	// if err != nil {
 	// 	t.Fatalf("unable to convert `REDIS_DATABASE` str to int: %s", err)
 	// }
-	_, err := initMemorystoreRedisClient(ctx, REDIS_ADDRESS)
+	_, err := initMemorystoreRedisClient(ctx, REDIS_ADDRESS, REDIS_PASS)
 	if err != nil {
 		t.Fatalf("unable to create Redis connection: %s", err)
 	}
