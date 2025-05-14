@@ -144,7 +144,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeAuthWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeAuthWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }

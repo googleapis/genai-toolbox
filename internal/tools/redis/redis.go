@@ -161,21 +161,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 }
 
 // Helper function to replace parameters in the commands
-func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
 	for _, p := range params {
 		placeholder := "$" + p.GetName()
 		typeMap[placeholder] = p.GetType()
 	}
-	newCommands := make([][]string, len(commands))
+	newCommands := make([][]any, len(commands))
 	for i, cmd := range commands {
-		newCmd := make([]string, len(cmd))
-		for _, part := range cmd {
+		newCmd := make([]any, len(cmd))
+		for j, part := range cmd {
 			v, ok := paramMap[part]
 			if !ok {
 				// Command part is not a Parameter placeholder
-				newCmd = append(newCmd, part)
+				newCmd[j] = part
 				continue
 			}
 			if typeMap[part] == "array" {
@@ -186,7 +186,7 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 				}
 				continue
 			}
-			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+			newCmd[j] = fmt.Sprintf("%s", v)
 		}
 		newCommands[i] = newCmd
 	}

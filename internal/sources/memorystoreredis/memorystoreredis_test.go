@@ -20,7 +20,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"gopkg.in/yaml.v3"
@@ -41,7 +40,7 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					address: 127.0.0.1
 					clusterEnabled: true
 			`,
-			want: map[string]sources.SourceConfig{
+			want: server.SourceConfigs{
 				"my-redis-instance": memorystoreredis.Config{
 					Name:           "my-redis-instance",
 					Kind:           memorystoreredis.SourceKind,
@@ -61,7 +60,7 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					database: 1
 					clusterEnabled: false
 			`,
-			want: map[string]sources.SourceConfig{
+			want: server.SourceConfigs{
 				"my-redis-instance": memorystoreredis.Config{
 					Name:           "my-redis-instance",
 					Kind:           memorystoreredis.SourceKind,
