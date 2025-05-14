@@ -16,12 +16,24 @@ package util
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
 )
+
+// DecodeJSON decodes a given reader into an interface using the json decoder.
+func DecodeJSON(r io.Reader, v interface{}) error {
+	defer io.Copy(io.Discard, r) //nolint:errcheck
+	d := json.NewDecoder(r)
+	// specify JSON numbers should get parsed to json.Number instead of float64 by default.
+	// This prevents loss between floats/ints.
+	d.UseNumber()
+	return d.Decode(v)
+}
 
 var _ yaml.InterfaceUnmarshalerContext = &DelayedUnmarshaler{}
 

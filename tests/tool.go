@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/server/mcp"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -307,7 +307,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 	invokeTcs := []struct {
 		name          string
 		api           string
-		requestBody   mcp.JSONRPCRequest
+		requestBody   util.JSONRPCRequest
 		requestHeader map[string]string
 		want          string
 	}{
@@ -315,10 +315,10 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			name:          "MCP Invoke my-param-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "my-param-tool",
-				Request: mcp.Request{
+				Request: util.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -335,10 +335,10 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			name:          "MCP Invoke invalid tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invalid-tool",
-				Request: mcp.Request{
+				Request: util.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -352,10 +352,10 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			name:          "MCP Invoke my-param-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-without-parameter",
-				Request: mcp.Request{
+				Request: util.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -369,10 +369,10 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			name:          "MCP Invoke my-param-tool with insufficient parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-insufficient-parameter",
-				Request: mcp.Request{
+				Request: util.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -386,10 +386,10 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			name:          "MCP Invoke my-fail-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-fail-tool",
-				Request: mcp.Request{
+				Request: util.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
