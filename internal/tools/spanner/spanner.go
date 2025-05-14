@@ -44,6 +44,7 @@ type Config struct {
 	Source       string           `yaml:"source" validate:"required"`
 	Description  string           `yaml:"description" validate:"required"`
 	Statement    string           `yaml:"statement" validate:"required"`
+	ReadOnly     bool             `yaml:"readOnly"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 }
@@ -81,6 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
+		ReadOnly:     cfg.ReadOnly,
 		Client:       s.SpannerClient(),
 		dialect:      s.DatabaseDialect(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
@@ -97,7 +99,7 @@ type Tool struct {
 	Kind         string           `yaml:"kind"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
-
+	ReadOnly     bool             `yaml:"readOnly"`
 	Client      *spanner.Client
 	dialect     string
 	Statement   string
@@ -116,45 +118,68 @@ func getMapParams(params tools.ParamValues, dialect string) (map[string]interfac
 	}
 }
 
+func processRows(iter *spanner.RowIterator) ([]any, error) {
+	var out []any
+	defer iter.Stop()
+
+	for {
+		row, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+
+		vMap := make(map[string]any)
+		cols := row.ColumnNames()
+		for i, c := range cols {
+			vMap[c] = row.ColumnValue(i)
+		}
+		out = append(out, vMap)
+	}
+	return out, nil
+}
+
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	mapParams, err := getMapParams(params, t.dialect)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
 
-	var out []any
+	var results []any
+	var opErr error
 
-	_, err = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+	if t.ReadOnly {
+		ro := t.Client.ReadOnlyTransaction()
+		defer ro.Close()
 		stmt := spanner.Statement{
 			SQL:    t.Statement,
 			Params: mapParams,
 		}
-		iter := txn.Query(ctx, stmt)
-		defer iter.Stop()
-
-		for {
-			row, err := iter.Next()
-			if err == iterator.Done {
-				return nil
+		iter := ro.Query(ctx, stmt)
+		results, opErr = processRows(iter)
+	} else {
+		_, opErr = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			stmt := spanner.Statement{
+				SQL:    t.Statement,
+				Params: mapParams,
 			}
+			iter := txn.Query(ctx, stmt)
+
+			results, err = processRows(iter)
 			if err != nil {
-				return fmt.Errorf("unable to parse row: %w", err)
+				return err
 			}
-
-			vMap := make(map[string]any)
-			cols := row.ColumnNames()
-			for i, c := range cols {
-				vMap[c] = row.ColumnValue(i)
-			}
-
-			out = append(out, vMap)
-		}
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute client: %w", err)
+			return nil
+		})
 	}
 
-	return out, nil
+	if opErr != nil {
+		return nil, fmt.Errorf("spanner operation failed: %w", opErr)
+	}
+
+	return results, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

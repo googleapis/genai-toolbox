@@ -64,6 +64,37 @@ func TestParseFromYamlSpanner(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "read only set to true",
+			in: `
+			tools:
+				example_tool:
+					kind: spanner-sql
+					source: my-pg-instance
+					description: some description
+					readOnly: true
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					parameters:
+						- name: country
+						  type: string
+						  description: some description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": spanner.Config{
+					Name:         "example_tool",
+					Kind:         spanner.ToolKind,
+					Source:       "my-pg-instance",
+					Description:  "some description",
+					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+					ReadOnly:     true,
+					AuthRequired: []string{},
+					Parameters: []tools.Parameter{
+						tools.NewStringParameter("country", "some description"),
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
