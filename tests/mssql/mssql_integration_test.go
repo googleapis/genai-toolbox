@@ -122,8 +122,8 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want, failInvocationWant, createTableStatement := tests.GetMssqlWants()
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, mcpInvokeParamWant, invokeAuthWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeAuthWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
