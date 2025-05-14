@@ -32,7 +32,7 @@ type Config struct {
 	Name           string `yaml:"name" validate:"required"`
 	Kind           string `yaml:"kind" validate:"required"`
 	Address        string `yaml:"address" validate:"required"`
-	ClusterEnabled bool   `yaml:"clusterEnabled" validate:"required"`
+	ClusterEnabled bool   `yaml:"clusterEnabled"`
 	Password       string `yaml:"password"`
 	Database       int    `yaml:"database"`
 	UseIAM         bool   `yaml:"useIAM"`
@@ -42,6 +42,9 @@ type Config struct {
 type RedisClient interface {
 	Do(context.Context, ...any) *redis.Cmd
 }
+
+var _ RedisClient = (*redis.Client)(nil)
+var _ RedisClient = (*redis.ClusterClient)(nil)
 
 func (r Config) SourceConfigKind() string {
 	return SourceKind
@@ -84,6 +87,7 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 			ConnMaxIdleTime:            60 * time.Second,
 			MinIdleConns:               1,
 			CredentialsProviderContext: authFn,
+			Password:                   r.Password,
 		})
 		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
 			return shard.Ping(ctx).Err()
@@ -91,6 +95,7 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 		if err != nil {
 			return nil, fmt.Errorf("unable to connect to redis cluster: %s", err)
 		}
+		client = clusterClient
 		return client, nil
 	}
 
@@ -102,11 +107,13 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 		MinIdleConns:               1,
 		DB:                         r.Database,
 		CredentialsProviderContext: authFn,
+		Password:                   r.Password,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to redis: %s", err)
 	}
+	client = standaloneClient
 	return client, nil
 }
 

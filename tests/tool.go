@@ -75,7 +75,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeAuthWant string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -96,7 +96,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -104,7 +104,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          invoke_param_want,
+			want:          invokeParamWant,
 			isErr:         false,
 		},
 		{
@@ -126,7 +126,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          "[{\"name\":\"Alice\"}]",
+			want:          invokeAuthWant,
 			isErr:         false,
 		},
 		{
@@ -149,7 +149,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
-			want:          select_1_want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
@@ -459,7 +459,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want string) {
+func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -486,7 +486,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 					},
 				},
 			},
-			want: invoke_param_want,
+			want: invokeParamWant,
 		},
 		{
 			name:          "MCP Invoke invalid tool",

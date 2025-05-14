@@ -25,7 +25,6 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/valkey-io/valkey-go"
 )
 
 // GetToolsConfig returns a mock tools config file
@@ -536,46 +535,97 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 	}
 }
 
-func SetupRedisDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {
-	keys := []string{"row1", "row2", "row3"}
-	commands := [][]string{
-		{"HSET", keys[0], "name", "Alice", "email", SERVICE_ACCOUNT_EMAIL, "id", "1"},
-		{"HSET", keys[1], "name", "Jane", "email", "janedoe@gmail.com", "id", "2"},
-		{"HSET", keys[2], "name", "Sid", "id", "3"},
-	}
-	builtCmds := make(valkey.Commands, len(commands))
-
-	for i, cmd := range commands {
-		builtCmds[i] = client.B().Arbitrary(cmd...).Build()
-	}
-
-	responses := client.DoMulti(ctx, builtCmds...)
-	for _, resp := range responses {
-		if err := resp.Error(); err != nil {
-			t.Fatalf("unable to insert test data: %s", err)
-		}
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err := client.Do(ctx, client.B().Del().Key(keys...).Build()).AsInt64()
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-
-}
-
 // GetRedisWants return the expected wants for redis
-func GetRedisWants() (string, string) {
-	select1Want := "[{\"1\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
-	return select1Want, failInvocationWant
+func GetRedisValkeyWants() (string, string, string, string, string) {
+	select1Want := "[\"PONG\"]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"\"error from executing command at index 0: ERR unknown command 'SELEC 1;', with args beginning with:  command length: 1\""}]}}`
+	invokeParamWant := "[\"Alice\",\"Sid\"]"
+	invokeAuthWant := `["{\"name\":\"Alice\"}"]`
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"\"Alice\""},{"type":"text","text":"\"Sid\""}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, invokeAuthWant, mcpInvokeParamWant
 }
 
 // GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
-func GetRedisToolCmds() ([]string, []string) {
-	paramCmd := []string{}
-	authCmd := []string{}
+func GetRedisValkeyToolCmds() ([][]string, [][]string) {
+	paramCmd := [][]string{{"HGET", "row1", "name"}, {"HGET", "row3", "name"}}
+	authCmd := [][]string{{"HGET", "$email", "name"}}
 	return paramCmd, authCmd
+}
+
+func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string, param_cmds, auth_cmds [][]string) map[string]any {
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+				"commands":    [][]string{{"PING"}},
+			},
+			"my-param-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test invocation with params.",
+				"commands":    param_cmds,
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
+					},
+					map[string]any{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"commands": auth_cmds,
+				"parameters": []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authServices": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
+				"commands":    [][]string{{"PING"}},
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-fail-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test statement with incorrect syntax.",
+				"commands":    [][]string{{"SELEC 1;"}},
+			},
+		},
+	}
+
+	return toolsFile
+
 }

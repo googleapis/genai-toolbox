@@ -16,7 +16,6 @@ package redis
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
@@ -109,44 +108,43 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	// Execute commands
 	responses := make([]*redis.Cmd, len(cmds))
 	for i, cmd := range cmds {
-		c := make([]any, len(cmd))
-		for i, v := range cmd {
-			c[i] = v
-		}
-		responses[i] = t.Client.Do(ctx, c...)
+		responses[i] = t.Client.Do(ctx, cmd...)
 	}
 	// Parse responses
 	out := make([]any, len(t.Commands))
 	for i, resp := range responses {
 		if err := resp.Err(); err != nil {
 			// Add error from each command to `errSum`
-			cmdString := strings.Join(cmds[i], " ")
-			errString := fmt.Sprintf("Error from executing command `%s`: %s", cmdString, err)
+			errString := fmt.Sprintf("error from executing command at index %d: %s command length: %d", i, err, len(cmds[i]))
 			out[i] = errString
 			continue
 		}
-		out[i] = resp.String()
+		result, err := resp.Result()
+		if err != nil {
+			return nil, fmt.Errorf("error getting result: %s", err)
+		}
+		out[i] = result
 	}
 
 	return out, nil
 }
 
 // Helper function to replace parameters in the commands
-func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
 	for _, p := range params {
 		placeholder := "$" + p.GetName()
 		typeMap[placeholder] = p.GetType()
 	}
-	newCommands := make([][]string, len(commands))
+	newCommands := make([][]any, len(commands))
 	for i, cmd := range commands {
-		newCmd := make([]string, len(cmd))
-		for _, part := range cmd {
+		newCmd := make([]any, len(cmd))
+		for j, part := range cmd {
 			v, ok := paramMap[part]
 			if !ok {
 				// Command part is not a Parameter placeholder
-				newCmd = append(newCmd, part)
+				newCmd[j] = part
 				continue
 			}
 			if typeMap[part] == "array" {
@@ -157,7 +155,7 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 				}
 				continue
 			}
-			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+			newCmd[j] = fmt.Sprintf("%s", v)
 		}
 		newCommands[i] = newCmd
 	}

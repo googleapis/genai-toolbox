@@ -157,7 +157,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tmplSelectAllWant := "[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"},{\"age\":\"100\",\"id\":\"2\",\"name\":\"Alice\"}]"
 	tmplSelect1Want := "[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"}]"
 
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeAuthWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
