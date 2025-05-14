@@ -340,7 +340,7 @@ steps:
     env:
       - "MEMORYSTORE_REDIS_DATABASE=$_MEMORYSTORE_REDIS_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["MEMORYSTORE_REDIS_ADDRESS", "CLIENT_ID"]
+    secretEnv: ["MEMORYSTORE_REDIS_ADDRESS", "MEMORYSTORE_REDIS_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -397,6 +397,8 @@ availableSecrets:
       env: COUCHBASE_PASS
     - versionName: projects/$PROJECT_ID/secrets/memorystore_redis_address/versions/latest
       env: MEMORYSTORE_REDIS_ADDRESS
+    - versionName: projects/$PROJECT_ID/secrets/memorystore_redis_pass/versions/latest
+      env: MEMORYSTORE_REDIS_PASS
 
 
 options:
