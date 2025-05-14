@@ -176,7 +176,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 
 	if opErr != nil {
-		return nil, fmt.Errorf("spanner operation failed: %w", opErr)
+		return nil, fmt.Errorf("unable to execute client: %w", opErr)
 	}
 
 	return results, nil
