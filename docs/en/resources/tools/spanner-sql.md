@@ -124,3 +124,4 @@ tools:
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
 | statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
 | parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
+| readOnly    |                   bool                     |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`.                   |
