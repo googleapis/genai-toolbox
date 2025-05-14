@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -55,15 +56,25 @@ type RedisClient interface {
 }
 
 func initMemorystoreRedisClient(ctx context.Context, address string) (RedisClient, error) {
+	// Pass in an access token getter fn for IAM auth
+	authFn := func(ctx context.Context) (username string, password string, err error) {
+		token, err := sources.GetIAMAccessToken(ctx)
+		if err != nil {
+			return "", "", err
+		}
+		return "", token, nil
+	}
+
 	var client RedisClient
 	var err error
 
 	// Create a new Redis client
 	standaloneClient := redis.NewClient(&redis.Options{
-		Addr:            address,
-		PoolSize:        10,
-		ConnMaxIdleTime: 60 * time.Second,
-		MinIdleConns:    1,
+		Addr:                       address,
+		PoolSize:                   10,
+		ConnMaxIdleTime:            60 * time.Second,
+		MinIdleConns:               1,
+		CredentialsProviderContext: authFn,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {

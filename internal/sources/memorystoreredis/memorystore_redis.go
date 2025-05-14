@@ -35,6 +35,7 @@ type Config struct {
 	ClusterEnabled bool   `yaml:"clusterEnabled" validate:"required"`
 	Password       string `yaml:"password"`
 	Database       int    `yaml:"database"`
+	UseIAM         bool   `yaml:"useIAM"`
 }
 
 // RedisClient is an interface for `redis.Client` and `redis.ClusterClient
@@ -60,6 +61,18 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 }
 
 func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, error) {
+	var authFn func(ctx context.Context) (username string, password string, err error)
+	if r.UseIAM {
+		// Pass in an access token getter fn for IAM auth
+		authFn = func(ctx context.Context) (username string, password string, err error) {
+			token, err := sources.GetIAMAccessToken(ctx)
+			if err != nil {
+				return "", "", err
+			}
+			return "", token, nil
+		}
+	}
+
 	var client RedisClient
 	var err error
 	if r.ClusterEnabled {
@@ -67,9 +80,10 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 		clusterClient := redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs: []string{r.Address},
 			// PoolSize applies per cluster node and not for the whole cluster.
-			PoolSize:        10,
-			ConnMaxIdleTime: 60 * time.Second,
-			MinIdleConns:    1,
+			PoolSize:                   10,
+			ConnMaxIdleTime:            60 * time.Second,
+			MinIdleConns:               1,
+			CredentialsProviderContext: authFn,
 		})
 		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
 			return shard.Ping(ctx).Err()
@@ -82,10 +96,11 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 
 	// Create a new Redis client
 	standaloneClient := redis.NewClient(&redis.Options{
-		Addr:            r.Address,
-		PoolSize:        10,
-		ConnMaxIdleTime: 60 * time.Second,
-		MinIdleConns:    1,
+		Addr:                       r.Address,
+		PoolSize:                   10,
+		ConnMaxIdleTime:            60 * time.Second,
+		MinIdleConns:               1,
+		CredentialsProviderContext: authFn,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {
