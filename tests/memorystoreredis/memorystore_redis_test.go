@@ -21,7 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -39,15 +38,11 @@ func getRedisVars(t *testing.T) map[string]any {
 		t.Fatal("'REDIS_ADDRESS' not set")
 	case REDIS_DATABASE:
 		t.Fatal("'REDIS_DATABASE' not set")
-	case REDIS_PASS:
-		t.Fatal("'REDIS_PASS' not set")
 	}
-
 	return map[string]any{
 		"kind":     REDIS_SOURCE_KIND,
 		"address":  REDIS_ADDRESS,
 		"database": REDIS_DATABASE,
-		"password": REDIS_PASS,
 	}
 }
 
@@ -56,25 +51,17 @@ type RedisClient interface {
 }
 
 func initMemorystoreRedisClient(ctx context.Context, address string) (RedisClient, error) {
-	// Pass in an access token getter fn for IAM auth
-	authFn := func(ctx context.Context) (username string, password string, err error) {
-		token, err := sources.GetIAMAccessToken(ctx)
-		if err != nil {
-			return "", "", err
-		}
-		return "", token, nil
-	}
 
 	var client RedisClient
 	var err error
 
 	// Create a new Redis client
 	standaloneClient := redis.NewClient(&redis.Options{
-		Addr:                       address,
-		PoolSize:                   10,
-		ConnMaxIdleTime:            60 * time.Second,
-		MinIdleConns:               1,
-		CredentialsProviderContext: authFn,
+		Addr:            address,
+		PoolSize:        10,
+		ConnMaxIdleTime: 60 * time.Second,
+		MinIdleConns:    1,
+		Password:        REDIS_PASS,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {
