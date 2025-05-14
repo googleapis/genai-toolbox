@@ -69,7 +69,7 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 			if err != nil {
 				return "", "", err
 			}
-			return "", token, nil
+			return "default", token, nil
 		}
 	}
 
@@ -100,6 +100,7 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 		PoolSize:                   10,
 		ConnMaxIdleTime:            60 * time.Second,
 		MinIdleConns:               1,
+		DB:                         r.Database,
 		CredentialsProviderContext: authFn,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
