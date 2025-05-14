@@ -116,7 +116,7 @@ func TestToolsetEndpoint(t *testing.T) {
 			for _, name := range tc.want.tools {
 				_, ok := m.ToolsManifest[name]
 				if !ok {
-					t.Errorf("%q tool not found in manfiest", name)
+					t.Errorf("%q tool not found in manifest", name)
 				}
 			}
 		})
@@ -204,7 +204,7 @@ func TestToolGetEndpoint(t *testing.T) {
 			for _, name := range tc.want.tools {
 				_, ok := m.ToolsManifest[name]
 				if !ok {
-					t.Errorf("%q tool not found in manfiest", name)
+					t.Errorf("%q tool not found in manifest", name)
 				}
 			}
 		})

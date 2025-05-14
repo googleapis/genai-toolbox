@@ -1,6 +1,9 @@
-
 ![logo](./logo.png)
+
 # MCP Toolbox for Databases
+
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
+[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox) 
 
 > [!NOTE] 
 > MCP Toolbox for Databases is currently in beta, and may see breaking 
