@@ -27,6 +27,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
+	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -174,8 +176,13 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // mcpHandler handles all mcp messages.
 func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
+	ctx := util.WithLogger(r.Context(), s.logger)
+
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp")
 	r = r.WithContext(ctx)
+
+	// TODO: this will be updated to retrieve from request header when update mcpManager
+	protocolVersion := "2024-11-05"
 
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
@@ -210,20 +217,20 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		// Generate a new uuid if unable to decode
 		id = uuid.New().String()
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, mcputil.NewError(id, mcputil.PARSE_ERROR, err.Error(), nil))
 	}
 
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage struct {
-		Jsonrpc string        `json:"jsonrpc"`
-		Method  string        `json:"method"`
-		Id      mcp.RequestId `json:"id,omitempty"`
+		Jsonrpc string            `json:"jsonrpc"`
+		Method  string            `json:"method"`
+		Id      mcputil.RequestId `json:"id,omitempty"`
 	}
-	if err = decodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
+	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(id, mcp.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, mcputil.NewError(id, mcputil.PARSE_ERROR, err.Error(), nil))
 		return
 	}
 
@@ -231,27 +238,21 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if baseMessage.Method == "" {
 		err = fmt.Errorf("method not found")
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil))
+		render.JSON(w, r, mcputil.NewError(baseMessage.Id, mcputil.METHOD_NOT_FOUND, err.Error(), nil))
 		return
 	}
 
 	// Check for JSON-RPC 2.0
-	if baseMessage.Jsonrpc != mcp.JSONRPC_VERSION {
+	if baseMessage.Jsonrpc != mcputil.JSONRPC_VERSION {
 		err = fmt.Errorf("invalid json-rpc version")
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil))
+		render.JSON(w, r, mcputil.NewError(baseMessage.Id, mcputil.INVALID_REQUEST, err.Error(), nil))
 		return
 	}
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
-		id = ""
-		var notification mcp.JSONRPCNotification
-		if err = json.Unmarshal(body, &notification); err != nil {
-			err = fmt.Errorf("invalid notification request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			render.JSON(w, r, newJSONRPCError(baseMessage.Id, mcp.PARSE_ERROR, err.Error(), nil))
-		}
+		mcp.NotificationHandler(ctx, body)
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
 		w.WriteHeader(http.StatusAccepted)
@@ -261,101 +262,20 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	method = baseMessage.Method
 	s.logger.DebugContext(ctx, fmt.Sprintf("method is: %s", method))
 
-	var res mcp.JSONRPCMessage
-	switch baseMessage.Method {
-	case "initialize":
-		var req mcp.InitializeRequest
-		if err = json.Unmarshal(body, &req); err != nil {
-			err = fmt.Errorf("invalid mcp initialize request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
-			break
-		}
-		result := mcp.Initialize(s.version)
-		res = mcp.JSONRPCResponse{
-			Jsonrpc: mcp.JSONRPC_VERSION,
-			Id:      baseMessage.Id,
-			Result:  result,
-		}
-	case "tools/list":
-		var req mcp.ListToolsRequest
-		if err = json.Unmarshal(body, &req); err != nil {
-			err = fmt.Errorf("invalid mcp tools list request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
-			break
-		}
+	var res any
+	switch method {
+	case mcputil.INITIALIZE:
+		// TODO: will replace with protocol version once update mcpManager
+		res, _ = mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+	default:
 		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
 			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
+			res = mcputil.NewError(baseMessage.Id, mcputil.INVALID_REQUEST, err.Error(), nil)
 			break
 		}
-		result := mcp.ToolsList(toolset)
-		res = mcp.JSONRPCResponse{
-			Jsonrpc: mcp.JSONRPC_VERSION,
-			Id:      baseMessage.Id,
-			Result:  result,
-		}
-	case "tools/call":
-		var req mcp.CallToolRequest
-		if err = json.Unmarshal(body, &req); err != nil {
-			err = fmt.Errorf("invalid mcp tools call request: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil)
-			break
-		}
-		toolName = req.Params.Name
-		toolArgument := req.Params.Arguments
-		s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
-		tool, ok := s.tools[toolName]
-		if !ok {
-			err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
-			break
-		}
-
-		// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
-		aMarshal, err := json.Marshal(toolArgument)
-		if err != nil {
-			err = fmt.Errorf("unable to marshal tools argument: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
-			break
-		}
-		var data map[string]any
-		if err = decodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
-			err = fmt.Errorf("unable to decode tools argument: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INTERNAL_ERROR, err.Error(), nil)
-			break
-		}
-
-		// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
-		// Since MCP doesn't support auth, an empty map will be use every time.
-		claimsFromAuth := make(map[string]map[string]any)
-
-		params, err := tool.ParseParams(data, claimsFromAuth)
-		if err != nil {
-			err = fmt.Errorf("provided parameters were invalid: %w", err)
-			s.logger.DebugContext(ctx, err.Error())
-			res = newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil)
-			break
-		}
-		s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
-
-		result := mcp.ToolCall(ctx, tool, params)
-		res = mcp.JSONRPCResponse{
-			Jsonrpc: mcp.JSONRPC_VERSION,
-			Id:      baseMessage.Id,
-			Result:  result,
-		}
-	default:
-		err = fmt.Errorf("invalid method %s", baseMessage.Method)
-		s.logger.DebugContext(ctx, err.Error())
-		res = newJSONRPCError(baseMessage.Id, mcp.METHOD_NOT_FOUND, err.Error(), nil)
+		res, toolName = mcp.McpHandler(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
 	}
 
 	// retrieve sse session
@@ -378,17 +298,4 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// send HTTP response
 	render.JSON(w, r, res)
-}
-
-// newJSONRPCError is the response sent back when an error has been encountered in mcp.
-func newJSONRPCError(id mcp.RequestId, code int, message string, data any) mcp.JSONRPCError {
-	return mcp.JSONRPCError{
-		Jsonrpc: mcp.JSONRPC_VERSION,
-		Id:      id,
-		Error: mcp.McpError{
-			Code:    code,
-			Message: message,
-			Data:    data,
-		},
-	}
 }
