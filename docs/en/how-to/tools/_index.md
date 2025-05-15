@@ -1,7 +1,7 @@
 ---
-title: "Developer Assistant"
+title: "Developer Assistants"
 type: docs
-weight: 3
+weight: 1
 description: >
   List of guides detailing how to connect your AI tools to Toolbox using MCP.
 ---
