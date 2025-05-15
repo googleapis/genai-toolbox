@@ -340,7 +340,7 @@ queries = [
 ]
 
 async def run_application():
-    toolbox_client = ToolboxClient("<http://127.0.0.1:5000>")
+    toolbox_client = ToolboxClient("http://127.0.0.1:5000")
 
     # The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use
     # integration. While this example uses Google's genai client, these callables can be adapted for
@@ -432,7 +432,7 @@ import os
 
 os.environ['GOOGLE_API_KEY'] = 'your-api-key'
 
-toolbox_tools = ToolboxTool("<http://127.0.0.1:5000>")
+toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -487,6 +487,7 @@ for query in queries:
       print(text)
 {{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
+import asyncio
 
 from langgraph.prebuilt import create_react_agent
 
