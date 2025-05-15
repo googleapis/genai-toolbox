@@ -38,6 +38,10 @@ type Config struct {
 	UseIAM         bool   `yaml:"useIAM"`
 }
 
+func (r Config) SourceConfigKind() string {
+	return SourceKind
+}
+
 // RedisClient is an interface for `redis.Client` and `redis.ClusterClient
 type RedisClient interface {
 	Do(context.Context, ...any) *redis.Cmd
@@ -45,10 +49,6 @@ type RedisClient interface {
 
 var _ RedisClient = (*redis.Client)(nil)
 var _ RedisClient = (*redis.ClusterClient)(nil)
-
-func (r Config) SourceConfigKind() string {
-	return SourceKind
-}
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	client, err := initMemorystoreRedisClient(ctx, r)
