@@ -118,6 +118,7 @@ func getMapParams(params tools.ParamValues, dialect string) (map[string]interfac
 	}
 }
 
+// processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
 func processRows(iter *spanner.RowIterator) ([]any, error) {
 	var out []any
 	defer iter.Stop()
@@ -149,24 +150,17 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 
 	var results []any
 	var opErr error
+	stmt := spanner.Statement{
+		SQL:    t.Statement,
+		Params: mapParams,
+	}
 
 	if t.ReadOnly {
-		ro := t.Client.ReadOnlyTransaction()
-		defer ro.Close()
-		stmt := spanner.Statement{
-			SQL:    t.Statement,
-			Params: mapParams,
-		}
-		iter := ro.Query(ctx, stmt)
+		iter := t.Client.Single().Query(ctx, stmt)
 		results, opErr = processRows(iter)
 	} else {
 		_, opErr = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-			stmt := spanner.Statement{
-				SQL:    t.Statement,
-				Params: mapParams,
-			}
 			iter := txn.Query(ctx, stmt)
-
 			results, err = processRows(iter)
 			if err != nil {
 				return err
