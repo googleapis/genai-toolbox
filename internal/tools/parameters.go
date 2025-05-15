@@ -127,6 +127,10 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 			var ok bool
 			v, ok = data[name]
 			if !ok {
+				if p.IsOptional() {
+					params = append(params, ParamValue{Name: name, Value: nil})
+					continue
+				}
 				return nil, fmt.Errorf("parameter %q is required", name)
 			}
 		} else {
@@ -152,6 +156,7 @@ type Parameter interface {
 	GetName() string
 	GetType() string
 	GetAuthServices() []ParamAuthService
+	IsOptional() bool
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() ParameterMcpManifest
@@ -280,8 +285,10 @@ func (ps Parameters) McpManifest() McpToolsSchema {
 	for _, p := range ps {
 		name := p.GetName()
 		properties[name] = p.McpManifest()
-		// all parameters are added to the required field
-		required = append(required, name)
+		// Only add to required list if the parameter is not optional
+		if !p.IsOptional() {
+			required = append(required, name)
+		}
 	}
 
 	return McpToolsSchema{
@@ -312,6 +319,7 @@ type CommonParameter struct {
 	Name         string             `yaml:"name" validate:"required"`
 	Type         string             `yaml:"type" validate:"required"`
 	Desc         string             `yaml:"description" validate:"required"`
+	Optional     bool               `yaml:"optional,omitempty"`
 	AuthServices []ParamAuthService `yaml:"authServices"`
 	AuthSources  []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 }
@@ -347,6 +355,11 @@ func (p *CommonParameter) McpManifest() ParameterMcpManifest {
 		Type:        p.Type,
 		Description: p.Desc,
 	}
+}
+
+// IsOptional returns whether the parameter is optional.
+func (p *CommonParameter) IsOptional() bool {
+	return p.Optional
 }
 
 // ParseTypeError is a custom error for incorrectly typed Parameters.
@@ -385,6 +398,19 @@ func NewStringParameterWithAuth(name, desc string, authServices []ParamAuthServi
 			Type:         typeString,
 			Desc:         desc,
 			AuthServices: authServices,
+		},
+	}
+}
+
+// NewStringParameterWithOptions is a convenience function for initializing a StringParameter with optional flag.
+func NewStringParameterWithOptions(name, desc string, optional bool) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeString,
+			Desc:         desc,
+			Optional:     optional,
+			AuthServices: nil,
 		},
 	}
 }
@@ -428,6 +454,19 @@ func NewIntParameterWithAuth(name, desc string, authServices []ParamAuthService)
 			Type:         typeInt,
 			Desc:         desc,
 			AuthServices: authServices,
+		},
+	}
+}
+
+// NewIntParameterWithOptions is a convenience function for initializing an IntParameter with optional flag.
+func NewIntParameterWithOptions(name, desc string, optional bool) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeInt,
+			Desc:         desc,
+			Optional:     optional,
+			AuthServices: nil,
 		},
 	}
 }
@@ -488,6 +527,19 @@ func NewFloatParameterWithAuth(name, desc string, authServices []ParamAuthServic
 	}
 }
 
+// NewFloatParameterWithOptions is a convenience function for initializing a FloatParameter with optional flag.
+func NewFloatParameterWithOptions(name, desc string, optional bool) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeFloat,
+			Desc:         desc,
+			Optional:     optional,
+			AuthServices: nil,
+		},
+	}
+}
+
 var _ Parameter = &FloatParameter{}
 
 // FloatParameter is a parameter representing the "float" type.
@@ -542,6 +594,19 @@ func NewBooleanParameterWithAuth(name, desc string, authServices []ParamAuthServ
 	}
 }
 
+// NewBooleanParameterWithOptions is a convenience function for initializing a BooleanParameter with optional flag.
+func NewBooleanParameterWithOptions(name, desc string, optional bool) *BooleanParameter {
+	return &BooleanParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeBool,
+			Desc:         desc,
+			Optional:     optional,
+			AuthServices: nil,
+		},
+	}
+}
+
 var _ Parameter = &BooleanParameter{}
 
 // BooleanParameter is a parameter representing the "boolean" type.
@@ -582,6 +647,20 @@ func NewArrayParameterWithAuth(name, desc string, items Parameter, authServices 
 			Type:         typeArray,
 			Desc:         desc,
 			AuthServices: authServices,
+		},
+		Items: items,
+	}
+}
+
+// NewArrayParameterWithOptions is a convenience function for initializing an ArrayParameter with optional flag.
+func NewArrayParameterWithOptions(name, desc string, items Parameter, optional bool) *ArrayParameter {
+	return &ArrayParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeArray,
+			Desc:         desc,
+			Optional:     optional,
+			AuthServices: nil,
 		},
 		Items: items,
 	}
