@@ -61,7 +61,7 @@ func (h *ValueTextHandler) WithGroup(name string) slog.Handler {
 }
 
 // Handle formats its argument [Record] as a single line of space-separated values.
-// Example output format: 2024-11-12T15:08:11.451377-08:00 INFO "Initalized 0 sources.\n"
+// Example output format: 2024-11-12T15:08:11.451377-08:00 INFO "Initialized 0 sources.\n"
 func (h *ValueTextHandler) Handle(ctx context.Context, r slog.Record) error {
 	buf := make([]byte, 0, 1024)
 
@@ -86,7 +86,7 @@ func (h *ValueTextHandler) Handle(ctx context.Context, r slog.Record) error {
 	return err
 }
 
-// appendAttr is reponsible for formatting a single attribute
+// appendAttr is responsible for formatting a single attribute
 func (h *ValueTextHandler) appendAttr(buf []byte, a slog.Attr) []byte {
 	// Resolve the Attr's value before doing anything else.
 	a.Value = a.Value.Resolve()

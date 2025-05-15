@@ -35,7 +35,7 @@ tools:
         TO_INT64(cf[ 'id' ]) as id, 
         CAST(cf[ 'name' ] AS string) as name, 
       FROM 
-        % s 
+        mytable 
       WHERE 
         TO_INT64(cf[ 'id' ]) = @id 
         OR CAST(cf[ 'name' ] AS string) = @name;

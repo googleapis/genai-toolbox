@@ -250,7 +250,7 @@ func (rr resultResponse) Render(w http.ResponseWriter, r *http.Request) error {
 
 var _ render.Renderer = &errResponse{} // Renderer interface for managing response payloads.
 
-// newErrResponse is a helper function initalizing an ErrResponse
+// newErrResponse is a helper function initializing an ErrResponse
 func newErrResponse(err error, code int) *errResponse {
 	return &errResponse{
 		Err:            err,
