@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/valkey-io/valkey-go"
 )
