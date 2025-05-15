@@ -1,12 +1,12 @@
 ---
-title: "Connect AlloyDB to AI Developer Assistants using MCP"
+title: "Cloud SQL using MCP"
 type: docs
 weight: 2
 description: >
-  Connect your IDE to AlloyDB using Toolbox.
+  Connect your IDE to Cloud SQl for Postgres using Toolbox.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like AlloyDB. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a AlloyDB for Postgres instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Cloud SQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for Postgres instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -32,15 +32,15 @@ description: >
 
 ## Set up the database
 
-1. [Enable the AlloyDB, Compute Engine, Cloud Resource Manager, and Service Networking APIs in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=alloydb.googleapis.com,compute.googleapis.com,cloudresourcemanager.googleapis.com,servicenetworking.googleapis.com).
+1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
-1. [Create a cluster and its primary instance](https://cloud.google.com/alloydb/docs/quickstart/create-and-connect). These instructions assume that your AlloyDB instance has a [public IP address](https://cloud.google.com/alloydb/docs/connect-public-ip). By default, AlloyDB assigns a private IP address to a new instance. Toolbox will connect securely using the [AlloyDB Language Connectors](https://cloud.google.com/alloydb/docs/language-connectors-overview).
+1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
 
-1. Configure the required roles and permissions to complete this task. You will need [Cloud AlloyDB Client](https://cloud.google.com/alloydb/docs/auth-proxy/connect#required-iam-permissions) (`roles/alloydb.client`)  and Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`) roles or equivalent IAM permissions to connect to the instance.
+1. Configure the required roles and permissions to complete this task. You will need [Cloud SQL > Client](https://cloud.google.com/sql/docs/postgres/roles-and-permissions#proxy-roles-permissions) role (`roles/cloudsql.client`) or equivalent IAM permissions to connect to the instance.
 
 1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
 
-1. Create or reuse [a database user](https://cloud.google.com/alloydb/docs/database-users/manage-roles) and have the username and password ready.
+1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users) and have the username and password ready.
 
 
 ## Install MCP Toolbox
@@ -94,26 +94,23 @@ To configure Toolbox, run the following steps:
 1. Set the following environment variables:
 
     ```bash
-    # The ID of your Google Cloud Project where the AlloyDB cluster/instance is located.
-    export ALLOYDB_PROJECT="your-gcp-project-id"
+    # The ID of your Google Cloud Project where the Cloud SQL instance is located.
+    export CLOUD_SQL_PROJECT="your-gcp-project-id"
 
-    # The region where your AlloyDB cluster is located (e.g., us-central1).
-    export ALLOYDB_REGION="your-cluster-region"
+    # The region where your Cloud SQL instance is located (e.g., us-central1).
+    export CLOUD_SQL_REGION="your-instance-region"
 
-    # The name of your AlloyDB cluster.
-    export ALLOYDB_CLUSTER="your-cluster-name"
-
-    # The name of your AlloyDB instance.
-    export ALLOYDB_INSTANCE="your-instance-name"
+    # The name of your Cloud SQL instance.
+    export CLOUD_SQL_INSTANCE="your-instance-name"
 
     # The name of the database you want to connect to within the instance.
-    export ALLOYDB_DB="your-database-name"
+    export CLOUD_SQL_DB="your-database-name"
 
     # The username for connecting to the database.
-    export ALLOYDB_USER="your-database-user"
+    export CLOUD_SQL_USER="your-database-user"
 
     # The password for the specified database user.
-    export ALLOYDB_PASS="your-database-password"
+    export CLOUD_SQL_PASS="your-database-password"
     ```
 
 2. Create a `tools.yaml` file.
@@ -122,26 +119,27 @@ To configure Toolbox, run the following steps:
 
     ```yaml
     sources:
-      alloydb-pg-source:
-        kind: alloydb-postgres
-        project: ${ALLOYDB_PROJECT}
-        region: ${ALLOYDB_REGION}
-        cluster: ${ALLOYDB_CLUSTER}
-        instance: ${ALLOYDB_INSTANCE}
-        database: ${ALLOYDB_DB}
-        user: ${ALLOYDB_USER}
-        password: ${ALLOYDB_PASS}
-
+      cloudsql-pg-source:
+        kind: cloud-sql-postgres
+        project: ${CLOUD_SQL_PROJECT}
+        region: ${CLOUD_SQL_REGION}
+        instance: ${CLOUD_SQL_INSTANCE}
+        database: ${CLOUD_SQL_DB}
+        user: ${CLOUD_SQL_USER}
+        password: ${CLOUD_SQL_PASS}
     tools:
       execute_sql:
         kind: postgres-execute-sql
-        source: alloydb-pg-source
-        description: Use this tool to execute sql.
+        source: cloudsql-pg-source
+        description: Use this tool to execute SQL
 
       list_tables:
         kind: postgres-sql
-        source: alloydb-pg-source
-        description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+        source: cloudsql-pg-source
+        description: >
+          Lists detailed table information (object type, columns, constraints, indexes, triggers, owner, comment)
+          as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names.
+          If names are omitted, lists all tables in user schemas
         statement: |
           WITH desired_relkinds AS (
               SELECT ARRAY['r', 'p']::char[] AS kinds -- Always consider both 'TABLE' and 'PARTITIONED TABLE'
@@ -240,7 +238,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "alloydb": {
+        "cloud-sql-postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -261,7 +259,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "alloydb": {
+        "cloud-sql-postgres": {
           "command": "npx",
           "args": [
             "-y",
@@ -286,7 +284,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "alloydb": {
+        "cloud-sql-postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -306,7 +304,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "alloydb": {
+        "cloud-sql-postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -326,7 +324,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "alloydb": {
+        "cloud-sql-postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -344,7 +342,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "alloydb": {
+        "cloud-sql-postgres": {
           "serverUrl": "http://127.0.0.1:5000/mcp/sse"
         }
       }

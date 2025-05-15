@@ -1,12 +1,12 @@
 ---
-title: "Connect Postgres to AI Developer Assistants using MCP"
+title: "AlloyDB using MCP"
 type: docs
 weight: 2
 description: >
-  Connect your IDE to PostgreSQL using Toolbox.
+  Connect your IDE to AlloyDB using Toolbox.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Postgres instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like AlloyDB. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a AlloyDB for Postgres instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -23,18 +23,24 @@ description: >
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
 
-{{< notice tip >}}
-This guide can be used with [AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
-{{< /notice >}}
+## Before you begin
+
+1. In the Google Cloud console, on the [project selector page](https://console.cloud.google.com/projectselector2/home/dashboard), select or create a Google Cloud project.
+
+1. [Make sure that billing is enabled for your Google Cloud project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
+
 
 ## Set up the database
 
-1. Create or select a PostgreSQL instance.
+1. [Enable the AlloyDB, Compute Engine, Cloud Resource Manager, and Service Networking APIs in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=alloydb.googleapis.com,compute.googleapis.com,cloudresourcemanager.googleapis.com,servicenetworking.googleapis.com).
 
-    * [Install PostgreSQL locally](https://www.postgresql.org/download/)
-    * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/quickstart)
+1. [Create a cluster and its primary instance](https://cloud.google.com/alloydb/docs/quickstart/create-and-connect). These instructions assume that your AlloyDB instance has a [public IP address](https://cloud.google.com/alloydb/docs/connect-public-ip). By default, AlloyDB assigns a private IP address to a new instance. Toolbox will connect securely using the [AlloyDB Language Connectors](https://cloud.google.com/alloydb/docs/language-connectors-overview).
 
-1. Create or reuse [a database user](https://cloud.google.com/alloydb/omni/current/docs/database-users/manage-users) and have the username and password ready.
+1. Configure the required roles and permissions to complete this task. You will need [Cloud AlloyDB Client](https://cloud.google.com/alloydb/docs/auth-proxy/connect#required-iam-permissions) (`roles/alloydb.client`)  and Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`) roles or equivalent IAM permissions to connect to the instance.
+
+1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
+
+1. Create or reuse [a database user](https://cloud.google.com/alloydb/docs/database-users/manage-roles) and have the username and password ready.
 
 
 ## Install MCP Toolbox
@@ -88,20 +94,26 @@ To configure Toolbox, run the following steps:
 1. Set the following environment variables:
 
     ```bash
-    # The IP address of the Postgres instance.
-    export POSTGRES_HOST="127.0.0.1"
+    # The ID of your Google Cloud Project where the AlloyDB cluster/instance is located.
+    export ALLOYDB_PROJECT="your-gcp-project-id"
 
-    # The port of the Postgres instance.
-    export POSTGRES_PORT=5432
+    # The region where your AlloyDB cluster is located (e.g., us-central1).
+    export ALLOYDB_REGION="your-cluster-region"
+
+    # The name of your AlloyDB cluster.
+    export ALLOYDB_CLUSTER="your-cluster-name"
+
+    # The name of your AlloyDB instance.
+    export ALLOYDB_INSTANCE="your-instance-name"
 
     # The name of the database you want to connect to within the instance.
-    export POSTGRES_DB="your-database-name"
+    export ALLOYDB_DB="your-database-name"
 
     # The username for connecting to the database.
-    export POSTGRES_USER="your-database-user"
+    export ALLOYDB_USER="your-database-user"
 
     # The password for the specified database user.
-    export POSTGRES_PASS="your-database-password"
+    export ALLOYDB_PASS="your-database-password"
     ```
 
 2. Create a `tools.yaml` file.
@@ -110,24 +122,25 @@ To configure Toolbox, run the following steps:
 
     ```yaml
     sources:
-      postgresql-source:
-            kind: postgres
-            host: ${POSTGRES_HOST}
-            port: ${POSTGRES_PORT}
-            database: ${POSTGRES_DB}
-            user: ${POSTGRES_USER}
-            password: ${POSTGRES_PASS}
+      alloydb-pg-source:
+        kind: alloydb-postgres
+        project: ${ALLOYDB_PROJECT}
+        region: ${ALLOYDB_REGION}
+        cluster: ${ALLOYDB_CLUSTER}
+        instance: ${ALLOYDB_INSTANCE}
+        database: ${ALLOYDB_DB}
+        user: ${ALLOYDB_USER}
+        password: ${ALLOYDB_PASS}
 
     tools:
       execute_sql:
         kind: postgres-execute-sql
-        source: postgresql-source
-        description: Use this tool to execute SQL.
-
+        source: alloydb-pg-source
+        description: Use this tool to execute sql.
 
       list_tables:
         kind: postgres-sql
-        source: postgresql-source
+        source: alloydb-pg-source
         description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
         statement: |
           WITH desired_relkinds AS (
@@ -227,7 +240,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "postgres": {
+        "alloydb": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -248,7 +261,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "postgres": {
+        "alloydb": {
           "command": "npx",
           "args": [
             "-y",
@@ -273,7 +286,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "postgres": {
+        "alloydb": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -293,7 +306,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "postgres": {
+        "alloydb": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -313,7 +326,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "postgres": {
+        "alloydb": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -331,7 +344,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "postgres": {
+        "alloydb": {
           "serverUrl": "http://127.0.0.1:5000/mcp/sse"
         }
       }

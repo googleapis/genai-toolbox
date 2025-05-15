@@ -1,12 +1,12 @@
 ---
-title: "Connect Cloud SQL for Postgres to AI Developer Assistants using MCP"
+title: "PostgreSQL using MCP"
 type: docs
 weight: 2
 description: >
-  Connect your IDE to Cloud SQl for Postgres using Toolbox.
+  Connect your IDE to PostgreSQL using Toolbox.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Cloud SQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for Postgres instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Postgres instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -23,24 +23,18 @@ description: >
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
 
-## Before you begin
-
-1. In the Google Cloud console, on the [project selector page](https://console.cloud.google.com/projectselector2/home/dashboard), select or create a Google Cloud project.
-
-1. [Make sure that billing is enabled for your Google Cloud project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
-
+{{< notice tip >}}
+This guide can be used with [AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
+{{< /notice >}}
 
 ## Set up the database
 
-1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
+1. Create or select a PostgreSQL instance.
 
-1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
+    * [Install PostgreSQL locally](https://www.postgresql.org/download/)
+    * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/quickstart)
 
-1. Configure the required roles and permissions to complete this task. You will need [Cloud SQL > Client](https://cloud.google.com/sql/docs/postgres/roles-and-permissions#proxy-roles-permissions) role (`roles/cloudsql.client`) or equivalent IAM permissions to connect to the instance.
-
-1. Configured [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for your environment.
-
-1. Create or reuse [a database user](https://cloud.google.com/sql/docs/postgres/create-manage-users) and have the username and password ready.
+1. Create or reuse [a database user](https://cloud.google.com/alloydb/omni/current/docs/database-users/manage-users) and have the username and password ready.
 
 
 ## Install MCP Toolbox
@@ -94,23 +88,20 @@ To configure Toolbox, run the following steps:
 1. Set the following environment variables:
 
     ```bash
-    # The ID of your Google Cloud Project where the Cloud SQL instance is located.
-    export CLOUD_SQL_PROJECT="your-gcp-project-id"
+    # The IP address of the Postgres instance.
+    export POSTGRES_HOST="127.0.0.1"
 
-    # The region where your Cloud SQL instance is located (e.g., us-central1).
-    export CLOUD_SQL_REGION="your-instance-region"
-
-    # The name of your Cloud SQL instance.
-    export CLOUD_SQL_INSTANCE="your-instance-name"
+    # The port of the Postgres instance.
+    export POSTGRES_PORT=5432
 
     # The name of the database you want to connect to within the instance.
-    export CLOUD_SQL_DB="your-database-name"
+    export POSTGRES_DB="your-database-name"
 
     # The username for connecting to the database.
-    export CLOUD_SQL_USER="your-database-user"
+    export POSTGRES_USER="your-database-user"
 
     # The password for the specified database user.
-    export CLOUD_SQL_PASS="your-database-password"
+    export POSTGRES_PASS="your-database-password"
     ```
 
 2. Create a `tools.yaml` file.
@@ -119,27 +110,25 @@ To configure Toolbox, run the following steps:
 
     ```yaml
     sources:
-      cloudsql-pg-source:
-        kind: cloud-sql-postgres
-        project: ${CLOUD_SQL_PROJECT}
-        region: ${CLOUD_SQL_REGION}
-        instance: ${CLOUD_SQL_INSTANCE}
-        database: ${CLOUD_SQL_DB}
-        user: ${CLOUD_SQL_USER}
-        password: ${CLOUD_SQL_PASS}
+      postgresql-source:
+            kind: postgres
+            host: ${POSTGRES_HOST}
+            port: ${POSTGRES_PORT}
+            database: ${POSTGRES_DB}
+            user: ${POSTGRES_USER}
+            password: ${POSTGRES_PASS}
+
     tools:
       execute_sql:
         kind: postgres-execute-sql
-        source: cloudsql-pg-source
-        description: Use this tool to execute SQL
+        source: postgresql-source
+        description: Use this tool to execute SQL.
+
 
       list_tables:
         kind: postgres-sql
-        source: cloudsql-pg-source
-        description: >
-          Lists detailed table information (object type, columns, constraints, indexes, triggers, owner, comment)
-          as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names.
-          If names are omitted, lists all tables in user schemas
+        source: postgresql-source
+        description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
         statement: |
           WITH desired_relkinds AS (
               SELECT ARRAY['r', 'p']::char[] AS kinds -- Always consider both 'TABLE' and 'PARTITIONED TABLE'
@@ -238,7 +227,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres": {
+        "postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -259,7 +248,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres": {
+        "postgres": {
           "command": "npx",
           "args": [
             "-y",
@@ -284,7 +273,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres": {
+        "postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -304,7 +293,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres": {
+        "postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -324,7 +313,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres": {
+        "postgres": {
           "type": "sse",
           "url": "http://127.0.0.1:5000/mcp/sse"
         }
@@ -342,7 +331,7 @@ To stop the Toolbox server when you're finished, press `ctrl+c` to send the term
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres": {
+        "postgres": {
           "serverUrl": "http://127.0.0.1:5000/mcp/sse"
         }
       }
