@@ -18,11 +18,11 @@ import (
 	"strings"
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"gopkg.in/yaml.v3"
 )
 
 func TestParseFromYamlMemorystoreRedis(t *testing.T) {
@@ -58,6 +58,7 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					address: 127.0.0.1
 					password: my-pass
 					database: 1
+					useIAM: false
 					clusterEnabled: false
 			`,
 			want: server.SourceConfigs{
@@ -68,6 +69,7 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					Password:       "my-pass",
 					Database:       1,
 					ClusterEnabled: false,
+					UseIAM:         false,
 				},
 			},
 		},
