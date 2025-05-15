@@ -107,7 +107,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					project: my-project
 					address: 127.0.0.1
 					password: my-pass
-					clusterEnabled: 
+					database: data
 			`,
 			err: "cannot unmarshal string into Go struct field .Sources of type int",
 		},
