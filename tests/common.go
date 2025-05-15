@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 // GetToolsConfig returns a mock tools config file
@@ -252,6 +252,84 @@ func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	}
 	config["tools"] = tools
 	return config
+}
+
+// GetValkeyRedisToolsConfig returns a mock tools config file
+func GetValkeyRedisToolsConfig(sourceConfig map[string]any, toolKind string, paramCmds, authCmds [][]string) map[string]any {
+	// Write config into a file and pass it to command
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+				"statement":   "SELECT 1;",
+			},
+			"my-param-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test invocation with params.",
+				"commands":    paramCmds,
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
+					},
+					map[string]any{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				"commands":    authCmds,
+				"parameters": []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authServices": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
+				"statement":   "SELECT 1;",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-fail-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test statement with incorrect syntax.",
+				"statement":   "SELEC 1;",
+			},
+		},
+	}
+
+	return toolsFile
 }
 
 // GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
