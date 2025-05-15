@@ -3,7 +3,7 @@ title: "Connect AlloyDB to AI Developer Assistants using MCP"
 type: docs
 weight: 2
 description: >
-  Connect your AI developer assistant tools to Toolbox using MCP.
+  Connect your IDE to AlloyDB using Toolbox.
 ---
 
 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like AlloyDB. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a AlloyDB for Postgres instance:
