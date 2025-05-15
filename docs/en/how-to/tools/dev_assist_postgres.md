@@ -24,14 +24,16 @@ description: >
 [claudecode]: #configure-your-mcp-client
 
 {{< notice tip >}}
-This guide can be used with [AlloyDB Omni]().
+This guide can be used with [AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
 {{< /notice >}}
 
 ## Set up the database
 
-1. [Create](https://www.postgresql.org/download/) or select a PostgreSQL instance.
+1. Create or select a PostgreSQL instance.
+  * [Install PostgreSQL locally](https://www.postgresql.org/download/)
+  * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/quickstart)
 
-1. Create or reuse [a database user]() and have the username and password ready.
+1. Create or reuse [a database user](https://cloud.google.com/alloydb/omni/current/docs/database-users/manage-users) and have the username and password ready.
 
 
 ## Install MCP Toolbox
