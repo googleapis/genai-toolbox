@@ -39,10 +39,11 @@ func getValkeyVars(t *testing.T) map[string]any {
 		t.Fatal("'MEMORYSTORE_VALKEY_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":     MEMORYSTORE_VALKEY_SOURCE_KIND,
-		"address":  []string{MEMORYSTORE_VALKEY_ADDRESS},
-		"database": MEMORYSTORE_VALKEY_DATABASE,
-		"useIAM":   false,
+		"kind":         MEMORYSTORE_VALKEY_SOURCE_KIND,
+		"address":      []string{MEMORYSTORE_VALKEY_ADDRESS},
+		"database":     MEMORYSTORE_VALKEY_DATABASE,
+		"useIAM":       false,
+		"disableCache": true,
 	}
 }
 

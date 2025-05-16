@@ -60,14 +60,16 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 					  - 127.0.0.1
 					database: 1
 					useIAM: true
+					disableCache: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": memorystorevalkey.Config{
-					Name:     "my-valkey-instance",
-					Kind:     memorystorevalkey.SourceKind,
-					Address:  []string{"127.0.0.1"},
-					Database: 1,
-					UseIAM:   true,
+					Name:         "my-valkey-instance",
+					Kind:         memorystorevalkey.SourceKind,
+					Address:      []string{"127.0.0.1"},
+					Database:     1,
+					UseIAM:       true,
+					DisableCache: true,
 				},
 			},
 		},

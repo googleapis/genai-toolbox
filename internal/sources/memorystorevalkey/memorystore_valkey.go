@@ -29,11 +29,12 @@ const SourceKind string = "memorystore-valkey"
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name     string   `yaml:"name" validate:"required"`
-	Kind     string   `yaml:"kind" validate:"required"`
-	Address  []string `yaml:"address" validate:"required"`
-	Database int      `yaml:"database"`
-	UseIAM   bool     `yaml:"useIAM"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Address      []string `yaml:"address" validate:"required"`
+	Database     int      `yaml:"database"`
+	UseIAM       bool     `yaml:"useIAM"`
+	DisableCache bool     `yaml:"disableCache"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -72,6 +73,7 @@ func initMemorystoreValkeyClient(ctx context.Context, r Config) (valkey.Client, 
 		InitAddress:       r.Address,
 		SelectDB:          r.Database,
 		AuthCredentialsFn: authFn,
+		DisableCache:      r.DisableCache,
 	})
 
 	if err != nil {
