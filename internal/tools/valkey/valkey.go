@@ -109,7 +109,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	// Build commands
 	builtCmds := make(valkey.Commands, len(commands))
 
-	for i, cmd := range t.Commands {
+	for i, cmd := range commands {
 		builtCmds[i] = t.Client.B().Arbitrary(cmd...).Build()
 	}
 
@@ -150,11 +150,11 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 	newCommands := make([][]string, len(commands))
 	for i, cmd := range commands {
 		newCmd := make([]string, len(cmd))
-		for _, part := range cmd {
+		for j, part := range cmd {
 			v, ok := paramMap[part]
 			if !ok {
 				// Command part is not a Parameter placeholder
-				newCmd = append(newCmd, part)
+				newCmd[j] = part
 				continue
 			}
 			if typeMap[part] == "array" {
@@ -165,7 +165,7 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 				}
 				continue
 			}
-			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+			newCmd[j] = fmt.Sprintf("%s", v)
 		}
 		newCommands[i] = newCmd
 	}
