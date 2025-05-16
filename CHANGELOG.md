@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.0](https://github.com/googleapis/genai-toolbox/compare/v0.5.0...v0.6.0) (2025-05-16)
+
+
+### Features
+
+* Add support for read-only in Spanner tool ([#563](https://github.com/googleapis/genai-toolbox/issues/563)) ([6512704](https://github.com/googleapis/genai-toolbox/commit/6512704e77088d92fea53a85c6e6cbf4b99c988d))
+
+
+### Bug Fixes
+
+* Fix spellings in comments ([#561](https://github.com/googleapis/genai-toolbox/issues/561)) ([b58bf76](https://github.com/googleapis/genai-toolbox/commit/b58bf76ddaba407e3fd995dfe86d00a09484e14a))
+* Prevent tool calls through MCP when auth is required ([#544](https://github.com/googleapis/genai-toolbox/issues/544)) ([e747b6e](https://github.com/googleapis/genai-toolbox/commit/e747b6e289730c17f68be8dec0c6fa6021bb23bd))
+* Reinitialize required slice if nil ([#571](https://github.com/googleapis/genai-toolbox/issues/571)) ([04dcf47](https://github.com/googleapis/genai-toolbox/commit/04dcf4791272e1dd034b9a03664dd8dbe77fdddd)), closes [#564](https://github.com/googleapis/genai-toolbox/issues/564)
+
 ## [0.5.0](https://github.com/googleapis/genai-toolbox/compare/v0.4.0...v0.5.0) (2025-05-06)
 
 
