@@ -33,7 +33,7 @@ type Config struct {
 	Kind     string   `yaml:"kind" validate:"required"`
 	Address  []string `yaml:"address" validate:"required"`
 	Database int      `yaml:"database"`
-	UseIAM   bool     `yaml:"useIam"`
+	UseIAM   bool     `yaml:"useIAM"`
 }
 
 func (r Config) SourceConfigKind() string {

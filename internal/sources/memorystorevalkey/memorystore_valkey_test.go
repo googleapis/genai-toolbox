@@ -59,7 +59,7 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 					address:
 					  - 127.0.0.1
 					database: 1
-					useIam: true
+					useIAM: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": memorystorevalkey.Config{
@@ -106,7 +106,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					address:
 					  - 127.0.0.1
 					database: my-db
-					useIam: false
+					useIAM: false
 			`,
 			err: "cannot unmarshal string into Go struct field .Sources of type int",
 		},

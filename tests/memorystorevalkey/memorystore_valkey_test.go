@@ -44,12 +44,11 @@ func getValkeyVars(t *testing.T) map[string]any {
 		"kind":     MEMORYSTORE_VALKEY_SOURCE_KIND,
 		"address":  []string{MEMORYSTORE_VALKEY_ADDRESS},
 		"database": MEMORYSTORE_VALKEY_DATABASE,
-		"useIAM":   true,
+		"useIAM":   false,
 	}
 }
 
 func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
-
 	//Pass in an access token getter fn for IAM auth
 	authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
 		token, err := sources.GetIAMAccessToken(ctx)
@@ -82,6 +81,7 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valk
 	if err != nil {
 		log.Fatalf("Failed to execute PING command: %v", err)
 	}
+	log.Println("Successfully connected to Valkey")
 	return client, nil
 }
 
