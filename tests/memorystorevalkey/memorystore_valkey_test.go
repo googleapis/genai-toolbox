@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/valkey-io/valkey-go"
 )
@@ -50,23 +49,12 @@ func getValkeyVars(t *testing.T) map[string]any {
 
 func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
 	//Pass in an access token getter fn for IAM auth
-	authFn := func(authCtx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
-		token, err := sources.GetIAMAccessToken(ctx)
-		if err != nil {
-			log.Printf("AuthCredentialsFn: Error fetching token: %v", err)
-			return valkey.AuthCredentials{}, err
-		}
-		return valkey.AuthCredentials{
-			Username: "",
-			Password: token,
-		}, nil
-	}
+	log.Fatalf("port addr: %s", addr)
 	dialer := net.Dialer{Timeout: time.Minute}
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress:       []string{addr},
 		Dialer:            dialer,
 		SelectDB:          db,
-		AuthCredentialsFn: authFn,
 		ForceSingleClient: true,
 		DisableCache:      true,
 	})
