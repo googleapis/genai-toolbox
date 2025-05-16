@@ -69,6 +69,7 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valk
 		SelectDB:          db,
 		AuthCredentialsFn: authFn,
 		ForceSingleClient: true,
+		DisableCache:      true,
 	})
 
 	if err != nil {
