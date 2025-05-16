@@ -16,10 +16,7 @@ package tests
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -27,95 +24,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-// SetupPostgresSQLTable creates and inserts data into a table of tool
-// compatible with postgres-sql tool
-func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
-	err := pool.Ping(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.Query(ctx, create_statement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.Query(ctx, insert_statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
-
-// SetupMsSQLTable creates and inserts data into a table of tool
-// compatible with mssql-sql tool
-func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
-	err := pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.QueryContext(ctx, create_statement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.QueryContext(ctx, insert_statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
-
-// SetupMySQLTable creates and inserts data into a table of tool
-// compatible with mssql-sql tool
-func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
-	err := pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.QueryContext(ctx, create_statement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.QueryContext(ctx, insert_statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
 
 // RunToolGet runs the tool get endpoint
 func RunToolGetTest(t *testing.T) {
@@ -166,7 +75,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeAuthWant string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -187,7 +96,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -195,7 +104,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          invoke_param_want,
+			want:          invokeParamWant,
 			isErr:         false,
 		},
 		{
@@ -217,7 +126,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          "[{\"name\":\"Alice\"}]",
+			want:          invokeAuthWant,
 			isErr:         false,
 		},
 		{
@@ -240,7 +149,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
-			want:          select_1_want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
@@ -424,7 +333,7 @@ func RunPgExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want string) {
+func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -451,7 +360,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 					},
 				},
 			},
-			want: invoke_param_want,
+			want: invokeParamWant,
 		},
 		{
 			name:          "MCP Invoke invalid tool",
