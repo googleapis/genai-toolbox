@@ -112,6 +112,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		bodyMcpManifest.Required,
 		headerMcpManifest.Required,
 	)
+	if concatRequiredManifest == nil {
+		concatRequiredManifest = []string{}
+	}
 
 	// Concatenate parameters for MCP `properties` field
 	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
