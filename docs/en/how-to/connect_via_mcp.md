@@ -54,9 +54,9 @@ Add the following configuration to your MCP client configuration:
 
 If you would like to connect to a specific toolset, replace `url` with `"http://127.0.0.1:5000/mcp/{toolset_name}/sse"`.
 {{% /tab %}} {{% tab header="HTTP POST" lang="en" %}}
-Connect to Toolbox HTTP POST via `http://127.0.0.1:5000/mcp`.
+Connect to Toolbox HTTP POST via `http://127.0.0.1:5000/mcp/messages`.
 
-If you would like to connect to a specific toolset, connect via `http://127.0.0.1:5000/mcp/{toolset_name}`.
+If you would like to connect to a specific toolset, connect via `http://127.0.0.1:5000/mcp/{toolset_name}/messages`.
 {{% /tab %}} {{< /tabpane >}}
 
 ### Using the MCP Inspector with Toolbox

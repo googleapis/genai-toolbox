@@ -75,7 +75,7 @@ func TestMcpEndpoint(t *testing.T) {
 	}{
 		{
 			name: "initialize",
-			url:  "/",
+			url:  "/messages",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "mcp-initialize",
@@ -97,7 +97,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "basic notification",
-			url:  "/",
+			url:  "/messages",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Request: mcp.Request{
@@ -107,7 +107,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "tools/list",
-			url:  "/",
+			url:  "/messages",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "tools-list",
@@ -139,7 +139,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name: "tools/list on tool1_only",
-			url:  "/tool1_only",
+			url:  "/tool1_only/messages",
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
 				Id:      "tools-list-tool1",
@@ -162,7 +162,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "tools/list on invalid tool set",
-			url:   "/foo",
+			url:   "/foo/messages",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -182,7 +182,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "missing method",
-			url:   "/",
+			url:   "/messages",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -200,7 +200,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "invalid method",
-			url:   "/",
+			url:   "/messages",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: jsonrpcVersion,
@@ -220,7 +220,7 @@ func TestMcpEndpoint(t *testing.T) {
 		},
 		{
 			name:  "invalid jsonrpc version",
-			url:   "/",
+			url:   "/messages",
 			isErr: true,
 			body: mcp.JSONRPCRequest{
 				Jsonrpc: "1.0",
@@ -301,33 +301,33 @@ func TestSseEndpoint(t *testing.T) {
 			name:   "basic",
 			server: ts,
 			path:   "/sse",
-			event:  fmt.Sprintf("event: endpoint\ndata: %s/mcp?sessionId=", ts.URL),
+			event:  fmt.Sprintf("event: endpoint\ndata: %s/mcp/messages?sessionId=", ts.URL),
 		},
 		{
 			name:   "toolset1",
 			server: ts,
 			path:   "/tool1_only/sse",
-			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/tool1_only?sessionId=", tsPort),
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/tool1_only/messages?sessionId=", tsPort),
 		},
 		{
 			name:   "basic with http proto",
 			server: ts,
 			path:   "/sse",
 			proto:  "http",
-			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp?sessionId=", tsPort),
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/messages?sessionId=", tsPort),
 		},
 		{
 			name:   "basic tls with https proto",
 			server: ts,
 			path:   "/sse",
 			proto:  "https",
-			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp?sessionId=", tsPort),
+			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp/messages?sessionId=", tsPort),
 		},
 		{
 			name:   "basic tls",
 			server: tls,
 			path:   "/sse",
-			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp?sessionId=", tlsPort),
+			event:  fmt.Sprintf("event: endpoint\ndata: https://127.0.0.1:%s/mcp/messages?sessionId=", tlsPort),
 		},
 	}
 

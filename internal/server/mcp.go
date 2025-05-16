@@ -74,11 +74,11 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
-	r.Post("/", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
+	r.Post("/messages", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
+		r.Post("/messages", func(w http.ResponseWriter, r *http.Request) { mcpHandler(s, w, r) })
 	})
 
 	return r, nil
@@ -150,7 +150,7 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if toolsetName != "" {
 		toolsetURL = fmt.Sprintf("/%s", toolsetName)
 	}
-	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s?sessionId=%s", proto, r.Host, toolsetURL, sessionId)
+	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s/messages?sessionId=%s", proto, r.Host, toolsetURL, sessionId)
 	s.logger.DebugContext(ctx, fmt.Sprintf("sending endpoint event: %s", messageEndpoint))
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()

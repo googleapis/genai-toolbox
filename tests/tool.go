@@ -435,7 +435,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 	}{
 		{
 			name:          "MCP Invoke my-param-tool",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -455,7 +455,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 		},
 		{
 			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -472,7 +472,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 		},
 		{
 			name:          "MCP Invoke my-param-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -489,7 +489,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 		},
 		{
 			name:          "MCP Invoke my-param-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -506,7 +506,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -523,7 +523,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
