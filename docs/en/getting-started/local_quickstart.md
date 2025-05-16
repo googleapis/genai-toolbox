@@ -70,6 +70,7 @@ If desired, once connected to `psql` as the `postgres` OS user, you can set a pa
       CREATE DATABASE toolbox_db;
       GRANT ALL PRIVILEGES ON DATABASE toolbox_db TO toolbox_user;
 
+      GRANT toolbox_user TO postgres;
       ALTER DATABASE toolbox_db OWNER TO toolbox_user;
     ```
 
