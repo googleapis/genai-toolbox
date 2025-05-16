@@ -20,7 +20,6 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"strconv"
 	"testing"
 	"time"
 
@@ -32,18 +31,15 @@ import (
 var (
 	MEMORYSTORE_VALKEY_SOURCE_KIND = "memorystore-valkey"
 	MEMORYSTORE_VALKEY_TOOL_KIND   = "valkey"
+	MEMORYSTORE_VALKEY_DATABASE    = 0
 	MEMORYSTORE_VALKEY_ADDRESS     = os.Getenv("MEMORYSTORE_VALKEY_ADDRESS")
-	MEMORYSTORE_VALKEY_DATABASE    = os.Getenv("MEMORYSTORE_VALKEY_DATABASE")
 )
 
 func getValkeyVars(t *testing.T) map[string]any {
 	switch "" {
 	case MEMORYSTORE_VALKEY_ADDRESS:
 		t.Fatal("'MEMORYSTORE_VALKEY_ADDRESS' not set")
-	case MEMORYSTORE_VALKEY_DATABASE:
-		t.Fatal("'MEMORYSTORE_VALKEY_DATABASE' not set")
 	}
-
 	return map[string]any{
 		"kind":     MEMORYSTORE_VALKEY_SOURCE_KIND,
 		"address":  []string{MEMORYSTORE_VALKEY_ADDRESS},
@@ -95,11 +91,7 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	db, err := strconv.Atoi(MEMORYSTORE_VALKEY_DATABASE)
-	if err != nil {
-		t.Fatalf("unable to convert `VALKEY_DATABASE` str to int: %s", err)
-	}
-	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS, db)
+	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS, MEMORYSTORE_VALKEY_DATABASE)
 	if err != nil {
 		t.Fatalf("unable to create Valkey connection: %s", err)
 	}
