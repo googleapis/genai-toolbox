@@ -11,28 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package redis
+package valkey
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
+	"github.com/googleapis/genai-toolbox/internal/sources/memorystorevalkey"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
-const ToolKind string = "redis"
+const ToolKind string = "valkey"
 
 type compatibleSource interface {
-	RedisClient() memorystoreredis.RedisClient
+	ValkeyClient() valkey.Client
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &memorystoreredis.Source{}
+var _ compatibleSource = &memorystorevalkey.Source{}
 
-var compatibleSources = [...]string{memorystoreredis.SourceKind}
+var compatibleSources = [...]string{memorystorevalkey.SourceKind, memorystorevalkey.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`
@@ -77,7 +77,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   cfg.Parameters,
 		Commands:     cfg.Commands,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.RedisClient(),
+		Client:       s.ValkeyClient(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -93,53 +93,63 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client      memorystoreredis.RedisClient
+	Client      valkey.Client
 	Commands    [][]string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	cmds, err := replaceCommandsParams(t.Commands, t.Parameters, params)
+	// Replace parameters
+	commands, err := replaceCommandsParams(t.Commands, t.Parameters, params)
 	if err != nil {
 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
 	}
 
-	// Execute commands
-	responses := make([]*redis.Cmd, len(cmds))
-	for i, cmd := range cmds {
-		responses[i] = t.Client.Do(ctx, cmd...)
+	// Build commands
+	builtCmds := make(valkey.Commands, len(commands))
+
+	for i, cmd := range commands {
+		builtCmds[i] = t.Client.B().Arbitrary(cmd...).Build()
 	}
+
+	if len(builtCmds) == 0 {
+		return nil, fmt.Errorf("no valid commands were built to execute")
+	}
+
+	// Execute commands
+	responses := t.Client.DoMulti(ctx, builtCmds...)
+
 	// Parse responses
 	out := make([]any, len(t.Commands))
 	for i, resp := range responses {
-		if err := resp.Err(); err != nil {
+		if err := resp.Error(); err != nil {
 			// Add error from each command to `errSum`
-			errString := fmt.Sprintf("error from executing command at index %d: %s", i, err)
-			out[i] = errString
+			out[i] = fmt.Sprintf("error from executing command at index %d: %s", i, err)
 			continue
 		}
-		result, err := resp.Result()
+		resp, err := resp.ToString()
 		if err != nil {
-			return nil, fmt.Errorf("error getting result: %s", err)
+			out[i] = fmt.Sprintf("Error parsing response from command at index %d: %s", i, err)
+			continue
 		}
-		out[i] = result
+		out[i] = resp
 	}
 
 	return out, nil
 }
 
 // Helper function to replace parameters in the commands
-func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
 	for _, p := range params {
 		placeholder := "$" + p.GetName()
 		typeMap[placeholder] = p.GetType()
 	}
-	newCommands := make([][]any, len(commands))
+	newCommands := make([][]string, len(commands))
 	for i, cmd := range commands {
-		newCmd := make([]any, len(cmd))
+		newCmd := make([]string, len(cmd))
 		for j, part := range cmd {
 			v, ok := paramMap[part]
 			if !ok {
