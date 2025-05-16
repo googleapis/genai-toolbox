@@ -17,7 +17,6 @@ package memorystorevalkey
 import (
 	"context"
 	"log"
-	"net"
 	"os"
 	"regexp"
 	"testing"
@@ -49,11 +48,8 @@ func getValkeyVars(t *testing.T) map[string]any {
 
 func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
 	//Pass in an access token getter fn for IAM auth
-	log.Fatalf("port addr: %s", addr)
-	dialer := net.Dialer{Timeout: time.Minute}
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress:       []string{addr},
-		Dialer:            dialer,
 		SelectDB:          db,
 		ForceSingleClient: true,
 		DisableCache:      true,
