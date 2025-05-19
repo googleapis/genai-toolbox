@@ -259,7 +259,7 @@ pip install toolbox-core
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install toolbox-langchain
+pip install toolbox-core
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -280,7 +280,7 @@ pip install google-genai
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk langchain
+pip install google-adk
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -420,11 +420,11 @@ asyncio.run(run_application())
 {{< /tab >}}
 {{< tab header="ADK" lang="python" >}}
 from google.adk.agents import Agent
-from google.adk.tools.toolbox_tool import ToolboxTool
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
 from google.genai import types
+from toolbox_core import ToolboxSyncClient
 
 import os
 
@@ -432,7 +432,7 @@ import os
 
 os.environ['GOOGLE_API_KEY'] = 'your-api-key'
 
-toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
+toolbox_client = ToolboxSyncClient("http://127.0.0.1:5000")
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -449,7 +449,7 @@ root_agent = Agent(
     name='hotel_agent',
     description='A helpful AI assistant.',
     instruction=prompt,
-    tools=toolbox_tools.get_toolset("my-toolset"),
+    tools=toolbox_client.load_toolset("my-toolset"),
 )
 
 session_service = InMemorySessionService()
