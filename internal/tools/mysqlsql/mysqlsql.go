@@ -122,6 +122,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		values[i] = &rawValues[i]
 	}
 
+	colTypes, err := results.ColumnTypes()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column types: %w", err)
+	}
+
 	var out []any
 	for results.Next() {
 		err := results.Scan(values...)
@@ -130,10 +135,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		}
 		vMap := make(map[string]any)
 		for i, name := range cols {
-			b, ok := rawValues[i].([]byte)
-			if ok {
-				vMap[name] = string(b)
-			} else {
+			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
+			// we'll need to cast it back to string
+			switch colTypes[i].DatabaseTypeName() {
+			case "TEXT", "VARCHAR", "NVARCHAR":
+				vMap[name] = string(rawValues[i].([]byte))
+			default:
 				vMap[name] = rawValues[i]
 			}
 		}
