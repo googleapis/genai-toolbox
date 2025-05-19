@@ -143,13 +143,13 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	select1Want := "[{\"\":\"1\"}]"
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	listTablesWant := fmt.Sprintf("[{\"table_name\":\"%s\"},{\"table_name\":\"%s\"}]", tableNameAuth, tableNameParam)
+	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
 	failInvocationWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
 
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	RunSpannerSchemaToolInvokeTest(t, listTablesWant)
+	RunSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	RunSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
 }
 
@@ -229,18 +229,18 @@ func AddSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]an
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
-	tools["list-tables-read-only"] = map[string]any{
+	tools["access-schema-read-only"] = map[string]any{
 		"kind":        "spanner-sql",
 		"source":      "my-instance",
-		"description": "Tool to list tables in read-only mode.",
-		"statement":   "SELECT table_name FROM `INFORMATION_SCHEMA`.`TABLES` WHERE table_schema = '' ORDER BY table_name;",
+		"description": "Tool to access information schema in read-only mode.",
+		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
 		"readOnly":    true,
 	}
-	tools["list-tables"] = map[string]any{
+	tools["access-schema"] = map[string]any{
 		"kind":        "spanner-sql",
 		"source":      "my-instance",
-		"description": "Tool to list tables.",
-		"statement":   "SELECT table_name FROM `INFORMATION_SCHEMA`.`TABLES` WHERE table_schema = '' ORDER BY table_name;",
+		"description": "Tool to access information schema.",
+		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
 	}
 	config["tools"] = tools
 	return config
@@ -275,7 +275,7 @@ func AddSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]
 	return config
 }
 
-func RunSpannerSchemaToolInvokeTest(t *testing.T, listTablesWant string) {
+func RunSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	invokeTcs := []struct {
 		name          string
 		api           string
@@ -286,15 +286,15 @@ func RunSpannerSchemaToolInvokeTest(t *testing.T, listTablesWant string) {
 	}{
 		{
 			name:          "invoke list-tables-read-only",
-			api:           "http://127.0.0.1:5000/api/tool/list-tables-read-only/invoke",
+			api:           "http://127.0.0.1:5000/api/tool/access-schema-read-only/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          listTablesWant,
+			want:          accessSchemaWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke list-tables",
-			api:           "http://127.0.0.1:5000/api/tool/list-tables/invoke",
+			api:           "http://127.0.0.1:5000/api/tool/access-schema/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
@@ -372,7 +372,7 @@ func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			name:          "invoke my-exec-sql-tool-read-only with data present in table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("SELECT * FROM %s WHERE id = '3' OR name = 'Alice'", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = '3' OR name = 'Alice'", tableNameParam)\"")),
 			want:          invokeParamWant,
 			isErr:         false,
 		},
@@ -394,7 +394,7 @@ func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			name:          "invoke my-exec-sql-tool-read-only insert entry",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("INSERT INTO %s (id, name) VALUES (4, test_name)", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, test_name)\"", tableNameParam))),
 			isErr:         true,
 		},
 		{
