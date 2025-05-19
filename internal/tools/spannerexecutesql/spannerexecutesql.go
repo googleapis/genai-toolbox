@@ -17,7 +17,6 @@ package spannerexecutesql
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"cloud.google.com/go/spanner"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -100,21 +99,10 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	ReadOnly     bool             `yaml:"readOnly"`
-	Client      *spanner.Client
-	dialect     string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-}
-
-func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
-	switch strings.ToLower(dialect) {
-	case "googlesql":
-		return params.AsMap(), nil
-	case "postgresql":
-		return params.AsMapByOrderedKeys(), nil
-	default:
-		return nil, fmt.Errorf("invalid dialect %s", dialect)
-	}
+	Client       *spanner.Client
+	dialect      string
+	manifest     tools.Manifest
+	mcpManifest  tools.McpManifest
 }
 
 // processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
@@ -150,7 +138,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 
 	var results []any
 	var opErr error
-	stmt := spanner.Statement{SQL:sql}
+	stmt := spanner.Statement{SQL: sql}
 
 	if t.ReadOnly {
 		iter := t.Client.Single().Query(ctx, stmt)

@@ -15,8 +15,12 @@
 package spanner
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -97,8 +101,8 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getSpannerParamToolInfo(tableNameParam)
@@ -146,7 +150,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	RunSpannerSchemaToolInvokeTest(t, listTablesWant)
-	RunSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant,  tableNameParam, tableNameAuth)
+	RunSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
 }
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
@@ -272,12 +276,6 @@ func AddSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]
 }
 
 func RunSpannerSchemaToolInvokeTest(t *testing.T, listTablesWant string) {
-	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(ClientId)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
-
 	invokeTcs := []struct {
 		name          string
 		api           string
@@ -346,10 +344,9 @@ func RunSpannerSchemaToolInvokeTest(t *testing.T, listTablesWant string) {
 	}
 }
 
-
 func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -375,7 +372,7 @@ func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			name:          "invoke my-exec-sql-tool-read-only with data present in table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("SELECT * FROM %s WHERE id = '3' OR name = 'Alice'", tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("SELECT * FROM %s WHERE id = '3' OR name = 'Alice'", tableNameParam))),
 			want:          invokeParamWant,
 			isErr:         false,
 		},
