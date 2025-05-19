@@ -43,7 +43,7 @@ type Server struct {
 	root            chi.Router
 	logger          log.Logger
 	instrumentation *Instrumentation
-	sseManager      *sseManager
+	mcpManager      *mcpManager
 
 	sources      map[string]sources.Source
 	authServices map[string]auth.AuthService
@@ -205,9 +205,9 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
-	sseManager := &sseManager{
+	mcpM := &mcpManager{
 		mu:          sync.RWMutex{},
-		sseSessions: make(map[string]*sseSession),
+		mcpSessions: make(map[string]*mcpSession),
 	}
 
 	s := &Server{
@@ -216,7 +216,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		root:            r,
 		logger:          l,
 		instrumentation: instrumentation,
-		sseManager:      sseManager,
+		mcpManager:      mcpM,
 
 		sources:      sourcesMap,
 		authServices: authServicesMap,

@@ -35,35 +35,42 @@ import (
 )
 
 type sseSession struct {
-	sessionId  string
 	writer     http.ResponseWriter
 	flusher    http.Flusher
 	done       chan struct{}
 	eventQueue chan string
 }
 
-// sseManager manages and control access to sse sessions
-type sseManager struct {
-	mu          sync.RWMutex
-	sseSessions map[string]*sseSession
+// mcpSession represents each mcp session connected through initialize method.
+type mcpSession struct {
+	// protocol version negotiated during initialization
+	protocol string
+	// only available for connections that uses sse
+	sseSession *sseSession
 }
 
-func (m *sseManager) get(id string) (*sseSession, bool) {
+// mcpManager manages and control access to mcp sesisons
+type mcpManager struct {
+	mu          sync.RWMutex
+	mcpSessions map[string]*mcpSession
+}
+
+func (m *mcpManager) get(id string) (*mcpSession, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	session, ok := m.sseSessions[id]
+	session, ok := m.mcpSessions[id]
 	return session, ok
 }
 
-func (m *sseManager) add(id string, session *sseSession) {
+func (m *mcpManager) add(id string, session *mcpSession) {
 	m.mu.Lock()
-	m.sseSessions[id] = session
+	m.mcpSessions[id] = session
 	m.mu.Unlock()
 }
 
-func (m *sseManager) remove(id string) {
+func (m *mcpManager) remove(id string) {
 	m.mu.Lock()
-	delete(m.sseSessions, id)
+	delete(m.mcpSessions, id)
 	m.mu.Unlock()
 }
 
@@ -128,14 +135,17 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 	}
 	session := &sseSession{
-		sessionId:  sessionId,
 		writer:     w,
 		flusher:    flusher,
 		done:       make(chan struct{}),
 		eventQueue: make(chan string, 100),
 	}
-	s.sseManager.add(sessionId, session)
-	defer s.sseManager.remove(sessionId)
+	mcpSession := &mcpSession{
+		protocol:   "", // not yet negotiated protocol version
+		sseSession: session,
+	}
+	s.mcpManager.add(sessionId, mcpSession)
+	defer s.mcpManager.remove(sessionId)
 
 	// https scheme formatting if (forwarded) request is a TLS request
 	proto := r.Header.Get("X-Forwarded-Proto")
@@ -181,8 +191,32 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp")
 	r = r.WithContext(ctx)
 
-	// TODO: this will be updated to retrieve from request header when update mcpManager
-	protocolVersion := "2024-11-05"
+	var mcpSess *mcpSession
+	var sessionId, protocolVersion string
+
+	// session Id could present in either the header or the URL link (via sse)
+	sessionId = r.Header.Get("Mcp-Session-Id")
+	if sessionId == "" {
+		// if session id is not in header, try checking the url query
+		sessionId = r.URL.Query().Get("sessionId")
+	}
+	// sessionId is received during sse or initialization
+	if sessionId != "" {
+		var ok bool
+		mcpSess, ok = s.mcpManager.get(sessionId)
+		if !ok {
+			s.logger.DebugContext(ctx, "mcp session not available")
+		}
+		protocolVersion = mcpSess.protocol
+	} else {
+		// TODO: remove this when full initialize lifecycle is implemented
+		protocolVersion = "2024-11-05"
+		sessionId = uuid.New().String()
+		mcpSess = &mcpSession{}
+		s.mcpManager.add(sessionId, mcpSess)
+	}
+	// TODO: If client send HTTP DELETE to MCP Endpoint with the `MCP-Session-Id`
+	// header, remove the session from mcpManager.
 
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
@@ -203,7 +237,8 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		s.instrumentation.McpPost.Add(
 			r.Context(),
 			1,
-			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", id)),
+			metric.WithAttributes(attribute.String("toolbox.sse.messageId", id)),
+			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", sessionId)),
 			metric.WithAttributes(attribute.String("toolbox.tool.name", toolName)),
 			metric.WithAttributes(attribute.String("toolbox.toolset.name", toolsetName)),
 			metric.WithAttributes(attribute.String("toolbox.method", method)),
@@ -265,8 +300,9 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var res any
 	switch method {
 	case mcputil.INITIALIZE:
-		// TODO: will replace with protocol version once update mcpManager
-		res, _ = mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+		res, protocolVersion = mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+		mcpSess.protocol = protocolVersion
+		w.Header().Add("Mcp-Session-Id", sessionId)
 	default:
 		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
@@ -279,17 +315,16 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// retrieve sse session
-	sessionId := r.URL.Query().Get("sessionId")
-	session, ok := s.sseManager.get(sessionId)
-	if !ok {
+	sseSess := mcpSess.sseSession
+	if sseSess == nil {
 		s.logger.DebugContext(ctx, "sse session not available")
 	} else {
 		// queue sse event
 		eventData, _ := json.Marshal(res)
 		select {
-		case session.eventQueue <- fmt.Sprintf("event: message\ndata: %s\n\n", eventData):
+		case sseSess.eventQueue <- fmt.Sprintf("event: message\ndata: %s\n\n", eventData):
 			s.logger.DebugContext(ctx, "event queue successful")
-		case <-session.done:
+		case <-sseSess.done:
 			s.logger.DebugContext(ctx, "session is close")
 		default:
 			s.logger.DebugContext(ctx, "unable to add to event queue")
