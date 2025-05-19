@@ -538,7 +538,7 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 // GetRedisWants return the expected wants for redis
 func GetRedisValkeyWants() (string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"\"error from executing command at index 0: ERR unknown command 'SELEC 1;', with args beginning with:  command length: 1\""}]}}`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"\"error from executing command at index 0: ERR unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[\"Alice\",\"Sid\"]"
 	invokeAuthWant := `["{\"name\":\"Alice\"}"]`
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"\"Alice\""},{"type":"text","text":"\"Sid\""}]}}`
