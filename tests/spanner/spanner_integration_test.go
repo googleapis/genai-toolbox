@@ -394,7 +394,7 @@ func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			name:          "invoke my-exec-sql-tool-read-only insert entry",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, test_name)\"}", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
 			isErr:         true,
 		},
 		{
@@ -430,7 +430,7 @@ func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			name:          "invoke my-exec-sql-tool insert entry",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, test_name)\"}", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
 			want:          "null",
 			isErr:         false,
 		},
