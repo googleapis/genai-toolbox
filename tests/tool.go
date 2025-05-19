@@ -423,6 +423,128 @@ func RunPgExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
 	}
 }
 
+func RunMySqlExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
+	// Get ID token
+	idToken, err := GetGoogleIdToken(ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-exec-sql-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			want:          select_1_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool create table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool select table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM t"}`)),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool drop table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         false,
+			want:          select_1_want,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
 func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want string) {
 	// Test tool invoke endpoint
