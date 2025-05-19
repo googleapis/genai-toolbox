@@ -125,7 +125,7 @@ func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND, tool_statement1, tool_statement2)
-	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
+	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
