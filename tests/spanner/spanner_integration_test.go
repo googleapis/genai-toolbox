@@ -122,8 +122,8 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, SPANNER_TOOL_KIND, tool_statement1, tool_statement2)
-	toolsFile = AddSpannerReadOnlyConfig(t, toolsFile)
-	toolsFile = AddSpannerExecuteSqlConfig(t, toolsFile)
+	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
+	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -149,8 +149,8 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	RunSpannerSchemaToolInvokeTest(t, accessSchemaWant)
-	RunSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
+	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
+	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
 }
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
@@ -224,7 +224,7 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 	}
 }
 
-func AddSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]any {
+func addSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -246,8 +246,8 @@ func AddSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// AddSpannerExecuteSqlConfig gets the tools config for `spanner-execute-sql`
-func AddSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+// addSpannerExecuteSqlConfig gets the tools config for `spanner-execute-sql`
+func addSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -275,7 +275,7 @@ func AddSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]
 	return config
 }
 
-func RunSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
+func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	invokeTcs := []struct {
 		name          string
 		api           string
@@ -344,7 +344,7 @@ func RunSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	}
 }
 
-func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
+func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
