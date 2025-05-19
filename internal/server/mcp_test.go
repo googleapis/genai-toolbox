@@ -58,6 +58,53 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
+func runInitializeLifecycle(t *testing.T, ts *httptest.Server) string {
+	initializeRequestBody := map[string]any{
+		"jsonrpc": jsonrpcVersion,
+		"id":      "mcp-initialize",
+		"method":  "initialize",
+	}
+	initializeWant := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "mcp-initialize",
+		"result": map[string]any{
+			"protocolVersion": protocolVersion,
+			"capabilities": map[string]any{
+				"tools": map[string]any{"listChanged": false},
+			},
+			"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+		},
+	}
+	reqMarshal, err := json.Marshal(initializeRequestBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of body")
+	}
+
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(reqMarshal), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	sessionId := resp.Header.Get("Mcp-Session-Id")
+	if sessionId == "" {
+		t.Fatalf("missing Mcp-Session-Id from header")
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	if !reflect.DeepEqual(got, initializeWant) {
+		t.Fatalf("unexpected response: got %+v, want %+v", got, initializeWant)
+	}
+
+	return sessionId
+}
+
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3}
 	toolsMap, toolsets := setUpResources(t, mockTools)
@@ -66,6 +113,11 @@ func TestMcpEndpoint(t *testing.T) {
 	ts := runServer(r, false)
 	defer ts.Close()
 
+	sessionId := runInitializeLifecycle(t, ts)
+	header := map[string]string{
+		"Mcp-Session-Id": sessionId,
+	}
+
 	testCases := []struct {
 		name  string
 		url   string
@@ -73,28 +125,6 @@ func TestMcpEndpoint(t *testing.T) {
 		body  util.JSONRPCRequest
 		want  map[string]any
 	}{
-		{
-			name: "initialize",
-			url:  "/",
-			body: util.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "mcp-initialize",
-				Request: util.Request{
-					Method: "initialize",
-				},
-			},
-			want: map[string]any{
-				"jsonrpc": "2.0",
-				"id":      "mcp-initialize",
-				"result": map[string]any{
-					"protocolVersion": protocolVersion,
-					"capabilities": map[string]any{
-						"tools": map[string]any{"listChanged": false},
-					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
-				},
-			},
-		},
 		{
 			name: "basic notification",
 			url:  "/",
@@ -246,7 +276,7 @@ func TestMcpEndpoint(t *testing.T) {
 				t.Fatalf("unexpected error during marshaling of body")
 			}
 
-			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal))
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), header)
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
