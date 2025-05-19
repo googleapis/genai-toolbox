@@ -100,11 +100,11 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	ReadOnly     bool             `yaml:"readOnly"`
-	Client      *spanner.Client
-	dialect     string
-	Statement   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Client       *spanner.Client
+	dialect      string
+	Statement    string
+	manifest     tools.Manifest
+	mcpManifest  tools.McpManifest
 }
 
 func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
