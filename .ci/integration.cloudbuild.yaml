@@ -338,6 +338,7 @@ steps:
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
+      - "GOPATH=/gopath"
       - "MEMORYSTORE_REDIS_DATABASE=$_MEMORYSTORE_REDIS_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["MEMORYSTORE_REDIS_ADDRESS", "MEMORYSTORE_REDIS_PASS", "CLIENT_ID"]

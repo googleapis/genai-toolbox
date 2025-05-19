@@ -115,7 +115,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	for i, resp := range responses {
 		if err := resp.Err(); err != nil {
 			// Add error from each command to `errSum`
-			errString := fmt.Sprintf("error from executing command at index %d: %s command length: %d", i, err, len(cmds[i]))
+			errString := fmt.Sprintf("error from executing command at index %d: %s", i, err)
 			out[i] = errString
 			continue
 		}
