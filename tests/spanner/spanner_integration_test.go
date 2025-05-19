@@ -139,7 +139,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	select1Want := "[{\"\":\"1\"}]"
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	listTablesWant := := fmt.Sprintf("[{\"table_name\":\"%s\"},{\"table_name\":\"%s\"}]", tableNameAuth, tableNameParam)
+	listTablesWant := fmt.Sprintf("[{\"table_name\":\"%s\"},{\"table_name\":\"%s\"}]", tableNameAuth, tableNameParam)
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
 	failInvocationWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
 
@@ -296,7 +296,7 @@ func RunSpannerSchemaToolInvokeTest(t *testing.T, listTablesWant string) {
 		},
 		{
 			name:          "invoke list-tables",
-			api:           "http://127.0.0.1:5000/api/tool/list-tables/invoke"
+			api:           "http://127.0.0.1:5000/api/tool/list-tables/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
@@ -373,9 +373,9 @@ func RunSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 		},
 		{
 			name:          "invoke my-exec-sql-tool-read-only with data present in table",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke"
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("SELECT * FROM %s WHERE id = '3' OR name = 'Alice'", tableName)))
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("SELECT * FROM %s WHERE id = '3' OR name = 'Alice'", tableName))),
 			want:          invokeParamWant,
 			isErr:         false,
 		},
