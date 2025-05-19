@@ -81,7 +81,7 @@ func InitializeResponse(ctx context.Context, id mcputil.RequestId, body []byte, 
 
 // NotificationHandler process notifications request. It MUST NOT send a response.
 // Currently Toolbox does not process any notifications.
-func NotificationHandler(ctx context.Context, body []byte) {
+func NotificationHandler(ctx context.Context, method string, body []byte) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {

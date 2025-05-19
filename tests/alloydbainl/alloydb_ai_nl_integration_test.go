@@ -329,18 +329,21 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 }
 
 func runAiNlMCPToolCallMethod(t *testing.T) {
+	sessionId := tests.RunInitialize(t)
+	header := map[string]string{
+		"Mcp-Session-Id": sessionId,
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestBody   util.JSONRPCRequest
-		requestHeader map[string]string
-		want          string
+		name        string
+		api         string
+		requestBody util.JSONRPCRequest
+		want        string
 	}{
 		{
-			name:          "MCP Invoke my-simple-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke my-simple-tool",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "my-simple-tool",
@@ -357,9 +360,8 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 			want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"?column?\":1}}"}]}}`,
 		},
 		{
-			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke invalid tool",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invalid-tool",
@@ -374,9 +376,8 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 		},
 		{
-			name:          "MCP Invoke my-auth-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke my-auth-tool without parameters",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-without-parameter",
@@ -403,7 +404,7 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
+			for k, v := range header {
 				req.Header.Add(k, v)
 			}
 			resp, err := http.DefaultClient.Do(req)

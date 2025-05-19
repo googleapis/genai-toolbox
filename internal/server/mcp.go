@@ -47,6 +47,8 @@ type mcpSession struct {
 	protocol string
 	// only available for connections that uses sse
 	sseSession *sseSession
+	// represent if the the initialization is successful
+	initialized bool
 }
 
 // mcpManager manages and control access to mcp sesisons
@@ -141,8 +143,9 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		eventQueue: make(chan string, 100),
 	}
 	mcpSession := &mcpSession{
-		protocol:   "", // not yet negotiated protocol version
-		sseSession: session,
+		protocol:    "", // not yet negotiated protocol version
+		sseSession:  session,
+		initialized: false,
 	}
 	s.mcpManager.add(sessionId, mcpSession)
 	defer s.mcpManager.remove(sessionId)
@@ -209,8 +212,6 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 		protocolVersion = mcpSess.protocol
 	} else {
-		// TODO: remove this when full initialize lifecycle is implemented
-		protocolVersion = "2024-11-05"
 		sessionId = uuid.New().String()
 		mcpSess = &mcpSession{}
 		s.mcpManager.add(sessionId, mcpSess)
@@ -287,7 +288,10 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
-		mcp.NotificationHandler(ctx, body)
+		mcp.NotificationHandler(ctx, baseMessage.Method, body)
+		if baseMessage.Method == mcputil.INITIALIZE_NOTIFICATIONS {
+			mcpSess.initialized = true
+		}
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
 		w.WriteHeader(http.StatusAccepted)
@@ -304,6 +308,12 @@ func mcpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		mcpSess.protocol = protocolVersion
 		w.Header().Add("Mcp-Session-Id", sessionId)
 	default:
+		if !mcpSess.initialized {
+			err = fmt.Errorf("session is not initialized")
+			s.logger.DebugContext(ctx, err.Error())
+			res = mcputil.NewError(baseMessage.Id, mcputil.INVALID_REQUEST, err.Error(), nil)
+			break
+		}
 		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
