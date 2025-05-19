@@ -279,7 +279,7 @@ pip install llama-index-llms-google-genai
 # pip install llama-index-llms-anthropic
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
-pip install langchain toolbox-langchain
+pip install toolbox-core
 {{< /tab >}}
 {{< /tabpane >}}
     
@@ -399,11 +399,11 @@ asyncio.run(main())
 {{< /tab >}}
 {{< tab header="ADK" lang="python" >}}
 from google.adk.agents import Agent
-from google.adk.tools.toolbox_tool import ToolboxTool
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
 from google.genai import types # For constructing message content
+from toolbox_core import ToolboxSyncClient
 
 import os
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
@@ -414,7 +414,9 @@ os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
 
 # --- Load Tools from Toolbox ---
 # TODO(developer): Ensure the Toolbox server is running at http://127.0.0.1:5000
-toolbox_tools = ToolboxTool("http://127.0.0.1:5000")
+toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
+# TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
+agent_toolset = toolbox.load_toolset("my-toolset")
 
 # --- Define the Agent's Prompt ---
 prompt = """
@@ -428,8 +430,6 @@ prompt = """
 """
 
 # --- Configure the Agent ---
-# TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your GenAI Toolbox server.
-agent_toolset = toolbox_tools.get_toolset("my-toolset")
 
 root_agent = Agent(
     model='gemini-2.0-flash',
