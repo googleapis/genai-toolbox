@@ -80,7 +80,8 @@ func TestMemorystoreRedisToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	param_cmds, auth_cmds := tests.GetRedisValkeyToolCmds()
-	// // Write config into a file and pass it to command
+
+	// Write config into a file and pass it to command
 	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, REDIS_TOOL_KIND, param_cmds, auth_cmds)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
