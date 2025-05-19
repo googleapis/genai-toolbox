@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spanner_test
+package spannerexecutesql_test
 
 import (
 	"testing"
@@ -21,8 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
+	"github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 )
 
 func TestParseFromYamlExecuteSql(t *testing.T) {
@@ -45,7 +44,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spanner.Config{
+				"example_tool": spannerexecutesql.Config{
 					Name:         "example_tool",
 					Kind:         spannerexecutesql.ToolKind,
 					Source:       "my-spanner-instance",
@@ -66,7 +65,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 					readOnly: true
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spanner.Config{
+				"example_tool": spannerexecutesql.Config{
 					Name:         "example_tool",
 					Kind:         spannerexecutesql.ToolKind,
 					Source:       "my-spanner-instance",

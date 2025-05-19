@@ -73,7 +73,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
+		InputSchema: parameters.McpManifest(),
 	}
 
 	// finish tool setup
@@ -157,6 +157,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		results, opErr = processRows(iter)
 	} else {
 		_, opErr = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			var err error
 			iter := txn.Query(ctx, stmt)
 			results, err = processRows(iter)
 			if err != nil {
