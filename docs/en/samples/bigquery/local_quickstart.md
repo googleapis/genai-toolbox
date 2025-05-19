@@ -414,9 +414,9 @@ os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
 
 # --- Load Tools from Toolbox ---
 # TODO(developer): Ensure the Toolbox server is running at http://127.0.0.1:5000
-toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
+toolbox_client = ToolboxSyncClient("http://127.0.0.1:5000")
 # TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
-agent_toolset = toolbox.load_toolset("my-toolset")
+agent_toolset = toolbox_client.load_toolset("my-toolset")
 
 # --- Define the Agent's Prompt ---
 prompt = """
