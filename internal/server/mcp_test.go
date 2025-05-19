@@ -58,6 +58,110 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
+func TestMcpEndpointWithoutInitialized(t *testing.T) {
+	mockTools := []MockTool{tool1, tool2, tool3}
+	toolsMap, toolsets := setUpResources(t, mockTools)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	testCases := []struct {
+		name  string
+		url   string
+		isErr bool
+		body  util.JSONRPCRequest
+		want  map[string]any
+	}{
+		{
+			name: "tools/list",
+			url:  "/",
+			body: util.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "tools-list",
+				Request: util.Request{
+					Method: "tools/list",
+				},
+			},
+			isErr: true,
+			want: map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      "tools-list",
+				"error": map[string]any{
+					"code":    -32600.0,
+					"message": "session is not initialized",
+				},
+			},
+		},
+		{
+			name:  "missing method",
+			url:   "/",
+			isErr: true,
+			body: util.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "missing-method",
+				Request: util.Request{},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "missing-method",
+				"error": map[string]any{
+					"code":    -32601.0,
+					"message": "method not found",
+				},
+			},
+		},
+		{
+			name:  "invalid jsonrpc version",
+			url:   "/",
+			isErr: true,
+			body: util.JSONRPCRequest{
+				Jsonrpc: "1.0",
+				Id:      "invalid-jsonrpc-version",
+				Request: util.Request{
+					Method: "foo",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "invalid-jsonrpc-version",
+				"error": map[string]any{
+					"code":    -32600.0,
+					"message": "invalid json-rpc version",
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqMarshal, err := json.Marshal(tc.body)
+			if err != nil {
+				t.Fatalf("unexpected error during marshaling of body")
+			}
+
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+
+			// Notifications don't expect a response.
+			if tc.want != nil {
+				if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+					t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+				}
+
+				var got map[string]any
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatalf("unexpected error unmarshalling body: %s", err)
+				}
+				if !reflect.DeepEqual(got, tc.want) {
+					t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
+				}
+			}
+		})
+	}
+}
+
 func runInitializeLifecycle(t *testing.T, ts *httptest.Server) string {
 	initializeRequestBody := map[string]any{
 		"jsonrpc": jsonrpcVersion,
@@ -102,6 +206,23 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server) string {
 		t.Fatalf("unexpected response: got %+v, want %+v", got, initializeWant)
 	}
 
+	header := map[string]string{
+		"Mcp-Session-Id": sessionId,
+	}
+
+	initializeNotificationBody := map[string]any{
+		"jsonrpc": jsonrpcVersion,
+		"method":  "notifications/initialized",
+	}
+	notiMarshal, err := json.Marshal(initializeNotificationBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of notifications body")
+	}
+
+	_, _, err = runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(notiMarshal), header)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
 	return sessionId
 }
 

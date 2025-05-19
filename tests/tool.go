@@ -301,20 +301,68 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 	}
 }
 
+// RunInitialize runs the initialize lifecycle for mcp to set up client-server connection
+func RunInitialize(t *testing.T) string {
+	url := "http://127.0.0.1:5000/mcp"
+
+	initializeRequestBody := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "mcp-initialize",
+		"method":  "initialize",
+	}
+	reqMarshal, err := json.Marshal(initializeRequestBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of body")
+	}
+
+	resp, _ := runRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("response status code is not 200")
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	sessionId := resp.Header.Get("Mcp-Session-Id")
+	if sessionId == "" {
+		t.Fatalf("missing Mcp-Session-Id from header")
+	}
+
+	header := map[string]string{
+		"Mcp-Session-Id": sessionId,
+	}
+
+	initializeNotificationBody := map[string]any{
+		"jsonrpc": "2.0",
+		"method":  "notifications/initialized",
+	}
+	notiMarshal, err := json.Marshal(initializeNotificationBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of notifications body")
+	}
+
+	_, _ = runRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
+	return sessionId
+}
+
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
 func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want string) {
+	sessionId := RunInitialize(t)
+	header := map[string]string{
+		"Mcp-Session-Id": sessionId,
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestBody   util.JSONRPCRequest
-		requestHeader map[string]string
-		want          string
+		name        string
+		api         string
+		requestBody util.JSONRPCRequest
+		want        string
 	}{
 		{
-			name:          "MCP Invoke my-param-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke my-param-tool",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "my-param-tool",
@@ -332,9 +380,8 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			want: invoke_param_want,
 		},
 		{
-			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke invalid tool",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invalid-tool",
@@ -349,9 +396,8 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 		},
 		{
-			name:          "MCP Invoke my-param-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke my-param-tool without parameters",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-without-parameter",
@@ -366,9 +412,8 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
 		},
 		{
-			name:          "MCP Invoke my-param-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke my-param-tool with insufficient parameters",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-insufficient-parameter",
@@ -383,9 +428,8 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
 		},
 		{
-			name:          "MCP Invoke my-fail-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			name: "MCP Invoke my-fail-tool",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: util.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-fail-tool",
@@ -406,24 +450,8 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			if err != nil {
 				t.Fatalf("unexpected error during marshaling of request body")
 			}
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			respBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unable to read request body: %s", err)
-			}
-			defer resp.Body.Close()
+
+			_, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), header)
 			got := string(bytes.TrimSpace(respBody))
 
 			if !strings.Contains(got, tc.want) {
@@ -431,4 +459,29 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 			}
 		})
 	}
+}
+
+func runRequest(t *testing.T, method, url string, body io.Reader, header map[string]string) (*http.Response, []byte) {
+	// Send request
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+
+	req.Header.Add("Content-type", "application/json")
+	for k, v := range header {
+		req.Header.Add(k, v)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("unable to read request body: %s", err)
+	}
+
+	defer resp.Body.Close()
+	return resp, respBody
 }
