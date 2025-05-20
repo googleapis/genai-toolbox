@@ -20,8 +20,8 @@ parameters can be inserted into the query. BigQuery supports both named paramete
 (e.g., `@name`) and positional parameters (`?`), but they cannot be mixed in the
 same query.
 
-**Note:** This functionality is designed to replace **individual parameters**
- within a query, not to replace the **entire query** or **parts of query**.
+**Note:** This functionality is designed to fill **individual parameters**
+ within a query, not to filling the **entire query** or **parts of query**.
 
 [bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
