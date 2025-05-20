@@ -26,7 +26,7 @@ on:
     paths:
       - 'docs/**'
       - 'github/workflows/docs**'
-      - '.hugo'
+      - '.hugo/**'
 
 jobs:
   preview:
