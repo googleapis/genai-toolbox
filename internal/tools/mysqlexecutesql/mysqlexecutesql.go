@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysqlsql
+package mysqlexecutesql
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "mysql-sql"
+const ToolKind string = "mysql-execute-sql"
 
 type compatibleSource interface {
 	MySQLPool() *sql.DB
@@ -38,13 +38,11 @@ var _ compatibleSource = &mysql.Source{}
 var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	Statement    string           `yaml:"statement" validate:"required"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -67,21 +65,23 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
+	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	parameters := tools.Parameters{sqlParameter}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
+		InputSchema: parameters.McpManifest(),
 	}
 
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
 		Kind:         ToolKind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
+		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.MySQLPool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
@@ -97,15 +97,18 @@ type Tool struct {
 	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Pool        *sql.DB
-	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
+	sql, ok := sliceParams[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+	}
 
-	results, err := t.Pool.QueryContext(ctx, t.Statement, sliceParams...)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
