@@ -329,7 +329,7 @@ func RunPgExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
 			name:          "invoke my-exec-sql-tool create table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255))"}`)),
 			want:          "null",
 			isErr:         false,
 		},

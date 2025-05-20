@@ -107,44 +107,43 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
-
 	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	cols, err := results.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
-	}
-
-	// create an array of values for each column, which can be re-used to scan each row
-	rawValues := make([]any, len(cols))
-	values := make([]any, len(cols))
-	for i := range rawValues {
-		values[i] = &rawValues[i]
-	}
+	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
+	// We proceed, and results.Err() will catch actual query execution errors.
+	// 'out' will remain nil if cols is empty or err is not nil here.
 
 	var out []any
-	for results.Next() {
-		err = results.Scan(values...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
+	if err == nil && len(cols) > 0 {
+		// create an array of values for each column, which can be re-used to scan each row
+		rawValues := make([]any, len(cols))
+		values := make([]any, len(cols))
+		for i := range rawValues {
+			values[i] = &rawValues[i]
 		}
-		vMap := make(map[string]any)
-		for i, name := range cols {
-			vMap[name] = rawValues[i]
+
+		for results.Next() {
+			scanErr := results.Scan(values...)
+			if scanErr != nil {
+				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
+			}
+			vMap := make(map[string]any)
+			for i, name := range cols {
+				vMap[name] = rawValues[i]
+			}
+			out = append(out, vMap)
 		}
-		out = append(out, vMap)
 	}
 
-	err = results.Close()
-	if err != nil {
-		return nil, fmt.Errorf("unable to close rows: %w", err)
-	}
-
+	// Check for errors from iterating over rows or from the query execution itself.
+	// results.Close() is handled by defer.
 	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered by results.Scan: %w", err)
+		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
 	}
 
 	return out, nil
