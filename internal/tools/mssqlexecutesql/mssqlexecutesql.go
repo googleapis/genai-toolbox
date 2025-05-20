@@ -127,18 +127,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 
 	var out []any
 	for results.Next() {
-		err := results.Scan(values...)
+		err = results.Scan(values...)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
 		vMap := make(map[string]any)
 		for i, name := range cols {
-			b, ok := rawValues[i].([]byte)
-			if ok {
-				vMap[name] = string(b)
-			} else {
-				vMap[name] = rawValues[i]
-			}
+			vMap[name] = rawValues[i]
 		}
 		out = append(out, vMap)
 	}

@@ -150,8 +150,8 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// AddMSSqlExecuteSqlConfig gets the tools config for `postgres-execute-sql`
-func AddMSSqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+// AddMssqlExecuteSqlConfig gets the tools config for `mssql-execute-sql`
+func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")

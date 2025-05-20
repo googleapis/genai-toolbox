@@ -545,7 +545,7 @@ func RunMySqlExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
 	}
 }
 
-func RunMSSqlExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
+func RunMssqlExecuteSqlToolInvokeTest(t *testing.T, select_1_want string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
