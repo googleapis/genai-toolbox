@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spanner
+package spannerexecutesql
 
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"cloud.google.com/go/spanner"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -26,7 +25,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-const ToolKind string = "spanner-sql"
+const ToolKind string = "spanner-execute-sql"
 
 type compatibleSource interface {
 	SpannerClient() *spanner.Client
@@ -39,14 +38,12 @@ var _ compatibleSource = &spannerdb.Source{}
 var compatibleSources = [...]string{spannerdb.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	Statement    string           `yaml:"statement" validate:"required"`
-	ReadOnly     bool             `yaml:"readOnly"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
+	ReadOnly     bool     `yaml:"readOnly"`
 }
 
 // validate interface
@@ -69,23 +66,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
+	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	parameters := tools.Parameters{sqlParameter}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
+		InputSchema: parameters.McpManifest(),
 	}
 
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
 		Kind:         ToolKind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
+		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		ReadOnly:     cfg.ReadOnly,
 		Client:       s.SpannerClient(),
 		dialect:      s.DatabaseDialect(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
@@ -102,20 +101,8 @@ type Tool struct {
 	ReadOnly     bool             `yaml:"readOnly"`
 	Client       *spanner.Client
 	dialect      string
-	Statement    string
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
-}
-
-func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
-	switch strings.ToLower(dialect) {
-	case "googlesql":
-		return params.AsMap(), nil
-	case "postgresql":
-		return params.AsMapByOrderedKeys(), nil
-	default:
-		return nil, fmt.Errorf("invalid dialect %s", dialect)
-	}
 }
 
 // processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
@@ -143,23 +130,22 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	mapParams, err := getMapParams(params, t.dialect)
-	if err != nil {
-		return nil, fmt.Errorf("fail to get map params: %w", err)
+	sliceParams := params.AsSlice()
+	sql, ok := sliceParams[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
 	var results []any
 	var opErr error
-	stmt := spanner.Statement{
-		SQL:    t.Statement,
-		Params: mapParams,
-	}
+	stmt := spanner.Statement{SQL: sql}
 
 	if t.ReadOnly {
 		iter := t.Client.Single().Query(ctx, stmt)
 		results, opErr = processRows(iter)
 	} else {
 		_, opErr = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			var err error
 			iter := txn.Query(ctx, stmt)
 			results, err = processRows(iter)
 			if err != nil {
@@ -170,7 +156,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 
 	if opErr != nil {
-		return nil, fmt.Errorf("unable to execute client: %w", opErr)
+		return nil, fmt.Errorf("unable to execute query: %w", opErr)
 	}
 
 	return results, nil

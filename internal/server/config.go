@@ -46,11 +46,13 @@ import (
 	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
 	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
+	"github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -409,6 +411,18 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			(*c)[name] = actual
 		case postgresexecutesql.ToolKind:
 			actual := postgresexecutesql.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case mysqlexecutesql.ToolKind:
+			actual := mysqlexecutesql.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case spannerexecutesql.ToolKind:
+			actual := spannerexecutesql.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

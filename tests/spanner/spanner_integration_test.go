@@ -15,8 +15,12 @@
 package spanner
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -97,8 +101,8 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getSpannerParamToolInfo(tableNameParam)
@@ -118,6 +122,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, SPANNER_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -142,6 +147,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
 }
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
@@ -212,5 +218,198 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
+	}
+}
+
+// addSpannerExecuteSqlConfig gets the tools config for `spanner-execute-sql`
+func addSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool-read-only"] = map[string]any{
+		"kind":        "spanner-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"readOnly":    true,
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "spanner-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "spanner-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-exec-sql-tool-read-only",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			want:          select_1_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool-read-only with data present in table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 3 OR name = 'Alice'\"}", tableNameParam))),
+			want:          invokeParamWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool-read-only create table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool-read-only drop table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool-read-only insert entry",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			want:          select_1_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool create table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool drop table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool insert entry",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         false,
+			want:          select_1_want,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

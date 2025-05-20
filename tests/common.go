@@ -127,6 +127,29 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
+// AddMySqlExecuteSqlConfig gets the tools config for `mysql-execute-sql`
+func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "mysql-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "mysql-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
 // AddMSSqlExecuteSqlConfig gets the tools config for `postgres-execute-sql`
 func AddMSSqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
@@ -134,7 +157,7 @@ func AddMSSqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "mmsql-execute-sql",
+		"kind":        "mssql-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
