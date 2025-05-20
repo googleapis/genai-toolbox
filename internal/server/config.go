@@ -81,6 +81,8 @@ type ServerConfig struct {
 	TelemetryOTLP string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
+	// Stdio indicates if toolbox is running support for MCP studio transport protocol.
+	Stdio bool
 }
 
 type logFormat string
