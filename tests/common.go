@@ -127,19 +127,19 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-// AddPgExecuteSqlConfig gets the tools config for `postgres-execute-sql`
+// AddMSSqlExecuteSqlConfig gets the tools config for `postgres-execute-sql`
 func AddMSSqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "cloud-sql-mssql",
+		"kind":        "mmsql-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "cloud-sql-mssql",
+		"kind":        "mssql-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

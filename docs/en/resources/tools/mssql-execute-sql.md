@@ -3,17 +3,17 @@ title: "mssql-execute-sql"
 type: docs
 weight: 1
 description: > 
-  A "mssql-execute-sql" tool executes a SQL statement against a MySQL
+  A "mssql-execute-sql" tool executes a SQL statement against a SQL Server
   database.
 ---
 
 ## About
 
-A `mssql-execute-sql` tool executes a SQL statement against a MySQL
+A `mssql-execute-sql` tool executes a SQL statement against a SQL Server
 database. It's compatible with any of the following sources:
 
-- [cloud-sql-mssql](../sources/cloud-sql-mysql.md)
-- [mssql](../sources/mysql.md)
+- [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
+- [mssql](../sources/mssql.md)
 
 `mssql-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.
