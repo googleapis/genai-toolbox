@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/bigquery v1.68.0
 	cloud.google.com/go/bigtable v1.37.0
 	cloud.google.com/go/cloudsqlconn v1.17.0
-	cloud.google.com/go/spanner v1.81.1
+	cloud.google.com/go/spanner v1.82.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.27.0
 	github.com/couchbase/gocb/v2 v2.10.0
