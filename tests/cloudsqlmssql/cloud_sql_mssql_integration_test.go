@@ -131,7 +131,7 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
-	toolsFile = tests.AddMSSqlExecuteSqlConfig(t, toolsFile)
+	toolsFile = tests.AddMssqlExecuteSqlConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -152,7 +152,7 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 	select1Want, failInvocationWant := tests.GetMssqlWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
-	tests.RunMSSqlExecuteSqlToolInvokeTest(t, select1Want)
+	tests.RunMssqlExecuteSqlToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
