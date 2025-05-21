@@ -150,6 +150,29 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
+// AddMssqlExecuteSqlConfig gets the tools config for `mssql-execute-sql`
+func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "mssql-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "mssql-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
 // GetHTTPToolsConfig returns a mock HTTP tool's config file
 func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
 	// Write config into a file and pass it to command

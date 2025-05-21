@@ -88,8 +88,8 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMssqlParamToolInfo(tableNameParam)
@@ -103,6 +103,7 @@ func TestMssqlToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile = tests.AddMssqlExecuteSqlConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -123,5 +124,6 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	select1Want, failInvocationWant := tests.GetMssqlWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMssqlExecuteSqlToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
