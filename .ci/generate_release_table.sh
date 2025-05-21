@@ -11,20 +11,32 @@ fi
 FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64")
 output_string=""
 
+# Define the descriptions - ensure this array's order matches FILES
+DESCRIPTIONS=(
+    "For **Linux** systems running on **Intel/AMD 64-bit processors**."
+    "For **macOS** systems running on **Apple Silicon** (M1, M2, M3, etc.) processors."
+    "For **macOS** systems running on **Intel processors**."
+    "For **Windows** systems running on **Intel/AMD 64-bit processors**."
+)
+
 # Write the table header
-ROW_FMT="| %-93s | %73s |"
-output_string+=$(printf "$ROW_FMT" "**os/arch**" "**sha256**")$'\n'
-output_string+=$(printf "$ROW_FMT" $(printf -- '-%0.s' {1..93}) $(printf -- '-%0.s' {1..73}))$'\n'
+ROW_FMT="| %-105s | %-120s | %-67s |\n"
+output_string+=$(printf "$ROW_FMT" "**OS/Architecture**" "**Description**" "**SHA256 Hash**")$'\n'
+output_string+=$(printf "$ROW_FMT" "$(printf -- '-%0.s' {1..105})" "$(printf -- '-%0.s' {1..120})" "$(printf -- '-%0.s' {1..67})")$'\n'
+
 
 # Loop through all files matching the pattern "toolbox.*.*"
-for file in "${FILES[@]}"
+for i in "${!FILES[@]}"
 do
+    file_key="${FILES[$i]}" # e.g., "linux.amd64"
+    description_text="${DESCRIPTIONS[$i]}"
+
     # Extract OS and ARCH from the filename
-    OS=$(echo "$file" | cut -d '.' -f 1)
-    ARCH=$(echo "$file" | cut -d '.' -f 2)
+    OS=$(echo "$file_key" | cut -d '.' -f 1)
+    ARCH=$(echo "$file_key" | cut -d '.' -f 2)
 
     # Get release URL
-    URL=https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox
+    URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
 
     curl "$URL" --fail --output toolbox || exit 1
 
@@ -32,10 +44,10 @@ do
     SHA256=$(shasum -a 256 toolbox | awk '{print $1}')
 
     # Write the table row
-    # output_string+="| [$OS/$ARCH]($URL)   | $SHA256 |\n"
-    output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$SHA256")$'\n'
+    output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256")$'\n'
 
     rm toolbox
 done
+
 printf "$output_string\n"
 
