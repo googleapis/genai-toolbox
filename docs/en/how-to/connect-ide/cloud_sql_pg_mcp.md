@@ -1,5 +1,5 @@
 ---
-title: "Cloud SQL using MCP"
+title: "Cloud SQL for Postgres using MCP"
 type: docs
 weight: 2
 description: >
@@ -34,7 +34,7 @@ description: >
 
 1. [Enable the Cloud SQL Admin API in the Google Cloud project](https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com).
 
-1. [Create a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
+1. [Create  or select a Cloud SQL for PostgreSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance). These instructions assume that your Cloud SQL instance has a [public IP address](https://cloud.google.com/sql/docs/postgres/configure-ip). By default, Cloud SQL assigns a public IP address to a new instance. Toolbox will connect securely using the [Cloud SQL connectors](https://cloud.google.com/sql/docs/postgres/language-connectors).
 
 1. Configure the required roles and permissions to complete this task. You will need [Cloud SQL > Client](https://cloud.google.com/sql/docs/postgres/roles-and-permissions#proxy-roles-permissions) role (`roles/cloudsql.client`) or equivalent IAM permissions to connect to the instance.
 
@@ -95,22 +95,22 @@ To configure Toolbox, run the following steps:
 
     ```bash
     # The ID of your Google Cloud Project where the Cloud SQL instance is located.
-    export CLOUD_SQL_PROJECT="your-gcp-project-id"
+    export CLOUD_SQL_POSTGRES_PROJECT="your-gcp-project-id"
 
     # The region where your Cloud SQL instance is located (e.g., us-central1).
-    export CLOUD_SQL_REGION="your-instance-region"
+    export CLOUD_SQL_POSTGRES_REGION="your-instance-region"
 
     # The name of your Cloud SQL instance.
-    export CLOUD_SQL_INSTANCE="your-instance-name"
+    export CLOUD_SQL_POSTGRES_INSTANCE="your-instance-name"
 
     # The name of the database you want to connect to within the instance.
-    export CLOUD_SQL_DB="your-database-name"
+    export CLOUD_SQL_POSTGRES_DATABASE="your-database-name"
 
     # The username for connecting to the database.
-    export CLOUD_SQL_USER="your-database-user"
+    export CLOUD_SQL_POSTGRES_USER="your-database-user"
 
     # The password for the specified database user.
-    export CLOUD_SQL_PASS="your-database-password"
+    export CLOUD_SQL_POSTGRES_PASSWORD="your-database-password"
     ```
 
 2. Create a `tools.yaml` file.
@@ -121,12 +121,12 @@ To configure Toolbox, run the following steps:
     sources:
       cloudsql-pg-source:
         kind: cloud-sql-postgres
-        project: ${CLOUD_SQL_PROJECT}
-        region: ${CLOUD_SQL_REGION}
-        instance: ${CLOUD_SQL_INSTANCE}
-        database: ${CLOUD_SQL_DB}
-        user: ${CLOUD_SQL_USER}
-        password: ${CLOUD_SQL_PASS}
+        project: ${CLOUD_SQL_POSTGRES_PROJECT}
+        region: ${CLOUD_SQL_POSTGRES_REGION}
+        instance: ${CLOUD_SQL_POSTGRES_INSTANCE}
+        database: ${CLOUD_SQL_POSTGRES_DATABASE}
+        user: ${CLOUD_SQL_POSTGRES_USER}
+        password: ${CLOUD_SQL_POSTGRES_PASSWORD}
     tools:
       execute_sql:
         kind: postgres-execute-sql
