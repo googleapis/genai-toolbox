@@ -121,6 +121,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 
 	query := t.Client.Query(t.Statement)
 	query.Parameters = namedArgs
+	query.Location = t.Client.Location
 
 	it, err := query.Read(ctx)
 	if err != nil {
