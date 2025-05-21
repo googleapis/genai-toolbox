@@ -71,12 +71,14 @@ type Command struct {
 	cfg        server.ServerConfig
 	logger     log.Logger
 	tools_file string
+	inStream   io.Reader
 	outStream  io.Writer
 	errStream  io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
 func NewCommand(opts ...Option) *Command {
+	in := os.Stdin
 	out := os.Stdout
 	err := os.Stderr
 
@@ -87,6 +89,7 @@ func NewCommand(opts ...Option) *Command {
 	}
 	cmd := &Command{
 		Command:   baseCmd,
+		inStream:  in,
 		outStream: out,
 		errStream: err,
 	}
@@ -98,7 +101,8 @@ func NewCommand(opts ...Option) *Command {
 	// Set server version
 	cmd.cfg.Version = versionString
 
-	// set baseCmd out and err the same as cmd.
+	// set baseCmd in, out and err the same as cmd.
+	baseCmd.SetIn(cmd.inStream)
 	baseCmd.SetOut(cmd.outStream)
 	baseCmd.SetErr(cmd.errStream)
 
@@ -280,6 +284,12 @@ func run(cmd *Command) error {
 	// run server in background
 	srvErr := make(chan error)
 	go func() {
+		if cmd.cfg.Stdio {
+			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
+			if err != nil {
+				srvErr <- err
+			}
+		}
 		defer close(srvErr)
 		err = s.Serve(ctx)
 		if err != nil {

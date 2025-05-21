@@ -15,6 +15,7 @@
 package server
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -65,6 +66,101 @@ func (m *sseManager) remove(id string) {
 	m.mu.Lock()
 	delete(m.sseSessions, id)
 	m.mu.Unlock()
+}
+
+type stdioSession struct {
+	server *Server
+	reader *bufio.Reader
+	writer io.Writer
+}
+
+func NewStdioSession(s *Server, stdin io.Reader, stdout io.Writer) *stdioSession {
+	stdioSession := &stdioSession{
+		server: s,
+		reader: bufio.NewReader(stdin),
+		writer: stdout,
+	}
+	return stdioSession
+}
+
+func (s *stdioSession) Start(ctx context.Context) error {
+	return s.readInputStream(ctx)
+}
+
+// readInputStream reads requests/notifications from MCP clients through stdin
+func (s *stdioSession) readInputStream(ctx context.Context) error {
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		line, err := s.readLine(ctx)
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+		res, err := processMcpMessage(ctx, []byte(line), s.server, "")
+		if err != nil {
+			// errors during the processing of message will generate a valid MCP Error response.
+			// server can continue to run.
+			s.server.logger.ErrorContext(ctx, err.Error())
+		}
+		if err = s.write(ctx, res); err != nil {
+			return err
+		}
+	}
+}
+
+// readLine process each line within the input stream.
+func (s *stdioSession) readLine(ctx context.Context) (string, error) {
+	readChan := make(chan string, 1)
+	errChan := make(chan error, 1)
+	done := make(chan struct{})
+	defer close(done)
+	defer close(readChan)
+	defer close(errChan)
+
+	go func() {
+		select {
+		case <-done:
+			return
+		default:
+			line, err := s.reader.ReadString('\n')
+			if err != nil {
+				select {
+				case errChan <- err:
+				case <-done:
+				}
+				return
+			}
+			select {
+			case readChan <- line:
+			case <-done:
+			}
+			return
+		}
+	}()
+
+	select {
+	// if context is cancelled, return an empty string
+	case <-ctx.Done():
+		return "", ctx.Err()
+	// return error if error is found
+	case err := <-errChan:
+		return "", err
+	// return line if successful
+	case line := <-readChan:
+		return line, nil
+	}
+}
+
+// write writes to stdout with response to client
+func (s *stdioSession) write(ctx context.Context, response any) error {
+	res, _ := json.Marshal(response)
+
+	_, err := fmt.Fprintf(s.writer, "%s\n", res)
+	return err
 }
 
 // mcpRouter creates a router that represents the routes under /mcp
