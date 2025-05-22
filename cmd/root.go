@@ -16,11 +16,13 @@ package cmd
 
 import (
 	"context"
+	"embed"
 	_ "embed"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
@@ -40,10 +42,16 @@ var (
 	versionString string
 	// metadataString indicates additional build or distribution metadata.
 	metadataString string
+
+	//go:embed prebuiltconfigs/*.yaml
+	prebuiltConfigsFS embed.FS
+
+	prebuiltToolYAMLs map[string][]byte
 )
 
 func init() {
 	versionString = semanticVersion()
+	loadPrebuiltToolYAMLs()
 }
 
 // semanticVersion returns the version of the CLI including a compile-time metadata.
@@ -53,6 +61,35 @@ func semanticVersion() string {
 		v += "+" + metadataString
 	}
 	return v
+}
+
+func loadPrebuiltToolYAMLs() {
+	prebuiltToolYAMLs = make(map[string][]byte)
+	entries, err := prebuiltConfigsFS.ReadDir("prebuiltconfigs")
+	if err != nil {
+		// Logger isn't fully initialized at this stage of init(), so use fmt.Fprintf for critical warnings.
+		fmt.Fprintf(os.Stderr, "WARN: Failed to read embedded prebuiltconfigs directory: %v. Prebuilt tools will be unavailable.\n", err)
+		return
+	}
+
+	for _, entry := range entries {
+		lowerName := strings.ToLower(entry.Name())
+		if !entry.IsDir() && (strings.HasSuffix(lowerName, ".yaml")) {
+			filePathInFS := filepath.Join("prebuiltconfigs", entry.Name())
+			content, err := prebuiltConfigsFS.ReadFile(filePathInFS)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: Failed to read embedded file %s: %v\n", entry.Name(), err)
+				continue
+			}
+			// Determine key: filename without extension.
+			sourceTypeKey := entry.Name()[:len(entry.Name())-len(".yaml")]
+
+			prebuiltToolYAMLs[sourceTypeKey] = content
+		}
+	}
+	if len(prebuiltToolYAMLs) == 0 {
+		fmt.Fprintln(os.Stderr, "WARN: No prebuilt tool configurations were loaded.")
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -68,11 +105,12 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg        server.ServerConfig
-	logger     log.Logger
-	tools_file string
-	outStream  io.Writer
-	errStream  io.Writer
+	cfg                server.ServerConfig
+	logger             log.Logger
+	tools_file         string
+	prebuiltSourceType string
+	outStream          io.Writer
+	errStream          io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
@@ -109,12 +147,24 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.StringVar(&cmd.tools_file, "tools-file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
 	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
+
+	var availablePrebuiltKeys []string
+	for k := range prebuiltToolYAMLs {
+		availablePrebuiltKeys = append(availablePrebuiltKeys, k)
+	}
+	prebuiltHelpMsg := "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file."
+	if len(availablePrebuiltKeys) > 0 {
+		prebuiltHelpMsg += fmt.Sprintf(" Allowed: %s.", strings.Join(availablePrebuiltKeys, ", "))
+	} else {
+		prebuiltHelpMsg += " No prebuilt configurations found."
+	}
+	flags.StringVar(&cmd.prebuiltSourceType, "prebuilt", "", prebuiltHelpMsg)
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -202,7 +252,7 @@ func run(cmd *Command) error {
 		}
 		cmd.logger = logger
 	default:
-		return fmt.Errorf("logging format invalid.")
+		return fmt.Errorf("logging format invalid")
 	}
 
 	ctx = util.WithLogger(ctx, cmd.logger)
@@ -222,14 +272,47 @@ func run(cmd *Command) error {
 		}
 	}()
 
-	// Read tool file contents
-	buf, err := os.ReadFile(cmd.tools_file)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+	var yamlFileContent []byte
+
+	if cmd.prebuiltSourceType != "" && cmd.tools_file != "" {
+		errMsg := fmt.Errorf("--prebuilt and --tools-file flags cannot be used simultaneously")
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
-	toolsFile, err := parseToolsFile(ctx, buf)
+
+	if cmd.prebuiltSourceType != "" {
+		content, ok := prebuiltToolYAMLs[cmd.prebuiltSourceType]
+		if !ok {
+			var availablePrebuiltKeys []string
+			for k := range prebuiltToolYAMLs {
+				availablePrebuiltKeys = append(availablePrebuiltKeys, k)
+			}
+			prebuiltHelpSuffix := "No prebuilt configurations found."
+			if len(availablePrebuiltKeys) > 0 {
+				prebuiltHelpSuffix = fmt.Sprintf("Available: %s", strings.Join(availablePrebuiltKeys, ", "))
+			}
+			errMsg := fmt.Errorf("prebuilt source type '%s' not found. %s", cmd.prebuiltSourceType, prebuiltHelpSuffix)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		yamlFileContent = content
+		cmd.logger.InfoContext(ctx, "Using prebuilt tool configuration -", "source_type", cmd.prebuiltSourceType)
+	} else {
+		// Set default value of tools-file flag to tools.yaml
+		if cmd.tools_file == "" {
+			cmd.tools_file = "tools.yaml"
+		}
+		// Read tool file contents
+		buf, err := os.ReadFile(cmd.tools_file)
+		if err != nil {
+			errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		yamlFileContent = buf
+	}
+
+	toolsFile, err := parseToolsFile(ctx, yamlFileContent)
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
 	authSourceConfigs := toolsFile.AuthSources
 	if authSourceConfigs != nil {

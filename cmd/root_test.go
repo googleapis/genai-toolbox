@@ -187,7 +187,7 @@ func TestToolFileFlag(t *testing.T) {
 		{
 			desc: "default value",
 			args: []string{},
-			want: "tools.yaml",
+			want: "",
 		},
 		{
 			desc: "foo file",
@@ -855,6 +855,38 @@ func TestEnvVarReplacement(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 		})
+	}
+
+}
+
+func TestPrebuiltTools(t *testing.T) {
+	expectedKeys := []string{
+		"alloydb",
+		"cloudsqlpg",
+		"postgres",
+		"spanner",
+	}
+
+	if len(prebuiltToolYAMLs) == 0 {
+		t.Fatal("Failed to load prebuilt tools.")
+	}
+
+	foundExpectedKeys := make(map[string]bool)
+
+	for _, expectedKey := range expectedKeys {
+		_, ok := prebuiltToolYAMLs[expectedKey]
+		if !ok {
+			t.Errorf("MISSING Expected Key: Prebuilt configuration for '%s' was NOT FOUND in the loaded map.", expectedKey)
+		} else {
+			foundExpectedKeys[expectedKey] = true // Mark as found
+		}
+	}
+
+	// Report any expected keys that were not found (handles cases where len matches but keys differ)
+	for _, expectedKey := range expectedKeys {
+		if !foundExpectedKeys[expectedKey] {
+			t.Errorf("Prebuilt tool for '%s' was not found.", expectedKey)
+		}
 	}
 
 }
