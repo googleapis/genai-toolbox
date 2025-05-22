@@ -44,6 +44,7 @@ import (
 	couchbasetool "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
+	"github.com/googleapis/genai-toolbox/internal/tools/mssqlexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
@@ -422,6 +423,12 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			(*c)[name] = actual
 		case spannerexecutesql.ToolKind:
 			actual := spannerexecutesql.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case mssqlexecutesql.ToolKind:
+			actual := mssqlexecutesql.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
