@@ -121,12 +121,12 @@ To configure Toolbox, run the following steps:
     sources:
       cloud-sql-mysql-source:
             kind: cloud-sql-mysql
-            project: ${CLOUD_SQL_PROJECT}
-            region: ${CLOUD_SQL_REGION}
-            instance: ${CLOUD_SQL_INSTANCE}
-            database: ${CLOUD_SQL_DB}
-            user: ${CLOUD_SQL_USER}
-            password: ${CLOUD_SQL_PASS}
+            project: ${CLOUD_SQL_MYSQL_PROJECT}
+            region: ${CLOUD_SQL_MYSQL_REGION}
+            instance: ${CLOUD_SQL_MYSQL_INSTANCE}
+            database: ${CLOUD_SQL_MYSQL_DATABASE}
+            user: ${CLOUD_SQL_MYSQL_USER}
+            password: ${CLOUD_SQL_MYSQL_PASSWORD}
 
     tools:
       execute_sql:
