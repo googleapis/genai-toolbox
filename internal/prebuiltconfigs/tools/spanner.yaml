@@ -204,3 +204,9 @@ tools:
       - name: table_names
         type: string
         description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+
+toolsets:
+  spanner-database-tools:
+    - execute_sql
+    - execute_sql_dql
+    - list_tables

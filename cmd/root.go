@@ -16,13 +16,11 @@ package cmd
 
 import (
 	"context"
-	"embed"
 	_ "embed"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
@@ -30,6 +28,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -42,16 +41,10 @@ var (
 	versionString string
 	// metadataString indicates additional build or distribution metadata.
 	metadataString string
-
-	//go:embed prebuiltconfigs/*.yaml
-	prebuiltConfigsFS embed.FS
-
-	prebuiltToolYAMLs map[string][]byte
 )
 
 func init() {
 	versionString = semanticVersion()
-	loadPrebuiltToolYAMLs()
 }
 
 // semanticVersion returns the version of the CLI including a compile-time metadata.
@@ -61,35 +54,6 @@ func semanticVersion() string {
 		v += "+" + metadataString
 	}
 	return v
-}
-
-func loadPrebuiltToolYAMLs() {
-	prebuiltToolYAMLs = make(map[string][]byte)
-	entries, err := prebuiltConfigsFS.ReadDir("prebuiltconfigs")
-	if err != nil {
-		// Logger isn't fully initialized at this stage of init(), so use fmt.Fprintf for critical warnings.
-		fmt.Fprintf(os.Stderr, "WARN: Failed to read embedded prebuiltconfigs directory: %v. Prebuilt tools will be unavailable.\n", err)
-		return
-	}
-
-	for _, entry := range entries {
-		lowerName := strings.ToLower(entry.Name())
-		if !entry.IsDir() && (strings.HasSuffix(lowerName, ".yaml")) {
-			filePathInFS := filepath.Join("prebuiltconfigs", entry.Name())
-			content, err := prebuiltConfigsFS.ReadFile(filePathInFS)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "WARN: Failed to read embedded file %s: %v\n", entry.Name(), err)
-				continue
-			}
-			// Determine key: filename without extension.
-			sourceTypeKey := entry.Name()[:len(entry.Name())-len(".yaml")]
-
-			prebuiltToolYAMLs[sourceTypeKey] = content
-		}
-	}
-	if len(prebuiltToolYAMLs) == 0 {
-		fmt.Fprintln(os.Stderr, "WARN: No prebuilt tool configurations were loaded.")
-	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -153,18 +117,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-
-	var availablePrebuiltKeys []string
-	for k := range prebuiltToolYAMLs {
-		availablePrebuiltKeys = append(availablePrebuiltKeys, k)
-	}
-	prebuiltHelpMsg := "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file."
-	if len(availablePrebuiltKeys) > 0 {
-		prebuiltHelpMsg += fmt.Sprintf(" Allowed: %s.", strings.Join(availablePrebuiltKeys, ", "))
-	} else {
-		prebuiltHelpMsg += " No prebuilt configurations found."
-	}
-	flags.StringVar(&cmd.prebuiltSourceType, "prebuilt", "", prebuiltHelpMsg)
+	flags.StringVar(&cmd.prebuiltSourceType, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb', 'cloudsqlpg', 'postgres', 'spanner'.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -274,17 +227,26 @@ func run(cmd *Command) error {
 
 	var yamlFileContent []byte
 
-	if cmd.prebuiltSourceType != "" && cmd.tools_file != "" {
-		errMsg := fmt.Errorf("--prebuilt and --tools-file flags cannot be used simultaneously")
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
+	fmt.Println(cmd.prebuiltSourceType, cmd.tools_file)
 
 	if cmd.prebuiltSourceType != "" {
-		content, ok := prebuiltToolYAMLs[cmd.prebuiltSourceType]
+		// Make sure --prebuilt and --tools-file flags are mutually exclusive
+		if cmd.tools_file != "" {
+			errMsg := fmt.Errorf("--prebuilt and --tools-file flags cannot be used simultaneously")
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+
+		prebuiltToolYamls, err := prebuiltconfigs.GetPrebuiltToolYAMLs()
+		if err != nil {
+			cmd.logger.ErrorContext(ctx, err.Error())
+			return err
+		}
+
+		content, ok := prebuiltToolYamls[cmd.prebuiltSourceType]
 		if !ok {
 			var availablePrebuiltKeys []string
-			for k := range prebuiltToolYAMLs {
+			for k := range prebuiltToolYamls {
 				availablePrebuiltKeys = append(availablePrebuiltKeys, k)
 			}
 			prebuiltHelpSuffix := "No prebuilt configurations found."
@@ -296,7 +258,8 @@ func run(cmd *Command) error {
 			return errMsg
 		}
 		yamlFileContent = content
-		cmd.logger.InfoContext(ctx, "Using prebuilt tool configuration -", "source_type", cmd.prebuiltSourceType)
+		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltSourceType)
+		cmd.logger.InfoContext(ctx, logMsg)
 	} else {
 		// Set default value of tools-file flag to tools.yaml
 		if cmd.tools_file == "" {
