@@ -100,7 +100,7 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	cmds, err := tools.ReplaceCommandsParams(t.Commands, t.Parameters, params)
+	cmds, err := replaceCommandsParams(t.Commands, t.Parameters, params)
 	if err != nil {
 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
 	}
@@ -143,4 +143,37 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+// Helper function to replace parameters in the commands
+func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
+	paramMap := paramValues.AsMapWithDollarPrefix()
+	typeMap := make(map[string]string, len(params))
+	for _, p := range params {
+		placeholder := "$" + p.GetName()
+		typeMap[placeholder] = p.GetType()
+	}
+	newCommands := make([][]any, len(commands))
+	for i, cmd := range commands {
+		newCmd := make([]any, len(cmd))
+		for j, part := range cmd {
+			v, ok := paramMap[part]
+			if !ok {
+				// Command part is not a Parameter placeholder
+				newCmd[j] = part
+				continue
+			}
+			if typeMap[part] == "array" {
+				for _, item := range v.([]any) {
+					// Nested arrays will only be expanded once
+					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
+					newCmd = append(newCmd, fmt.Sprintf("%s", item))
+				}
+				continue
+			}
+			newCmd[j] = fmt.Sprintf("%s", v)
+		}
+		newCommands[i] = newCmd
+	}
+	return newCommands, nil
 }
