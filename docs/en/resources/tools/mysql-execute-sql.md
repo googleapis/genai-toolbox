@@ -18,6 +18,9 @@ database. It's compatible with any of the following sources:
 `mysql-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.
 
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
 ## Example
 
 ```yaml

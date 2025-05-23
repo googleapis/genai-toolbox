@@ -16,7 +16,14 @@ It's compatible with any of the following sources:
 SQLite uses the `?` placeholder for parameters in SQL statements. Parameters are
 bound in the order they are provided.
 
-The statement field supports any valid SQLite SQL statement, including `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other DDL statements.
+The statement field supports any valid SQLite SQL statement, including `SELECT`,
+`INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other
+DDL statements.
+
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
 
 ### Example
 
