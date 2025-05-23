@@ -42,10 +42,12 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": memorystorevalkey.Config{
-					Name:    "my-valkey-instance",
-					Kind:    memorystorevalkey.SourceKind,
-					Address: "127.0.0.1",
-					UseIAM:  false,
+					Name:         "my-valkey-instance",
+					Kind:         memorystorevalkey.SourceKind,
+					Address:      "127.0.0.1",
+					Database:     0,
+					UseIAM:       false,
+					DisableCache: false,
 				},
 			},
 		},
@@ -119,7 +121,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"memorystore-valkey\": [5:1] unknown field \"password\"",
+			err: "unable to parse as \"memorystore-valkey\": [4:1] unknown field \"password\"",
 		},
 		{
 			desc: "missing required field",
