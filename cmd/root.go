@@ -108,7 +108,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
-	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
 	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
