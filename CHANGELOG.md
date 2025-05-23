@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/googleapis/genai-toolbox/compare/v0.5.0...v0.6.0) (2025-05-23)
+
+
+### Features
+
+* Add Execute sql tool for SQL Server(MSSQL) ([#585](https://github.com/googleapis/genai-toolbox/issues/585)) ([6083a22](https://github.com/googleapis/genai-toolbox/commit/6083a224aa650caf4e132b4a704323c5f18c4986))
+* Add mysql-execute-sql tool ([#577](https://github.com/googleapis/genai-toolbox/issues/577)) ([8590061](https://github.com/googleapis/genai-toolbox/commit/8590061ae4908da0e4b1bd6f7cf7ee8d972fa5ba))
+* Add spanner-execute-sql tool ([#576](https://github.com/googleapis/genai-toolbox/issues/576)) ([d65747a](https://github.com/googleapis/genai-toolbox/commit/d65747a2dcf3022f22c86a1524ee28c8229f7c20))
+* Add support for read-only in Spanner tool ([#563](https://github.com/googleapis/genai-toolbox/issues/563)) ([6512704](https://github.com/googleapis/genai-toolbox/commit/6512704e77088d92fea53a85c6e6cbf4b99c988d))
+
+
+### Bug Fixes
+
+* Explicitly set query location for BigQuery queries ([#586](https://github.com/googleapis/genai-toolbox/issues/586)) ([eb52b66](https://github.com/googleapis/genai-toolbox/commit/eb52b66d82aaa11be6b1489335f49cba8168099b))
+* Fix spellings in comments ([#561](https://github.com/googleapis/genai-toolbox/issues/561)) ([b58bf76](https://github.com/googleapis/genai-toolbox/commit/b58bf76ddaba407e3fd995dfe86d00a09484e14a))
+* Prevent tool calls through MCP when auth is required ([#544](https://github.com/googleapis/genai-toolbox/issues/544)) ([e747b6e](https://github.com/googleapis/genai-toolbox/commit/e747b6e289730c17f68be8dec0c6fa6021bb23bd))
+* Reinitialize required slice if nil ([#571](https://github.com/googleapis/genai-toolbox/issues/571)) ([04dcf47](https://github.com/googleapis/genai-toolbox/commit/04dcf4791272e1dd034b9a03664dd8dbe77fdddd)), closes [#564](https://github.com/googleapis/genai-toolbox/issues/564)
+
 ## [0.5.0](https://github.com/googleapis/genai-toolbox/compare/v0.4.0...v0.5.0) (2025-05-06)
 
 
