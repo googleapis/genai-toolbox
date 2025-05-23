@@ -286,9 +286,6 @@ To configure Toolbox, run the following steps:
           - name: table_names
             type: string
             description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
-          - name: table_names
-            type: string
-            description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
     ```
 
 4. Start Toolbox to listen on `127.0.0.1:5000`:
