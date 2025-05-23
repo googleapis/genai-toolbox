@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -263,6 +264,12 @@ func (s *Server) Listen(ctx context.Context) error {
 func (s *Server) Serve(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "Starting a HTTP server.")
 	return s.srv.Serve(s.listener)
+}
+
+// ServeStdio starts a new stdio session for mcp.
+func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writer) error {
+	stdioServer := NewStdioSession(s, stdin, stdout)
+	return stdioServer.Start(ctx)
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active
