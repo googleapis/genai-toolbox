@@ -339,7 +339,7 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 	}{
 		{
 			name:          "MCP Invoke my-simple-tool",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -358,7 +358,7 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 		},
 		{
 			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -375,7 +375,7 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 		},
 		{
 			name:          "MCP Invoke my-auth-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp/messages",
 			requestHeader: map[string]string{},
 			requestBody: mcp.JSONRPCRequest{
 				Jsonrpc: "2.0",
