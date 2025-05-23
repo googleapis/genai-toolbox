@@ -29,7 +29,6 @@ import (
 var (
 	MEMORYSTORE_VALKEY_SOURCE_KIND = "memorystore-valkey"
 	MEMORYSTORE_VALKEY_TOOL_KIND   = "valkey"
-	MEMORYSTORE_VALKEY_DATABASE    = 0
 	MEMORYSTORE_VALKEY_ADDRESS     = os.Getenv("MEMORYSTORE_VALKEY_ADDRESS")
 )
 
@@ -41,17 +40,14 @@ func getValkeyVars(t *testing.T) map[string]any {
 	return map[string]any{
 		"kind":         MEMORYSTORE_VALKEY_SOURCE_KIND,
 		"address":      MEMORYSTORE_VALKEY_ADDRESS,
-		"database":     MEMORYSTORE_VALKEY_DATABASE,
-		"useIAM":       false,
 		"disableCache": true,
 	}
 }
 
-func initMemorystoreValkeyClient(ctx context.Context, addr string, db int) (valkey.Client, error) {
-	//Pass in an access token getter fn for IAM auth
+func initMemorystoreValkeyClient(ctx context.Context, addr string) (valkey.Client, error) {
+	// Pass in an access token getter fn for IAM auth
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress:       []string{addr},
-		SelectDB:          db,
 		ForceSingleClient: true,
 		DisableCache:      true,
 	})
@@ -77,7 +73,7 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS, MEMORYSTORE_VALKEY_DATABASE)
+	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS)
 	if err != nil {
 		t.Fatalf("unable to create Valkey connection: %s", err)
 	}
