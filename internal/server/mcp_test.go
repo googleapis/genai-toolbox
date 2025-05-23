@@ -15,16 +15,22 @@
 package server
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 )
 
 const jsonrpcVersion = "2.0"
@@ -378,4 +384,79 @@ func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Respon
 		return nil, fmt.Errorf("unable to send request: %w", err)
 	}
 	return resp, nil
+}
+
+func TestStdioSession(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mockTools := []MockTool{tool1, tool2, tool3}
+	toolsMap, toolsets := setUpResources(t, mockTools)
+
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("error with Pipe: %s", err)
+	}
+
+	testLogger, err := log.NewStdLogger(pw, os.Stderr, "warn")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+
+	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
+	sseManager := &sseManager{
+		mu:          sync.RWMutex{},
+		sseSessions: make(map[string]*sseSession),
+	}
+
+	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: toolsMap, toolsets: toolsets}
+
+	in := bufio.NewReader(pr)
+	stdioSession := NewStdioSession(server, in, pw)
+
+	// test stdioSession.readLine()
+	input := "test readLine function\n"
+	_, err = fmt.Fprintf(pw, "%s", input)
+	if err != nil {
+		t.Fatalf("error writing into pipe w: %s", err)
+	}
+
+	line, err := stdioSession.readLine(ctx)
+	if err != nil {
+		t.Fatalf("error with stdioSession.readLine: %s", err)
+	}
+	if line != input {
+		t.Fatalf("unexpected line: got %s, want %s", line, input)
+	}
+
+	// test stdioSession.write()
+	write := "test write function"
+	err = stdioSession.write(ctx, write)
+	if err != nil {
+		t.Fatalf("error with stdioSession.write: %s", err)
+	}
+
+	read, err := in.ReadString('\n')
+	if err != nil {
+		t.Fatalf("error reading: %s", err)
+	}
+	want := fmt.Sprintf(`"%s"`, write) + "\n"
+	if read != want {
+		t.Fatalf("unexpected read: got %s, want %s", read, want)
+	}
 }
