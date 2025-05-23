@@ -143,10 +143,10 @@ func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant := tests.GetMysqlWants()
+	select1Want, failInvocationWant, createTableStatement := tests.GetMysqlWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
-	tests.RunMySqlExecuteSqlToolInvokeTest(t, select1Want)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
