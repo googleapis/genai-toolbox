@@ -121,13 +121,13 @@ To configure Toolbox, run the following steps:
     sources:
       cloudsql-mssql-source:
         kind: cloud-sql-mysql
-        project: ${CLOUD_SQL_PROJECT}
-        region: ${CLOUD_SQL_REGION}
-        instance: ${CLOUD_SQL_INSTANCE}
-        database: ${CLOUD_SQL_DB}
-        ipAddress: ${CLOUD_SQL_IP_ADDRESS}
-        user: ${CLOUD_SQL_USER}
-        password: ${CLOUD_SQL_PASS}
+        project: ${CLOUD_SQL_MSSQL_PROJECT}
+        region: ${CLOUD_SQL_MSSQL_REGION}
+        instance: ${CLOUD_SQL_MSSQL_INSTANCE}
+        database: ${CLOUD_SQL_MSSQL_DATABASE}
+        ipAddress: ${CLOUD_SQL_MSSQL_IP_ADDRESS}
+        user: ${CLOUD_SQL_MSSQL_USER}
+        password: ${CLOUD_SQL_MSSQL_PASSWORD}
     tools:
       execute_sql:
         kind: mssql-execute-sql
