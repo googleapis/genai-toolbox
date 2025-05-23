@@ -36,6 +36,20 @@ MCP is only compatible with Toolbox version 0.3.0 and above.
 
 1. [Set up](../getting-started/configure.md) your `tools.yaml` file.
 
+### Connecting via Standard Input/Output (stdio)
+Toolbox supports the
+[stdio](https://modelcontextprotocol.io/docs/concepts/transports#standard-input%2Foutput-stdio)
+transport protocol. Users that wish to use stdio will have to include the
+`--stdio` flag when running Toolbox.
+
+```bash
+./toolbox --stdio
+```
+
+When running with stdio, Toolbox will listen via stdio instead of acting as a
+remote HTTP server. Logs will be set to the `warn` level by default. `debug` and `info` logs are not
+supported with stdio.
+
 ### Connecting via HTTP
 Toolbox supports the HTTP transport protocol with and without SSE.
 
@@ -61,8 +75,28 @@ If you would like to connect to a specific toolset, connect via `http://127.0.0.
 
 ### Using the MCP Inspector with Toolbox
 
-Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testing and debugging Toolbox server.
+Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for
+testing and debugging Toolbox server.
 
+{{< tabpane text=true >}}
+{{% tab header="STDIO" lang="en" %}}
+1. Run Inspector with Toolbox as a subprocess:
+
+   ```bash
+   npx @modelcontextprotocol/inspector ./toolbox --stdio
+   ```
+
+1. For `Transport Type` dropdown menu, select `STDIO`.
+
+1. In `Command`, make sure that it's filled with `./toolbox` (The Toolbox binary that was
+   installed).
+
+1. In `Arguments`, make sure that it's filled with `--stdio`.
+
+1. Click the `Connect` button. It might take awhile to spin up Toolbox. Voila!
+   You should be able to inspect your toolbox tools!
+{{% /tab %}}
+{{% tab header="HTTP with SSE" lang="en" %}}
 1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
 
 1. In a separate terminal, run Inspector directly through `npx`:
@@ -78,12 +112,13 @@ Use MCP [Inspector](https://github.com/modelcontextprotocol/inspector) for testi
 
 1. Click the `Connect` button. Voila! You should be able to inspect your toolbox
    tools!
+{{% /tab %}} {{< /tabpane >}}
 
 ### Tested Clients
 
 | Client | SSE Works | MCP Config Docs |
 |--------|--------|--------|
-| Claude Desktop | ❗ | Claude Desktop only supports STDIO -- use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) to proxy. | 
+| Claude Desktop | ✅ | https://modelcontextprotocol.io/quickstart/user#1-download-claude-for-desktop | 
 | MCP Inspector | ✅ | https://github.com/modelcontextprotocol/inspector |
 | Cursor | ✅ | https://docs.cursor.com/context/model-context-protocol |
 | Windsurf | ✅ | https://docs.windsurf.com/windsurf/mcp | 
