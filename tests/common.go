@@ -150,6 +150,29 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
+// AddMssqlExecuteSqlConfig gets the tools config for `mssql-execute-sql`
+func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "mssql-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "mssql-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
 // GetHTTPToolsConfig returns a mock HTTP tool's config file
 func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
 	// Write config into a file and pass it to command
@@ -302,22 +325,25 @@ func GetNonSpannerInvokeParamWant() (string, string) {
 }
 
 // GetPostgresWants return the expected wants for postgres
-func GetPostgresWants() (string, string) {
+func GetPostgresWants() (string, string, string) {
 	select1Want := "[{\"?column?\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
-	return select1Want, failInvocationWant
+	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
+	return select1Want, failInvocationWant, createTableStatement
 }
 
 // GetMssqlWants return the expected wants for mssql
-func GetMssqlWants() (string, string) {
+func GetMssqlWants() (string, string, string) {
 	select1Want := "[{\"\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
-	return select1Want, failInvocationWant
+	createTableStatement := `"CREATE TABLE t (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(MAX))"`
+	return select1Want, failInvocationWant, createTableStatement
 }
 
 // GetMysqlWants return the expected wants for mysql
-func GetMysqlWants() (string, string) {
+func GetMysqlWants() (string, string, string) {
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
-	return select1Want, failInvocationWant
+	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
+	return select1Want, failInvocationWant, createTableStatement
 }

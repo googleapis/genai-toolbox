@@ -12,39 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery
+package mssqlexecutesql
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"strings"
 
-	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/iterator"
 )
 
-const ToolKind string = "bigquery-sql"
+const ToolKind string = "mssql-execute-sql"
 
 type compatibleSource interface {
-	BigQueryClient() *bigqueryapi.Client
+	MSSQLDB() *sql.DB
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
+var _ compatibleSource = &cloudsqlmssql.Source{}
+var _ compatibleSource = &mssql.Source{}
 
-var compatibleSources = [...]string{bigqueryds.SourceKind}
+var compatibleSources = [...]string{cloudsqlmssql.SourceKind, mssql.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	Statement    string           `yaml:"statement" validate:"required"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -67,21 +65,23 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
+	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	parameters := tools.Parameters{sqlParameter}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
+		InputSchema: parameters.McpManifest(),
 	}
 
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
 		Kind:         ToolKind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
+		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.BigQueryClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		Pool:         s.MSSQLDB(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
@@ -96,53 +96,54 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client      *bigqueryapi.Client
-	Statement   string
+	Pool        *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	namedArgs := make([]bigqueryapi.QueryParameter, 0, len(params))
-	paramsMap := params.AsReversedMap()
-	for _, v := range params.AsSlice() {
-		paramName := paramsMap[v]
-		if strings.Contains(t.Statement, "@"+paramName) {
-			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
-				Name:  paramName,
-				Value: v,
-			})
-		} else {
-			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
-				Value: v,
-			})
-		}
+	sliceParams := params.AsSlice()
+	sql, ok := sliceParams[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
-
-	query := t.Client.Query(t.Statement)
-	query.Parameters = namedArgs
-	query.Location = t.Client.Location
-
-	it, err := query.Read(ctx)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
+
+	cols, err := results.Columns()
+	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
+	// We proceed, and results.Err() will catch actual query execution errors.
+	// 'out' will remain nil if cols is empty or err is not nil here.
 
 	var out []any
-	for {
-		var row map[string]bigqueryapi.Value
-		err := it.Next(&row)
-		if err == iterator.Done {
-			break
+	if err == nil && len(cols) > 0 {
+		// create an array of values for each column, which can be re-used to scan each row
+		rawValues := make([]any, len(cols))
+		values := make([]any, len(cols))
+		for i := range rawValues {
+			values[i] = &rawValues[i]
 		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
+
+		for results.Next() {
+			scanErr := results.Scan(values...)
+			if scanErr != nil {
+				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
+			}
+			vMap := make(map[string]any)
+			for i, name := range cols {
+				vMap[name] = rawValues[i]
+			}
+			out = append(out, vMap)
 		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
-		}
-		out = append(out, vMap)
+	}
+
+	// Check for errors from iterating over rows or from the query execution itself.
+	// results.Close() is handled by defer.
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
 	}
 
 	return out, nil
