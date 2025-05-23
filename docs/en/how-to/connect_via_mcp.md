@@ -88,8 +88,7 @@ testing and debugging Toolbox server.
 
 1. For `Transport Type` dropdown menu, select `STDIO`.
 
-1. In `Command`, make sure that it's filled with `./toolbox` (The Toolbox binary that was
-   installed).
+1. In `Command`, make sure that it is set to :`./toolbox` (or the correct path to where the Toolbox binary is installed).
 
 1. In `Arguments`, make sure that it's filled with `--stdio`.
 
