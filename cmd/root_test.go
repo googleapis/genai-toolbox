@@ -890,7 +890,10 @@ func TestEnvVarReplacement(t *testing.T) {
 
 }
 func TestPrebuiltTools(t *testing.T) {
-	prebuiltTools, err := prebuiltconfigs.GetPrebuiltToolYAMLs()
+	alloydb_config, err := prebuiltconfigs.Get("alloydb")
+	cloudsqlpg_config, err := prebuiltconfigs.Get("cloudsqlpg")
+	postgresconfig, err := prebuiltconfigs.Get("postgres")
+	spanner_config, err := prebuiltconfigs.Get("spanner")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -905,7 +908,7 @@ func TestPrebuiltTools(t *testing.T) {
 	}{
 		{
 			name: "alloydb prebuilt tools",
-			in:   prebuiltTools["alloydb"],
+			in:   alloydb_config,
 			wantToolset: server.ToolsetConfigs{
 				"alloydb-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "alloydb-postgres-database-tools",
@@ -915,7 +918,7 @@ func TestPrebuiltTools(t *testing.T) {
 		},
 		{
 			name: "cloudsqlpg prebuilt tools",
-			in:   prebuiltTools["cloudsqlpg"],
+			in:   cloudsqlpg_config,
 			wantToolset: server.ToolsetConfigs{
 				"cloudsql-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "cloudsql-postgres-database-tools",
@@ -925,7 +928,7 @@ func TestPrebuiltTools(t *testing.T) {
 		},
 		{
 			name: "postgres prebuilt tools",
-			in:   prebuiltTools["postgres"],
+			in:   postgresconfig,
 			wantToolset: server.ToolsetConfigs{
 				"postgresql-database-tools": tools.ToolsetConfig{
 					Name:      "postgresql-database-tools",
@@ -935,7 +938,7 @@ func TestPrebuiltTools(t *testing.T) {
 		},
 		{
 			name: "spanner prebuilt tools",
-			in:   prebuiltTools["spanner"],
+			in:   spanner_config,
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",

@@ -16,9 +16,11 @@ package prebuiltconfigs
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestGetPrebuiltToolYAMLs(t *testing.T) {
+func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
 	expectedKeys := []string{
 		"alloydb",
@@ -27,18 +29,18 @@ func TestGetPrebuiltToolYAMLs(t *testing.T) {
 		"spanner",
 	}
 	t.Run(test_name, func(t *testing.T) {
-		configs, err := GetPrebuiltToolYAMLs()
+		configsMap, keys, err := loadPrebuiltToolYAMLs()
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
 		foundExpectedKeys := make(map[string]bool)
 
-		if len(expectedKeys) != len(configs) {
+		if len(expectedKeys) != len(configsMap) {
 			t.Fatalf("Failed to load all prebuilt tools.")
 		}
 
 		for _, expectedKey := range expectedKeys {
-			_, ok := configs[expectedKey]
+			_, ok := configsMap[expectedKey]
 			if !ok {
 				t.Fatalf("Prebuilt tools for '%s' was NOT FOUND in the loaded map.", expectedKey)
 			} else {
@@ -46,5 +48,39 @@ func TestGetPrebuiltToolYAMLs(t *testing.T) {
 			}
 		}
 
+		t.Log(expectedKeys)
+		t.Log(keys)
+
+		if diff := cmp.Diff(expectedKeys, keys); diff != "" {
+			t.Fatalf("incorrect sources parse: diff %v", diff)
+		}
+
 	})
+}
+
+func TestGetPrebuiltTool(t *testing.T) {
+	alloydb_config, _ := Get("alloydb")
+	cloudsqlpg_config, _ := Get("cloudsqlpg")
+	postgresconfig, _ := Get("postgres")
+	spanner_config, _ := Get("spanner")
+	if len(alloydb_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+	}
+	if len(cloudsqlpg_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud sql pg prebuilt tools yaml")
+	}
+	if len(postgresconfig) <= 0 {
+		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
+	}
+	if len(spanner_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
+	}
+
+}
+
+func TestFailGetPrebuiltTool(t *testing.T) {
+	_, err := Get("sql")
+	if err == nil {
+		t.Fatalf("unexpected an error but got nil.")
+	}
 }

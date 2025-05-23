@@ -17,6 +17,7 @@ package prebuiltconfigs
 import (
 	"embed"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -24,15 +25,41 @@ import (
 var (
 	//go:embed tools/*.yaml
 	prebuiltConfigsFS embed.FS
+
+	prebuiltToolYAMLs    map[string][]byte
+	prebuiltToolsSources []string
 )
 
-func GetPrebuiltToolYAMLs() (map[string][]byte, error) {
+func init() {
+	var err error
+	prebuiltToolYAMLs, prebuiltToolsSources, err = loadPrebuiltToolYAMLs()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unexpected Error: %v\n", err)
+	}
+}
 
-	prebuiltToolYAMLs := make(map[string][]byte)
+func Get(prebuiltSourceConfig string) ([]byte, error) {
+	content, ok := prebuiltToolYAMLs[prebuiltSourceConfig]
+	if !ok {
+		prebuiltHelpSuffix := "no prebuilt configurations found."
+		if len(prebuiltToolsSources) > 0 {
+			prebuiltHelpSuffix = fmt.Sprintf("available: %s", strings.Join(prebuiltToolsSources, ", "))
+		}
+		errMsg := fmt.Errorf("prebuilt source tool for '%s' not found. %s", prebuiltSourceConfig, prebuiltHelpSuffix)
+		return nil, errMsg
+	}
+	return content, nil
+
+}
+
+func loadPrebuiltToolYAMLs() (map[string][]byte, []string, error) {
+
+	toolYAMLs := make(map[string][]byte)
+	var sourceTypes []string
 	entries, err := prebuiltConfigsFS.ReadDir("tools")
 	if err != nil {
 		errMsg := fmt.Errorf("failed to read prebuilt tools %w", err)
-		return nil, errMsg
+		return nil, nil, errMsg
 	}
 
 	for _, entry := range entries {
@@ -42,17 +69,18 @@ func GetPrebuiltToolYAMLs() (map[string][]byte, error) {
 			content, err := prebuiltConfigsFS.ReadFile(filePathInFS)
 			if err != nil {
 				errMsg := fmt.Errorf("failed to read a prebuilt tool %w", err)
-				return nil, errMsg
+				return nil, nil, errMsg
 			}
 			sourceTypeKey := entry.Name()[:len(entry.Name())-len(".yaml")]
 
-			prebuiltToolYAMLs[sourceTypeKey] = content
+			sourceTypes = append(sourceTypes, sourceTypeKey)
+			toolYAMLs[sourceTypeKey] = content
 		}
 	}
-	if len(prebuiltToolYAMLs) == 0 {
+	if len(toolYAMLs) == 0 {
 		errMsg := fmt.Errorf("no prebuilt tool configurations were loaded.%w", err)
-		return nil, errMsg
+		return nil, nil, errMsg
 	}
 
-	return prebuiltToolYAMLs, nil
+	return toolYAMLs, sourceTypes, nil
 }
