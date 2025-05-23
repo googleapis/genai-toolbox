@@ -18,6 +18,11 @@ database. It's compatible with any of the following sources:
 The specified SQL statement is executed as a [prepared statement][mysql-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
 
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
 [mysql-prepare]: https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 
 ## Example
