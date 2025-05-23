@@ -132,7 +132,7 @@
 
 ## Developing Documentation
 
-1. [Install Hugo](https://gohugo.io/installation/macos/)
+1. [Install Hugo](https://gohugo.io/installation/macos/) version 0.145.0. This version is currently required due to breaking changes.
 1. Move into the `.hugo` directory
 
     ```bash

@@ -95,25 +95,25 @@ To configure Toolbox, run the following steps:
 
     ```bash
     # The ID of your Google Cloud Project where the AlloyDB cluster/instance is located.
-    export ALLOYDB_PROJECT="your-gcp-project-id"
+    export ALLOYDB_POSTGRES_PROJECT="your-gcp-project-id"
 
     # The region where your AlloyDB cluster is located (e.g., us-central1).
-    export ALLOYDB_REGION="your-cluster-region"
+    export ALLOYDB_POSTGRES_REGION="your-cluster-region"
 
     # The name of your AlloyDB cluster.
-    export ALLOYDB_CLUSTER="your-cluster-name"
+    export ALLOYDB_POSTGRES_CLUSTER="your-cluster-name"
 
     # The name of your AlloyDB instance.
-    export ALLOYDB_INSTANCE="your-instance-name"
+    export ALLOYDB_POSTGRES_INSTANCE="your-instance-name"
 
     # The name of the database you want to connect to within the instance.
-    export ALLOYDB_DB="your-database-name"
+    export ALLOYDB_POSTGRES_DATABASE="your-database-name"
 
     # The username for connecting to the database.
-    export ALLOYDB_USER="your-database-user"
+    export ALLOYDB_POSTGRES_USER="your-database-user"
 
     # The password for the specified database user.
-    export ALLOYDB_PASS="your-database-password"
+    export ALLOYDB_POSTGRES_PASSWORD="your-database-password"
     ```
 
 2. Create a `tools.yaml` file.
@@ -124,13 +124,13 @@ To configure Toolbox, run the following steps:
     sources:
       alloydb-pg-source:
         kind: alloydb-postgres
-        project: ${ALLOYDB_PROJECT}
-        region: ${ALLOYDB_REGION}
-        cluster: ${ALLOYDB_CLUSTER}
-        instance: ${ALLOYDB_INSTANCE}
-        database: ${ALLOYDB_DB}
-        user: ${ALLOYDB_USER}
-        password: ${ALLOYDB_PASS}
+        project: ${ALLOYDB_POSTGRES_PROJECT}
+        region: ${ALLOYDB_POSTGRES_REGION}
+        cluster: ${ALLOYDB_POSTGRES_CLUSTER}
+        instance: ${ALLOYDB_POSTGRES_INSTANCE}
+        database: ${ALLOYDB_POSTGRES_DATABASE}
+        user: ${ALLOYDB_POSTGRES_USER}
+        password: ${ALLOYDB_POSTGRES_PASSWORD}
 
     tools:
       execute_sql:
