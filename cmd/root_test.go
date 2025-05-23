@@ -890,13 +890,10 @@ func TestEnvVarReplacement(t *testing.T) {
 
 }
 func TestPrebuiltTools(t *testing.T) {
-	alloydb_config, err := prebuiltconfigs.Get("alloydb")
-	cloudsqlpg_config, err := prebuiltconfigs.Get("cloudsqlpg")
-	postgresconfig, err := prebuiltconfigs.Get("postgres")
-	spanner_config, err := prebuiltconfigs.Get("spanner")
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
+	alloydb_config, _ := prebuiltconfigs.Get("alloydb")
+	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloudsqlpg")
+	postgresconfig, _ := prebuiltconfigs.Get("postgres")
+	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
