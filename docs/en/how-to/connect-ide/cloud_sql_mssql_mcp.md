@@ -106,6 +106,9 @@ To configure Toolbox, run the following steps:
     # The name of the database you want to connect to within the instance.
     export CLOUD_SQL_MSSQL_DATABASE="your-database-name"
 
+    # The ip address of the Cloud SQL instance.
+    export CLOUD_SQL_MSSQL_IP_ADDRESS="your-ip-address"
+    
     # The username for connecting to the database.
     export CLOUD_SQL_MSSQL_USER="your-database-user"
 
