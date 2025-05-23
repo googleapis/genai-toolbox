@@ -80,7 +80,7 @@ func initMemorystoreValkeyClient(ctx context.Context, r Config) (valkey.Client, 
 		log.Fatalf("error creating Valkey client: %v", err)
 	}
 
-	// Ping the server to check connectivity\
+	// Ping the server to check connectivity
 	pingCmd := client.B().Ping().Build()
 	_, err = client.Do(ctx, pingCmd).ToString()
 	if err != nil {
