@@ -117,10 +117,10 @@ tools:
 from toolbox_core import ToolboxClient
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
+async with ToolboxClient("http://127.0.0.1:5000") as client:
 
-# these tools can be passed to your application! 
-tools = await client.load_toolset("toolset_name")
+    # these tools can be passed to your application! 
+    tools = await client.load_toolset("toolset_name")
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
@@ -137,10 +137,10 @@ tools:
 from toolbox_langchain import ToolboxClient
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
+async with ToolboxClient("http://127.0.0.1:5000") as client:
 
-# these tools can be passed to your application! 
-tools = client.load_toolset()
+    # these tools can be passed to your application! 
+    tools = client.load_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
@@ -157,10 +157,10 @@ tools:
 from toolbox_llamaindex import ToolboxClient
 
 # update the url to point to your server
-client = ToolboxClient("http://127.0.0.1:5000")
+async with ToolboxClient("http://127.0.0.1:5000") as client:
 
-# these tools can be passed to your application! 
-tools = client.load_toolset()
+  # these tools can be passed to your application! 
+  tools = client.load_toolset()
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
