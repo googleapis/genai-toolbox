@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -187,7 +188,7 @@ func TestToolFileFlag(t *testing.T) {
 		{
 			desc: "default value",
 			args: []string{},
-			want: "tools.yaml",
+			want: "",
 		},
 		{
 			desc: "foo file",
@@ -203,6 +204,36 @@ func TestToolFileFlag(t *testing.T) {
 			desc: "deprecated flag",
 			args: []string{"--tools_file", "foo.yaml"},
 			want: "foo.yaml",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			c, _, err := invokeCommand(tc.args)
+			if err != nil {
+				t.Fatalf("unexpected error invoking command: %s", err)
+			}
+			if c.tools_file != tc.want {
+				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			}
+		})
+	}
+}
+
+func TestPrebuiltFlag(t *testing.T) {
+	tcs := []struct {
+		desc string
+		args []string
+		want string
+	}{
+		{
+			desc: "default value",
+			args: []string{},
+			want: "",
+		},
+		{
+			desc: "custom pre built flag",
+			args: []string{"--tools-file", "alloydb"},
+			want: "alloydb",
 		},
 	}
 	for _, tc := range tcs {
@@ -857,4 +888,73 @@ func TestEnvVarReplacement(t *testing.T) {
 		})
 	}
 
+}
+
+func TestPrebuiltTools(t *testing.T) {
+	alloydb_config, _ := prebuiltconfigs.Get("alloydb")
+	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloudsqlpg")
+	postgresconfig, _ := prebuiltconfigs.Get("postgres")
+	spanner_config, _ := prebuiltconfigs.Get("spanner")
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		name        string
+		in          []byte
+		wantToolset server.ToolsetConfigs
+	}{
+		{
+			name: "alloydb prebuilt tools",
+			in:   alloydb_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb-postgres-database-tools": tools.ToolsetConfig{
+					Name:      "alloydb-postgres-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "cloudsqlpg prebuilt tools",
+			in:   cloudsqlpg_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloudsql-postgres-database-tools": tools.ToolsetConfig{
+					Name:      "cloudsql-postgres-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "postgres prebuilt tools",
+			in:   postgresconfig,
+			wantToolset: server.ToolsetConfigs{
+				"postgresql-database-tools": tools.ToolsetConfig{
+					Name:      "postgresql-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "spanner prebuilt tools",
+			in:   spanner_config,
+			wantToolset: server.ToolsetConfigs{
+				"spanner-database-tools": tools.ToolsetConfig{
+					Name:      "spanner-database-tools",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			toolsFile, err := parseToolsFile(ctx, tc.in)
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+		})
+	}
 }
