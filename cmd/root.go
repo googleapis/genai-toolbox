@@ -205,7 +205,7 @@ func run(cmd *Command) error {
 		}
 		cmd.logger = logger
 	default:
-		return fmt.Errorf("logging format invalid")
+		return fmt.Errorf("logging format invalid.")
 	}
 
 	ctx = util.WithLogger(ctx, cmd.logger)
@@ -227,8 +227,6 @@ func run(cmd *Command) error {
 
 	var buf []byte
 
-	fmt.Println(cmd.prebuiltConfig, cmd.tools_file)
-
 	if cmd.prebuiltConfig != "" {
 		// Make sure --prebuilt and --tools-file flags are mutually exclusive
 		if cmd.tools_file != "" {
@@ -236,6 +234,7 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+		// Use prebuilt tools
 		buf, err = prebuiltconfigs.Get(cmd.prebuiltConfig)
 		if err != nil {
 			cmd.logger.ErrorContext(ctx, err.Error())

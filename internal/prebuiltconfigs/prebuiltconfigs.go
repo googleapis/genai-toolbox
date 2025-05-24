@@ -17,7 +17,6 @@ package prebuiltconfigs
 import (
 	"embed"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -26,7 +25,9 @@ var (
 	//go:embed tools/*.yaml
 	prebuiltConfigsFS embed.FS
 
-	prebuiltToolYAMLs    map[string][]byte
+	// Map of sources to their prebuilt tools
+	prebuiltToolYAMLs map[string][]byte
+	// List of sources with prebuilt tools
 	prebuiltToolsSources []string
 )
 
@@ -34,10 +35,11 @@ func init() {
 	var err error
 	prebuiltToolYAMLs, prebuiltToolsSources, err = loadPrebuiltToolYAMLs()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unexpected Error: %v\n", err)
+		panic(fmt.Sprintf("Unexpected Error: %v\n", err))
 	}
 }
 
+// Get prebuilt tools for a source
 func Get(prebuiltSourceConfig string) ([]byte, error) {
 	content, ok := prebuiltToolYAMLs[prebuiltSourceConfig]
 	if !ok {
@@ -49,11 +51,10 @@ func Get(prebuiltSourceConfig string) ([]byte, error) {
 		return nil, errMsg
 	}
 	return content, nil
-
 }
 
+// Load all available pre built tools
 func loadPrebuiltToolYAMLs() (map[string][]byte, []string, error) {
-
 	toolYAMLs := make(map[string][]byte)
 	var sourceTypes []string
 	entries, err := prebuiltConfigsFS.ReadDir("tools")
