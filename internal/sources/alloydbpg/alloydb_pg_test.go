@@ -159,7 +159,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err: "unable to parse \"alloydb-pg\" config: ipType invalid: must be one of \"public\", or \"private\"",
+			err: "unable to parse \"alloydb-postgres\" config: ipType invalid: must be one of \"public\", or \"private\"",
 		},
 		{
 			desc: "extra field",
@@ -176,7 +176,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse \"alloydb-pg\" config: [3:1] unknown field \"foo\"\n   1 | cluster: my-cluster\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | instance: my-instance\n   5 | kind: alloydb-pg\n   6 | password: my_pass\n   7 | ",
+			err: "unable to parse \"alloydb-postgres\" config: [3:1] unknown field \"foo\"\n   1 | cluster: my-cluster\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | instance: my-instance\n   5 | kind: alloydb-postgres\n   6 | password: my_pass\n   7 | ",
 		},
 		{
 			desc: "missing required field",
@@ -191,7 +191,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err: "unable to parse \"alloydb-pg\" config: Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "unable to parse \"alloydb-postgres\" config: Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

@@ -28,7 +28,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const Kind string = "alloydb-pg"
+const Kind string = "alloydb-postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}

@@ -27,7 +27,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const Kind string = "cloud-sql-pg"
+const Kind string = "cloud-sql-postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
