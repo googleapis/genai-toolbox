@@ -50,7 +50,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &spannerdb.Source{}
 
-var compatibleSources = [...]string{spannerdb.SourceKind}
+var compatibleSources = [...]string{spannerdb.Kind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`

@@ -45,7 +45,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-dgraph-instance": dgraph.Config{
 					Name:      "my-dgraph-instance",
-					Kind:      dgraph.SourceKind,
+					Kind:      dgraph.Kind,
 					DgraphUrl: "https://localhost:8080",
 					ApiKey:    "abc123",
 					Password:  "pass@123",
@@ -65,7 +65,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-dgraph-instance": dgraph.Config{
 					Name:      "my-dgraph-instance",
-					Kind:      dgraph.SourceKind,
+					Kind:      dgraph.Kind,
 					DgraphUrl: "https://localhost:8080",
 				},
 			},
@@ -106,7 +106,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					dgraphUrl: https://localhost:8080
 					foo: bar
 			`,
-			err: "unable to parse as \"dgraph\": [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | kind: dgraph",
+			err: "unable to parse \"dgraph\" config: [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | kind: dgraph",
 		},
 		{
 			desc: "missing required field",
@@ -115,7 +115,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-dgraph-instance:
 					kind: dgraph
 			`,
-			err: "unable to parse as \"dgraph\": Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
+			err: "unable to parse \"dgraph\" config: Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

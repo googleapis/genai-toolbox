@@ -19,18 +19,32 @@ import (
 	"fmt"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/option"
-
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 )
 
-const SourceKind string = "bigquery"
+const Kind string = "bigquery"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	// BigQuery configs
@@ -42,7 +56,7 @@ type Config struct {
 
 func (r Config) SourceConfigKind() string {
 	// Returns BigQuery source kind
-	return SourceKind
+	return Kind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -53,7 +67,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 	s := &Source{
 		Name:     r.Name,
-		Kind:     SourceKind,
+		Kind:     Kind,
 		Client:   client,
 		Location: r.Location,
 	}
@@ -73,7 +87,7 @@ type Source struct {
 
 func (s *Source) SourceKind() string {
 	// Returns BigQuery Google SQL source kind
-	return SourceKind
+	return Kind
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
@@ -87,7 +101,7 @@ func initBigQueryConnection(
 	project string,
 	location string,
 ) (*bigqueryapi.Client, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)

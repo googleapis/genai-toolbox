@@ -17,18 +17,34 @@ package couchbase
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"os"
 
 	"github.com/couchbase/gocb/v2"
 	tlsutil "github.com/couchbase/tools-common/http/tls"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "couchbase"
+const Kind string = "couchbase"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name                 string `yaml:"name" validate:"required"`
@@ -49,7 +65,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -66,7 +82,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	scope := cluster.Bucket(r.Bucket).Scope(r.Scope)
 	s := &Source{
 		Name:                 r.Name,
-		Kind:                 SourceKind,
+		Kind:                 Kind,
 		QueryScanConsistency: r.QueryScanConsistency,
 		Scope:                scope,
 	}
@@ -83,7 +99,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (s *Source) CouchbaseScope() *gocb.Scope {

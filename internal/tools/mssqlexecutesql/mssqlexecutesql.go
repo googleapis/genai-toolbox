@@ -50,7 +50,7 @@ type compatibleSource interface {
 var _ compatibleSource = &cloudsqlmssql.Source{}
 var _ compatibleSource = &mssql.Source{}
 
-var compatibleSources = [...]string{cloudsqlmssql.SourceKind, mssql.SourceKind}
+var compatibleSources = [...]string{cloudsqlmssql.Kind, mssql.Kind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`

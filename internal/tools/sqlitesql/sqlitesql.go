@@ -48,7 +48,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &sqlite.Source{}
 
-var compatibleSources = [...]string{sqlite.SourceKind}
+var compatibleSources = [...]string{sqlite.Kind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

@@ -19,15 +19,30 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"go.opentelemetry.io/otel/trace"
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
 )
 
-const SourceKind string = "sqlite"
+const Kind string = "sqlite"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
@@ -36,7 +51,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -52,7 +67,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: SourceKind,
+		Kind: Kind,
 		Db:   db,
 	}
 	return s, nil
@@ -67,7 +82,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (s *Source) SQLiteDB() *sql.DB {
@@ -76,7 +91,7 @@ func (s *Source) SQLiteDB() *sql.DB {
 
 func initSQLiteConnection(ctx context.Context, tracer trace.Tracer, name, dbPath string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
 	defer span.End()
 
 	// Open database connection

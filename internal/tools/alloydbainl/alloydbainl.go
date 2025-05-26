@@ -49,7 +49,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &alloydbpg.Source{}
 
-var compatibleSources = [...]string{alloydbpg.SourceKind}
+var compatibleSources = [...]string{alloydbpg.Kind}
 
 type Config struct {
 	Name               string           `yaml:"name" validate:"required"`

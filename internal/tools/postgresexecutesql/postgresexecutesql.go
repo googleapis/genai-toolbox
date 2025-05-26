@@ -52,7 +52,7 @@ var _ compatibleSource = &alloydbpg.Source{}
 var _ compatibleSource = &cloudsqlpg.Source{}
 var _ compatibleSource = &postgres.Source{}
 
-var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
+var compatibleSources = [...]string{alloydbpg.Kind, cloudsqlpg.Kind, postgres.Kind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
