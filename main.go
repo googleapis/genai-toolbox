@@ -16,24 +16,6 @@ package main
 
 import (
 	"github.com/googleapis/genai-toolbox/cmd"
-
-	// Import tool packages for side effect of registration
-	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/mssqlexecutesql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 )
 
 func main() {
