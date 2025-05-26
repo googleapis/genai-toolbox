@@ -56,7 +56,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": neo4j.Config{
 					Name:         "example_tool",
-					Kind:         neo4j.ToolKind,
+					Kind:         "neo4j-cypher",
 					Source:       "my-neo4j-instance",
 					Description:  "some tool description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

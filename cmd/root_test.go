@@ -358,7 +358,7 @@ func TestParseToolFile(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:        "example_tool",
-						Kind:        postgressql.ToolKind,
+						Kind:        "postgres-sql",
 						Source:      "my-pg-instance",
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
@@ -489,7 +489,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         postgressql.ToolKind,
+						Kind:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -588,7 +588,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         postgressql.ToolKind,
+						Kind:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -689,7 +689,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         postgressql.ToolKind,
+						Kind:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -842,7 +842,7 @@ func TestEnvVarReplacement(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
 						Name:         "example_tool",
-						Kind:         http.ToolKind,
+						Kind:         "http",
 						Source:       "my-instance",
 						Method:       "GET",
 						Path:         "search?name=alice&pet=cat",
