@@ -38,7 +38,7 @@ func init() {
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
 	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
-		return nil, fmt.Errorf("unable to parse tool %q as kind %q: %w", name, kind, err)
+		return nil, err
 	}
 	return actual, nil
 }

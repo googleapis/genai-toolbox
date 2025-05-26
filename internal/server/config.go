@@ -38,9 +38,6 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	sqlitesrc "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-
-	// Individual tool packages (alloydbainl, bigquery, bigtable, etc.) are no longer directly needed here
-	// as their registration is handled within their own packages and accessed via tools.DecodeToolConfig.
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -336,9 +333,8 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
 		}
 
-		toolCfg, err := tools.DecodeToolConfig(ctx, kindStr, name, yamlDecoder)
+		toolCfg, err := tools.DecodeConfig(ctx, kindStr, name, yamlDecoder)
 		if err != nil {
-			// The error from DecodeToolConfig will already include kind and name context if it's from the factory or registry.
 			return err
 		}
 		(*c)[name] = toolCfg

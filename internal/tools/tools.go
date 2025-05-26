@@ -44,14 +44,18 @@ func Register(kind string, factory ToolConfigFactory) bool {
 	return true
 }
 
-// DecodeToolConfig looks up the registered factory for the given kind and uses it
+// DecodeConfig looks up the registered factory for the given kind and uses it
 // to decode the tool configuration.
-func DecodeToolConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
+func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
 	factory, found := toolRegistry[kind]
 	if !found {
 		return nil, fmt.Errorf("unknown tool kind: %q", kind)
 	}
-	return factory(ctx, name, decoder)
+	toolConfig, err := factory(ctx, name, decoder)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse tool %q as kind %q: %w", name, kind, err)
+	}
+	return toolConfig, nil
 }
 
 type ToolConfig interface {
