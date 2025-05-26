@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/bigtable"
-	yaml "github.com/goccy/go-yaml" // Added for decoding
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigtabledb "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/tools"

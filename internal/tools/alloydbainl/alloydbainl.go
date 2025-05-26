@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	yaml "github.com/goccy/go-yaml" // Added for decoding
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/genai-toolbox/internal/tools"
