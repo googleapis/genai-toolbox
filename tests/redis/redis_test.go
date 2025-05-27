@@ -37,6 +37,8 @@ func getRedisVars(t *testing.T) map[string]any {
 	switch "" {
 	case REDIS_ADDRESS:
 		t.Fatal("'REDIS_ADDRESS' not set")
+	case REDIS_PASS:
+		t.Fatal("'REDIS_PASS' not set")
 	}
 	return map[string]any{
 		"kind":     REDIS_SOURCE_KIND,
