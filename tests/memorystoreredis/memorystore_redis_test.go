@@ -27,11 +27,10 @@ import (
 )
 
 var (
-	REDIS_SOURCE_KIND     = "memorystore-redis"
-	REDIS_TOOL_KIND       = "redis"
-	REDIS_ADDRESS         = os.Getenv("MEMORYSTORE_REDIS_ADDRESS")
-	REDIS_PASS            = os.Getenv("MEMORYSTORE_REDIS_PASS")
-	SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
+	REDIS_SOURCE_KIND = "memorystore-redis"
+	REDIS_TOOL_KIND   = "redis"
+	REDIS_ADDRESS     = os.Getenv("MEMORYSTORE_REDIS_ADDRESS")
+	REDIS_PASS        = os.Getenv("MEMORYSTORE_REDIS_PASS")
 )
 
 func getRedisVars(t *testing.T) map[string]any {
@@ -40,10 +39,9 @@ func getRedisVars(t *testing.T) map[string]any {
 		t.Fatal("'REDIS_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":           REDIS_SOURCE_KIND,
-		"address":        REDIS_ADDRESS,
-		"password":       REDIS_PASS,
-		"clusterEnabled": false,
+		"kind":     REDIS_SOURCE_KIND,
+		"address":  REDIS_ADDRESS,
+		"password": REDIS_PASS,
 	}
 }
 
@@ -111,7 +109,7 @@ func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(
 		{"HSET", keys[0], "name", "Alice", "id", "1"},
 		{"HSET", keys[1], "name", "Jane", "id", "2"},
 		{"HSET", keys[2], "name", "Sid", "id", "3"},
-		{"HSET", SERVICE_ACCOUNT_EMAIL, "name", `{"name":"Alice"}`},
+		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", `{"name":"Alice"}`},
 	}
 	for _, c := range commands {
 		resp := client.Do(ctx, c...)

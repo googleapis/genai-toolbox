@@ -38,14 +38,14 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 				my-redis-instance:
 					kind: memorystore-redis
 					address: 127.0.0.1
-					clusterEnabled: true
 			`,
 			want: server.SourceConfigs{
 				"my-redis-instance": memorystoreredis.Config{
 					Name:           "my-redis-instance",
 					Kind:           memorystoreredis.SourceKind,
 					Address:        "127.0.0.1",
-					ClusterEnabled: true,
+					ClusterEnabled: false,
+					UseIAM:         false,
 				},
 			},
 		},
@@ -58,8 +58,8 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					address: 127.0.0.1
 					password: my-pass
 					database: 1
-					useIAM: false
-					clusterEnabled: false
+					useIAM: true
+					clusterEnabled: true
 			`,
 			want: server.SourceConfigs{
 				"my-redis-instance": memorystoreredis.Config{
@@ -68,8 +68,8 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					Address:        "127.0.0.1",
 					Password:       "my-pass",
 					Database:       1,
-					ClusterEnabled: false,
-					UseIAM:         false,
+					ClusterEnabled: true,
+					UseIAM:         true,
 				},
 			},
 		},
