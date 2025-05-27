@@ -29,8 +29,8 @@ import (
 var (
 	REDIS_SOURCE_KIND = "redis"
 	REDIS_TOOL_KIND   = "redis"
-	REDIS_ADDRESS     = os.Getenv("MEMORYSTORE_REDIS_ADDRESS")
-	REDIS_PASS        = os.Getenv("MEMORYSTORE_REDIS_PASS")
+	REDIS_ADDRESS     = os.Getenv("REDIS_ADDRESS")
+	REDIS_PASS        = os.Getenv("REDIS_PASS")
 )
 
 func getRedisVars(t *testing.T) map[string]any {
