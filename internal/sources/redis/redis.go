@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package memorystoreredis
+package redis
 
 import (
 	"context"
@@ -23,19 +23,20 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "memorystore-redis"
+const SourceKind string = "redis"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 type Config struct {
-	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
-	Address        string `yaml:"address" validate:"required"`
-	ClusterEnabled bool   `yaml:"clusterEnabled"`
-	Password       string `yaml:"password"`
-	Database       int    `yaml:"database"`
-	UseIAM         bool   `yaml:"useIAM"`
+	Name           string   `yaml:"name" validate:"required"`
+	Kind           string   `yaml:"kind" validate:"required"`
+	Address        []string `yaml:"address" validate:"required"`
+	Username       string   `yaml:"username"`
+	Password       string   `yaml:"password"`
+	Database       int      `yaml:"database"`
+	UseGCPIAM      bool     `yaml:"useGCPIAM"`
+	ClusterEnabled bool     `yaml:"clusterEnabled"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -51,7 +52,7 @@ var _ RedisClient = (*redis.Client)(nil)
 var _ RedisClient = (*redis.ClusterClient)(nil)
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	client, err := initMemorystoreRedisClient(ctx, r)
+	client, err := initRedisClient(ctx, r)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing Redis client: %s", err)
 	}
@@ -63,9 +64,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	return s, nil
 }
 
-func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, error) {
+func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 	var authFn func(ctx context.Context) (username string, password string, err error)
-	if r.UseIAM {
+	if r.UseGCPIAM {
 		// Pass in an access token getter fn for IAM auth
 		authFn = func(ctx context.Context) (username string, password string, err error) {
 			token, err := sources.GetIAMAccessToken(ctx)
@@ -81,7 +82,7 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 	if r.ClusterEnabled {
 		// Create a new Redis Cluster client
 		clusterClient := redis.NewClusterClient(&redis.ClusterOptions{
-			Addrs: []string{r.Address},
+			Addrs: r.Address,
 			// PoolSize applies per cluster node and not for the whole cluster.
 			PoolSize:                   10,
 			ConnMaxIdleTime:            60 * time.Second,
@@ -101,7 +102,7 @@ func initMemorystoreRedisClient(ctx context.Context, r Config) (RedisClient, err
 
 	// Create a new Redis client
 	standaloneClient := redis.NewClient(&redis.Options{
-		Addr:                       r.Address,
+		Addr:                       r.Address[0],
 		PoolSize:                   10,
 		ConnMaxIdleTime:            60 * time.Second,
 		MinIdleConns:               1,
