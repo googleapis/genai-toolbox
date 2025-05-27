@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
+	redissrc "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/redis/go-redis/v9"
 )
@@ -26,13 +26,13 @@ import (
 const ToolKind string = "redis"
 
 type compatibleSource interface {
-	RedisClient() memorystoreredis.RedisClient
+	RedisClient() redissrc.RedisClient
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &memorystoreredis.Source{}
+var _ compatibleSource = &redissrc.Source{}
 
-var compatibleSources = [...]string{memorystoreredis.SourceKind}
+var compatibleSources = [...]string{redissrc.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`
@@ -93,7 +93,7 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client      memorystoreredis.RedisClient
+	Client      redissrc.RedisClient
 	Commands    [][]string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest

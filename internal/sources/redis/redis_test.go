@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package memorystoreredis_test
+package redis_test
 
 import (
 	"strings"
@@ -21,11 +21,11 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/memorystoreredis"
+	"github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlMemorystoreRedis(t *testing.T) {
+func TestParseFromYamlRedis(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -36,16 +36,16 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: memorystore-redis
+					kind: redis
 					address: 127.0.0.1
 			`,
 			want: server.SourceConfigs{
-				"my-redis-instance": memorystoreredis.Config{
+				"my-redis-instance": redis.Config{
 					Name:           "my-redis-instance",
-					Kind:           memorystoreredis.SourceKind,
-					Address:        "127.0.0.1",
+					Kind:           redis.SourceKind,
+					Address:        []string{"127.0.0.1"},
 					ClusterEnabled: false,
-					UseIAM:         false,
+					UseGCPIAM:      false,
 				},
 			},
 		},
@@ -54,7 +54,7 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: memorystore-redis
+					kind: redis
 					address: 127.0.0.1
 					password: my-pass
 					database: 1
@@ -62,14 +62,14 @@ func TestParseFromYamlMemorystoreRedis(t *testing.T) {
 					clusterEnabled: true
 			`,
 			want: server.SourceConfigs{
-				"my-redis-instance": memorystoreredis.Config{
+				"my-redis-instance": redis.Config{
 					Name:           "my-redis-instance",
-					Kind:           memorystoreredis.SourceKind,
-					Address:        "127.0.0.1",
+					Kind:           redis.SourceKind,
+					Address:        []string{"127.0.0.1"},
 					Password:       "my-pass",
 					Database:       1,
 					ClusterEnabled: true,
-					UseIAM:         true,
+					UseGCPIAM:      true,
 				},
 			},
 		},
@@ -103,7 +103,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: memorystore-redis
+					kind: redis
 					project: my-project
 					address: 127.0.0.1
 					password: my-pass
@@ -116,22 +116,22 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: memorystore-redis
+					kind: redis
 					project: my-project
 					address: 127.0.0.1
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"memorystore-redis\": [5:1] unknown field \"project\"",
+			err: "unable to parse as \"redis\": [5:1] unknown field \"project\"",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-redis-instance:
-					kind: memorystore-redis
+					kind: redis
 			`,
-			err: "unable to parse as \"memorystore-redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "unable to parse as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

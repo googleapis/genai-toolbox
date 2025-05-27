@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package memorystoreredis
+package redis
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	REDIS_SOURCE_KIND = "memorystore-redis"
+	REDIS_SOURCE_KIND = "redis"
 	REDIS_TOOL_KIND   = "redis"
 	REDIS_ADDRESS     = os.Getenv("MEMORYSTORE_REDIS_ADDRESS")
 	REDIS_PASS        = os.Getenv("MEMORYSTORE_REDIS_PASS")
@@ -45,7 +45,7 @@ func getRedisVars(t *testing.T) map[string]any {
 	}
 }
 
-func initMemorystoreRedisClient(ctx context.Context, address, pass string) (*redis.Client, error) {
+func initRedisClient(ctx context.Context, address, pass string) (*redis.Client, error) {
 	// Create a new Redis client
 	standaloneClient := redis.NewClient(&redis.Options{
 		Addr:            address,
@@ -61,14 +61,14 @@ func initMemorystoreRedisClient(ctx context.Context, address, pass string) (*red
 	return standaloneClient, nil
 }
 
-func TestMemorystoreRedisToolEndpoints(t *testing.T) {
+func TestRedisToolEndpoints(t *testing.T) {
 	sourceConfig := getRedisVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	client, err := initMemorystoreRedisClient(ctx, REDIS_ADDRESS, REDIS_PASS)
+	client, err := initRedisClient(ctx, REDIS_ADDRESS, REDIS_PASS)
 	if err != nil {
 		t.Fatalf("unable to create Redis connection: %s", err)
 	}
