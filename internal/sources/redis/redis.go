@@ -88,6 +88,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 			ConnMaxIdleTime:            60 * time.Second,
 			MinIdleConns:               1,
 			CredentialsProviderContext: authFn,
+			Username:                   r.Username,
 			Password:                   r.Password,
 		})
 		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
@@ -108,6 +109,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		MinIdleConns:               1,
 		DB:                         r.Database,
 		CredentialsProviderContext: authFn,
+		Username:                   r.Username,
 		Password:                   r.Password,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
