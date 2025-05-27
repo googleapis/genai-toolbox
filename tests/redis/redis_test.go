@@ -40,7 +40,7 @@ func getRedisVars(t *testing.T) map[string]any {
 	}
 	return map[string]any{
 		"kind":     REDIS_SOURCE_KIND,
-		"address":  REDIS_ADDRESS,
+		"address":  []string{REDIS_ADDRESS},
 		"password": REDIS_PASS,
 	}
 }
