@@ -21,6 +21,11 @@ For the `googlesql` dialect, the specified SQL statement is executed as a [data
 manipulation language (DML)][gsql-dml] statements, and specified parameters will
 inserted according to their name: e.g. `@name`.
 
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
 [gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
 
 ### PostgreSQL
@@ -29,6 +34,11 @@ For the `postgresql` dialect, the specified SQL statement is executed as a [prep
 statement][pg-prepare], and specified parameters will inserted according to
 their position: e.g. `$1` will be the first parameter specified, `$@` will be
 the second parameter, and so on.
+
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
 
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 

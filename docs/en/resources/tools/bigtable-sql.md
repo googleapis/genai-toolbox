@@ -21,6 +21,11 @@ dialect, the specified SQL statement is executed as a [data manipulation
 language (DML)][bigtable-googlesql] statements, and specified parameters will
 inserted according to their name: e.g. `@name`.
 
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
 [bigtable-googlesql]: https://cloud.google.com/bigtable/docs/googlesql-overview
 
 ## Example
