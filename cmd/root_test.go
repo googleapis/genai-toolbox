@@ -935,8 +935,8 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "postgres prebuilt tools",
 			in:   postgresconfig,
 			wantToolset: server.ToolsetConfigs{
-				"postgresql-database-tools": tools.ToolsetConfig{
-					Name:      "postgresql-database-tools",
+				"postgres-database-tools": tools.ToolsetConfig{
+					Name:      "postgres-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},

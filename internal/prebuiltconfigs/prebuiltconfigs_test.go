@@ -24,13 +24,13 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
 	expectedKeys := []string{
 		"alloydb-postgres",
-		"bigquery"
+		"bigquery",
 		"cloud-sql-postgres",
 		"cloud-sql-mysql",
 		"cloud-sql-mssql",
 		"postgres",
 		"spanner",
-		"spanner-postgres"
+		"spanner-postgres",
 	}
 	t.Run(test_name, func(t *testing.T) {
 		configsMap, keys, err := loadPrebuiltToolYAMLs()
