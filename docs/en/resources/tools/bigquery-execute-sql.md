@@ -13,7 +13,7 @@ It's compatible with the following sources:
 
 - [bigquery](../sources/bigquery.md)
 
-`bigquery-execute-sql` takes one input parameter `sql` and run the sql
+`bigquery-execute-sql` takes one input parameter `sql` and runs the sql
 statement against the `source`.
 
 ## Example

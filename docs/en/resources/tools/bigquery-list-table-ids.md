@@ -13,8 +13,8 @@ It's compatible with the following sources:
 
 - [bigquery](../sources/bigquery.md)
 
-bigquery-get-dataset-info takes a dataset parameter to specify the dataset 
-on the given source.
+bigquery-get-dataset-info takes a dataset parameter to specify the dataset
+from which to list table IDs.
 
 ## Example
 
