@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
 )
 
-func TestParseFromYamlSpanner(t *testing.T) {
+func TestParseFromYamlBigQuery(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -53,7 +53,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquery.Config{
 					Name:         "example_tool",
-					Kind:         bigquery.ToolKind,
+					Kind:         "bigquery-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

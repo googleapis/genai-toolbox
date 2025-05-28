@@ -27,12 +27,27 @@ import (
 	"maps"
 	"text/template"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "http"
+const kind string = "http"
+
+func init() {
+	if !tools.Register(kind, newConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
@@ -53,7 +68,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigKind() string {
-	return ToolKind
+	return kind
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -66,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*httpsrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", ToolKind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
 	}
 
 	// Create URL based on BaseURL and Path
@@ -153,7 +168,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	return Tool{
 		Name:         cfg.Name,
-		Kind:         ToolKind,
+		Kind:         kind,
 		URL:          u,
 		Method:       cfg.Method,
 		AuthRequired: cfg.AuthRequired,

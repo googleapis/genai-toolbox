@@ -82,7 +82,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": http.Config{
 					Name:         "example_tool",
-					Kind:         http.ToolKind,
+					Kind:         "http",
 					Source:       "my-instance",
 					Method:       "GET",
 					Path:         "search?name=alice&pet=cat",

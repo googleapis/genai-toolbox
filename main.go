@@ -14,7 +14,9 @@
 
 package main
 
-import "github.com/googleapis/genai-toolbox/cmd"
+import (
+	"github.com/googleapis/genai-toolbox/cmd"
+)
 
 func main() {
 	cmd.Execute()
