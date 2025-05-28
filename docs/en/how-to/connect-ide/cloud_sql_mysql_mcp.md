@@ -80,40 +80,6 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.6.0/windows/amd64/toolbo
     ./toolbox --version
     ```
 
-## Configure and run Toolbox
-
-The prebuild Toolbox binary will include the following tools:
-
-1. **list_tables**: lists tables and descriptions
-1. **execute_sql**: execute any SQL statement
-
-To configure Toolbox, run the following steps:
-
-1. Set the following environment variables:
-
-    ```bash
-    # The ID of your Google Cloud Project where the Cloud SQL instance is located.
-    export CLOUD_SQL_MYSQL_PROJECT="your-gcp-project-id"
-
-    # The region where your Cloud SQL instance is located (e.g., us-central1).
-    export CLOUD_SQL_MYSQL_REGION="your-instance-region"
-
-    # The name of your Cloud SQL instance.
-    export CLOUD_SQL_MYSQL_INSTANCE="your-instance-name"
-
-    # The name of the database you want to connect to within the instance.
-    export CLOUD_SQL_MYSQL_DATABASE="your-database-name"
-
-    # The username for connecting to the database.
-    export CLOUD_SQL_MYSQL_USER="your-database-user"
-
-    # The password for the specified database user.
-    export CLOUD_SQL_MYSQL_PASSWORD="your-database-password"
-
-    # The ip type for the AlloyDB instance (default: `public`).
-    export CLOUD_SQL_MYSQL_IP_TYPE="your-ip-type"
-    ```
-
 ## Configure your MCP Client
 
 {{< tabpane text=true >}}
@@ -121,7 +87,7 @@ To configure Toolbox, run the following steps:
 
 1. Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1. Create a `.mcp.json` file in your project root if it doesn't exist.
-1. Add the following configuration and save:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -129,15 +95,14 @@ To configure Toolbox, run the following steps:
         "cloud-sql-mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","cloud-sql-mysql","--stdio"],
-          "env": [
+          "env": {
             "CLOUD_SQL_MYSQL_PROJECT": "",
             "CLOUD_SQL_MYSQL_REGION": "",
             "CLOUD_SQL_MYSQL_INSTANCE": "",
             "CLOUD_SQL_MYSQL_DATABASE": "",
             "CLOUD_SQL_MYSQL_USER": "",
-            "CLOUD_SQL_MYSQL_PASSWORD": "",
-            "CLOUD_SQL_MYSQL_IP_TYPE": "",
-          ],
+            "CLOUD_SQL_MYSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -151,7 +116,7 @@ To configure Toolbox, run the following steps:
 1. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
 1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1. Under the Developer tab, tap Edit Config to open the configuration file.
-1. Add the following configuration and save:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -159,15 +124,14 @@ To configure Toolbox, run the following steps:
         "cloud-sql-mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","cloud-sql-mysql","--stdio"],
-          "env": [
+          "env": {
             "CLOUD_SQL_MYSQL_PROJECT": "",
             "CLOUD_SQL_MYSQL_REGION": "",
             "CLOUD_SQL_MYSQL_INSTANCE": "",
             "CLOUD_SQL_MYSQL_DATABASE": "",
             "CLOUD_SQL_MYSQL_USER": "",
-            "CLOUD_SQL_MYSQL_PASSWORD": "",
-            "CLOUD_SQL_MYSQL_IP_TYPE": "",
-          ],
+            "CLOUD_SQL_MYSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -181,7 +145,7 @@ To configure Toolbox, run the following steps:
 
 1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
 1. Tap Configure MCP Servers to open the configuration file.
-1. Add the following configuration and save:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -189,15 +153,14 @@ To configure Toolbox, run the following steps:
         "cloud-sql-mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","cloud-sql-mysql","--stdio"],
-          "env": [
+          "env": {
             "CLOUD_SQL_MYSQL_PROJECT": "",
             "CLOUD_SQL_MYSQL_REGION": "",
             "CLOUD_SQL_MYSQL_INSTANCE": "",
             "CLOUD_SQL_MYSQL_DATABASE": "",
             "CLOUD_SQL_MYSQL_USER": "",
-            "CLOUD_SQL_MYSQL_PASSWORD": "",
-            "CLOUD_SQL_MYSQL_IP_TYPE": "",
-          ],
+            "CLOUD_SQL_MYSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -210,7 +173,7 @@ To configure Toolbox, run the following steps:
 
 1. Create a `.cursor` directory in your project root if it doesn't exist.
 1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -218,15 +181,14 @@ To configure Toolbox, run the following steps:
         "cloud-sql-mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","cloud-sql-mysql","--stdio"],
-          "env": [
+          "env": {
             "CLOUD_SQL_MYSQL_PROJECT": "",
             "CLOUD_SQL_MYSQL_REGION": "",
             "CLOUD_SQL_MYSQL_INSTANCE": "",
             "CLOUD_SQL_MYSQL_DATABASE": "",
             "CLOUD_SQL_MYSQL_USER": "",
-            "CLOUD_SQL_MYSQL_PASSWORD": "",
-            "CLOUD_SQL_MYSQL_IP_TYPE": "",
-          ],
+            "CLOUD_SQL_MYSQL_PASSWORD": ""
+          }
       }
     }
     ```
@@ -238,7 +200,7 @@ To configure Toolbox, run the following steps:
 
 1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
 1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -246,15 +208,14 @@ To configure Toolbox, run the following steps:
         "cloud-sql-mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","cloud-sql-mysql","--stdio"],
-          "env": [
+          "env": {
             "CLOUD_SQL_MYSQL_PROJECT": "",
             "CLOUD_SQL_MYSQL_REGION": "",
             "CLOUD_SQL_MYSQL_INSTANCE": "",
             "CLOUD_SQL_MYSQL_DATABASE": "",
             "CLOUD_SQL_MYSQL_USER": "",
-            "CLOUD_SQL_MYSQL_PASSWORD": "",
-            "CLOUD_SQL_MYSQL_IP_TYPE": "",
-          ],
+            "CLOUD_SQL_MYSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -265,7 +226,7 @@ To configure Toolbox, run the following steps:
 
 1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
 1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1. Add the following configuration:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -273,15 +234,14 @@ To configure Toolbox, run the following steps:
         "cloud-sql-mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","cloud-sql-mysql","--stdio"],
-          "env": [
+          "env": {
             "CLOUD_SQL_MYSQL_PROJECT": "",
             "CLOUD_SQL_MYSQL_REGION": "",
             "CLOUD_SQL_MYSQL_INSTANCE": "",
             "CLOUD_SQL_MYSQL_DATABASE": "",
             "CLOUD_SQL_MYSQL_USER": "",
-            "CLOUD_SQL_MYSQL_PASSWORD": "",
-            "CLOUD_SQL_MYSQL_IP_TYPE": "",
-          ],
+            "CLOUD_SQL_MYSQL_PASSWORD": ""
+          }
         }
       }
     }

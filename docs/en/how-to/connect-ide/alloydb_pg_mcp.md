@@ -80,43 +80,6 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/windows/amd64/toolbo
     ./toolbox --version
     ```
 
-## Configure and run Toolbox
-
-The prebuild Toolbox binary will include the following tools:
-
-1. **list_tables**: lists tables and descriptions
-1. **execute_sql**: execute any SQL statement
-
-To configure Toolbox, run the following steps:
-
-1. Set the following environment variables:
-
-    ```bash
-    # The ID of your Google Cloud Project where the AlloyDB cluster/instance is located.
-    export ALLOYDB_POSTGRES_PROJECT="your-gcp-project-id"
-
-    # The region where your AlloyDB cluster is located (e.g., us-central1).
-    export ALLOYDB_POSTGRES_REGION="your-cluster-region"
-
-    # The name of your AlloyDB cluster.
-    export ALLOYDB_POSTGRES_CLUSTER="your-cluster-name"
-
-    # The name of your AlloyDB instance.
-    export ALLOYDB_POSTGRES_INSTANCE="your-instance-name"
-
-    # The name of the database you want to connect to within the instance.
-    export ALLOYDB_POSTGRES_DATABASE="your-database-name"
-
-    # The username for connecting to the database.
-    export ALLOYDB_POSTGRES_USER="your-database-user"
-
-    # The password for the specified database user.
-    export ALLOYDB_POSTGRES_PASSWORD="your-database-password"
-
-    # The ip type for the AlloyDB instance (default: `public`).
-    export ALLOYDB_POSTGRES_IP_TYPE="your-ip-type"
-    ```
-
 ## Configure your MCP Client
 
 {{< tabpane text=true >}}
@@ -124,7 +87,7 @@ To configure Toolbox, run the following steps:
 
 1. Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1. Create a `.mcp.json` file in your project root if it doesn't exist.
-1. Add the following configuration and save:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -132,16 +95,15 @@ To configure Toolbox, run the following steps:
         "alloydb": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","alloydb-postgres","--stdio"],
-          "env": [
-            "ALLOYDB_POSTGRES_PROJECT": "",
-            "ALLOYDB_POSTGRES_REGION": "",
-            "ALLOYDB_POSTGRES_CLUSTER": "",
-            "ALLOYDB_POSTGRES_INSTANCE": "",
-            "ALLOYDB_POSTGRES_DATABASE": "",
-            "ALLOYDB_POSTGRES_USER": "",
-            "ALLOYDB_POSTGRES_PASSWORD": "",
-            "ALLOYDB_POSTGRES_IP_TYPE": "",
-          ],
+          "env": {
+            "ALLOYDB_POSTGRES_PROJECT": "your-gcp-project-id",
+            "ALLOYDB_POSTGRES_REGION": "your-cluster-region",
+            "ALLOYDB_POSTGRES_CLUSTER": "your-cluster-name",
+            "ALLOYDB_POSTGRES_INSTANCE": "your-instance-name",
+            "ALLOYDB_POSTGRES_DATABASE": "your-database-name",
+            "ALLOYDB_POSTGRES_USER": "your-database-user",
+            "ALLOYDB_POSTGRES_PASSWORD": "your-database-password"
+          }
         }
       }
     }
@@ -155,7 +117,7 @@ To configure Toolbox, run the following steps:
 1. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
 1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1. Under the Developer tab, tap Edit Config to open the configuration file.
-1. Add the following configuration and save:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -163,16 +125,15 @@ To configure Toolbox, run the following steps:
         "alloydb": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","alloydb-postgres","--stdio"],
-          "env": [
-            "ALLOYDB_POSTGRES_PROJECT": "",
-            "ALLOYDB_POSTGRES_REGION": "",
-            "ALLOYDB_POSTGRES_CLUSTER": "",
-            "ALLOYDB_POSTGRES_INSTANCE": "",
-            "ALLOYDB_POSTGRES_DATABASE": "",
-            "ALLOYDB_POSTGRES_USER": "",
-            "ALLOYDB_POSTGRES_PASSWORD": "",
-            "ALLOYDB_POSTGRES_IP_TYPE": "",
-          ],
+          "env": {
+            "ALLOYDB_POSTGRES_PROJECT": "your-gcp-project-id",
+            "ALLOYDB_POSTGRES_REGION": "your-cluster-region",
+            "ALLOYDB_POSTGRES_CLUSTER": "your-cluster-name",
+            "ALLOYDB_POSTGRES_INSTANCE": "your-instance-name",
+            "ALLOYDB_POSTGRES_DATABASE": "your-database-name",
+            "ALLOYDB_POSTGRES_USER": "your-database-user",
+            "ALLOYDB_POSTGRES_PASSWORD": "your-database-password"
+          }
         }
       }
     }
@@ -186,7 +147,7 @@ To configure Toolbox, run the following steps:
 
 1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
 1. Tap Configure MCP Servers to open the configuration file.
-1. Add the following configuration and save:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -194,16 +155,15 @@ To configure Toolbox, run the following steps:
         "alloydb": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","alloydb-postgres","--stdio"],
-          "env": [
-            "ALLOYDB_POSTGRES_PROJECT": "",
-            "ALLOYDB_POSTGRES_REGION": "",
-            "ALLOYDB_POSTGRES_CLUSTER": "",
-            "ALLOYDB_POSTGRES_INSTANCE": "",
-            "ALLOYDB_POSTGRES_DATABASE": "",
-            "ALLOYDB_POSTGRES_USER": "",
-            "ALLOYDB_POSTGRES_PASSWORD": "",
-            "ALLOYDB_POSTGRES_IP_TYPE": "",
-          ],
+          "env": {
+            "ALLOYDB_POSTGRES_PROJECT": "your-gcp-project-id",
+            "ALLOYDB_POSTGRES_REGION": "your-cluster-region",
+            "ALLOYDB_POSTGRES_CLUSTER": "your-cluster-name",
+            "ALLOYDB_POSTGRES_INSTANCE": "your-instance-name",
+            "ALLOYDB_POSTGRES_DATABASE": "your-database-name",
+            "ALLOYDB_POSTGRES_USER": "your-database-user",
+            "ALLOYDB_POSTGRES_PASSWORD": "your-database-password"
+          }
         }
       }
     }
@@ -216,7 +176,7 @@ To configure Toolbox, run the following steps:
 
 1. Create a `.cursor` directory in your project root if it doesn't exist.
 1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -224,16 +184,15 @@ To configure Toolbox, run the following steps:
         "alloydb": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","alloydb-postgres","--stdio"],
-          "env": [
-            "ALLOYDB_POSTGRES_PROJECT": "",
-            "ALLOYDB_POSTGRES_REGION": "",
-            "ALLOYDB_POSTGRES_CLUSTER": "",
-            "ALLOYDB_POSTGRES_INSTANCE": "",
-            "ALLOYDB_POSTGRES_DATABASE": "",
-            "ALLOYDB_POSTGRES_USER": "",
-            "ALLOYDB_POSTGRES_PASSWORD": "",
-            "ALLOYDB_POSTGRES_IP_TYPE": "",
-          ],
+          "env": {
+            "ALLOYDB_POSTGRES_PROJECT": "your-gcp-project-id",
+            "ALLOYDB_POSTGRES_REGION": "your-cluster-region",
+            "ALLOYDB_POSTGRES_CLUSTER": "your-cluster-name",
+            "ALLOYDB_POSTGRES_INSTANCE": "your-instance-name",
+            "ALLOYDB_POSTGRES_DATABASE": "your-database-name",
+            "ALLOYDB_POSTGRES_USER": "your-database-user",
+            "ALLOYDB_POSTGRES_PASSWORD": "your-database-password"
+          }
         }
       }
     }
@@ -246,7 +205,7 @@ To configure Toolbox, run the following steps:
 
 1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
 1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -254,16 +213,15 @@ To configure Toolbox, run the following steps:
         "alloydb": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","alloydb-postgres","--stdio"],
-          "env": [
-            "ALLOYDB_POSTGRES_PROJECT": "",
-            "ALLOYDB_POSTGRES_REGION": "",
-            "ALLOYDB_POSTGRES_CLUSTER": "",
-            "ALLOYDB_POSTGRES_INSTANCE": "",
-            "ALLOYDB_POSTGRES_DATABASE": "",
-            "ALLOYDB_POSTGRES_USER": "",
-            "ALLOYDB_POSTGRES_PASSWORD": "",
-            "ALLOYDB_POSTGRES_IP_TYPE": "",
-          ],
+          "env": {
+            "ALLOYDB_POSTGRES_PROJECT": "your-gcp-project-id",
+            "ALLOYDB_POSTGRES_REGION": "your-cluster-region",
+            "ALLOYDB_POSTGRES_CLUSTER": "your-cluster-name",
+            "ALLOYDB_POSTGRES_INSTANCE": "your-instance-name",
+            "ALLOYDB_POSTGRES_DATABASE": "your-database-name",
+            "ALLOYDB_POSTGRES_USER": "your-database-user",
+            "ALLOYDB_POSTGRES_PASSWORD": "your-database-password"
+          }
         }
       }
     }
@@ -274,7 +232,7 @@ To configure Toolbox, run the following steps:
 
 1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
 1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1. Add the following configuration:
+1. Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -282,16 +240,15 @@ To configure Toolbox, run the following steps:
         "alloydb": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","alloydb-postgres","--stdio"],
-          "env": [
-            "ALLOYDB_POSTGRES_PROJECT": "",
-            "ALLOYDB_POSTGRES_REGION": "",
-            "ALLOYDB_POSTGRES_CLUSTER": "",
-            "ALLOYDB_POSTGRES_INSTANCE": "",
-            "ALLOYDB_POSTGRES_DATABASE": "",
-            "ALLOYDB_POSTGRES_USER": "",
-            "ALLOYDB_POSTGRES_PASSWORD": "",
-            "ALLOYDB_POSTGRES_IP_TYPE": "",
-          ],
+          "env": {
+            "ALLOYDB_POSTGRES_PROJECT": "your-gcp-project-id",
+            "ALLOYDB_POSTGRES_REGION": "your-cluster-region",
+            "ALLOYDB_POSTGRES_CLUSTER": "your-cluster-name",
+            "ALLOYDB_POSTGRES_INSTANCE": "your-instance-name",
+            "ALLOYDB_POSTGRES_DATABASE": "your-database-name",
+            "ALLOYDB_POSTGRES_USER": "your-database-user",
+            "ALLOYDB_POSTGRES_PASSWORD": "your-database-password"
+          }
         }
       }
     }
