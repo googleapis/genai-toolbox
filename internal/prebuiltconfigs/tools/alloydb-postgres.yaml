@@ -1,21 +1,23 @@
 sources:
-    postgresql-source:
-        kind: postgres
-        host: ${POSTGRES_HOST}
-        port: ${POSTGRES_PORT}
-        database: ${POSTGRES_DATABASE}
-        user: ${POSTGRES_USER}
-        password: ${POSTGRES_PASSWORD}
+    alloydb-pg-source:
+        kind: "alloydb-postgres"
+        project: ${ALLOYDB_POSTGRES_PROJECT}
+        region: ${ALLOYDB_POSTGRES_REGION}
+        cluster: ${ALLOYDB_POSTGRES_CLUSTER}
+        instance: ${ALLOYDB_POSTGRES_INSTANCE}
+        database: ${ALLOYDB_POSTGRES_DATABASE}
+        user: ${ALLOYDB_POSTGRES_USER}
+        password: ${ALLOYDB_POSTGRES_PASSWORD}
 
 tools:
     execute_sql:
         kind: postgres-execute-sql
-        source: postgresql-source
-        description: Use this tool to execute SQL.
+        source: alloydb-pg-source
+        description: Use this tool to execute sql.
 
     list_tables:
         kind: postgres-sql
-        source: postgresql-source
+        source: alloydb-pg-source
         description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
         statement: |
             WITH desired_relkinds AS (
@@ -93,6 +95,6 @@ tools:
               description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
 
 toolsets:
-    postgres-database-tools:
+    alloydb-postgres-database-tools:
         - execute_sql
         - list_tables

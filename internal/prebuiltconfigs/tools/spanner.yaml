@@ -1,9 +1,9 @@
 sources:
   spanner-source:
-        kind: spanner
-        project: ${SPANNER_PROJECT}
-        instance: ${SPANNER_INSTANCE}
-        database: ${SPANNER_DB}
+    kind: spanner
+    project: ${SPANNER_PROJECT}
+    instance: ${SPANNER_INSTANCE}
+    database: ${SPANNER_DATABASE}
 
 tools:
   execute_sql:
@@ -198,7 +198,6 @@ tools:
       LEFT JOIN indexes_info_cte AS II
         ON TI.TABLE_SCHEMA = II.TABLE_SCHEMA AND TI.TABLE_NAME = II.TABLE_NAME
       ORDER BY TI.TABLE_SCHEMA, TI.TABLE_NAME;
-
 
     parameters:
       - name: table_names

@@ -69,13 +69,13 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg        server.ServerConfig
-	logger     log.Logger
-	tools_file string
-  prebuiltConfig string
-	inStream   io.Reader
-	outStream  io.Writer
-	errStream  io.Writer
+	cfg            server.ServerConfig
+	logger         log.Logger
+	tools_file     string
+	prebuiltConfig string
+	inStream       io.Reader
+	outStream      io.Writer
+	errStream      io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
@@ -121,7 +121,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb', 'cloudsqlpg', 'postgres', 'spanner'.")
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 
 	// wrap RunE command so that we have access to original Command object

@@ -23,10 +23,14 @@ import (
 func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
 	expectedKeys := []string{
-		"alloydb",
-		"cloudsqlpg",
+		"alloydb-postgres",
+		"bigquery"
+		"cloud-sql-postgres",
+		"cloud-sql-mysql",
+		"cloud-sql-mssql",
 		"postgres",
 		"spanner",
+		"spanner-postgres"
 	}
 	t.Run(test_name, func(t *testing.T) {
 		configsMap, keys, err := loadPrebuiltToolYAMLs()
@@ -59,15 +63,28 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 }
 
 func TestGetPrebuiltTool(t *testing.T) {
-	alloydb_config, _ := Get("alloydb")
-	cloudsqlpg_config, _ := Get("cloudsqlpg")
+	alloydb_config, _ := Get("alloydb-postgres")
+	bigquery_config, _ := Get("bigquery")
+	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
+	cloudsqlmysql_config, _ := Get("cloud-sql-mysql")
+	cloudsqlmssql_config, _ := Get("cloud-sql-mssql")
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
+	spannerpg_config, _ := Get("spanner-postgres")
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
+	if len(bigquery_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch bigquery prebuilt tools yaml")
+	}
 	if len(cloudsqlpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql pg prebuilt tools yaml")
+	}
+	if len(cloudsqlmysql_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud sql mysql prebuilt tools yaml")
+	}
+	if len(cloudsqlmssql_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud sql mssql prebuilt tools yaml")
 	}
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
@@ -75,7 +92,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
 	}
-
+	if len(spannerpg_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+	}
 }
 
 func TestFailGetPrebuiltTool(t *testing.T) {

@@ -898,8 +898,8 @@ func TestEnvVarReplacement(t *testing.T) {
 }
 
 func TestPrebuiltTools(t *testing.T) {
-	alloydb_config, _ := prebuiltconfigs.Get("alloydb")
-	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloudsqlpg")
+	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
+	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	ctx, err := testutils.ContextWithNewLogger()
