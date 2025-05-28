@@ -153,12 +153,12 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	sseManager := &sseManager{
+	mcpM := &mcpManager{
 		mu:          sync.RWMutex{},
-		sseSessions: make(map[string]*sseSession),
+		mcpSessions: make(map[string]*mcpSession),
 	}
 
-	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: tools, toolsets: toolsets}
+	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, mcpManager: mcpM, tools: tools, toolsets: toolsets}
 	var r chi.Router
 	switch router {
 	case "api":
