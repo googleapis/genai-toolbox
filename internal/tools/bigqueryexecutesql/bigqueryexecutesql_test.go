@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery_test
+package bigqueryexecutesql_test
 
 import (
 	"testing"
@@ -21,11 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigqueryexecutesql"
 )
 
-func TestParseFromYamlBigQuery(t *testing.T) {
+func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -40,27 +39,17 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-sql
+					kind: bigquery-execute-sql
 					source: my-instance
 					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigquery.Config{
+				"example_tool": bigqueryexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         bigquery.ToolKind,
+					Kind:         bigqueryexecutesql.ToolKind,
 					Source:       "my-instance",
 					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
-					},
 				},
 			},
 		},

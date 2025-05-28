@@ -1,0 +1,38 @@
+sources:
+  bigquery-source:
+    kind: "bigquery"
+    project: ${BIGQUERY_PROJECT}
+
+tools:
+  execute_sql:
+    kind: bigquery-execute-sql
+    source: bigquery-source
+    description: Use this tool to execute sql statement.
+
+  get_dataset_info:
+    kind: bigquery-get-dataset-info
+    source: bigquery-source
+    description: Use this tool to get dataset metadata.
+
+  get_table_info:
+    kind: bigquery-get-table-info
+    source: bigquery-source
+    description: Use this tool to get table metadata.
+
+  list_dataset_ids:
+    kind: bigquery-list-dataset-ids
+    source: bigquery-source
+    description: Use this tool to get dataset metadata.
+
+  list_table_ids:
+    kind: bigquery-list-table-ids
+    source: bigquery-source
+    description: Use this tool to get table metadata.
+
+toolsets:
+  bigquery-database-tools:
+    - execute_sql
+    - get_dataset_info
+    - get_table_info
+    - list_dataset_ids
+    - list_table_ids

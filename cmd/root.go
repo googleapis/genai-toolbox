@@ -28,6 +28,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -68,12 +69,13 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg        server.ServerConfig
-	logger     log.Logger
-	tools_file string
-	inStream   io.Reader
-	outStream  io.Writer
-	errStream  io.Writer
+	cfg            server.ServerConfig
+	logger         log.Logger
+	tools_file     string
+	prebuiltConfig string
+	inStream       io.Reader
+	outStream      io.Writer
+	errStream      io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
@@ -110,15 +112,16 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
-	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.StringVar(&cmd.tools_file, "tools-file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
 	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 
 	// wrap RunE command so that we have access to original Command object
@@ -245,13 +248,37 @@ func run(cmd *Command) error {
 		}
 	}()
 
-	// Read tool file contents
-	buf, err := os.ReadFile(cmd.tools_file)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
+	var buf []byte
+
+	if cmd.prebuiltConfig != "" {
+		// Make sure --prebuilt and --tools-file flags are mutually exclusive
+		if cmd.tools_file != "" {
+			errMsg := fmt.Errorf("--prebuilt and --tools-file flags cannot be used simultaneously")
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		// Use prebuilt tools
+		buf, err = prebuiltconfigs.Get(cmd.prebuiltConfig)
+		if err != nil {
+			cmd.logger.ErrorContext(ctx, err.Error())
+			return err
+		}
+		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltConfig)
+		cmd.logger.InfoContext(ctx, logMsg)
+	} else {
+		// Set default value of tools-file flag to tools.yaml
+		if cmd.tools_file == "" {
+			cmd.tools_file = "tools.yaml"
+		}
+		// Read tool file contents
+		buf, err = os.ReadFile(cmd.tools_file)
+		if err != nil {
+			errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
 	}
+
 	toolsFile, err := parseToolsFile(ctx, buf)
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
 	authSourceConfigs := toolsFile.AuthSources
