@@ -929,8 +929,8 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "bigquery prebuilt tools",
 			in:   bigquery_config,
 			wantToolset: server.ToolsetConfigs{
-				"bigquery-postgres-database-tools": tools.ToolsetConfig{
-					Name:      "bigquery-postgres-database-tools",
+				"bigquery-database-tools": tools.ToolsetConfig{
+					Name:      "bigquery-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
