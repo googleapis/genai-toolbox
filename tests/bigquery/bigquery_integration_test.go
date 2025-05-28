@@ -15,8 +15,12 @@
 package bigquery
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -82,10 +86,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// create table name with UUID
 	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.Replace(uuid.New().String(), "-", "", -1))
-	tableNameParam := fmt.Sprintf("`%s.%s.param_table_%s`",
+	tableName := fmt.Sprintf("param_table_%s", strings.Replace(uuid.New().String(), "-", "", -1))
+	tableNameParam := fmt.Sprintf("`%s.%s.%s`",
 		BIGQUERY_PROJECT,
 		datasetName,
-		strings.Replace(uuid.New().String(), "-", "", -1),
+		tableName,
 	)
 	tableNameAuth := fmt.Sprintf("`%s.%s.auth_table_%s`",
 		BIGQUERY_PROJECT,
@@ -104,6 +109,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BIGQUERY_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -124,9 +130,16 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	select1Want := "[{\"f0_\":1}]"
 	// Partial message; the full error message is too long.
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
+	datasetInfoWant := "[{\"Access\":[{\"Condition\""
+	tableInfoWant := "\"Location\":\"US\",\"MaterializedView\":null,\"MaxStaleness\":null,\"Name\":\"\",\"NumBytes\":61,\"NumLongTermBytes\":0,\"NumRows\":4"
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
+	runBigQueryListDatasetToolInvokeTest(t, datasetName)
+	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
+	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
+	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-param-tool for bigquery kind
@@ -233,5 +246,606 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 		} else if err != nil {
 			t.Errorf("Failed to list tables in dataset %s to check emptiness: %v.", datasetName, err)
 		}
+	}
+}
+
+func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "bigquery-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "bigquery-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-list-dataset-ids-tool"] = map[string]any{
+		"kind":        "bigquery-list-dataset-ids",
+		"source":      "my-instance",
+		"description": "Tool to list dataset",
+	}
+	tools["my-auth-list-dataset-ids-tool"] = map[string]any{
+		"kind":        "bigquery-list-dataset-ids",
+		"source":      "my-instance",
+		"description": "Tool to list dataset",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-get-dataset-info-tool"] = map[string]any{
+		"kind":        "bigquery-get-dataset-info",
+		"source":      "my-instance",
+		"description": "Tool to show dataset metadata",
+	}
+	tools["my-auth-get-dataset-info-tool"] = map[string]any{
+		"kind":        "bigquery-get-dataset-info",
+		"source":      "my-instance",
+		"description": "Tool to show dataset metadata",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-list-table-ids-tool"] = map[string]any{
+		"kind":        "bigquery-list-table-ids",
+		"source":      "my-instance",
+		"description": "Tool to list table within a dataset",
+	}
+	tools["my-auth-list-table-ids-tool"] = map[string]any{
+		"kind":        "bigquery-list-table-ids",
+		"source":      "my-instance",
+		"description": "Tool to list table within a dataset",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-get-table-info-tool"] = map[string]any{
+		"kind":        "bigquery-get-table-info",
+		"source":      "my-instance",
+		"description": "Tool to show dataset metadata",
+	}
+	tools["my-auth-get-table-info-tool"] = map[string]any{
+		"kind":        "bigquery-get-table-info",
+		"source":      "my-instance",
+		"description": "Tool to show dataset metadata",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-exec-sql-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			want:          select_1_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool create table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with data present in table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 3 OR name = 'Alice'\"}", tableNameParam))),
+			want:          invokeParamWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool drop table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool insert entry",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         false,
+			want:          select_1_want,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-list-dataset-ids-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-list-dataset-ids-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         false,
+			want:          datasetWant,
+		},
+		{
+			name:          "invoke my-auth-list-dataset-ids-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-list-dataset-ids-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         false,
+			want:          datasetWant,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetInfoWant string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-dataset-info-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dataset-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-dataset-info-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dataset-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			want:          datasetInfoWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dataset-info-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dataset-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-get-dataset-info-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dataset-info-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			want:          datasetInfoWant,
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-get-dataset-info-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dataset-info-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-get-dataset-info-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dataset-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_want string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-list-table-ids-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-list-table-ids-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-list-table-ids-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-list-table-ids-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			want:          tablename_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-list-table-ids-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-list-table-ids-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-list-table-ids-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-list-table-ids-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			want:          tablename_want,
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-list-table-ids-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-list-table-ids-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-list-table-ids-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-list-table-ids-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName, tableInfoWant string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-table-info-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-table-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-table-info-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-table-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
+			want:          tableInfoWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-table-info-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-table-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-get-table-info-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-table-info-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
+			want:          tableInfoWant,
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-get-table-info-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-table-info-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-get-table-info-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-table-info-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
 	}
 }
