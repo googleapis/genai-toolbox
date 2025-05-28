@@ -104,7 +104,6 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.6.0/windows/amd64/toolbo
 
 {{% tab header="Claude desktop" lang="en" %}}
 
-1. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
 1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1. Under the Developer tab, tap Edit Config to open the configuration file.
 1. Add the following configuration, replace the environment variables with your values, and save:
