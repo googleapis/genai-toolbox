@@ -95,12 +95,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		strings.Replace(uuid.New().String(), "-", "", -1),
 	)
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(BIGQUERY_PROJECT, datasetName, tableNameParam)
+	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(tableNameParam)
 	teardownTable1 := setupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := getBigQueryAuthToolInfo(BIGQUERY_PROJECT, datasetName, tableNameAuth)
+	create_statement2, insert_statement2, tool_statement2, params2 := getBigQueryAuthToolInfo(tableNameAuth)
 	teardownTable2 := setupBigQueryTable(t, ctx, client, create_statement2, insert_statement2, datasetName, tableNameAuth, params2)
 	defer teardownTable2(t)
 
@@ -132,7 +132,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
+	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
@@ -140,7 +140,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-param-tool for bigquery kind
-func getBigQueryParamToolInfo(projectID, datasetID, tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
+func getBigQueryParamToolInfo(tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING);`, tableName)
 	insertStatement := fmt.Sprintf(`
@@ -155,7 +155,7 @@ func getBigQueryParamToolInfo(projectID, datasetID, tableName string) (string, s
 }
 
 // getBigQueryAuthToolInfo returns statements and param of my-auth-tool for bigquery kind
-func getBigQueryAuthToolInfo(projectID, datasetID, tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
+func getBigQueryAuthToolInfo(tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING, email STRING)`, tableName)
 	insertStatement := fmt.Sprintf(`
@@ -320,7 +320,7 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
-func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
+func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
