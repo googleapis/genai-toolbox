@@ -69,16 +69,18 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg            server.ServerConfig
-	logger         log.Logger
-	tools_file     string
-	prebuiltConfig string
-	outStream      io.Writer
-	errStream      io.Writer
+	cfg        server.ServerConfig
+	logger     log.Logger
+	tools_file string
+  prebuiltConfig string
+	inStream   io.Reader
+	outStream  io.Writer
+	errStream  io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
 func NewCommand(opts ...Option) *Command {
+	in := os.Stdin
 	out := os.Stdout
 	err := os.Stderr
 
@@ -89,6 +91,7 @@ func NewCommand(opts ...Option) *Command {
 	}
 	cmd := &Command{
 		Command:   baseCmd,
+		inStream:  in,
 		outStream: out,
 		errStream: err,
 	}
@@ -100,7 +103,8 @@ func NewCommand(opts ...Option) *Command {
 	// Set server version
 	cmd.cfg.Version = versionString
 
-	// set baseCmd out and err the same as cmd.
+	// set baseCmd in, out and err the same as cmd.
+	baseCmd.SetIn(cmd.inStream)
 	baseCmd.SetOut(cmd.outStream)
 	baseCmd.SetErr(cmd.errStream)
 
@@ -118,6 +122,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb', 'cloudsqlpg', 'postgres', 'spanner'.")
+	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -166,7 +171,25 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
+// updateLogLevel checks if Toolbox have to update the existing log level set by users.
+// stdio doesn't support "debug" and "info" logs.
+func updateLogLevel(stdio bool, logLevel string) bool {
+	if stdio {
+		switch strings.ToUpper(logLevel) {
+		case log.Debug, log.Info:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
+}
+
 func run(cmd *Command) error {
+	if updateLogLevel(cmd.cfg.Stdio, cmd.cfg.LogLevel.String()) {
+		cmd.cfg.LogLevel = server.StringLevel(log.Warn)
+	}
+
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
@@ -289,9 +312,16 @@ func run(cmd *Command) error {
 	srvErr := make(chan error)
 	go func() {
 		defer close(srvErr)
-		err = s.Serve(ctx)
-		if err != nil {
-			srvErr <- err
+		if cmd.cfg.Stdio {
+			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
+			if err != nil {
+				srvErr <- err
+			}
+		} else {
+			err = s.Serve(ctx)
+			if err != nil {
+				srvErr <- err
+			}
 		}
 	}()
 
