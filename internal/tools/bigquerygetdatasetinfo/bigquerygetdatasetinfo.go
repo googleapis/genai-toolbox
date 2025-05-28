@@ -16,7 +16,6 @@ package bigquerygetdatasetinfo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
@@ -115,16 +114,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, t.Client.Project(), err)
 	}
-	var metadataMap map[string]any
-	jsonData, err := json.Marshal(metadata)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal dataset metadata to JSON: %w", err)
-	}
-	if err := json.Unmarshal(jsonData, &metadataMap); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal dataset metadata JSON to map: %w", err)
-	}
 
-	return []any{metadataMap}, nil
+	return []any{metadata}, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
