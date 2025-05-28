@@ -365,7 +365,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokePara
 			name:          "invoke my-exec-sql-tool with data present in table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 3 OR name = 'Alice'\"}", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 3 OR name = 'Alice' ORDER BY id\"}", tableNameParam))),
 			want:          invokeParamWant,
 			isErr:         false,
 		},
