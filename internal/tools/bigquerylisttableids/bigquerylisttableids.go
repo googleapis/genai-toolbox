@@ -121,7 +121,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		if err != nil {
 			return nil, fmt.Errorf("failed to iterate through tables in dataset %s.%s: %w", t.Client.Project(), datasetId, err)
 		}
-		tableIds = append(tableIds, table.TableID)
+
+		// Remove leading and trailing quotes
+		id := table.TableID
+		if len(id) >= 2 && id[0] == '"' && id[len(id)-1] == '"' {
+			id = id[1 : len(id)-1]
+		}
+		tableIds = append(tableIds, id)
 	}
 
 	return tableIds, nil

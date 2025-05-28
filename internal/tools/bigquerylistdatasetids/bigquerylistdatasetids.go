@@ -113,7 +113,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 			return nil, fmt.Errorf("unable to iterate through datasets: %w", err)
 		}
 
-		datasetIds = append(datasetIds, dataset.DatasetID)
+		// Remove leading and trailing quotes
+		id := dataset.DatasetID
+		if len(id) >= 2 && id[0] == '"' && id[len(id)-1] == '"' {
+			id = id[1 : len(id)-1]
+		}
+		datasetIds = append(datasetIds, id)
 	}
 
 	return datasetIds, nil
