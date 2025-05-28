@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.2
-	cloud.google.com/go/bigquery v1.68.0
+	cloud.google.com/go/bigquery v1.69.0
 	cloud.google.com/go/bigtable v1.37.0
 	cloud.google.com/go/cloudsqlconn v1.17.1
 	cloud.google.com/go/spanner v1.82.0

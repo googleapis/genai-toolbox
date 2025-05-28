@@ -21,6 +21,11 @@ and specified parameters will inserted according to their position: e.g. `1`
 will be the first parameter specified, `$@` will be the second parameter, and so
 on.
 
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ## Example
