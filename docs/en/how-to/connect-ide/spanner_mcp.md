@@ -79,12 +79,10 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.6.0/windows/amd64/toolbo
 
 ## Configure and run Toolbox
 
-This section will create a `tools.yaml` file, which will define which tools your AI Agent will have access to. You can add, remove, or edit tools as needed to make sure you have the best tools for your workflows.
-
-This will configure the following tools:
+The prebuild Toolbox binary will include the following tools:
 
 1. **list_tables**: lists tables and descriptions
-3. **execute_sql**: execute any SQL statement
+1. **execute_sql**: execute any SQL statement
 
 To configure Toolbox, run the following steps:
 
@@ -101,560 +99,276 @@ To configure Toolbox, run the following steps:
     export SPANNER_DATABASE="your-database-name"
     ```
 
-2. Create a `tools.yaml` file.
-
-3. Copy and paste the following contents into the `tools.yaml`:
-    {{< tabpane persist=header >}}
-{{< tab header="googlesql" lang="yaml" >}}
-sources:
-  spanner-source:
-    kind: spanner
-    project: ${SPANNER_PROJECT}
-    instance: ${SPANNER_INSTANCE}
-    database: ${SPANNER_DATABASE}
-
-tools:
-  execute_sql:
-    kind: spanner-execute-sql
-    source: spanner-source
-    description: Use this tool to execute DML SQL
-
-  execute_sql_dql:
-    kind: spanner-execute-sql
-    source: spanner-source
-    description: Use this tool to execute DQL SQL
-    readOnly: true
-
-  list_tables:
-    kind: spanner-sql
-    source: spanner-source
-    readOnly: true
-    description: "Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
-    statement: |
-      WITH FilterTableNames AS (
-        SELECT DISTINCT TRIM(name) AS TABLE_NAME
-        FROM UNNEST(IF(@table_names = '' OR @table_names IS NULL, ['%'], SPLIT(@table_names, ','))) AS name
-      ),
-
-      -- 1. Table Information
-      table_info_cte AS (
-        SELECT
-          T.TABLE_SCHEMA,
-          T.TABLE_NAME,
-          T.TABLE_TYPE,
-          T.PARENT_TABLE_NAME, -- For interleaved tables
-          T.ON_DELETE_ACTION -- For interleaved tables
-        FROM INFORMATION_SCHEMA.TABLES AS T
-        WHERE
-          T.TABLE_SCHEMA = ''
-          AND T.TABLE_TYPE = 'BASE TABLE'
-          AND (EXISTS (SELECT 1 FROM FilterTableNames WHERE FilterTableNames.TABLE_NAME = '%') OR T.TABLE_NAME IN (SELECT TABLE_NAME FROM FilterTableNames))
-      ),
-
-      -- 2. Column Information (with JSON string for each column)
-      columns_info_cte AS (
-        SELECT
-          C.TABLE_SCHEMA,
-          C.TABLE_NAME,
-          ARRAY_AGG(
-            CONCAT(
-              '{',
-              '"column_name":"', IFNULL(C.COLUMN_NAME, ''), '",',
-              '"data_type":"', IFNULL(C.SPANNER_TYPE, ''), '",',
-              '"ordinal_position":', CAST(C.ORDINAL_POSITION AS STRING), ',',
-              '"is_not_nullable":', IF(C.IS_NULLABLE = 'NO', 'true', 'false'), ',',
-              '"column_default":', IF(C.COLUMN_DEFAULT IS NULL, 'null', CONCAT('"', C.COLUMN_DEFAULT, '"')),
-              '}'
-            ) ORDER BY C.ORDINAL_POSITION
-          ) AS columns_json_array_elements
-        FROM INFORMATION_SCHEMA.COLUMNS AS C
-        WHERE EXISTS (SELECT 1 FROM table_info_cte TI WHERE C.TABLE_SCHEMA = TI.TABLE_SCHEMA AND C.TABLE_NAME = TI.TABLE_NAME)
-        GROUP BY C.TABLE_SCHEMA, C.TABLE_NAME
-      ),
-
-      -- Helper CTE for aggregating constraint columns
-      constraint_columns_agg_cte AS (
-        SELECT
-          CONSTRAINT_CATALOG,
-          CONSTRAINT_SCHEMA,
-          CONSTRAINT_NAME,
-          ARRAY_AGG(CONCAT('"', COLUMN_NAME, '"') ORDER BY ORDINAL_POSITION) AS column_names_json_list
-        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-        GROUP BY CONSTRAINT_CATALOG, CONSTRAINT_SCHEMA, CONSTRAINT_NAME
-      ),
-
-      -- 3. Constraint Information (with JSON string for each constraint)
-      constraints_info_cte AS (
-        SELECT
-          TC.TABLE_SCHEMA,
-          TC.TABLE_NAME,
-          ARRAY_AGG(
-            CONCAT(
-              '{',
-              '"constraint_name":"', IFNULL(TC.CONSTRAINT_NAME, ''), '",',
-              '"constraint_type":"', IFNULL(TC.CONSTRAINT_TYPE, ''), '",',
-              '"constraint_definition":',
-                CASE TC.CONSTRAINT_TYPE
-                  WHEN 'CHECK' THEN IF(CC.CHECK_CLAUSE IS NULL, 'null', CONCAT('"', CC.CHECK_CLAUSE, '"'))
-                  WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), ')', '"')
-                  WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), ')', '"')
-                  WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), ') REFERENCES ',
-                                          IFNULL(RefKeyTable.TABLE_NAME, ''),
-                                          ' (', ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ', '), ')', '"')
-                  ELSE 'null'
-                END, ',',
-              '"constraint_columns":[', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ','), '],',
-              '"foreign_key_referenced_table":', IF(RefKeyTable.TABLE_NAME IS NULL, 'null', CONCAT('"', RefKeyTable.TABLE_NAME, '"')), ',',
-              '"foreign_key_referenced_columns":[', ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ','), ']',
-              '}'
-            ) ORDER BY TC.CONSTRAINT_NAME
-          ) AS constraints_json_array_elements
-        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC
-        LEFT JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS AS CC
-          ON TC.CONSTRAINT_CATALOG = CC.CONSTRAINT_CATALOG AND TC.CONSTRAINT_SCHEMA = CC.CONSTRAINT_SCHEMA AND TC.CONSTRAINT_NAME = CC.CONSTRAINT_NAME
-        LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS RC
-          ON TC.CONSTRAINT_CATALOG = RC.CONSTRAINT_CATALOG AND TC.CONSTRAINT_SCHEMA = RC.CONSTRAINT_SCHEMA AND TC.CONSTRAINT_NAME = RC.CONSTRAINT_NAME
-        LEFT JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS RefConstraint
-          ON RC.UNIQUE_CONSTRAINT_CATALOG = RefConstraint.CONSTRAINT_CATALOG AND RC.UNIQUE_CONSTRAINT_SCHEMA = RefConstraint.CONSTRAINT_SCHEMA AND RC.UNIQUE_CONSTRAINT_NAME = RefConstraint.CONSTRAINT_NAME
-        LEFT JOIN INFORMATION_SCHEMA.TABLES AS RefKeyTable
-          ON RefConstraint.TABLE_CATALOG = RefKeyTable.TABLE_CATALOG AND RefConstraint.TABLE_SCHEMA = RefKeyTable.TABLE_SCHEMA AND RefConstraint.TABLE_NAME = RefKeyTable.TABLE_NAME
-        LEFT JOIN constraint_columns_agg_cte AS KeyCols
-          ON TC.CONSTRAINT_CATALOG = KeyCols.CONSTRAINT_CATALOG AND TC.CONSTRAINT_SCHEMA = KeyCols.CONSTRAINT_SCHEMA AND TC.CONSTRAINT_NAME = KeyCols.CONSTRAINT_NAME
-        LEFT JOIN constraint_columns_agg_cte AS RefKeyCols
-          ON RC.UNIQUE_CONSTRAINT_CATALOG = RefKeyCols.CONSTRAINT_CATALOG AND RC.UNIQUE_CONSTRAINT_SCHEMA = RefKeyCols.CONSTRAINT_SCHEMA AND RC.UNIQUE_CONSTRAINT_NAME = RefKeyCols.CONSTRAINT_NAME AND TC.CONSTRAINT_TYPE = 'FOREIGN KEY'
-        WHERE EXISTS (SELECT 1 FROM table_info_cte TI WHERE TC.TABLE_SCHEMA = TI.TABLE_SCHEMA AND TC.TABLE_NAME = TI.TABLE_NAME)
-        GROUP BY TC.TABLE_SCHEMA, TC.TABLE_NAME
-      ),
-
-      -- Helper CTE for aggregating index key columns (as JSON strings)
-      index_key_columns_agg_cte AS (
-        SELECT
-          TABLE_CATALOG,
-          TABLE_SCHEMA,
-          TABLE_NAME,
-          INDEX_NAME,
-          ARRAY_AGG(
-            CONCAT(
-              '{"column_name":"', IFNULL(COLUMN_NAME, ''), '",',
-              '"ordering":"', IFNULL(COLUMN_ORDERING, ''), '"}'
-            ) ORDER BY ORDINAL_POSITION
-          ) AS key_column_json_details
-        FROM INFORMATION_SCHEMA.INDEX_COLUMNS
-        WHERE ORDINAL_POSITION IS NOT NULL -- Key columns
-        GROUP BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, INDEX_NAME
-      ),
-
-      -- Helper CTE for aggregating index storing columns (as JSON strings)
-      index_storing_columns_agg_cte AS (
-        SELECT
-          TABLE_CATALOG,
-          TABLE_SCHEMA,
-          TABLE_NAME,
-          INDEX_NAME,
-          ARRAY_AGG(CONCAT('"', COLUMN_NAME, '"') ORDER BY COLUMN_NAME) AS storing_column_json_names
-        FROM INFORMATION_SCHEMA.INDEX_COLUMNS
-        WHERE ORDINAL_POSITION IS NULL -- Storing columns
-        GROUP BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, INDEX_NAME
-      ),
-
-      -- 4. Index Information (with JSON string for each index)
-      indexes_info_cte AS (
-        SELECT
-          I.TABLE_SCHEMA,
-          I.TABLE_NAME,
-          ARRAY_AGG(
-            CONCAT(
-              '{',
-              '"index_name":"', IFNULL(I.INDEX_NAME, ''), '",',
-              '"index_type":"', IFNULL(I.INDEX_TYPE, ''), '",',
-              '"is_unique":', IF(I.IS_UNIQUE, 'true', 'false'), ',',
-              '"is_null_filtered":', IF(I.IS_NULL_FILTERED, 'true', 'false'), ',',
-              '"interleaved_in_table":', IF(I.PARENT_TABLE_NAME IS NULL, 'null', CONCAT('"', I.PARENT_TABLE_NAME, '"')), ',',
-              '"index_key_columns":[', ARRAY_TO_STRING(COALESCE(KeyIndexCols.key_column_json_details, []), ','), '],',
-              '"storing_columns":[', ARRAY_TO_STRING(COALESCE(StoringIndexCols.storing_column_json_names, []), ','), ']',
-              '}'
-            ) ORDER BY I.INDEX_NAME
-          ) AS indexes_json_array_elements
-        FROM INFORMATION_SCHEMA.INDEXES AS I
-        LEFT JOIN index_key_columns_agg_cte AS KeyIndexCols
-          ON I.TABLE_CATALOG = KeyIndexCols.TABLE_CATALOG AND I.TABLE_SCHEMA = KeyIndexCols.TABLE_SCHEMA AND I.TABLE_NAME = KeyIndexCols.TABLE_NAME AND I.INDEX_NAME = KeyIndexCols.INDEX_NAME
-        LEFT JOIN index_storing_columns_agg_cte AS StoringIndexCols
-          ON I.TABLE_CATALOG = StoringIndexCols.TABLE_CATALOG AND I.TABLE_SCHEMA = StoringIndexCols.TABLE_SCHEMA AND I.TABLE_NAME = StoringIndexCols.TABLE_NAME AND I.INDEX_NAME = StoringIndexCols.INDEX_NAME AND I.INDEX_TYPE = 'INDEX'
-        WHERE EXISTS (SELECT 1 FROM table_info_cte TI WHERE I.TABLE_SCHEMA = TI.TABLE_SCHEMA AND I.TABLE_NAME = TI.TABLE_NAME)
-        GROUP BY I.TABLE_SCHEMA, I.TABLE_NAME
-      )
-
-      -- Final SELECT to build the JSON output
-      SELECT
-        TI.TABLE_SCHEMA AS schema_name,
-        TI.TABLE_NAME AS object_name,
-        CONCAT(
-          '{',
-          '"schema_name":"', IFNULL(TI.TABLE_SCHEMA, ''), '",',
-          '"object_name":"', IFNULL(TI.TABLE_NAME, ''), '",',
-          '"object_type":"', IFNULL(TI.TABLE_TYPE, ''), '",',
-          '"columns":[', ARRAY_TO_STRING(COALESCE(CI.columns_json_array_elements, []), ','), '],',
-          '"constraints":[', ARRAY_TO_STRING(COALESCE(CONSI.constraints_json_array_elements, []), ','), '],',
-          '"indexes":[', ARRAY_TO_STRING(COALESCE(II.indexes_json_array_elements, []), ','), '],',
-          '}'
-        ) AS object_details
-      FROM table_info_cte AS TI
-      LEFT JOIN columns_info_cte AS CI
-        ON TI.TABLE_SCHEMA = CI.TABLE_SCHEMA AND TI.TABLE_NAME = CI.TABLE_NAME
-      LEFT JOIN constraints_info_cte AS CONSI
-        ON TI.TABLE_SCHEMA = CONSI.TABLE_SCHEMA AND TI.TABLE_NAME = CONSI.TABLE_NAME
-      LEFT JOIN indexes_info_cte AS II
-        ON TI.TABLE_SCHEMA = II.TABLE_SCHEMA AND TI.TABLE_NAME = II.TABLE_NAME
-      ORDER BY TI.TABLE_SCHEMA, TI.TABLE_NAME;
-
-    parameters:
-      - name: table_names
-        type: string
-        description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
-{{< /tab >}}
-{{< tab header="postgresql" lang="yaml" >}}
-sources:
-  spanner-source:
-        kind: "spanner"
-        project: ${SPANNER_PROJECT} 
-        instance: ${SPANNER_INSTANCE}
-        database: ${SPANNER_DB}
-        dialect: "postgresql"
-
-tools:
-  execute_sql:
-    kind: spanner-execute-sql
-    source: spanner-source
-    description: Use this tool to execute DML SQL. Please use the PostgreSQL interface for Spanner.
-
-  execute_sql_dql:
-    kind: spanner-execute-sql
-    source: spanner-source
-    description: Use this tool to execute DQL SQL. Please use the PostgreSQL interface for Spanner.
-    readOnly: true
-
-  list_tables:
-    kind: spanner-sql
-    source: spanner-source
-    readOnly: true
-    description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
-    statement: |
-      WITH table_info_cte AS (
-          SELECT
-            T.TABLE_SCHEMA,
-            T.TABLE_NAME,
-            T.TABLE_TYPE,
-            T.PARENT_TABLE_NAME,
-            T.ON_DELETE_ACTION 
-          FROM INFORMATION_SCHEMA.TABLES AS T
-          WHERE
-            T.TABLE_SCHEMA = 'public'
-            AND T.TABLE_TYPE = 'BASE TABLE'
-            AND (
-            NULLIF(TRIM($1), '') IS NULL OR 
-            T.TABLE_NAME IN (
-              SELECT table_name 
-              FROM UNNEST(regexp_split_to_array($1, '\s*,\s*')) AS table_name)
-            )
-        ),
-
-        columns_info_cte AS (
-          SELECT
-            C.TABLE_SCHEMA,
-            C.TABLE_NAME,
-            ARRAY_AGG(
-              CONCAT(
-                '{',
-                '"column_name":"', COALESCE(REPLACE(C.COLUMN_NAME, '"', '\"'), ''), '",',
-                '"data_type":"', COALESCE(REPLACE(C.SPANNER_TYPE, '"', '\"'), ''), '",', 
-                '"ordinal_position":', C.ORDINAL_POSITION::TEXT, ',',
-                '"is_not_nullable":', CASE WHEN C.IS_NULLABLE = 'NO' THEN 'true' ELSE 'false' END, ',',
-                '"column_default":', CASE WHEN C.COLUMN_DEFAULT IS NULL THEN 'null' ELSE CONCAT('"', REPLACE(C.COLUMN_DEFAULT::text, '"', '\"'), '"') END,
-                '}'
-              ) ORDER BY C.ORDINAL_POSITION
-            ) AS columns_json_array_elements
-          FROM INFORMATION_SCHEMA.COLUMNS AS C
-          WHERE C.TABLE_SCHEMA = 'public'
-            AND EXISTS (SELECT 1 FROM table_info_cte TI WHERE C.TABLE_SCHEMA = TI.TABLE_SCHEMA AND C.TABLE_NAME = TI.TABLE_NAME)
-          GROUP BY C.TABLE_SCHEMA, C.TABLE_NAME
-        ),
-
-        constraint_columns_agg_cte AS (
-          SELECT
-            CONSTRAINT_CATALOG,
-            CONSTRAINT_SCHEMA,
-            CONSTRAINT_NAME,
-            ARRAY_AGG('"' || REPLACE(COLUMN_NAME, '"', '\"') || '"' ORDER BY ORDINAL_POSITION) AS column_names_json_list
-          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-          WHERE CONSTRAINT_SCHEMA = 'public' 
-          GROUP BY CONSTRAINT_CATALOG, CONSTRAINT_SCHEMA, CONSTRAINT_NAME
-        ),
-
-        constraints_info_cte AS (
-          SELECT
-            TC.TABLE_SCHEMA,
-            TC.TABLE_NAME,
-            ARRAY_AGG(
-              CONCAT(
-                '{',
-                '"constraint_name":"', COALESCE(REPLACE(TC.CONSTRAINT_NAME, '"', '\"'), ''), '",',
-                '"constraint_type":"', COALESCE(REPLACE(TC.CONSTRAINT_TYPE, '"', '\"'), ''), '",',
-                '"constraint_definition":',
-                  CASE TC.CONSTRAINT_TYPE
-                    WHEN 'CHECK' THEN CASE WHEN CC.CHECK_CLAUSE IS NULL THEN 'null' ELSE CONCAT('"', REPLACE(CC.CHECK_CLAUSE, '"', '\"'), '"') END
-                    WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
-                    WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
-                    WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ') REFERENCES ',
-                                            COALESCE(REPLACE(RefKeyTable.TABLE_NAME, '"', '\"'), ''),
-                                            ' (', array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
-                    ELSE 'null'
-                  END, ',',
-                '"constraint_columns":[', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '],',
-                '"foreign_key_referenced_table":', CASE WHEN RefKeyTable.TABLE_NAME IS NULL THEN 'null' ELSE CONCAT('"', REPLACE(RefKeyTable.TABLE_NAME, '"', '\"'), '"') END, ',',
-                '"foreign_key_referenced_columns":[', array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ','), ']',
-                '}'
-              ) ORDER BY TC.CONSTRAINT_NAME
-            ) AS constraints_json_array_elements
-          FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC
-          LEFT JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS AS CC
-            ON TC.CONSTRAINT_CATALOG = CC.CONSTRAINT_CATALOG AND TC.CONSTRAINT_SCHEMA = CC.CONSTRAINT_SCHEMA AND TC.CONSTRAINT_NAME = CC.CONSTRAINT_NAME
-          LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS RC
-            ON TC.CONSTRAINT_CATALOG = RC.CONSTRAINT_CATALOG AND TC.CONSTRAINT_SCHEMA = RC.CONSTRAINT_SCHEMA AND TC.CONSTRAINT_NAME = RC.CONSTRAINT_NAME
-          LEFT JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS RefConstraint
-            ON RC.UNIQUE_CONSTRAINT_CATALOG = RefConstraint.CONSTRAINT_CATALOG AND RC.UNIQUE_CONSTRAINT_SCHEMA = RefConstraint.CONSTRAINT_SCHEMA AND RC.UNIQUE_CONSTRAINT_NAME = RefConstraint.CONSTRAINT_NAME
-          LEFT JOIN INFORMATION_SCHEMA.TABLES AS RefKeyTable
-            ON RefConstraint.TABLE_CATALOG = RefKeyTable.TABLE_CATALOG AND RefConstraint.TABLE_SCHEMA = RefKeyTable.TABLE_SCHEMA AND RefConstraint.TABLE_NAME = RefKeyTable.TABLE_NAME
-          LEFT JOIN constraint_columns_agg_cte AS KeyCols
-            ON TC.CONSTRAINT_CATALOG = KeyCols.CONSTRAINT_CATALOG AND TC.CONSTRAINT_SCHEMA = KeyCols.CONSTRAINT_SCHEMA AND TC.CONSTRAINT_NAME = KeyCols.CONSTRAINT_NAME
-          LEFT JOIN constraint_columns_agg_cte AS RefKeyCols
-            ON RC.UNIQUE_CONSTRAINT_CATALOG = RefKeyCols.CONSTRAINT_CATALOG AND RC.UNIQUE_CONSTRAINT_SCHEMA = RefKeyCols.CONSTRAINT_SCHEMA AND RC.UNIQUE_CONSTRAINT_NAME = RefKeyCols.CONSTRAINT_NAME AND TC.CONSTRAINT_TYPE = 'FOREIGN KEY'
-          WHERE TC.TABLE_SCHEMA = 'public'
-            AND EXISTS (SELECT 1 FROM table_info_cte TI WHERE TC.TABLE_SCHEMA = TI.TABLE_SCHEMA AND TC.TABLE_NAME = TI.TABLE_NAME)
-          GROUP BY TC.TABLE_SCHEMA, TC.TABLE_NAME
-        ),
-
-        index_key_columns_agg_cte AS (
-          SELECT
-            TABLE_CATALOG,
-            TABLE_SCHEMA,
-            TABLE_NAME,
-            INDEX_NAME,
-            ARRAY_AGG(
-              CONCAT(
-                '{"column_name":"', COALESCE(REPLACE(COLUMN_NAME, '"', '\"'), ''), '",',
-                '"ordering":"', COALESCE(REPLACE(COLUMN_ORDERING, '"', '\"'), ''), '"}'
-              ) ORDER BY ORDINAL_POSITION
-            ) AS key_column_json_details
-          FROM INFORMATION_SCHEMA.INDEX_COLUMNS 
-          WHERE ORDINAL_POSITION IS NOT NULL 
-            AND TABLE_SCHEMA = 'public'
-          GROUP BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, INDEX_NAME
-        ),
-
-        index_storing_columns_agg_cte AS (
-          SELECT
-            TABLE_CATALOG,
-            TABLE_SCHEMA,
-            TABLE_NAME,
-            INDEX_NAME,
-            ARRAY_AGG(CONCAT('"', REPLACE(COLUMN_NAME, '"', '\"'), '"') ORDER BY COLUMN_NAME) AS storing_column_json_names
-          FROM INFORMATION_SCHEMA.INDEX_COLUMNS 
-          WHERE ORDINAL_POSITION IS NULL 
-            AND TABLE_SCHEMA = 'public'
-          GROUP BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, INDEX_NAME
-        ),
-
-        indexes_info_cte AS (
-          SELECT
-            I.TABLE_SCHEMA,
-            I.TABLE_NAME,
-            ARRAY_AGG(
-              CONCAT(
-                '{',
-                '"index_name":"', COALESCE(REPLACE(I.INDEX_NAME, '"', '\"'), ''), '",',
-                '"index_type":"', COALESCE(REPLACE(I.INDEX_TYPE, '"', '\"'), ''), '",', 
-                '"is_unique":', CASE WHEN I.IS_UNIQUE = 'YES' THEN 'true' ELSE 'false' END, ',',
-                '"is_null_filtered":', CASE WHEN I.IS_NULL_FILTERED = 'YES' THEN 'true' ELSE 'false' END, ',', 
-                '"interleaved_in_table":', CASE WHEN I.PARENT_TABLE_NAME IS NULL OR I.PARENT_TABLE_NAME = '' THEN 'null' ELSE CONCAT('"', REPLACE(I.PARENT_TABLE_NAME, '"', '\"'), '"') END, ',', 
-                '"index_key_columns":[', COALESCE(array_to_string(KeyIndexCols.key_column_json_details, ','), ''), '],',
-                '"storing_columns":[', COALESCE(array_to_string(StoringIndexCols.storing_column_json_names, ','), ''), ']',
-                '}'
-              ) ORDER BY I.INDEX_NAME
-            ) AS indexes_json_array_elements
-          FROM INFORMATION_SCHEMA.INDEXES AS I
-          LEFT JOIN index_key_columns_agg_cte AS KeyIndexCols
-            ON I.TABLE_CATALOG = KeyIndexCols.TABLE_CATALOG AND I.TABLE_SCHEMA = KeyIndexCols.TABLE_SCHEMA AND I.TABLE_NAME = KeyIndexCols.TABLE_NAME AND I.INDEX_NAME = KeyIndexCols.INDEX_NAME
-          LEFT JOIN index_storing_columns_agg_cte AS StoringIndexCols
-            ON I.TABLE_CATALOG = StoringIndexCols.TABLE_CATALOG AND I.TABLE_SCHEMA = StoringIndexCols.TABLE_SCHEMA AND I.TABLE_NAME = StoringIndexCols.TABLE_NAME AND I.INDEX_NAME = StoringIndexCols.INDEX_NAME
-          AND I.INDEX_TYPE IN ('LOCAL', 'GLOBAL')
-          WHERE I.TABLE_SCHEMA = 'public'
-            AND EXISTS (SELECT 1 FROM table_info_cte TI WHERE I.TABLE_SCHEMA = TI.TABLE_SCHEMA AND I.TABLE_NAME = TI.TABLE_NAME)
-          GROUP BY I.TABLE_SCHEMA, I.TABLE_NAME
-        )
-
-      SELECT
-        TI.TABLE_SCHEMA AS schema_name,
-        TI.TABLE_NAME AS object_name,
-        CONCAT(
-          '{',
-          '"schema_name":"', COALESCE(REPLACE(TI.TABLE_SCHEMA, '"', '\"'), ''), '",',
-          '"object_name":"', COALESCE(REPLACE(TI.TABLE_NAME, '"', '\"'), ''), '",',
-          '"object_type":"', COALESCE(REPLACE(TI.TABLE_TYPE, '"', '\"'), ''), '",',
-          '"columns":[', COALESCE(array_to_string(CI.columns_json_array_elements, ','), ''), '],',
-          '"constraints":[', COALESCE(array_to_string(CONSI.constraints_json_array_elements, ','), ''), '],',
-          '"indexes":[', COALESCE(array_to_string(II.indexes_json_array_elements, ','), ''), ']',
-          '}'
-        ) AS object_details
-      FROM table_info_cte AS TI
-      LEFT JOIN columns_info_cte AS CI
-        ON TI.TABLE_SCHEMA = CI.TABLE_SCHEMA AND TI.TABLE_NAME = CI.TABLE_NAME
-      LEFT JOIN constraints_info_cte AS CONSI
-        ON TI.TABLE_SCHEMA = CONSI.TABLE_SCHEMA AND TI.TABLE_NAME = CONSI.TABLE_NAME
-      LEFT JOIN indexes_info_cte AS II
-        ON TI.TABLE_SCHEMA = II.TABLE_SCHEMA AND TI.TABLE_NAME = II.TABLE_NAME
-      ORDER BY TI.TABLE_SCHEMA, TI.TABLE_NAME;
-      
-
-    parameters:
-      - name: table_names
-        type: string
-        description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
-
-{{< /tab >}}
-    {{< /tabpane >}}
-
-4. Start Toolbox to listen on `127.0.0.1:5000`:
-
-    ```bash
-    ./toolbox --tools-file tools.yaml --address 127.0.0.1 --port 5000
-    ```
-
-{{< notice tip >}}
-To stop the Toolbox server when you're finished, press `ctrl+c` to send the terminate signal.
-{{< /notice >}}
-
 ## Configure your MCP Client
 
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
 1. Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-2. Create a `.mcp.json` file in your project root if it doesn't exist.
-3. Add the following configuration and save:
+1. Create a `.mcp.json` file in your project root if it doesn't exist.
+1. Add the following configuration and save:
 
+   Spanner with `googlesql` dialect
     ```json
     {
       "mcpServers": {
         "spanner": {
-          "type": "sse",
-          "url": "http://127.0.0.1:5000/mcp/sse"
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+          ],
         }
       }
     }
     ```
 
-4. Restart Claude code to apply the new configuration.
+   Spanner with `postgresql` dialect
+
+    ```json
+    {
+      "mcpServers": {
+        "spanner": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner-postgres","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+            "SPANNER_DIALECT": "postgresql",
+          ],
+        }
+      }
+    }
+    ```
+
+1. Restart Claude code to apply the new configuration.
 {{% /tab %}}
 
 {{% tab header="Claude desktop" lang="en" %}}
 
 1. Install [`npx`](https://docs.npmjs.com/cli/v8/commands/npx).
-2. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-3. Under the Developer tab, tap Edit Config to open the configuration file.
-4. Add the following configuration and save:
+1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1. Under the Developer tab, tap Edit Config to open the configuration file.
+1. Add the following configuration and save:
 
+   Spanner with `googlesql` dialect
     ```json
     {
       "mcpServers": {
         "spanner": {
-          "command": "npx",
-          "args": [
-            "-y",
-            "mcp-remote",
-            "http://127.0.0.1:5000/mcp/sse"
-          ]
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+          ],
         }
       }
     }
     ```
 
-5. Restart Claude desktop.
-6. From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+   Spanner with `postgresql` dialect
+
+    ```json
+    {
+      "mcpServers": {
+        "spanner": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner-postgres","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+            "SPANNER_DIALECT": "postgresql",
+          ],
+        }
+      }
+    }
+    ```
+
+1. Restart Claude desktop.
+1. From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
 {{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
 
 1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
-2. Tap Configure MCP Servers to open the configuration file.
-3. Add the following configuration and save:
+1. Tap Configure MCP Servers to open the configuration file.
+1. Add the following configuration and save:
 
+   Spanner with `googlesql` dialect
     ```json
     {
       "mcpServers": {
         "spanner": {
-          "type": "sse",
-          "url": "http://127.0.0.1:5000/mcp/sse"
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+          ],
         }
       }
     }
     ```
 
-4. You should see a green active status after the server is successfully connected.
+   Spanner with `postgresql` dialect
+
+    ```json
+    {
+      "mcpServers": {
+        "spanner": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner-postgres","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+            "SPANNER_DIALECT": "postgresql",
+          ],
+        }
+      }
+    }
+    ```
+
+1. You should see a green active status after the server is successfully connected.
 {{% /tab %}}
 
 {{% tab header="Cursor" lang="en" %}}
 
 1. Create a `.cursor` directory in your project root if it doesn't exist.
-2. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-3. Add the following configuration:
+1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
 
+   Spanner with `googlesql` dialect
     ```json
     {
       "mcpServers": {
         "spanner": {
-          "type": "sse",
-          "url": "http://127.0.0.1:5000/mcp/sse"
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+          ],
         }
       }
     }
     ```
 
-4. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+   Spanner with `postgresql` dialect
+
+    ```json
+    {
+      "mcpServers": {
+        "spanner": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner-postgres","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+            "SPANNER_DIALECT": "postgresql",
+          ],
+        }
+      }
+    }
+    ```
+
+1. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
 {{% /tab %}}
 
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
 1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
-2. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-3. Add the following configuration:
+1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+   Spanner with `googlesql` dialect
+    ```json
+    {
+      "mcpServers": {
+        "spanner": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+          ],
+        }
+      }
+    }
+    ```
+
+   Spanner with `postgresql` dialect
 
     ```json
     {
       "mcpServers": {
         "spanner": {
-          "type": "sse",
-          "url": "http://127.0.0.1:5000/mcp/sse"
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner-postgres","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+            "SPANNER_DIALECT": "postgresql",
+          ],
         }
       }
     }
     ```
+
 {{% /tab %}}
 
 {{% tab header="Windsurf" lang="en" %}}
 
 1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
-2. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-3. Add the following configuration:
+1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1. Add the following configuration and save:
+
+   Spanner with `googlesql` dialect
+    ```json
+    {
+      "mcpServers": {
+        "spanner": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+          ],
+        }
+      }
+    }
+    ```
+
+   Spanner with `postgresql` dialect
 
     ```json
     {
       "mcpServers": {
         "spanner": {
-          "serverUrl": "http://127.0.0.1:5000/mcp/sse"
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","spanner-postgres","--stdio"],
+          "env": [
+            "SPANNER_PROJECT": "",
+            "SPANNER_INSTANCE": "",
+            "SPANNER_DATABASE": "",
+            "SPANNER_DIALECT": "postgresql",
+          ],
         }
       }
     }
-
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
