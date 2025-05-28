@@ -899,9 +899,13 @@ func TestEnvVarReplacement(t *testing.T) {
 
 func TestPrebuiltTools(t *testing.T) {
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
+	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
+	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
+	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
+	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -922,11 +926,41 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
+			name: "bigquery prebuilt tools",
+			in:   bigquery_config,
+			wantToolset: server.ToolsetConfigs{
+				"bigquery-postgres-database-tools": tools.ToolsetConfig{
+					Name:      "bigquery-postgres-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
 			name: "cloudsqlpg prebuilt tools",
 			in:   cloudsqlpg_config,
 			wantToolset: server.ToolsetConfigs{
-				"cloudsql-postgres-database-tools": tools.ToolsetConfig{
-					Name:      "cloudsql-postgres-database-tools",
+				"cloud-sql-postgres-database-tools": tools.ToolsetConfig{
+					Name:      "cloud-sql-postgres-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "cloudsqlmysql prebuilt tools",
+			in:   cloudsqlmysql_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-sql-mysql-database-tools": tools.ToolsetConfig{
+					Name:      "cloud-sql-mysql-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "cloudsqlmssql prebuilt tools",
+			in:   cloudsqlmssql_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-sql-mssql-database-tools": tools.ToolsetConfig{
+					Name:      "cloud-sql-mssql-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
@@ -947,6 +981,16 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "spanner pg prebuilt tools",
+			in:   spannerpg_config,
+			wantToolset: server.ToolsetConfigs{
+				"spanner-postgres-database-tools": tools.ToolsetConfig{
+					Name:      "spanner-postgres-database-tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
 				},
 			},
