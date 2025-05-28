@@ -101,13 +101,13 @@ Next, we will use Toolbox with the Client SDKs:
 from toolbox_langchain import ToolboxClient
 
 # Replace with the cloud run service URL generated above
-toolbox = ToolboxClient("http://$YOUR_URL")
+async with ToolboxClient("http://$YOUR_URL") as toolbox:
 {{< /tab >}}
 {{< tab header="Llamaindex" lang="Python" >}}
 from toolbox_llamaindex import ToolboxClient
 
 # Replace with the cloud run service URL generated above
-toolbox = ToolboxClient("http://$YOUR_URL")
+async with ToolboxClient("http://$YOUR_URL") as toolbox:
 {{< /tab >}}
 {{< /tabpane >}}
 
