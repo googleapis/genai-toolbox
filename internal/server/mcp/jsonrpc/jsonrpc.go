@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package jsonrpc
 
 // JSONRPC_VERSION is the version of JSON-RPC used by MCP.
 const JSONRPC_VERSION = "2.0"
@@ -85,7 +85,7 @@ type JSONRPCResponse struct {
 	Result  interface{} `json:"result"`
 }
 
-// McpError represents the error content.
+// Error represents the error content.
 type Error struct {
 	// The error type that occurred.
 	Code int `json:"code"`
@@ -102,6 +102,13 @@ type JSONRPCError struct {
 	Jsonrpc string    `json:"jsonrpc"`
 	Id      RequestId `json:"id"`
 	Error   Error     `json:"error"`
+}
+
+// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
+type BaseMessage struct {
+	Jsonrpc string    `json:"jsonrpc"`
+	Method  string    `json:"method"`
+	Id      RequestId `json:"id,omitempty"`
 }
 
 // NewError is the standard JSONRPC response sent back when an error has been encountered.

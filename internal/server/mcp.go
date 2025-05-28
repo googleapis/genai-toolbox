@@ -29,6 +29,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
@@ -309,7 +310,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, mcputil.NewError(id, mcputil.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
 	}
 
 	res, err := processMcpMessage(ctx, body, s, toolsetName)
@@ -349,35 +350,31 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 func processMcpMessage(ctx context.Context, body []byte, s *Server, toolsetName string) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return mcputil.NewError("", mcputil.INTERNAL_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	// TODO: will update during implementation of mcpManager
 	protocolVersion := "2024-11-05"
 
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
-	var baseMessage struct {
-		Jsonrpc string            `json:"jsonrpc"`
-		Method  string            `json:"method"`
-		Id      mcputil.RequestId `json:"id,omitempty"`
-	}
+	var baseMessage jsonrpc.BaseMessage
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
-		return mcputil.NewError(id, mcputil.PARSE_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
 	// Check if method is present
 	if baseMessage.Method == "" {
 		err = fmt.Errorf("method not found")
-		return mcputil.NewError(baseMessage.Id, mcputil.METHOD_NOT_FOUND, err.Error(), nil), err
+		return jsonrpc.NewError(baseMessage.Id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("method is: %s", baseMessage.Method))
 
 	// Check for JSON-RPC 2.0
-	if baseMessage.Jsonrpc != mcputil.JSONRPC_VERSION {
+	if baseMessage.Jsonrpc != jsonrpc.JSONRPC_VERSION {
 		err = fmt.Errorf("invalid json-rpc version")
-		return mcputil.NewError(baseMessage.Id, mcputil.INVALID_REQUEST, err.Error(), nil), err
+		return jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	// Check if message is a notification
@@ -395,7 +392,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, toolsetName 
 		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
-			return mcputil.NewError(baseMessage.Id, mcputil.INVALID_REQUEST, err.Error(), nil), err
+			return jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 		return mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
 	}

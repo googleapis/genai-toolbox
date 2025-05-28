@@ -14,6 +14,8 @@
 
 package util
 
+import "github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+
 const (
 	// SERVER_NAME is the server name used in Implementation.
 	SERVER_NAME = "Toolbox"
@@ -35,14 +37,14 @@ type InitializeParams struct {
 // InitializeRequest is sent from the client to the server when it first
 // connects, asking it to begin initialization.
 type InitializeRequest struct {
-	Request
+	jsonrpc.Request
 	Params InitializeParams `json:"params"`
 }
 
 // InitializeResult is sent after receiving an initialize request from the
 // client.
 type InitializeResult struct {
-	Result
+	jsonrpc.Result
 	// The version of the Model Context Protocol that the server wants to use.
 	// This may not match the version that the client requested. If the client cannot
 	// support this version, it MUST disconnect.
@@ -60,7 +62,7 @@ type InitializeResult struct {
 // InitializedNotification is sent from the client to the server after
 // initialization has finished.
 type InitializedNotification struct {
-	Notification
+	jsonrpc.Notification
 }
 
 // ListChange represents whether the server supports notification for changes to the capabilities.

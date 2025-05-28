@@ -15,7 +15,7 @@
 package v20241105
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/util"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -34,7 +34,7 @@ const (
 /* Empty result */
 
 // EmptyResult represents a response that indicates success but carries no data.
-type EmptyResult util.Result
+type EmptyResult jsonrpc.Result
 
 /* Pagination */
 
@@ -42,7 +42,7 @@ type EmptyResult util.Result
 type Cursor string
 
 type PaginatedRequest struct {
-	util.Request
+	jsonrpc.Request
 	Params struct {
 		// An opaque token representing the current pagination position.
 		// If provided, the server should return results starting after this cursor.
@@ -51,7 +51,7 @@ type PaginatedRequest struct {
 }
 
 type PaginatedResult struct {
-	util.Result
+	jsonrpc.Result
 	// An opaque token representing the pagination position after the last returned result.
 	// If present, there may be more results available.
 	NextCursor Cursor `json:"nextCursor,omitempty"`
@@ -72,7 +72,7 @@ type ListToolsResult struct {
 
 // Used by the client to invoke a tool provided by the server.
 type CallToolRequest struct {
-	util.Request
+	jsonrpc.Request
 	Params struct {
 		Name      string         `json:"name"`
 		Arguments map[string]any `json:"arguments,omitempty"`
@@ -127,7 +127,7 @@ type TextContent struct {
 // server does not support tool calls, or any other exceptional conditions,
 // should be reported as an MCP error response.
 type CallToolResult struct {
-	util.Result
+	jsonrpc.Result
 	// Could be either a TextContent, ImageContent, or EmbeddedResources
 	// For Toolbox, we will only be sending TextContent
 	Content []TextContent `json:"content"`

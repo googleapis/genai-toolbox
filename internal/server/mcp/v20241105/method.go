@@ -20,13 +20,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id mcputil.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte) (any, error) {
 	switch method {
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
@@ -34,39 +34,39 @@ func ProcessMethod(ctx context.Context, id mcputil.RequestId, method string, too
 		return toolsCallHandler(ctx, id, tools, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
-		return mcputil.NewError(id, mcputil.METHOD_NOT_FOUND, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
 }
 
-func toolsListHandler(id mcputil.RequestId, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
-		return mcputil.NewError(id, mcputil.INVALID_REQUEST, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	result := ListToolsResult{
 		Tools: toolset.McpManifest,
 	}
-	return mcputil.JSONRPCResponse{
-		Jsonrpc: mcputil.JSONRPC_VERSION,
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
 		Result:  result,
 	}, nil
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id mcputil.RequestId, tools map[string]tools.Tool, body []byte) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[string]tools.Tool, body []byte) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return mcputil.NewError(id, mcputil.INTERNAL_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	var req CallToolRequest
 	if err = json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools call request: %w", err)
-		return mcputil.NewError(id, mcputil.INVALID_REQUEST, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	toolName := req.Params.Name
@@ -75,20 +75,20 @@ func toolsCallHandler(ctx context.Context, id mcputil.RequestId, tools map[strin
 	tool, ok := tools[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		return mcputil.NewError(id, mcputil.INVALID_PARAMS, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
 	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
 	aMarshal, err := json.Marshal(toolArgument)
 	if err != nil {
 		err = fmt.Errorf("unable to marshal tools argument: %w", err)
-		return mcputil.NewError(id, mcputil.INTERNAL_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	var data map[string]any
 	if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
 		err = fmt.Errorf("unable to decode tools argument: %w", err)
-		return mcputil.NewError(id, mcputil.INTERNAL_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
@@ -98,13 +98,13 @@ func toolsCallHandler(ctx context.Context, id mcputil.RequestId, tools map[strin
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		return mcputil.NewError(id, mcputil.INVALID_PARAMS, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	if !tool.Authorized([]string{}) {
 		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool")
-		return mcputil.NewError(id, mcputil.INVALID_REQUEST, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	// run tool invocation and generate response.
@@ -114,8 +114,8 @@ func toolsCallHandler(ctx context.Context, id mcputil.RequestId, tools map[strin
 			Type: "text",
 			Text: err.Error(),
 		}
-		return mcputil.JSONRPCResponse{
-			Jsonrpc: mcputil.JSONRPC_VERSION,
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
 			Id:      id,
 			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
 		}, nil
@@ -133,8 +133,8 @@ func toolsCallHandler(ctx context.Context, id mcputil.RequestId, tools map[strin
 		content = append(content, text)
 	}
 
-	return mcputil.JSONRPCResponse{
-		Jsonrpc: mcputil.JSONRPC_VERSION,
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
 		Result:  CallToolResult{Content: content},
 	}, nil
