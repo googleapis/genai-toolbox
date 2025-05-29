@@ -261,4 +261,4 @@ The following tools are available to the LLM:
 
 {{< notice note >}}
 This server is pre-1.0, so expect some breaking changes between versions. Since LLMs will automatically adapt to the tools available, this shouldn't affect most users.
-{{< /notice note >}}
+{{< /notice >}}
