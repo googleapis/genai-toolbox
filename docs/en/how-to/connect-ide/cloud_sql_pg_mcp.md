@@ -252,7 +252,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.6.0/windows/amd64/toolbo
 
 ## Use Tools
 
-Your AI tool is now connected to AlloyDB using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+Your AI tool is now connected to Cloud SQL for PostgreSQL using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
 
 The following tools are available to the LLM:
 
