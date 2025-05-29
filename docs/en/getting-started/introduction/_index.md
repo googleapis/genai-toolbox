@@ -41,6 +41,7 @@ Here’s how it will save you time:
 * **Slash Development Overhead**: Radically reduce the time spent on manual setup and boilerplate. MCP Toolbox helps streamline lengthy database configurations, repetitive code, and error-prone schema migrations.
 
 Learn [how to connect your AI tools (IDEs) to Toolbox using MCP][connect-ide].
+
 [connect-ide]: ../../how-to/connect-ide/
 
 ## General Architecture
