@@ -651,8 +651,8 @@ github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.2 h1:DBjmt6/otSdULyJdVg2
 github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.2/go.mod h1:dppbR7CwXD4pgtV9t3wD1812RaLDcBjtblcDF5f1vI0=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.27.0 h1:ErKg/3iS1AKcTkf3yixlZ54f9U1rljCkQyEXWUnIUxc=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.27.0/go.mod h1:yAZHSGnqScoU556rBOVkwLze6WP5N+U11RHuWaGVxwY=
-github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0 h1:fYE9p3esPxA/C0rQ0AHhP0drtPXDRhaWiwg1DPqO7IU=
-github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0/go.mod h1:BnBReJLvVYx2CS/UHOgVz2BXKXD9wsQPxZug20nZhd0=
+github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.52.0 h1:QFgWzcdmJlgEAwJz/zePYVJQxfoJGRtgIqZfIUFg5oQ=
+github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.52.0/go.mod h1:ayYHuYU7iNcNtEs1K9k6D/Bju7u1VEHMQm5qQ1n3GtM=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.28.0 h1:RC78FvsZ8rLRLgVQuw1jMJ8d6t38QgOv3hDoUVGD50U=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.28.0/go.mod h1:03+QlJ+6zSrBaVaZ9K87fzUyKBDcAh0X1n1Vxq3XAjc=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/cloudmock v0.52.0 h1:0l8ynskVvq1dvIn5vJbFMf/a/3TqFpRmCMrruFbzlvk=
