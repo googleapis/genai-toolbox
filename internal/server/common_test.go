@@ -197,12 +197,17 @@ func runServer(r chi.Router, tls bool) *httptest.Server {
 	return ts
 }
 
-func runRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, []byte, error) {
+func runRequest(ts *httptest.Server, method, path string, body io.Reader, header map[string]string) (*http.Response, []byte, error) {
 	req, err := http.NewRequest(method, ts.URL+path, body)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create request: %w", err)
 	}
+
 	req.Header.Set("Content-Type", "application/json")
+	for k, v := range header {
+		req.Header.Set(k, v)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to send request: %w", err)
