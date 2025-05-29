@@ -29,13 +29,14 @@ database. Toolbox provides:
 - **End-to-end observability**: Out of the box metrics and tracing with built-in
   support for OpenTelemetry.
 
+
 **⚡ Supercharge Your Workflow with an AI Database Assistant ⚡**
 
 Stop context-switching and let your AI assistant become a true co-developer. By [connecting your IDE to your databases with MCP Toolbox][connect-ide], you can delegate complex and time-consuming database tasks, allowing you to build faster and focus on what matters. This isn't just about code completion; it's about giving your AI the context it needs to handle the entire development lifecycle.
 
 Here’s how it will save you time:
 
-* **Query in Plain English** : Interact with your data using natural language right from your IDE. Ask complex questions like, *"How many orders were delivered in 2024, and what items were in them?"* without writing any SQL.
+* **Query in Plain English**: Interact with your data using natural language right from your IDE. Ask complex questions like, *"How many orders were delivered in 2024, and what items were in them?"* without writing any SQL.
 * **Automate Database Management**: Simply describe your data needs, and let the AI assistant manage your database for you. It can handle generating queries, creating tables, adding indexes, and more.
 * **Generate Context-Aware Code**: Empower your AI assistant to generate application code and tests with a deep understanding of your real-time database schema.  This accelerates the development cycle by ensuring the generated code is directly usable.
 * **Slash Development Overhead**: Radically reduce the time spent on manual setup and boilerplate. MCP Toolbox helps streamline lengthy database configurations, repetitive code, and error-prone schema migrations.
