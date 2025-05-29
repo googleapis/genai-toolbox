@@ -254,3 +254,16 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.6.0/windows/amd64/toolbo
     ```
 {{% /tab %}}
 {{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to AlloyDB using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+
+The following tools are available to the LLM:
+
+1. **list_tables**: lists tables and descriptions
+1. **execute_sql**: execute any SQL statement
+
+{{< notice note >}}
+This server is pre-1.0, so expect some breaking changes between versions. Since LLMs will automatically adapt to the tools available, this shouldn't affect most users.
+{{< /notice note >}}

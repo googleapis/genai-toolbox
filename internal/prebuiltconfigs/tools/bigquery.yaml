@@ -22,12 +22,12 @@ tools:
   list_dataset_ids:
     kind: bigquery-list-dataset-ids
     source: bigquery-source
-    description: Use this tool to get dataset metadata.
+    description: Use this tool to list datasets.
 
   list_table_ids:
     kind: bigquery-list-table-ids
     source: bigquery-source
-    description: Use this tool to get table metadata.
+    description: Use this tool to list tables.
 
 toolsets:
   bigquery-database-tools:
