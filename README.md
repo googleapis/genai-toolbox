@@ -3,10 +3,10 @@
 # MCP Toolbox for Databases
 
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
-[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
 
-> [!NOTE] 
-> MCP Toolbox for Databases is currently in beta, and may see breaking 
+> [!NOTE]
+> MCP Toolbox for Databases is currently in beta, and may see breaking
 > changes until the first stable release (v1.0).
 
 MCP Toolbox for Databases is an open source MCP server for databases. It enables
@@ -17,10 +17,10 @@ This README provides a brief overview. For comprehensive details, see the [full
 documentation](https://googleapis.github.io/genai-toolbox/).
 
 
-> [!NOTE] 
+> [!NOTE]
 > This solution was originally named “Gen AI Toolbox for Databases” as
 > its initial development predated MCP, but was renamed to align with recently
-> added MCP compatibility. 
+> added MCP compatibility.
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -56,6 +56,21 @@ database. Toolbox provides:
 - **End-to-end observability**: Out of the box metrics and tracing with built-in
   support for OpenTelemetry.
 
+
+**⚡ Supercharge Your Workflow with an AI Database Assistant ⚡**
+
+Stop context-switching and let your AI assistant become a true co-developer. By [connecting your IDE to your databases with MCP Toolbox][connect-ide], you can delegate complex and time-consuming database tasks, allowing you to build faster and focus on what matters. This isn't just about code completion; it's about giving your AI the context it needs to handle the entire development lifecycle.
+
+Here’s how it will save you time:
+
+* **Query in Plain English**: Interact with your data using natural language right from your IDE. Ask complex questions like, *"How many orders were delivered in 2024, and what items were in them?"* without writing any SQL.
+* **Automate Database Management**: Simply describe your data needs, and let the AI assistant manage your database for you. It can handle generating queries, creating tables, adding indexes, and more.
+* **Generate Context-Aware Code**: Empower your AI assistant to generate application code and tests with a deep understanding of your real-time database schema.  This accelerates the development cycle by ensuring the generated code is directly usable.
+* **Slash Development Overhead**: Radically reduce the time spent on manual setup and boilerplate. MCP Toolbox helps streamline lengthy database configurations, repetitive code, and error-prone schema migrations.
+
+Learn [how to connect your AI tools (IDEs) to Toolbox using MCP][connect-ide].
+
+[connect-ide]: https://googleapis.github.io/genai-toolbox/how-to/connect-ide/
 
 ## General Architecture
 
@@ -151,7 +166,7 @@ application. See below the list of Client SDKs for using various frameworks:
     # update the url to point to your server
     async with ToolboxClient("http://127.0.0.1:5000") as client:
 
-        # these tools can be passed to your application! 
+        # these tools can be passed to your application!
         tools = await client.load_toolset("toolset_name")
     ```
 
@@ -176,7 +191,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     # update the url to point to your server
     async with ToolboxClient("http://127.0.0.1:5000") as client:
 
-        # these tools can be passed to your application! 
+        # these tools can be passed to your application!
         tools = client.load_toolset()
     ```
 
@@ -202,7 +217,7 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
     # update the url to point to your server
     async with ToolboxClient("http://127.0.0.1:5000") as client:
 
-        # these tools can be passed to your application! 
+        # these tools can be passed to your application!
         tools = client.load_toolset()
     ```
 
@@ -300,7 +315,7 @@ This project uses [semantic versioning](https://semver.org/), including a
 - PATCH version when we make backward compatible bug fixes
 
 The public API that this applies to is the CLI associated with Toolbox, the
-interactions with official SDKs, and the definitions in the `tools.yaml` file. 
+interactions with official SDKs, and the definitions in the `tools.yaml` file.
 
 ## Contributing
 
