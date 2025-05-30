@@ -82,8 +82,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.Replace(uuid.New().String(), "-", "", -1))
-	tableName := fmt.Sprintf("param_table_%s", strings.Replace(uuid.New().String(), "-", "", -1))
+	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	tableName := fmt.Sprintf("param_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableNameParam := fmt.Sprintf("`%s.%s.%s`",
 		BIGQUERY_PROJECT,
 		datasetName,
@@ -92,7 +92,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tableNameAuth := fmt.Sprintf("`%s.%s.auth_table_%s`",
 		BIGQUERY_PROJECT,
 		datasetName,
-		strings.Replace(uuid.New().String(), "-", "", -1),
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(tableNameParam)

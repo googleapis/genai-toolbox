@@ -228,13 +228,13 @@ func run(cmd *Command) error {
 		}
 		cmd.logger = logger
 	default:
-		return fmt.Errorf("logging format invalid.")
+		return fmt.Errorf("logging format invalid")
 	}
 
 	ctx = util.WithLogger(ctx, cmd.logger)
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
@@ -339,7 +339,7 @@ func run(cmd *Command) error {
 		cmd.logger.WarnContext(shutdownContext, "Shutting down gracefully...")
 		err := s.Shutdown(shutdownContext)
 		if err == context.DeadlineExceeded {
-			return fmt.Errorf("graceful shutdown timed out... forcing exit.")
+			return fmt.Errorf("graceful shutdown timed out... forcing exit")
 		}
 	}
 
