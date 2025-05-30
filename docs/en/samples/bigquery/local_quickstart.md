@@ -495,3 +495,74 @@ To learn more about Agents in ADK, check out the [ADK documentation.](https://go
     ```sh
     python hotel_agent.py
     ```
+
+## Alternative Approach: Using Pre-built Tools
+
+In addition to defining specific tools with fixed SQL statements, Toolbox also provides **pre-built tools** that offer general-purpose functionality. For example, instead of a tool to `search-hotels-by-location`, you can use a general `execute-sql` tool and let the agent construct the necessary SQL query. This approach offers more flexibility at the cost of requiring the agent to have more knowledge about your database schema.
+
+Here, we'll demonstrate how to achieve the same hotel booking workflow using two pre-built tools: `bigquery-get-table-info` and `bigquery-execute-sql`. For a complete list of pre-built tools and their configurations, see the [tools section](../../resources/tools).
+
+1.  First, update your `tools.yaml` to use the pre-built tools. Notice the `kind` now refers to `bigquery-get-table-info` and `bigquery-execute-sql`. The agent will use the first tool to understand the table schema and the second to query and modify the data.
+
+    ```yaml
+    sources:
+      my-bigquery-source:
+        kind: bigquery
+        project: YOUR_PROJECT_ID
+    tools:
+      get-table-info:
+        kind: bigquery-get-table-info
+        source: my-bigquery-source
+        description: Retrieves metadata for a specific table.
+      execute-sql:
+        kind: bigquery-execute-sql
+        source: my-bigquery-source
+        description: A general purpose tool to execute valid BigQuery SQL query.
+
+    toolsets:
+      my-toolset:
+        - get-table-info
+        - execute-sql
+    ```
+
+2.  Next, update the `queries` list in your `hotel_agent.py` file. The first query now explicitly asks the agent to inspect the table schema, and the subsequent queries are the same. The agent will now use its general-purpose tools to fulfill these requests.
+
+    {{< tabpane persist=header >}}
+    {{< tab header="LangChain" lang="python" >}}
+    ```python
+    queries = [
+        "Summarize the hotels table's schema in dataset YOUR_DATASET_NAME.",
+        "Find hotels in location Basel with Basel in it's name.",
+        "Can you book the Hilton Basel for me?",
+        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+        "My check in dates would be from April 10, 2024 to April 11, 2024.",
+    ]
+    ```
+    {{< /tab >}}
+    {{< tab header="LlamaIndex" lang="python" >}}
+    ```python
+    queries = [
+        "Summarize the hotels table's schema in dataset YOUR_DATASET_NAME.",
+        "Find hotels in location Basel with Basel in it's name.",
+        "Can you book the Hilton Basel for me?",
+        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+        "My check in dates would be from April 10, 2024 to April 11, 2024.",
+    ]
+    ```
+    {{< /tab >}}
+    {{< tab header="ADK" lang="python" >}}
+    ```python
+    queries = [
+        "Summarize the hotels table's schema in dataset YOUR_DATASET_NAME.",
+        "Find hotels in location Basel with Basel in it's name.",
+        "Can you book the Hilton Basel for me?",
+        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+        "My check in dates would be from April 10, 2024 to April 11, 2024.",
+    ]
+    ```
+    {{< /tab >}}
+    {{< /tabpane >}}
+
+    > **Note:** Remember to replace `YOUR_DATASET_NAME` with your actual dataset name in the first query.
+
+3.  With the updated `tools.yaml` and `hotel_agent.py`, run the Toolbox server and the agent script again to observe the agent using the general-purpose tools to complete the tasks.
