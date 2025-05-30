@@ -127,6 +127,85 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
+func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any {
+	toolsMap, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	toolsMap["create-table-templateParams-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("columns", "The columns to create", tools.NewStringParameter("column", "A column name that will be created")),
+		},
+	}
+	toolsMap["insert-table-templateParams-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Insert tool with template parameters",
+		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("columns", "The columns to insert into", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+			tools.NewStringParameter("values", "The values to insert as a comma separated string"),
+		},
+	}
+	toolsMap["select-templateParams-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT * FROM {{.tableName}}",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-templateParams-combined-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT * FROM {{.tableName}} WHERE id = $1",
+		"parameters":  []tools.Parameter{tools.NewStringParameter("id", "the id of the user")},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-fields-templateParams-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),
+		},
+	}
+	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = $1",
+		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewStringParameter("columnFilter", "some description"),
+		},
+	}
+	toolsMap["drop-table-templateParams-tool"] = map[string]any{
+		"kind":        "postgres-sql",
+		"source":      "my-instance",
+		"description": "Drop table tool with template parameters",
+		"statement":   "DROP TABLE IF EXISTS {{.tableName}}",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	config["tools"] = toolsMap
+	return config
+}
+
 // AddMySqlExecuteSqlConfig gets the tools config for `mysql-execute-sql`
 func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)

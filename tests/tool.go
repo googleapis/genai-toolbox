@@ -301,6 +301,129 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 	}
 }
 
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string) {
+	select_all_want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
+	select_only_1_want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
+	select_only_names_want := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke create-table-templateParams-tool",
+			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id INT","name VARCHAR(20)","age INT"]}`, tableName))),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke insert-table-templateParams-tool",
+			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke insert-table-templateParams-tool",
+			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
+			want:          "null",
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-templateParams-tool",
+			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
+			want:          select_all_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-templateParams-combined-tool",
+			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": "1", "tableName": "%s"}`, tableName))),
+			want:          select_only_1_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-fields-templateParams-tool",
+			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":["name"]}`, tableName))),
+			want:          select_only_names_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-filter-templateParams-combined-tool",
+			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "name"}`, tableName))),
+			want:          select_only_1_want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke drop-table-templateParams-tool",
+			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
+			want:          "null",
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select_1_want string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)

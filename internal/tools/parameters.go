@@ -15,10 +15,12 @@
 package tools
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -144,6 +146,62 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		params = append(params, ParamValue{Name: name, Value: newV})
 	}
 	return params, nil
+}
+
+// helper function to convert a string array parameter to a comma separated string
+func ConvertArrayParamToString(param any) (string, error) {
+	switch v := param.(type) {
+	case []any:
+		var stringValues []string
+		for _, item := range v {
+			stringVal, ok := item.(string)
+			if !ok {
+				return "", fmt.Errorf("templateParameter only supports string arrays")
+			}
+			stringValues = append(stringValues, stringVal)
+		}
+		return strings.Join(stringValues, ", "), nil
+	default:
+		return "", fmt.Errorf("invalid parameter type, expected array of type string")
+	}
+}
+
+// GetParams return the ParamValues that are associated with the Parameters.
+func GetParams(params Parameters, paramValuesMap map[string]any) (ParamValues, error) {
+	resultParamValues := make(ParamValues, 0)
+	for _, p := range params {
+		k := p.GetName()
+		v, ok := paramValuesMap[k]
+		if !ok {
+			return nil, fmt.Errorf("missing parameter %s", k)
+		}
+		resultParamValues = append(resultParamValues, ParamValue{Name: k, Value: v})
+	}
+	return resultParamValues, nil
+}
+
+func ResolveTemplateParams(templateParams Parameters, originalStatement string, paramsMap map[string]any) (string, error) {
+	templateParamsValues, err := GetParams(templateParams, paramsMap)
+	templateParamsMap := templateParamsValues.AsMap()
+	if err != nil {
+		return "", fmt.Errorf("error getting template params %s", err)
+	}
+
+	funcMap := template.FuncMap{
+		"array": ConvertArrayParamToString,
+	}
+	t, err := template.New("statement").Funcs(funcMap).Parse(originalStatement)
+	if err != nil {
+		return "", fmt.Errorf("error creating go template %s", err)
+	}
+	var result bytes.Buffer
+	err = t.Execute(&result, templateParamsMap)
+	if err != nil {
+		return "", fmt.Errorf("error executing go template %s", err)
+	}
+
+	modifiedStatement := result.String()
+	return modifiedStatement, nil
 }
 
 type Parameter interface {

@@ -980,3 +980,310 @@ func TestFailParametersUnmarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertArrayParamToString(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   []any
+		want string
+	}{
+		{
+			in: []any{
+				"id",
+				"name",
+				"location",
+			},
+			want: "id, name, location",
+		},
+		{
+			in: []any{
+				"id",
+			},
+			want: "id",
+		},
+		{
+			in: []any{
+				"id",
+				"5",
+				"false",
+			},
+			want: "id, 5, false",
+		},
+		{
+			in:   []any{},
+			want: "",
+		},
+		{
+			in:   []any{},
+			want: "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, _ := tools.ConvertArrayParamToString(tc.in)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("incorrect array param conversion: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestFailConvertArrayParamToString(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   []any
+		err  string
+	}{
+		{
+			in:  []any{5, 10, 15},
+			err: "templateParameter only supports string arrays",
+		},
+		{
+			in:  []any{"id", "name", 15},
+			err: "templateParameter only supports string arrays",
+		},
+		{
+			in:  []any{false},
+			err: "templateParameter only supports string arrays",
+		},
+		{
+			in:  []any{10, true},
+			err: "templateParameter only supports string arrays",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tools.ConvertArrayParamToString(tc.in)
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestGetParams(t *testing.T) {
+	tcs := []struct {
+		name   string
+		in     map[string]any
+		params tools.Parameters
+		want   tools.ParamValues
+	}{
+		{
+			name: "parameters to include and exclude",
+			params: tools.Parameters{
+				tools.NewStringParameter("my_string_inc", "this should be included"),
+				tools.NewStringParameter("my_string_inc2", "this should be included"),
+			},
+			in: map[string]any{
+				"my_string_inc":  "hello world A",
+				"my_string_inc2": "hello world B",
+				"my_string_exc":  "hello world C",
+			},
+			want: tools.ParamValues{
+				tools.ParamValue{Name: "my_string_inc", Value: "hello world A"},
+				tools.ParamValue{Name: "my_string_inc2", Value: "hello world B"},
+			},
+		},
+		{
+			name: "include all",
+			params: tools.Parameters{
+				tools.NewStringParameter("my_string_inc", "this should be included"),
+			},
+			in: map[string]any{
+				"my_string_inc": "hello world A",
+			},
+			want: tools.ParamValues{
+				tools.ParamValue{Name: "my_string_inc", Value: "hello world A"},
+			},
+		},
+		{
+			name:   "exclude all",
+			params: tools.Parameters{},
+			in: map[string]any{
+				"my_string_exc":  "hello world A",
+				"my_string_exc2": "hello world B",
+			},
+			want: tools.ParamValues{},
+		},
+		{
+			name:   "empty",
+			params: tools.Parameters{},
+			in:     map[string]any{},
+			want:   tools.ParamValues{},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, _ := tools.GetParams(tc.params, tc.in)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("incorrect get params: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestFailGetParams(t *testing.T) {
+	tcs := []struct {
+		name   string
+		params tools.Parameters
+		in     map[string]any
+		err    string
+	}{
+		{
+			name:   "missing the only parameter",
+			params: tools.Parameters{tools.NewStringParameter("my_string", "this was missing")},
+			in:     map[string]any{},
+			err:    "missing parameter my_string",
+		},
+		{
+			name: "missing one parameter of multiple",
+			params: tools.Parameters{
+				tools.NewStringParameter("my_string_inc", "this should be included"),
+				tools.NewStringParameter("my_string_exc", "this was missing"),
+			},
+			in: map[string]any{
+				"my_string_inc": "hello world A",
+			},
+			err: "missing parameter my_string_exc",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tools.GetParams(tc.params, tc.in)
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestResolveTemplateParameters(t *testing.T) {
+	tcs := []struct {
+		name           string
+		templateParams tools.Parameters
+		statement      string
+		in             map[string]any
+		want           string
+	}{
+		{
+			name: "single template parameter",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			},
+			statement: "SELECT * FROM {{.tableName}}",
+			in: map[string]any{
+				"tableName": "hotels",
+			},
+			want: "SELECT * FROM hotels",
+		},
+		{
+			name: "multiple template parameters",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+				tools.NewStringParameter("columnName", "this is a string template parameter"),
+			},
+			statement: "SELECT * FROM {{.tableName}} WHERE {{.columnName}} = 'Hilton'",
+			in: map[string]any{
+				"tableName":  "hotels",
+				"columnName": "name",
+			},
+			want: "SELECT * FROM hotels WHERE name = 'Hilton'",
+		},
+		{
+			name: "standard and template parameter",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+				tools.NewStringParameter("hotelName", "this is a string parameter"),
+			},
+			statement: "SELECT * FROM {{.tableName}} WHERE name = $1",
+			in: map[string]any{
+				"tableName": "hotels",
+				"hotelName": "name",
+			},
+			want: "SELECT * FROM hotels WHERE name = $1",
+		},
+		{
+			name: "standard parameter",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("hotelName", "this is a string parameter"),
+			},
+			statement: "SELECT * FROM hotels WHERE name = $1",
+			in: map[string]any{
+				"hotelName": "hotels",
+			},
+			want: "SELECT * FROM hotels WHERE name = $1",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, _ := tools.ResolveTemplateParams(tc.templateParams, tc.statement, tc.in)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("incorrect resolved template params: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestFailResolveTemplateParameters(t *testing.T) {
+	tcs := []struct {
+		name           string
+		templateParams tools.Parameters
+		statement      string
+		in             map[string]any
+		err            string
+	}{
+		{
+			name: "wrong param name",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			},
+			statement: "SELECT * FROM {{.missingParam}}",
+			in:        map[string]any{},
+			err:       "error getting template params missing parameter tableName",
+		},
+		{
+			name: "incomplete param template",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			},
+			statement: "SELECT * FROM {{.tableName",
+			in: map[string]any{
+				"tableName": "hotels",
+			},
+			err: "error creating go template template: statement:1: unclosed action",
+		},
+		{
+			name: "undefined function",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			},
+			statement: "SELECT * FROM {{json .tableName}}",
+			in: map[string]any{
+				"tableName": "hotels",
+			},
+			err: "error creating go template template: statement:1: function \"json\" not defined",
+		},
+		{
+			name: "undefined method",
+			templateParams: tools.Parameters{
+				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			},
+			statement: "SELECT * FROM {{.tableName .wrong}}",
+			in: map[string]any{
+				"tableName": "hotels",
+			},
+			err: "error executing go template template: statement:1:16: executing \"statement\" at <.tableName>: tableName is not a method but has arguments",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tools.ResolveTemplateParams(tc.templateParams, tc.statement, tc.in)
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}

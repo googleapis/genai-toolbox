@@ -130,6 +130,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameTemplateParam := "template_param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
 
 	// set up data for param tool
@@ -145,7 +146,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, ALLOYDB_POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
-
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -167,6 +168,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // Test connection with different IP type
