@@ -1,0 +1,107 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.image.repository }}{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          args: [
+            "--address",
+            "{{ .Values.options.address }}",
+            "--port",
+            "{{ .Values.options.port }}",
+            "--log-level",
+            "{{ .Values.options.log_level }}",
+            "--logging-format",
+            "{{ .Values.options.logging_format }}",
+
+            {{- if .Values.options.telemetry_gcp }}
+            "--telemetry-gcp",
+            "{{ .Values.options.telemetry_gcp }}",
+            {{- end }}
+
+            {{- if .Values.options.telemetry_otlp }}
+            "--telemetry-otlp",
+            "{{ .Values.options.telemetry_otlp }}",
+            {{- end }}
+
+            {{- if .Values.options.telemetry_service_name }}
+            "--telemetry-service-name",
+            "{{ .Values.options.telemetry_service_name }}",
+            {{- end }}
+          ]
+          ports:
+            - containerPort: {{ .Values.options.port }}
+          volumeMounts:
+            - name: {{ .Values.name }}-config
+              mountPath: "/app/tools.yaml"
+              subPath: tools.yaml
+              readOnly: true
+
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+
+          {{- if .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+
+          {{- if .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
+
+          {{- if .Values.securityContext }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: {{ .Values.name }}-config
+          secret:
+            secretName: {{ .Values.name }}-config
+            items:
+              - key: tools.yaml
+                path: tools.yaml
+
+      {{- if .Values.podDistribution.antiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.podDistribution.antiAffinity.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: {{ .Values.name }}
+                topologyKey: kubernetes.io/hostname
+      {{- end }}
+
+      {{- if .Values.podDistribution.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.podDistribution.topologySpread.maxSkew }}
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: {{ .Values.podDistribution.topologySpread.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              app: {{ .Values.name }}
+        - maxSkew: {{ .Values.podDistribution.topologySpread.maxSkew }}
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: {{ .Values.podDistribution.topologySpread.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              app: {{ .Values.name }}
+      {{- end }}
