@@ -72,6 +72,16 @@ If desired, once connected to `psql` as the `postgres` OS user, you can set a pa
 
       ALTER DATABASE toolbox_db OWNER TO toolbox_user;
     ```
+    {{< notice info >}}
+#### **Having trouble elevating user to DB Owner?**
+* **`postgresql error: must be member of role "toolbox_user"`:** This error means the current user doesn't have sufficient permissions to do the operations on `toolbox_db`.
+<br/>
+#### **Common Solution**
+Grant membership in the `toolbox_user` role to `postgres`
+```bash
+GRANT toolbox_user TO postgres;
+```
+    {{< /notice >}}
 
 1. End the database session:
 
