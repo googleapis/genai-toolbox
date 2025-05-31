@@ -44,7 +44,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-neo4j-instance": neo4j.Config{
 					Name:     "my-neo4j-instance",
-					Kind:     neo4j.SourceKind,
+					Kind:     neo4j.Kind,
 					Uri:      "neo4j+s://my-host:7687",
 					Database: "my_db",
 					User:     "my_user",
@@ -89,7 +89,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse as \"neo4j\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | kind: neo4j\n   4 | password: my_pass\n   5 | uri: neo4j+s://my-host:7687\n   6 | ",
+			err: "unable to parse \"neo4j\" config: [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | kind: neo4j\n   4 | password: my_pass\n   5 | uri: neo4j+s://my-host:7687\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -101,7 +101,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					database: my_db
 					user: my_user
 			`,
-			err: "unable to parse as \"neo4j\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "unable to parse \"neo4j\" config: Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

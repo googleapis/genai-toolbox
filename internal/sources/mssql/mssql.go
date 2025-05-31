@@ -19,15 +19,30 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	_ "github.com/microsoft/go-mssqldb"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "mssql"
+const Kind string = "mssql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	// Cloud SQL MSSQL configs
@@ -42,7 +57,7 @@ type Config struct {
 
 func (r Config) SourceConfigKind() string {
 	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+	return Kind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -60,7 +75,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: SourceKind,
+		Kind: Kind,
 		Db:   db,
 	}
 	return s, nil
@@ -77,7 +92,7 @@ type Source struct {
 
 func (s *Source) SourceKind() string {
 	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+	return Kind
 }
 
 func (s *Source) MSSQLDB() *sql.DB {
@@ -87,7 +102,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 
 func initMssqlConnection(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
 	defer span.End()
 
 	// Create dsn

@@ -19,15 +19,30 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/spanner"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "spanner"
+const Kind string = "spanner"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name, Dialect: "googlesql"} // Default dialect
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name     string          `yaml:"name" validate:"required"`
@@ -39,7 +54,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -50,7 +65,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:    r.Name,
-		Kind:    SourceKind,
+		Kind:    Kind,
 		Client:  client,
 		Dialect: r.Dialect.String(),
 	}
@@ -67,7 +82,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (s *Source) SpannerClient() *spanner.Client {
@@ -80,7 +95,7 @@ func (s *Source) DatabaseDialect() string {
 
 func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*spanner.Client, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
 	defer span.End()
 
 	// Configure the connection to the database

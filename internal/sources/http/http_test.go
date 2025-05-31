@@ -50,7 +50,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
 					Name:           "my-http-instance",
-					Kind:           http.SourceKind,
+					Kind:           http.Kind,
 					BaseURL:        "http://test_server/",
 					Timeout:        "10s",
 					DefaultHeaders: map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
@@ -96,7 +96,7 @@ func TestFailParseFromYaml(t *testing.T) {
 						api-key: test_api_key
 					project: test-project
 			`,
-			err: "unable to parse as \"http\"",
+			err: "unable to parse \"http\" config",
 		},
 		{
 			desc: "missing required field",

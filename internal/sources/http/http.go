@@ -20,14 +20,29 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "http"
+const Kind string = "http"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := DefaultConfig(name)
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name           string            `yaml:"name" validate:"required"`
@@ -39,7 +54,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return SourceKind
+	return Kind
 }
 
 // DefaultConfig is a helper function that generates the default configuration for an HTTP Tool Config.
@@ -65,7 +80,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:           r.Name,
-		Kind:           SourceKind,
+		Kind:           Kind,
 		BaseURL:        r.BaseURL,
 		DefaultHeaders: r.DefaultHeaders,
 		QueryParams:    r.QueryParams,
@@ -87,5 +102,5 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return SourceKind
+	return Kind
 }

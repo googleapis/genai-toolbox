@@ -20,14 +20,29 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "mysql"
+const Kind string = "mysql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(Kind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
@@ -40,7 +55,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -56,7 +71,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: SourceKind,
+		Kind: Kind,
 		Pool: pool,
 	}
 	return s, nil
@@ -71,7 +86,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return SourceKind
+	return Kind
 }
 
 func (s *Source) MySQLPool() *sql.DB {
@@ -80,7 +95,7 @@ func (s *Source) MySQLPool() *sql.DB {
 
 func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database
