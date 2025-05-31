@@ -254,25 +254,25 @@ func addSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]
 }
 
 func addSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]any {
-    tools, ok := config["tools"].(map[string]any)
-    if !ok {
-        t.Fatalf("unable to get tools from config")
-    }
-    tools["access-schema-read-only"] = map[string]any{
-        "kind":        "spanner-sql",
-        "source":      "my-instance",
-        "description": "Tool to access information schema in read-only mode.",
-        "statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
-        "readOnly":    true,
-    }
-    tools["access-schema"] = map[string]any{
-        "kind":        "spanner-sql",
-        "source":      "my-instance",
-        "description": "Tool to access information schema.",
-        "statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
-    }
-    config["tools"] = tools
-    return config
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["access-schema-read-only"] = map[string]any{
+		"kind":        "spanner-sql",
+		"source":      "my-instance",
+		"description": "Tool to access information schema in read-only mode.",
+		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
+		"readOnly":    true,
+	}
+	tools["access-schema"] = map[string]any{
+		"kind":        "spanner-sql",
+		"source":      "my-instance",
+		"description": "Tool to access information schema.",
+		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
+	}
+	config["tools"] = tools
+	return config
 }
 
 func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
@@ -440,70 +440,70 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 }
 
 func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
-    invokeTcs := []struct {
-        name          string
-        api           string
-        requestHeader map[string]string
-        requestBody   io.Reader
-        want          string
-        isErr         bool
-    }{
-        {
-            name:          "invoke list-tables-read-only",
-            api:           "http://127.0.0.1:5000/api/tool/access-schema-read-only/invoke",
-            requestHeader: map[string]string{},
-            requestBody:   bytes.NewBuffer([]byte(`{}`)),
-            want:          accessSchemaWant,
-            isErr:         false,
-        },
-        {
-            name:          "invoke list-tables",
-            api:           "http://127.0.0.1:5000/api/tool/access-schema/invoke",
-            requestHeader: map[string]string{},
-            requestBody:   bytes.NewBuffer([]byte(`{}`)),
-            isErr:         true,
-        },
-    }
-    for _, tc := range invokeTcs {
-        t.Run(tc.name, func(t *testing.T) {
-            // Send Tool invocation request
-            req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-            if err != nil {
-                t.Fatalf("unable to create request: %s", err)
-            }
-            req.Header.Add("Content-type", "application/json")
-            for k, v := range tc.requestHeader {
-                req.Header.Add(k, v)
-            }
-            resp, err := http.DefaultClient.Do(req)
-            if err != nil {
-                t.Fatalf("unable to send request: %s", err)
-            }
-            defer resp.Body.Close()
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke list-tables-read-only",
+			api:           "http://127.0.0.1:5000/api/tool/access-schema-read-only/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          accessSchemaWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke list-tables",
+			api:           "http://127.0.0.1:5000/api/tool/access-schema/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
 
-            if resp.StatusCode != http.StatusOK {
-                if tc.isErr {
-                    return
-                }
-                bodyBytes, _ := io.ReadAll(resp.Body)
-                t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-            }
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
 
-            // Check response body
-            var body map[string]interface{}
-            err = json.NewDecoder(resp.Body).Decode(&body)
-            if err != nil {
-                t.Fatalf("error parsing response body")
-            }
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
 
-            got, ok := body["result"].(string)
-            if !ok {
-                t.Fatalf("unable to find result in response body")
-            }
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
 
-            if got != tc.want {
-                t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-            }
-        })
-    }
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
 }

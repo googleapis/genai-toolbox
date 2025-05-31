@@ -112,8 +112,8 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	var args []string
 
 	// create table name with UUID
-	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getSQLiteParamToolInfo(tableNameParam)

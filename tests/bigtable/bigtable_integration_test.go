@@ -67,8 +67,8 @@ func TestBigtableToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	tableName := "param_table" + strings.Replace(uuid.New().String(), "-", "", -1)
-	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableName := "param_table" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	columnFamilyName := "cf"
 	muts, rowKeys := getTestData(columnFamilyName)
