@@ -210,13 +210,13 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"path":        "/tool1",
 				"description": "some description",
 				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID")},
+					tools.NewIntParameter("id", nil, "user ID")},
 				"requestBody": `{
 "age": 36,
 "name": "{{.name}}"
 }
 `,
-				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
+				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", nil, "user name")},
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
 			"my-auth-tool": map[string]any{
@@ -227,7 +227,7 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"description": "some description",
 				"requestBody": "{}",
 				"queryParams": []tools.Parameter{
-					tools.NewStringParameterWithAuth("email", "some description",
+					tools.NewStringParameterWithAuth("email", nil, "some description",
 						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
 				},
 			},
@@ -250,14 +250,14 @@ func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					"X-Custom-Header": "example",
 				},
 				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
+					tools.NewIntParameter("id", nil, "user ID"), tools.NewStringParameter("country", nil, "country")},
 				"requestBody": `{
 "place": "zoo",
 "animals": {{json .animalArray }}
 }
 `,
-				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
-				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
+				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", nil, "animals in the zoo", tools.NewStringParameter("animals", nil, "desc"))},
+				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", nil, "custom header")},
 			},
 		},
 	}

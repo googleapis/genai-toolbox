@@ -63,7 +63,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					NLConfig:     "my_nl_config",
 					AuthRequired: []string{"my-google-auth-service"},
 					NLConfigParameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("user_id", "user_id to use",
+						tools.NewStringParameterWithAuth("user_id", nil, "user_id to use",
 							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
 					},
 				},
@@ -104,9 +104,9 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					NLConfig:     "complex_nl_config",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					NLConfigParameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("user_id", "user_id to use",
+						tools.NewStringParameterWithAuth("user_id", nil, "user_id to use",
 							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
-						tools.NewStringParameterWithAuth("user_email", "user_email to use",
+						tools.NewStringParameterWithAuth("user_email", nil, "user_email to use",
 							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}}),
 					},
 				},

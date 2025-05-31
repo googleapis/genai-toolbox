@@ -66,7 +66,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	sqlParameter := tools.NewStringParameter("sql", nil, "The sql to execute.")
 	parameters := tools.Parameters{sqlParameter}
 
 	mcpManifest := tools.McpManifest{
