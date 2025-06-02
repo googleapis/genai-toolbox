@@ -194,14 +194,13 @@ func mcpRouter(s *Server) (chi.Router, error) {
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
+	r.Delete("/", func(w http.ResponseWriter, r *http.Request) { deleteMcpSession(s, w, r) })
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
+		r.Delete("/", func(w http.ResponseWriter, r *http.Request) { deleteMcpSession(s, w, r) })
 	})
-
-	// TODO: If client send HTTP DELETE to MCP Endpoint with the `MCP-Session-Id`
-	// header, remove the session from mcpManager.
 
 	return r, nil
 }
@@ -305,38 +304,15 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
 
-	var mcpSess *mcpSession
-	var sessionId, protocolVersion string
-	// indicate if initialize have to be enforced
-	var initialized *bool
-	var initEnforced bool
-
-	// check url for sessionId (if user connect via sse)
-	sessionId = r.URL.Query().Get("sessionId")
-	if sessionId == "" {
-		// check for sessionId in the header
-		// client had done the initialization step if this exists
-		sessionId = r.Header.Get("Mcp-Session-Id")
-	}
-	// sessionId present, retrieve mcpSess and protocolVersion
-	if sessionId != "" {
-		var ok bool
-		mcpSess, ok = s.mcpManager.get(sessionId)
-		if !ok {
-			s.logger.DebugContext(ctx, "mcp session not available")
-		}
-		protocolVersion = mcpSess.protocol
-		initialized = mcpSess.initialized
-		initEnforced = true
-	} else {
-		init := false
-		initialized = &init
-	}
-
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 
+	var mcpSess *mcpSession
+	var sessionId, protocolVersion string
+	// indicate if initialize have to be enforced
+	var initialized *bool
+	var ok, initEnforced bool
 	var err error
 	defer func() {
 		if err != nil {
@@ -355,6 +331,36 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
 	}()
+
+	// check url for sessionId (if user connect via sse)
+	sessionId = r.URL.Query().Get("sessionId")
+	if sessionId == "" {
+		// check header for session id (if user uses v2025-03-26)
+		// client had done the initialization step if this exists
+		sessionId = r.Header.Get("Mcp-Session-Id")
+		// for v2025-03-26, response with HTTP 404 Not Found
+		// client will have to re-initialize
+		mcpSess, ok = s.mcpManager.get(sessionId)
+		if !ok {
+			err = fmt.Errorf("session not found")
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+	} else {
+		mcpSess, ok = s.mcpManager.get(sessionId)
+		if !ok {
+			s.logger.DebugContext(ctx, "mcp session not available")
+		}
+	}
+	if mcpSess != nil {
+		protocolVersion = mcpSess.protocol
+		initialized = mcpSess.initialized
+		initEnforced = true
+	} else {
+		init := false
+		initialized = &init
+	}
 
 	// Read and returns a body from io.Reader
 	body, err := io.ReadAll(r.Body)
@@ -466,5 +472,16 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		}
 		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
 		return "", res, err
+	}
+}
+
+// deleteMcpSession removes session from mcpManager.
+func deleteMcpSession(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sessionId := r.Header.Get("Mcp-Session-Id")
+	_, ok := s.mcpManager.mcpSessions[sessionId]
+	if ok {
+		s.mcpManager.remove(sessionId)
+		s.logger.InfoContext(ctx, fmt.Sprintf("removed %s from mcp manager", sessionId))
 	}
 }
