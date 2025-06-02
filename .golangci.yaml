@@ -12,21 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+version: "2"
 linters:
   enable:
     - errcheck
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
-linters-settings:
-  gofmt:
-    rewrite-rules:
-      - pattern: 'interface{}'
-        replacement: 'any'
-      - pattern: 'a[b:len(a)]'
-        replacement: 'a[b:]'
+  exclusions:
+    presets:
+      - std-error-handling
 issues:
   fix: true
+formatters:
+  enable:
+    - goimports
+  settings:
+    gofmt:
+      rewrite-rules:
+        - pattern: interface{}
+          replacement: any
+        - pattern: a[b:len(a)]
+          replacement: a[b:]

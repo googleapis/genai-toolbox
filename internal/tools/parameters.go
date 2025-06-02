@@ -262,7 +262,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		}
 		return a, nil
 	}
-	return nil, fmt.Errorf("%q is not valid type for a parameter!", t)
+	return nil, fmt.Errorf("%q is not valid type for a parameter", t)
 }
 
 func (ps Parameters) Manifest() []ParameterManifest {

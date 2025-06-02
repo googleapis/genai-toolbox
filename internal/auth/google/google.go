@@ -74,7 +74,7 @@ func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (ma
 	if token := h.Get(a.Name + "_token"); token != "" {
 		payload, err := idtoken.Validate(ctx, token, a.ClientID)
 		if err != nil {
-			return nil, fmt.Errorf("Google ID token verification failure: %w", err)
+			return nil, fmt.Errorf("Google ID token verification failure: %w", err) //nolint:staticcheck
 		}
 		return payload.Claims, nil
 	}

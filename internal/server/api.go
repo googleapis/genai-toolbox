@@ -77,7 +77,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	toolset, ok := s.toolsets[toolsetName]
 	if !ok {
-		err = fmt.Errorf("Toolset %q does not exist", toolsetName)
+		err = fmt.Errorf("toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
