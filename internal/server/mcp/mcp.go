@@ -75,10 +75,15 @@ func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, 
 
 // NotificationHandler process notifications request. It MUST NOT send a response.
 // Currently Toolbox does not process any notifications.
-func NotificationHandler(ctx context.Context, body []byte) error {
+func NotificationHandler(ctx context.Context, body []byte, initialized *bool) error {
 	var notification jsonrpc.JSONRPCNotification
 	if err := json.Unmarshal(body, &notification); err != nil {
 		return fmt.Errorf("invalid notification request: %w", err)
+	}
+	if notification.Method == mcputil.INITIALIZE_NOTIFICATIONS {
+		init := true
+		*initialized = init
+		return nil
 	}
 	return nil
 }
@@ -87,8 +92,6 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 // This is the Operation phase of the lifecycle for MCP client-server connections.
 func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte) (any, error) {
 	switch mcpVersion {
-	case v20241105.PROTOCOL_VERSION:
-		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
 	default:
 		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
 	}
