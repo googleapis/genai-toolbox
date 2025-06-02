@@ -53,5 +53,5 @@ Here are some example prompts you can use with an client equipped with these too
 For more information on how to integrate and run Toolbox in different environments, check out the following guides:
 
 * **[Connecting to LangGraph/LlamaIndex/ADK)](./local_quickstart.md)**
-* **[Running with MCP (sse)](./mcp_quickstart/_index.md)**
+* **[Running with MCP (SSE)](./mcp_quickstart/_index.md)**
 * **[Running with MCP (Stdio)](../../how-to/connect-ide/bigquery_mcp.md)**
