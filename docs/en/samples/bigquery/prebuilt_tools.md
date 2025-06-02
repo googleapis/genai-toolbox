@@ -40,7 +40,7 @@ Toolbox simplifies authentication by using **Application Default Credentials (AD
 
 ## Sample prompts
 
-Here are some example prompts you can use with an agent equipped with these tools:
+Here are some example prompts you can use with an client equipped with these tools:
 
 * "Which datasets exist in the project?"
 * "Tell me more about the `noaa_lightning` dataset."
@@ -52,6 +52,6 @@ Here are some example prompts you can use with an agent equipped with these tool
 
 For more information on how to integrate and run Toolbox in different environments, check out the following guides:
 
-* **[Connecting to an Agent (LangGraph, LlamaIndex, ADK)](./local_quickstart.md)**
+* **[Connecting to LangGraph/LlamaIndex/ADK)](./local_quickstart.md)**
 * **[Running with MCP (sse)](./mcp_quickstart/_index.md)**
 * **[Running with MCP (Stdio)](../../how-to/connect-ide/bigquery_mcp.md)**
