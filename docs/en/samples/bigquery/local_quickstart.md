@@ -32,6 +32,13 @@ This guide assumes you have already done the following:
     ```
 1. Completed setup for usage with an LLM model such as
 {{< tabpane text=true persist=header >}}
+{{% tab header="Core" lang="en" %}}
+- [langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
+
+- [langchain-google-genai](https://python.langchain.com/docs/integrations/chat/google_generative_ai/#setup) package.
+
+- [langchain-anthropic](https://python.langchain.com/docs/integrations/chat/anthropic/#setup) package.
+{{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
 - [langchain-vertexai](https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm/#setup) package.
 
@@ -246,6 +253,10 @@ you can connect to a
 1. In a new terminal, install the SDK package.
     
     {{< tabpane persist=header >}}
+{{< tab header="Core" lang="bash" >}}
+
+pip install toolbox-core
+{{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
 pip install toolbox-langchain
@@ -262,8 +273,15 @@ pip install google-adk
 {{< /tabpane >}}
 
 1. Install other required dependencies:
-    
+
     {{< tabpane persist=header >}}
+{{< tab header="Core" lang="bash" >}}
+
+# TODO(developer): replace with correct package if needed
+pip install langgraph langchain-google-vertexai
+# pip install langchain-google-genai
+# pip install langchain-anthropic
+{{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
 # TODO(developer): replace with correct package if needed
@@ -285,8 +303,58 @@ pip install toolbox-core
 1. Create a new file named `hotel_agent.py` and copy the following
    code to create an agent:
     {{< tabpane persist=header >}}
+{{< tab header="Core" lang="python" >}}
+
+import asyncio
+from langgraph.prebuilt import create_react_agent
+# TODO(developer): replace this with another import if needed
+from langchain_google_vertexai import ChatVertexAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_anthropic import ChatAnthropic
+from langgraph.checkpoint.memory import MemorySaver
+
+from toolbox_core import ToolboxClient
+
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id, 
+  location and price tier. Always mention hotel ids while performing any 
+  searches. This is very important for any operations. For any bookings or 
+  cancellations, please provide the appropriate confirmation. Be sure to 
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
+
+queries = [
+    "Find hotels in Basel with Basel in it's name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
+
+async def main():
+    # TODO(developer): replace this with another model if needed
+    model = ChatVertexAI(model_name="gemini-2.0-flash-001")
+    # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
+    # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+    
+    # Load the tools from the Toolbox server
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
+        tools = await client.load_toolset()
+
+        agent = create_react_agent(model, tools, checkpointer=MemorySaver())
+
+        config = {"configurable": {"thread_id": "thread-1"}}
+        for query in queries:
+            inputs = {"messages": [("user", prompt + query)]}
+            response = await agent.ainvoke(inputs, stream_mode="values", config=config)
+            print(response["messages"][-1].content)
+
+asyncio.run(main())
+{{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
 
+import asyncio
 from langgraph.prebuilt import create_react_agent
 # TODO(developer): replace this with another import if needed
 from langchain_google_vertexai import ChatVertexAI
@@ -313,25 +381,25 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-def main():
+async def main():
     # TODO(developer): replace this with another model if needed
     model = ChatVertexAI(model_name="gemini-2.0-flash-001")
     # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
     # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
     
     # Load the tools from the Toolbox server
-    async with ToolboxClient("http://127.0.0.1:5000") as client:
-        tools = client.load_toolset()
+    client = ToolboxClient("http://127.0.0.1:5000")
+    tools = await client.aload_toolset()
 
-        agent = create_react_agent(model, tools, checkpointer=MemorySaver())
+    agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
-        config = {"configurable": {"thread_id": "thread-1"}}
-        for query in queries:
-            inputs = {"messages": [("user", prompt + query)]}
-            response = agent.invoke(inputs, stream_mode="values", config=config)
-            print(response["messages"][-1].content)
+    config = {"configurable": {"thread_id": "thread-1"}}
+    for query in queries:
+        inputs = {"messages": [("user", prompt + query)]}
+        response = await agent.ainvoke(inputs, stream_mode="values", config=config)
+        print(response["messages"][-1].content)
 
-main()
+asyncio.run(main())
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="python" >}}
 import asyncio
@@ -380,19 +448,19 @@ async def main():
     # )
     
     # Load the tools from the Toolbox server
-    async with ToolboxClient("http://127.0.0.1:5000") as client:
-        tools = client.load_toolset()
+    client = ToolboxClient("http://127.0.0.1:5000")
+    tools = await client.aload_toolset()
 
-        agent = AgentWorkflow.from_tools_or_functions(
-            tools,
-            llm=llm,
-            system_prompt=prompt,
-        )
-        ctx = Context(agent)
-        for query in queries:
-            response = await agent.run(user_msg=query, ctx=ctx)
-            print(f"---- {query} ----")
-            print(str(response))
+    agent = AgentWorkflow.from_tools_or_functions(
+        tools,
+        llm=llm,
+        system_prompt=prompt,
+    )
+    ctx = Context(agent)
+    for query in queries:
+        response = await agent.arun(user_msg=query, ctx=ctx)
+        print(f"---- {query} ----")
+        print(str(response))
 
 asyncio.run(main())
 {{< /tab >}}
@@ -479,6 +547,9 @@ with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
 {{< /tabpane >}}
     
     {{< tabpane text=true persist=header >}}
+{{% tab header="Core" lang="en" %}}
+To learn more about the Core SDK, check out the [Toolbox Core SDK documentation.](https://github.com/googleapis/genai-toolbox/tree/main/sdks/toolbox-core)
+{{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
