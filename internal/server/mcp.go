@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -55,6 +56,7 @@ type mcpSession struct {
 	sseSession *sseSession
 	// represent if the the initialization is successful
 	initialized *bool
+	lastActive  time.Time
 }
 
 // mcpManager manages and control access to mcp sesisons
@@ -63,16 +65,27 @@ type mcpManager struct {
 	mcpSessions map[string]*mcpSession
 }
 
+func newMcpManager() *mcpManager {
+	mcpM := &mcpManager{
+		mu:          sync.RWMutex{},
+		mcpSessions: make(map[string]*mcpSession),
+	}
+	go mcpM.cleanupRoutine()
+	return mcpM
+}
+
 func (m *mcpManager) get(id string) (*mcpSession, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	session, ok := m.mcpSessions[id]
+	session.lastActive = time.Now()
 	return session, ok
 }
 
 func (m *mcpManager) add(id string, session *mcpSession) {
 	m.mu.Lock()
 	m.mcpSessions[id] = session
+	session.lastActive = time.Now()
 	m.mu.Unlock()
 }
 
@@ -80,6 +93,23 @@ func (m *mcpManager) remove(id string) {
 	m.mu.Lock()
 	delete(m.mcpSessions, id)
 	m.mu.Unlock()
+}
+
+func (m *mcpManager) cleanupRoutine() {
+	timeout := 10 * time.Minute
+	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		m.mu.Lock()
+		now := time.Now()
+		for id, sess := range m.mcpSessions {
+			if sess.protocol == v20250326.PROTOCOL_VERSION && now.Sub(sess.lastActive) > timeout {
+				delete(m.mcpSessions, id)
+			}
+		}
+		m.mu.Unlock()
+	}
 }
 
 type stdioSession struct {

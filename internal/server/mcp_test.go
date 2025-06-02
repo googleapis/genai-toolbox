@@ -25,7 +25,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -626,10 +625,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	mcpM := &mcpManager{
-		mu:          sync.RWMutex{},
-		mcpSessions: make(map[string]*mcpSession),
-	}
+	mcpM := newMcpManager()
 
 	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, mcpManager: mcpM, tools: toolsMap, toolsets: toolsets}
 
