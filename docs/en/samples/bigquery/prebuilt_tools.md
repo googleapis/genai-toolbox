@@ -42,7 +42,7 @@ Toolbox simplifies authentication by using **Application Default Credentials (AD
 
 Here are some example prompts you can use with an agent equipped with these tools:
 
-* ""Which datasets exist in the project?""
+* "Which datasets exist in the project?"
 * "Tell me more about the `noaa_lightning` dataset."
 * "Which tables are in the `ml_datasets` dataset?"
 * "Show me the schema for the `penguins` table."
