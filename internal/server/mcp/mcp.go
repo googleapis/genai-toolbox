@@ -90,6 +90,6 @@ func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId,
 	case v20241105.PROTOCOL_VERSION:
 		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
 	default:
-		return nil, nil
+		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
 	}
 }
