@@ -550,8 +550,60 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 	}
 }
 
+// RunInitialize runs the initialize lifecycle for mcp to set up client-server connection
+func RunInitialize(t *testing.T, protocolVersion string) string {
+	url := "http://127.0.0.1:5000/mcp"
+
+	initializeRequestBody := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "mcp-initialize",
+		"method":  "initialize",
+		"params": map[string]any{
+			"protocolVersion": protocolVersion,
+		},
+	}
+	reqMarshal, err := json.Marshal(initializeRequestBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of body")
+	}
+
+	resp, _ := runRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("response status code is not 200")
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	sessionId := resp.Header.Get("Mcp-Session-Id")
+
+	header := map[string]string{}
+	if sessionId != "" {
+		header["Mcp-Session-Id"] = sessionId
+	}
+
+	initializeNotificationBody := map[string]any{
+		"jsonrpc": "2.0",
+		"method":  "notifications/initialized",
+	}
+	notiMarshal, err := json.Marshal(initializeNotificationBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of notifications body")
+	}
+
+	_, _ = runRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
+	return sessionId
+}
+
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
 func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want string) {
+	sessionId := RunInitialize(t, "2024-11-05")
+	header := map[string]string{}
+	if sessionId != "" {
+		header["Mcp-Session-Id"] = sessionId
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -672,24 +724,8 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			if err != nil {
 				t.Fatalf("unexpected error during marshaling of request body")
 			}
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			respBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unable to read request body: %s", err)
-			}
-			defer resp.Body.Close()
+
+			_, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), header)
 			got := string(bytes.TrimSpace(respBody))
 
 			if !strings.Contains(got, tc.want) {
@@ -697,4 +733,29 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			}
 		})
 	}
+}
+
+func runRequest(t *testing.T, method, url string, body io.Reader, header map[string]string) (*http.Response, []byte) {
+	// Send request
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+
+	req.Header.Add("Content-type", "application/json")
+	for k, v := range header {
+		req.Header.Add(k, v)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("unable to read request body: %s", err)
+	}
+
+	defer resp.Body.Close()
+	return resp, respBody
 }

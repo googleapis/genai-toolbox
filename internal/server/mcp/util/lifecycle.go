@@ -20,7 +20,8 @@ const (
 	// SERVER_NAME is the server name used in Implementation.
 	SERVER_NAME = "Toolbox"
 	// methods that are supported
-	INITIALIZE = "initialize"
+	INITIALIZE               = "initialize"
+	INITIALIZE_NOTIFICATIONS = "notifications/initialized"
 )
 
 /* Initialization */
