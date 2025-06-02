@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/server/mcp"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 )
 
 // RunToolGet runs the tool get endpoint
@@ -556,7 +556,7 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 	invokeTcs := []struct {
 		name          string
 		api           string
-		requestBody   mcp.JSONRPCRequest
+		requestBody   jsonrpc.JSONRPCRequest
 		requestHeader map[string]string
 		want          string
 	}{
@@ -564,10 +564,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			name:          "MCP Invoke my-param-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "my-param-tool",
-				Request: mcp.Request{
+				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -584,10 +584,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			name:          "MCP Invoke invalid tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invalid-tool",
-				Request: mcp.Request{
+				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -601,10 +601,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			name:          "MCP Invoke my-param-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-without-parameter",
-				Request: mcp.Request{
+				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -618,10 +618,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			name:          "MCP Invoke my-param-tool with insufficient parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-insufficient-parameter",
-				Request: mcp.Request{
+				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -635,10 +635,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			name:          "MCP Invoke my-auth-required-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke my-auth-required-tool",
-				Request: mcp.Request{
+				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
@@ -652,10 +652,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 			name:          "MCP Invoke my-fail-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
-			requestBody: mcp.JSONRPCRequest{
+			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke-fail-tool",
-				Request: mcp.Request{
+				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
