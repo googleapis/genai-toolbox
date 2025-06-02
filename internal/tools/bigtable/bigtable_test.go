@@ -59,7 +59,7 @@ func TestParseFromYamlBigtable(t *testing.T) {
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{},
 					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+						tools.NewStringParameter("country", nil, "some description"),
 					},
 				},
 			},

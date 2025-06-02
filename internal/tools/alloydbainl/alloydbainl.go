@@ -99,6 +99,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	newQuestionParam := tools.NewStringParameter(
 		"question",                              // name
+		nil,                                     // default value
 		"The natural language question to ask.", // description
 	)
 

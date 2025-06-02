@@ -89,7 +89,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					QueryParams: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
+						tools.NewStringParameterWithAuth("country", nil, "some description",
 							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
@@ -99,9 +99,9 @@ func TestParseFromYamlHTTP(t *testing.T) {
   "food": {{.food}}
 }
 `,
-					BodyParams:   []tools.Parameter{tools.NewIntParameter("age", "age num"), tools.NewStringParameter("city", "city string")},
+					BodyParams:   []tools.Parameter{tools.NewIntParameter("age", nil, "age num"), tools.NewStringParameter("city", nil, "city string")},
 					Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-					HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", "language string")},
+					HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", nil, "language string")},
 				},
 			},
 		},

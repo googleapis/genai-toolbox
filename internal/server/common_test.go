@@ -95,8 +95,8 @@ var tool1 = MockTool{
 var tool2 = MockTool{
 	Name: "some_params",
 	Params: tools.Parameters{
-		tools.NewIntParameter("param1", "This is the first parameter."),
-		tools.NewIntParameter("param2", "This is the second parameter."),
+		tools.NewIntParameter("param1", nil, "This is the first parameter."),
+		tools.NewIntParameter("param2", nil, "This is the second parameter."),
 	},
 }
 
@@ -104,7 +104,7 @@ var tool3 = MockTool{
 	Name:        "array_param",
 	Description: "some description",
 	Params: tools.Parameters{
-		tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+		tools.NewArrayParameter("my_array", nil, "this param is an array of strings", tools.NewStringParameter("my_string", nil, "string item")),
 	},
 }
 

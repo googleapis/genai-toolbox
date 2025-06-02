@@ -62,7 +62,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Statement:    "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
 					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "country parameter description"),
+						tools.NewStringParameter("country", nil, "country parameter description"),
 					},
 				},
 			},
