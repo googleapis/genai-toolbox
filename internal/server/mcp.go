@@ -106,8 +106,12 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			// server can continue to run.
 			s.server.logger.ErrorContext(ctx, err.Error())
 		}
-		if err = s.write(ctx, res); err != nil {
-			return err
+
+		// no responses for notifications
+		if res != nil {
+			if err = s.write(ctx, res); err != nil {
+				return err
+			}
 		}
 	}
 }
