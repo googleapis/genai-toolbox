@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -50,18 +51,30 @@ type sseSession struct {
 type sseManager struct {
 	mu          sync.RWMutex
 	sseSessions map[string]*sseSession
+	lastActive  time.Time
 }
 
 func (m *sseManager) get(id string) (*sseSession, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	session, ok := m.sseSessions[id]
+	session.lastActive = time.Now()
 	return session, ok
+}
+
+func newSseManager() *sseManager {
+	sseM := &sseManager{
+		mu:          sync.RWMutex{},
+		sseSessions: make(map[string]*sseSession),
+	}
+	go sseM.cleanupRoutine()
+	return sseM 
 }
 
 func (m *sseManager) add(id string, session *sseSession) {
 	m.mu.Lock()
 	m.sseSessions[id] = session
+	session.lastActive = time.Now()
 	m.mu.Unlock()
 }
 
@@ -69,6 +82,23 @@ func (m *sseManager) remove(id string) {
 	m.mu.Lock()
 	delete(m.sseSessions, id)
 	m.mu.Unlock()
+}
+
+func (m *mcpManager) cleanupRoutine() {
+	timeout := 10 * time.Minute
+	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		m.mu.Lock()
+		now := time.Now()
+		for id, sess := range m.mcpSessions {
+			if sess.protocol == v20250326.PROTOCOL_VERSION && now.Sub(sess.lastActive) > timeout {
+				delete(m.mcpSessions, id)
+			}
+		}
+		m.mu.Unlock()
+	}
 }
 
 type stdioSession struct {
