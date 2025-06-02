@@ -193,10 +193,12 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 	})
 
@@ -297,6 +299,13 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+// methodNotAllowed handles all mcp messages.
+func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
+	err := fmt.Errorf("toolbox does not support streaming in streamable HTTP transport")
+	s.logger.DebugContext(r.Context(), err.Error())
+	_ = render.Render(w, r, newErrResponse(err, http.StatusMethodNotAllowed))
 }
 
 // httpHandler handles all mcp messages.
