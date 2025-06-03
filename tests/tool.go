@@ -127,7 +127,7 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          invokeAuthWant,
+			want:          "[{\"name\":\"Alice\"}]",
 			isErr:         false,
 		},
 		{
