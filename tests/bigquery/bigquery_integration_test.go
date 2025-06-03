@@ -322,7 +322,7 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 
 func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -457,7 +457,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokePara
 
 func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -534,7 +534,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 
 func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetInfoWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -639,7 +639,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 
 func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_want string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -744,7 +744,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 
 func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName, tableInfoWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}

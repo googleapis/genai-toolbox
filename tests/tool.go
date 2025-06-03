@@ -16,8 +16,6 @@ package tests
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,95 +25,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-// SetupPostgresSQLTable creates and inserts data into a table of tool
-// compatible with postgres-sql tool
-func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
-	err := pool.Ping(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.Query(ctx, create_statement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.Query(ctx, insert_statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
-
-// SetupMsSQLTable creates and inserts data into a table of tool
-// compatible with mssql-sql tool
-func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
-	err := pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.QueryContext(ctx, create_statement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.QueryContext(ctx, insert_statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
-
-// SetupMySQLTable creates and inserts data into a table of tool
-// compatible with mysql-sql tool
-func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
-	err := pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.QueryContext(ctx, create_statement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.QueryContext(ctx, insert_statement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
 
 // RunToolGet runs the tool get endpoint
 func RunToolGetTest(t *testing.T) {
@@ -168,7 +78,7 @@ func RunToolGetTest(t *testing.T) {
 // RunToolInvoke runs the tool invoke endpoint
 func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -303,7 +213,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select_1_want string) {
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}

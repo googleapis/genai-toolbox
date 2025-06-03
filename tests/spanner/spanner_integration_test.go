@@ -277,7 +277,7 @@ func addSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]an
 
 func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
