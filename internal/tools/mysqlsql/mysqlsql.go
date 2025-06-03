@@ -139,7 +139,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 			// we'll need to cast it back to string
 			switch colTypes[i].DatabaseTypeName() {
 			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(rawValues[i].([]byte))
+				if rawValues[i] != nil {
+					vMap[name] = string(rawValues[i].([]byte))
+				} else {
+					vMap[name] = nil
+				}
 			default:
 				vMap[name] = rawValues[i]
 			}
