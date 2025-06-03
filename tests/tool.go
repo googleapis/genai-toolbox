@@ -89,7 +89,7 @@ func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 }
 
 // SetupMySQLTable creates and inserts data into a table of tool
-// compatible with mssql-sql tool
+// compatible with mysql-sql tool
 func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
 	err := pool.PingContext(ctx)
 	if err != nil {
