@@ -148,8 +148,8 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want, failInvocationWant := tests.GetPostgresWants()
-	invokeParamWant, invokeAuthWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeAuthWant)
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 }

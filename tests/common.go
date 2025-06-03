@@ -308,11 +308,10 @@ func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-func GetNonSpannerInvokeParamWant() (string, string, string) {
+func GetNonSpannerInvokeParamWant() (string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	invokeAuthWant := `[{"name":"Alice"}]`
-	return invokeParamWant, invokeAuthWant, mcpInvokeParamWant
+	return invokeParamWant, mcpInvokeParamWant
 }
 
 // GetPostgresWants return the expected wants for postgres
@@ -514,23 +513,15 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 }
 
 // GetRedisWants return the expected wants for redis
-func GetRedisValkeyWants() (string, string, string, string, string) {
+func GetRedisValkeyWants() (string, string, string, string) {
 	select1Want := "[\"PONG\"]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"\"error from executing command at index 0: ERR unknown command 'SELEC 1;', with args beginning with: \""}]}}`
-	invokeParamWant := "[\"Alice\",\"Sid\"]"
-	invokeAuthWant := `["{\"name\":\"Alice\"}"]`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"\"Alice\""},{"type":"text","text":"\"Sid\""}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, invokeAuthWant, mcpInvokeParamWant
+	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
 }
 
-// GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
-func GetRedisValkeyToolCmds() ([][]string, [][]string) {
-	paramCmd := [][]string{{"HGET", "row1", "name"}, {"HGET", "row3", "name"}}
-	authCmd := [][]string{{"HGET", "$email", "name"}}
-	return paramCmd, authCmd
-}
-
-func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string, param_cmds, auth_cmds [][]string) map[string]any {
+func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
@@ -552,7 +543,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string, par
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
-				"commands":    param_cmds,
+				"commands":    [][]string{{"HGETALL", "row1"}, {"HGETALL", "row3"}},
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
@@ -571,7 +562,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string, par
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
-				"commands": auth_cmds,
+				"commands": [][]string{{"HGETALL", "$email"}},
 				"parameters": []map[string]any{
 					{
 						"name":        "email",
