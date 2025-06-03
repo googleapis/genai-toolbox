@@ -38,7 +38,7 @@ func init() {
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
 	actual := Config{Name: name, Database: "neo4j"} // Default database
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
-		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+		return nil, err
 	}
 	return actual, nil
 }

@@ -32,7 +32,8 @@ var sourceRegistry = make(map[string]SourceConfigFactory)
 // Register registers a new source kind with its factory.
 // It returns false if the kind is already registered.
 func Register(kind string, factory SourceConfigFactory) bool {
-	if _, P := sourceRegistry[kind]; P {
+	if _, exists := sourceRegistry[kind]; exists {
+		// Source with this kind already exists, do not overwrite.
 		return false
 	}
 	sourceRegistry[kind] = factory
@@ -41,11 +42,15 @@ func Register(kind string, factory SourceConfigFactory) bool {
 
 // DecodeConfig decodes a source configuration using the registered factory for the given kind.
 func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (SourceConfig, error) {
-	factory, P := sourceRegistry[kind]
-	if !P {
-		return nil, fmt.Errorf("source kind %q not registered", kind)
+	factory, found := sourceRegistry[kind]
+	if !found {
+		return nil, fmt.Errorf("unknown source kind: %q", kind)
 	}
-	return factory(ctx, name, decoder)
+	sourceConfig, err := factory(ctx, name, decoder)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse source %q as %q: %w", name, kind, err)
+	}
+	return sourceConfig, err
 }
 
 // SourceConfig is the interface for configuring a source.

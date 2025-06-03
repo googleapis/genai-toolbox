@@ -130,21 +130,21 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 
 		kind, ok := v["kind"]
 		if !ok {
-			return fmt.Errorf("missing 'kind' field for %q", name)
+			return fmt.Errorf("missing 'kind' field for source %q", name)
 		}
 		kindStr, ok := kind.(string)
 		if !ok {
-			return fmt.Errorf("kind field for %q is not a string", name)
+			return fmt.Errorf("invalid 'kind' field for source %q (must be a string)", name)
 		}
 
-		sourceNode, err := util.NewStrictDecoder(v)
+		yamlDecoder, err := util.NewStrictDecoder(v)
 		if err != nil {
-			return fmt.Errorf("error creating decoder for source %q: %w", name, err)
+			return fmt.Errorf("error creating YAML decoder for source %q: %w", name, err)
 		}
 
-		sourceConfig, err := sources.DecodeConfig(ctx, kindStr, name, sourceNode)
+		sourceConfig, err := sources.DecodeConfig(ctx, kindStr, name, yamlDecoder)
 		if err != nil {
-			return fmt.Errorf("unable to parse source %q (kind: %q): %w", name, kindStr, err)
+			return err
 		}
 		(*c)[name] = sourceConfig
 	}

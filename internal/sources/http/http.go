@@ -37,9 +37,9 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := DefaultConfig(name)
+	actual := Config{Name: name, Timeout: "30s"} // Default timeout
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
-		return nil, fmt.Errorf("unable to parse %q config: %w", Kind, err)
+		return nil, err
 	}
 	return actual, nil
 }
@@ -55,11 +55,6 @@ type Config struct {
 
 func (r Config) SourceConfigKind() string {
 	return Kind
-}
-
-// DefaultConfig is a helper function that generates the default configuration for an HTTP Tool Config.
-func DefaultConfig(name string) Config {
-	return Config{Name: name, Timeout: "30s"}
 }
 
 // Initialize initializes an HTTP Source instance.
