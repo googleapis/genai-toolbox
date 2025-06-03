@@ -36,6 +36,11 @@ import (
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigqueryexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerygetdatasetinfo"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerygettableinfo"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerylistdatasetids"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerylisttableids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
