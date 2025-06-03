@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
@@ -138,12 +139,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		}
 		vMap := make(map[string]any)
 		for i, name := range cols {
-			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
-			// we'll need to cast it back to string
-			switch colTypes[i].DatabaseTypeName() {
-			case "TEXT", "VARCHAR", "NVARCHAR":
+			if rawValues[i] != nil && slices.Contains([]string{"TEXT", "VARCHAR", "NVARCHAR"}, colTypes[i].DatabaseTypeName()) {
+				// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
+				// we'll need to cast it back to string
 				vMap[name] = string(rawValues[i].([]byte))
-			default:
+			} else {
 				vMap[name] = rawValues[i]
 			}
 		}
