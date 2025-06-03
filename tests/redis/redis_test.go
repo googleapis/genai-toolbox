@@ -79,10 +79,8 @@ func TestRedisToolEndpoints(t *testing.T) {
 	teardownDB := setupRedisDB(t, ctx, client)
 	defer teardownDB(t)
 
-	param_cmds, auth_cmds := tests.GetRedisValkeyToolCmds()
-
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, REDIS_TOOL_KIND, param_cmds, auth_cmds)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, REDIS_TOOL_KIND)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -100,18 +98,18 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, invokeAuthWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeAuthWant)
+	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(*testing.T) {
 	keys := []string{"row1", "row2", "row3"}
 	commands := [][]any{
-		{"HSET", keys[0], "name", "Alice", "id", "1"},
-		{"HSET", keys[1], "name", "Jane", "id", "2"},
-		{"HSET", keys[2], "name", "Sid", "id", "3"},
-		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", `{"name":"Alice"}`},
+		{"HSET", keys[0], "id", 1, "name", "Alice"},
+		{"HSET", keys[1], "id", 2, "name", "Jane"},
+		{"HSET", keys[2], "id", 3, "name", "Sid"},
+		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", "Alice"},
 	}
 	for _, c := range commands {
 		resp := client.Do(ctx, c...)

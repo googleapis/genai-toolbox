@@ -20,6 +20,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	redissrc "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -119,11 +120,26 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 			out[i] = errString
 			continue
 		}
-		result, err := resp.Result()
+		val, err := resp.Result()
 		if err != nil {
 			return nil, fmt.Errorf("error getting result: %s", err)
 		}
-		out[i] = result
+		// If result is a map, convert map[any]any to map[string]any
+		// Because the Go's built-in json/encoding marshalling doesn't support
+		// map[any]any as an input
+		var strMap map[string]any
+		var json = jsoniter.ConfigCompatibleWithStandardLibrary
+		mapStr, err := json.Marshal(val)
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling result: %s", err)
+		}
+		err = json.Unmarshal(mapStr, &strMap)
+		if err != nil {
+			// result is not a map
+			out[i] = val
+			continue
+		}
+		out[i] = strMap
 	}
 
 	return out, nil
