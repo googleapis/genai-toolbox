@@ -38,7 +38,7 @@ var (
 )
 
 func getHTTPSourceConfig(t *testing.T) map[string]any {
-	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
 		t.Fatalf("error getting ID token: %s", err)
 	}
@@ -355,7 +355,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"kind":     "google",
-				"clientId": tests.CLIENT_ID,
+				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{

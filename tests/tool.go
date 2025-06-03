@@ -78,7 +78,7 @@ func RunToolGetTest(t *testing.T) {
 // RunToolInvoke runs the tool invoke endpoint
 func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 	// Get ID token
-	idToken, err := GetGoogleIdToken(CLIENT_ID)
+	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -213,7 +213,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select_1_want string) {
 	// Get ID token
-	idToken, err := GetGoogleIdToken(CLIENT_ID)
+	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}

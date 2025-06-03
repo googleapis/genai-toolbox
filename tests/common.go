@@ -36,7 +36,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"kind":     "google",
-				"clientId": CLIENT_ID,
+				"clientId": ClientId,
 			},
 		},
 		"tools": map[string]any{

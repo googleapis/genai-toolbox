@@ -157,7 +157,7 @@ func runAiNlToolGetTest(t *testing.T) {
 
 func runAiNlToolInvokeTest(t *testing.T) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.CLIENT_ID)
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -284,7 +284,7 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"kind":     "google",
-				"clientId": tests.CLIENT_ID,
+				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{

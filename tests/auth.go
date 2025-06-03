@@ -24,7 +24,7 @@ import (
 )
 
 var SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
-var CLIENT_ID = os.Getenv("CLIENT_ID")
+var ClientId = os.Getenv("CLIENT_ID")
 
 // GetGoogleIdToken retrieve and return the Google ID token
 func GetGoogleIdToken(audience string) (string, error) {
@@ -35,7 +35,7 @@ func GetGoogleIdToken(audience string) (string, error) {
 		return strings.TrimSpace(string(output)), nil
 	}
 	// For Cloud Build testing - retrieve ID token from GCE metadata server
-	ts, err := idtoken.NewTokenSource(context.Background(), CLIENT_ID)
+	ts, err := idtoken.NewTokenSource(context.Background(), ClientId)
 	if err != nil {
 		return "", err
 	}
