@@ -378,6 +378,14 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
 		},
+		{
+			name:          "invoke my-exec-sql-tool with null varchar",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE test_nulls (id INT, name VARCHAR(255), description TEXT); INSERT INTO test_nulls VALUES (1, NULL, 'test'), (2, 'Alice', NULL); SELECT * FROM test_nulls;"}`)),
+			want:          `[{"description":"test","id":1,"name":null},{"description":null,"id":2,"name":"Alice"}]`,
+			isErr:         false,
+		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
