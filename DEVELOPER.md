@@ -80,43 +80,6 @@
     automatically. For external contributors, ask the Toolbox
     maintainers to trigger the testing workflows on your PR.
 
-## Developing Documentation
-
-Follow these steps to run a Hugo server for local preview:
-
-1. [Install Hugo](https://gohugo.io/installation/macos/) version 0.145.0. This version is currently required due to breaking changes.
-1. Move into the `.hugo` directory
-
-    ```bash
-    cd .hugo
-    ```
-
-1. Install dependencies
-
-    ```bash
-    npm ci
-    ```
-
-1. Run the server
-
-    ```bash
-    hugo server
-    ```
-
-### PR documentation preview
-
-For contributors:
-
-- Ask a repo owner to run the documentation preview on your PR
-
-For maintainers:
-
-- Inspect the proposed changes in the PR and ensure that it does not contain
-  malicious code changes. You should be especially alert to any proposed changes in the
-  `.github/workflows/` directory that affect workflow files.
-- After you make sure the changes are safe, apply the `docs: deploy-preview`
-  label to the PR to deploy documentation preview.
-
 ## Compile the app locally
 
 ### Compile Toolbox binary
@@ -165,6 +128,27 @@ For maintainers:
 
     ```bash
     docker run -d toolbox:dev
+    ```
+
+## Developing Documentation
+
+1. [Install Hugo](https://gohugo.io/installation/macos/) version 0.145.0. This version is currently required due to breaking changes.
+1. Move into the `.hugo` directory
+
+    ```bash
+    cd .hugo
+    ```
+
+1. Install dependencies
+
+    ```bash
+    npm ci
+    ```
+
+1. Run the server
+
+    ```bash
+    hugo server
     ```
 
 ## Developing Toolbox SDKs
