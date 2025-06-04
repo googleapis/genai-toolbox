@@ -69,7 +69,7 @@ tools:
         description: 1 to 4 digit number
 ```
 
-## Example with template parameters
+### Example with template parameters
 
 > **Note:** This tool allows direct modifications the SQL statement, including identifiers, column names,
 > and table names. **This makes it more vulnerable to SQL injections**. Using basic parameters 
@@ -97,11 +97,11 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "postgres-sql".                                                                          |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
-| statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
-| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
-| templateParameters  |  [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| **field**           |                  **type**                                 | **required** | **description**                                                                                                                            |
+|---------------------|:---------------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                |                   string                                  |     true     | Must be "postgres-sql".                                                                                                                    |
+| source              |                   string                                  |     true     | Name of the source the SQL should execute on.                                                                                              |
+| description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
+| parameters          | [parameters](_index#specifying-parameters)                |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters  |  [templateParameters](_index#template-parameters)         |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

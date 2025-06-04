@@ -186,11 +186,12 @@ tools:
           description: Name of a column to select
 ```
 
-| **field**   | **type** | **required** | **description**                                                            |
-|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
-| name        |  string  |     true     | Name of the template parameter.                                                     |
-| type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
-| description |  string  |     true     | Natural language description of the template parameter to describe it to the agent. |
+| **field**   | **type**         | **required**  | **description**                                                                     |
+|-------------|:----------------:|:-------------:|-------------------------------------------------------------------------------------|
+| name        |  string          |     true      | Name of the template parameter.                                                     |
+| type        |  string          |     true      | Must be one of "string", "integer", "float", "boolean" "array"                      |
+| description |  string          |     true      | Natural language description of the template parameter to describe it to the agent. |
+| items       | parameter object |true (if array)| Specify a Parameter object for the type of the values in the array (string only).   |
 
 ## Authorized Invocations
 
