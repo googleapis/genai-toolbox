@@ -17,7 +17,7 @@ enableRobotsTXT = true
   proxy = "direct"
   [module.hugoVersion]
     extended = true
-    min = "0.73.0"
+    min = "0.146.0"
   [[module.mounts]]
     source = "../docs/en"
     target = 'content'
@@ -28,6 +28,7 @@ enableRobotsTXT = true
     path = "github.com/martignoni/hugo-notice"
 
 [params]
+  description = "MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more."
   copyright = "Google LLC"
   github_repo = "https://github.com/googleapis/genai-toolbox"
   github_project_repo = "https://github.com/googleapis/genai-toolbox"
@@ -48,3 +49,12 @@ enableRobotsTXT = true
 
 [markup.goldmark.renderer]
   unsafe= true 
+
+[outputFormats]
+  [outputFormats.TXT]
+    mediaType = "text/plain"
+    baseName = "llms"
+    isPlainText = true
+
+[outputs]
+  home = ["HTML", "TXT"]
