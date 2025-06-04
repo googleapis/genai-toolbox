@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
