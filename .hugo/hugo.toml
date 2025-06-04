@@ -51,11 +51,16 @@ enableRobotsTXT = true
   unsafe= true 
 
 [outputFormats]
-  [outputFormats.TXT]
+  [outputFormats.LLMS]
     mediaType = "text/plain"
     baseName = "llms"
     isPlainText = true
     root = true
+  [outputFormats.LLMS-FULL]
+    mediaType = "text/plain"
+    baseName = "llms-full"
+    isPlainText = true
+    root = true
 
 [outputs]
-  home = ["HTML", "TXT"]
+  home = ["HTML", "RSS", "LLMS", "LLMS-FULL"]
