@@ -55,6 +55,7 @@ enableRobotsTXT = true
     mediaType = "text/plain"
     baseName = "llms"
     isPlainText = true
+    root = true
 
 [outputs]
   home = ["HTML", "TXT"]

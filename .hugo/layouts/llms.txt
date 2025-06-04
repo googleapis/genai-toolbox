@@ -1,8 +1,0 @@
-# {{ .Site.Title }}
-
-> {{ .Site.Params.description }}
-
-## Docs
-{{ range .Site.Sections }}
-### {{ .Title }}
-{{ range .Pages }}- [{{ .Title }}]({{ .Permalink }}): {{ .Description }}{{ range .Pages }}  - [{{ .Title }}]({{ .Permalink }}): {{ .Description }}{{end }}{{ end }}{{ end }}
