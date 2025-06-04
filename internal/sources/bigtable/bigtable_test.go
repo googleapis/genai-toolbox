@@ -43,7 +43,7 @@ func TestParseFromYamlBigtableDb(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-bigtable-instance": bigtable.Config{
 					Name:     "my-bigtable-instance",
-					Kind:     bigtable.Kind,
+					Kind:     bigtable.SourceKind,
 					Project:  "my-project",
 					Instance: "my-instance",
 				},

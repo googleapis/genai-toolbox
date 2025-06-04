@@ -50,7 +50,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &bigqueryds.Source{}
 
-var compatibleSources = [...]string{bigqueryds.Kind}
+var compatibleSources = [...]string{bigqueryds.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

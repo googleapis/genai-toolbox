@@ -48,7 +48,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &bigtabledb.Source{}
 
-var compatibleSources = [...]string{bigtabledb.Kind}
+var compatibleSources = [...]string{bigtabledb.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

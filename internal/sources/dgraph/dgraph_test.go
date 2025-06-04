@@ -45,7 +45,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-dgraph-instance": dgraph.Config{
 					Name:      "my-dgraph-instance",
-					Kind:      dgraph.Kind,
+					Kind:      dgraph.SourceKind,
 					DgraphUrl: "https://localhost:8080",
 					ApiKey:    "abc123",
 					Password:  "pass@123",
@@ -65,7 +65,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-dgraph-instance": dgraph.Config{
 					Name:      "my-dgraph-instance",
-					Kind:      dgraph.Kind,
+					Kind:      dgraph.SourceKind,
 					DgraphUrl: "https://localhost:8080",
 				},
 			},

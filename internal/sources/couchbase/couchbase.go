@@ -27,14 +27,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const Kind string = "couchbase"
+const SourceKind string = "couchbase"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(Kind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
 	}
 }
 
@@ -65,7 +65,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return Kind
+	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -82,7 +82,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	scope := cluster.Bucket(r.Bucket).Scope(r.Scope)
 	s := &Source{
 		Name:                 r.Name,
-		Kind:                 Kind,
+		Kind:                 SourceKind,
 		QueryScanConsistency: r.QueryScanConsistency,
 		Scope:                scope,
 	}
@@ -99,7 +99,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return Kind
+	return SourceKind
 }
 
 func (s *Source) CouchbaseScope() *gocb.Scope {

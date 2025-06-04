@@ -25,14 +25,14 @@ import (
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
 )
 
-const Kind string = "sqlite"
+const SourceKind string = "sqlite"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(Kind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
 	}
 }
 
@@ -51,7 +51,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return Kind
+	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -67,7 +67,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: Kind,
+		Kind: SourceKind,
 		Db:   db,
 	}
 	return s, nil
@@ -82,7 +82,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return Kind
+	return SourceKind
 }
 
 func (s *Source) SQLiteDB() *sql.DB {
@@ -91,7 +91,7 @@ func (s *Source) SQLiteDB() *sql.DB {
 
 func initSQLiteConnection(ctx context.Context, tracer trace.Tracer, name, dbPath string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	// Open database connection

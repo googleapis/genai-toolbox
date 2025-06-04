@@ -44,7 +44,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-neo4j-instance": neo4j.Config{
 					Name:     "my-neo4j-instance",
-					Kind:     neo4j.Kind,
+					Kind:     neo4j.SourceKind,
 					Uri:      "neo4j+s://my-host:7687",
 					Database: "my_db",
 					User:     "my_user",

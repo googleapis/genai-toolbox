@@ -29,14 +29,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const Kind string = "dgraph"
+const SourceKind string = "dgraph"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(Kind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
 	}
 }
 
@@ -75,7 +75,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return Kind
+	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -90,7 +90,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:   r.Name,
-		Kind:   Kind,
+		Kind:   SourceKind,
 		Client: hc,
 	}
 	return s, nil
@@ -105,7 +105,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return Kind
+	return SourceKind
 }
 
 func (s *Source) DgraphClient() *DgraphClient {
@@ -114,7 +114,7 @@ func (s *Source) DgraphClient() *DgraphClient {
 
 func initDgraphHttpClient(ctx context.Context, tracer trace.Tracer, r Config) (*DgraphClient, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, r.Name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, r.Name)
 	defer span.End()
 
 	if r.DgraphUrl == "" {

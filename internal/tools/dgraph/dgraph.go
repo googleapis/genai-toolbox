@@ -48,7 +48,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &dgraph.Source{}
 
-var compatibleSources = [...]string{dgraph.Kind}
+var compatibleSources = [...]string{dgraph.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

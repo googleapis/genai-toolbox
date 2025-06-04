@@ -50,7 +50,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &couchbase.Source{}
 
-var compatibleSources = [...]string{couchbase.Kind}
+var compatibleSources = [...]string{couchbase.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

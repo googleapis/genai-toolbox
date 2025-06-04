@@ -50,7 +50,7 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &neo4jsc.Source{}
 
-var compatibleSources = [...]string{neo4jsc.Kind}
+var compatibleSources = [...]string{neo4jsc.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

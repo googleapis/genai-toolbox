@@ -27,14 +27,14 @@ import (
 	"google.golang.org/api/option"
 )
 
-const Kind string = "bigquery"
+const SourceKind string = "bigquery"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(Kind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
 	}
 }
 
@@ -56,7 +56,7 @@ type Config struct {
 
 func (r Config) SourceConfigKind() string {
 	// Returns BigQuery source kind
-	return Kind
+	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -67,7 +67,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 	s := &Source{
 		Name:     r.Name,
-		Kind:     Kind,
+		Kind:     SourceKind,
 		Client:   client,
 		Location: r.Location,
 	}
@@ -87,7 +87,7 @@ type Source struct {
 
 func (s *Source) SourceKind() string {
 	// Returns BigQuery Google SQL source kind
-	return Kind
+	return SourceKind
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
@@ -101,7 +101,7 @@ func initBigQueryConnection(
 	project string,
 	location string,
 ) (*bigqueryapi.Client, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, Kind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)

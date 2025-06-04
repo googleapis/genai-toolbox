@@ -42,7 +42,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:     "my-instance",
-					Kind:     bigquery.Kind,
+					Kind:     bigquery.SourceKind,
 					Project:  "my-project",
 					Location: "us",
 				},

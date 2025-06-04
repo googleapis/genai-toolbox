@@ -25,14 +25,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const Kind string = "http"
+const SourceKind string = "http"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(Kind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", Kind))
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
 	}
 }
 
@@ -54,7 +54,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigKind() string {
-	return Kind
+	return SourceKind
 }
 
 // Initialize initializes an HTTP Source instance.
@@ -75,7 +75,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:           r.Name,
-		Kind:           Kind,
+		Kind:           SourceKind,
 		BaseURL:        r.BaseURL,
 		DefaultHeaders: r.DefaultHeaders,
 		QueryParams:    r.QueryParams,
@@ -97,5 +97,5 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return Kind
+	return SourceKind
 }

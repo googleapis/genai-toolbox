@@ -45,7 +45,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-pg-instance": postgres.Config{
 					Name:     "my-pg-instance",
-					Kind:     postgres.Kind,
+					Kind:     postgres.SourceKind,
 					Host:     "my-host",
 					Port:     "my-port",
 					Database: "my_db",
