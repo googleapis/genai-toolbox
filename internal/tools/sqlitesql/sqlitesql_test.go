@@ -61,7 +61,7 @@ func TestParseFromYamlSQLite(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": sqlitesql.Config{
 					Name:         "example_tool",
-					Kind:         sqlitesql.ToolKind,
+					Kind:         "sqlite-sql",
 					Source:       "my-sqlite-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

@@ -38,27 +38,6 @@ import (
 	spannersrc "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	sqlitesrc "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigqueryexecutesql"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerygetdatasetinfo"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerygettableinfo"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerylistdatasetids"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerylisttableids"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigtable"
-	couchbasetool "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
-	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
-	httptool "github.com/googleapis/genai-toolbox/internal/tools/http"
-	"github.com/googleapis/genai-toolbox/internal/tools/mssqlexecutesql"
-	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
-	neo4jtool "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
-	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
-	"github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
-	"github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -340,146 +319,25 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			v["authRequired"] = []string{}
 		}
 
-		kind, ok := v["kind"]
+		kindVal, ok := v["kind"]
 		if !ok {
-			return fmt.Errorf("missing 'kind' field for %q", name)
+			return fmt.Errorf("missing 'kind' field for tool %q", name)
+		}
+		kindStr, ok := kindVal.(string)
+		if !ok {
+			return fmt.Errorf("invalid 'kind' field for tool %q (must be a string)", name)
 		}
 
-		dec, err := util.NewStrictDecoder(v)
+		yamlDecoder, err := util.NewStrictDecoder(v)
 		if err != nil {
-			return fmt.Errorf("error creating decoder: %w", err)
-		}
-		switch kind {
-		case bigtable.ToolKind:
-			actual := bigtable.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case postgressql.ToolKind:
-			actual := postgressql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case alloydbainl.ToolKind:
-			actual := alloydbainl.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case mysqlsql.ToolKind:
-			actual := mysqlsql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case spanner.ToolKind:
-			actual := spanner.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case neo4jtool.ToolKind:
-			actual := neo4jtool.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case mssqlsql.ToolKind:
-			actual := mssqlsql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case dgraph.ToolKind:
-			actual := dgraph.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case httptool.ToolKind:
-			actual := httptool.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case bigquery.ToolKind:
-			actual := bigquery.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case sqlitesql.ToolKind:
-			actual := sqlitesql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case postgresexecutesql.ToolKind:
-			actual := postgresexecutesql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case mysqlexecutesql.ToolKind:
-			actual := mysqlexecutesql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case spannerexecutesql.ToolKind:
-			actual := spannerexecutesql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case mssqlexecutesql.ToolKind:
-			actual := mssqlexecutesql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case couchbasetool.ToolKind:
-			actual := couchbasetool.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case bigqueryexecutesql.ToolKind:
-			actual := bigqueryexecutesql.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case bigquerylistdatasetids.ToolKind:
-			actual := bigquerylistdatasetids.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case bigquerygetdatasetinfo.ToolKind:
-			actual := bigquerygetdatasetinfo.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case bigquerylisttableids.ToolKind:
-			actual := bigquerylisttableids.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		case bigquerygettableinfo.ToolKind:
-			actual := bigquerygettableinfo.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		default:
-			return fmt.Errorf("%q is not a valid kind of tool", kind)
+			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
 		}
 
+		toolCfg, err := tools.DecodeConfig(ctx, kindStr, name, yamlDecoder)
+		if err != nil {
+			return err
+		}
+		(*c)[name] = toolCfg
 	}
 	return nil
 }

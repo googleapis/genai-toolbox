@@ -53,7 +53,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquery.Config{
 					Name:         "example_tool",
-					Kind:         bigquery.ToolKind,
+					Kind:         "bigquery-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

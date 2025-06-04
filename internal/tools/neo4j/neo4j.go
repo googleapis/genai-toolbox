@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	yaml "github.com/goccy/go-yaml"
 	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
@@ -25,7 +26,21 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const ToolKind string = "neo4j-cypher"
+const kind string = "neo4j-cypher"
+
+func init() {
+	if !tools.Register(kind, newConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
 
 type compatibleSource interface {
 	Neo4jDriver() neo4j.DriverWithContext
@@ -51,7 +66,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigKind() string {
-	return ToolKind
+	return kind
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -64,7 +79,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", ToolKind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -76,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
-		Kind:         ToolKind,
+		Kind:         kind,
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,

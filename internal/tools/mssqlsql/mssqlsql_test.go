@@ -61,7 +61,7 @@ func TestParseFromYamlMssql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mssqlsql.Config{
 					Name:         "example_tool",
-					Kind:         mssqlsql.ToolKind,
+					Kind:         "mssql-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

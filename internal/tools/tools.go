@@ -16,10 +16,47 @@ package tools
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
+
+// ToolConfigFactory defines the signature for a function that creates and
+// decodes a specific tool's configuration. It takes the context, the tool's
+// name, and a YAML decoder to parse the config.
+type ToolConfigFactory func(ctx context.Context, name string, decoder *yaml.Decoder) (ToolConfig, error)
+
+var toolRegistry = make(map[string]ToolConfigFactory)
+
+// Register allows individual tool packages to register their configuration
+// factory function. This is typically called from an init() function in the
+// tool's package. It associates a 'kind' string with a function that can
+// produce the specific ToolConfig type. It returns true if the registration was
+// successful, and false if a tool with the same kind was already registered.
+func Register(kind string, factory ToolConfigFactory) bool {
+	if _, exists := toolRegistry[kind]; exists {
+		// Tool with this kind already exists, do not overwrite.
+		return false
+	}
+	toolRegistry[kind] = factory
+	return true
+}
+
+// DecodeConfig looks up the registered factory for the given kind and uses it
+// to decode the tool configuration.
+func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
+	factory, found := toolRegistry[kind]
+	if !found {
+		return nil, fmt.Errorf("unknown tool kind: %q", kind)
+	}
+	toolConfig, err := factory(ctx, name, decoder)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse tool %q as kind %q: %w", name, kind, err)
+	}
+	return toolConfig, nil
+}
 
 type ToolConfig interface {
 	ToolConfigKind() string

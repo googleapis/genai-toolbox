@@ -32,6 +32,30 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/util"
+
+	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigqueryexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerygetdatasetinfo"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerygettableinfo"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerylistdatasetids"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquerylisttableids"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mssqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+
 	"github.com/spf13/cobra"
 )
 

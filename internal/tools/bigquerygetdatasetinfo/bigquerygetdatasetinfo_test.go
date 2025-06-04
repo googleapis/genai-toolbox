@@ -46,7 +46,7 @@ func TestParseFromYamlBigQueryGetDatasetInfo(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerygetdatasetinfo.Config{
 					Name:         "example_tool",
-					Kind:         bigquerygetdatasetinfo.ToolKind,
+					Kind:         "bigquery-get-dataset-info",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

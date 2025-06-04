@@ -129,7 +129,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-  tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
