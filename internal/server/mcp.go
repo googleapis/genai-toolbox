@@ -386,7 +386,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, res)
 }
 
-// processMcpMessage process the messages received from clients
+// processMcpMessage process the messages received from clients and return protocol version, response, and error.
+// protocol version is only returned with initialize response.
 func processMcpMessage(ctx context.Context, protocolVersion string, body []byte, s *Server, toolsetName string) (string, any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
