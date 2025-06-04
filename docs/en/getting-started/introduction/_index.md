@@ -2,7 +2,8 @@
 title: "Introduction"
 type: docs
 weight: 1
-description: An introduction to MCP Toolbox for Databases.
+description: >
+  An introduction to MCP Toolbox for Databases.
 ---
 
 MCP Toolbox for Databases is an open source MCP server for databases. It enables
