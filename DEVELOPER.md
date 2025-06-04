@@ -107,7 +107,7 @@ Follow these steps to run a Hugo server for local preview:
 
 - For contributors:
 
-  - Ask a repo owner to run the documentation preview on your PR. The preview link
+  - Ask a repo owner to run the preview deployment workflow on your PR. The preview link
     will be commented under your PR automatically.
 
 - For maintainers:
