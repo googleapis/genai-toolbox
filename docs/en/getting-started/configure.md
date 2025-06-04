@@ -2,7 +2,8 @@
 title: "Configuration"
 type: docs
 weight: 4
-description: How to configure Toolbox's tools.yaml file.
+description: >
+  How to configure Toolbox's tools.yaml file.
 ---
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
