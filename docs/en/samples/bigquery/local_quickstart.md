@@ -17,8 +17,7 @@ This guide assumes you have already done the following:
 1.  Installed and configured the [Google Cloud SDK (gcloud CLI)][install-gcloud].
 1.  Authenticated with Google Cloud for Application Default Credentials (ADC):
     ```bash
-    gcloud auth login
-    gcloud auth application-default login
+    gcloud auth login --update-adc
     ```
 1.  Set your default Google Cloud project (replace `YOUR_PROJECT_ID` with your actual project ID):
     ```bash
