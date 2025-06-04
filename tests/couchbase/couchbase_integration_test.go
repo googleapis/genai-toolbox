@@ -98,8 +98,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	defer cluster.Close(nil)
 
 	// Create collection names with UUID
-	collectionNameParam := "param_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	collectionNameAuth := "auth_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	collectionNameParam := "param_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	collectionNameAuth := "auth_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// Set up data for param tool
 	paramToolStatement, params1 := getCouchbaseParamToolInfo(collectionNameParam)

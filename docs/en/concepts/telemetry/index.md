@@ -2,7 +2,8 @@
 title: "Telemetry"
 type: docs
 weight: 2
-description: An overview of telemetry and observability in Toolbox. 
+description: >
+  An overview of telemetry and observability in Toolbox. 
 ---
 
 ## About

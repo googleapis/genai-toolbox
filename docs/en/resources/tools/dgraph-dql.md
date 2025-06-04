@@ -18,6 +18,11 @@ To run a statement as a query, you need to set the config `isQuery=true`. For
 upserts or mutations, set `isQuery=false`. You can also configure timeout for a
 query.
 
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
 ## Example
 
 {{< tabpane persist="header" >}}

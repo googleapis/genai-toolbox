@@ -18,6 +18,11 @@ The specified Cypher statement is executed as a [parameterized
 statement][neo4j-parameters], and specified parameters will be used according to
 their name: e.g. `$id`.
 
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
 [neo4j-parameters]:
     https://neo4j.com/docs/cypher-manual/current/syntax/parameters/
 

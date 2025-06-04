@@ -40,6 +40,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigqueryexecutesql"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquerygetdatasetinfo"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquerygettableinfo"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquerylistdatasetids"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquerylisttableids"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	couchbasetool "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
@@ -82,6 +87,8 @@ type ServerConfig struct {
 	TelemetryOTLP string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
+	// Stdio indicates if Toolbox is listening via MCP stdio.
+	Stdio bool
 }
 
 type logFormat string
@@ -435,6 +442,36 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			(*c)[name] = actual
 		case couchbasetool.ToolKind:
 			actual := couchbasetool.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case bigqueryexecutesql.ToolKind:
+			actual := bigqueryexecutesql.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case bigquerylistdatasetids.ToolKind:
+			actual := bigquerylistdatasetids.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case bigquerygetdatasetinfo.ToolKind:
+			actual := bigquerygetdatasetinfo.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case bigquerylisttableids.ToolKind:
+			actual := bigquerylisttableids.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		case bigquerygettableinfo.ToolKind:
+			actual := bigquerygettableinfo.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}

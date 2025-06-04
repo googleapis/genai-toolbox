@@ -28,6 +28,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -68,15 +69,18 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg        server.ServerConfig
-	logger     log.Logger
-	tools_file string
-	outStream  io.Writer
-	errStream  io.Writer
+	cfg            server.ServerConfig
+	logger         log.Logger
+	tools_file     string
+	prebuiltConfig string
+	inStream       io.Reader
+	outStream      io.Writer
+	errStream      io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
 func NewCommand(opts ...Option) *Command {
+	in := os.Stdin
 	out := os.Stdout
 	err := os.Stderr
 
@@ -87,6 +91,7 @@ func NewCommand(opts ...Option) *Command {
 	}
 	cmd := &Command{
 		Command:   baseCmd,
+		inStream:  in,
 		outStream: out,
 		errStream: err,
 	}
@@ -98,7 +103,8 @@ func NewCommand(opts ...Option) *Command {
 	// Set server version
 	cmd.cfg.Version = versionString
 
-	// set baseCmd out and err the same as cmd.
+	// set baseCmd in, out and err the same as cmd.
+	baseCmd.SetIn(cmd.inStream)
 	baseCmd.SetOut(cmd.outStream)
 	baseCmd.SetErr(cmd.errStream)
 
@@ -106,15 +112,17 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
-	flags.StringVar(&cmd.tools_file, "tools_file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.StringVar(&cmd.tools_file, "tools-file", "tools.yaml", "File path specifying the tool configuration.")
+	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
 	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'postgres', 'spanner', 'spanner-postgres'.")
+	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -163,7 +171,25 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
+// updateLogLevel checks if Toolbox have to update the existing log level set by users.
+// stdio doesn't support "debug" and "info" logs.
+func updateLogLevel(stdio bool, logLevel string) bool {
+	if stdio {
+		switch strings.ToUpper(logLevel) {
+		case log.Debug, log.Info:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
+}
+
 func run(cmd *Command) error {
+	if updateLogLevel(cmd.cfg.Stdio, cmd.cfg.LogLevel.String()) {
+		cmd.cfg.LogLevel = server.StringLevel(log.Warn)
+	}
+
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
@@ -202,13 +228,13 @@ func run(cmd *Command) error {
 		}
 		cmd.logger = logger
 	default:
-		return fmt.Errorf("logging format invalid.")
+		return fmt.Errorf("logging format invalid")
 	}
 
 	ctx = util.WithLogger(ctx, cmd.logger)
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Command.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
@@ -222,13 +248,37 @@ func run(cmd *Command) error {
 		}
 	}()
 
-	// Read tool file contents
-	buf, err := os.ReadFile(cmd.tools_file)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
+	var buf []byte
+
+	if cmd.prebuiltConfig != "" {
+		// Make sure --prebuilt and --tools-file flags are mutually exclusive
+		if cmd.tools_file != "" {
+			errMsg := fmt.Errorf("--prebuilt and --tools-file flags cannot be used simultaneously")
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		// Use prebuilt tools
+		buf, err = prebuiltconfigs.Get(cmd.prebuiltConfig)
+		if err != nil {
+			cmd.logger.ErrorContext(ctx, err.Error())
+			return err
+		}
+		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltConfig)
+		cmd.logger.InfoContext(ctx, logMsg)
+	} else {
+		// Set default value of tools-file flag to tools.yaml
+		if cmd.tools_file == "" {
+			cmd.tools_file = "tools.yaml"
+		}
+		// Read tool file contents
+		buf, err = os.ReadFile(cmd.tools_file)
+		if err != nil {
+			errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
 	}
+
 	toolsFile, err := parseToolsFile(ctx, buf)
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
 	authSourceConfigs := toolsFile.AuthSources
@@ -262,9 +312,16 @@ func run(cmd *Command) error {
 	srvErr := make(chan error)
 	go func() {
 		defer close(srvErr)
-		err = s.Serve(ctx)
-		if err != nil {
-			srvErr <- err
+		if cmd.cfg.Stdio {
+			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
+			if err != nil {
+				srvErr <- err
+			}
+		} else {
+			err = s.Serve(ctx)
+			if err != nil {
+				srvErr <- err
+			}
 		}
 	}()
 
@@ -282,7 +339,7 @@ func run(cmd *Command) error {
 		cmd.logger.WarnContext(shutdownContext, "Shutting down gracefully...")
 		err := s.Shutdown(shutdownContext)
 		if err == context.DeadlineExceeded {
-			return fmt.Errorf("graceful shutdown timed out... forcing exit.")
+			return fmt.Errorf("graceful shutdown timed out... forcing exit")
 		}
 	}
 

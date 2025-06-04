@@ -132,7 +132,7 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.5.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.6.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -316,21 +316,21 @@ queries = [
 
 def main():
     # TODO(developer): replace this with another model if needed
-    model = ChatVertexAI(model_name="gemini-1.5-pro")
-    # model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
+    model = ChatVertexAI(model_name="gemini-2.0-flash-001")
+    # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
     # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
     
     # Load the tools from the Toolbox server
-    client = ToolboxClient("http://127.0.0.1:5000")
-    tools = client.load_toolset()
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
+        tools = client.load_toolset()
 
-    agent = create_react_agent(model, tools, checkpointer=MemorySaver())
+        agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
-    config = {"configurable": {"thread_id": "thread-1"}}
-    for query in queries:
-        inputs = {"messages": [("user", prompt + query)]}
-        response = agent.invoke(inputs, stream_mode="values", config=config)
-        print(response["messages"][-1].content)
+        config = {"configurable": {"thread_id": "thread-1"}}
+        for query in queries:
+            inputs = {"messages": [("user", prompt + query)]}
+            response = agent.invoke(inputs, stream_mode="values", config=config)
+            print(response["messages"][-1].content)
 
 main()
 {{< /tab >}}
@@ -368,12 +368,12 @@ queries = [
 async def main():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
-        model="gemini-1.5-pro",
+        model="gemini-2.0-flash-001",
         vertexai_config={"location": "us-central1"},
     )
     # llm = GoogleGenAI(
     #     api_key=os.getenv("GOOGLE_API_KEY"),
-    #     model="gemini-1.5-pro",
+    #     model="gemini-2.0-flash-001",
     # )
     # llm = Anthropic(
     #   model="claude-3-7-sonnet-latest",
@@ -381,19 +381,19 @@ async def main():
     # )
     
     # Load the tools from the Toolbox server
-    client = ToolboxClient("http://127.0.0.1:5000")
-    tools = client.load_toolset()
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
+        tools = client.load_toolset()
 
-    agent = AgentWorkflow.from_tools_or_functions(
-        tools,
-        llm=llm,
-        system_prompt=prompt,
-    )
-    ctx = Context(agent)
-    for query in queries:
-         response = await agent.run(user_msg=query, ctx=ctx)
-         print(f"---- {query} ----")
-         print(str(response))
+        agent = AgentWorkflow.from_tools_or_functions(
+            tools,
+            llm=llm,
+            system_prompt=prompt,
+        )
+        ctx = Context(agent)
+        for query in queries:
+            response = await agent.run(user_msg=query, ctx=ctx)
+            print(f"---- {query} ----")
+            print(str(response))
 
 asyncio.run(main())
 {{< /tab >}}
@@ -414,68 +414,68 @@ os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
 
 # --- Load Tools from Toolbox ---
 # TODO(developer): Ensure the Toolbox server is running at http://127.0.0.1:5000
-toolbox_client = ToolboxSyncClient("http://127.0.0.1:5000")
-# TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
-agent_toolset = toolbox_client.load_toolset("my-toolset")
+with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
+    # TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
+    agent_toolset = toolbox_client.load_toolset("my-toolset")
 
-# --- Define the Agent's Prompt ---
-prompt = """
-  You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id,
-  location and price tier. Always mention hotel ids while performing any
-  searches. This is very important for any operations. For any bookings or
-  cancellations, please provide the appropriate confirmation. Be sure to
-  update checkin or checkout dates if mentioned by the user.
-  Don't ask for confirmations from the user.
-"""
+    # --- Define the Agent's Prompt ---
+    prompt = """
+      You're a helpful hotel assistant. You handle hotel searching, booking and
+      cancellations. When the user searches for a hotel, mention it's name, id,
+      location and price tier. Always mention hotel ids while performing any
+      searches. This is very important for any operations. For any bookings or
+      cancellations, please provide the appropriate confirmation. Be sure to
+      update checkin or checkout dates if mentioned by the user.
+      Don't ask for confirmations from the user.
+    """
 
-# --- Configure the Agent ---
+    # --- Configure the Agent ---
 
-root_agent = Agent(
-    model='gemini-2.0-flash',
-    name='hotel_agent',
-    description='A helpful AI assistant that can search and book hotels.',
-    instruction=prompt,
-    tools=agent_toolset, # Pass the loaded toolset
-)
-
-# --- Initialize Services for Running the Agent ---
-session_service = InMemorySessionService()
-artifacts_service = InMemoryArtifactService()
-# Create a new session for the interaction.
-session = session_service.create_session(
-    state={}, app_name='hotel_agent', user_id='123'
-)
-
-runner = Runner(
-    app_name='hotel_agent',
-    agent=root_agent,
-    artifact_service=artifacts_service,
-    session_service=session_service,
-)
-
-# --- Define Queries and Run the Agent ---
-queries = [
-    "Find hotels in Basel with Basel in it's name.",
-    "Can you book the Hilton Basel for me?",
-    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-    "My check in dates would be from April 10, 2024 to April 19, 2024.",
-]
-
-for query in queries:
-    content = types.Content(role='user', parts=[types.Part(text=query)])
-    events = runner.run(session_id=session.id,
-                        user_id='123', new_message=content)
-
-    responses = (
-      part.text
-      for event in events
-      for part in event.content.parts
-      if part.text is not None
+    root_agent = Agent(
+        model='gemini-2.0-flash-001',
+        name='hotel_agent',
+        description='A helpful AI assistant that can search and book hotels.',
+        instruction=prompt,
+        tools=agent_toolset, # Pass the loaded toolset
     )
 
-    for text in responses:
-      print(text)
+    # --- Initialize Services for Running the Agent ---
+    session_service = InMemorySessionService()
+    artifacts_service = InMemoryArtifactService()
+    # Create a new session for the interaction.
+    session = session_service.create_session(
+        state={}, app_name='hotel_agent', user_id='123'
+    )
+
+    runner = Runner(
+        app_name='hotel_agent',
+        agent=root_agent,
+        artifact_service=artifacts_service,
+        session_service=session_service,
+    )
+
+    # --- Define Queries and Run the Agent ---
+    queries = [
+        "Find hotels in Basel with Basel in it's name.",
+        "Can you book the Hilton Basel for me?",
+        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+        "My check in dates would be from April 10, 2024 to April 19, 2024.",
+    ]
+
+    for query in queries:
+        content = types.Content(role='user', parts=[types.Part(text=query)])
+        events = runner.run(session_id=session.id,
+                            user_id='123', new_message=content)
+
+        responses = (
+          part.text
+          for event in events
+          for part in event.content.parts
+          if part.text is not None
+        )
+
+        for text in responses:
+          print(text)
 {{< /tab >}}
 {{< /tabpane >}}
     

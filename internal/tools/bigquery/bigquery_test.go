@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/bigquery"
 )
 
-func TestParseFromYamlSpanner(t *testing.T) {
+func TestParseFromYamlBigQuery(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)

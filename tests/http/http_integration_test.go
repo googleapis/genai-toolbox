@@ -28,6 +28,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -244,7 +245,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	toolsFile := tests.GetHTTPToolsConfig(sourceConfig, HTTP_TOOL_KIND)
+	toolsFile := getHTTPToolsConfig(sourceConfig, HTTP_TOOL_KIND)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -334,4 +335,95 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			}
 		})
 	}
+}
+
+// getHTTPToolsConfig returns a mock HTTP tool's config file
+func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+	// Write config into a file and pass it to command
+	otherSourceConfig := make(map[string]any)
+	for k, v := range sourceConfig {
+		otherSourceConfig[k] = v
+	}
+	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
+	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
+
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance":    sourceConfig,
+			"other-instance": otherSourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": tests.ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        toolKind,
+				"path":        "/tool0",
+				"method":      "POST",
+				"source":      "my-instance",
+				"requestBody": "{}",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"my-param-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/tool1",
+				"description": "some description",
+				"queryParams": []tools.Parameter{
+					tools.NewIntParameter("id", "user ID")},
+				"requestBody": `{
+"age": 36,
+"name": "{{.name}}"
+}
+`,
+				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
+				"headers":    map[string]string{"Content-Type": "application/json"},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/tool2",
+				"description": "some description",
+				"requestBody": "{}",
+				"queryParams": []tools.Parameter{
+					tools.NewStringParameterWithAuth("email", "some description",
+						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":         toolKind,
+				"source":       "my-instance",
+				"method":       "POST",
+				"path":         "/tool0",
+				"description":  "some description",
+				"requestBody":  "{}",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-advanced-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "other-instance",
+				"method":      "get",
+				"path":        "/tool3?id=2",
+				"description": "some description",
+				"headers": map[string]string{
+					"X-Custom-Header": "example",
+				},
+				"queryParams": []tools.Parameter{
+					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
+				"requestBody": `{
+"place": "zoo",
+"animals": {{json .animalArray }}
+}
+`,
+				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
+				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
+			},
+		},
+	}
+	return toolsFile
 }
