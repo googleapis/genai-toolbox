@@ -218,16 +218,11 @@ func convertParamToJSON(param any) (string, error) {
 
 // Helper function to generate the HTTP request body upon Tool invocation.
 func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
-	// Create a map for request body parameters
-	bodyParamsMap := make(map[string]any)
-	for _, p := range bodyParams {
-		k := p.GetName()
-		v, ok := paramsMap[k]
-		if !ok {
-			return "", fmt.Errorf("missing request body parameter %s", k)
-		}
-		bodyParamsMap[k] = v
+	bodyParamValues, err := tools.GetParams(bodyParams, paramsMap)
+	if err != nil {
+		return "", err
 	}
+	bodyParamsMap := bodyParamValues.AsMap()
 
 	// Create a FuncMap to format array parameters
 	funcMap := template.FuncMap{
