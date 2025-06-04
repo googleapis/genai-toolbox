@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package memorystorevalkey_test
+package valkey_test
 
 import (
 	"strings"
@@ -22,11 +22,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/memorystorevalkey"
+	"github.com/googleapis/genai-toolbox/internal/sources/valkey"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlMemorystoreValkey(t *testing.T) {
+func TestParseFromYamlValkey(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -37,13 +37,13 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: memorystore-valkey
+					kind: valkey
 					address: 127.0.0.1
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-valkey-instance": memorystorevalkey.Config{
+				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
-					Kind:         memorystorevalkey.SourceKind,
+					Kind:         valkey.SourceKind,
 					Address:      "127.0.0.1",
 					Database:     0,
 					UseIAM:       false,
@@ -56,16 +56,16 @@ func TestParseFromYamlMemorystoreValkey(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: memorystore-valkey
+					kind: valkey
 					address: 127.0.0.1
 					database: 1
 					useIAM: true
 					disableCache: true
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-valkey-instance": memorystorevalkey.Config{
+				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
-					Kind:         memorystorevalkey.SourceKind,
+					Kind:         valkey.SourceKind,
 					Address:      "127.0.0.1",
 					Database:     1,
 					UseIAM:       true,
@@ -103,7 +103,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: memorystore-valkey
+					kind: valkey
 					project: my-project
 					address: 127.0.0.1
 					database: my-db
@@ -116,21 +116,21 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: memorystore-valkey
+					kind: valkey
 					address: 127.0.0.1
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"memorystore-valkey\": [4:1] unknown field \"password\"",
+			err: "unable to parse as \"valkey\": [4:1] unknown field \"password\"",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: memorystore-valkey
+					kind: valkey
 			`,
-			err: "unable to parse as \"memorystore-valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "unable to parse as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

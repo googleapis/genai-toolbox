@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package memorystorevalkey
+package valkey
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "memorystore-valkey"
+const SourceKind string = "valkey"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -43,7 +43,7 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 
-	client, err := initMemorystoreValkeyClient(ctx, r)
+	client, err := initValkeyClient(ctx, r)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing Valkey client: %s", err)
 	}
@@ -55,7 +55,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	return s, nil
 }
 
-func initMemorystoreValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
+func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	var authFn func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error)
 	if r.UseIAM {
 		// Pass in an access token getter fn for IAM auth

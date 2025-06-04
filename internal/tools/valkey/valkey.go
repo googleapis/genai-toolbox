@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/memorystorevalkey"
+	valkeysrc "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/valkey-io/valkey-go"
 )
@@ -30,9 +30,9 @@ type compatibleSource interface {
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &memorystorevalkey.Source{}
+var _ compatibleSource = &valkeysrc.Source{}
 
-var compatibleSources = [...]string{memorystorevalkey.SourceKind, memorystorevalkey.SourceKind}
+var compatibleSources = [...]string{valkeysrc.SourceKind, valkeysrc.SourceKind}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`

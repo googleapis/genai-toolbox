@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package memorystorevalkey
+package valkey
 
 import (
 	"context"
@@ -27,24 +27,24 @@ import (
 )
 
 var (
-	MEMORYSTORE_VALKEY_SOURCE_KIND = "memorystore-valkey"
-	MEMORYSTORE_VALKEY_TOOL_KIND   = "valkey"
-	MEMORYSTORE_VALKEY_ADDRESS     = os.Getenv("MEMORYSTORE_VALKEY_ADDRESS")
+	VALKEY_SOURCE_KIND = "valkey"
+	VALKEY_TOOL_KIND   = "valkey"
+	VALKEY_ADDRESS     = os.Getenv("VALKEY_ADDRESS")
 )
 
 func getValkeyVars(t *testing.T) map[string]any {
 	switch "" {
-	case MEMORYSTORE_VALKEY_ADDRESS:
-		t.Fatal("'MEMORYSTORE_VALKEY_ADDRESS' not set")
+	case VALKEY_ADDRESS:
+		t.Fatal("'VALKEY_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":         MEMORYSTORE_VALKEY_SOURCE_KIND,
-		"address":      MEMORYSTORE_VALKEY_ADDRESS,
+		"kind":         VALKEY_SOURCE_KIND,
+		"address":      VALKEY_ADDRESS,
 		"disableCache": true,
 	}
 }
 
-func initMemorystoreValkeyClient(ctx context.Context, addr string) (valkey.Client, error) {
+func initValkeyClient(ctx context.Context, addr string) (valkey.Client, error) {
 	// Pass in an access token getter fn for IAM auth
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress:       []string{addr},
@@ -66,14 +66,14 @@ func initMemorystoreValkeyClient(ctx context.Context, addr string) (valkey.Clien
 	return client, nil
 }
 
-func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
+func TestValkeyToolEndpoints(t *testing.T) {
 	sourceConfig := getValkeyVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	client, err := initMemorystoreValkeyClient(ctx, MEMORYSTORE_VALKEY_ADDRESS)
+	client, err := initValkeyClient(ctx, VALKEY_ADDRESS)
 	if err != nil {
 		t.Fatalf("unable to create Valkey connection: %s", err)
 	}
@@ -83,8 +83,7 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	paramCmds, authCmds := tests.GetRedisValkeyToolCmds()
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, MEMORYSTORE_VALKEY_TOOL_KIND, paramCmds, authCmds)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, VALKEY_TOOL_KIND)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -102,8 +101,8 @@ func TestMemorystoreValkeyToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, invokeAuthWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeAuthWant)
+	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
