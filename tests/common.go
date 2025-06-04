@@ -18,11 +18,12 @@
 package tests
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // GetToolsConfig returns a mock tools config file
@@ -173,97 +174,6 @@ func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// GetHTTPToolsConfig returns a mock HTTP tool's config file
-func GetHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
-	// Write config into a file and pass it to command
-	otherSourceConfig := make(map[string]any)
-	for k, v := range sourceConfig {
-		otherSourceConfig[k] = v
-	}
-	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
-	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
-
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance":    sourceConfig,
-			"other-instance": otherSourceConfig,
-		},
-		"authServices": map[string]any{
-			"my-google-auth": map[string]any{
-				"kind":     "google",
-				"clientId": ClientId,
-			},
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        toolKind,
-				"path":        "/tool0",
-				"method":      "POST",
-				"source":      "my-instance",
-				"requestBody": "{}",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"my-param-tool": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool1",
-				"description": "some description",
-				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID")},
-				"requestBody": `{
-"age": 36,
-"name": "{{.name}}"
-}
-`,
-				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
-				"headers":    map[string]string{"Content-Type": "application/json"},
-			},
-			"my-auth-tool": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool2",
-				"description": "some description",
-				"requestBody": "{}",
-				"queryParams": []tools.Parameter{
-					tools.NewStringParameterWithAuth("email", "some description",
-						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
-				},
-			},
-			"my-auth-required-tool": map[string]any{
-				"kind":         toolKind,
-				"source":       "my-instance",
-				"method":       "POST",
-				"path":         "/tool0",
-				"description":  "some description",
-				"requestBody":  "{}",
-				"authRequired": []string{"my-google-auth"},
-			},
-			"my-advanced-tool": map[string]any{
-				"kind":        toolKind,
-				"source":      "other-instance",
-				"method":      "get",
-				"path":        "/tool3?id=2",
-				"description": "some description",
-				"headers": map[string]string{
-					"X-Custom-Header": "example",
-				},
-				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
-				"requestBody": `{
-"place": "zoo",
-"animals": {{json .animalArray }}
-}
-`,
-				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
-				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
-			},
-		},
-	}
-	return toolsFile
-}
-
 // GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
 func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
@@ -346,4 +256,91 @@ func GetMysqlWants() (string, string, string) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
 	return select1Want, failInvocationWant, createTableStatement
+}
+
+// SetupPostgresSQLTable creates and inserts data into a table of tool
+// compatible with postgres-sql tool
+func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
+	err := pool.Ping(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	// Create table
+	_, err = pool.Query(ctx, create_statement)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	_, err = pool.Query(ctx, insert_statement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+}
+
+// SetupMsSQLTable creates and inserts data into a table of tool
+// compatible with mssql-sql tool
+func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
+	err := pool.PingContext(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	// Create table
+	_, err = pool.QueryContext(ctx, create_statement)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	_, err = pool.QueryContext(ctx, insert_statement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
+}
+
+// SetupMySQLTable creates and inserts data into a table of tool
+// compatible with mysql-sql tool
+func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
+	err := pool.PingContext(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	// Create table
+	_, err = pool.QueryContext(ctx, create_statement)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	_, err = pool.QueryContext(ctx, insert_statement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
 }
