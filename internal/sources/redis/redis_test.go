@@ -37,7 +37,8 @@ func TestParseFromYamlRedis(t *testing.T) {
 			sources:
 				my-redis-instance:
 					kind: redis
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 			`,
 			want: server.SourceConfigs{
 				"my-redis-instance": redis.Config{
@@ -55,10 +56,11 @@ func TestParseFromYamlRedis(t *testing.T) {
 			sources:
 				my-redis-instance:
 					kind: redis
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 					password: my-pass
 					database: 1
-					useIAM: true
+					useGCPIAM: true
 					clusterEnabled: true
 			`,
 			want: server.SourceConfigs{
@@ -105,7 +107,8 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-redis-instance:
 					kind: redis
 					project: my-project
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 					password: my-pass
 					database: data
 			`,
@@ -118,11 +121,12 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-redis-instance:
 					kind: redis
 					project: my-project
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"redis\": [5:1] unknown field \"project\"",
+			err: "unable to parse as \"redis\": [6:1] unknown field \"project\"",
 		},
 		{
 			desc: "missing required field",
