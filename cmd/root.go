@@ -21,11 +21,13 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
@@ -163,6 +165,62 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
+func parse(ctx context.Context, logger log.Logger) {
+	logger.DebugContext(ctx, "Attempting to parse updated tools file.")
+	// TODO: add logic for parsing
+}
+
+// watchFile checks for changes in the provided yaml tools file.
+func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.WarnContext(ctx, "error setting up new watcher %s", err)
+	}
+
+	defer w.Close()
+
+	err = w.Add(filepath.Dir(toolsFileName))
+	if err != nil {
+		logger.WarnContext(ctx, "error adding the tools file to watcher %s", err)
+	}
+
+	logger.InfoContext(ctx, "Now watching tools file %s", toolsFileName)
+	var debounceTimer *time.Timer
+	debounceDelay := 100 * time.Millisecond
+	for {
+		select {
+		case <-ctx.Done():
+			logger.WarnContext(ctx, "watcher context cancelled")
+			return
+		case err, ok := <-w.Errors:
+			if !ok {
+				logger.WarnContext(ctx, "error watcher alredy closed %s", err)
+			}
+
+			if err != nil {
+				logger.WarnContext(ctx, "error watching file %s", err)
+			}
+		case e, ok := <-w.Events:
+			if !ok {
+				logger.WarnContext(ctx, "error with event %s", err)
+			}
+			if strings.HasSuffix(e.Name, toolsFileName) && e.Op == fsnotify.Write {
+				if debounceTimer == nil {
+					debounceTimer = time.NewTimer(debounceDelay)
+					go func() {
+						<-debounceTimer.C
+						logger.DebugContext(ctx, fmt.Sprintf("%s event detected in tools file: %s", e.Op, e.Name))
+						parse(ctx, logger)
+						debounceTimer = nil
+					}()
+				} else {
+					debounceTimer.Reset(debounceDelay)
+				}
+			}
+		}
+	}
+}
+
 func run(cmd *Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
@@ -267,6 +325,9 @@ func run(cmd *Command) error {
 			srvErr <- err
 		}
 	}()
+
+	// start watching for file changes to trigger dynamic reloading
+	go watchFile(string(cmd.tools_file), ctx, cmd.logger)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {
