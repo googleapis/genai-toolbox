@@ -155,9 +155,9 @@ items must be strings. Once inserted into the SQL statement, the outer layer of 
 will be removed. Therefore to insert strings into the SQL statement, a set of quotes 
 must be explicitly added within the string.
 
-> **NOTE:** Because template parameters can directly replace identifiers, column names,
-> and table names, they are prone to SQL injections. Basic parameters are preferred
-> for performance and safety reasons.
+{{< notice note >}}
+Because template parameters can directly replace identifiers, column names, and table names, they are prone to SQL injections. Basic parameters are preferred for performance and safety reasons.
+{{< /notice >}}
 
 ```yaml
 tools:
