@@ -37,7 +37,6 @@ import (
 )
 
 func withDefaults(c server.ServerConfig) server.ServerConfig {
-	// Replicate the version string construction from cmd/root.go
 	data, _ := os.ReadFile("version.txt")
 	version := strings.TrimSpace(string(data)) // Preserving 'data', new var for clarity
 	c.Version = version + "+" + strings.Join([]string{"dev", runtime.GOOS, runtime.GOARCH}, ".")
