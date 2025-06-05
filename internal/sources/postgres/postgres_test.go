@@ -92,7 +92,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse as \"postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | kind: postgres\n   5 | password: my_pass\n   6 | ",
+			err: "unable to parse source \"my-pg-instance\" as \"postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | kind: postgres\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -105,7 +105,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					database: my_db
 					user: my_user
 			`,
-			err: "unable to parse as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "unable to parse source \"my-pg-instance\" as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

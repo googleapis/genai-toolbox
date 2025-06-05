@@ -21,6 +21,7 @@ import (
 	"slices"
 
 	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
@@ -30,6 +31,20 @@ const SourceKind string = "cloud-sql-mysql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name, IPType: "public"} // Default IPType
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name     string         `yaml:"name" validate:"required"`

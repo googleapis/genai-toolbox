@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -202,6 +203,49 @@ func ResolveTemplateParams(templateParams Parameters, originalStatement string, 
 
 	modifiedStatement := result.String()
 	return modifiedStatement, nil
+}
+
+// ProcessParameters concatenate templateParameters and parameters from a tool.
+// It returns a list of concatenated parameters, concatenated Toolbox manifest, and concatenated MCP Manifest.
+func ProcessParameters(templateParams Parameters, params Parameters) (Parameters, []ParameterManifest, McpToolsSchema) {
+	allParameters := slices.Concat(params, templateParams)
+
+	paramManifest := slices.Concat(
+		params.Manifest(),
+		templateParams.Manifest(),
+	)
+	if paramManifest == nil {
+		paramManifest = make([]ParameterManifest, 0)
+	}
+
+	parametersMcpManifest := params.McpManifest()
+	templateParametersMcpManifest := templateParams.McpManifest()
+
+	// Concatenate parameters for MCP `required` field
+	concatRequiredManifest := slices.Concat(
+		parametersMcpManifest.Required,
+		templateParametersMcpManifest.Required,
+	)
+	if concatRequiredManifest == nil {
+		concatRequiredManifest = []string{}
+	}
+
+	// Concatenate parameters for MCP `properties` field
+	concatPropertiesManifest := make(map[string]ParameterMcpManifest)
+	for name, p := range parametersMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+	for name, p := range templateParametersMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+
+	// Create a new McpToolsSchema with all parameters
+	paramMcpManifest := McpToolsSchema{
+		Type:       "object",
+		Properties: concatPropertiesManifest,
+		Required:   concatRequiredManifest,
+	}
+	return allParameters, paramManifest, paramMcpManifest
 }
 
 type Parameter interface {

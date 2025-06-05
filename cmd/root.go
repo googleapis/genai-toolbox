@@ -57,6 +57,22 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 
 	"github.com/spf13/cobra"
+
+	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 )
 
 var (

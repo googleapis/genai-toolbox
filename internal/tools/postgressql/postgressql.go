@@ -17,7 +17,6 @@ package postgressql
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -86,43 +85,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := slices.Concat(cfg.Parameters, cfg.TemplateParameters)
-
-	paramManifest := slices.Concat(
-		cfg.Parameters.Manifest(),
-		cfg.TemplateParameters.Manifest(),
-	)
-	if paramManifest == nil {
-		paramManifest = make([]tools.ParameterManifest, 0)
-	}
-
-	parametersMcpManifest := cfg.Parameters.McpManifest()
-	templateParametersMcpManifest := cfg.TemplateParameters.McpManifest()
-
-	// Concatenate parameters for MCP `required` field
-	concatRequiredManifest := slices.Concat(
-		parametersMcpManifest.Required,
-		templateParametersMcpManifest.Required,
-	)
-	if concatRequiredManifest == nil {
-		concatRequiredManifest = []string{}
-	}
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
-	for name, p := range parametersMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-	for name, p := range templateParametersMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   concatRequiredManifest,
-	}
+	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,

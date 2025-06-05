@@ -83,17 +83,17 @@ func TestFailParseFromYaml(t *testing.T) {
 					location: us
 					foo: bar
 			`,
-			err: "unable to parse as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: bigquery\n   3 | location: us\n   4 | project: my-project",
+			err: "unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: bigquery\n   3 | location: us\n   4 | project: my-project",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
-				my-mysql-instance:
+				my-instance:
 					kind: bigquery
 					location: us
 			`,
-			err: "unable to parse as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

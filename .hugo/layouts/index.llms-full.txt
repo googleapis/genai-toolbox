@@ -1,0 +1,14 @@
+{{ .Site.Params.description }}
+
+{{ range .Site.Sections }}
+# {{ .Title }}
+{{ .Description }}
+{{ range .Pages }}
+# {{ .Title }}
+{{ .Description }}
+{{ .RawContent }}
+{{ range .Pages }}
+# {{ .Title }}
+{{ .Description }}
+{{ .RawContent }}
+{{end }}{{ end }}{{ end }}

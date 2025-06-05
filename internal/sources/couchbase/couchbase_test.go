@@ -125,7 +125,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					scope: inventory
 					foo: bar
 			`,
-			err: "unable to parse as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | kind: couchbase\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
+			err: "unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | kind: couchbase\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
 		},
 		{
 			desc: "missing required field",
@@ -138,7 +138,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					bucket: travel-sample
 					scope: inventory
 			`,
-			err: "unable to parse as \"couchbase\": Key: 'Config.ConnectionString' Error:Field validation for 'ConnectionString' failed on the 'required' tag",
+			err: "unable to parse source \"my-couchbase-instance\" as \"couchbase\": Key: 'Config.ConnectionString' Error:Field validation for 'ConnectionString' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

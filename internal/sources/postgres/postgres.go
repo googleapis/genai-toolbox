@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
@@ -27,6 +28,20 @@ const SourceKind string = "postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`

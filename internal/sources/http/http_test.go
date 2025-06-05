@@ -15,7 +15,6 @@
 package http_test
 
 import (
-	"strings"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
@@ -96,7 +95,7 @@ func TestFailParseFromYaml(t *testing.T) {
 						api-key: test_api_key
 					project: test-project
 			`,
-			err: "unable to parse as \"http\"",
+			err: "unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s",
 		},
 		{
 			desc: "missing required field",
@@ -105,7 +104,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-http-instance:
 					baseUrl: http://test_server/
 			`,
-			err: "missing 'kind' field for \"my-http-instance\"",
+			err: "missing 'kind' field for source \"my-http-instance\"",
 		},
 	}
 	for _, tc := range tcs {
@@ -119,9 +118,8 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
-
-			if !strings.Contains(errStr, tc.err) {
-				t.Fatalf("unexpected error string: got %q, want substring %q", errStr, tc.err)
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}

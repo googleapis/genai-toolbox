@@ -132,7 +132,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					dialect: fail
 					database: my_db
 			`,
-			err: "unable to parse as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
+			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
 		},
 		{
 			desc: "extra field",
@@ -145,7 +145,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					database: my_db
 					foo: bar
 			`,
-			err: "unable to parse as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: spanner\n   5 | project: my-project",
+			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: spanner\n   5 | project: my-project",
 		},
 		{
 			desc: "missing required field",
@@ -156,7 +156,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					project: my-project
 					instance: my-instance
 			`,
-			err: "unable to parse as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
+			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

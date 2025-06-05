@@ -99,7 +99,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err: "unable to parse as \"cloud-sql-mssql\": ipType invalid: must be one of \"public\", or \"private\"",
+			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": ipType invalid: must be one of \"public\", or \"private\"",
 		},
 		{
 			desc: "extra field",
@@ -116,7 +116,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | ipAddress: localhost\n   5 | kind: cloud-sql-mssql\n   6 | ",
+			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | ipAddress: localhost\n   5 | kind: cloud-sql-mssql\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -131,7 +131,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err: "unable to parse as \"cloud-sql-mssql\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
