@@ -48,7 +48,7 @@ type Config struct {
 	Kind         string `yaml:"kind" validate:"required"`
 	Address      string `yaml:"address" validate:"required"`
 	Database     int    `yaml:"database"`
-	UseIAM       bool   `yaml:"useIAM"`
+	UseGCPIAM    bool   `yaml:"useGCPIAM"`
 	DisableCache bool   `yaml:"disableCache"`
 }
 
@@ -72,7 +72,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	var authFn func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error)
-	if r.UseIAM {
+	if r.UseGCPIAM {
 		// Pass in an access token getter fn for IAM auth
 		authFn = func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
 			token, err := sources.GetIAMAccessToken(ctx)

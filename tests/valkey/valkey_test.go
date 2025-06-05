@@ -112,7 +112,7 @@ func setupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func
 		{"HSET", keys[0], "name", "Alice", "id", "1"},
 		{"HSET", keys[1], "name", "Jane", "id", "2"},
 		{"HSET", keys[2], "name", "Sid", "id", "3"},
-		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", `{"name":"Alice"}`},
+		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", "Alice"},
 	}
 	builtCmds := make(valkey.Commands, len(commands))
 

@@ -143,12 +143,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 			out[i] = fmt.Sprintf("error from executing command at index %d: %s", i, err)
 			continue
 		}
-		resp, err := resp.ToString()
+		val, err := resp.ToAny()
 		if err != nil {
-			out[i] = fmt.Sprintf("Error parsing response from command at index %d: %s", i, err)
+			out[i] = fmt.Sprintf("error parsing response: %s", err)
 			continue
 		}
-		out[i] = resp
+		out[i] = val
 	}
 
 	return out, nil

@@ -46,7 +46,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 					Kind:         valkey.SourceKind,
 					Address:      "127.0.0.1",
 					Database:     0,
-					UseIAM:       false,
+					useGCPIAM:    false,
 					DisableCache: false,
 				},
 			},
@@ -59,7 +59,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 					kind: valkey
 					address: 127.0.0.1
 					database: 1
-					useIAM: true
+					useGCPIAM: true
 					disableCache: true
 			`,
 			want: map[string]sources.SourceConfig{
@@ -68,7 +68,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 					Kind:         valkey.SourceKind,
 					Address:      "127.0.0.1",
 					Database:     1,
-					UseIAM:       true,
+					useGCPIAM:    true,
 					DisableCache: true,
 				},
 			},
@@ -107,7 +107,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					project: my-project
 					address: 127.0.0.1
 					database: my-db
-					useIAM: false
+					useGCPIAM: false
 			`,
 			err: "cannot unmarshal string into Go struct field .Sources of type int",
 		},
