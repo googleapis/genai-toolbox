@@ -28,6 +28,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
 	github.com/redis/go-redis/v9 v9.9.0
 	github.com/spf13/cobra v1.9.1
+	github.com/valkey-io/valkey-go v1.0.60
 	go.opentelemetry.io/contrib/propagators/autoprop v0.61.0
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.36.0
@@ -38,6 +39,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.36.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.236.0
+	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.37.1
 )
 

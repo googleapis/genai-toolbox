@@ -121,7 +121,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"valkey\": [4:1] unknown field \"password\"",
+			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": [4:1] unknown field \"password\"",
 		},
 		{
 			desc: "missing required field",
@@ -130,7 +130,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-valkey-instance:
 					kind: valkey
 			`,
-			err: "unable to parse as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
