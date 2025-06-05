@@ -129,13 +129,13 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any {
+func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
@@ -145,7 +145,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Insert tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -156,7 +156,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT * FROM {{.tableName}}",
@@ -165,17 +165,17 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}} WHERE id = $1",
+		"statement":   tmplSelectCombined,
 		"parameters":  []tools.Parameter{tools.NewStringParameter("id", "the id of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
@@ -185,10 +185,10 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = $1",
+		"statement":   tmplSelectFilterCombined,
 		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
@@ -196,7 +196,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE IF EXISTS {{.tableName}}",
@@ -270,6 +270,13 @@ func GetPostgresSQLAuthToolInfo(tableName string) (string, string, string, []any
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
 	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetPostgresSQLTmplToolStatement returns statements and param for template parameter test cases for postgres-sql kind
+func GetPostgresSQLTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = $1"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = $1"
+	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
 // GetMssqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
