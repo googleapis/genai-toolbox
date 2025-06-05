@@ -39,15 +39,15 @@ func getValkeyVars(t *testing.T) map[string]any {
 	}
 	return map[string]any{
 		"kind":         VALKEY_SOURCE_KIND,
-		"address":      VALKEY_ADDRESS,
+		"address":      []string{VALKEY_ADDRESS},
 		"disableCache": true,
 	}
 }
 
-func initValkeyClient(ctx context.Context, addr string) (valkey.Client, error) {
+func initValkeyClient(ctx context.Context, addr []string) (valkey.Client, error) {
 	// Pass in an access token getter fn for IAM auth
 	client, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress:       []string{addr},
+		InitAddress:       addr,
 		ForceSingleClient: true,
 		DisableCache:      true,
 	})
@@ -73,7 +73,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initValkeyClient(ctx, VALKEY_ADDRESS)
+	client, err := initValkeyClient(ctx, []string{VALKEY_ADDRESS})
 	if err != nil {
 		t.Fatalf("unable to create Valkey connection: %s", err)
 	}

@@ -38,15 +38,18 @@ func TestParseFromYamlValkey(t *testing.T) {
 			sources:
 				my-valkey-instance:
 					kind: valkey
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
 					Kind:         valkey.SourceKind,
-					Address:      "127.0.0.1",
+					Address:      []string{"127.0.0.1"},
+					Username:     "",
+					Password:     "",
 					Database:     0,
-					useGCPIAM:    false,
+					UseGCPIAM:    false,
 					DisableCache: false,
 				},
 			},
@@ -57,8 +60,11 @@ func TestParseFromYamlValkey(t *testing.T) {
 			sources:
 				my-valkey-instance:
 					kind: valkey
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 					database: 1
+					username: user
+					password: pass
 					useGCPIAM: true
 					disableCache: true
 			`,
@@ -66,9 +72,11 @@ func TestParseFromYamlValkey(t *testing.T) {
 				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
 					Kind:         valkey.SourceKind,
-					Address:      "127.0.0.1",
+					Address:      []string{"127.0.0.1"},
+					Username:     "user",
+					Password:     "pass",
 					Database:     1,
-					useGCPIAM:    true,
+					UseGCPIAM:    true,
 					DisableCache: true,
 				},
 			},
@@ -105,7 +113,8 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-valkey-instance:
 					kind: valkey
 					project: my-project
-					address: 127.0.0.1
+					address:
+					  - 127.0.0.1
 					database: my-db
 					useGCPIAM: false
 			`,
@@ -117,11 +126,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				my-valkey-instance:
 					kind: valkey
-					address: 127.0.0.1
-					password: my-pass
+					address:
+					  - 127.0.0.1
+					project: proj
 					database: 1
 			`,
-			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": [4:1] unknown field \"password\"",
+			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": [5:1] unknown field \"project\"",
 		},
 		{
 			desc: "missing required field",

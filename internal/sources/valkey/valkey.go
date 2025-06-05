@@ -44,12 +44,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name         string `yaml:"name" validate:"required"`
-	Kind         string `yaml:"kind" validate:"required"`
-	Address      string `yaml:"address" validate:"required"`
-	Database     int    `yaml:"database"`
-	UseGCPIAM    bool   `yaml:"useGCPIAM"`
-	DisableCache bool   `yaml:"disableCache"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Address      []string `yaml:"address" validate:"required"`
+	Username     string   `yaml:"username"`
+	Password     string   `yaml:"password"`
+	Database     int      `yaml:"database"`
+	UseGCPIAM    bool     `yaml:"useGCPIAM"`
+	DisableCache bool     `yaml:"disableCache"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -85,8 +87,10 @@ func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	}
 
 	client, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress:       []string{r.Address},
+		InitAddress:       r.Address,
 		SelectDB:          r.Database,
+		Username:          r.Username,
+		Password:          r.Password,
 		AuthCredentialsFn: authFn,
 		DisableCache:      r.DisableCache,
 	})
