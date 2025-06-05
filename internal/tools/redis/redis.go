@@ -160,7 +160,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	return out, nil
 }
 
-// Helper function to replace parameters in the commands
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) Manifest() tools.Manifest {
+	return t.manifest
+}
+
+func (t Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
+}
+
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+// replaceCommandsParams is a helper function to replace parameters in the commands
 func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
@@ -191,20 +207,4 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 		newCommands[i] = newCmd
 	}
 	return newCommands, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
