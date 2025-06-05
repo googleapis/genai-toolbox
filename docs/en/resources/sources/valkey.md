@@ -22,6 +22,8 @@ sources:
      kind: valkey
      address:
        - 127.0.0.1
+     username: ${YOUR_USERNAME}
+     password: ${YOUR_PASSWORD}
      database: 1
      # useGCPIAM: false
      # disableCache: false
@@ -51,10 +53,12 @@ sources:
 
 ## Reference
 
-| **field**    | **type** | **required** | **description**                                                                                               |
-|--------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "valkey".                                                                                             |
-| address      | []string |     true     | Endpoints for the Valkey instance to connect to.                                                              |
-| database     |   int    |    false     | The Valkey database to connect to. Not applicable for cluster enabled instances. The default database is `0`. |
-| useGCPIAM    |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                              |
-| disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                              |
+| **field**    | **type** | **required** | **description**                                                                                                                  |
+|--------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------|
+| kind         |  string  |     true     | Must be "valkey".                                                                                                                |
+| address      | []string |     true     | Endpoints for the Valkey instance to connect to.                                                                                 |
+| username     |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Valkey, leave this field blank |
+| password     |  string  |    false     | Password for the Valkey instance                                                                                                 |
+| database     |   int    |    false     | The Valkey database to connect to. Not applicable for cluster enabled instances. The default database is `0`.                    |
+| useGCPIAM    |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                 |
+| disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                                                 |
