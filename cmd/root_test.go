@@ -18,6 +18,7 @@ import (
 	"bytes"
 	_ "embed"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -36,8 +37,11 @@ import (
 )
 
 func withDefaults(c server.ServerConfig) server.ServerConfig {
+	// Replicate the version string construction from cmd/root.go
 	data, _ := os.ReadFile("version.txt")
-	c.Version = strings.TrimSpace(string(data))
+	version := strings.TrimSpace(string(data)) // Preserving 'data', new var for clarity
+	c.Version = version + "+" + strings.Join([]string{"dev", runtime.GOOS, runtime.GOARCH}, ".")
+
 	if c.Address == "" {
 		c.Address = "127.0.0.1"
 	}
