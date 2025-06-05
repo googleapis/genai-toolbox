@@ -305,6 +305,8 @@ func run(cmd *Command) error {
 		}
 		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltConfig)
 		cmd.logger.InfoContext(ctx, logMsg)
+		// Append prebuilt.source to Version string for the User Agent
+		cmd.cfg.Version += "+prebuilt." + cmd.prebuiltConfig
 	} else {
 		// Set default value of tools-file flag to tools.yaml
 		if cmd.tools_file == "" {
