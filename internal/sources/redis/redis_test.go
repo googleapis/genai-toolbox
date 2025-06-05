@@ -126,7 +126,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my-pass
 					database: 1
 			`,
-			err: "unable to parse as \"redis\": [6:1] unknown field \"project\"",
+			err: "unable to parse source \"my-redis-instance\" as \"redis\": [6:1] unknown field \"project\"",
 		},
 		{
 			desc: "missing required field",
@@ -135,7 +135,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-redis-instance:
 					kind: redis
 			`,
-			err: "unable to parse as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

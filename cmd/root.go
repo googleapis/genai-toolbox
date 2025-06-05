@@ -52,6 +52,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
@@ -71,6 +72,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 )
