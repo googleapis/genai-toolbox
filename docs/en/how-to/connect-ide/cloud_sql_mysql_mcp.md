@@ -3,7 +3,7 @@ title: "Cloud SQL for MySQL using MCP"
 type: docs
 weight: 2
 description: >
-  Connect your IDE to Cloud SQl for MySQL using Toolbox.
+  Connect your IDE to Cloud SQL for MySQL using Toolbox.
 ---
 
 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Cloud SQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Cloud SQL for MySQL instance:
