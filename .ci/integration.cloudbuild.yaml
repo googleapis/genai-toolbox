@@ -364,7 +364,7 @@ steps:
     args:
       - -c
       - |
-        ./memorystorevalkey.test -test.v
+        ./valkey.test -test.v
     
 
 availableSecrets:
