@@ -38,6 +38,24 @@ func TestParseFromYamlHttp(t *testing.T) {
 				my-http-instance:
 					kind: http
 					baseUrl: http://test_server/
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-http-instance": http.Config{
+					Name:                   "my-http-instance",
+					Kind:                   http.SourceKind,
+					BaseURL:                "http://test_server/",
+					Timeout:                "30s",
+					DisableSslVerification: false,
+				},
+			},
+		},
+		{
+			desc: "advanced example",
+			in: `
+			sources:
+				my-http-instance:
+					kind: http
+					baseUrl: http://test_server/
 					timeout: 10s
 					headers:
 						Authorization: test_header
@@ -45,15 +63,17 @@ func TestParseFromYamlHttp(t *testing.T) {
 					queryParams:
 						api-key: test_api_key
 						param: param-value
+					disableSslVerification: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
-					Name:           "my-http-instance",
-					Kind:           http.SourceKind,
-					BaseURL:        "http://test_server/",
-					Timeout:        "10s",
-					DefaultHeaders: map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
-					QueryParams:    map[string]string{"api-key": "test_api_key", "param": "param-value"},
+					Name:                   "my-http-instance",
+					Kind:                   http.SourceKind,
+					BaseURL:                "http://test_server/",
+					Timeout:                "10s",
+					DefaultHeaders:         map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
+					QueryParams:            map[string]string{"api-key": "test_api_key", "param": "param-value"},
+					DisableSslVerification: true,
 				},
 			},
 		},
