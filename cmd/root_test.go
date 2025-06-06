@@ -15,15 +15,22 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	_ "embed"
+	"fmt"
+	"io"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -857,4 +864,124 @@ func TestEnvVarReplacement(t *testing.T) {
 		})
 	}
 
+}
+
+// helper function for testing file detection in dynamic reloading
+func tmpFileWithCleanup(content []byte) (string, func(), error) {
+	f, err := os.CreateTemp("", "*")
+	if err != nil {
+		return "", nil, err
+	}
+	cleanup := func() { os.Remove(f.Name()) }
+
+	if _, err := f.Write(content); err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	if err := f.Close(); err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	return f.Name(), cleanup, err
+}
+
+// matches server logs a single line that matches the provided regex.
+// adapted from tests/server.go
+func WaitForString(ctx context.Context, re *regexp.Regexp, pr *io.PipeReader, pw *io.PipeWriter) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	in := bufio.NewReader(pr)
+
+	type result struct {
+		s   string
+		err error
+	}
+
+	output := make(chan result)
+	go func() {
+		defer close(output)
+		for {
+			select {
+			case <-ctx.Done():
+				// if the context is canceled, the orig thread will send back the error
+				// so we can just exit the goroutine here
+				return
+			default:
+				// otherwise read a line from the output
+				s, err := in.ReadString('\n')
+				if err != nil {
+					output <- result{err: err}
+					return
+				}
+				output <- result{s: s}
+				// if that last string matched, exit the goroutine
+				if re.MatchString(s) {
+					return
+				} else {
+					fmt.Printf("Actual logs: %s did not match pattern %s\n", s, re)
+				}
+			}
+		}
+	}()
+
+	// collect the output until the ctx is canceled, an error was hit,
+	// or match was found (which is indicated the channel is closed)
+	var sb strings.Builder
+	for {
+		select {
+		case <-ctx.Done():
+			// if ctx is done, return that error
+			return sb.String(), ctx.Err()
+		case o, ok := <-output:
+			if !ok {
+				// match was found!
+				return sb.String(), nil
+			}
+			if o.err != nil {
+				// error was found!
+				return sb.String(), o.err
+			}
+			sb.WriteString(o.s)
+		}
+	}
+}
+
+func TestSingleEdit(t *testing.T) {
+	ctx, cancelCtx := context.WithTimeout(context.Background(), time.Minute)
+	defer cancelCtx()
+
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	defer pr.Close()
+
+	fileToWatch, cleanup, err := tmpFileWithCleanup([]byte("initial content"))
+	if err != nil {
+		t.Fatalf("error editing tools file %s", err)
+	}
+	defer cleanup()
+
+	logger, err := log.NewStdLogger(pw, pw, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to setup logger %s", err)
+	}
+
+	go watchFile(fileToWatch, ctx, logger)
+
+	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("INFO \"Now watching tools file %s\"", fileToWatch))
+	_, err = WaitForString(ctx, begunWatchingFile, pr, pw)
+	if err != nil {
+		t.Fatalf("timeout or error waiting for watcher to start")
+	}
+
+	err = os.WriteFile(fileToWatch, []byte("modification"), 0777)
+	if err != nil {
+		t.Fatalf("error writing to file: %v", err)
+	}
+
+	detectedFileChange := regexp.MustCompile(fmt.Sprintf("DEBUG \"WRITE event detected in tools file: %s", fileToWatch))
+	_, err = WaitForString(ctx, detectedFileChange, pr, pw)
+	if err != nil {
+		t.Fatalf("timeout or error waiting for file to detect write %v", err)
+	}
 }

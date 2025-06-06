@@ -184,7 +184,7 @@ func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
 		logger.WarnContext(ctx, "error adding the tools file to watcher %s", err)
 	}
 
-	logger.InfoContext(ctx, "Now watching tools file %s", toolsFileName)
+	logger.InfoContext(ctx, fmt.Sprintf("Now watching tools file %s", toolsFileName))
 	var debounceTimer *time.Timer
 	debounceDelay := 100 * time.Millisecond
 	for {
