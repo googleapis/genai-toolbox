@@ -31,6 +31,8 @@ branchProtectionRules:
       - "header-check"
     # - Add required status checks like presubmit tests
       - "unit tests (ubuntu-latest)"
+      - "unit tests (windows-latest)"
+      - "unit tests (macos-latest)"
       - "integration-test-pr (toolbox-testing-438616)"
     requiredApprovingReviewCount: 1
     requiresCodeOwnerReviews: true
