@@ -129,13 +129,13 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any {
+func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
@@ -145,7 +145,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Insert tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -156,7 +156,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT * FROM {{.tableName}}",
@@ -165,17 +165,17 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}} WHERE id = $1",
+		"statement":   tmplSelectCombined,
 		"parameters":  []tools.Parameter{tools.NewStringParameter("id", "the id of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
@@ -185,10 +185,10 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = $1",
+		"statement":   tmplSelectFilterCombined,
 		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
@@ -196,7 +196,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        "postgres-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE IF EXISTS {{.tableName}}",
@@ -272,6 +272,13 @@ func GetPostgresSQLAuthToolInfo(tableName string) (string, string, string, []any
 	return create_statement, insert_statement, tool_statement, params
 }
 
+// GetPostgresSQLTmplToolStatement returns statements and param for template parameter test cases for postgres-sql kind
+func GetPostgresSQLTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = $1"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = $1"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}
+
 // GetMssqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
 func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
@@ -281,8 +288,8 @@ func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMssqlLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
-func GetMssqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMssqlAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
+func GetMssqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
@@ -290,7 +297,7 @@ func GetMssqlLAuthToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMysqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+// GetMysqlParamToolInfo returns statements and param for my-param-tool mysql-sql kind
 func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
@@ -299,13 +306,20 @@ func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMysqlLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
-func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMysqlAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
+func GetMysqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
 	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
 	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMysqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMysqlTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
+	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
 func GetNonSpannerInvokeParamWant() (string, string) {
