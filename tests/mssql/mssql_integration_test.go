@@ -98,7 +98,7 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlLAuthToolInfo(tableNameAuth)
+	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlAuthToolInfo(tableNameAuth)
 	teardownTable2 := tests.SetupMsSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
