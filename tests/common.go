@@ -297,6 +297,13 @@ func GetMssqlLAuthToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
+// GetMssqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMssqlTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = @id"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = @name"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}
+
 // GetMysqlParamToolInfo returns statements and param for my-param-tool mysql-sql kind
 func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
