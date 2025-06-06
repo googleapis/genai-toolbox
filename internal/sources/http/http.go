@@ -15,6 +15,7 @@ package http
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -45,12 +46,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name           string            `yaml:"name" validate:"required"`
-	Kind           string            `yaml:"kind" validate:"required"`
-	BaseURL        string            `yaml:"baseUrl"`
-	Timeout        string            `yaml:"timeout"`
-	DefaultHeaders map[string]string `yaml:"headers"`
-	QueryParams    map[string]string `yaml:"queryParams"`
+	Name                   string            `yaml:"name" validate:"required"`
+	Kind                   string            `yaml:"kind" validate:"required"`
+	BaseURL                string            `yaml:"baseUrl"`
+	Timeout                string            `yaml:"timeout"`
+	DefaultHeaders         map[string]string `yaml:"headers"`
+	QueryParams            map[string]string `yaml:"queryParams"`
+	DisableSslVerification bool              `yaml:"disableSslVerification"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -63,8 +65,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse Timeout string as time.Duration: %s", err)
 	}
+
+	tr := &http.Transport{}
+
+	if r.DisableSslVerification {
+		tr.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		fmt.Printf("WARNING: InsecureHTTP is enabled for HTTP source %s. TLS certificate verification is skipped.\n", r.Name)
+	}
+
 	client := http.Client{
-		Timeout: duration,
+		Timeout:   duration,
+		Transport: tr,
 	}
 
 	// Validate BaseURL
