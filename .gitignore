@@ -4,6 +4,9 @@
 # vscode
 .vscode/
 
+# idea
+.idea/
+
 # npm
 node_modules
 
