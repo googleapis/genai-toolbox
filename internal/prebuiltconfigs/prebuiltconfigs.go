@@ -17,7 +17,7 @@ package prebuiltconfigs
 import (
 	"embed"
 	"fmt"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -66,7 +66,7 @@ func loadPrebuiltToolYAMLs() (map[string][]byte, []string, error) {
 	for _, entry := range entries {
 		lowerName := strings.ToLower(entry.Name())
 		if !entry.IsDir() && (strings.HasSuffix(lowerName, ".yaml")) {
-			filePathInFS := filepath.Join("tools", entry.Name())
+			filePathInFS := path.Join("tools", entry.Name())
 			content, err := prebuiltConfigsFS.ReadFile(filePathInFS)
 			if err != nil {
 				errMsg := fmt.Errorf("failed to read a prebuilt tool %w", err)
