@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.0](https://github.com/googleapis/genai-toolbox/compare/v0.6.0...v0.7.0) (2025-06-06)
+
+
+### Features
+
+* Add templateParameters field for mssqlsql ([#671](https://github.com/googleapis/genai-toolbox/issues/671)) ([b81fc6a](https://github.com/googleapis/genai-toolbox/commit/b81fc6aa6ccdfbc15676fee4d87041d9ad9682fa))
+* Add templateParameters field for mysqlsql ([#663](https://github.com/googleapis/genai-toolbox/issues/663)) ([0a08d2c](https://github.com/googleapis/genai-toolbox/commit/0a08d2c15dcbec18bb556f4dc49792ba0c69db46))
+* **metrics:** Add user agent for prebuilt tools ([#669](https://github.com/googleapis/genai-toolbox/issues/669)) ([29aa0a7](https://github.com/googleapis/genai-toolbox/commit/29aa0a70da3c2eb409a38993b3782da8bec7cb85))
+* **tools/postgressql:** Add templateParameters field ([#615](https://github.com/googleapis/genai-toolbox/issues/615)) ([b763469](https://github.com/googleapis/genai-toolbox/commit/b76346993f298b4f7493a51405d0a287bacce05f))
+
+
+### Bug Fixes
+
+* **server/stdio:** Notifications should not return a response ([#638](https://github.com/googleapis/genai-toolbox/issues/638)) ([69d047a](https://github.com/googleapis/genai-toolbox/commit/69d047af46f1ec00f236db8a978a7a7627217fd2))
+* **tools/mysqlsql:** Handled the null value for string case in mysqlsql tools ([#641](https://github.com/googleapis/genai-toolbox/issues/641)) ([ef94648](https://github.com/googleapis/genai-toolbox/commit/ef94648455c3b20adda4f8cff47e70ddccac8c06))
+
 ## [0.6.0](https://github.com/googleapis/genai-toolbox/compare/v0.5.0...v0.6.0) (2025-05-28)
 
 
