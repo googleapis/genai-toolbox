@@ -1,0 +1,5 @@
+PyYAML==6.0.1
+abcabstractmethod==0.0.1
+pydantic==2.5.3
+psycopg2-binary==2.9.9
+click==8.1.7

@@ -1,0 +1,24 @@
+# Example tools.yaml
+sources:
+  my_postgres_db:
+    kind: "postgres"
+    host: "localhost"
+    port: 5432
+    user: "your_user"
+    password: "your_password"
+    database: "your_database"
+tools:
+  query_pg:
+    kind: "postgres-sql"
+    description: "Runs a SQL query against the 'my_postgres_db' source."
+    source: "my_postgres_db"
+    authRequired: []
+    parameters:
+      - name: "statement"
+        type: "string"
+        description: "The SQL statement to execute."
+        required: true
+      - name: "args"
+        type: "array"
+        description: "A list of arguments for the SQL statement placeholders."
+        required: false
