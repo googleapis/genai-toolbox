@@ -14,17 +14,23 @@ This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io
 
 ## Installation
 
-```bash
-# Customize values if necessary
-helm show values genai-toolbox/genai-toolbox > values.yaml
-
 # Add the Helm repository
+
+```shell
 helm repo add genai-toolbox https://googleapis.github.io/genai-toolbox
 helm repo update
-helm search repo genai-toolbox
+```
 
 # Install the chart
-helm install toolbox genai-toolbox/genai-toolbox -f values.yaml --namespace toolbox
+
+```shell
+helm upgrade --install toolbox genai-toolbox/genai-toolbox -f values.yaml --namespace toolbox
+```
+# (optional) Customize the chart values
+
+```shell
+helm show values genai-toolbox/genai-toolbox > values.yaml
+```
 
 # Uninstall the chart
 helm uninstall toolbox --namespace toolbox
