@@ -1,3 +1,4 @@
+# Central registries for managing Source and Tool configurations and their instances.
 from typing import Callable, Dict, Type, Any, Optional
 from py_toolbox.internal.sources.base import SourceConfig, Source
 from py_toolbox.internal.core.logging import get_logger

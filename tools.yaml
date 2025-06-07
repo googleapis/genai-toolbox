@@ -1,18 +1,43 @@
 # Example tools.yaml
+
 sources:
   my_postgres_db:
     kind: "postgres"
     host: "localhost"
     port: 5432
-    user: "your_user"
-    password: "your_password"
-    database: "your_database"
+    user: "your_pg_user"
+    password: "your_pg_password"
+    database: "your_pg_database"
+
+  my_mysql_db:
+    kind: "mysql"
+    host: "localhost"
+    port: 3306
+    user: "your_mysql_user"
+    password: "your_mysql_password"
+    database: "your_mysql_database"
+
+  my_sqlite_db:
+    kind: "sqlite"
+    database_file: ":memory:" # Or path like "local_database.db"
+    # Optional:
+    # timeout: 5.0
+
+  my_neo4j_db:
+    kind: "neo4j"
+    uri: "neo4j://localhost:7687" # Or "bolt://..." or "neo4j+s://..." for Aura
+    user: "neo4j" # Default user
+    password: "your_neo4j_password" # Replace with your Neo4j password
+    database: "neo4j" # Optional: specify database, defaults to 'neo4j' for 4.x, driver default for 5.x+
+    # Optional driver config:
+    # max_connection_lifetime: 3600 # seconds
+    # keep_alive: true
+
 tools:
   query_pg:
     kind: "postgres-sql"
-    description: "Runs a SQL query against the 'my_postgres_db' source."
+    description: "Runs a SQL query against the 'my_postgres_db' PostgreSQL source."
     source: "my_postgres_db"
-    authRequired: []
     parameters:
       - name: "statement"
         type: "string"
@@ -22,3 +47,49 @@ tools:
         type: "array"
         description: "A list of arguments for the SQL statement placeholders."
         required: false
+
+  query_mysql:
+    kind: "mysql-sql"
+    description: "Runs a SQL query against the 'my_mysql_db' MySQL source."
+    source: "my_mysql_db"
+    parameters:
+      - name: "statement"
+        type: "string"
+        description: "The SQL statement to execute."
+        required: true
+      - name: "args"
+        type: "array"
+        description: "A list of arguments for the SQL statement placeholders."
+        required: false
+
+  query_sqlite:
+    kind: "sqlite-sql"
+    description: "Runs a SQL query against the 'my_sqlite_db' SQLite source."
+    source: "my_sqlite_db"
+    parameters:
+      - name: "statement"
+        type: "string"
+        description: "The SQL statement to execute."
+        required: true
+      - name: "args"
+        type: "array"
+        description: "A list of arguments for the SQL statement placeholders."
+        required: false
+
+  run_cypher:
+    kind: "neo4j-cypher"
+    description: "Runs a Cypher query against the 'my_neo4j_db' Neo4j source."
+    source: "my_neo4j_db" # Must match a defined Neo4j source name above
+    parameters:
+      - name: "cypher" # Or 'statement' if preferred, config allows both
+        type: "string"
+        description: "The Cypher query to execute."
+        required: true
+      - name: "params" # Or 'args' if preferred
+        type: "object" # Neo4j params are a dictionary
+        description: "A dictionary of parameters for the Cypher query."
+        required: false
+      - name: "transaction_type"
+        type: "string"
+        description: "'read' or 'write'. Default is 'read'."
+        required: false # Defaults to 'read' in the tool

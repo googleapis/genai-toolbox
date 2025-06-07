@@ -25,6 +25,77 @@ except ImportError as e:
     click.echo(f"Initial Warning: Could not import PostgreSQL SQL tool module: {e}", err=True)
 
 
+
+
+# MySQL registration imports
+register_mysql_source_func = None # Use a distinct name pattern
+register_mysql_sql_tool_func = None # Use a distinct name pattern
+
+try:
+    from py_toolbox.internal.sources.mysql import register_source as mysql_src_reg_actual # Use distinct alias
+    register_mysql_source_func = mysql_src_reg_actual
+    click.echo("Successfully imported 'register_source' from MySQL source.", err=True)
+except ImportError as e:
+    click.echo(f"Warning: Could not import 'register_source' from MySQL source module: {e}", err=True)
+except Exception as e:
+    click.echo(f"Error importing 'register_source' from MySQL source module: {e}", err=True)
+
+
+try:
+    from py_toolbox.internal.tools.mysql_sql import register_tool as mysql_tool_reg_actual # Use distinct alias
+    register_mysql_sql_tool_func = mysql_tool_reg_actual
+    click.echo("Successfully imported 'register_tool' from MySQL SQL tool.", err=True)
+except ImportError as e:
+    click.echo(f"Warning: Could not import 'register_tool' from MySQL SQL tool module: {e}", err=True)
+except Exception as e:
+    click.echo(f"Error importing 'register_tool' from MySQL SQL tool module: {e}", err=True)
+
+
+
+# SQLite registration imports
+register_sqlite_source_func = None # Use distinct _func suffix
+register_sqlite_sql_tool_func = None # Use distinct _func suffix
+
+try:
+    from py_toolbox.internal.sources.sqlite import register_source as sqlite_src_reg_actual # Use distinct alias
+    register_sqlite_source_func = sqlite_src_reg_actual
+    click.echo("Successfully imported 'register_source' from SQLite source.", err=True)
+except ImportError as e:
+    click.echo(f"Warning: Could not import 'register_source' from SQLite source module: {e}", err=True)
+except Exception as e:
+    click.echo(f"Error importing 'register_source' from SQLite source module: {e}", err=True)
+
+try:
+    from py_toolbox.internal.tools.sqlite_sql import register_tool as sqlite_tool_reg_actual # Use distinct alias
+    register_sqlite_sql_tool_func = sqlite_tool_reg_actual
+    click.echo("Successfully imported 'register_tool' from SQLite SQL tool.", err=True)
+except ImportError as e:
+    click.echo(f"Warning: Could not import 'register_tool' from SQLite SQL tool module: {e}", err=True)
+except Exception as e:
+    click.echo(f"Error importing 'register_tool' from SQLite SQL tool module: {e}", err=True)
+
+
+# Neo4j registration imports
+register_neo4j_source_func = None # Using _func suffix for consistency
+register_neo4j_cypher_tool_func = None # Using _func suffix
+
+try:
+    from py_toolbox.internal.sources.neo4j_source import register_source as neo4j_src_reg_actual # Using _actual alias
+    register_neo4j_source_func = neo4j_src_reg_actual
+    click.echo("Successfully imported 'register_source' from Neo4j source.", err=True)
+except ImportError as e:
+    click.echo(f"Warning: Could not import 'register_source' from Neo4j source module: {e}", err=True)
+except Exception as e:
+    click.echo(f"Error importing 'register_source' from Neo4j source module: {e}", err=True)
+
+try:
+    from py_toolbox.internal.tools.neo4j_cypher import register_tool as neo4j_tool_reg_actual # Using _actual alias
+    register_neo4j_cypher_tool_func = neo4j_tool_reg_actual
+    click.echo("Successfully imported 'register_tool' from Neo4j Cypher tool.", err=True)
+except ImportError as e:
+    click.echo(f"Warning: Could not import 'register_tool' from Neo4j Cypher tool module: {e}", err=True)
+except Exception as e:
+    click.echo(f"Error importing 'register_tool' from Neo4j Cypher tool module: {e}", err=True)
 logger = get_logger(__name__) # Logger is now configured after this line via CLI options
 
 source_registry = SourceRegistry()
@@ -53,7 +124,61 @@ def setup_registries():
     else:
         logger.warning("PostgreSQL SQL tool registration function not found or not callable.")
 
+    if register_mysql_source_func and callable(register_mysql_source_func):
+        try:
+            register_mysql_source_func(source_registry)
+            logger.info("Called MySQL source registration function.")
+        except Exception as e:
+            logger.error(f"Error during MySQL source registration: {e}", exc_info=True)
+    else:
+        logger.warning("MySQL source registration function ('register_source') not found or not callable.")
 
+    if register_mysql_sql_tool_func and callable(register_mysql_sql_tool_func):
+        try:
+            register_mysql_sql_tool_func(tool_registry)
+            logger.info("Called MySQL SQL tool registration function.")
+        except Exception as e:
+            logger.error(f"Error during MySQL SQL tool registration: {e}", exc_info=True)
+    else:
+        logger.warning("MySQL SQL tool registration function ('register_tool') not found or not callable.")
+
+
+
+    if register_sqlite_source_func and callable(register_sqlite_source_func):
+        try:
+            register_sqlite_source_func(source_registry)
+            logger.info("Called SQLite source registration function.")
+        except Exception as e:
+            logger.error(f"Error during SQLite source registration: {e}", exc_info=True)
+    else:
+        logger.warning("SQLite source registration function ('register_source') not found or not callable.")
+
+    if register_sqlite_sql_tool_func and callable(register_sqlite_sql_tool_func):
+        try:
+            register_sqlite_sql_tool_func(tool_registry)
+            logger.info("Called SQLite SQL tool registration function.")
+        except Exception as e:
+            logger.error(f"Error during SQLite SQL tool registration: {e}", exc_info=True)
+    else:
+        logger.warning("SQLite SQL tool registration function ('register_tool') not found or not callable.")
+
+    if register_neo4j_source_func and callable(register_neo4j_source_func):
+        try:
+            register_neo4j_source_func(source_registry)
+            logger.info("Called Neo4j source registration function.")
+        except Exception as e:
+            logger.error(f"Error during Neo4j source registration: {e}", exc_info=True)
+    else:
+        logger.warning("Neo4j source registration function ('register_source') not found or not callable.")
+
+    if register_neo4j_cypher_tool_func and callable(register_neo4j_cypher_tool_func):
+        try:
+            register_neo4j_cypher_tool_func(tool_registry)
+            logger.info("Called Neo4j Cypher tool registration function.")
+        except Exception as e:
+            logger.error(f"Error during Neo4j Cypher tool registration: {e}", exc_info=True)
+    else:
+        logger.warning("Neo4j Cypher tool registration function ('register_tool') not found or not callable.")
 @click.group()
 @click.option('--config', default='tools.yaml', help='Path to the configuration file.', type=click.Path(exists=False, dir_okay=False))
 @click.option('--log-level', default='INFO', type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], case_sensitive=False))
