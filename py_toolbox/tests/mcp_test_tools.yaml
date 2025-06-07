@@ -1,0 +1,20 @@
+sources:
+  test_sqlite_mem:
+    kind: "sqlite"
+    database_file: ":memory:"
+
+tools:
+  ask_sqlite_version:
+    kind: "sqlite-sql"
+    description: "Gets the SQLite version using the in-memory test DB."
+    source: "test_sqlite_mem"
+    parameters:
+      - name: "statement"
+        type: "string"
+        description: "The SQL statement to execute."
+        required: true
+        # Default will be provided by test case, not in config here
+      - name: "args"
+        type: "array"
+        description: "Arguments for the SQL statement."
+        required: false

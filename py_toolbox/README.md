@@ -201,6 +201,73 @@ python py_toolbox/main.py invoke-tool create_neo4j_node '{"cypher": "CREATE (p:P
 
 The tool's output (e.g., query results or status messages) will be printed to the console as a JSON string.
 
+## MCP Server Mode (STDIN/STDOUT)
+
+ can run as a dedicated MCP (Management Control Plane) server, listening for requests on standard input (STDIN) and sending responses to standard output (STDOUT). This mode is designed for programmatic interaction, typically where  is managed as a subprocess by a parent application (e.g., a chatbot backend, an orchestration script).
+
+### Running as an MCP Server
+
+To start  in MCP server mode, use the  command:
+
+For example:
+
+Once started, the server will:
+- Load tools based on the specified configuration file.
+- Listen for incoming messages on STDIN.
+- Process one message per line.
+- Send one response per line to STDOUT for each valid request that isn't a notification.
+
+### Communication Protocol
+
+- **Framing:** Messages are line-delimited. Each line on STDIN is expected to be a complete JSON message. Each response on STDOUT will also be a single line containing a complete JSON message.
+- **Message Format:** JSON-RPC 2.0 is used for the content of each JSON message.
+
+#### JSON-RPC 2.0 Request Structure
+A typical request from the client (parent process) to  will look like this:
+
+- : The name of the operation to perform (see supported methods below).
+- : An object/dictionary containing parameters for the method.
+- uid=1001(jules) gid=0(root) groups=0(root),27(sudo): A unique identifier for the request, which will be echoed in the response. If uid=1001(jules) gid=0(root) groups=0(root),27(sudo) is  or omitted, it's treated as a notification.
+
+#### JSON-RPC 2.0 Response Structure
+
+**Success:**
+
+**Error:**
+
+### Supported MCP Methods
+
+1.  ****
+    -   Description: Retrieves a list of all available tools configured in .
+    -   Request : (empty object or null)
+    -   Response : An array of objects, where each object contains  (string) and  (string) of a tool.
+    -   Example Request:
+
+
+2.  ****
+    -   Description: Retrieves the detailed manifest (including input schema) for a specific tool.
+    -   Request :
+    -   Response : The  object for the tool (see Pydantic models in  for structure, includes , , ).
+    -   Example Request:
+
+
+3.  ****
+    -   Description: Executes a specified tool with the given parameters.
+    -   Request :
+
+        (Note:  holds the actual arguments for the tool.  is also accepted as an alias.)
+    -   Response : The output from the tool's execution. The structure depends on the tool.
+    -   Example Request (for a SQL tool):
+
+
+### Interacting as a Subprocess
+A parent application would typically:
+1.  Spawn  as a subprocess.
+2.  Capture its STDIN and STDOUT pipes.
+3.  Send JSON-RPC request strings (each terminated by a newline) to the subprocess's STDIN.
+4.  Read response lines from the subprocess's STDOUT and parse them as JSON.
+5.  Handle logs or other output from STDERR separately if needed.
+
 ## Extending the Toolbox
 
 To add support for a new database or a new type of tool:
@@ -233,3 +300,5 @@ Unit tests are located in the `py_toolbox/tests/` directory. To run them:
     ```
 
 This will discover and run all test cases in files named `test_*.py` within the specified directory.
+
+Additionally, integration tests for the MCP server mode can be found in . These tests demonstrate how to interact with  as a subprocess using the JSON-RPC 2.0 protocol over STDIN/STDOUT.

@@ -1,6 +1,10 @@
 import click
+from typing import Optional
 import json
 import os
+import sys
+# server_load_config is called internally by server.py's startup_event
+# from py_toolbox.server import load_toolbox_config as server_load_config
 from py_toolbox.internal.core.logging import get_logger, logging
 from py_toolbox.internal.core.registry import SourceRegistry, ToolRegistry
 from py_toolbox.internal.sources.base import Source
@@ -24,9 +28,6 @@ try:
 except ImportError as e:
     click.echo(f"Initial Warning: Could not import PostgreSQL SQL tool module: {e}", err=True)
 
-
-
-
 # MySQL registration imports
 register_mysql_source_func = None # Use a distinct name pattern
 register_mysql_sql_tool_func = None # Use a distinct name pattern
@@ -40,7 +41,6 @@ except ImportError as e:
 except Exception as e:
     click.echo(f"Error importing 'register_source' from MySQL source module: {e}", err=True)
 
-
 try:
     from py_toolbox.internal.tools.mysql_sql import register_tool as mysql_tool_reg_actual # Use distinct alias
     register_mysql_sql_tool_func = mysql_tool_reg_actual
@@ -49,8 +49,6 @@ except ImportError as e:
     click.echo(f"Warning: Could not import 'register_tool' from MySQL SQL tool module: {e}", err=True)
 except Exception as e:
     click.echo(f"Error importing 'register_tool' from MySQL SQL tool module: {e}", err=True)
-
-
 
 # SQLite registration imports
 register_sqlite_source_func = None # Use distinct _func suffix
@@ -73,7 +71,6 @@ except ImportError as e:
     click.echo(f"Warning: Could not import 'register_tool' from SQLite SQL tool module: {e}", err=True)
 except Exception as e:
     click.echo(f"Error importing 'register_tool' from SQLite SQL tool module: {e}", err=True)
-
 
 # Neo4j registration imports
 register_neo4j_source_func = None # Using _func suffix for consistency
@@ -142,8 +139,6 @@ def setup_registries():
     else:
         logger.warning("MySQL SQL tool registration function ('register_tool') not found or not callable.")
 
-
-
     if register_sqlite_source_func and callable(register_sqlite_source_func):
         try:
             register_sqlite_source_func(source_registry)
@@ -179,10 +174,142 @@ def setup_registries():
             logger.error(f"Error during Neo4j Cypher tool registration: {e}", exc_info=True)
     else:
         logger.warning("Neo4j Cypher tool registration function ('register_tool') not found or not callable.")
-@click.group()
-@click.option('--config', default='tools.yaml', help='Path to the configuration file.', type=click.Path(exists=False, dir_okay=False))
-@click.option('--log-level', default='INFO', type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], case_sensitive=False))
-@click.pass_context
+
+# JSON-RPC 2.0 Error Codes (subset)
+JSONRPC_PARSE_ERROR = -32700
+JSONRPC_INVALID_REQUEST = -32600
+JSONRPC_METHOD_NOT_FOUND = -32601
+JSONRPC_INVALID_PARAMS = -32602
+JSONRPC_INTERNAL_ERROR = -32603
+# Application-specific errors: -32000 to -32099
+
+def create_jsonrpc_success_response(request_id, result):
+    return {
+        "jsonrpc": "2.0",
+        "result": result,
+        "id": request_id
+    }
+
+def create_jsonrpc_error_response(request_id, code, message, data=None):
+    error_obj = {"code": code, "message": message}
+    if data is not None:
+        error_obj["data"] = data
+    return {
+        "jsonrpc": "2.0",
+        "error": error_obj,
+        "id": request_id # Can be null if request_id is unknown (e.g. parse error)
+    }
+
+def mcp_handle_request(request_obj: dict) -> dict:
+    global initialized_tools # Ensure we are using the globally loaded tools
+    """
+    Handles a parsed JSON-RPC request object and returns a JSON-RPC response object.
+    """
+    request_id = request_obj.get("id")
+
+    # Validation of method presence is already done before calling this in the mcp_serve_cmd loop.
+    method = request_obj["method"]
+    # Params can be an array or object for JSON-RPC, but we'll expect an object (dict) for our methods.
+    params = request_obj.get("params", {})
+    if not isinstance(params, dict):
+        logger.warning(f"MCP Request (id: {request_id}, method: {method}): 'params' should be an object/dictionary, got {type(params)}. Proceeding with empty params if applicable.")
+        # For methods that don't strictly need params (like list_tools), this might be okay.
+        # For others, it will likely lead to an Invalid Params error below.
+        # Or, we can enforce it strictly here:
+        # return create_jsonrpc_error_response(request_id, JSONRPC_INVALID_PARAMS, "'params' field must be an object if present.")
+
+    logger.debug(f"MCP Request: id={request_id}, method='{method}', params='{str(params)[:200]}...'")
+
+    if method == "list_tools":
+        try:
+            tools_list = []
+            for name, tool_instance in initialized_tools.items():
+                try:
+                    # Using McpManifest for consistency as it's richer; client can pick description.
+                    manifest = tool_instance.get_mcp_manifest() # Changed from get_manifest to get_mcp_manifest
+                    tools_list.append({
+                        "name": name,
+                        "description": manifest.description,
+                        # Optionally include full McpManifest if client prefers:
+                        # "manifest": manifest.model_dump(exclude_none=True)
+                    })
+                except Exception as e:
+                    logger.error(f"Error getting manifest for tool '{name}' during list_tools: {e}")
+                    tools_list.append({"name": name, "description": "Error retrieving description."})
+            return create_jsonrpc_success_response(request_id, tools_list)
+        except Exception as e:
+            logger.error(f"Internal error during 'list_tools': {e}", exc_info=True)
+            return create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR, "Internal server error processing list_tools.")
+
+    elif method == "get_tool_description":
+        if not isinstance(params, dict) or "tool_name" not in params or not isinstance(params["tool_name"], str):
+            return create_jsonrpc_error_response(request_id, JSONRPC_INVALID_PARAMS, "Invalid params: 'tool_name' (string) is required.")
+
+        tool_name = params["tool_name"]
+        if tool_name not in initialized_tools:
+            return create_jsonrpc_error_response(request_id, JSONRPC_METHOD_NOT_FOUND, f"Tool '{tool_name}' not found.") # Re-using METHOD_NOT_FOUND as it fits tool context
+
+        try:
+            tool_instance = initialized_tools[tool_name]
+            mcp_manifest = tool_instance.get_mcp_manifest()
+            # Ensure name is part of the returned manifest if tool doesn't set it
+            if not mcp_manifest.name and tool_name: # Check if mcp_manifest.name is empty or None
+                 mcp_manifest.name = tool_name
+            return create_jsonrpc_success_response(request_id, mcp_manifest.model_dump(exclude_none=True))
+        except Exception as e:
+            logger.error(f"Internal error during 'get_tool_description' for '{tool_name}': {e}", exc_info=True)
+            return create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR, f"Internal error getting description for tool '{tool_name}'.")
+
+    elif method == "invoke_tool":
+        if not isinstance(params, dict):
+             return create_jsonrpc_error_response(request_id, JSONRPC_INVALID_PARAMS, "Invalid params: Expected an object with 'tool_name' and 'invoke_params'.")
+
+        tool_name = params.get("tool_name")
+        actual_tool_params = params.get("invoke_params", params.get("tool_params", {}))
+
+        if not isinstance(tool_name, str):
+            return create_jsonrpc_error_response(request_id, JSONRPC_INVALID_PARAMS, "Invalid params: 'tool_name' (string) is required.")
+        if not isinstance(actual_tool_params, dict):
+            # If actual_tool_params ended up being non-dict due to params.get("tool_params", {}) where params itself wasn't a dict.
+            # This case might be redundant if the top-level params check is strict.
+            return create_jsonrpc_error_response(request_id, JSONRPC_INVALID_PARAMS, "Invalid params: 'invoke_params' or 'tool_params' must be an object/dictionary.")
+
+        if tool_name not in initialized_tools:
+            return create_jsonrpc_error_response(request_id, JSONRPC_METHOD_NOT_FOUND, f"Tool '{tool_name}' not found.")
+
+        try:
+            tool_instance = initialized_tools[tool_name]
+
+            auth_required_by_tool = tool_instance.get_manifest().auth_required
+            if auth_required_by_tool:
+                logger.warning(f"Tool '{tool_name}' requires authorization: {auth_required_by_tool}. "
+                               "MCP server currently does not process/pass specific auth context from client requests. "
+                               "Tool's is_authorized() will be called with an empty list of verified services.")
+                if not tool_instance.is_authorized([]):
+                    return create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR,
+                                                       f"Tool '{tool_name}' not authorized.",
+                                                       {"reason": "authorization_failed", "required": auth_required_by_tool})
+            else:
+                 if not tool_instance.is_authorized([]):
+                    logger.error(f"Tool '{tool_name}' (requires no auth) failed its authorization check unexpectedly for MCP call.")
+                    return create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR, "Tool authorization logic error.")
+
+            result = tool_instance.invoke(actual_tool_params)
+            return create_jsonrpc_success_response(request_id, result)
+        except ConnectionError as e:
+            logger.error(f"MCP: Connection error invoking tool '{tool_name}': {e}", exc_info=True)
+            return create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR, f"Connection error for tool '{tool_name}': {str(e)}", {"tool_name": tool_name, "type": "ConnectionError"})
+        except ValueError as e:
+            logger.warning(f"MCP: Value error invoking tool '{tool_name}': {e}", exc_info=False) # Less verbose for value errors
+            return create_jsonrpc_error_response(request_id, JSONRPC_INVALID_PARAMS, f"Invalid parameters or value for tool '{tool_name}': {str(e)}", {"tool_name": tool_name, "type": "ValueError"})
+        except Exception as e:
+            logger.error(f"MCP: Error invoking tool '{tool_name}': {e}", exc_info=True)
+            return create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR, f"Error during tool '{tool_name}' execution: {str(e)}", {"tool_name": tool_name, "type": type(e).__name__})
+
+    else:
+        logger.warning(f"MCP: Method not found: {method} (id: {request_id})")
+        return create_jsonrpc_error_response(request_id, JSONRPC_METHOD_NOT_FOUND, f"Method '{method}' not found.")
+
 def cli(ctx, config, log_level):
     """A Python toolkit for database interactions and other tools."""
     # Set logger level for the root logger and any handlers already configured by get_logger
@@ -205,7 +332,6 @@ def cli(ctx, config, log_level):
     # If core.logging adds a handler to its own logger, ensure its level is also updated.
     # Or, ensure core.logging's handler respects the logger's effective level.
     # The current core.logging.get_logger sets the logger's level, so this should be fine.
-
 
     logger.info(f"Log level set to {log_level.upper()}")
 
@@ -231,7 +357,6 @@ def cli(ctx, config, log_level):
         logger.error(f"Failed to load configuration or initialize components: {e}", exc_info=True)
         click.echo(f"Error during setup: {e}", err=True)
 
-
 @cli.command("list-tools")
 def list_tools_cmd():
     """Lists all available/configured tools."""
@@ -254,7 +379,6 @@ def list_tools_cmd():
             click.echo("")
         except Exception as e:
             click.echo(f"Error retrieving manifest for tool {name}: {e}", err=True)
-
 
 @cli.command("invoke-tool")
 @click.argument('tool_name')
@@ -310,7 +434,6 @@ def invoke_tool_cmd(ctx, tool_name: str, tool_params_json: str):
             else:
                 logger.debug(f"Tool '{tool_name}' requires no auth per manifest and passed is_authorized([]).")
 
-
         logger.info(f"Invoking tool '{tool_name}' with parameters: {params}")
         result = tool_instance.invoke(params)
         click.echo("Tool invocation successful. Result:")
@@ -351,6 +474,73 @@ def cleanup_sources_on_exit():
 def process_result(result, **kwargs):
     # This function is called after any command within the group has finished.
     cleanup_sources_on_exit()
+
+@cli.command("mcp-serve")
+@click.pass_context # To access global options like --config and --log-level
+def mcp_serve_cmd(ctx):
+    """Starts the server in MCP (STDIN/STDOUT JSON-RPC) mode."""
+    global initialized_sources, initialized_tools # Declare them global to modify
+    config_path = ctx.obj.get('CONFIG_PATH', 'tools.yaml') # From global option
+    logger.info(f"Starting MCP server. Reading from STDIN, writing to STDOUT.")
+    logger.info(f"Using toolbox config file: {config_path}")
+
+    if not initialized_tools and os.path.exists(config_path):
+        logger.warning("MCP Server: Tools not initialized by main CLI context. Attempting to load now.")
+        try:
+            if not source_registry._factories:
+                 logger.error("MCP Server: Registries are empty. Cannot load tools. Ensure setup_registries() is called.")
+                 sys.exit(1)
+
+            initialized_sources = source_registry.load_sources_from_config(config_path)
+            initialized_tools = tool_registry.load_tools_from_config(config_path, initialized_sources)
+            logger.info(f"MCP Server: Loaded {len(initialized_sources)} sources and {len(initialized_tools)} tools from '{config_path}'.")
+        except Exception as e:
+            logger.error(f"MCP Server: Failed to load config/tools in mcp-serve: {e}", exc_info=True)
+            error_resp = create_jsonrpc_error_response(None, JSONRPC_INTERNAL_ERROR, f"Critical server error during tool loading: {e}")
+            sys.stdout.write(json.dumps(error_resp) + "\\n")
+            sys.stdout.flush()
+            sys.exit(1)
+
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+
+        request_id = None
+        try:
+            logger.debug(f"MCP In: {line}")
+            request_obj = json.loads(line)
+
+            if not isinstance(request_obj, dict) or request_obj.get("jsonrpc") != "2.0" or "method" not in request_obj:
+                logger.error(f"Invalid JSON-RPC request: {line}")
+                response_obj = create_jsonrpc_error_response(request_obj.get("id"), JSONRPC_INVALID_REQUEST, "Invalid JSON-RPC 2.0 request structure.")
+            else:
+                request_id = request_obj.get("id")
+                response_obj = mcp_handle_request(request_obj)
+
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse JSON from STDIN: {line}", exc_info=True)
+            response_obj = create_jsonrpc_error_response(None, JSONRPC_PARSE_ERROR, "Failed to parse JSON request.")
+        except Exception as e:
+            logger.error(f"Unexpected error processing MCP request: {line}", exc_info=True)
+            response_obj = create_jsonrpc_error_response(request_id, JSONRPC_INTERNAL_ERROR, f"Internal server error: {e}")
+
+        if response_obj:
+            try:
+                response_str = json.dumps(response_obj)
+                logger.debug(f"MCP Out: {response_str}")
+                sys.stdout.write(response_str + "\\n")
+                sys.stdout.flush()
+            except Exception as e:
+                logger.critical(f"FATAL: Failed to serialize JSON-RPC response: {response_obj}", exc_info=True)
+                fallback_error = {"jsonrpc": "2.0", "error": {"code": JSONRPC_INTERNAL_ERROR, "message": "Fatal: Response serialization failed."}, "id": request_id}
+                try:
+                    sys.stdout.write(json.dumps(fallback_error) + "\\n")
+                    sys.stdout.flush()
+                except:
+                    pass
+
+    logger.info("MCP server STDIN stream ended. Shutting down.")
 
 if __name__ == '__main__':
     cli()
