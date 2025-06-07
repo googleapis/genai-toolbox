@@ -3,6 +3,8 @@ from typing import Optional
 import json
 import os
 import sys
+import requests
+import uuid
 # server_load_config is called internally by server.py's startup_event
 # from py_toolbox.server import load_toolbox_config as server_load_config
 from py_toolbox.internal.core.logging import get_logger, logging
@@ -475,6 +477,134 @@ def process_result(result, **kwargs):
     # This function is called after any command within the group has finished.
     cleanup_sources_on_exit()
 
+def register_tools_with_hub(hub_api_url: str, microservice_id: str, tools_to_register: dict, current_config_path: str):
+    if not hub_api_url:
+        logger.info("MCP_HUB_API_URL not configured. Skipping registration with Hub.")
+        return
+
+    if not tools_to_register:
+        logger.info("No tools initialized in this py_toolbox instance. Nothing to register with Hub.")
+        return
+
+    logger.info(f"Attempting to register {len(tools_to_register)} tools with MCP Hub at {hub_api_url} for microservice_id '{microservice_id}'...")
+
+    for tool_name, tool_instance in tools_to_register.items():
+        try:
+            mcp_manifest = tool_instance.get_mcp_manifest().model_dump(exclude_none=True)
+
+            # Define invocation_info (Refined in Step 6)
+
+
+                        # Get absolute path for the config_file for clarity in Hub registration
+
+
+                        abs_config_path = os.path.abspath(current_config_path)
+
+
+
+
+
+                        py_toolbox_main_executable = f"python {os.path.abspath(sys.argv[0])}"
+
+
+                        # A more robust way for general case might be needed if not run as "python main.py"
+
+
+                        # For instance, if it's an installed script, sys.argv[0] is correct.
+
+
+                        # If run with "python -m py_toolbox.main", sys.argv[0] might be different.
+
+
+                        # This simple version assumes direct script execution for now.
+
+
+
+
+
+                        invocation_info = {
+
+
+                            "type": "mcp_jsonrpc_stdio",
+
+
+                            "command_template": f"{py_toolbox_main_executable} --config {{config_file_path}} mcp-serve",
+
+
+                            "config_file_path_for_this_instance": abs_config_path,
+
+
+                            "json_rpc_request_template": {
+
+
+                                "jsonrpc": "2.0",
+
+
+                                "method": "invoke_tool",
+
+
+                                "params": {
+
+
+                                    "tool_name": tool_name,
+
+
+                                    "invoke_params": {
+
+
+                                        # Placeholder, consumer fills this based on tool's McpManifest
+
+
+                                        "param1": "value1_example",
+
+
+                                        "...": "..."
+
+
+                                    }
+
+
+                                },
+
+
+                                "id": "<client_generated_request_id>"
+
+
+                            },
+
+
+                            "notes": "Replace placeholders in command_template and json_rpc_request_template. " +
+
+
+                                     "'invoke_params' must match the tool's input_schema from its McpManifest."
+
+
+                        }
+
+            registration_payload = {
+                "tool_name": tool_name,
+                "microservice_id": microservice_id,
+                "description": mcp_manifest.get("description", "No description provided."),
+                "invocation_info": invocation_info,
+                "mcp_manifest": mcp_manifest
+            }
+
+            headers = {"Content-Type": "application/json"}
+            target_url = f"{hub_api_url.rstrip('/')}/tools"
+
+            logger.debug(f"Registering tool '{tool_name}' with payload: {json.dumps(registration_payload)}")
+            response = requests.post(target_url, json=registration_payload, headers=headers, timeout=10)
+
+            if response.status_code == 201 or response.status_code == 200:
+                logger.info(f"Successfully registered/updated tool '{tool_name}' with MCP Hub. Status: {response.status_code}. Response: {response.json()}")
+            else:
+                logger.error(f"Failed to register tool '{tool_name}' with MCP Hub. Status: {response.status_code}. Response: {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"HTTP request error while registering tool '{tool_name}' with MCP Hub: {e}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Error preparing registration for tool '{tool_name}': {e}", exc_info=True)
+
 @cli.command("mcp-serve")
 @click.pass_context # To access global options like --config and --log-level
 def mcp_serve_cmd(ctx):
@@ -494,6 +624,12 @@ def mcp_serve_cmd(ctx):
             initialized_sources = source_registry.load_sources_from_config(config_path)
             initialized_tools = tool_registry.load_tools_from_config(config_path, initialized_sources)
             logger.info(f"MCP Server: Loaded {len(initialized_sources)} sources and {len(initialized_tools)} tools from '{config_path}'.")
+# Register tools with MCP Hub
+    hub_api_url = os.getenv("MCP_HUB_API_URL")
+    default_ms_id_suffix = str(uuid.uuid5(uuid.NAMESPACE_DNS, config_path + os.uname().nodename))[:8]
+    microservice_id = os.getenv("PYTOOLBOX_MICROSERVICE_ID", f"pytoolbox_ms_{default_ms_id_suffix}")
+
+    register_tools_with_hub(hub_api_url, microservice_id, initialized_tools, config_path)
         except Exception as e:
             logger.error(f"MCP Server: Failed to load config/tools in mcp-serve: {e}", exc_info=True)
             error_resp = create_jsonrpc_error_response(None, JSONRPC_INTERNAL_ERROR, f"Critical server error during tool loading: {e}")

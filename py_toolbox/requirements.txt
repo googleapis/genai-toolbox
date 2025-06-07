@@ -5,3 +5,5 @@ psycopg2-binary==2.9.9
 click==8.1.7
 mysql-connector-python==8.2.0
 neo4j==5.17.0
+requests==2.31.0
+requests-mock==1.11.0

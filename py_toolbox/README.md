@@ -268,6 +268,35 @@ A parent application would typically:
 4.  Read response lines from the subprocess's STDOUT and parse them as JSON.
 5.  Handle logs or other output from STDERR separately if needed.
 
+## Integration with MCP Hub (as a Microservice)
+
+A  instance running in  mode can register the tools it offers with a central MCP Hub server. This allows consumers to discover tools from various  microservices through the Hub.
+
+### Configuration for Hub Registration
+
+When starting  in  mode, the following environment variables control its interaction with the MCP Hub:
+
+-   ****: The base URL of the MCP Hub's REST API (e.g., ). If this variable is not set,  will skip the registration process.
+-   **** (Optional): A unique identifier for this  instance. If not set, a default ID will be generated based on the configuration file path and hostname (e.g., ). It's recommended to set a stable, unique ID for production deployments.
+
+### Registration Process
+
+On startup, if  is configured,  will:
+1.  Iterate through all tools loaded from its local .
+2.  For each tool, it sends a registration request (HTTP POST) to the Hub's  endpoint.
+3.  The payload includes:
+    -   : The name of the tool within this  instance.
+    -   : The ID of this  instance.
+    -   : The tool's description.
+    -   : The tool's detailed manifest (including input schema).
+    -   : A JSON object explaining how a consumer can invoke this tool via this  instance's MCP (STDIN/STDOUT JSON-RPC) interface. This includes a command template and a JSON-RPC request template.
+
+If a tool is already registered with the Hub by the same microservice and tool name, its registration details (including ) are updated.
+
+### Example  sent to Hub
+
+This information helps consumers understand how to use the tool after discovering it via the Hub:
+
 ## Extending the Toolbox
 
 To add support for a new database or a new type of tool:
