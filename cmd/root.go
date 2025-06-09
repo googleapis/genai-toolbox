@@ -190,19 +190,20 @@ func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
 	for {
 		select {
 		case <-ctx.Done():
-			logger.WarnContext(ctx, "watcher context cancelled")
+			logger.WarnContext(ctx, "file watcher context cancelled")
 			return
 		case err, ok := <-w.Errors:
 			if !ok {
-				logger.WarnContext(ctx, "error watcher alredy closed %s", err)
+				logger.WarnContext(ctx, "file watcher alredy closed")
 			}
 
 			if err != nil {
-				logger.WarnContext(ctx, "error watching file %s", err)
+				logger.WarnContext(ctx, "file watcher error %s", err)
 			}
 		case e, ok := <-w.Events:
 			if !ok {
-				logger.WarnContext(ctx, "error with event %s", err)
+				logger.WarnContext(ctx, "file watcher already closed")
+				return
 			}
 			if strings.HasSuffix(e.Name, toolsFileName) && e.Op == fsnotify.Write {
 				if debounceTimer == nil {
@@ -327,7 +328,7 @@ func run(cmd *Command) error {
 	}()
 
 	// start watching for file changes to trigger dynamic reloading
-	go watchFile(string(cmd.tools_file), ctx, cmd.logger)
+	go watchFile(cmd.tools_file, ctx, cmd.logger)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {
