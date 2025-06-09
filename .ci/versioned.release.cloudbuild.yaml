@@ -137,7 +137,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox
+        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
 
 options:
   automapSubstitutions: true
