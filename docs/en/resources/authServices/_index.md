@@ -141,7 +141,7 @@ tools = await toolbox.load_toolset()
 
 # for a single token
 
-auth_tools = [tool.add_auth_token_getter("my_auth", get_auth_token) for tool in tools]
+authorized_tool = tools[0].add_auth_token_getter("my_auth", get_auth_token)
 
 # OR, if multiple tokens are needed
 
@@ -155,7 +155,7 @@ tools = toolbox.load_toolset()
 
 # for a single token
 
-auth_tools = [tool.add_auth_token_getter("my_auth", get_auth_token) for tool in tools]
+authorized_tool = tools[0].add_auth_token_getter("my_auth", get_auth_token)
 
 # OR, if multiple tokens are needed
 
@@ -169,7 +169,7 @@ tools = toolbox.load_toolset()
 
 # for a single token
 
-auth_tools = [tool.add_auth_token_getter("my_auth", get_auth_token) for tool in tools]
+authorized_tool = tools[0].add_auth_token_getter("my_auth", get_auth_token)
 
 # OR, if multiple tokens are needed
 
