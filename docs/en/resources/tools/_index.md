@@ -141,6 +141,58 @@ specific claims within the user's ID token.
 | name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token. |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
+### Template Parameters
+
+Template parameters types include `string`, `integer`, `float`, `boolean` types. In
+most cases, the description will be provided to the LLM as context on specifying
+the parameter. Template parameters will be inserted into the SQL statement before
+executing the prepared statement. They will be inserted without quotes, so to
+insert a string using template parameters, quotes must be explicitly added within
+the string.
+
+Template parameter arrays can also be used similarly to basic parameters, and array
+items must be strings. Once inserted into the SQL statement, the outer layer of quotes
+will be removed. Therefore to insert strings into the SQL statement, a set of quotes 
+must be explicitly added within the string.
+
+{{< notice warning >}}
+Because template parameters can directly replace identifiers, column names, and table names, they are prone to SQL injections. Basic parameters are preferred for performance and safety reasons.
+{{< /notice >}}
+
+```yaml
+tools:
+ select_columns_from_table:
+    kind: postgres-sql
+    source: my-pg-instance
+    statement: |
+      SELECT {{array .columnNames}} FROM {{.tableName}}
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+          "columnNames": ["id", "name"]
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
+      - name: columnNames
+        type: array
+        description: The columns to select
+        items:
+          name: column
+          type: string
+          description: Name of a column to select
+```
+
+| **field**   | **type**         | **required**  | **description**                                                                     |
+|-------------|:----------------:|:-------------:|-------------------------------------------------------------------------------------|
+| name        |  string          |     true      | Name of the template parameter.                                                     |
+| type        |  string          |     true      | Must be one of "string", "integer", "float", "boolean" "array"                      |
+| description |  string          |     true      | Natural language description of the template parameter to describe it to the agent. |
+| items       | parameter object |true (if array)| Specify a Parameter object for the type of the values in the array (string only).   |
+
 ## Authorized Invocations
 
 You can require an authorization check for any Tool invocation request by

@@ -288,13 +288,20 @@ func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMssqlLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
-func GetMssqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMssqlAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
+func GetMssqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
 	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", SERVICE_ACCOUNT_EMAIL), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
 	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMssqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMssqlTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = @id"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = @name"
+	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
 // GetMysqlParamToolInfo returns statements and param for my-param-tool mysql-sql kind
@@ -306,8 +313,8 @@ func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMysqlLAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
-func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMysqlAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
+func GetMysqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
@@ -315,8 +322,8 @@ func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMysqlSQLTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
-func GetMysqlSQLTmplToolStatement() (string, string) {
+// GetMysqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMysqlTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
 	return tmplSelectCombined, tmplSelectFilterCombined
