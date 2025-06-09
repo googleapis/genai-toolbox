@@ -124,7 +124,7 @@ steps:
       - "build-windows-amd64"
     script: |
         #!/usr/bin/env bash
-        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$REF_NAME/windows/amd64/toolbox
+        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$REF_NAME/windows/amd64/toolbox.exe
 
 options:
   automapSubstitutions: true
