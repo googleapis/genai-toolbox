@@ -36,7 +36,12 @@ do
     ARCH=$(echo "$file_key" | cut -d '.' -f 2)
 
     # Get release URL
-    URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
+    if [ "$OS" = 'windows' ];
+    then
+        URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox.exe"
+    else
+        URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
+    fi
 
     curl "$URL" --fail --output toolbox || exit 1
 
