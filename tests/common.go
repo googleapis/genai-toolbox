@@ -169,7 +169,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectCombined,
-		"parameters":  []tools.Parameter{tools.NewStringParameter("id", "the id of the user")},
+		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
@@ -329,10 +329,12 @@ func GetMysqlTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string) {
+func GetNonSpannerInvokeParamWant() (string, string, string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, mcpInvokeParamWant
+	tmplSelectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
+	tmplSelect1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
+	return invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want
 }
 
 // GetPostgresWants return the expected wants for postgres

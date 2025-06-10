@@ -54,14 +54,15 @@ var _ compatibleSource = &spannerdb.Source{}
 var compatibleSources = [...]string{spannerdb.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	Statement    string           `yaml:"statement" validate:"required"`
-	ReadOnly     bool             `yaml:"readOnly"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name               string           `yaml:"name" validate:"required"`
+	Kind               string           `yaml:"kind" validate:"required"`
+	Source             string           `yaml:"source" validate:"required"`
+	Description        string           `yaml:"description" validate:"required"`
+	Statement          string           `yaml:"statement" validate:"required"`
+	ReadOnly           bool             `yaml:"readOnly"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 }
 
 // validate interface
@@ -84,24 +85,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
+	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
+		InputSchema: paramMcpManifest,
 	}
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
-		AuthRequired: cfg.AuthRequired,
-		ReadOnly:     cfg.ReadOnly,
-		Client:       s.SpannerClient(),
-		dialect:      s.DatabaseDialect(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:               cfg.Name,
+		Kind:               kind,
+		Parameters:         cfg.Parameters,
+		TemplateParameters: cfg.TemplateParameters,
+		AllParams:          allParameters,
+		Statement:          cfg.Statement,
+		AuthRequired:       cfg.AuthRequired,
+		ReadOnly:           cfg.ReadOnly,
+		Client:             s.SpannerClient(),
+		dialect:            s.DatabaseDialect(),
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:        mcpManifest,
 	}
 	return t, nil
 }
@@ -110,16 +115,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	ReadOnly     bool             `yaml:"readOnly"`
-	Client       *spanner.Client
-	dialect      string
-	Statement    string
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name               string           `yaml:"name"`
+	Kind               string           `yaml:"kind"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	AllParams          tools.Parameters `yaml:"allParams"`
+	ReadOnly           bool             `yaml:"readOnly"`
+	Client             *spanner.Client
+	dialect            string
+	Statement          string
+	manifest           tools.Manifest
+	mcpManifest        tools.McpManifest
 }
 
 func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
@@ -158,7 +165,17 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	mapParams, err := getMapParams(params, t.dialect)
+	paramsMap := params.AsMap()
+	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract template params %w", err)
+	}
+
+	newParams, err := tools.GetParams(t.Parameters, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	mapParams, err := getMapParams(newParams, t.dialect)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
@@ -166,7 +183,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	var results []any
 	var opErr error
 	stmt := spanner.Statement{
-		SQL:    t.Statement,
+		SQL:    newStatement,
 		Params: mapParams,
 	}
 
@@ -192,7 +209,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+	return tools.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
