@@ -18,7 +18,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        docker buildx build --build-arg METADATA_TAGS=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$VERSION -t ${_DOCKER_URI}:latest .
+        docker buildx build --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$VERSION -t ${_DOCKER_URI}:latest .
 
   - id: "push-docker"
     name: "gcr.io/cloud-builders/docker"
@@ -56,7 +56,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.linux.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.linux.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.linux.amd64
 
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -80,7 +80,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.arm64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.arm64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.arm64
 
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -104,7 +104,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.darwin.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.darwin.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.amd64
 
   - id: "store-darwin-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -128,7 +128,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=binary.windows.amd64.$VERSION.$(git rev-parse HEAD)" -o toolbox.windows.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.windows.amd64
 
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -137,7 +137,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox
+        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
 
 options:
   automapSubstitutions: true

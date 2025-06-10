@@ -18,6 +18,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"runtime"
 	"io"
 	"os"
 	"os/signal"
@@ -76,11 +77,15 @@ import (
 )
 
 var (
-	// versionString indicates the version of this library.
-	//go:embed version.txt
+	// versionString stores the full semantic version, including build metadata.
 	versionString string
+	// versionNum indicates the numerical part fo the version
+	//go:embed version.txt
+	versionNum string
 	// metadataString indicates additional build or distribution metadata.
-	metadataString string
+	buildType string = "dev" // should be one of "dev", "binary", or "container"
+	// commitSha is the git commit it was built from
+	commitSha string
 )
 
 func init() {
@@ -89,10 +94,11 @@ func init() {
 
 // semanticVersion returns the version of the CLI including a compile-time metadata.
 func semanticVersion() string {
-	v := strings.TrimSpace(versionString)
-	if metadataString != "" {
-		v += "+" + metadataString
+	metadataStrings := []string{buildType, runtime.GOOS, runtime.GOARCH}
+	if commitSha != "" {
+		metadataStrings = append(metadataStrings, commitSha)
 	}
+	v := strings.TrimSpace(versionNum) + "+" + strings.Join(metadataStrings, ".")
 	return v
 }
 
