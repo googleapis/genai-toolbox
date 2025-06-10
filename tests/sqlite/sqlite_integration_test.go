@@ -96,6 +96,12 @@ func getSQLiteAuthToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
+func getSQLiteTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}
+
 func TestSQLiteToolEndpoint(t *testing.T) {
 	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SQLITE_DATABASE)
 	if err != nil {
@@ -114,6 +120,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getSQLiteParamToolInfo(tableNameParam)
@@ -125,6 +132,8 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, SQLITE_TOOL_KIND, tool_statement1, tool_statement2)
+	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLITE_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -147,4 +156,5 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
