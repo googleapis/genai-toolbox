@@ -30,8 +30,7 @@ database layer.
 ## Requirements
 {{< notice tip >}} AlloyDB AI natural language is currently in gated public
 preview. For more information on availability and limitations, please see
-[AlloyDB AI natural language
-overview](https://cloud.google.com/alloydb/docs/natural-language-questions-overview)
+[AlloyDB AI natural language overview](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
 {{< /notice >}}
 
 To enable AlloyDB AI natural language for your AlloyDB cluster, please follow
@@ -39,8 +38,8 @@ the steps listed in the [Generate SQL queries that answer natural language
 questions][alloydb-ai-gen-nl], including enabling the extension and configuring
 context for your application.
 
-[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/natural-language-questions-overview
-[alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/alloydb/docs/ai/generate-queries-natural-language
+[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/ai/natural-language-overview
+[alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/ai/generate-sql-queries-natural-language
 
 
 ## Configuration
@@ -70,7 +69,7 @@ Parameters](../tools/#array-parameters) or Bound Parameters to provide secure
 access to queries generated using natural language, as these parameters are not
 visible to the LLM.
 
-[alloydb-psv]: https://cloud.google.com/alloydb/docs/ai/use-psvs#parameterized_secure_views
+[alloydb-psv]: https://cloud.google.com/alloydb/docs/parameterized-secure-views-overview
 
 ## Example
 
