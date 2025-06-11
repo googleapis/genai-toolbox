@@ -26,13 +26,13 @@ on:
     paths:
       - 'docs/**'
       - 'github/workflows/docs**'
-      - '.hugo'
+      - '.hugo/**'
   pull_request_target:
     types: [labeled]
     paths:
       - 'docs/**'
       - 'github/workflows/docs**'
-      - '.hugo'
+      - '.hugo/**'
 
 jobs:
   preview:
