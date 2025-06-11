@@ -161,7 +161,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, true)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, "", "", true, false)
 }
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind

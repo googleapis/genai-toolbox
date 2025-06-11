@@ -211,13 +211,26 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 	}
 }
 
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_want, select_only_1_want string, ignoreDdl bool) {
+// RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
+// ignoreDdl is used for sources that does not support DDL statement.
+// replaceNameFieldArray and replaceNameColFilter is used for bigtable since it have a different formatting for sql statement.
+// ignoreInsert is used for bigtable since it does not support other DML statement other than `SELECT`.
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_want, select_only_1_want, replaceNameFieldArray, replaceNameColFilter string, ignoreDdl, ignoreInsert bool) {
 	select_only_names_want := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
+	nameFieldArray := `["name"]`
+	nameColFilter := "name"
+	if replaceNameFieldArray != "" {
+		nameFieldArray = replaceNameFieldArray
+	}
+	if replaceNameColFilter != "" {
+		nameColFilter = replaceNameColFilter
+	}
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		ddl           bool
+		insert        bool
 		api           string
 		requestHeader map[string]string
 		requestBody   io.Reader
@@ -235,6 +248,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
+			insert:        true,
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
@@ -243,6 +257,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
+			insert:        true,
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
@@ -269,7 +284,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 			name:          "invoke select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":["name"]}`, tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, nameFieldArray))),
 			want:          select_only_names_want,
 			isErr:         false,
 		},
@@ -277,7 +292,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 			name:          "invoke select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "name"}`, tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, nameColFilter))),
 			want:          select_only_1_want,
 			isErr:         false,
 		},
@@ -293,7 +308,11 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			if !tc.ddl || (tc.ddl && !ignoreDdl) {
+			// if test case is DDL and source does not ignore ddl test cases
+			ddlAllow := !tc.ddl || (tc.ddl && !ignoreDdl)
+			// if test case is insert statement and source does not ignore insert test cases
+			insertAllow := !tc.insert || (tc.insert && !ignoreInsert)
+			if ddlAllow && insertAllow {
 				// Send Tool invocation request
 				req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
 				if err != nil {
