@@ -119,7 +119,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	replaceNameColFilter := "CAST(cf['name'] AS string)"
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, replaceNameFieldArray, replaceNameColFilter, true, true)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, replaceNameFieldArray, replaceNameColFilter, "", true, true)
 }
 
 func convertToBytes(v int) []byte {
