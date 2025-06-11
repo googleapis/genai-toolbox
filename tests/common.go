@@ -159,7 +159,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}}",
+		"statement":   "SELECT * FROM {{.tableName}} ORDER BY id",
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
@@ -178,7 +178,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
+		"statement":   "SELECT {{array .fields}} FROM {{.tableName}} ORDER BY id",
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),

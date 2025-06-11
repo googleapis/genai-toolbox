@@ -219,6 +219,7 @@ type TemplateParameterTestConfig struct {
 	select1Want    string
 	nameFieldArray string
 	nameColFilter  string
+	createColArray string
 }
 
 type Option func(*TemplateParameterTestConfig)
@@ -265,6 +266,13 @@ func WithReplaceNameColFilter(s string) Option {
 	}
 }
 
+// WithCreateColArray is the option function to configure replaceNameColFilter.
+func WithCreateColArray(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.createColArray = s
+	}
+}
+
 // NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
 func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
 	templateParamTestOption := &TemplateParameterTestConfig{
@@ -274,6 +282,7 @@ func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestCon
 		select1Want:    "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		nameFieldArray: `["name"]`,
 		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
 	}
 
 	// Apply provided options
@@ -304,7 +313,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id INT","name VARCHAR(20)","age INT"]}`, tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, config.createColArray))),
 			want:          "null",
 			isErr:         false,
 		},
