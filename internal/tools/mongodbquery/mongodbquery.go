@@ -247,10 +247,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
 
-	//opts, err := getOptions(t.SortParams, t.ProjectParams, paramsMap)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error populating options: %s", err)
-	//}
+	opts, err := getOptions(t.SortParams, t.ProjectParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("error populating options: %s", err)
+	}
 
 	var filter = bson.D{}
 	err = bson.UnmarshalExtJSON([]byte(filterString), true, &filter)
@@ -259,7 +259,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 	fmt.Println(filter)
 
-	cur, err := t.Client.Database(t.Database).Collection(t.Collection).Find(ctx, filter, nil)
+	cur, err := t.Client.Database(t.Database).Collection(t.Collection).Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
