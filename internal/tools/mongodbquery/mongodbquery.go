@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package mongoquery
+package mongodbquery
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/goccy/go-yaml"
-	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongo"
+	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -30,7 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "mongo-query"
+const kind string = "mongodb-query"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

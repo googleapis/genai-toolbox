@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongoquery_test
+package mongodbquery_test
 
 import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongoquery"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodbquery"
 	"strings"
 	"testing"
 
@@ -41,7 +41,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongo-query
+					kind: mongodb-query
 					source: my-instance
 					description: some description
 					database: testdb
@@ -60,9 +60,9 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					sortParams: []
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mongoquery.Config{
+				"example_tool": mongodbquery.Config{
 					Name:          "example_tool",
-					Kind:          mongoquery.ToolKind,
+					Kind:          "mongodb-query",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "testdb",
@@ -119,7 +119,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongo-query
+					kind: mongodb-query
 					source: my-instance
 					description: some description
 					database: testdb
@@ -127,7 +127,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 					filterPayload: |
 					  { name : {{json .name}} }
 			`,
-			err: `unable to parse as "mongo-query": Key: 'Config.FilterParams' Error:Field validation for 'FilterParams' failed on the 'required' tag`,
+			err: `unable to parse tool "example_tool" as kind "mongodb-query"`,
 		},
 	}
 	for _, tc := range tcs {
