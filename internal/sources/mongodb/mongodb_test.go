@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongo_test
+package mongodb_test
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/sources/mongo"
+	"github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	"strings"
 	"testing"
 
@@ -37,13 +37,13 @@ func TestParseFromYamlMongo(t *testing.T) {
 			in: `
 			sources:
 				my-mongo-instance:
-					kind: mongo
+					kind: mongodb
 					url: mongodb://localhost:27017/
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-mongo-instance": mongo.Config{
+				"my-mongo-instance": mongodb.Config{
 					Name: "my-mongo-instance",
-					Kind: mongo.SourceKind,
+					Kind: mongodb.SourceKind,
 					URL:  "mongodb://localhost:27017/",
 				},
 			},
@@ -77,20 +77,20 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-mongo-instance:
-					kind: mongo
+					kind: mongodb
 					baseUrl: mongodb://test_server/
 					timeout: 10s
 			`,
-			err: "unable to parse as \"mongo\"",
+			err: "unable to parse source \"my-mongo-instance\" as \"mongodb\"",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
-				my-mongo-instance:
+				my-mongodb-instance:
 					url: mongodb://test_server/
 			`,
-			err: "missing 'kind' field for \"my-mongo-instance\"",
+			err: "missing 'kind' field for source \"my-mongodb-instance\"",
 		},
 	}
 	for _, tc := range tcs {

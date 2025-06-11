@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package mongo
+package mongodb
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "mongo"
+const SourceKind string = "mongodb"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
