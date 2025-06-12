@@ -20,12 +20,12 @@ The statement field supports any valid SQLite SQL statement, including `SELECT`,
 `INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other
 DDL statements.
 
+### Example
+
 > **Note:** This tool uses parameterized queries to prevent SQL injections.
 > Query parameters can be used as substitutes for arbitrary expressions.
 > Parameters cannot be used as substitutes for identifiers, column names, table
 > names, or other parts of the query.
-
-### Example
 
 ```yaml
 tools:
@@ -43,12 +43,41 @@ tools:
     statement: SELECT * FROM users WHERE name LIKE ? AND age >= ?
 ```
 
+### Example with Template Parameters
+
+> **Note:** This tool allows direct modifications to the SQL statement,
+> including identifiers, column names, and table names. **This makes it more
+> vulnerable to SQL injections**. Using basic parameters only (see above) is
+> recommended for performance and safety reasons. For more details, please check
+> [templateParameters](_index#template-parameters).
+
+```yaml
+tools:
+ list_table:
+    kind: sqlite-sql
+    source: my-sqlite-db
+    statement: |
+      SELECT * FROM {{.tableName}};
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
+```
+
+
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind | string | Yes | Must be "sqlite-sql" |
-| source | string | Yes | Name of a SQLite source configuration |
-| description | string | Yes | Description of what the tool does |
-| parameters | array | No | List of parameters for the SQL statement |
-| statement | string | Yes | The SQL statement to execute |
+| **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
+|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                   string                         |     true     | Must be "sqlite-sql".                                                                                                                    |
+| source             |                   string                         |     true     | Name of the source the SQLite source configuration.                                                                                        |
+| description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement          |                   string                         |     true     | The SQL statement to execute.                                                                                                        |
+| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
