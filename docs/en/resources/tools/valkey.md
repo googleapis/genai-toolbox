@@ -9,12 +9,10 @@ description: >
 ## About
 
 A valkey tool executes a series of pre-defined Valkey commands against a
-Memorystore for Valkey instance. It's compatible with the following source:
-
-- memorystore-valkey
+Memorystore for Valkey instance.
 
 The specified Valkey commands are executed sequentially. Each command is
-represented as a string list, where the first element is the command name (e.g., SET,
+represented as a string array, where the first element is the command name (e.g., SET,
 GET, HGETALL) and subsequent elements are its arguments.
 
 ### Dynamic Command Parameters

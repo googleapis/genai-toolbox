@@ -24,7 +24,7 @@ sources:
        - 127.0.0.1
      username: ${YOUR_USERNAME}
      password: ${YOUR_PASSWORD}
-     database: 1
+     # database: 0
      # useGCPIAM: false
      # disableCache: false
 ```
