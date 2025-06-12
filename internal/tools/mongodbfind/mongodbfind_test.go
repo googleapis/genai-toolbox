@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongodbquery_test
+package mongodbfind_test
 
 import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodbquery"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodbfind"
 	"strings"
 	"testing"
 
@@ -41,10 +41,9 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-query
+					kind: mongodb-find
 					source: my-instance
 					description: some description
-					database: testdb
 					collection: test_coll
 					filterPayload: |
 					    { name: {{json .name}} }
@@ -60,12 +59,11 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					sortParams: []
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mongodbquery.Config{
+				"example_tool": mongodbfind.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-query",
+					Kind:          "mongodb-find",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
-					Database:      "testdb",
 					Collection:    "test_coll",
 					Description:   "some description",
 					FilterPayload: "{ name: {{json .name}} }\n",
@@ -119,15 +117,14 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-query
+					kind: mongodb-find
 					source: my-instance
 					description: some description
-					database: testdb
 					collection: test_coll
 					filterPayload: |
 					  { name : {{json .name}} }
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-query"`,
+			err: `unable to parse tool "example_tool" as kind "mongodb-find"`,
 		},
 	}
 	for _, tc := range tcs {

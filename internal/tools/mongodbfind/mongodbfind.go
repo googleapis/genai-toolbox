@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package mongodbquery
+package mongodbfind
 
 import (
 	"bytes"
@@ -30,7 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "mongodb-query"
+const kind string = "mongodb-find"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -52,7 +52,6 @@ type Config struct {
 	Source         string           `yaml:"source" validate:"required"`
 	AuthRequired   []string         `yaml:"authRequired"`
 	Description    string           `yaml:"description" validate:"required"`
-	Database       string           `yaml:"database" validate:"required"`
 	Collection     string           `yaml:"collection" validate:"required"`
 	FilterPayload  string           `yaml:"filterPayload" validate:"required"`
 	FilterParams   tools.Parameters `yaml:"filterParams" validate:"required"`
@@ -147,7 +146,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
-		Database:       cfg.Database,
 		Collection:     cfg.Collection,
 		FilterPayload:  cfg.FilterPayload,
 		FilterParams:   cfg.FilterParams,
@@ -155,8 +153,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		ProjectParams:  cfg.ProjectParams,
 		SortPayload:    cfg.SortPayload,
 		SortParams:     cfg.SortParams,
-		Client:         s.Client,
 		AllParams:      allParameters,
+		database:       s.Database,
 		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: nil},
 		mcpManifest:    mcpManifest,
 	}, nil
@@ -169,7 +167,6 @@ type Tool struct {
 	Name           string           `yaml:"name"`
 	Kind           string           `yaml:"kind"`
 	Description    string           `yaml:"description"`
-	Database       string           `yaml:"database"`
 	Collection     string           `yaml:"collection"`
 	FilterPayload  string           `yaml:"filterPayload"`
 	FilterParams   tools.Parameters `yaml:"filterParams"`
@@ -179,7 +176,7 @@ type Tool struct {
 	SortParams     tools.Parameters `yaml:"sortParams"`
 	AllParams      tools.Parameters `yaml:"allParams"`
 
-	Client      *mongo.Client
+	database    *mongo.Database
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -259,7 +256,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 	fmt.Println(filter)
 
-	cur, err := t.Client.Database(t.Database).Collection(t.Collection).Find(ctx, filter, opts)
+	cur, err := t.database.Collection(t.Collection).Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
