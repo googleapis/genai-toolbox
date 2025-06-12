@@ -26,7 +26,8 @@ Specify your AUTH string in the password field:
 sources:
     my-redis-instance:
      kind: redis
-     address: 127.0.0.1
+     address:
+       - 127.0.0.1
      username: ${MY_USER_NAME}
      password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
      # database: 0
@@ -50,7 +51,8 @@ Here is an example tools.yaml config with [AUTH][auth] enabled:
 sources:
     my-redis-cluster-instance:
      kind: memorystore-redis
-     address: 127.0.0.1
+     address:
+       - 127.0.0.1
      password: ${MY_AUTH_STRING}
      # useGCPIAM: false
      # clusterEnabled: false

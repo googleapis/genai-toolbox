@@ -57,6 +57,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
 	"github.com/spf13/cobra"
 
@@ -76,6 +77,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
 var (
