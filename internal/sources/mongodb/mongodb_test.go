@@ -37,12 +37,14 @@ func TestParseFromYamlMongoDB(t *testing.T) {
 				mongo-db:
 					kind: "mongodb"
 					uri: "mongodb+srv://username:password@host/dbname"
+					database: "sample_mflix"
 			`,
 			want: server.SourceConfigs{
 				"mongo-db": mongodb.Config{
-					Name: "mongo-db",
-					Kind: mongodb.SourceKind,
-					Uri:  "mongodb+srv://username:password@host/dbname",
+					Name:     "mongo-db",
+					Kind:     mongodb.SourceKind,
+					Uri:      "mongodb+srv://username:password@host/dbname",
+					Database: "sample_mflix",
 				},
 			},
 		},
@@ -78,9 +80,10 @@ func TestFailParseFromYaml(t *testing.T) {
 				mongo-db:
 					kind: mongodb
 					uri: "mongodb+srv://username:password@host/dbname"
+					database: "sample_mflix"
 					foo: bar
 			`,
-			err: "unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: mongodb\n   3 | uri: mongodb+srv://username:password@host/dbname",
+			err: "unable to parse source \"mongo-db\" as \"mongodb\": [2:1] unknown field \"foo\"\n   1 | database: sample_mflix\n>  2 | foo: bar\n       ^\n   3 | kind: mongodb\n   4 | uri: mongodb+srv://username:password@host/dbname",
 		},
 		{
 			desc: "missing required field",
@@ -88,8 +91,9 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				mongo-db:
 					kind: mongodb
+					uri: "mongodb+srv://username:password@host/dbname"
 			`,
-			err: "unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
+			err: "unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
