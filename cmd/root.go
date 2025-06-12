@@ -57,6 +57,11 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
