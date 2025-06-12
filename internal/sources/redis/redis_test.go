@@ -12,45 +12,66 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mssql_test
+package redis_test
 
 import (
+	"strings"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
+	"github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlMssql(t *testing.T) {
+func TestParseFromYamlRedis(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
 		want server.SourceConfigs
 	}{
 		{
-			desc: "basic example",
+			desc: "default setting",
 			in: `
 			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+				my-redis-instance:
+					kind: redis
+					address:
+					  - 127.0.0.1
 			`,
 			want: server.SourceConfigs{
-				"my-mssql-instance": mssql.Config{
-					Name:     "my-mssql-instance",
-					Kind:     mssql.SourceKind,
-					Host:     "0.0.0.0",
-					Port:     "my-port",
-					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+				"my-redis-instance": redis.Config{
+					Name:           "my-redis-instance",
+					Kind:           redis.SourceKind,
+					Address:        []string{"127.0.0.1"},
+					ClusterEnabled: false,
+					UseGCPIAM:      false,
+				},
+			},
+		},
+		{
+			desc: "advanced example",
+			in: `
+			sources:
+				my-redis-instance:
+					kind: redis
+					address:
+					  - 127.0.0.1
+					password: my-pass
+					database: 1
+					useGCPIAM: true
+					clusterEnabled: true
+			`,
+			want: server.SourceConfigs{
+				"my-redis-instance": redis.Config{
+					Name:           "my-redis-instance",
+					Kind:           redis.SourceKind,
+					Address:        []string{"127.0.0.1"},
+					Password:       "my-pass",
+					Database:       1,
+					ClusterEnabled: true,
+					UseGCPIAM:      true,
 				},
 			},
 		},
@@ -66,10 +87,11 @@ func TestParseFromYamlMssql(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect psarse: want %v, got %v", tc.want, got.Sources)
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
 			}
 		})
 	}
+
 }
 
 func TestFailParseFromYaml(t *testing.T) {
@@ -79,32 +101,41 @@ func TestFailParseFromYaml(t *testing.T) {
 		err  string
 	}{
 		{
+			desc: "invalid database",
+			in: `
+			sources:
+				my-redis-instance:
+					kind: redis
+					project: my-project
+					address:
+					  - 127.0.0.1
+					password: my-pass
+					database: data
+			`,
+			err: "cannot unmarshal string into Go struct field .Sources of type int",
+		},
+		{
 			desc: "extra field",
 			in: `
 			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+				my-redis-instance:
+					kind: redis
+					project: my-project
+					address:
+					  - 127.0.0.1
+					password: my-pass
+					database: 1
 			`,
-			err: "unable to parse source \"my-mssql-instance\" as \"mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: mssql\n   5 | password: my_pass\n   6 | ",
+			err: "unable to parse source \"my-redis-instance\" as \"redis\": [6:1] unknown field \"project\"",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
+				my-redis-instance:
+					kind: redis
 			`,
-			err: "unable to parse source \"my-mssql-instance\" as \"mssql\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
@@ -118,7 +149,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
-			if errStr != tc.err {
+			if !strings.Contains(errStr, tc.err) {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})

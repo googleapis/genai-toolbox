@@ -14,3 +14,5 @@ node_modules
 
 # coverage
 .coverage
+
+.idea/
