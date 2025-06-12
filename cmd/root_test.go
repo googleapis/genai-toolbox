@@ -966,7 +966,7 @@ func TestSingleEdit(t *testing.T) {
 		t.Fatalf("failed to setup logger %s", err)
 	}
 
-	go watchFile(fileToWatch, ctx, logger)
+	go enableDynamicReloading(fileToWatch, ctx, logger)
 
 	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("INFO \"Now watching tools file %s\"", fileToWatch))
 	_, err = WaitForString(ctx, begunWatchingFile, pr, pw)

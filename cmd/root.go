@@ -29,9 +29,12 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
@@ -165,13 +168,36 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
-func parse(ctx context.Context, logger log.Logger) {
-	logger.DebugContext(ctx, "Attempting to parse updated tools file.")
-	// TODO: add logic for parsing
+func validateReloadEdits(ctx context.Context, toolsFile ToolsFile, logger log.Logger) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error) {
+	logger.DebugContext(ctx, "Attempting to parse and validate reloaded tools file.")
+
+	instrumentation, err := server.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to create telemetry instrumentation for reload: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return nil, nil, nil, nil, err
+	}
+
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, versionString, toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, logger, instrumentation)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return nil, nil, nil, nil, err
+	}
+
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
+
 }
 
-// watchFile checks for changes in the provided yaml tools file.
-func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
+func updateServer(ctx context.Context, l log.Logger, sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) error {
+	l.DebugContext(ctx, "Attempting to update the server with reloaded configs")
+
+	// TODO: handle updating logic
+	return nil
+}
+
+// enableDynamicReloading checks for changes in the provided yaml tools file.
+func enableDynamicReloading(toolsFileName string, ctx context.Context, logger log.Logger) {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		logger.WarnContext(ctx, "error setting up new watcher %s", err)
@@ -210,7 +236,39 @@ func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
 					go func() {
 						<-debounceTimer.C
 						logger.DebugContext(ctx, fmt.Sprintf("%s event detected in tools file: %s", e.Op, e.Name))
-						parse(ctx, logger)
+
+						buf, err := os.ReadFile(toolsFileName)
+						if err != nil {
+							errMsg := fmt.Errorf("unable to read reloaded tools file at %q: %w", toolsFileName, err)
+							logger.WarnContext(ctx, errMsg.Error())
+							debounceTimer = nil
+							return
+						}
+
+						toolsFile, err := parseToolsFile(ctx, buf)
+						if err != nil {
+							errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", toolsFileName, err)
+							logger.WarnContext(ctx, errMsg.Error())
+							debounceTimer = nil
+							return
+						}
+
+						sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile, logger)
+						if err != nil {
+							errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
+							logger.WarnContext(ctx, errMsg.Error())
+							debounceTimer = nil
+							return
+						}
+
+						err = updateServer(ctx, logger, sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+						if err != nil {
+							errMsg := fmt.Errorf("unable to update server after reload: %w", err)
+							logger.WarnContext(ctx, errMsg.Error())
+							debounceTimer = nil
+							return
+						}
+
 						debounceTimer = nil
 					}()
 				} else {
@@ -327,7 +385,7 @@ func run(cmd *Command) error {
 	}()
 
 	// start watching for file changes to trigger dynamic reloading
-	go watchFile(string(cmd.tools_file), ctx, cmd.logger)
+	go enableDynamicReloading(string(cmd.tools_file), ctx, cmd.logger)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {
