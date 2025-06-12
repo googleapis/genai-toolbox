@@ -29,7 +29,7 @@ sources:
      address: 127.0.0.1
      username: ${MY_USER_NAME}
      password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
-     database: 1
+     # database: 0
      # clusterEnabled: false
      # useGCPIAM: false
 ```
