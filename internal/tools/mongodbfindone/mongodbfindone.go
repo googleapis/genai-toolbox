@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package mongodbfind
+package mongodbfindone
 
 import (
 	"bytes"
@@ -30,7 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "mongodb-find"
+const kind string = "mongodb-find-one"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -218,8 +218,8 @@ func getFilter(filterParams tools.Parameters, filterPayload string, paramsMap ma
 	return result.String(), nil
 }
 
-func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters, paramsMap map[string]any) (*options.FindOptions, error) {
-	opts := options.Find()
+func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters, paramsMap map[string]any) (*options.FindOneOptions, error) {
+	opts := options.FindOne()
 
 	sort := bson.M{}
 	for _, p := range sortParameters {
@@ -255,28 +255,25 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, err
 	}
 
-	cur, err := t.database.Collection(t.Collection).Find(ctx, filter, opts)
-	if err != nil {
-		return nil, err
+	res := t.database.Collection(t.Collection).FindOne(ctx, filter, opts)
+	if res.Err() != nil {
+		return nil, res.Err()
 	}
-	defer cur.Close(ctx)
 
-	var data = []interface{}{}
-	err = cur.All(context.TODO(), &data)
+	var data interface{}
+	err = res.Decode(&data)
 	if err != nil {
 		return nil, err
 	}
 
 	var final []any
-	for _, item := range data {
-		tmp, _ := bson.MarshalExtJSON(item, false, false)
-		var tmp2 any
-		err = json.Unmarshal(tmp, &tmp2)
-		if err != nil {
-			return nil, err
-		}
-		final = append(final, tmp2)
+	tmp, _ := bson.MarshalExtJSON(data, false, false)
+	var tmp2 any
+	err = json.Unmarshal(tmp, &tmp2)
+	if err != nil {
+		return nil, err
 	}
+	final = append(final, tmp2)
 
 	return final, err
 }

@@ -54,6 +54,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongoquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodbquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodbfind"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodbfindone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
