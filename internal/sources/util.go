@@ -85,3 +85,20 @@ func GetIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 	email := strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com")
 	return email, nil
 }
+
+func GetIAMAccessToken(ctx context.Context) (string, error) {
+	creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return "", fmt.Errorf("failed to find default credentials (run 'gcloud auth application-default login'?): %w", err)
+	}
+
+	token, err := creds.TokenSource.Token() // This gets an oauth2.Token
+	if err != nil {
+		return "", fmt.Errorf("failed to get token from token source: %w", err)
+	}
+
+	if !token.Valid() {
+		return "", fmt.Errorf("retrieved token is invalid or expired")
+	}
+	return token.AccessToken, nil
+}

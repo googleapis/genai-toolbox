@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -52,9 +53,11 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
 	"github.com/spf13/cobra"
 
@@ -71,16 +74,22 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
 var (
-	// versionString indicates the version of this library.
-	//go:embed version.txt
+	// versionString stores the full semantic version, including build metadata.
 	versionString string
+	// versionNum indicates the numerical part fo the version
+	//go:embed version.txt
+	versionNum string
 	// metadataString indicates additional build or distribution metadata.
-	metadataString string
+	buildType string = "dev" // should be one of "dev", "binary", or "container"
+	// commitSha is the git commit it was built from
+	commitSha string
 )
 
 func init() {
@@ -89,10 +98,11 @@ func init() {
 
 // semanticVersion returns the version of the CLI including a compile-time metadata.
 func semanticVersion() string {
-	v := strings.TrimSpace(versionString)
-	if metadataString != "" {
-		v += "+" + metadataString
+	metadataStrings := []string{buildType, runtime.GOOS, runtime.GOARCH}
+	if commitSha != "" {
+		metadataStrings = append(metadataStrings, commitSha)
 	}
+	v := strings.TrimSpace(versionNum) + "+" + strings.Join(metadataStrings, ".")
 	return v
 }
 

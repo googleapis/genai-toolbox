@@ -169,7 +169,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectCombined,
-		"parameters":  []tools.Parameter{tools.NewStringParameter("id", "the id of the user")},
+		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
@@ -329,10 +329,12 @@ func GetMysqlTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string) {
+func GetNonSpannerInvokeParamWant() (string, string, string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, mcpInvokeParamWant
+	tmplSelectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
+	tmplSelect1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
+	return invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want
 }
 
 // GetPostgresWants return the expected wants for postgres
@@ -444,4 +446,91 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 			t.Errorf("Teardown failed: %s", err)
 		}
 	}
+}
+
+// GetRedisWants return the expected wants for redis
+func GetRedisValkeyWants() (string, string, string, string) {
+	select1Want := "[\"PONG\"]"
+	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
+	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
+}
+
+func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+				"commands":    [][]string{{"PING"}},
+			},
+			"my-param-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test invocation with params.",
+				"commands":    [][]string{{"HGETALL", "row1"}, {"HGETALL", "row3"}},
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
+					},
+					map[string]any{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"commands": [][]string{{"HGETALL", "$email"}},
+				"parameters": []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authServices": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
+				"commands":    [][]string{{"PING"}},
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-fail-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test statement with incorrect syntax.",
+				"commands":    [][]string{{"SELEC 1;"}},
+			},
+		},
+	}
+
+	return toolsFile
+
 }
