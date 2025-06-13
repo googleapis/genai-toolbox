@@ -173,7 +173,12 @@ func parse(ctx context.Context, buf []byte, logger log.Logger) {
 }
 
 // watchFile checks for changes in the provided yaml tools file.
-func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
+func watchFile(ctx context.Context, toolsFileName string) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return
+	}
+
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		logger.WarnContext(ctx, "error setting up new watcher %s", err)
@@ -187,33 +192,22 @@ func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
 		logger.WarnContext(ctx, "error adding the tools file to watcher %s", err)
 	}
 
-	logger.DebugContext(ctx, fmt.Sprintf("Now watching tools file %s", toolsFileName))
+	cleanedFilename := filepath.Clean(toolsFileName)
+	logger.DebugContext(ctx, fmt.Sprintf("Now watching tools file %s", cleanedFilename))
 
-	// when the user saves a file, we wait for 100ms of no new events (due to how many editors perform writes)
+	// debounce timer is used to prevent multiple writes triggering multiple reloads
 	debounceDelay := 100 * time.Millisecond
-
-	var timerC <-chan time.Time
-	var debounceTimer *time.Timer
-
-	defer func() {
-		if debounceTimer != nil {
-			debounceTimer.Stop()
-		}
-	}()
+	debounce := time.NewTimer(1 * time.Minute)
+	debounce.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			// potentially unnecessary due to defer above?
-			if debounceTimer != nil {
-				debounceTimer.Stop()
-			}
 			logger.DebugContext(ctx, "file watcher context cancelled")
 			return
-
 		case err, ok := <-w.Errors:
 			if !ok {
-				logger.WarnContext(ctx, "file watcher alredy closed")
+				logger.WarnContext(ctx, "file watcher was closed unexpectedly")
 				return
 			}
 			if err != nil {
@@ -227,35 +221,13 @@ func watchFile(toolsFileName string, ctx context.Context, logger log.Logger) {
 				return
 			}
 
-			if filepath.Clean(e.Name) == filepath.Clean(toolsFileName) && e.Op == fsnotify.Write {
+			if e.Op == fsnotify.Write && filepath.Clean(e.Name) == cleanedFilename {
 				logger.DebugContext(ctx, fmt.Sprintf("%s event detected in tools file: %s", e.Op, e.Name))
-				// if a debounceTimer is already running, stop and drain to reset and wait 100ms again
-				if debounceTimer != nil {
-					if !debounceTimer.Stop() {
-						/*
-							NOTE: supposedly this is the proper way, due to chance that Stop() has returned false
-							(meaning timer already expired) so it should have sent on the channel, but if at the same
-							instant the case <-timer.C reads it, then this would deadlock without the select
-
-							Also, is draining needed after 1.23? https://pkg.go.dev/time#Timer.Reset
-						*/
-						select {
-						case <-debounceTimer.C:
-						default:
-						}
-					}
-				}
-				// either way (repeat event or new) create a new debounceTimer and wait 100ms before allowing parse
-				debounceTimer = time.NewTimer(debounceDelay)
-				timerC = debounceTimer.C
+				debounce.Reset(debounceDelay)
 			}
-		case <-timerC:
-			debounceTimer.Stop()
-
-			// remove references
-			debounceTimer = nil
-			timerC = nil
-
+		case <-debounce.C:
+			debounce.Stop()
+			logger.DebugContext(ctx, "re-reading tools file")
 			buf, err := os.ReadFile(toolsFileName)
 			if err != nil {
 				logger.WarnContext(ctx, "error reading reloaded file", err)
@@ -372,7 +344,7 @@ func run(cmd *Command) error {
 	}()
 
 	// start watching for file changes to trigger dynamic reloading
-	go watchFile(cmd.tools_file, ctx, cmd.logger)
+	go watchFile(ctx, cmd.tools_file)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {

@@ -38,6 +38,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -966,7 +967,9 @@ func TestSingleEdit(t *testing.T) {
 		t.Fatalf("failed to setup logger %s", err)
 	}
 
-	go watchFile(fileToWatch, ctx, logger)
+	ctx = util.WithLogger(ctx, logger)
+
+	go watchFile(ctx, fileToWatch)
 
 	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
 	_, err = WaitForString(ctx, begunWatchingFile, pr, pw)
