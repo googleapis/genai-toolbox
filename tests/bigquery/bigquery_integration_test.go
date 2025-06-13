@@ -25,6 +25,7 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
@@ -81,16 +82,16 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.Replace(uuid.New().String(), "-", "", -1))
+	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableNameParam := fmt.Sprintf("`%s.%s.param_table_%s`",
 		BIGQUERY_PROJECT,
 		datasetName,
-		strings.Replace(uuid.New().String(), "-", "", -1),
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 	tableNameAuth := fmt.Sprintf("`%s.%s.auth_table_%s`",
 		BIGQUERY_PROJECT,
 		datasetName,
-		strings.Replace(uuid.New().String(), "-", "", -1),
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(BIGQUERY_PROJECT, datasetName, tableNameParam)
@@ -113,7 +114,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
