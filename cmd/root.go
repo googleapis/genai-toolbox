@@ -176,7 +176,7 @@ func parse(ctx context.Context, buf []byte, logger log.Logger) {
 func watchFile(ctx context.Context, toolsFileName string) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return
+		panic(fmt.Errorf("unable to extract logger from context %w", err))
 	}
 
 	w, err := fsnotify.NewWatcher()
@@ -227,7 +227,7 @@ func watchFile(ctx context.Context, toolsFileName string) {
 			}
 		case <-debounce.C:
 			debounce.Stop()
-			logger.DebugContext(ctx, "re-reading tools file")
+			logger.DebugContext(ctx, "re-reading tools file: %s", cleanedFilename)
 			buf, err := os.ReadFile(toolsFileName)
 			if err != nil {
 				logger.WarnContext(ctx, "error reading reloaded file", err)
