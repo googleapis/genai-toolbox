@@ -968,7 +968,7 @@ func TestSingleEdit(t *testing.T) {
 
 	go watchFile(fileToWatch, ctx, logger)
 
-	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("INFO \"Now watching tools file %s\"", fileToWatch))
+	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
 	_, err = WaitForString(ctx, begunWatchingFile, pr, pw)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for watcher to start")
