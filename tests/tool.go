@@ -214,16 +214,21 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 // RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
 // ignoreDdl is used for sources that does not support DDL statement.
 // replaceNameFieldArray and replaceNameColFilter is used for bigtable since it have a different formatting for sql statement.
+// createTableCol is used for bigquery since it have a different type for columns.
 // ignoreInsert is used for bigtable since it does not support other DML statement other than `SELECT`.
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_want, select_only_1_want, replaceNameFieldArray, replaceNameColFilter string, ignoreDdl, ignoreInsert bool) {
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_want, select_only_1_want, replaceNameFieldArray, replaceNameColFilter, createTableCol string, ignoreDdl, ignoreInsert bool) {
 	select_only_names_want := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 	nameFieldArray := `["name"]`
 	nameColFilter := "name"
+	createCol := `["id INT","name VARCHAR(20)","age INT"]`
 	if replaceNameFieldArray != "" {
 		nameFieldArray = replaceNameFieldArray
 	}
 	if replaceNameColFilter != "" {
 		nameColFilter = replaceNameColFilter
+	}
+	if createTableCol != "" {
+		createCol = createTableCol
 	}
 
 	// Test tool invoke endpoint
@@ -242,7 +247,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id INT","name VARCHAR(20)","age INT"]}`, tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, createCol))),
 			want:          "null",
 			isErr:         false,
 		},
