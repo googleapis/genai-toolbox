@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/cloudsqlconn"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
 // RunSourceConnection test for source connection
@@ -57,7 +58,7 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		return fmt.Errorf("toolbox didn't start successfully: %s", err)

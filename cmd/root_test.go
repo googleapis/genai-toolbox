@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	_ "embed"
@@ -910,10 +909,9 @@ func TestSingleEdit(t *testing.T) {
 	go watchFile(ctx, fileToWatch)
 
 	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
-	in := bufio.NewReader(pr)
-	_, err = testutils.WaitForString(ctx, begunWatchingFile, in)
+	_, err = testutils.WaitForString(ctx, begunWatchingFile, pr)
 	if err != nil {
-		t.Fatalf("timeout or error waiting for watcher to start")
+		t.Fatalf("timeout or error waiting for watcher to start %s", err)
 	}
 
 	err = os.WriteFile(fileToWatch, []byte("modification"), 0777)
@@ -922,8 +920,8 @@ func TestSingleEdit(t *testing.T) {
 	}
 
 	detectedFileChange := regexp.MustCompile(fmt.Sprintf("DEBUG \"WRITE event detected in tools file: %s", fileToWatch))
-	_, err = testutils.WaitForString(ctx, detectedFileChange, in)
+	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
 	if err != nil {
-		t.Fatalf("timeout or error waiting for file to detect write %v", err)
+		t.Fatalf("timeout or error waiting for file to detect write %s", err)
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -47,7 +48,8 @@ func ContextWithNewLogger() (context.Context, error) {
 
 // WaitForString waits until the server logs a single line that matches the provided regex.
 // returns the output of whatever the server sent so far.
-func WaitForString(ctx context.Context, re *regexp.Regexp, in *bufio.Reader) (string, error) {
+func WaitForString(ctx context.Context, re *regexp.Regexp, pr io.ReadCloser) (string, error) {
+	in := bufio.NewReader(pr)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

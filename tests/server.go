@@ -15,17 +15,14 @@
 package tests
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 
 	yaml "github.com/goccy/go-yaml"
 
 	"github.com/googleapis/genai-toolbox/cmd"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
 // tmpFileWithCleanup creates a temporary file with the content and returns the path and
@@ -132,9 +129,4 @@ func (c *CmdExec) Close() {
 	for _, c := range c.closers {
 		c.Close()
 	}
-}
-
-func (c *CmdExec) WaitForString(ctx context.Context, re *regexp.Regexp) (string, error) {
-	in := bufio.NewReader(c.Out)
-	return testutils.WaitForString(ctx, re, in)
 }
