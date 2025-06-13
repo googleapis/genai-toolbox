@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0](https://github.com/googleapis/genai-toolbox/compare/v0.7.0...v0.8.0) (2025-06-13)
+
+
+### Features
+
+* Add Redis Source and Tool ([#519](https://github.com/googleapis/genai-toolbox/issues/519)) ([f0aef29](https://github.com/googleapis/genai-toolbox/commit/f0aef29b0c2563e2a00277fbe2784f39f16d2835))
+* Add Valkey Source and Tool ([#532](https://github.com/googleapis/genai-toolbox/issues/532)) ([054ec19](https://github.com/googleapis/genai-toolbox/commit/054ec198b97ba9f36f67dd12b2eff0cc6bc4d080))
+* **tools/bigtable:** Add templateParameters field for bigtable ([#692](https://github.com/googleapis/genai-toolbox/issues/692)) ([1c06771](https://github.com/googleapis/genai-toolbox/commit/1c067715fac06479eb0060d7067b73dba099ed92))
+* **tools/spanner:** Add templateParameters field for spanner ([#691](https://github.com/googleapis/genai-toolbox/issues/691)) ([075dfa4](https://github.com/googleapis/genai-toolbox/commit/075dfa47e1fd92be4847bd0aec63296146b66455))
+* **tools/sqlitesql:** Add templateParameters field for sqlitesql ([#687](https://github.com/googleapis/genai-toolbox/issues/687)) ([75e254c](https://github.com/googleapis/genai-toolbox/commit/75e254c0a4ce690ca5fa4d1741550ce54734b226))
+
 ## [0.7.0](https://github.com/googleapis/genai-toolbox/compare/v0.6.0...v0.7.0) (2025-06-10)
 
 
