@@ -1,0 +1,25 @@
+sources:
+  demo-sqlite:
+    kind: sqlite
+    database: ":memory:"
+
+authServices: {}
+
+tools:
+  # Static tool for comparison
+  get-tables:
+    kind: sqlite-sql
+    source: demo-sqlite
+    description: Get all table names from the database
+    statement: SELECT name FROM sqlite_master WHERE type='table'
+    
+  # New dynamic MCP tools
+  execute-arbitrary-sql:
+    kind: toolbox-execute-arbitrary-sql
+    description: Execute arbitrary SQL queries against configured database sources
+    
+  create-dynamic-tool:
+    kind: toolbox-create-dynamic-tool
+    description: Create new database tools at runtime with custom SQL queries and parameters
+
+toolsets: {}

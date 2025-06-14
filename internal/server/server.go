@@ -29,8 +29,11 @@ import (
 	"github.com/go-chi/httplog/v2"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/runtime"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/toolboxdynamic"
+	"github.com/googleapis/genai-toolbox/internal/tools/toolboxsql"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -122,6 +125,10 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
+	// Create dynamic tool manager after sources are available but before tools
+	dynamicManager := createDynamicManager(sourcesMap, instrumentation.Tracer, l)
+	l.InfoContext(ctx, "Initialized dynamic tool manager.")
+
 	// initialize and validate the auth services from configs
 	authServicesMap := make(map[string]auth.AuthService)
 	for name, sc := range cfg.AuthServiceConfigs {
@@ -169,6 +176,10 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		toolsMap[name] = t
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+
+	// Inject dynamic manager into tools that need it
+	injectDynamicManager(toolsMap, dynamicManager, l)
+	l.InfoContext(ctx, "Injected dynamic manager into compatible tools.")
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -277,4 +288,61 @@ func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writ
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
 	return s.srv.Shutdown(ctx)
+}
+
+// basicConfigManager is a simple in-memory implementation of ConfigManager
+type basicConfigManager struct{}
+
+func (m *basicConfigManager) SaveConfiguration(ctx context.Context, config runtime.DynamicConfig) error {
+	// In-memory only - configuration is not persisted across restarts
+	// This can be enhanced later to save to file or database
+	return nil
+}
+
+func (m *basicConfigManager) LoadConfiguration(ctx context.Context) (runtime.DynamicConfig, error) {
+	// Return empty configuration since we're not persisting yet
+	return runtime.DynamicConfig{}, nil
+}
+
+func (m *basicConfigManager) ValidateConfiguration(ctx context.Context, config runtime.DynamicConfig) error {
+	// Basic validation - always return nil for now
+	// This can be enhanced later with proper validation logic
+	return nil
+}
+
+func (m *basicConfigManager) ExportConfiguration(ctx context.Context, format string) ([]byte, error) {
+	// Return empty configuration export for now
+	// This can be enhanced later to export actual configuration
+	return []byte("{}"), nil
+}
+
+func (m *basicConfigManager) ImportConfiguration(ctx context.Context, data []byte, format string) error {
+	// No-op import for now
+	// This can be enhanced later to handle configuration imports
+	return nil
+}
+
+// createDynamicManager creates and configures the dynamic tool manager
+func createDynamicManager(sources map[string]sources.Source, tracer trace.Tracer, logger log.Logger) runtime.DynamicToolManager {
+	configManager := &basicConfigManager{}
+	return runtime.NewDefaultManager(sources, configManager, tracer, logger)
+}
+
+// injectDynamicManager injects the dynamic manager into tools that need it
+func injectDynamicManager(toolsMap map[string]tools.Tool, manager runtime.DynamicToolManager, logger log.Logger) {
+	for name, tool := range toolsMap {
+		logger.DebugContext(context.Background(), fmt.Sprintf("Checking tool %s of type %T", name, tool))
+		
+		// Check if this tool has a SetManager method (dynamic tools)
+		// We need to get a pointer to the actual tool to modify it
+		if ptrTool, ok := tool.(*toolboxsql.Tool); ok {
+			ptrTool.SetManager(manager)
+			logger.InfoContext(context.Background(), fmt.Sprintf("✅ Injected dynamic manager into toolboxsql tool: %s", name))
+		} else if ptrTool, ok := tool.(*toolboxdynamic.Tool); ok {
+			ptrTool.SetManager(manager)
+			logger.InfoContext(context.Background(), fmt.Sprintf("✅ Injected dynamic manager into toolboxdynamic tool: %s", name))
+		} else {
+			logger.DebugContext(context.Background(), fmt.Sprintf("⏭️ Skipping tool %s of type %T", name, tool))
+		}
+	}
 }
