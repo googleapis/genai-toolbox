@@ -14,3 +14,7 @@ node_modules
 
 # coverage
 .coverage
+
+# binaries
+toolbox
+toolbox.exe
