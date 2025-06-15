@@ -1,0 +1,33 @@
+sources:
+  clickhouse-source:
+    kind: clickhouse
+    host: ${CLICKHOUSE_HOST}
+    port: ${CLICKHOUSE_PORT}
+    user: ${CLICKHOUSE_USER}
+    password: ${CLICKHOUSE_PASSWORD}
+    database: ${CLICKHOUSE_DATABASE}
+    protocol: http
+    secure: false
+    compression: lz4
+
+tools:
+  execute_sql:
+    kind: clickhouse-execute-sql
+    source: clickhouse-source
+    description: Use this tool to execute SQL.
+
+  describe_table:
+    kind: clickhouse-describe-table
+    source: clickhouse-source
+    description: Use this tool to get comprehensive metadata about a specific table including schema, engine details, storage statistics, and performance information.
+
+  list_tables:
+    kind: clickhouse-list-tables
+    source: clickhouse-source
+    description: "Lists detailed schema information (table name, engine, columns, primary key, sorting key, partition key) as JSON for tables in the current database. Filters by a comma-separated list of names. If names are omitted, lists all tables in current database."
+
+toolsets:
+  clickhouse-database-tools:
+    - execute_sql
+    - describe_table
+    - list_tables
