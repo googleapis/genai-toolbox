@@ -131,16 +131,66 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
-	newParams, err := tools.GetParams(t.Parameters, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
-	}
+	for i, name := range paramNames {
+		value := paramValues[i]
 
-	namedArgs := make([]bigqueryapi.QueryParameter, 0, len(newParams))
-	newParamsMap := newParams.AsReversedMap()
-	for _, v := range newParams.AsSlice() {
-		paramName := newParamsMap[v]
-		if strings.Contains(newStatement, "@"+paramName) {
+		// BigQuery's QueryParameter only accepts typed slices as input
+		// This checks if the param is an array.
+		// If yes, convert []any to typed slice (e.g []string, []int)
+		switch vType := value.(type) {
+		case []any:
+			var itemType string
+			for _, p := range t.Parameters {
+				// iterate through parameters to get array's item type
+				if name == p.GetName() {
+					itemType = p.McpManifest().Items.Type
+				}
+			}
+			switch itemType {
+			case "string":
+				typedSlice := make([]string, len(vType))
+				for j, item := range value.([]any) {
+					if s, ok := item.(string); ok {
+						typedSlice[j] = s
+					} else {
+						return nil, fmt.Errorf("parameter '%s': expected item at index %d to be string, got %T", name, j, item)
+					}
+				}
+				value = typedSlice
+			case "integer":
+				typedSlice := make([]int64, len(vType))
+				for j, item := range value.([]any) {
+					if i, ok := item.(int); ok {
+						typedSlice[j] = int64(i)
+					} else {
+						return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", name, j, item)
+					}
+				}
+				value = typedSlice
+			case "float":
+				typedSlice := make([]float64, len(vType))
+				for j, item := range value.([]any) {
+					if f, ok := item.(float64); ok {
+						typedSlice[j] = f
+					} else {
+						return nil, fmt.Errorf("parameter '%s': expected item at index %d to be float, got %T", name, j, item)
+					}
+				}
+				value = typedSlice
+			case "boolean":
+				typedSlice := make([]bool, len(vType))
+				for j, item := range value.([]any) {
+					if b, ok := item.(bool); ok {
+						typedSlice[j] = b
+					} else {
+						return nil, fmt.Errorf("parameter '%s': expected item at index %d to be boolean, got %T", name, j, item)
+					}
+				}
+				value = typedSlice
+			}
+		}
+
+		if strings.Contains(t.Statement, "@"+name) {
 			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
 				Name:  name,
 				Value: value,
