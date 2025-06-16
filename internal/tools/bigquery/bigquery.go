@@ -142,12 +142,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		paramName := newParamsMap[v]
 		if strings.Contains(newStatement, "@"+paramName) {
 			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
-				Name:  paramName,
-				Value: v,
+				Name:  name,
+				Value: value,
 			})
 		} else {
 			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
-				Value: v,
+				Value: value,
 			})
 		}
 	}

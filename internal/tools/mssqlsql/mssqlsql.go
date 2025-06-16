@@ -138,16 +138,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 
 	namedArgs := make([]any, 0, len(newParams))
-	newParamsMap := newParams.AsReversedMap()
-	// To support both named args (e.g @id) and positional args (e.g @p1), check if arg name is contained in the statement.
-	for _, v := range newParams.AsSlice() {
-		paramName := newParamsMap[v]
-		if strings.Contains(newStatement, "@"+paramName) {
-			namedArgs = append(namedArgs, sql.Named(paramName, v))
+	// To support both named args (e.g @id) and positional args (e.g @p1), check
+	// if arg name is contained in the statement.
+	paramNames, paramValues := newParams.AsNameAndValueSlices()
+	for i, name := range paramNames {
+		value := paramValues[i]
+		if strings.Contains(newStatement, "@"+name) {
+			namedArgs = append(namedArgs, sql.Named(name, value))
 		} else {
-			namedArgs = append(namedArgs, v)
+			namedArgs = append(namedArgs, value)
 		}
+
 	}
+
 	rows, err := t.Db.QueryContext(ctx, newStatement, namedArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
