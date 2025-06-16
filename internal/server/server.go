@@ -127,12 +127,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, cfg.Version)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		panic(err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		panic(err)
 	}
 
 	// initialize and validate the sources from configs
@@ -333,6 +333,18 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	})
 
 	return s, nil
+}
+
+func UpdateServer(ctx context.Context, s *Server, sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) error {
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	l.DebugContext(ctx, "Attempting to update the server with reloaded configs")
+	s.ConfigManager.SetConfigs(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	// TODO: form of error handling? Can errors even occur within setConfig
+	return nil
 }
 
 // Listen starts a listener for the given Server instance.

@@ -23,9 +23,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -100,5 +106,69 @@ func TestServe(t *testing.T) {
 	}
 	if got := string(raw); strings.Contains(got, "0.0.0") {
 		t.Fatalf("version missing from output: %q", got)
+	}
+}
+
+func TestUpdateServer(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	addr, port := "127.0.0.1", 5000
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		Address: addr,
+		Port:    port,
+	}
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("error setting up server: %s", err)
+	}
+
+	newSources := map[string]sources.Source{
+		"example-source": &alloydbpg.Source{
+			Name: "example-alloydb-source",
+			Kind: "alloydb-postgres",
+		},
+	}
+	newAuth := map[string]auth.AuthService{"example-auth": nil}
+	newTools := map[string]tools.Tool{"example-tool": nil}
+	newToolsets := map[string]tools.Toolset{
+		"example-toolset": {
+			Name: "example-toolset", Tools: []*tools.Tool{},
+		},
+	}
+	err = server.UpdateServer(ctx, s, newSources, newAuth, newTools, newToolsets)
+	if err != nil {
+		t.Errorf("error updating server: %s", err)
+	}
+
+	gotSource, _ := s.ConfigManager.GetSource("example-source")
+	if gotSource != newSources["example-source"] {
+		t.Errorf("error updating server, got: %s, want: %s", gotSource, newSources["example-source"])
+	}
+
+	gotAuthService, _ := s.ConfigManager.GetAuthService("example-auth")
+	if gotAuthService != newAuth["example-auth"] {
+		t.Errorf("error updating server, got: %s, want: %s", gotSource, newSources["example-auth"])
+	}
+
+	gotTool, _ := s.ConfigManager.GetTool("example-tool")
+	if gotTool != newTools["example-tool"] {
+		t.Errorf("error updating server, got: %s, want: %s", gotSource, newSources["example-tool"])
+	}
+
+	gotToolset, _ := s.ConfigManager.GetToolset("example-toolset")
+	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"]); diff != "" {
+		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 }
