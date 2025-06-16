@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	_ "embed"
@@ -992,67 +991,6 @@ func tmpFileWithCleanup(content []byte) (string, func(), error) {
 	return f.Name(), cleanup, err
 }
 
-// WaitForString is a helper function that waits for a string in the server log that matches the provided regex.
-func WaitForString(ctx context.Context, re *regexp.Regexp, pr *io.PipeReader) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
-
-	in := bufio.NewReader(pr)
-
-	type result struct {
-		s   string
-		err error
-	}
-
-	output := make(chan result)
-	go func() {
-		defer close(output)
-		for {
-			select {
-			case <-ctx.Done():
-				// if the context is canceled, the orig thread will send back the error
-				// so we can just exit the goroutine here
-				return
-			default:
-				// otherwise read a line from the output
-				s, err := in.ReadString('\n')
-				if err != nil {
-					output <- result{err: err}
-					return
-				}
-				output <- result{s: s}
-				// if that last string matched, exit the goroutine
-				if re.MatchString(s) {
-					return
-				} else {
-					fmt.Printf("Actual logs: %s did not match pattern %s\n", s, re)
-				}
-			}
-		}
-	}()
-
-	// collect the output until the ctx is canceled, an error was hit,
-	// or match was found (which is indicated the channel is closed)
-	var sb strings.Builder
-	for {
-		select {
-		case <-ctx.Done():
-			// if ctx is done, return that error
-			return sb.String(), ctx.Err()
-		case o, ok := <-output:
-			if !ok {
-				// match was found!
-				return sb.String(), nil
-			}
-			if o.err != nil {
-				// error was found!
-				return sb.String(), o.err
-			}
-			sb.WriteString(o.s)
-		}
-	}
-}
-
 func TestSingleEdit(t *testing.T) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), time.Minute)
 	defer cancelCtx()
@@ -1077,9 +1015,9 @@ func TestSingleEdit(t *testing.T) {
 	go watchFile(ctx, fileToWatch)
 
 	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
-	_, err = WaitForString(ctx, begunWatchingFile, pr)
+	_, err = testutils.WaitForString(ctx, begunWatchingFile, pr)
 	if err != nil {
-		t.Fatalf("timeout or error waiting for watcher to start")
+		t.Fatalf("timeout or error waiting for watcher to start: %s", err)
 	}
 
 	err = os.WriteFile(fileToWatch, []byte("modification"), 0777)
@@ -1088,9 +1026,9 @@ func TestSingleEdit(t *testing.T) {
 	}
 
 	detectedFileChange := regexp.MustCompile(fmt.Sprintf("DEBUG \"WRITE event detected in tools file: %s", fileToWatch))
-	_, err = WaitForString(ctx, detectedFileChange, pr)
+	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
 	if err != nil {
-		t.Fatalf("timeout or error waiting for file to detect write %v", err)
+		t.Fatalf("timeout or error waiting for file to detect write: %s", err)
 	}
 }
 
