@@ -911,7 +911,7 @@ func TestSingleEdit(t *testing.T) {
 	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
 	_, err = testutils.WaitForString(ctx, begunWatchingFile, pr)
 	if err != nil {
-		t.Fatalf("timeout or error waiting for watcher to start %s", err)
+		t.Fatalf("timeout or error waiting for watcher to start: %s", err)
 	}
 
 	err = os.WriteFile(fileToWatch, []byte("modification"), 0777)
@@ -922,6 +922,6 @@ func TestSingleEdit(t *testing.T) {
 	detectedFileChange := regexp.MustCompile(fmt.Sprintf("DEBUG \"WRITE event detected in tools file: %s", fileToWatch))
 	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
 	if err != nil {
-		t.Fatalf("timeout or error waiting for file to detect write %s", err)
+		t.Fatalf("timeout or error waiting for file to detect write: %s", err)
 	}
 }
