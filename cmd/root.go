@@ -352,13 +352,15 @@ func run(cmd *Command) error {
 		return errMsg
 	}
 
-	err = s.Listen(ctx)
-	if err != nil {
-		errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
+	if !cmd.cfg.Stdio {
+		err = s.Listen(ctx)
+		if err != nil {
+			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		cmd.logger.InfoContext(ctx, "Server ready to serve!")
 	}
-	cmd.logger.InfoContext(ctx, "Server ready to serve!")
 
 	// run server in background
 	srvErr := make(chan error)
