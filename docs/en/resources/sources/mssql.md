@@ -42,13 +42,13 @@ Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
-## Reference
+## Reference 
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mssql".                                                       |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                           |
-| port      |  string  |     true     | Port to connect to (e.g. "1433").                                      |
-| database  |  string  |     true     | Name of the SQL Server database to connect to (e.g. "my_db").          |
-| user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-user").            |
-| password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                  |
+| **field** | **type** | **required** | **description**                                                                                                   |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "mssql".                                                                                                  |
+| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                      |
+| port      |  string  |     true     | Port to connect to (e.g. "1433").                                                                                 |
+| database  |  string  |     true     | Name of the SQL Server database to connect to (e.g. "my_db").                                                     |
+| user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-user").                                                       |
+| password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password"). Special characters must be URL encoded (% becomes %25 etc). |
