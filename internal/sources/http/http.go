@@ -23,6 +23,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -68,11 +69,17 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	tr := &http.Transport{}
 
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+	}
+
 	if r.DisableSslVerification {
 		tr.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
-		fmt.Printf("WARNING: InsecureHTTP is enabled for HTTP source %s. TLS certificate verification is skipped.\n", r.Name)
+
+		logger.WarnContext(ctx, "Insecure HTTP is enabled for HTTP source %s. TLS certificate verification is skipped.\n", r.Name)
 	}
 
 	client := http.Client{
