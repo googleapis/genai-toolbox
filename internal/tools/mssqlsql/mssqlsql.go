@@ -148,7 +148,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		} else {
 			namedArgs = append(namedArgs, value)
 		}
-
 	}
 
 	rows, err := t.Db.QueryContext(ctx, newStatement, namedArgs...)
