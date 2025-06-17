@@ -352,7 +352,17 @@ func run(cmd *Command) error {
 		return errMsg
 	}
 
-	if !cmd.cfg.Stdio {
+	// run server in background
+	srvErr := make(chan error)
+	if cmd.cfg.Stdio {
+		go func() {
+			defer close(srvErr)
+			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
+			if err != nil {
+				srvErr <- err
+			}
+		}()
+	} else {
 		err = s.Listen(ctx)
 		if err != nil {
 			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
@@ -360,24 +370,15 @@ func run(cmd *Command) error {
 			return errMsg
 		}
 		cmd.logger.InfoContext(ctx, "Server ready to serve!")
-	}
 
-	// run server in background
-	srvErr := make(chan error)
-	go func() {
-		defer close(srvErr)
-		if cmd.cfg.Stdio {
-			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
-			if err != nil {
-				srvErr <- err
-			}
-		} else {
+		go func() {
+			defer close(srvErr)
 			err = s.Serve(ctx)
 			if err != nil {
 				srvErr <- err
 			}
-		}
-	}()
+		}()
+	}
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {
