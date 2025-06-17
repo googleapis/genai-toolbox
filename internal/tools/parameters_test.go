@@ -885,6 +885,7 @@ func TestParamValues(t *testing.T) {
 		wantMap           map[string]interface{}
 		wantMapOrdered    map[string]interface{}
 		wantMapWithDollar map[string]interface{}
+		wantNameSlice     []string
 	}{
 		{
 			name:           "string",
@@ -896,6 +897,7 @@ func TestParamValues(t *testing.T) {
 				"$my_bool":   true,
 				"$my_string": "hello world",
 			},
+			wantNameSlice: []string{"my_bool", "my_string"},
 		},
 	}
 	for _, tc := range tcs {
@@ -904,6 +906,7 @@ func TestParamValues(t *testing.T) {
 			gotMap := tc.in.AsMap()
 			gotMapOrdered := tc.in.AsMapByOrderedKeys()
 			gotMapWithDollar := tc.in.AsMapWithDollarPrefix()
+			gotNameSlice, gotValueSlice := tc.in.AsNameAndValueSlices()
 
 			for i, got := range gotSlice {
 				want := tc.wantSlice[i]
@@ -927,6 +930,18 @@ func TestParamValues(t *testing.T) {
 				want := tc.wantMapWithDollar[key]
 				if got != want {
 					t.Fatalf("unexpected value in AsMapWithDollarPrefix: got %q, want %q", got, want)
+				}
+			}
+			for key, got := range gotNameSlice {
+				want := tc.wantNameSlice[key]
+				if got != want {
+					t.Fatalf("unexpected name in AsNameAndValueSlices: got %q, want %q", got, want)
+				}
+			}
+			for key, got := range gotValueSlice {
+				want := tc.wantSlice[key]
+				if got != want {
+					t.Fatalf("unexpected value in AsNameAndValueSlices: got %q, want %q", got, want)
 				}
 			}
 		})
