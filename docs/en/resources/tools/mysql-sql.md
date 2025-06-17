@@ -2,7 +2,7 @@
 title: "mysql-sql"
 type: docs
 weight: 1
-description: > 
+description: >
   A "mysql-sql" tool executes a pre-defined SQL statement against a MySQL
   database.
 ---
@@ -29,7 +29,7 @@ and expects parameters in the SQL query to be in the form of placeholders `?`.
 
 ```yaml
 tools:
- search_flights_by_number:
+  search_flights_by_number:
     kind: mysql-sql
     source: my-mysql-instance
     statement: |
@@ -67,10 +67,11 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "mysql-sql".                                                                             |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
-| statement   |                   string                   |     true     | SQL statement to execute on.                                                                     |
-| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement. |
+| **field**          |                     **type**                     | **required** | **description**                                                                                                                            |
+| ------------------ | :----------------------------------------------: | :----------: | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| kind               |                      string                      |     true     | Must be "mysql-sql".                                                                                                                       |
+| source             |                      string                      |     true     | Name of the source the SQL should execute on.                                                                                              |
+| description        |                      string                      |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement          |                      string                      |     true     | SQL statement to execute on.                                                                                                               |
+| parameters         |    [parameters](_index#specifying-parameters)    |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
