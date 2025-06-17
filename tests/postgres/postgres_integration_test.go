@@ -17,6 +17,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -65,8 +66,13 @@ func getPostgresVars(t *testing.T) map[string]any {
 // Copied over from postgres.go
 func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
-	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)
-	pool, err := pgxpool.New(context.Background(), i)
+	url := &url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, pass),
+		Host:   fmt.Sprintf("%s:%s", host, port),
+		Path:   dbname,
+	}
+	pool, err := pgxpool.New(context.Background(), url.String())
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create connection pool: %w", err)
 	}

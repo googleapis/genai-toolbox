@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -106,10 +107,17 @@ func initMssqlConnection(ctx context.Context, tracer trace.Tracer, name, host, p
 	defer span.End()
 
 	// Create dsn
-	dsn := fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s", user, pass, host, port, dbname)
+	query := url.Values{}
+	query.Add("database", dbname)
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		Host:     fmt.Sprintf("%s:%s", host, port),
+		RawQuery: query.Encode(),
+	}
 
 	// Open database connection
-	db, err := sql.Open("sqlserver", dsn)
+	db, err := sql.Open("sqlserver", url.String())
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open: %w", err)
 	}

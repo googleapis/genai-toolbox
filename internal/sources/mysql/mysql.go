@@ -18,6 +18,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
@@ -99,7 +101,15 @@ func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 	defer span.End()
 
 	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+	query := url.Values{}
+	query.Add("parseTime", "true")
+	url := &url.URL{
+		User:     url.UserPassword(user, pass),
+		Host:     fmt.Sprintf("tcp(%s:%s)", host, port),
+		Path:     dbname,
+		RawQuery: query.Encode(),
+	}
+	dsn := strings.TrimPrefix(url.String(), "//")
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)

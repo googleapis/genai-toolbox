@@ -17,6 +17,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -96,9 +97,15 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
-	i := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, dbname)
-	pool, err := pgxpool.New(ctx, i)
+	url := &url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, pass),
+		Host:   fmt.Sprintf("%s:%s", host, port),
+		Path:   dbname,
+	}
+	pool, err := pgxpool.New(ctx, url.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}

@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -76,7 +77,13 @@ func getCloudSQLMssqlVars(t *testing.T) map[string]any {
 // Copied over from cloud_sql_mssql.go
 func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	// Create dsn
-	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
+	query := fmt.Sprintf("database=%s&cloudsql=%s:%s:%s", dbname, project, region, instance)
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		Host:     ipAddress,
+		RawQuery: query,
+	}
 
 	// Get dial options
 	dialOpts, err := tests.GetCloudSQLDialOpts(ipType)
@@ -95,7 +102,7 @@ func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, u
 	// Open database connection
 	db, err := sql.Open(
 		"cloudsql-sqlserver-driver",
-		dsn,
+		url.String(),
 	)
 	if err != nil {
 		return nil, err
