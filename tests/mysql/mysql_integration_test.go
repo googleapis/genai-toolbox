@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -65,15 +64,7 @@ func getMySQLVars(t *testing.T) map[string]any {
 
 // Copied over from mysql.go
 func initMySQLConnectionPool(host, port, user, pass, dbname string) (*sql.DB, error) {
-	query := url.Values{}
-	query.Add("parseTime", "true")
-	url := &url.URL{
-		User:     url.UserPassword(user, pass),
-		Host:     fmt.Sprintf("tcp(%s:%s)", host, port),
-		Path:     dbname,
-		RawQuery: query.Encode(),
-	}
-	dsn := strings.TrimPrefix(url.String(), "//")
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)

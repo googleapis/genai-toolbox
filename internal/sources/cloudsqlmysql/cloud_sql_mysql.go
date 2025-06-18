@@ -18,9 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
 	"slices"
-	"strings"
 
 	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
 	"github.com/goccy/go-yaml"
@@ -122,12 +120,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	}
 
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	url := &url.URL{
-		User: url.UserPassword(user, pass),
-		Host: fmt.Sprintf("cloudsql-mysql(%s:%s:%s)", project, region, instance),
-		Path: dbname,
-	}
-	dsn := strings.TrimPrefix(url.String(), "//")
+	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
 	db, err := sql.Open(
 		"cloudsql-mysql",
 		dsn,
