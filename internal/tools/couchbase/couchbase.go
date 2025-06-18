@@ -136,7 +136,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
-	fmt.Println("statements: \n", t.Statement, "\n", newStatement)
 	results, err := t.Scope.Query(newStatement, &gocb.QueryOptions{
 		ScanConsistency: gocb.QueryScanConsistency(t.QueryScanConsistency),
 		NamedParameters: newParams.AsMap(),

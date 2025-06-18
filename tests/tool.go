@@ -178,7 +178,6 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			fmt.Println("REQ WITHIN NORMAL WAS: ", req)
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -204,8 +203,6 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
-
-			fmt.Println("RESULT WITHIN NORMAL WAS: ", body)
 
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
@@ -396,7 +393,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 				for k, v := range tc.requestHeader {
 					req.Header.Add(k, v)
 				}
-				fmt.Println("REQ WITHIN NORMAL WAS: ", req)
 
 				resp, err := http.DefaultClient.Do(req)
 				if err != nil {
@@ -423,8 +419,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 				if !ok {
 					t.Fatalf("unable to find result in response body")
 				}
-
-				fmt.Println("RESULT WITHIN TEMPLATE WAS: ", body)
 
 				if got != tc.want {
 					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
