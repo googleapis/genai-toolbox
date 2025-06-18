@@ -86,7 +86,7 @@ jobs:
           go test -race -v ./internal/sources/... ./internal/tools/... ./internal/auth/...
 
       - name: Run tests without coverage
-        if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+        if: ${{ runner.os != 'Linux' }}
         run: |
           go test -race -v ./internal/... ./cmd/...
 
