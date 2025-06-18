@@ -45,11 +45,50 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *Instrumentation
 	sseManager      *sseManager
+	configManager   *ConfigManager
+}
 
+type ConfigManager struct {
+	mu           sync.RWMutex
 	sources      map[string]sources.Source
 	authServices map[string]auth.AuthService
 	tools        map[string]tools.Tool
 	toolsets     map[string]tools.Toolset
+}
+
+func (m *ConfigManager) getSource(sourceName string) sources.Source {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.sources[sourceName]
+}
+
+func (m *ConfigManager) getAuthServices() map[string]auth.AuthService {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.authServices
+}
+
+func (m *ConfigManager) getTool(toolName string) (tools.Tool, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	tool, ok := m.tools[toolName]
+	return tool, ok
+}
+
+func (m *ConfigManager) getToolset(toolsetName string) (tools.Toolset, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	toolset, ok := m.toolsets[toolsetName]
+	return toolset, ok
+}
+
+func (m *ConfigManager) setConfigs(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
+	m.mu.Lock()
+	m.sources = sourcesMap
+	m.authServices = authServicesMap
+	m.tools = toolsMap
+	m.toolsets = toolsetsMap
+	m.mu.Unlock()
 }
 
 func InitializeConfigs(ctx context.Context, VersionIn string, SourceConfigsIn SourceConfigs, AuthServiceConfigsIn AuthServiceConfigs, ToolConfigsIn ToolConfigs, ToolsetConfigsIn ToolsetConfigs, l log.Logger, instrumentation *Instrumentation) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error) {
@@ -215,6 +254,14 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentat
 		sseSessions: make(map[string]*sseSession),
 	}
 
+	configManager := &ConfigManager{
+		mu:           sync.RWMutex{},
+		sources:      sourcesMap,
+		authServices: authServicesMap,
+		tools:        toolsMap,
+		toolsets:     toolsetsMap,
+	}
+
 	s := &Server{
 		version:         cfg.Version,
 		srv:             srv,
@@ -222,11 +269,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentat
 		logger:          l,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
+		configManager:   configManager,
 	}
 	// control plane
 	apiR, err := apiRouter(s)
@@ -245,6 +288,13 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentat
 	})
 
 	return s, nil
+}
+
+func UpdateServer(ctx context.Context, s *Server, l log.Logger, sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) error {
+	l.DebugContext(ctx, "Attempting to update the server with reloaded configs")
+	s.configManager.setConfigs(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	// TODO: form of error handling? Can errors even occur within setConfig
+	return nil
 }
 
 // Listen starts a listener for the given Server instance.

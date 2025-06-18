@@ -951,7 +951,10 @@ func TestSingleEdit(t *testing.T) {
 		t.Fatalf("failed to setup instrumentation %s", err)
 	}
 
-	go watchFile(ctx, fileToWatch, instrumentation)
+	mockServer := &server.Server{}
+	mockCfg := &server.ServerConfig{}
+
+	go watchFile(ctx, fileToWatch, instrumentation, mockCfg, mockServer)
 
 	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
 	_, err = testutils.WaitForString(ctx, begunWatchingFile, pr)
