@@ -2,6 +2,13 @@ assign_issues:
   - kurtisvg
   - Yuan325
   - duwenxin99
+assign_issues_by:
+  - labels:
+    - 'product: bigquery'
+    to:
+    - Genesis929
+    - shobsi
+    - jiaxunwu
 assign_prs:
   - kurtisvg
   - Yuan325
