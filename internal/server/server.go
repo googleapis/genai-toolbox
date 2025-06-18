@@ -164,12 +164,7 @@ func InitializeConfigs(ctx context.Context, VersionIn string, SourceConfigsIn So
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
-	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
-	}
-
+func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentation *Instrumentation) (*Server, error) {
 	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/init")
 	defer span.End()
 

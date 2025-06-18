@@ -55,7 +55,12 @@ func TestServe(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	s, err := server.NewServer(ctx, cfg, testLogger)
+	instrumentation, err := server.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	s, err := server.NewServer(ctx, cfg, testLogger, instrumentation)
 	if err != nil {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
