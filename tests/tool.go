@@ -393,6 +393,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 				for k, v := range tc.requestHeader {
 					req.Header.Add(k, v)
 				}
+
 				resp, err := http.DefaultClient.Do(req)
 				if err != nil {
 					t.Fatalf("unable to send request: %s", err)

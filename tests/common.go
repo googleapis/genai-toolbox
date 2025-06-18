@@ -129,11 +129,17 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
+
+	selectAll := "SELECT * FROM {{.tableName}} ORDER BY id"
+	if tmplSelectAll != "" {
+		selectAll = tmplSelectAll
+	}
+
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
 		"kind":        toolKind,
 		"source":      "my-instance",
@@ -159,7 +165,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}} ORDER BY id",
+		"statement":   selectAll,
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
