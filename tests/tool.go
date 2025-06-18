@@ -211,20 +211,91 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 	}
 }
 
+// TemplateParameterTestConfig represents the various configuration options for template parameter tests.
+type TemplateParameterTestConfig struct {
+	ignoreDdl      bool
+	ignoreInsert   bool
+	selectAllWant  string
+	select1Want    string
+	nameFieldArray string
+	nameColFilter  string
+	createColArray string
+}
+
+type Option func(*TemplateParameterTestConfig)
+
+// WithIgnoreDdl is the option function to configure ignoreDdl.
+func WithIgnoreDdl() Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.ignoreDdl = true
+	}
+}
+
+// WithIgnoreInsert is the option function to configure ignoreInsert.
+func WithIgnoreInsert() Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.ignoreInsert = true
+	}
+}
+
+// WithSelectAllWant is the option function to configure selectAllWant.
+func WithSelectAllWant(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.selectAllWant = s
+	}
+}
+
+// WithSelect1Want is the option function to configure select1Want.
+func WithSelect1Want(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.select1Want = s
+	}
+}
+
+// WithReplaceNameFieldArray is the option function to configure replaceNameFieldArray.
+func WithReplaceNameFieldArray(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.nameFieldArray = s
+	}
+}
+
+// WithReplaceNameColFilter is the option function to configure replaceNameColFilter.
+func WithReplaceNameColFilter(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.nameColFilter = s
+	}
+}
+
+// WithCreateColArray is the option function to configure replaceNameColFilter.
+func WithCreateColArray(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.createColArray = s
+	}
+}
+
+// NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
+func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
+	templateParamTestOption := &TemplateParameterTestConfig{
+		ignoreDdl:      false,
+		ignoreInsert:   false,
+		selectAllWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
+		select1Want:    "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(templateParamTestOption)
+	}
+
+	return templateParamTestOption
+}
+
 // RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
-// ignoreDdl is used for sources that does not support DDL statement.
-// replaceNameFieldArray and replaceNameColFilter is used for bigtable since it have a different formatting for sql statement.
-// ignoreInsert is used for bigtable since it does not support other DML statement other than `SELECT`.
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_want, select_only_1_want, replaceNameFieldArray, replaceNameColFilter string, ignoreDdl, ignoreInsert bool) {
-	select_only_names_want := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
-	nameFieldArray := `["name"]`
-	nameColFilter := "name"
-	if replaceNameFieldArray != "" {
-		nameFieldArray = replaceNameFieldArray
-	}
-	if replaceNameColFilter != "" {
-		nameColFilter = replaceNameColFilter
-	}
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config *TemplateParameterTestConfig) {
+	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -242,7 +313,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id INT","name VARCHAR(20)","age INT"]}`, tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, config.createColArray))),
 			want:          "null",
 			isErr:         false,
 		},
@@ -269,7 +340,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          select_all_want,
+			want:          config.selectAllWant,
 			isErr:         false,
 		},
 		{
@@ -277,23 +348,23 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
-			want:          select_only_1_want,
+			want:          config.select1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, nameFieldArray))),
-			want:          select_only_names_want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, config.nameFieldArray))),
+			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, nameColFilter))),
-			want:          select_only_1_want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, config.nameColFilter))),
+			want:          config.select1Want,
 			isErr:         false,
 		},
 		{
@@ -309,9 +380,9 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, select_all_wan
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// if test case is DDL and source does not ignore ddl test cases
-			ddlAllow := !tc.ddl || (tc.ddl && !ignoreDdl)
+			ddlAllow := !tc.ddl || (tc.ddl && !config.ignoreDdl)
 			// if test case is insert statement and source does not ignore insert test cases
-			insertAllow := !tc.insert || (tc.insert && !ignoreInsert)
+			insertAllow := !tc.insert || (tc.insert && !config.ignoreInsert)
 			if ddlAllow && insertAllow {
 				// Send Tool invocation request
 				req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)

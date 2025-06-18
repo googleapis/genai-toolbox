@@ -114,12 +114,17 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
 	select1Want := "[{\"$col1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
-	invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want := tests.GetNonSpannerInvokeParamWant()
-	replaceNameFieldArray := `["CAST(cf['name'] AS string) as name"]`
-	replaceNameColFilter := "CAST(cf['name'] AS string)"
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, replaceNameFieldArray, replaceNameColFilter, true, true)
+
+	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
+		tests.WithIgnoreDdl(),
+		tests.WithIgnoreInsert(),
+		tests.WithReplaceNameFieldArray(`["CAST(cf['name'] AS string) as name"]`),
+		tests.WithReplaceNameColFilter("CAST(cf['name'] AS string)"),
+	)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 }
 
 func convertToBytes(v int) []byte {
