@@ -148,7 +148,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to setup otel: %s", err)
 	}
 
-	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
