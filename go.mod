@@ -11,7 +11,7 @@ require (
 	cloud.google.com/go/cloudsqlconn v1.17.2
 	cloud.google.com/go/spanner v1.82.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.52.0
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.28.0
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
 	github.com/couchbase/gocb/v2 v2.10.0
 	github.com/couchbase/tools-common/http v1.0.9
 	github.com/go-chi/chi/v5 v5.2.1
@@ -58,7 +58,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.2 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.27.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.52.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
