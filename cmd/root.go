@@ -108,6 +108,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"
 
 	"github.com/spf13/cobra"
 
@@ -134,6 +135,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/yugabytedb"
 )
 
 var (
