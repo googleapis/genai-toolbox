@@ -50,7 +50,7 @@ type Config struct {
 	Name           string           `yaml:"name" validate:"required"`
 	Kind           string           `yaml:"kind" validate:"required"`
 	Source         string           `yaml:"source" validate:"required"`
-	AuthRequired   []string         `yaml:"authRequired"`
+	AuthRequired   []string         `yaml:"authRequired" validate:"required"`
 	Description    string           `yaml:"description" validate:"required"`
 	Collection     string           `yaml:"collection" validate:"required"`
 	FilterPayload  string           `yaml:"filterPayload" validate:"required"`
@@ -142,10 +142,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: paramMcpManifest,
 	}
 
+	fmt.Println(cfg.AuthRequired)
+
 	// finish tool setup
 	return Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
+		AuthRequired:   cfg.AuthRequired,
 		Collection:     cfg.Collection,
 		FilterPayload:  cfg.FilterPayload,
 		FilterParams:   cfg.FilterParams,
@@ -155,7 +158,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		SortParams:     cfg.SortParams,
 		AllParams:      allParameters,
 		database:       s.Database,
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: nil},
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}, nil
 }
@@ -167,6 +170,7 @@ type Tool struct {
 	Name           string           `yaml:"name"`
 	Kind           string           `yaml:"kind"`
 	Description    string           `yaml:"description"`
+	AuthRequired   []string         `yaml:"authRequired"`
 	Collection     string           `yaml:"collection"`
 	FilterPayload  string           `yaml:"filterPayload"`
 	FilterParams   tools.Parameters `yaml:"filterParams"`
@@ -218,7 +222,7 @@ func getFilter(filterParams tools.Parameters, filterPayload string, paramsMap ma
 	return result.String(), nil
 }
 
-func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters, paramsMap map[string]any) (*options.FindOptions, error) {
+func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters, projectPayload string, paramsMap map[string]any) (*options.FindOptions, error) {
 	opts := options.Find()
 
 	sort := bson.M{}
@@ -227,11 +231,38 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 	}
 	opts = opts.SetSort(sort)
 
+	if len(projectPayload) == 0 {
+		return opts, nil
+	}
+
 	project := bson.M{}
+
 	for _, p := range projectParams {
 		project[p.GetName()] = paramsMap[p.GetName()]
 	}
-	opts = opts.SetProjection(project)
+
+	// Create a FuncMap to format array parameters
+	funcMap := template.FuncMap{
+		"json": convertParamToJSON,
+	}
+	templ, err := template.New("project").Funcs(funcMap).Parse(projectPayload)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing project: %s", err)
+	}
+
+	var result bytes.Buffer
+	err = templ.Execute(&result, project)
+	if err != nil {
+		return nil, fmt.Errorf("error replacing projection payload: %s", err)
+	}
+
+	var projection interface{}
+	err = bson.UnmarshalExtJSON(result.Bytes(), false, &projection)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
+	}
+
+	opts = opts.SetProjection(projection)
 
 	return opts, nil
 }
@@ -244,7 +275,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
 
-	opts, err := getOptions(t.SortParams, t.ProjectParams, paramsMap)
+	opts, err := getOptions(t.SortParams, t.ProjectParams, t.ProjectPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating options: %s", err)
 	}
@@ -294,5 +325,6 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized([]string{}, verifiedAuthServices)
+	fmt.Println("verifiedAuthServices:", verifiedAuthServices, t.AuthRequired)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

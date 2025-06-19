@@ -538,3 +538,88 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 	return toolsFile
 
 }
+
+func GetMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Simple tool to test end to end functionality.",
+				"collection":    "test_collection",
+				"filterPayload": `{ "_id" : 3 }`,
+				"filterParams":  []any{},
+			},
+			"my-param-tool": map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Tool to test invocation with params.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id" : {{ .id }}, "name" : {{json .name }} }`,
+				"filterParams": []map[string]any{
+					{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user id",
+					},
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":           toolKind,
+				"source":         "my-instance",
+				"description":    "Tool to test authenticated parameters.",
+				"authRequired":   []string{},
+				"collection":     "test_collection",
+				"filterPayload":  `{ "id" : 1 }`,
+				"filterParams":   []any{},
+				"projectPayload": `{ "_id": 0, "name" : 1 }`,
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id": 1 }`,
+				"filterParams":  []any{},
+			},
+			"my-fail-tool": map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Tool to test statement with incorrect syntax.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id" ; 1 }"}`,
+				"filterParams":  []any{},
+			},
+		},
+	}
+
+	return toolsFile
+
+}
+
+func GetMongoDBWants() (string, string, string, string) {
+	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
+	failInvocationWant := `invalid JSON input: missing colon after key `
+	invokeParamWant := `[{"_id":5,"id":3,"name":"Alice"}]`
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
+}
