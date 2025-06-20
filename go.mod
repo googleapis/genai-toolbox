@@ -29,6 +29,7 @@ require (
 	github.com/redis/go-redis/v9 v9.10.0
 	github.com/spf13/cobra v1.9.1
 	github.com/valkey-io/valkey-go v1.0.61
+	github.com/yugabyte/pgx/v5 v5.5.3-yb-5
 	go.opentelemetry.io/contrib/propagators/autoprop v0.61.0
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.36.0
