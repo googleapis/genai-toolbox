@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"slices"
 
 	"cloud.google.com/go/cloudsqlconn/sqlserver/mssql"
@@ -111,7 +112,13 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	defer span.End()
 
 	// Create dsn
-	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
+	query := fmt.Sprintf("database=%s&cloudsql=%s:%s:%s", dbname, project, region, instance)
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		Host:     ipAddress,
+		RawQuery: query,
+	}
 
 	// Get dial options
 	userAgent, err := util.UserAgentFromContext(ctx)
@@ -134,7 +141,7 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	// Open database connection
 	db, err := sql.Open(
 		"cloudsql-sqlserver-driver",
-		dsn,
+		url.String(),
 	)
 	if err != nil {
 		return nil, err
