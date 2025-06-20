@@ -225,11 +225,11 @@ func convertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 	case "integer":
 		typedSlice := make([]int64, len(s))
 		for j, item := range s {
-			if i, ok := item.(int); ok {
-				typedSlice[j] = int64(i)
-			} else {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
-			}
+			i, ok := item.(int);
+			if  !ok {
+			    return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
+			} 
+			typedSlice[j] = int64(i)
 		}
 	case "float":
 		typedSlice := make([]float64, len(s))
