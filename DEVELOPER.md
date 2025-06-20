@@ -226,6 +226,7 @@ Toolbox has two types of releases: versioned and continuous. It uses Google Clou
     1. Copy the table output
     1. In the GitHub UI, navigate to Releases and click the `edit` button.
     1. Paste the table at the bottom of release note and click `Update release`.
+5. Post release in internal chat and on Discord.
 
 #### Supported Binaries
 
