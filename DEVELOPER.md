@@ -58,9 +58,13 @@ New contributions should be added with both unit tests and integration tests.
   2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native
      Toolbox endpoints.
 
-  3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP endpoints.
+  3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP
+         endpoints.
+  
   4. (Optional) [RunExecuteSqlToolInvokeTest][execute-sql]: tests an
-     `execute-sql` tool for any source. Only run this test if you are adding an `execute-sql` tool.
+     `execute-sql` tool for any source. Only run this test if you are adding an
+     `execute-sql` tool.
+
   5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
          parameters][temp-param-doc]. Only run this test if template parameters apply to your tool.
   
