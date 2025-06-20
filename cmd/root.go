@@ -30,10 +30,13 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
@@ -223,15 +226,24 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
-func parse(ctx context.Context, buf []byte, logger log.Logger) {
-	logger.DebugContext(ctx, "Attempting to parse updated tools file.")
-	// time.Sleep(5 * time.Second)
-	// logger.DebugContext(ctx, "Parse finished.")
-	// TODO: add logic for parsing
+func validateReloadEdits(ctx context.Context, toolsFile ToolsFile, logger log.Logger, instrumentation *server.Instrumentation) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error) {
+	logger.DebugContext(ctx, "Attempting to parse and validate reloaded tools file.")
+
+	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/reload")
+	defer span.End()
+
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, versionString, toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, logger, instrumentation)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return nil, nil, nil, nil, err
+	}
+
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
 }
 
 // watchFile checks for changes in the provided yaml tools file.
-func watchFile(ctx context.Context, toolsFileName string) {
+func watchFile(ctx context.Context, toolsFileName string, instrumentation *server.Instrumentation) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(fmt.Errorf("unable to extract logger from context %w", err))
@@ -288,10 +300,25 @@ func watchFile(ctx context.Context, toolsFileName string) {
 			logger.DebugContext(ctx, "re-reading tools file: %s", cleanedFilename)
 			buf, err := os.ReadFile(toolsFileName)
 			if err != nil {
-				logger.WarnContext(ctx, "error reading reloaded file", err)
-				return
+				errMsg := fmt.Errorf("unable to read reloaded tools file at %q: %w", toolsFileName, err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
 			}
-			parse(ctx, buf, logger)
+
+			toolsFile, err := parseToolsFile(ctx, buf)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", toolsFileName, err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
+			}
+
+			// TODO: will update when updateServer() function is added to use return values
+			_, _, _, _, err = validateReloadEdits(ctx, toolsFile, logger, instrumentation)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
+			}
 		}
 	}
 }
@@ -419,8 +446,15 @@ func run(cmd *Command) error {
 		return errMsg
 	}
 
+	instrumentation, err := server.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to create telemetry instrumentation: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+
 	// start server
-	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
+	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger, instrumentation)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
@@ -453,7 +487,7 @@ func run(cmd *Command) error {
 	}()
 
 	// start watching for file changes to trigger dynamic reloading
-	go watchFile(ctx, cmd.tools_file)
+	go watchFile(ctx, cmd.tools_file, instrumentation)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {

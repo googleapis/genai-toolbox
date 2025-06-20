@@ -52,10 +52,12 @@ type Server struct {
 	toolsets     map[string]tools.Toolset
 }
 
-func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentation *Instrumentation) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error) {
+func InitializeConfigs(ctx context.Context, VersionIn string, SourceConfigsIn SourceConfigs, AuthServiceConfigsIn AuthServiceConfigs, ToolConfigsIn ToolConfigs, ToolsetConfigsIn ToolsetConfigs, l log.Logger, instrumentation *Instrumentation) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error) {
+	ctx = util.WithUserAgent(ctx, VersionIn)
+
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
-	for name, sc := range cfg.SourceConfigs {
+	for name, sc := range SourceConfigsIn {
 		s, err := func() (sources.Source, error) {
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
@@ -79,7 +81,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, inst
 
 	// initialize and validate the auth services from configs
 	authServicesMap := make(map[string]auth.AuthService)
-	for name, sc := range cfg.AuthServiceConfigs {
+	for name, sc := range AuthServiceConfigsIn {
 		a, err := func() (auth.AuthService, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
@@ -103,7 +105,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, inst
 
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
-	for name, tc := range cfg.ToolConfigs {
+	for name, tc := range ToolConfigsIn {
 		t, err := func() (tools.Tool, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
@@ -130,14 +132,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, inst
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
 	}
-	if cfg.ToolsetConfigs == nil {
-		cfg.ToolsetConfigs = make(ToolsetConfigs)
+	if ToolsetConfigsIn == nil {
+		ToolsetConfigsIn = make(ToolsetConfigs)
 	}
-	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+	ToolsetConfigsIn[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
 
 	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
-	for name, tc := range cfg.ToolsetConfigs {
+	for name, tc := range ToolsetConfigsIn {
 		t, err := func() (tools.Toolset, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
@@ -145,7 +147,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, inst
 				trace.WithAttributes(attribute.String("toolset_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize(cfg.Version, toolsMap)
+			t, err := tc.Initialize(VersionIn, toolsMap)
 			if err != nil {
 				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
 			}
@@ -162,16 +164,9 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, inst
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
-	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
-	}
-
+func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentation *Instrumentation) (*Server, error) {
 	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/init")
 	defer span.End()
-
-	ctx = util.WithUserAgent(ctx, cfg.Version)
 
 	// set up http serving
 	r := chi.NewRouter()
@@ -207,7 +202,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	httpLogger := httplog.NewLogger("httplog", httpOpts)
 	r.Use(httplog.RequestLogger(httpLogger))
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := InitializeConfigs(ctx, cfg, l, instrumentation)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := InitializeConfigs(ctx, cfg.Version, cfg.SourceConfigs, cfg.AuthServiceConfigs, cfg.ToolConfigs, cfg.ToolsetConfigs, l, instrumentation)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
 	}
