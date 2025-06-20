@@ -41,6 +41,44 @@
 
 ### Testing
 
+#### Writing Tests
+
+New contributions should be added with both unit tests and integration tests.
+
+- Unit tests are in the same package as the source code.
+
+- Integration tests are in the `/tests` directory, under its dedicated package
+  named after its source. We have several pre-defined integration test suites
+  in the `/tests/tool.go` that are **required** to be run as long as your code contains related
+  features:
+
+  1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
+         tool's manifest.
+  
+  2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native
+     Toolbox endpoints.
+
+  3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP endpoints.
+  4. (Optional) [RunExecuteSqlToolInvokeTest][execute-sql]: tests an
+     `execute-sql` tool for any source. Only run this test if you are adding an `execute-sql` tool.
+  5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
+         parameters][temp-param-doc]. Only run this test if template parameters apply to your tool.
+  
+[tool-get]:
+    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L31
+[tool-call]:
+    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L79>
+[mcp-call]:
+    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L554
+[execute-sql]:
+    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L431>
+[temp-param]:
+    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L297>
+[temp-param-doc]:
+    https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
+
+#### Running Tests
+
 - Run the lint check:
 
     ```bash
