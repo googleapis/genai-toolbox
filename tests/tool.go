@@ -76,7 +76,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -97,7 +97,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -105,7 +105,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          invoke_param_want,
+			want:          invokeParamWant,
 			isErr:         false,
 		},
 		{
@@ -150,7 +150,7 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
-			want:          select_1_want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
@@ -211,14 +211,97 @@ func RunToolInvokeTest(t *testing.T, select_1_want, invoke_param_want string) {
 	}
 }
 
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string) {
-	select_all_want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
-	select_only_1_want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
-	select_only_names_want := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
+// TemplateParameterTestConfig represents the various configuration options for template parameter tests.
+type TemplateParameterTestConfig struct {
+	ignoreDdl      bool
+	ignoreInsert   bool
+	selectAllWant  string
+	select1Want    string
+	nameFieldArray string
+	nameColFilter  string
+	createColArray string
+}
+
+type Option func(*TemplateParameterTestConfig)
+
+// WithIgnoreDdl is the option function to configure ignoreDdl.
+func WithIgnoreDdl() Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.ignoreDdl = true
+	}
+}
+
+// WithIgnoreInsert is the option function to configure ignoreInsert.
+func WithIgnoreInsert() Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.ignoreInsert = true
+	}
+}
+
+// WithSelectAllWant is the option function to configure selectAllWant.
+func WithSelectAllWant(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.selectAllWant = s
+	}
+}
+
+// WithSelect1Want is the option function to configure select1Want.
+func WithSelect1Want(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.select1Want = s
+	}
+}
+
+// WithReplaceNameFieldArray is the option function to configure replaceNameFieldArray.
+func WithReplaceNameFieldArray(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.nameFieldArray = s
+	}
+}
+
+// WithReplaceNameColFilter is the option function to configure replaceNameColFilter.
+func WithReplaceNameColFilter(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.nameColFilter = s
+	}
+}
+
+// WithCreateColArray is the option function to configure replaceNameColFilter.
+func WithCreateColArray(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.createColArray = s
+	}
+}
+
+// NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
+func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
+	templateParamTestOption := &TemplateParameterTestConfig{
+		ignoreDdl:      false,
+		ignoreInsert:   false,
+		selectAllWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
+		select1Want:    "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(templateParamTestOption)
+	}
+
+	return templateParamTestOption
+}
+
+// RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config *TemplateParameterTestConfig) {
+	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
+		ddl           bool
+		insert        bool
 		api           string
 		requestHeader map[string]string
 		requestBody   io.Reader
@@ -227,14 +310,16 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string) {
 	}{
 		{
 			name:          "invoke create-table-templateParams-tool",
+			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id INT","name VARCHAR(20)","age INT"]}`, tableName))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, config.createColArray))),
 			want:          "null",
 			isErr:         false,
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
+			insert:        true,
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
@@ -243,6 +328,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string) {
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
+			insert:        true,
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
@@ -254,35 +340,36 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string) {
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          select_all_want,
+			want:          config.selectAllWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": "1", "tableName": "%s"}`, tableName))),
-			want:          select_only_1_want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
+			want:          config.select1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":["name"]}`, tableName))),
-			want:          select_only_names_want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, config.nameFieldArray))),
+			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "name"}`, tableName))),
-			want:          select_only_1_want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, config.nameColFilter))),
+			want:          config.select1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke drop-table-templateParams-tool",
+			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
@@ -292,43 +379,50 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string) {
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
+			// if test case is DDL and source does not ignore ddl test cases
+			ddlAllow := !tc.ddl || (tc.ddl && !config.ignoreDdl)
+			// if test case is insert statement and source does not ignore insert test cases
+			insertAllow := !tc.insert || (tc.insert && !config.ignoreInsert)
+			if ddlAllow && insertAllow {
+				// Send Tool invocation request
+				req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+				if err != nil {
+					t.Fatalf("unable to create request: %s", err)
 				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
+				req.Header.Add("Content-type", "application/json")
+				for k, v := range tc.requestHeader {
+					req.Header.Add(k, v)
+				}
 
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					t.Fatalf("unable to send request: %s", err)
+				}
+				defer resp.Body.Close()
 
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
+				if resp.StatusCode != http.StatusOK {
+					if tc.isErr {
+						return
+					}
+					bodyBytes, _ := io.ReadAll(resp.Body)
+					t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+				}
 
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				// Check response body
+				var body map[string]interface{}
+				err = json.NewDecoder(resp.Body).Decode(&body)
+				if err != nil {
+					t.Fatalf("error parsing response body")
+				}
+
+				got, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+
+				if got != tc.want {
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				}
 			}
 		})
 	}
@@ -457,7 +551,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want string) {
+func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -484,7 +578,7 @@ func RunMCPToolCallMethod(t *testing.T, invoke_param_want, fail_invocation_want 
 					},
 				},
 			},
-			want: invoke_param_want,
+			want: invokeParamWant,
 		},
 		{
 			name:          "MCP Invoke invalid tool",

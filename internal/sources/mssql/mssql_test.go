@@ -70,7 +70,6 @@ func TestParseFromYamlMssql(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestFailParseFromYaml(t *testing.T) {

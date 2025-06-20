@@ -53,9 +53,11 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
 	"github.com/spf13/cobra"
 
@@ -72,8 +74,10 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
 var (
@@ -280,7 +284,7 @@ func run(cmd *Command) error {
 	ctx = util.WithLogger(ctx, cmd.logger)
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.cfg.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
@@ -348,30 +352,33 @@ func run(cmd *Command) error {
 		return errMsg
 	}
 
-	err = s.Listen(ctx)
-	if err != nil {
-		errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
-	cmd.logger.InfoContext(ctx, "Server ready to serve!")
-
 	// run server in background
 	srvErr := make(chan error)
-	go func() {
-		defer close(srvErr)
-		if cmd.cfg.Stdio {
+	if cmd.cfg.Stdio {
+		go func() {
+			defer close(srvErr)
 			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
 			if err != nil {
 				srvErr <- err
 			}
-		} else {
+		}()
+	} else {
+		err = s.Listen(ctx)
+		if err != nil {
+			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		cmd.logger.InfoContext(ctx, "Server ready to serve!")
+
+		go func() {
+			defer close(srvErr)
 			err = s.Serve(ctx)
 			if err != nil {
 				srvErr <- err
 			}
-		}
-	}()
+		}()
+	}
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {

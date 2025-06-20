@@ -29,6 +29,7 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -69,6 +70,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 
 	tableName := "param_table" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "tmpl_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	columnFamilyName := "cf"
 	muts, rowKeys := getTestData(columnFamilyName)
@@ -85,8 +87,14 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	teardownTable2 := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
 	defer teardownTable2(t)
 
+	mutsTmpl, rowKeysTmpl := getTestDataTemplateParam(columnFamilyName)
+	teardownTableTmpl := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameTemplateParam, columnFamilyName, mutsTmpl, rowKeysTmpl)
+	defer teardownTableTmpl(t)
+
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BIGTABLE_TOOL_KIND, param_test_statement, auth_tool_statement)
+	toolsFile = addTemplateParamConfig(t, toolsFile)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -109,6 +117,22 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+
+	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
+		tests.WithIgnoreDdl(),
+		tests.WithIgnoreInsert(),
+		tests.WithReplaceNameFieldArray(`["CAST(cf['name'] AS string) as name"]`),
+		tests.WithReplaceNameColFilter("CAST(cf['name'] AS string)"),
+	)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+}
+
+func convertToBytes(v int) []byte {
+	binary1 := new(bytes.Buffer)
+	if err := binary.Write(binary1, binary.BigEndian, int64(v)); err != nil {
+		log.Fatalf("Unable to encode id: %v", err)
+	}
+	return binary1.Bytes()
 }
 
 func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
@@ -117,11 +141,7 @@ func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
 
 	var ids [3][]byte
 	for i := range ids {
-		binary1 := new(bytes.Buffer)
-		if err := binary.Write(binary1, binary.BigEndian, int64(i+1)); err != nil {
-			log.Fatalf("Unable to encode id: %v", err)
-		}
-		ids[i] = binary1.Bytes()
+		ids[i] = convertToBytes(i + 1)
 	}
 
 	now := bigtable.Time(time.Now())
@@ -142,6 +162,41 @@ func getTestData(columnFamilyName string) ([]*bigtable.Mutation, []string) {
 		"row-03": {
 			"name": []byte("Sid"),
 			"id":   ids[2],
+		},
+	} {
+		mut := bigtable.NewMutation()
+		for col, v := range mutData {
+			mut.Set(columnFamilyName, col, now, v)
+		}
+		muts = append(muts, mut)
+		rowKeys = append(rowKeys, rowKey)
+	}
+	return muts, rowKeys
+}
+
+func getTestDataTemplateParam(columnFamilyName string) ([]*bigtable.Mutation, []string) {
+	muts := []*bigtable.Mutation{}
+	rowKeys := []string{}
+
+	var ids [2][]byte
+	for i := range ids {
+		ids[i] = convertToBytes(i + 1)
+	}
+
+	now := bigtable.Time(time.Now())
+	for rowKey, mutData := range map[string]map[string][]byte{
+		// Do not change the test data without checking tests/common_test.go.
+		// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
+		// Expected values are defined in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L229-L310
+		"row-01": {
+			"name": []byte("Alex"),
+			"age":  convertToBytes(21),
+			"id":   ids[0],
+		},
+		"row-02": {
+			"name": []byte("Alice"),
+			"age":  convertToBytes(100),
+			"id":   ids[1],
 		},
 	} {
 		mut := bigtable.NewMutation()
@@ -212,4 +267,53 @@ func setupBtTable(t *testing.T, ctx context.Context, projectId string, instance 
 		}
 		defer adminClient.Close()
 	}
+}
+
+func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any {
+	toolsMap, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	toolsMap["select-templateParams-tool"] = map[string]any{
+		"kind":        "bigtable-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}};",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-templateParams-combined-tool"] = map[string]any{
+		"kind":        "bigtable-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}} WHERE TO_INT64(cf['id']) = @id;",
+		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-fields-templateParams-tool"] = map[string]any{
+		"kind":        "bigtable-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT {{array .fields}}, FROM {{.tableName}};",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),
+		},
+	}
+	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
+		"kind":        "bigtable-sql",
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}} WHERE {{.columnFilter}} = @name;",
+		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewStringParameter("columnFilter", "some description"),
+		},
+	}
+	config["tools"] = toolsMap
+	return config
 }

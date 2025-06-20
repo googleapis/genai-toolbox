@@ -18,19 +18,13 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        docker buildx build --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$VERSION -t ${_DOCKER_URI}:latest .
+        docker buildx create --name container-builder --driver docker-container --bootstrap --use
 
-  - id: "push-docker"
-    name: "gcr.io/cloud-builders/docker"
-    waitFor:
-      - "build-docker"
-    script: |
-        #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        docker push ${_DOCKER_URI}:$VERSION
+        export TAGS="-t ${_DOCKER_URI}:$VERSION"
         if [[ $_PUSH_LATEST == 'true' ]]; then
-          docker push ${_DOCKER_URI}:latest
+          export TAGS="$TAGS -t ${_DOCKER_URI}:latest"
         fi
+        docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse HEAD) $TAGS --push .
 
   - id: "install-dependencies"
     name: golang:1
@@ -143,6 +137,7 @@ options:
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
+  machineType: 'E2_HIGHCPU_32'
 
 substitutions:
   _REGION: us-central1
