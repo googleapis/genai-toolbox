@@ -17,15 +17,8 @@ steps:
     waitFor: ['-']
     script: |
         #!/usr/bin/env bash
-        docker buildx build --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$REF_NAME .
-
-  - id: "push-docker"
-    name: "gcr.io/cloud-builders/docker"
-    waitFor:
-      - "build-docker"
-    script: |
-        #!/usr/bin/env bash
-        docker push ${_DOCKER_URI}:$REF_NAME
+        docker buildx create --name container-builder --driver docker-container --bootstrap --use
+        docker buildx build --platform linux/amd64,linux/arm64 --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$REF_NAME --push .
 
   - id: "install-dependencies"
     name: golang:1
@@ -130,6 +123,7 @@ options:
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
+  machineType: 'E2_HIGHCPU_32'
 
 substitutions:
   _REGION: us-central1

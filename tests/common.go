@@ -129,11 +129,17 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
+
+	selectAll := "SELECT * FROM {{.tableName}} ORDER BY id"
+	if tmplSelectAll != "" {
+		selectAll = tmplSelectAll
+	}
+
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
 		"kind":        toolKind,
 		"source":      "my-instance",
@@ -159,7 +165,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}}",
+		"statement":   selectAll,
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
@@ -178,7 +184,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
+		"statement":   "SELECT {{array .fields}} FROM {{.tableName}} ORDER BY id",
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),
@@ -329,12 +335,10 @@ func GetMysqlTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string, string, string) {
+func GetNonSpannerInvokeParamWant() (string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	tmplSelectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
-	tmplSelect1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
-	return invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want
+	return invokeParamWant, mcpInvokeParamWant
 }
 
 // GetPostgresWants return the expected wants for postgres

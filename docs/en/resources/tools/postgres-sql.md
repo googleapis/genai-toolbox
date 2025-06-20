@@ -22,14 +22,14 @@ will be the first parameter specified, `$@` will be the second parameter, and so
 on. If template parameters are included, they will be resolved before execution
 of the prepared statement.
 
+[pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
+
 ## Example
 
 > **Note:** This tool uses parameterized queries to prevent SQL injections.
 > Query parameters can be used as substitutes for arbitrary expressions.
 > Parameters cannot be used as substitutes for identifiers, column names, table
 > names, or other parts of the query.
-
-[pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
 ```yaml
 tools:
@@ -71,10 +71,11 @@ tools:
 
 ### Example with Template Parameters
 
-> **Note:** This tool allows direct modifications to the SQL statement, including identifiers, column names,
-> and table names. **This makes it more vulnerable to SQL injections**. Using basic parameters 
-> only (see above) is recommended for performance and safety reasons. For more details, please
-> check [templateParameters](_index#template-parameters).
+> **Note:** This tool allows direct modifications to the SQL statement,
+> including identifiers, column names, and table names. **This makes it more
+> vulnerable to SQL injections**. Using basic parameters only (see above) is
+> recommended for performance and safety reasons. For more details, please check
+> [templateParameters](_index#template-parameters).
 
 ```yaml
 tools:

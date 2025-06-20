@@ -94,6 +94,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		datasetName,
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
+	tableNameTemplateParam := fmt.Sprintf("`%s.%s.template_param_table_%s`",
+		BIGQUERY_PROJECT,
+		datasetName,
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
+	)
+
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(tableNameParam)
 	teardownTable1 := setupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
@@ -107,6 +113,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BIGQUERY_TOOL_KIND, tool_statement1, tool_statement2)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BIGQUERY_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -129,9 +137,14 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "[{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
-	invokeParamWant, mcpInvokeParamWant, _, _ := tests.GetNonSpannerInvokeParamWant()
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
+		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),
+	)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -167,6 +180,13 @@ func getBigQueryAuthToolInfo(tableName string) (string, string, string, []bigque
 		{Value: int64(2)}, {Value: "Jane"}, {Value: "janedoe@gmail.com"},
 	}
 	return createStatement, insertStatement, toolStatement, params
+}
+
+// getBigQueryTmplToolStatement returns statements for template parameter test cases for bigquery kind
+func getBigQueryTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ? ORDER BY id"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ? ORDER BY id"
+	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, create_statement, insert_statement, datasetName string, tableName string, params []bigqueryapi.QueryParameter) func(*testing.T) {

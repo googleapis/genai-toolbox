@@ -85,3 +85,67 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		})
 	}
 }
+
+func TestParseFromYamlWithTemplateMssql(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: couchbase-sql
+					source: my-couchbase-instance
+					description: some tool description
+					statement: |
+						select * from {{.tableName}} WHERE name = $hotel;
+					parameters:
+						- name: hotel
+						  type: string
+						  description: hotel parameter description
+					templateParameters:
+						- name: tableName
+						  type: string
+						  description: The table to select hotels from.
+			`,
+			want: server.ToolConfigs{
+				"example_tool": couchbase.Config{
+					Name:         "example_tool",
+					Kind:         "couchbase-sql",
+					AuthRequired: []string{},
+					Source:       "my-couchbase-instance",
+					Description:  "some tool description",
+					Statement:    "select * from {{.tableName}} WHERE name = $hotel;\n",
+					Parameters: []tools.Parameter{
+						tools.NewStringParameter("hotel", "hotel parameter description"),
+					},
+					TemplateParameters: []tools.Parameter{
+						tools.NewStringParameter("tableName", "The table to select hotels from."),
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
+	}
+}

@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -65,10 +66,17 @@ func getMsSQLVars(t *testing.T) map[string]any {
 // Copied over from mssql.go
 func initMssqlConnection(host, port, user, pass, dbname string) (*sql.DB, error) {
 	// Create dsn
-	dsn := fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s", user, pass, host, port, dbname)
+	query := url.Values{}
+	query.Add("database", dbname)
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		Host:     fmt.Sprintf("%s:%s", host, port),
+		RawQuery: query.Encode(),
+	}
 
 	// Open database connection
-	db, err := sql.Open("sqlserver", dsn)
+	db, err := sql.Open("sqlserver", url.String())
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open: %w", err)
 	}
@@ -106,7 +114,7 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	toolsFile := tests.GetToolsConfig(sourceConfig, MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
 	toolsFile = tests.AddMssqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMssqlTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MSSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined)
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MSSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -125,9 +133,9 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want, failInvocationWant, createTableStatement := tests.GetMssqlWants()
-	invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want := tests.GetNonSpannerInvokeParamWant()
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, "", "", false, false)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }

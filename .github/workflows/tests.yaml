@@ -32,8 +32,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [macos-latest, windows-latest, ubuntu-latest]
-        os: [ubuntu-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
       fail-fast: false
     permissions:
       contents: 'read'
@@ -75,7 +74,8 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Run tests
+      - name: Run tests with coverage
+        if: ${{ runner.os == 'Linux' }}
         run: |
           source_dir="./internal/sources/*"
           tool_dir="./internal/tools/*"
@@ -85,7 +85,13 @@ jobs:
           go test -race -cover -coverprofile=coverage.out -v $included_packages
           go test -race -v ./internal/sources/... ./internal/tools/... ./internal/auth/...
 
+      - name: Run tests without coverage
+        if: ${{ runner.os != 'Linux' }}
+        run: |
+          go test -race -v ./internal/... ./cmd/...
+
       - name: Check coverage
+        if: ${{ runner.os == 'Linux' }}
         run: |
           FILE_TO_EXCLUDE="github.com/googleapis/genai-toolbox/internal/server/config.go"
           ESCAPED_PATH=$(echo "$FILE_TO_EXCLUDE" | sed 's/\//\\\//g; s/\./\\\./g')

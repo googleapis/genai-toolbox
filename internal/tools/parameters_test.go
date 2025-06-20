@@ -125,6 +125,100 @@ func TestParametersMarshal(t *testing.T) {
 				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
 			},
 		},
+		{
+			name: "string default",
+			in: []map[string]any{
+				{
+					"name":        "my_string",
+					"type":        "string",
+					"default":     "foo",
+					"description": "this param is a string",
+				},
+			},
+			want: tools.Parameters{
+				tools.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
+			},
+		},
+		{
+			name: "int default",
+			in: []map[string]any{
+				{
+					"name":        "my_integer",
+					"type":        "integer",
+					"default":     5,
+					"description": "this param is an int",
+				},
+			},
+			want: tools.Parameters{
+				tools.NewIntParameterWithDefault("my_integer", uint64(5), "this param is an int"),
+			},
+		},
+		{
+			name: "float default",
+			in: []map[string]any{
+				{
+					"name":        "my_float",
+					"type":        "float",
+					"default":     1.1,
+					"description": "my param is a float",
+				},
+			},
+			want: tools.Parameters{
+				tools.NewFloatParameterWithDefault("my_float", 1.1, "my param is a float"),
+			},
+		},
+		{
+			name: "bool default",
+			in: []map[string]any{
+				{
+					"name":        "my_bool",
+					"type":        "boolean",
+					"default":     true,
+					"description": "this param is a boolean",
+				},
+			},
+			want: tools.Parameters{
+				tools.NewBooleanParameterWithDefault("my_bool", true, "this param is a boolean"),
+			},
+		},
+		{
+			name: "string array default",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"default":     `["foo", "bar"]`,
+					"description": "this param is an array of strings",
+					"items": map[string]string{
+						"name":        "my_string",
+						"type":        "string",
+						"description": "string item",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewArrayParameterWithDefault("my_array", `["foo", "bar"]`, "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+			},
+		},
+		{
+			name: "float array default",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"default":     "[1.0, 1.1]",
+					"description": "this param is an array of floats",
+					"items": map[string]string{
+						"name":        "my_float",
+						"type":        "float",
+						"description": "float item",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewArrayParameterWithDefault("my_array", "[1.0, 1.1]", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -539,6 +633,46 @@ func TestParametersParse(t *testing.T) {
 				"my_bool": 1.5,
 			},
 		},
+		{
+			name: "string default",
+			params: tools.Parameters{
+				tools.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "foo"}},
+		},
+		{
+			name: "int default",
+			params: tools.Parameters{
+				tools.NewIntParameterWithDefault("my_int", 100, "this param is an int"),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
+		},
+		{
+			name: "int (big)",
+			params: tools.Parameters{
+				tools.NewIntParameterWithDefault("my_big_int", math.MaxInt64, "this param is an int"),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_big_int", Value: math.MaxInt64}},
+		},
+		{
+			name: "float default",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithDefault("my_float", 1.1, "this param is a float"),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.1}},
+		},
+		{
+			name: "bool default",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithDefault("my_bool", true, "this param is a bool"),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -808,22 +942,22 @@ func TestParamManifest(t *testing.T) {
 		{
 			name: "string",
 			in:   tools.NewStringParameter("foo-string", "bar"),
-			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Description: "bar", AuthServices: []string{}},
+			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "int",
 			in:   tools.NewIntParameter("foo-int", "bar"),
-			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Description: "bar", AuthServices: []string{}},
+			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "float",
 			in:   tools.NewFloatParameter("foo-float", "bar"),
-			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Description: "bar", AuthServices: []string{}},
+			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "boolean",
 			in:   tools.NewBooleanParameter("foo-bool", "bar"),
-			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Description: "bar", AuthServices: []string{}},
+			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "array",
@@ -831,9 +965,42 @@ func TestParamManifest(t *testing.T) {
 			want: tools.ParameterManifest{
 				Name:         "foo-array",
 				Type:         "array",
+				Required:     true,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Description: "bar", AuthServices: []string{}},
+				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
+			},
+		},
+		{
+			name: "string default",
+			in:   tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "int default",
+			in:   tools.NewIntParameterWithDefault("foo-int", 1, "bar"),
+			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "float default",
+			in:   tools.NewFloatParameterWithDefault("foo-float", 1.1, "bar"),
+			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "boolean default",
+			in:   tools.NewBooleanParameterWithDefault("foo-bool", true, "bar"),
+			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "array default",
+			in:   tools.NewArrayParameterWithDefault("foo-array", `["foo", "bar"]`, "bar", tools.NewStringParameter("foo-string", "bar")),
+			want: tools.ParameterManifest{
+				Name:         "foo-array",
+				Type:         "array",
+				Required:     false,
+				Description:  "bar",
+				AuthServices: []string{},
+				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
 			},
 		},
 	}
@@ -880,6 +1047,54 @@ func TestParamMcpManifest(t *testing.T) {
 				Type:        "array",
 				Description: "bar",
 				Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.in.McpManifest()
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMcpManifest(t *testing.T) {
+	tcs := []struct {
+		name string
+		in   tools.Parameters
+		want tools.McpToolsSchema
+	}{
+		{
+			name: "string",
+			in: tools.Parameters{
+				tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+				tools.NewStringParameter("foo-string2", "bar"),
+				tools.NewIntParameterWithDefault("foo-int", 1, "bar"),
+				tools.NewIntParameter("foo-int2", "bar"),
+				tools.NewArrayParameterWithDefault("foo-array", []string{"hello", "world"}, "bar", tools.NewStringParameter("foo-string", "bar")),
+				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
+			},
+			want: tools.McpToolsSchema{
+				Type: "object",
+				Properties: map[string]tools.ParameterMcpManifest{
+					"foo-string":  tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					"foo-string2": tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					"foo-int":     tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+					"foo-int2":    tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+					"foo-array": tools.ParameterMcpManifest{
+						Type:        "array",
+						Description: "bar",
+						Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					},
+					"foo-array2": tools.ParameterMcpManifest{
+						Type:        "array",
+						Description: "bar",
+						Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					},
+				},
+				Required: []string{"foo-string2", "foo-int2", "foo-array2"},
 			},
 		},
 	}

@@ -79,11 +79,12 @@ the parameter.
         description: Airline unique 2 letter identifier
 ```
 
-| **field**   | **type** | **required** | **description**                                                            |
-|-------------|:--------:|:------------:|----------------------------------------------------------------------------|
-| name        |  string  |     true     | Name of the parameter.                                                     |
-| type        |  string  |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
-| description |  string  |     true     | Natural language description of the parameter to describe it to the agent. |
+| **field**   | **type**        | **required** | **description**                                                             |
+|-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
+| name        |  string         |     true     | Name of the parameter.                                                      |
+| type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
+| default     |  parameter type |     false    | Default value of the parameter. If provided, the parameter is not required. |
+| description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
 
 ### Array Parameters
 
@@ -102,12 +103,17 @@ in the list using the items field:
           description: Name of the airline. 
 ```
 
-| **field**   |     **type**     | **required** | **description**                                                            |
-|-------------|:----------------:|:------------:|----------------------------------------------------------------------------|
-| name        |      string      |     true     | Name of the parameter.                                                     |
-| type        |      string      |     true     | Must be "array"                                                            |
-| description |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
-| items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
+| **field**   |     **type**     | **required** | **description**                                                             |
+|-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
+| name        |      string      |     true     | Name of the parameter.                                                      |
+| type        |      string      |     true     | Must be "array"                                                             |
+| default     |  parameter type  |     false    | Default value of the parameter. If provided, the parameter is not required. |
+| description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
+| items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
+
+{{< notice note >}}
+Items in array should not have a default value. If provided, it will be ignored.
+{{< /notice >}}
 
 ### Authenticated Parameters
 
