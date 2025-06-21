@@ -608,12 +608,12 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	mcpM := &mcpManager{
+	sseManager := &sseManager{
 		mu:          sync.RWMutex{},
-		mcpSessions: make(map[string]*mcpSession),
+		sseSessions: make(map[string]*sseSession),
 	}
 
-	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, mcpManager: mcpM, tools: toolsMap, toolsets: toolsets}
+	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: toolsMap, toolsets: toolsets}
 
 	in := bufio.NewReader(pr)
 	stdioSession := NewStdioSession(server, in, pw)
