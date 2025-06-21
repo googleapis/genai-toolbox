@@ -625,7 +625,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	sseManager := newSseManager()
+	sseManager := newSseManager(ctx)
 
 	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: toolsMap, toolsets: toolsets}
 

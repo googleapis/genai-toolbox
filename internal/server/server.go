@@ -205,7 +205,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
-	sseManager := newSseManager()
+	sseManager := newSseManager(ctx)
 
 	s := &Server{
 		version:         cfg.Version,

@@ -50,7 +50,7 @@ type sseSession struct {
 
 // sseManager manages and control access to sse sessions
 type sseManager struct {
-	mu          sync.RWMutex
+	mu          sync.Mutex
 	sseSessions map[string]*sseSession
 }
 
@@ -62,20 +62,20 @@ func (m *sseManager) get(id string) (*sseSession, bool) {
 	return session, ok
 }
 
-func newSseManager() *sseManager {
+func newSseManager(ctx context.Context) *sseManager {
 	sseM := &sseManager{
-		mu:          sync.RWMutex{},
+		mu:          sync.Mutex{},
 		sseSessions: make(map[string]*sseSession),
 	}
-	go sseM.cleanupRoutine()
+	go sseM.cleanupRoutine(ctx)
 	return sseM
 }
 
 func (m *sseManager) add(id string, session *sseSession) {
 	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.sseSessions[id] = session
 	session.lastActive = time.Now()
-	m.mu.Unlock()
 }
 
 func (m *sseManager) remove(id string) {
@@ -84,7 +84,7 @@ func (m *sseManager) remove(id string) {
 	m.mu.Unlock()
 }
 
-func (m *sseManager) cleanupRoutine() {
+func (m *sseManager) cleanupRoutine(ctx context.Context) {
 	timeout := 10 * time.Minute
 	ticker := time.NewTicker(timeout)
 	defer ticker.Stop()
@@ -98,6 +98,13 @@ func (m *sseManager) cleanupRoutine() {
 			}
 		}
 		m.mu.Unlock()
+	}
+
+	// to shutdown goroutine if ctx is cancelled
+	select {
+	case <-ctx.Done():
+		return
+	default:
 	}
 }
 

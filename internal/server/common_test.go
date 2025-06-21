@@ -152,7 +152,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	sseManager := newSseManager()
+	sseManager := newSseManager(ctx)
 
 	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: tools, toolsets: toolsets}
 	var r chi.Router
