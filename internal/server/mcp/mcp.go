@@ -75,15 +75,10 @@ func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, 
 
 // NotificationHandler process notifications request. It MUST NOT send a response.
 // Currently Toolbox does not process any notifications.
-func NotificationHandler(ctx context.Context, body []byte, initialized *bool) error {
+func NotificationHandler(ctx context.Context, body []byte) error {
 	var notification jsonrpc.JSONRPCNotification
 	if err := json.Unmarshal(body, &notification); err != nil {
 		return fmt.Errorf("invalid notification request: %w", err)
-	}
-	if notification.Method == mcputil.INITIALIZE_NOTIFICATIONS {
-		init := true
-		*initialized = init
-		return nil
 	}
 	return nil
 }
