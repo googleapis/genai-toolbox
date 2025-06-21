@@ -90,7 +90,10 @@ func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId,
 	switch mcpVersion {
 	case v20250326.PROTOCOL_VERSION:
 		return v20250326.ProcessMethod(ctx, id, method, toolset, tools, body)
-	default:
+	case v20241105.PROTOCOL_VERSION:
 		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
+	default:
+		err := fmt.Errorf("invalid protocol version: %s", mcpVersion)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 }

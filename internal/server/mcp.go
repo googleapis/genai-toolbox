@@ -297,6 +297,12 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// check if client have `Mcp-Session-Id` header
+	headerSessionId := r.Header.Get("Mcp-Session-Id")
+	if headerSessionId != "" {
+		protocolVersion = v20250326.PROTOCOL_VERSION
+	}
+
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
@@ -341,7 +347,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		s.logger.DebugContext(ctx, err.Error())
 	}
 
-    // for v20240326, add the `Mcp-Session-Id` header
+	// for v20240326, add the `Mcp-Session-Id` header
 	if v == v20250326.PROTOCOL_VERSION {
 		sessionId = uuid.New().String()
 		w.Header().Set("Mcp-Session-Id", sessionId)
