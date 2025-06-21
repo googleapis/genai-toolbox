@@ -45,13 +45,13 @@ type sseSession struct {
 	flusher    http.Flusher
 	done       chan struct{}
 	eventQueue chan string
+	lastActive time.Time
 }
 
 // sseManager manages and control access to sse sessions
 type sseManager struct {
 	mu          sync.RWMutex
 	sseSessions map[string]*sseSession
-	lastActive  time.Time
 }
 
 func (m *sseManager) get(id string) (*sseSession, bool) {
@@ -68,7 +68,7 @@ func newSseManager() *sseManager {
 		sseSessions: make(map[string]*sseSession),
 	}
 	go sseM.cleanupRoutine()
-	return sseM 
+	return sseM
 }
 
 func (m *sseManager) add(id string, session *sseSession) {
@@ -84,7 +84,7 @@ func (m *sseManager) remove(id string) {
 	m.mu.Unlock()
 }
 
-func (m *mcpManager) cleanupRoutine() {
+func (m *sseManager) cleanupRoutine() {
 	timeout := 10 * time.Minute
 	ticker := time.NewTicker(timeout)
 	defer ticker.Stop()
@@ -92,9 +92,9 @@ func (m *mcpManager) cleanupRoutine() {
 	for range ticker.C {
 		m.mu.Lock()
 		now := time.Now()
-		for id, sess := range m.mcpSessions {
-			if sess.protocol == v20250326.PROTOCOL_VERSION && now.Sub(sess.lastActive) > timeout {
-				delete(m.mcpSessions, id)
+		for id, sess := range m.sseSessions {
+			if now.Sub(sess.lastActive) > timeout {
+				delete(m.sseSessions, id)
 			}
 		}
 		m.mu.Unlock()
@@ -339,11 +339,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 
-	var mcpSess *mcpSession
-	var sessionId, protocolVersion string
-	// indicate if initialize have to be enforced
-	var initialized *bool
-	var ok, initEnforced bool
 	var err error
 	defer func() {
 		if err != nil {
@@ -362,36 +357,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
 	}()
-
-	// check url for sessionId (if user connect via sse)
-	sessionId = r.URL.Query().Get("sessionId")
-	if sessionId == "" {
-		// check header for session id (if user uses v2025-03-26)
-		// client had done the initialization step if this exists
-		sessionId = r.Header.Get("Mcp-Session-Id")
-		// for v2025-03-26, response with HTTP 404 Not Found
-		// client will have to re-initialize
-		mcpSess, ok = s.mcpManager.get(sessionId)
-		if !ok {
-			err = fmt.Errorf("session not found")
-			s.logger.DebugContext(ctx, err.Error())
-			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
-			return
-		}
-	} else {
-		mcpSess, ok = s.mcpManager.get(sessionId)
-		if !ok {
-			s.logger.DebugContext(ctx, "mcp session not available")
-		}
-	}
-	if mcpSess != nil {
-		protocolVersion = mcpSess.protocol
-		initialized = mcpSess.initialized
-		initEnforced = true
-	} else {
-		init := false
-		initialized = &init
-	}
 
 	// Read and returns a body from io.Reader
 	body, err := io.ReadAll(r.Body)
@@ -490,16 +455,5 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		}
 		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
 		return "", res, err
-	}
-}
-
-// deleteMcpSession removes session from mcpManager.
-func deleteMcpSession(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	sessionId := r.Header.Get("Mcp-Session-Id")
-	_, ok := s.mcpManager.mcpSessions[sessionId]
-	if ok {
-		s.mcpManager.remove(sessionId)
-		s.logger.InfoContext(ctx, fmt.Sprintf("removed %s from mcp manager", sessionId))
 	}
 }
