@@ -35,6 +35,7 @@ import (
 
 const jsonrpcVersion = "2.0"
 const protocolVersion20241105 = "2024-11-05"
+const protocolVersion20250326 = "2025-03-26"
 const serverName = "Toolbox"
 
 var tool1InputSchema = map[string]any{
@@ -246,43 +247,21 @@ func TestMcpEndpoint(t *testing.T) {
 	ts := runServer(r, false)
 	defer ts.Close()
 
-	initializeWant := map[string]any{
-		"jsonrpc": "2.0",
-		"id":      "mcp-initialize",
-		"result": map[string]any{
-			"protocolVersion": protocolVersion20241105,
-			"capabilities": map[string]any{
-				"tools": map[string]any{"listChanged": false},
-			},
-			"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
-		},
-	}
-
-	_ = runInitializeLifecycle(t, ts, protocolVersion20241105, initializeWant, false)
-	header := map[string]string{}
-
-	testCases := []struct {
-		name  string
-		url   string
-		isErr bool
-		body  jsonrpc.JSONRPCRequest
-		want  map[string]any
+	versTestCases := []struct {
+		name     string
+		protocol string
+		idHeader bool
+		initWant map[string]any
 	}{
 		{
-			name: "initialize",
-			url:  "/",
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "mcp-initialize",
-				Request: jsonrpc.Request{
-					Method: "initialize",
-				},
-			},
-			want: map[string]any{
+			name:     "verson 2024-11-05",
+			protocol: protocolVersion20241105,
+			idHeader: false,
+			initWant: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "mcp-initialize",
 				"result": map[string]any{
-					"protocolVersion": protocolVersion20241105,
+					"protocolVersion": "2024-11-05",
 					"capabilities": map[string]any{
 						"tools": map[string]any{"listChanged": false},
 					},
@@ -291,174 +270,213 @@ func TestMcpEndpoint(t *testing.T) {
 			},
 		},
 		{
-			name: "basic notification",
-			url:  "/",
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Request: jsonrpc.Request{
-					Method: "notification",
-				},
-			},
-		},
-		{
-			name: "tools/list",
-			url:  "/",
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "tools-list",
-				Request: jsonrpc.Request{
-					Method: "tools/list",
-				},
-			},
-			want: map[string]any{
+			name:     "verson 2025-03-26",
+			protocol: protocolVersion20250326,
+			idHeader: true,
+			initWant: map[string]any{
 				"jsonrpc": "2.0",
-				"id":      "tools-list",
+				"id":      "mcp-initialize",
 				"result": map[string]any{
-					"tools": []any{
-						map[string]any{
-							"name":        "no_params",
-							"inputSchema": tool1InputSchema,
-						},
-						map[string]any{
-							"name":        "some_params",
-							"inputSchema": tool2InputSchema,
-						},
-						map[string]any{
-							"name":        "array_param",
-							"description": "some description",
-							"inputSchema": tool3InputSchema,
-						},
+					"protocolVersion": "2025-03-26",
+					"capabilities": map[string]any{
+						"tools": map[string]any{"listChanged": false},
 					},
-				},
-			},
-		},
-		{
-			name: "tools/list on tool1_only",
-			url:  "/tool1_only",
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "tools-list-tool1",
-				Request: jsonrpc.Request{
-					Method: "tools/list",
-				},
-			},
-			want: map[string]any{
-				"jsonrpc": "2.0",
-				"id":      "tools-list-tool1",
-				"result": map[string]any{
-					"tools": []any{
-						map[string]any{
-							"name":        "no_params",
-							"inputSchema": tool1InputSchema,
-						},
-					},
-				},
-			},
-		},
-		{
-			name:  "tools/list on invalid tool set",
-			url:   "/foo",
-			isErr: true,
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "tools-list-invalid-toolset",
-				Request: jsonrpc.Request{
-					Method: "tools/list",
-				},
-			},
-			want: map[string]any{
-				"jsonrpc": "2.0",
-				"id":      "tools-list-invalid-toolset",
-				"error": map[string]any{
-					"code":    -32600.0,
-					"message": "toolset does not exist",
-				},
-			},
-		},
-		{
-			name:  "missing method",
-			url:   "/",
-			isErr: true,
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "missing-method",
-				Request: jsonrpc.Request{},
-			},
-			want: map[string]any{
-				"jsonrpc": "2.0",
-				"id":      "missing-method",
-				"error": map[string]any{
-					"code":    -32601.0,
-					"message": "method not found",
-				},
-			},
-		},
-		{
-			name:  "invalid method",
-			url:   "/",
-			isErr: true,
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: jsonrpcVersion,
-				Id:      "invalid-method",
-				Request: jsonrpc.Request{
-					Method: "foo",
-				},
-			},
-			want: map[string]any{
-				"jsonrpc": "2.0",
-				"id":      "invalid-method",
-				"error": map[string]any{
-					"code":    -32601.0,
-					"message": "invalid method foo",
-				},
-			},
-		},
-		{
-			name:  "invalid jsonrpc version",
-			url:   "/",
-			isErr: true,
-			body: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "1.0",
-				Id:      "invalid-jsonrpc-version",
-				Request: jsonrpc.Request{
-					Method: "foo",
-				},
-			},
-			want: map[string]any{
-				"jsonrpc": "2.0",
-				"id":      "invalid-jsonrpc-version",
-				"error": map[string]any{
-					"code":    -32600.0,
-					"message": "invalid json-rpc version",
+					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
 				},
 			},
 		},
 	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			reqMarshal, err := json.Marshal(tc.body)
-			if err != nil {
-				t.Fatalf("unexpected error during marshaling of body")
+	for _, vtc := range versTestCases {
+		t.Run(vtc.name, func(t *testing.T) {
+			sessionId := runInitializeLifecycle(t, ts, vtc.protocol, vtc.initWant, vtc.idHeader)
+
+			header := map[string]string{}
+			if sessionId != "" {
+				header["Mcp-Session-Id"] = sessionId
 			}
 
-			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), header)
-			if err != nil {
-				t.Fatalf("unexpected error during request: %s", err)
+			testCases := []struct {
+				name  string
+				url   string
+				isErr bool
+				body  jsonrpc.JSONRPCRequest
+				want  map[string]any
+			}{
+				{
+					name: "basic notification",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Request: jsonrpc.Request{
+							Method: "notification",
+						},
+					},
+				},
+				{
+					name: "tools/list",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-list",
+						Request: jsonrpc.Request{
+							Method: "tools/list",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-list",
+						"result": map[string]any{
+							"tools": []any{
+								map[string]any{
+									"name":        "no_params",
+									"inputSchema": tool1InputSchema,
+								},
+								map[string]any{
+									"name":        "some_params",
+									"inputSchema": tool2InputSchema,
+								},
+								map[string]any{
+									"name":        "array_param",
+									"description": "some description",
+									"inputSchema": tool3InputSchema,
+								},
+							},
+						},
+					},
+				},
+				{
+					name: "tools/list on tool1_only",
+					url:  "/tool1_only",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-list-tool1",
+						Request: jsonrpc.Request{
+							Method: "tools/list",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-list-tool1",
+						"result": map[string]any{
+							"tools": []any{
+								map[string]any{
+									"name":        "no_params",
+									"inputSchema": tool1InputSchema,
+								},
+							},
+						},
+					},
+				},
+				{
+					name:  "tools/list on invalid tool set",
+					url:   "/foo",
+					isErr: true,
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-list-invalid-toolset",
+						Request: jsonrpc.Request{
+							Method: "tools/list",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-list-invalid-toolset",
+						"error": map[string]any{
+							"code":    -32600.0,
+							"message": "toolset does not exist",
+						},
+					},
+				},
+				{
+					name:  "missing method",
+					url:   "/",
+					isErr: true,
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "missing-method",
+						Request: jsonrpc.Request{},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "missing-method",
+						"error": map[string]any{
+							"code":    -32601.0,
+							"message": "method not found",
+						},
+					},
+				},
+				{
+					name:  "invalid method",
+					url:   "/",
+					isErr: true,
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "invalid-method",
+						Request: jsonrpc.Request{
+							Method: "foo",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "invalid-method",
+						"error": map[string]any{
+							"code":    -32601.0,
+							"message": "invalid method foo",
+						},
+					},
+				},
+				{
+					name:  "invalid jsonrpc version",
+					url:   "/",
+					isErr: true,
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "1.0",
+						Id:      "invalid-jsonrpc-version",
+						Request: jsonrpc.Request{
+							Method: "foo",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "invalid-jsonrpc-version",
+						"error": map[string]any{
+							"code":    -32600.0,
+							"message": "invalid json-rpc version",
+						},
+					},
+				},
 			}
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					reqMarshal, err := json.Marshal(tc.body)
+					if err != nil {
+						t.Fatalf("unexpected error during marshaling of body")
+					}
 
-			// Notifications don't expect a response.
-			if tc.want != nil {
-				if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
-					t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
-				}
+					if vtc.protocol == protocolVersion20250326 && len(header) == 0 {
+						t.Fatalf("header is missing")
+					}
 
-				var got map[string]any
-				if err := json.Unmarshal(body, &got); err != nil {
-					t.Fatalf("unexpected error unmarshalling body: %s", err)
-				}
-				if !reflect.DeepEqual(got, tc.want) {
-					t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
-				}
+					resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), header)
+					if err != nil {
+						t.Fatalf("unexpected error during request: %s", err)
+					}
+
+					// Notifications don't expect a response.
+					if tc.want != nil {
+						if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+							t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+						}
+
+						var got map[string]any
+						if err := json.Unmarshal(body, &got); err != nil {
+							t.Fatalf("unexpected error unmarshalling body: %s", err)
+						}
+						if !reflect.DeepEqual(got, tc.want) {
+							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
+						}
+					}
+				})
 			}
 		})
 	}
