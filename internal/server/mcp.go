@@ -183,10 +183,12 @@ func mcpRouter(s *Server) (chi.Router, error) {
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
+	r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
+		r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})
 	})
 
 	return r, nil
