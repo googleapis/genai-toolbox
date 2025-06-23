@@ -33,7 +33,7 @@ steps:
       - name: "go"
         path: "/gopath"
     script: |
-      go test -c -race -cover
+      go test -c -race -cover \
       -coverpkg=./internal/sources/...,./internal/tools/... ./tests/...
 
   - id: "cloud-sql-pg"
