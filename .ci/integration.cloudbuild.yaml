@@ -65,7 +65,7 @@ steps:
         | grep "total:" | awk '{print $3}')
         echo "Cloud SQL total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if (( $(echo "$coverage_numeric < 60" | bc -l) )); then
+        if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 60)}'; then
             echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 60%."
             exit 1
         fi
