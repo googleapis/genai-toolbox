@@ -55,27 +55,12 @@ steps:
     args:
       - -c
       - |
-        ./cloudsqlpg.test -test.v -test.coverprofile=cloudsqlpg_coverage.out
-        export path="github.com/googleapis/genai-toolbox/internal/"
-
-
-        # Filter source/tool packages
-        grep -E \
-          "^mode:|${path}sources/cloudsqlpg/|\
-          ${path}tools/postgressql/|\
-          ${path}tools/postgresexecutesql/" \
-          cloudsqlpg_coverage.out \
-          > cloudsqlpg_filtered_coverage.out
-
-        # calculate & check coverage
-        total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out \
-        | grep "total:" | awk '{print $3}')
-        echo "Cloud SQL total coverage: $total_coverage"
-        coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 80)}'; then
-            echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 80%."
-            exit 1
-        fi
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Cloud SQL Postgres" \
+          cloudsqlpg \
+          postgressql \
+          postgresexecutesql
 
 
   - id: "alloydb-pg"
@@ -97,19 +82,12 @@ steps:
     args:
       - -c
       - |
-        ./alloydbpg.test -test.v -test.coverprofile=alloydbpg_coverage.out
-        export path="github.com/googleapis/genai-toolbox/internal/"
-        grep -E "^mode:
-        |${path}sources/alloydbpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/" \
-        alloydbpg_coverage.out > alloydbpg_filtered_coverage.out
-        
-        total_coverage=$(go tool cover -func=alloydbpg_filtered_coverage.out | grep "total:" | awk '{print $3}')
-        echo "AlloyDB total coverage: $total_coverage"
-        coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if (( $(echo "$coverage_numeric < 60" | bc -l) )); then
-            echo "Coverage failure: AlloyDB total coverage($total_coverage) is below 60%."
-            exit 1
-        fi
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "AlloyDB Postgres" \
+          alloydbpg \
+          postgressql \
+          postgresexecutesql
 
   - id: "alloydb-ai-nl"
     name: golang:1
@@ -130,7 +108,11 @@ steps:
     args:
       - -c
       - |
-        ./alloydbainl.test -test.v -test.coverprofile=alloydbainl_coverage.out
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "AlloyDB AI NL" \
+          alloydbainl \
+          alloydbainl
 
   - id: "bigtable"
     name: golang:1
@@ -149,7 +131,11 @@ steps:
     args:
       - -c
       - |
-        ./bigtable.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Bigtable" \
+          bigtable \
+          bigtable
 
   - id: "bigquery"
     name: golang:1
@@ -166,7 +152,11 @@ steps:
     args:
       - -c
       - |
-        ./bigquery.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "BigQuery" \
+          bigquery \
+          bigquery
 
   - id: "postgres"
     name: golang:1
@@ -185,7 +175,12 @@ steps:
     args:
       - -c
       - |
-        ./postgres.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Postgres" \
+          postgres \
+          postgressql \
+          postgresexecutesql
 
   - id: "spanner"
     name: golang:1
@@ -204,7 +199,11 @@ steps:
     args:
       - -c
       - |
-        ./spanner.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Spanner" \
+          spanner \
+          spanner
 
   - id: "neo4j"
     name: golang:1
@@ -221,7 +220,11 @@ steps:
     args:
       - -c
       - |
-        ./neo4j.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Neo4j" \
+          neo4j \
+          neo4j
 
   - id: "cloud-sql-mssql"
     name: golang:1
@@ -242,7 +245,11 @@ steps:
     args:
       - -c
       - |
-        ./cloudsqlmssql.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Cloud SQL MSSQL" \
+          cloudsqlmssql \
+          mssql
 
   - id: "cloud-sql-mysql"
     name: golang:1
@@ -263,7 +270,11 @@ steps:
     args:
       - -c
       - |
-        ./cloudsqlmysql.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Cloud SQL MySQL" \
+          cloudsqlmysql \
+          mysql
 
   - id: "mysql"
     name: golang:1
@@ -282,7 +293,11 @@ steps:
     args:
       - -c
       - |
-        ./mysql.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "MySQL" \
+          mysql \
+          mysql
 
   - id: "mssql"
     name: golang:1
@@ -301,7 +316,11 @@ steps:
     args:
       - -c
       - |
-        ./mssql.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "MSSQL" \
+          mssql \
+          mssql
 
   - id: "dgraph"
     name: golang:1
@@ -316,7 +335,11 @@ steps:
     args:
       - -c
       - |
-        ./dgraph.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Dgraph" \
+          dgraph \
+          dgraph
 
   - id: "http"
     name: golang:1
@@ -331,7 +354,11 @@ steps:
     args:
       - -c
       - |
-        ./http.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "HTTP" \
+          http \
+          http
 
   - id: "sqlite"
     name: golang:1
@@ -347,7 +374,11 @@ steps:
     args:
       - -c
       - |
-        ./sqlite.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "SQLite" \
+          sqlite \
+          sqlite
 
   - id: "couchbase"
     name : golang:1
@@ -365,7 +396,11 @@ steps:
     args:
       - -c
       - |
-        ./couchbase.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Couchbase" \
+          couchbase \
+          couchbase
 
   - id: "redis"
     name : golang:1
@@ -381,7 +416,11 @@ steps:
     args:
       - -c
       - |
-        ./redis.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Redis" \
+          redis \
+          redis
         
   - id: "valkey"
     name : golang:1
@@ -398,7 +437,11 @@ steps:
     args:
       - -c
       - |
-        ./valkey.test -test.v
+        chmod +x .ci/test_with_coverage.sh
+        .ci/test_with_coverage.sh \
+          "Valkey" \
+          valkey \
+          valkey
     
 
 availableSecrets:
@@ -438,7 +481,7 @@ availableSecrets:
     - versionName: projects/$PROJECT_ID/secrets/mysql_pass/versions/latest
       env: MYSQL_PASS
     - versionName: projects/$PROJECT_ID/secrets/mssql_user/versions/latest
-      env: MSSQL_USER 
+      env: MSSQL_USER
     - versionName: projects/$PROJECT_ID/secrets/mssql_pass/versions/latest
       env: MSSQL_PASS
     - versionName: projects/$PROJECT_ID/secrets/couchbase_connection/versions/latest
