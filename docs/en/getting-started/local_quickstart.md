@@ -376,8 +376,7 @@ async def main():
           for text in responses:
             print(text)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 {{< /tab >}}
 {{< tab header="LangChain" lang="python" >}}
 import asyncio
