@@ -80,21 +80,21 @@ Create a `Config` struct and a `Tool` struct to store necessary parameters for t
 *   **Add pre-defined integration test suites** in the `/tests/tool.go` that are **required** to be run as long as your code contains related
 features:
 
-  1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
-         tool's manifest.
-  
-  2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native
-     Toolbox endpoints.
-
-  3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP
-         endpoints.
-  
-  4. (Optional) [RunExecuteSqlToolInvokeTest][execute-sql]: tests an
-     `execute-sql` tool for any source. Only run this test if you are adding an
-     `execute-sql` tool.
-
-  5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
-         parameters][temp-param-doc]. Only run this test if template parameters apply to your tool.
+     1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
+            tool's manifest.
+     
+     2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native
+        Toolbox endpoints.
+   
+     3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP
+            endpoints.
+     
+     4. (Optional) [RunExecuteSqlToolInvokeTest][execute-sql]: tests an
+        `execute-sql` tool for any source. Only run this test if you are adding an
+        `execute-sql` tool.
+   
+     5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
+            parameters][temp-param-doc]. Only run this test if template parameters apply to your tool.
   
 *   **Add the new database to the test config** in [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 
