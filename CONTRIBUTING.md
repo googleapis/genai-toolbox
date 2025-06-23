@@ -39,7 +39,7 @@ Please follow up with changes promptly. If a PR is awaiting changes by the autho
 
 ### Adding a New Database Source and Tool
 
-We recommend creating an [issue](https://github.com/googleapis/genai-toolbox/issues) before implementation to ensure we can accept the contribution and no duplicated work. If you have any questions, reach out on our [Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team.
+We recommend creating an [issue](https://github.com/googleapis/genai-toolbox/issues) before implementation to ensure we can accept the contribution and no duplicated work. If you have any questions, reach out on our [Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team. New contributions should be added with both unit tests and integration tests.
 
 #### 1. Implement the New Data Source
 
@@ -74,10 +74,45 @@ Create a `Config` struct and a `Tool` struct to store necessary parameters for t
 *   **Implement `init()`** to register the new Tool.
 *   **Implement Unit Tests** in a file named `newdb_test.go`.
 
-#### 3. Add Integration
+#### 3. Add Integration Tests
+
+- Integration tests are in the `/tests` directory, under its dedicated package
+  named after its source. 
 
 *   **Add a test file** under a new directory `tests/newdb`.
-*   **Add test to the test config** in [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
+   * We have several pre-defined integration test suites in the `/tests/tool.go` that are **required** to be run as long as your code contains related
+  features:
+
+     1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
+            tool's manifest.
+     
+     2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native
+        Toolbox endpoints.
+   
+     3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP
+            endpoints.
+     
+     4. (Optional) [RunExecuteSqlToolInvokeTest][execute-sql]: tests an
+        `execute-sql` tool for any source. Only run this test if you are adding an
+        `execute-sql` tool.
+   
+     5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
+            parameters][temp-param-doc]. Only run this test if template parameters apply to your tool.
+  
+*   **Add the new database to the test config** in [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
+
+[tool-get]:
+    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L31
+[tool-call]:
+    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L79>
+[mcp-call]:
+    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L554
+[execute-sql]:
+    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L431>
+[temp-param]:
+    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L297>
+[temp-param-doc]:
+    https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
 
 #### 4. Add Documentation
 
