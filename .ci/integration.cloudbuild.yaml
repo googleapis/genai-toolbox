@@ -35,6 +35,7 @@ steps:
     script: |
       go test -c -race -cover \
       -coverpkg=./internal/sources/...,./internal/tools/... ./tests/...
+      chmod +x .ci/test_with_coverage.sh
 
   - id: "cloud-sql-pg"
     name: golang:1
@@ -55,7 +56,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Cloud SQL Postgres" \
           cloudsqlpg \
@@ -82,7 +82,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "AlloyDB Postgres" \
           alloydbpg \
@@ -108,7 +107,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "AlloyDB AI NL" \
           alloydbainl \
@@ -131,7 +129,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Bigtable" \
           bigtable \
@@ -152,7 +149,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "BigQuery" \
           bigquery \
@@ -175,7 +171,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Postgres" \
           postgres \
@@ -199,7 +194,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Spanner" \
           spanner \
@@ -220,7 +214,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Neo4j" \
           neo4j \
@@ -245,7 +238,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Cloud SQL MSSQL" \
           cloudsqlmssql \
@@ -270,7 +262,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Cloud SQL MySQL" \
           cloudsqlmysql \
@@ -293,7 +284,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "MySQL" \
           mysql \
@@ -316,7 +306,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "MSSQL" \
           mssql \
@@ -335,7 +324,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Dgraph" \
           dgraph \
@@ -354,7 +342,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "HTTP" \
           http \
@@ -374,7 +361,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "SQLite" \
           sqlite \
@@ -396,7 +382,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Couchbase" \
           couchbase \
@@ -416,7 +401,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Redis" \
           redis \
@@ -437,7 +421,6 @@ steps:
     args:
       - -c
       - |
-        chmod +x .ci/test_with_coverage.sh
         .ci/test_with_coverage.sh \
           "Valkey" \
           valkey \
