@@ -56,13 +56,14 @@ steps:
       - |
         ./cloudsqlpg.test -test.v -test.coverprofile=cloudsqlpg_coverage.out
         export path="github.com/googleapis/genai-toolbox/internal/"
-        grep -E "^mode: |${path}sources/cloudsqlpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/"
-        cloudsqlpg_coverage.out > cloudsqlpg_coverage.out
+        grep -E "^mode:
+        |${path}sources/cloudsqlpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/"
+        cloudsqlpg_coverage.out > cloudsqlpg_filtered_coverage.out
         
-        total_coverage=$(go tool cover -func=coverage.out | grep "total:" | awk '{print $3}')
+        total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out | grep "total:" | awk '{print $3}')
         echo "Cloud SQL total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if (( $(echo "$coverage_numeric < 40" | bc -l) )); then
+        if (( $(echo "$coverage_numeric < 70" | bc -l) )); then
             echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 40%."
             exit 1
         fi
