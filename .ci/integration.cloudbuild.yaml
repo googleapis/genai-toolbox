@@ -67,20 +67,15 @@ steps:
           cloudsqlpg_coverage.out \
           > cloudsqlpg_filtered_coverage.out
 
-        echo "--- Top 10 entries of cloudsqlpg_filtered_coverage.out ---"
-        head -n 10 cloudsqlpg_coverage.out
-        echo "---------------------------------------------------------"
-
         # calculate & check coverage
         total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out \
         | grep "total:" | awk '{print $3}')
         echo "Cloud SQL total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 60)}'; then
-            echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 60%."
+        if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 80)}'; then
+            echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 80%."
             exit 1
         fi
-        
 
 
   - id: "alloydb-pg"
