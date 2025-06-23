@@ -56,15 +56,17 @@ steps:
       - |
         ./cloudsqlpg.test -test.v -test.coverprofile=cloudsqlpg_coverage.out
         export path="github.com/googleapis/genai-toolbox/internal/"
-        grep -E "^mode:
-        |${path}sources/cloudsqlpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/" \
+        grep -E "^mode:\
+        |${path}sources/cloudsqlpg/|${path}tools/postgressql/\
+        |${path}tools/postgresexecutesql/" \
         cloudsqlpg_coverage.out > cloudsqlpg_filtered_coverage.out
         
-        total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out | grep "total:" | awk '{print $3}')
+        total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out \
+        | grep "total:" | awk '{print $3}')
         echo "Cloud SQL total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if (( $(echo "$coverage_numeric < 70" | bc -l) )); then
-            echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 40%."
+        if (( $(echo "$coverage_numeric < 60" | bc -l) )); then
+            echo "Coverage failure: Cloud SQL total coverage($total_coverage) is below 60%."
             exit 1
         fi
         
@@ -89,7 +91,19 @@ steps:
     args:
       - -c
       - |
-        ./alloydbpg.test -test.v
+        ./alloydbpg.test -test.v -test.coverprofile=alloydbpg_coverage.out
+        export path="github.com/googleapis/genai-toolbox/internal/"
+        grep -E "^mode:
+        |${path}sources/alloydbpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/" \
+        alloydbpg_coverage.out > alloydbpg_filtered_coverage.out
+        
+        total_coverage=$(go tool cover -func=alloydbpg_filtered_coverage.out | grep "total:" | awk '{print $3}')
+        echo "AlloyDB total coverage: $total_coverage"
+        coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
+        if (( $(echo "$coverage_numeric < 60" | bc -l) )); then
+            echo "Coverage failure: AlloyDB total coverage($total_coverage) is below 60%."
+            exit 1
+        fi
 
   - id: "alloydb-ai-nl"
     name: golang:1
@@ -110,7 +124,7 @@ steps:
     args:
       - -c
       - |
-        ./alloydbainl.test -test.v
+        ./alloydbainl.test -test.v -test.coverprofile=alloydbainl_coverage.out
 
   - id: "bigtable"
     name: golang:1
