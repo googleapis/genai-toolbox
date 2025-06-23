@@ -314,6 +314,7 @@ from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactServ
 from google.genai import types
 from toolbox_core import ToolboxSyncClient
 
+import asyncio
 import os
 
 # TODO(developer): replace this with your Google API key
