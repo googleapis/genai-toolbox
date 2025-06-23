@@ -17,12 +17,12 @@ database. It's compatible with any of the following sources:
 The specified SQL statement is executed as a parameterized statement, and specified
 parameters will be used according to their name: e.g. `$id`.
 
+## Example
+
 > **Note:** This tool uses parameterized queries to prevent SQL injections.
 > Query parameters can be used as substitutes for arbitrary expressions.
 > Parameters cannot be used as substitutes for identifiers, column names, table
 > names, or other parts of the query.
-
-## Example
 
 ```yaml
 tools:
@@ -58,13 +58,41 @@ tools:
               description: Maximum price (positive integer)
 ```
 
+### Example with Template Parameters
+
+> **Note:** This tool allows direct modifications to the SQL statement,
+> including identifiers, column names, and table names. **This makes it more
+> vulnerable to SQL injections**. Using basic parameters only (see above) is
+> recommended for performance and safety reasons. For more details, please check
+> [templateParameters](_index#template-parameters).
+
+```yaml
+tools:
+ list_table:
+    kind: couchbase-sql
+    source: my-couchbase-instance
+    statement: |
+      SELECT * FROM {{.tableName}};
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
+```
+
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                |
-|-------------|:------------------------------------------:|:------------:|------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "couchbase-sql".                                                                       |
-| source      |                   string                   |     true     | Name of the source the SQL query should execute on.                                            |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                             |
-| statement   |                   string                   |     true     | SQL statement to execute                                                                       |
-| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be used with the SQL statement.   |
-| authRequired|                array[string]               |    false     | List of auth services that are required to use this tool.                                      |
+| **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
+|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                   string                         |     true     | Must be "couchbase-sql".                                                                                                                   |
+| source             |                   string                         |     true     | Name of the source the SQL query should execute on.                                                                                        |
+| description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement          |                   string                         |     true     | SQL statement to execute                                                                                                                   |
+| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be used with the SQL statement.                                               |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| authRequired       |                array[string]                     |    false     | List of auth services that are required to use this tool.                                                                                  |

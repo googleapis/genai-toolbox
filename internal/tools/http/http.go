@@ -59,6 +59,7 @@ type Config struct {
 	Method       tools.HTTPMethod  `yaml:"method" validate:"required"`
 	Headers      map[string]string `yaml:"headers"`
 	RequestBody  string            `yaml:"requestBody"`
+	PathParams   tools.Parameters  `yaml:"pathParams"`
 	QueryParams  tools.Parameters  `yaml:"queryParams"`
 	BodyParams   tools.Parameters  `yaml:"bodyParams"`
 	HeaderParams tools.Parameters  `yaml:"headerParams"`
@@ -84,20 +85,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
 	}
 
-	// Create URL based on BaseURL and Path
-	// Attach query parameters
-	u, err := url.Parse(s.BaseURL + cfg.Path)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing URL: %s", err)
-	}
-
-	// Get existing query parameters from the URL
-	queryParameters := u.Query()
-	for key, value := range s.QueryParams {
-		queryParameters.Add(key, value)
-	}
-	u.RawQuery = queryParameters.Encode()
-
 	// Combine Source and Tool headers.
 	// In case of conflict, Tool header overrides Source header
 	combinedHeaders := make(map[string]string)
@@ -105,10 +92,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
+	allParameters := slices.Concat(cfg.PathParams, cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
 
 	// Create parameter MCP manifest
 	paramManifest := slices.Concat(
+		cfg.PathParams.Manifest(),
 		cfg.QueryParams.Manifest(),
 		cfg.BodyParams.Manifest(),
 		cfg.HeaderParams.Manifest(),
@@ -116,13 +104,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
-
+	pathMcpManifest := cfg.PathParams.McpManifest()
 	queryMcpManifest := cfg.QueryParams.McpManifest()
 	bodyMcpManifest := cfg.BodyParams.McpManifest()
 	headerMcpManifest := cfg.HeaderParams.McpManifest()
 
 	// Concatenate parameters for MCP `required` field
 	concatRequiredManifest := slices.Concat(
+		pathMcpManifest.Required,
 		queryMcpManifest.Required,
 		bodyMcpManifest.Required,
 		headerMcpManifest.Required,
@@ -133,6 +122,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Concatenate parameters for MCP `properties` field
 	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
+	for name, p := range pathMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
 	for name, p := range queryMcpManifest.Properties {
 		concatPropertiesManifest[name] = p
 	}
@@ -167,20 +159,23 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		URL:          u,
-		Method:       cfg.Method,
-		AuthRequired: cfg.AuthRequired,
-		RequestBody:  cfg.RequestBody,
-		QueryParams:  cfg.QueryParams,
-		BodyParams:   cfg.BodyParams,
-		HeaderParams: cfg.HeaderParams,
-		Headers:      combinedHeaders,
-		Client:       s.Client,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:               cfg.Name,
+		Kind:               kind,
+		BaseURL:            s.BaseURL,
+		Path:               cfg.Path,
+		Method:             cfg.Method,
+		AuthRequired:       cfg.AuthRequired,
+		RequestBody:        cfg.RequestBody,
+		PathParams:         cfg.PathParams,
+		QueryParams:        cfg.QueryParams,
+		BodyParams:         cfg.BodyParams,
+		HeaderParams:       cfg.HeaderParams,
+		Headers:            combinedHeaders,
+		DefaultQueryParams: s.QueryParams,
+		Client:             s.Client,
+		AllParams:          allParameters,
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:        mcpManifest,
 	}, nil
 }
 
@@ -193,14 +188,18 @@ type Tool struct {
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
-	URL          *url.URL          `yaml:"url"`
-	Method       tools.HTTPMethod  `yaml:"method"`
-	Headers      map[string]string `yaml:"headers"`
-	RequestBody  string            `yaml:"requestBody"`
-	QueryParams  tools.Parameters  `yaml:"queryParams"`
-	BodyParams   tools.Parameters  `yaml:"bodyParams"`
-	HeaderParams tools.Parameters  `yaml:"headerParams"`
-	AllParams    tools.Parameters  `yaml:"allParams"`
+	BaseURL            string            `yaml:"baseURL"`
+	Path               string            `yaml:"path"`
+	Method             tools.HTTPMethod  `yaml:"method"`
+	Headers            map[string]string `yaml:"headers"`
+	DefaultQueryParams map[string]string `yaml:"defaultQueryParams"`
+
+	RequestBody  string           `yaml:"requestBody"`
+	PathParams   tools.Parameters `yaml:"pathParams"`
+	QueryParams  tools.Parameters `yaml:"queryParams"`
+	BodyParams   tools.Parameters `yaml:"bodyParams"`
+	HeaderParams tools.Parameters `yaml:"headerParams"`
+	AllParams    tools.Parameters `yaml:"allParams"`
 
 	Client      *http.Client
 	manifest    tools.Manifest
@@ -241,14 +240,45 @@ func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, para
 }
 
 // Helper function to generate the HTTP request URL upon Tool invocation.
-func getURL(u *url.URL, queryParams tools.Parameters, paramsMap map[string]any) (string, error) {
+func getURL(baseURL, path string, pathParams, queryParams tools.Parameters, defaultQueryParams map[string]string, paramsMap map[string]any) (string, error) {
+	// use Go template to replace path params
+	pathParamValues, err := tools.GetParams(pathParams, paramsMap)
+	if err != nil {
+		return "", err
+	}
+	pathParamsMap := pathParamValues.AsMap()
+
+	templ, err := template.New("url").Parse(path)
+	if err != nil {
+		return "", fmt.Errorf("error parsing URL: %s", err)
+	}
+	var templatedPath bytes.Buffer
+	err = templ.Execute(&templatedPath, pathParamsMap)
+	if err != nil {
+		return "", fmt.Errorf("error replacing pathParams: %s", err)
+	}
+
+	// Create URL based on BaseURL and Path
+	// Attach query parameters
+	parsedURL, err := url.Parse(baseURL + templatedPath.String())
+	if err != nil {
+		return "", fmt.Errorf("error parsing URL: %s", err)
+	}
+
+	// Get existing query parameters from the URL
+	queryParameters := parsedURL.Query()
+	for key, value := range defaultQueryParams {
+		queryParameters.Add(key, value)
+	}
+	parsedURL.RawQuery = queryParameters.Encode()
+
 	// Set dynamic query parameters
-	query := u.Query()
+	query := parsedURL.Query()
 	for _, p := range queryParams {
 		query.Add(p.GetName(), fmt.Sprintf("%v", paramsMap[p.GetName()]))
 	}
-	u.RawQuery = query.Encode()
-	return u.String(), nil
+	parsedURL.RawQuery = query.Encode()
+	return parsedURL.String(), nil
 }
 
 // Helper function to generate the HTTP headers upon Tool invocation.
@@ -279,9 +309,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 
 	// Calculate URL
-	urlString, err := getURL(t.URL, t.QueryParams, paramsMap)
+	urlString, err := getURL(t.BaseURL, t.Path, t.PathParams, t.QueryParams, t.DefaultQueryParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("error populating query parameters: %s", err)
+		return nil, fmt.Errorf("error populating path parameters: %s", err)
 	}
 
 	req, _ := http.NewRequest(string(t.Method), urlString, strings.NewReader(requestBody))

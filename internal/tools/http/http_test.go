@@ -44,7 +44,30 @@ func TestParseFromYamlHTTP(t *testing.T) {
 					kind: http
 					source: my-instance
 					method: GET
-					path: "search?name=alice&pet=cat"
+					description: some description
+					path: search
+				`,
+			want: server.ToolConfigs{
+				"example_tool": http.Config{
+					Name:         "example_tool",
+					Kind:         "http",
+					Source:       "my-instance",
+					Method:       "GET",
+					Path:         "search",
+					Description:  "some description",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "advanced example",
+			in: `
+			tools:
+				example_tool:
+					kind: http
+					source: my-instance
+					method: GET
+					path: "{{.pathParam}}?name=alice&pet=cat"
 					description: some description
 					authRequired:
 						- my-google-auth-service
@@ -58,6 +81,10 @@ func TestParseFromYamlHTTP(t *testing.T) {
 							  field: user_id
 							- name: other-auth-service
 							  field: user_id
+					pathParams:
+					    - name: pathParam
+					      type: string
+					      description: path param
 					requestBody: |
 							{
 								"age": {{.age}},
@@ -85,13 +112,18 @@ func TestParseFromYamlHTTP(t *testing.T) {
 					Kind:         "http",
 					Source:       "my-instance",
 					Method:       "GET",
-					Path:         "search?name=alice&pet=cat",
+					Path:         "{{.pathParam}}?name=alice&pet=cat",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					QueryParams: []tools.Parameter{
 						tools.NewStringParameterWithAuth("country", "some description",
 							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
+					},
+					PathParams: tools.Parameters{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{Name: "pathParam", Type: "string", Desc: "path param"},
+						},
 					},
 					RequestBody: `{
   "age": {{.age}},

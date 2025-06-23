@@ -69,6 +69,10 @@
   color: 3DED97
   description: Label to trigger Github Action tests.
 
+- name: 'docs: deploy-preview'
+  color: BFDADC
+  description: Label to trigger Github Action docs preview.
+
 - name: 'status: contribution welcome'
   color: 8befd7
   description: Status - Contributions welcome.
@@ -80,3 +84,9 @@
 - name: 'status: awaiting codeowners'
   color: 8befd7
   description: Status - Awaiting response from code owners.
+
+# Product Labels
+- name: 'product: bigquery'
+  color: 5065c7
+  description: Product - Assigned to the BigQuery team. 
+

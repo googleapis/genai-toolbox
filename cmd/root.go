@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -52,9 +53,11 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
 	"github.com/spf13/cobra"
 
@@ -71,16 +74,22 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
 var (
-	// versionString indicates the version of this library.
-	//go:embed version.txt
+	// versionString stores the full semantic version, including build metadata.
 	versionString string
+	// versionNum indicates the numerical part fo the version
+	//go:embed version.txt
+	versionNum string
 	// metadataString indicates additional build or distribution metadata.
-	metadataString string
+	buildType string = "dev" // should be one of "dev", "binary", or "container"
+	// commitSha is the git commit it was built from
+	commitSha string
 )
 
 func init() {
@@ -89,10 +98,11 @@ func init() {
 
 // semanticVersion returns the version of the CLI including a compile-time metadata.
 func semanticVersion() string {
-	v := strings.TrimSpace(versionString)
-	if metadataString != "" {
-		v += "+" + metadataString
+	metadataStrings := []string{buildType, runtime.GOOS, runtime.GOARCH}
+	if commitSha != "" {
+		metadataStrings = append(metadataStrings, commitSha)
 	}
+	v := strings.TrimSpace(versionNum) + "+" + strings.Join(metadataStrings, ".")
 	return v
 }
 
@@ -274,7 +284,7 @@ func run(cmd *Command) error {
 	ctx = util.WithLogger(ctx, cmd.logger)
 
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.cfg.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
@@ -305,6 +315,8 @@ func run(cmd *Command) error {
 		}
 		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltConfig)
 		cmd.logger.InfoContext(ctx, logMsg)
+		// Append prebuilt.source to Version string for the User Agent
+		cmd.cfg.Version += "+prebuilt." + cmd.prebuiltConfig
 	} else {
 		// Set default value of tools-file flag to tools.yaml
 		if cmd.tools_file == "" {
@@ -340,30 +352,33 @@ func run(cmd *Command) error {
 		return errMsg
 	}
 
-	err = s.Listen(ctx)
-	if err != nil {
-		errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
-	cmd.logger.InfoContext(ctx, "Server ready to serve!")
-
 	// run server in background
 	srvErr := make(chan error)
-	go func() {
-		defer close(srvErr)
-		if cmd.cfg.Stdio {
+	if cmd.cfg.Stdio {
+		go func() {
+			defer close(srvErr)
 			err = s.ServeStdio(ctx, cmd.inStream, cmd.outStream)
 			if err != nil {
 				srvErr <- err
 			}
-		} else {
+		}()
+	} else {
+		err = s.Listen(ctx)
+		if err != nil {
+			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		cmd.logger.InfoContext(ctx, "Server ready to serve!")
+
+		go func() {
+			defer close(srvErr)
 			err = s.Serve(ctx)
 			if err != nil {
 				srvErr <- err
 			}
-		}
-	}()
+		}()
+	}
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {

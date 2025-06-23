@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -76,7 +77,13 @@ func getCloudSQLMssqlVars(t *testing.T) map[string]any {
 // Copied over from cloud_sql_mssql.go
 func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	// Create dsn
-	dsn := fmt.Sprintf("sqlserver://%s:%s@%s?database=%s&cloudsql=%s:%s:%s", user, pass, ipAddress, dbname, project, region, instance)
+	query := fmt.Sprintf("database=%s&cloudsql=%s:%s:%s", dbname, project, region, instance)
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		Host:     ipAddress,
+		RawQuery: query,
+	}
 
 	// Get dial options
 	dialOpts, err := tests.GetCloudSQLDialOpts(ipType)
@@ -95,7 +102,7 @@ func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, u
 	// Open database connection
 	db, err := sql.Open(
 		"cloudsql-sqlserver-driver",
-		dsn,
+		url.String(),
 	)
 	if err != nil {
 		return nil, err
@@ -118,6 +125,7 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMssqlParamToolInfo(tableNameParam)
@@ -125,13 +133,15 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlLAuthToolInfo(tableNameAuth)
+	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlAuthToolInfo(tableNameAuth)
 	teardownTable2 := tests.SetupMsSQLTable(t, ctx, db, create_statement2, insert_statement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
 	toolsFile = tests.AddMssqlExecuteSqlConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMssqlTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CLOUD_SQL_MSSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -154,6 +164,7 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }
 
 // Test connection with different IP type

@@ -129,11 +129,17 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
+
+	selectAll := "SELECT * FROM {{.tableName}} ORDER BY id"
+	if tmplSelectAll != "" {
+		selectAll = tmplSelectAll
+	}
+
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
 		"kind":        toolKind,
 		"source":      "my-instance",
@@ -159,7 +165,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT * FROM {{.tableName}}",
+		"statement":   selectAll,
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
@@ -169,7 +175,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectCombined,
-		"parameters":  []tools.Parameter{tools.NewStringParameter("id", "the id of the user")},
+		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 		},
@@ -178,7 +184,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
-		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
+		"statement":   "SELECT {{array .fields}} FROM {{.tableName}} ORDER BY id",
 		"templateParameters": []tools.Parameter{
 			tools.NewStringParameter("tableName", "some description"),
 			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),
@@ -288,13 +294,20 @@ func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMssqlLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
-func GetMssqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMssqlAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
+func GetMssqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
 	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", SERVICE_ACCOUNT_EMAIL), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
 	return create_statement, insert_statement, tool_statement, params
+}
+
+// GetMssqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMssqlTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = @id"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = @name"
+	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
 // GetMysqlParamToolInfo returns statements and param for my-param-tool mysql-sql kind
@@ -306,8 +319,8 @@ func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMysqlLAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
-func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMysqlAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
+func GetMysqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
 	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
@@ -315,8 +328,8 @@ func GetMysqlLAuthToolInfo(tableName string) (string, string, string, []any) {
 	return create_statement, insert_statement, tool_statement, params
 }
 
-// GetMysqlSQLTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
-func GetMysqlSQLTmplToolStatement() (string, string) {
+// GetMysqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMysqlTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
 	return tmplSelectCombined, tmplSelectFilterCombined
@@ -437,4 +450,91 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 			t.Errorf("Teardown failed: %s", err)
 		}
 	}
+}
+
+// GetRedisWants return the expected wants for redis
+func GetRedisValkeyWants() (string, string, string, string) {
+	select1Want := "[\"PONG\"]"
+	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
+	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
+}
+
+func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+				"commands":    [][]string{{"PING"}},
+			},
+			"my-param-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test invocation with params.",
+				"commands":    [][]string{{"HGETALL", "row1"}, {"HGETALL", "row3"}},
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
+					},
+					map[string]any{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+			},
+			"my-auth-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"commands": [][]string{{"HGETALL", "$email"}},
+				"parameters": []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authServices": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
+				"commands":    [][]string{{"PING"}},
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-fail-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test statement with incorrect syntax.",
+				"commands":    [][]string{{"SELEC 1;"}},
+			},
+		},
+	}
+
+	return toolsFile
+
 }

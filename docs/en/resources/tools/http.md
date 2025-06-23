@@ -16,7 +16,12 @@ Toolbox allows you to configure the request URL, method, headers, query paramete
 ### URL
 
 An HTTP request URL identifies the target the client wants to access.
-Toolbox composes the request URL from the HTTP Source's `baseUrl` and the HTTP Tool's `path`.
+Toolbox composes the request URL from 3 places:
+
+1. The HTTP Source's `baseUrl`.
+2. The HTTP Tool's `path` field.
+3. The HTTP Tool's `pathParams` for dynamic path composed during Tool invocation.
+
 For example, the following config allows you to reach different paths of the same server using multiple Tools:
 
 ```yaml
@@ -39,6 +44,17 @@ tools:
         method: GET
         path: /search
         description: Tool to search information from the example API
+    
+    my-dynamic-path-tool:
+        kind: http
+        source: my-http-source
+        method: GET
+        path: /{{.myPathParam}}/search
+        description: Tool to reach endpoint based on the input to `myPathParam`
+        pathParams:
+            - name: myPathParam
+              type: string
+              description: The dynamic path parameter
 
 ```
 

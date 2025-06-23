@@ -13,18 +13,19 @@
 # limitations under the License.
 
 # Use the latest stable golang 1.x to compile to a binary
-FROM --platform=$BUILDPLATFORM golang:1 as build
+FROM --platform=$BUILDPLATFORM golang:1 AS build
 
 WORKDIR /go/src/genai-toolbox
 COPY . .
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG METADATA_TAGS=dev
+ARG BUILD_TYPE="container.dev"
+ARG COMMIT_SHA=""
 
 RUN go get ./...
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.metadataString=container.${METADATA_TAGS}"
+    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=container.${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}"
 
 # Final Stage
 FROM gcr.io/distroless/static:nonroot
