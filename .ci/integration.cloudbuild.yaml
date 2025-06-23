@@ -66,6 +66,10 @@ steps:
           cloudsqlpg_coverage.out \
           > cloudsqlpg_filtered_coverage.out
 
+        echo "--- Top 10 entries of cloudsqlpg_filtered_coverage.out ---"
+        head -n 10 cloudsqlpg_filtered_coverage.out
+        echo "---------------------------------------------------------"
+
         # calculate & check coverage
         total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out \
         | grep "total:" | awk '{print $3}')
