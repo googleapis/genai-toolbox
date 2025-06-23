@@ -88,7 +88,7 @@ go test -race -v ./...
 The following databases have been added as test resources. To add a new database to test against, please contact the Toolbox maintainer team via an issue or PR. Refer to the [Cloud Build testing configuration](./.ci/integration.cloudbuild.yaml) for a complete list of variables for each source.
 
 * AlloyDB - setup in the test project
-    * AI Natural Language ([setup instructions](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries))
+    * AI Natural Language ([setup instructions](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries)) has been configured for `alloydb-a`-nl` tool tests
     * The Cloud Build service account is a user
 * Bigtable - setup in the test project
     * The Cloud Build service account is a user
@@ -101,18 +101,19 @@ The following databases have been added as test resources. To add a new database
 * Cloud SQL SQL Server - setup in the test project
     * The Cloud Build service account is a user
 * Couchbase - setup in the test project via the Marketplace
-* DGraph
-* Memorystore Redis - setup in the test project
+* DGraph - using the public dgraph interface https://play.dgraph.io for testing
+* Memorystore Redis - setup in the test project using a Memorystore for Redis standalone instance
+    * Memorystore Redis Cluster, Memorystore Valkey standalone, and Memorystore Valkey Cluster instances all require PSC connections, which requires extra security setup to connect from Cloud Build. Memorystore Redis standalone is the only one allowing PSA connection.
     * The Cloud Build service account is a user
-* Memorystore Valkey - setup in the test project
+* Memorystore Valkey - setup in the test project using a Memorystore for Redis standalone instance
     * The Cloud Build service account is a user
-* MySQL -
-* Neo4j -
-* Postgres -
+* MySQL - setup in the test project using a Cloud SQL instance
+* Neo4j - setup in the test project on a GCE VM
+* Postgres - setup in the test project using an AlloyDB instance
 * Spanner - setup in the test project
     * The Cloud Build service account is a user
-* SQL Server -
-* SQLite -
+* SQL Server - setup in the test project using a Cloud SQL instance
+* SQLite -  setup in the integration test, where we create a temporary database file
 
 ### Other GitHub Checks
 
