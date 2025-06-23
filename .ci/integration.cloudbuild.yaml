@@ -57,7 +57,7 @@ steps:
         ./cloudsqlpg.test -test.v -test.coverprofile=cloudsqlpg_coverage.out
         export path="github.com/googleapis/genai-toolbox/internal/"
         grep -E "^mode:
-        |${path}sources/cloudsqlpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/"
+        |${path}sources/cloudsqlpg/|${path}tools/postgressql/|${path}tools/postgresexecutesql/" \
         cloudsqlpg_coverage.out > cloudsqlpg_filtered_coverage.out
         
         total_coverage=$(go tool cover -func=cloudsqlpg_filtered_coverage.out | grep "total:" | awk '{print $3}')
