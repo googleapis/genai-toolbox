@@ -21,7 +21,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -206,10 +205,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
-	sseManager := &sseManager{
-		mu:          sync.RWMutex{},
-		sseSessions: make(map[string]*sseSession),
-	}
+	sseManager := newSseManager(ctx)
 
 	s := &Server{
 		version:         cfg.Version,
