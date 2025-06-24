@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgresexecutesql"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 )
 
 func TestParseFromYamlExecuteSql(t *testing.T) {
