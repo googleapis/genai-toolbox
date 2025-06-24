@@ -32,6 +32,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
+	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -288,6 +289,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var session *sseSession
 
 	// check if client connects via sse
+	// v2024-11-05 supports http with sse
 	paramSessionId := r.URL.Query().Get("sessionId")
 	if paramSessionId != "" {
 		sessionId = paramSessionId
@@ -297,6 +299,14 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			s.logger.DebugContext(ctx, "sse session not available")
 		}
+	}
+
+	// check if client have `Mcp-Session-Id` header
+	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 since 
+	// previous version doesn't use this header.
+	headerSessionId := r.Header.Get("Mcp-Session-Id")
+	if headerSessionId != "" {
+		protocolVersion = v20250326.PROTOCOL_VERSION
 	}
 
 	toolsetName := chi.URLParam(r, "toolsetName")
@@ -331,7 +341,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
 	}
 
-	_, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName)
+	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName)
 	// notifications will return empty string
 	if res == nil {
 		// Notifications do not expect a response
@@ -341,6 +351,12 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		s.logger.DebugContext(ctx, err.Error())
+	}
+
+	// for v20250326, add the `Mcp-Session-Id` header
+	if v == v20250326.PROTOCOL_VERSION {
+		sessionId = uuid.New().String()
+		w.Header().Set("Mcp-Session-Id", sessionId)
 	}
 
 	if session != nil {
