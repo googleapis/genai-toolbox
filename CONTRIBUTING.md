@@ -77,7 +77,7 @@ Create a `Config` struct and a `Tool` struct to store necessary parameters for t
 #### 3. Add Integration Tests
 
 *   **Add a test file** under a new directory `tests/newdb`.
-*   **Add pre-defined integration test suites** in the `/tests/tool.go` that are **required** to be run as long as your code contains related
+*   **Add pre-defined integration test suites** in the `/tests/newdb/newdb_test.go` that are **required** to be run as long as your code contains related
 features:
 
      1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
