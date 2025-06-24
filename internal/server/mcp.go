@@ -313,7 +313,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if client have `Mcp-Session-Id` header
-	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 since 
+	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 since
 	// previous version doesn't use this header.
 	headerSessionId := r.Header.Get("Mcp-Session-Id")
 	if headerSessionId != "" {
@@ -403,6 +403,15 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
+
+		// check if user is sending a batch request
+		var a []any
+		unmarshalErr := json.Unmarshal(body, &a)
+		if unmarshalErr == nil {
+			err = fmt.Errorf("not supporting batch requests")
+			return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+		}
+
 		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
