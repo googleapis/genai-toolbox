@@ -313,7 +313,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if client have `Mcp-Session-Id` header
-	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 since 
+	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 since
 	// previous version doesn't use this header.
 	headerSessionId := r.Header.Get("Mcp-Session-Id")
 	if headerSessionId != "" {
