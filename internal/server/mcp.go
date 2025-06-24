@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
+	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -38,7 +39,6 @@ import (
 )
 
 type sseSession struct {
-	sessionId  string
 	writer     http.ResponseWriter
 	flusher    http.Flusher
 	done       chan struct{}
@@ -71,9 +71,10 @@ func (m *sseManager) remove(id string) {
 }
 
 type stdioSession struct {
-	server *Server
-	reader *bufio.Reader
-	writer io.Writer
+	protocol string
+	server   *Server
+	reader   *bufio.Reader
+	writer   io.Writer
 }
 
 func NewStdioSession(s *Server, stdin io.Reader, stdout io.Writer) *stdioSession {
@@ -102,13 +103,15 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			}
 			return err
 		}
-		res, err := processMcpMessage(ctx, []byte(line), s.server, "")
+		v, res, err := processMcpMessage(ctx, []byte(line), s.server, s.protocol, "")
 		if err != nil {
 			// errors during the processing of message will generate a valid MCP Error response.
 			// server can continue to run.
 			s.server.logger.ErrorContext(ctx, err.Error())
 		}
-
+		if v != "" {
+			s.protocol = v
+		}
 		// no responses for notifications
 		if res != nil {
 			if err = s.write(ctx, res); err != nil {
@@ -230,7 +233,6 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 	}
 	session := &sseSession{
-		sessionId:  sessionId,
 		writer:     w,
 		flusher:    flusher,
 		done:       make(chan struct{}),
@@ -282,12 +284,24 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
 
+	var sessionId, protocolVersion string
+	var session *sseSession
+
+	// check if client connects via sse
+	paramSessionId := r.URL.Query().Get("sessionId")
+	if paramSessionId != "" {
+		sessionId = paramSessionId
+		protocolVersion = v20241105.PROTOCOL_VERSION
+		var ok bool
+		session, ok = s.sseManager.get(sessionId)
+		if !ok {
+			s.logger.DebugContext(ctx, "sse session not available")
+		}
+	}
+
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
-
-	// retrieve sse session id, if applicable
-	sessionId := r.URL.Query().Get("sessionId")
 
 	var err error
 	defer func() {
@@ -317,7 +331,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
 	}
 
-	res, err := processMcpMessage(ctx, body, s, toolsetName)
+	_, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName)
 	// notifications will return empty string
 	if res == nil {
 		// Notifications do not expect a response
@@ -329,11 +343,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		s.logger.DebugContext(ctx, err.Error())
 	}
 
-	// retrieve sse session
-	session, ok := s.sseManager.get(sessionId)
-	if !ok {
-		s.logger.DebugContext(ctx, "sse session not available")
-	} else {
+	if session != nil {
 		// queue sse event
 		eventData, _ := json.Marshal(res)
 		select {
@@ -351,53 +361,57 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 // processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, toolsetName string) (any, error) {
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string) (string, any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	// TODO: will update during implementation of mcpManager
-	protocolVersion := "2024-11-05"
+	if protocolVersion == "" {
+		protocolVersion = v20241105.PROTOCOL_VERSION
+	}
 
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage jsonrpc.BaseMessage
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
-		return jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
 	// Check if method is present
 	if baseMessage.Method == "" {
 		err = fmt.Errorf("method not found")
-		return jsonrpc.NewError(baseMessage.Id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
+		return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("method is: %s", baseMessage.Method))
 
 	// Check for JSON-RPC 2.0
 	if baseMessage.Jsonrpc != jsonrpc.JSONRPC_VERSION {
 		err = fmt.Errorf("invalid json-rpc version")
-		return jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
 		err := mcp.NotificationHandler(ctx, body)
-		return nil, err
+		return "", nil, err
 	}
 
 	switch baseMessage.Method {
 	case mcputil.INITIALIZE:
-		// TODO: will replace with protocol version once update mcpManager
-		res, _, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
-		return res, err
+		res, v, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+		if err != nil {
+			return "", res, err
+		}
+		return v, res, err
 	default:
 		toolset, ok := s.toolsets[toolsetName]
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
-			return jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		return mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
+		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
+		return "", res, err
 	}
 }

@@ -330,6 +330,12 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 }
 
 func runAiNlMCPToolCallMethod(t *testing.T) {
+	sessionId := tests.RunInitialize(t, "2024-11-05")
+	header := map[string]string{}
+	if sessionId != "" {
+		header["Mcp-Session-Id"] = sessionId
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -404,7 +410,7 @@ func runAiNlMCPToolCallMethod(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
+			for k, v := range header {
 				req.Header.Add(k, v)
 			}
 			resp, err := http.DefaultClient.Do(req)
