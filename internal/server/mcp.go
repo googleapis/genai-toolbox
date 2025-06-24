@@ -291,6 +291,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var session *sseSession
 
 	// check if client connects via sse
+	// v2024-11-05 supports http with sse
 	paramSessionId := r.URL.Query().Get("sessionId")
 	if paramSessionId != "" {
 		sessionId = paramSessionId
@@ -303,6 +304,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if client have `Mcp-Session-Id` header
+	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 since 
+	// previous version doesn't use this header.
 	headerSessionId := r.Header.Get("Mcp-Session-Id")
 	if headerSessionId != "" {
 		protocolVersion = v20250326.PROTOCOL_VERSION
@@ -352,7 +355,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		s.logger.DebugContext(ctx, err.Error())
 	}
 
-	// for v20240326, add the `Mcp-Session-Id` header
+	// for v20250326, add the `Mcp-Session-Id` header
 	if v == v20250326.PROTOCOL_VERSION {
 		sessionId = uuid.New().String()
 		w.Header().Set("Mcp-Session-Id", sessionId)
