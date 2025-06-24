@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysqlexecutesql_test
+package bigquerygettableinfo_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysqlexecutesql"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygettableinfo"
 )
 
-func TestParseFromYamlExecuteSql(t *testing.T) {
+func TestParseFromYamlBigQueryGetTableInfo(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,20 +39,17 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mysql-execute-sql
+					kind: bigquery-get-table-info
 					source: my-instance
 					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mysqlexecutesql.Config{
+				"example_tool": bigquerygettableinfo.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-execute-sql",
+					Kind:         "bigquery-get-table-info",
 					Source:       "my-instance",
 					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					AuthRequired: []string{},
 				},
 			},
 		},

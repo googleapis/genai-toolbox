@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquerylisttableids_test
+package bigquerylistdatasetids_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerylisttableids"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylistdatasetids"
 )
 
-func TestParseFromYamlBigQueryListTableIds(t *testing.T) {
+func TestParseFromYamlBigQueryListDatasetIds(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,14 +39,14 @@ func TestParseFromYamlBigQueryListTableIds(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-list-table-ids
+					kind: bigquery-list-dataset-ids
 					source: my-instance
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigquerylisttableids.Config{
+				"example_tool": bigquerylistdatasetids.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-list-table-ids",
+					Kind:         "bigquery-list-dataset-ids",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

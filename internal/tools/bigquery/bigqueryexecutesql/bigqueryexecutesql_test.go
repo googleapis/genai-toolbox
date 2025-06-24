@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquerygettableinfo_test
+package bigqueryexecutesql_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerygettableinfo"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
 )
 
-func TestParseFromYamlBigQueryGetTableInfo(t *testing.T) {
+func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,14 +39,14 @@ func TestParseFromYamlBigQueryGetTableInfo(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-get-table-info
+					kind: bigquery-execute-sql
 					source: my-instance
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigquerygettableinfo.Config{
+				"example_tool": bigqueryexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-get-table-info",
+					Kind:         "bigquery-execute-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

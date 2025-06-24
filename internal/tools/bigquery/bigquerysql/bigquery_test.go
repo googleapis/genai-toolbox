@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mssqlsql_test
+package bigquerysql_test
 
 import (
 	"testing"
@@ -22,10 +22,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mssqlsql"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 )
 
-func TestParseFromYamlMssql(t *testing.T) {
+func TestParseFromYamlBigQuery(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -40,36 +40,26 @@ func TestParseFromYamlMssql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mssql-sql
+					kind: bigquery-sql
 					source: my-instance
 					description: some description
 					statement: |
 						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
 					parameters:
 						- name: country
 						  type: string
 						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mssqlsql.Config{
+				"example_tool": bigquerysql.Config{
 					Name:         "example_tool",
-					Kind:         "mssql-sql",
+					Kind:         "bigquery-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					AuthRequired: []string{},
 					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+						tools.NewStringParameter("country", "some description"),
 					},
 				},
 			},
@@ -90,9 +80,10 @@ func TestParseFromYamlMssql(t *testing.T) {
 			}
 		})
 	}
+
 }
 
-func TestParseFromYamlWithTemplateMssql(t *testing.T) {
+func TestParseFromYamlWithTemplateBigQuery(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -107,23 +98,15 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mssql-sql
+					kind: bigquery-sql
 					source: my-instance
 					description: some description
 					statement: |
 						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
 					parameters:
 						- name: country
 						  type: string
 						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
 					templateParameters:
 						- name: tableName
 						  type: string
@@ -137,17 +120,15 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 								description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mssqlsql.Config{
+				"example_tool": bigquerysql.Config{
 					Name:         "example_tool",
-					Kind:         "mssql-sql",
+					Kind:         "bigquery-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					AuthRequired: []string{},
 					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+						tools.NewStringParameter("country", "some description"),
 					},
 					TemplateParameters: []tools.Parameter{
 						tools.NewStringParameter("tableName", "The table to select hotels from."),
@@ -172,4 +153,5 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 			}
 		})
 	}
+
 }

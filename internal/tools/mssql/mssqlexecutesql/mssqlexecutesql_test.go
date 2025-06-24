@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquerygetdatasetinfo_test
+package mssqlexecutesql_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquerygetdatasetinfo"
+	"github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 )
 
-func TestParseFromYamlBigQueryGetDatasetInfo(t *testing.T) {
+func TestParseFromYamlExecuteSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,17 +39,20 @@ func TestParseFromYamlBigQueryGetDatasetInfo(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-get-dataset-info
+					kind: mssql-execute-sql
 					source: my-instance
 					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigquerygetdatasetinfo.Config{
+				"example_tool": mssqlexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-get-dataset-info",
+					Kind:         "mssql-execute-sql",
 					Source:       "my-instance",
 					Description:  "some description",
-					AuthRequired: []string{},
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
 			},
 		},

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spanner_test
+package spannersql_test
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/spanner"
+	"github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 )
 
 func TestParseFromYamlSpanner(t *testing.T) {
@@ -51,7 +51,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 						  description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spanner.Config{
+				"example_tool": spannersql.Config{
 					Name:         "example_tool",
 					Kind:         "spanner-sql",
 					Source:       "my-pg-instance",
@@ -81,7 +81,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 						  description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spanner.Config{
+				"example_tool": spannersql.Config{
 					Name:         "example_tool",
 					Kind:         "spanner-sql",
 					Source:       "my-pg-instance",
@@ -151,7 +151,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 								description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spanner.Config{
+				"example_tool": spannersql.Config{
 					Name:         "example_tool",
 					Kind:         "spanner-sql",
 					Source:       "my-pg-instance",
@@ -185,7 +185,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 						  description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spanner.Config{
+				"example_tool": spannersql.Config{
 					Name:         "example_tool",
 					Kind:         "spanner-sql",
 					Source:       "my-pg-instance",

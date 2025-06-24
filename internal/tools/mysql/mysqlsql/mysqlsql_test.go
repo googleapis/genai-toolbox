@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysqlsql"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 )
 
 func TestParseFromYamlMySQL(t *testing.T) {

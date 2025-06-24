@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery
+package spannersql
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	bigqueryapi "cloud.google.com/go/bigquery"
+	"cloud.google.com/go/spanner"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"google.golang.org/api/iterator"
 )
 
-const kind string = "bigquery-sql"
+const kind string = "spanner-sql"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -44,13 +44,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	BigQueryClient() *bigqueryapi.Client
+	SpannerClient() *spanner.Client
+	DatabaseDialect() string
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
+var _ compatibleSource = &spannerdb.Source{}
 
-var compatibleSources = [...]string{bigqueryds.SourceKind}
+var compatibleSources = [...]string{spannerdb.SourceKind}
 
 type Config struct {
 	Name               string           `yaml:"name" validate:"required"`
@@ -58,6 +59,7 @@ type Config struct {
 	Source             string           `yaml:"source" validate:"required"`
 	Description        string           `yaml:"description" validate:"required"`
 	Statement          string           `yaml:"statement" validate:"required"`
+	ReadOnly           bool             `yaml:"readOnly"`
 	AuthRequired       []string         `yaml:"authRequired"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
@@ -100,7 +102,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AllParams:          allParameters,
 		Statement:          cfg.Statement,
 		AuthRequired:       cfg.AuthRequired,
-		Client:             s.BigQueryClient(),
+		ReadOnly:           cfg.ReadOnly,
+		Client:             s.SpannerClient(),
+		dialect:            s.DatabaseDialect(),
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 	}
@@ -117,77 +121,91 @@ type Tool struct {
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 	AllParams          tools.Parameters `yaml:"allParams"`
+	ReadOnly           bool             `yaml:"readOnly"`
+	Client             *spanner.Client
+	dialect            string
+	Statement          string
+	manifest           tools.Manifest
+	mcpManifest        tools.McpManifest
+}
 
-	Client      *bigqueryapi.Client
-	Statement   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+func getMapParams(params tools.ParamValues, dialect string) (map[string]interface{}, error) {
+	switch strings.ToLower(dialect) {
+	case "googlesql":
+		return params.AsMap(), nil
+	case "postgresql":
+		return params.AsMapByOrderedKeys(), nil
+	default:
+		return nil, fmt.Errorf("invalid dialect %s", dialect)
+	}
+}
+
+// processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
+func processRows(iter *spanner.RowIterator) ([]any, error) {
+	var out []any
+	defer iter.Stop()
+
+	for {
+		row, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+
+		vMap := make(map[string]any)
+		cols := row.ColumnNames()
+		for i, c := range cols {
+			vMap[c] = row.ColumnValue(i)
+		}
+		out = append(out, vMap)
+	}
+	return out, nil
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	namedArgs := make([]bigqueryapi.QueryParameter, 0, len(params))
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
-	for _, p := range t.Parameters {
-		name := p.GetName()
-		value := paramsMap[name]
-
-		// BigQuery's QueryParameter only accepts typed slices as input
-		// This checks if the param is an array.
-		// If yes, convert []any to typed slice (e.g []string, []int)
-		switch arrayParam := value.(type) {
-		case []any:
-			var err error
-			itemType := p.McpManifest().Items.Type
-			value, err = convertAnySliceToTyped(arrayParam, itemType, name)
-			if err != nil {
-				return nil, fmt.Errorf("unable to convert []any to typed slice: %w", err)
-			}
-		}
-
-		if strings.Contains(t.Statement, "@"+name) {
-			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
-				Name:  name,
-				Value: value,
-			})
-		} else {
-			namedArgs = append(namedArgs, bigqueryapi.QueryParameter{
-				Value: value,
-			})
-		}
-	}
-
-	query := t.Client.Query(newStatement)
-	query.Parameters = namedArgs
-	query.Location = t.Client.Location
-
-	it, err := query.Read(ctx)
+	newParams, err := tools.GetParams(t.Parameters, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	mapParams, err := getMapParams(newParams, t.dialect)
+	if err != nil {
+		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
 
-	var out []any
-	for {
-		var row map[string]bigqueryapi.Value
-		err := it.Next(&row)
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
-		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
-		}
-		out = append(out, vMap)
+	var results []any
+	var opErr error
+	stmt := spanner.Statement{
+		SQL:    newStatement,
+		Params: mapParams,
 	}
 
-	return out, nil
+	if t.ReadOnly {
+		iter := t.Client.Single().Query(ctx, stmt)
+		results, opErr = processRows(iter)
+	} else {
+		_, opErr = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			iter := txn.Query(ctx, stmt)
+			results, err = processRows(iter)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+	}
+
+	if opErr != nil {
+		return nil, fmt.Errorf("unable to execute client: %w", opErr)
+	}
+
+	return results, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
@@ -204,48 +222,4 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func convertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
-	var typedSlice any
-	switch itemType {
-	case "string":
-		typedSlice := make([]string, len(s))
-		for j, item := range s {
-			if s, ok := item.(string); ok {
-				typedSlice[j] = s
-			} else {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be string, got %T", paramName, j, item)
-			}
-		}
-	case "integer":
-		typedSlice := make([]int64, len(s))
-		for j, item := range s {
-			i, ok := item.(int)
-			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
-			}
-			typedSlice[j] = int64(i)
-		}
-	case "float":
-		typedSlice := make([]float64, len(s))
-		for j, item := range s {
-			if f, ok := item.(float64); ok {
-				typedSlice[j] = f
-			} else {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be float, got %T", paramName, j, item)
-			}
-		}
-	case "boolean":
-		typedSlice := make([]bool, len(s))
-		for j, item := range s {
-			if b, ok := item.(bool); ok {
-				typedSlice[j] = b
-			} else {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be boolean, got %T", paramName, j, item)
-			}
-		}
-
-	}
-	return typedSlice, nil
 }
