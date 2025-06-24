@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
