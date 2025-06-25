@@ -131,22 +131,17 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
-	for i, name := range paramNames {
-		value := paramValues[i]
+	for _, p := range t.Parameters {
+		name := p.GetName()
+		value := paramsMap[name]
 
 		// BigQuery's QueryParameter only accepts typed slices as input
 		// This checks if the param is an array.
 		// If yes, convert []any to typed slice (e.g []string, []int)
 		switch arrayParam := value.(type) {
 		case []any:
-			var itemType string
 			var err error
-			for _, p := range t.Parameters {
-				// iterate through parameters to get array's item type
-				if name == p.GetName() {
-					itemType = p.McpManifest().Items.Type
-				}
-			}
+			itemType := p.McpManifest().Items.Type
 			value, err = convertAnySliceToTyped(arrayParam, itemType, name)
 			if err != nil {
 				return nil, fmt.Errorf("unable to convert []any to typed slice: %w", err)
@@ -225,10 +220,10 @@ func convertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 	case "integer":
 		typedSlice := make([]int64, len(s))
 		for j, item := range s {
-			i, ok := item.(int);
-			if  !ok {
-			    return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
-			} 
+			i, ok := item.(int)
+			if !ok {
+				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
+			}
 			typedSlice[j] = int64(i)
 		}
 	case "float":

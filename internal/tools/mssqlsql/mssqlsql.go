@@ -140,9 +140,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	namedArgs := make([]any, 0, len(newParams))
 	// To support both named args (e.g @id) and positional args (e.g @p1), check
 	// if arg name is contained in the statement.
-	paramNames, paramValues := newParams.AsNameAndValueSlices()
-	for i, name := range paramNames {
-		value := paramValues[i]
+	for _, p := range t.Parameters {
+		name := p.GetName()
+		value := paramsMap[name]
 		if strings.Contains(newStatement, "@"+name) {
 			namedArgs = append(namedArgs, sql.Named(name, value))
 		} else {

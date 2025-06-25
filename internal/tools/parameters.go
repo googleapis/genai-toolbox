@@ -62,17 +62,6 @@ func (p ParamValues) AsMap() map[string]interface{} {
 	return params
 }
 
-// AsNameAndValueSlices returns a slice of param names and a slice of values
-func (p ParamValues) AsNameAndValueSlices() ([]string, []any) {
-	names := []string{}
-	values := []any{}
-	for _, p := range p {
-		names = append(names, p.Name)
-		values = append(values, p.Value)
-	}
-	return names, values
-}
-
 // AsMapByOrderedKeys returns a map of a key's position to it's value, as necessary for Spanner PSQL.
 // Example { $1 -> "value1", $2 -> "value2" }
 func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
