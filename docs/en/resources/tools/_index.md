@@ -96,11 +96,13 @@ in the list using the items field:
     parameters:
       - name: preferred_airlines
         type: array
-        description: A list of airline, ordered by preference. 
+        description: A list of airline, ordered by preference.
         items:
-          name: name 
+          name: name
           type: string
-          description: Name of the airline. 
+          description: Name of the airline.
+    statement: |
+      SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
 ```
 
 | **field**   |     **type**     | **required** | **description**                                                             |
