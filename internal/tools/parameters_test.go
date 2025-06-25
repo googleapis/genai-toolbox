@@ -885,7 +885,6 @@ func TestParamValues(t *testing.T) {
 		wantMap           map[string]interface{}
 		wantMapOrdered    map[string]interface{}
 		wantMapWithDollar map[string]interface{}
-		wantNameSlice     []string
 	}{
 		{
 			name:           "string",
@@ -897,7 +896,6 @@ func TestParamValues(t *testing.T) {
 				"$my_bool":   true,
 				"$my_string": "hello world",
 			},
-			wantNameSlice: []string{"my_bool", "my_string"},
 		},
 	}
 	for _, tc := range tcs {
