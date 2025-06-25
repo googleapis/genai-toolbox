@@ -125,6 +125,7 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+	namedArgs := make([]bigqueryapi.QueryParameter, 0, len(params))
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
