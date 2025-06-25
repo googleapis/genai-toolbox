@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 const jsonrpcVersion = "2.0"
@@ -479,6 +480,46 @@ func TestMcpEndpoint(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+func TestDeleteEndpoint(t *testing.T) {
+	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	resp, _, err := runRequest(ts, http.MethodDelete, "/", nil, nil)
+	if resp.Status != "200 OK" {
+		t.Fatalf("unexpected status: %s", resp.Status)
+	}
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+}
+
+func TestGetEndpoint(t *testing.T) {
+	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	resp, body, err := runRequest(ts, http.MethodGet, "/", nil, nil)
+	if resp.Status != "405 Method Not Allowed" {
+		t.Fatalf("unexpected status: %s", resp.Status)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	want := "toolbox does not support streaming in streamable HTTP transport"
+	if got["error"] != want {
+		t.Fatalf("unexpected error message: %s", got["error"])
+	}
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
 	}
 }
 
