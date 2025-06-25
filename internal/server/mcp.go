@@ -409,7 +409,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		unmarshalErr := json.Unmarshal(body, &a)
 		if unmarshalErr == nil {
 			err = fmt.Errorf("not supporting batch requests")
-			return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+			return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 
 		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err

@@ -468,7 +468,7 @@ func TestMcpEndpoint(t *testing.T) {
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"error": map[string]any{
-							"code":    -32700.0,
+							"code":    -32600.0,
 							"message": "not supporting batch requests",
 						},
 					},
