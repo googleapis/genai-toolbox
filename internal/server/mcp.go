@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -44,31 +45,67 @@ type sseSession struct {
 	flusher    http.Flusher
 	done       chan struct{}
 	eventQueue chan string
+	lastActive time.Time
 }
 
 // sseManager manages and control access to sse sessions
 type sseManager struct {
-	mu          sync.RWMutex
+	mu          sync.Mutex
 	sseSessions map[string]*sseSession
 }
 
 func (m *sseManager) get(id string) (*sseSession, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	session, ok := m.sseSessions[id]
+	session.lastActive = time.Now()
 	return session, ok
+}
+
+func newSseManager(ctx context.Context) *sseManager {
+	sseM := &sseManager{
+		mu:          sync.Mutex{},
+		sseSessions: make(map[string]*sseSession),
+	}
+	go sseM.cleanupRoutine(ctx)
+	return sseM
 }
 
 func (m *sseManager) add(id string, session *sseSession) {
 	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.sseSessions[id] = session
-	m.mu.Unlock()
+	session.lastActive = time.Now()
 }
 
 func (m *sseManager) remove(id string) {
 	m.mu.Lock()
 	delete(m.sseSessions, id)
 	m.mu.Unlock()
+}
+
+func (m *sseManager) cleanupRoutine(ctx context.Context) {
+	timeout := 10 * time.Minute
+	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			func() {
+				m.mu.Lock()
+				defer m.mu.Unlock()
+				now := time.Now()
+				for id, sess := range m.sseSessions {
+					if now.Sub(sess.lastActive) > timeout {
+						delete(m.sseSessions, id)
+					}
+				}
+			}()
+		}
+	}
 }
 
 type stdioSession struct {

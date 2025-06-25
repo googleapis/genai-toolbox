@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"sync"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -153,10 +152,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	sseManager := &sseManager{
-		mu:          sync.RWMutex{},
-		sseSessions: make(map[string]*sseSession),
-	}
+	sseManager := newSseManager(ctx)
 
 	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: tools, toolsets: toolsets}
 	var r chi.Router

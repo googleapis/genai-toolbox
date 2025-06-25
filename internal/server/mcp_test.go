@@ -25,7 +25,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -667,10 +666,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	sseManager := &sseManager{
-		mu:          sync.RWMutex{},
-		sseSessions: make(map[string]*sseSession),
-	}
+	sseManager := newSseManager(ctx)
 
 	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: toolsMap, toolsets: toolsets}
 
