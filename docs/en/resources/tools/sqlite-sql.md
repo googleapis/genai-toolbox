@@ -70,14 +70,13 @@ tools:
         description: Table to select from
 ```
 
-
 ## Reference
 
 | **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
 |--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                   string                         |     true     | Must be "sqlite-sql".                                                                                                                    |
+| kind               |                   string                         |     true     | Must be "sqlite-sql".                                                                                                                      |
 | source             |                   string                         |     true     | Name of the source the SQLite source configuration.                                                                                        |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement          |                   string                         |     true     | The SQL statement to execute.                                                                                                        |
+| statement          |                   string                         |     true     | The SQL statement to execute.                                                                                                              |
 | parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
 | templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

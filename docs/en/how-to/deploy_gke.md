@@ -9,7 +9,6 @@ description: >
 
 ## Before you begin
 
-
 1. Set the PROJECT_ID environment variable:
 
     ```bash
@@ -41,7 +40,6 @@ description: >
     kubectl version --client
     ```
 
-
 1. If needed, install `kubectl` component using the Google Cloud CLI:
 
    ```bash
@@ -62,7 +60,7 @@ description: >
     gcloud iam service-accounts create $SA_NAME
     ```
 
-1.  Grant any IAM roles necessary to the IAM service account. Each source have a
+1. Grant any IAM roles necessary to the IAM service account. Each source have a
     list of necessary IAM permissions listed on it's page. The example below is
     for cloud sql postgres source:
 
@@ -254,6 +252,7 @@ description: >
     ```
 
 ## Clean up resources
+
 1. Delete secret.
 
     ```bash

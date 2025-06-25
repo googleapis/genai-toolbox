@@ -10,15 +10,21 @@ description: >
 
 ## About
 
-Redis is an open-source, in-memory data structure store, used as a database, cache, and message broker. It supports data structures such as strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial indexes with radius queries.
+Redis is an open-source, in-memory data structure store, used as a database,
+cache, and message broker. It supports data structures such as strings, hashes,
+lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
+geospatial indexes with radius queries.
 
-If you are new to Redis, you can find installation and getting started guides on the [official Redis website](https://redis.io/docs/getting-started/).
+If you are new to Redis, you can find installation and getting started guides on
+the [official Redis website](https://redis.io/docs/getting-started/).
 
 ## Requirements
 
 ### Redis
 
-[AUTH string][auth] is a password for connection to Redis. If you have the `requirepass` directive set in your Redis configuration, incoming client connections must authenticate in order to connect.
+[AUTH string][auth] is a password for connection to Redis. If you have the
+`requirepass` directive set in your Redis configuration, incoming client
+connections must authenticate in order to connect.
 
 Specify your AUTH string in the password field:
 
@@ -58,8 +64,8 @@ sources:
      # clusterEnabled: false
 ```
 
-Memorystore Redis Cluster supports IAM authentication instead. Grant your account the
-required [IAM role][iam] and make sure to set `useGCPIAM` to `true`.
+Memorystore Redis Cluster supports IAM authentication instead. Grant your
+account the required [IAM role][iam] and make sure to set `useGCPIAM` to `true`.
 
 Here is an example tools.yaml config for Memorystore Redis Cluster instances
 using IAM authentication:

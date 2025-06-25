@@ -14,9 +14,12 @@ on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
 
 ## Step 1: Set up your BigQuery Dataset and Table
 
-In this section, we will create a BigQuery dataset and a table, then insert some data that needs to be accessed by our agent.
+In this section, we will create a BigQuery dataset and a table, then insert some
+data that needs to be accessed by our agent.
 
-1.  Create a new BigQuery dataset (replace `YOUR_DATASET_NAME` with your desired dataset name, e.g., `toolbox_mcp_ds`, and optionally specify a location like `US` or `EU`):
+1. Create a new BigQuery dataset (replace `YOUR_DATASET_NAME` with your desired
+   dataset name, e.g., `toolbox_mcp_ds`, and optionally specify a location like
+   `US` or `EU`):
 
     ```bash
     export BQ_DATASET_NAME="YOUR_DATASET_NAME"
@@ -24,10 +27,12 @@ In this section, we will create a BigQuery dataset and a table, then insert some
 
     bq --location=$BQ_LOCATION mk $BQ_DATASET_NAME
     ```
-    You can also do this through the [Google Cloud Console](https://console.cloud.google.com/bigquery).
 
-1.  The `hotels` table needs to be defined in your new dataset. First, create a file named `create_hotels_table.sql` with the following content:
-    
+    You can also do this through the [Google Cloud
+    Console](https://console.cloud.google.com/bigquery).
+
+1. The `hotels` table needs to be defined in your new dataset. First, create a
+   file named `create_hotels_table.sql` with the following content:
 
     ```sql
     CREATE TABLE IF NOT EXISTS `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (
@@ -40,14 +45,19 @@ In this section, we will create a BigQuery dataset and a table, then insert some
       booked        BOOLEAN NOT NULL
     );
     ```
-    > **Note:** Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL with your actual project ID and dataset name.
+
+    > **Note:** Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL
+    > with your actual project ID and dataset name.
 
     Then run the command below to execute the sql query:
+
     ```bash
     bq query --project_id=$GOOGLE_CLOUD_PROJECT --dataset_id=$BQ_DATASET_NAME --use_legacy_sql=false < create_hotels_table.sql
     ```
 
-1.  .  Next, populate the hotels table with some initial data. To do this, create a file named `insert_hotels_data.sql` and add the following SQL INSERT statement to it.
+1. .  Next, populate the hotels table with some initial data. To do this, create
+   a file named `insert_hotels_data.sql` and add the following SQL INSERT
+   statement to it.
 
     ```sql
     INSERT INTO `YOUR_PROJECT_ID.YOUR_DATASET_NAME.hotels` (id, name, location, price_tier, checkin_date, checkout_date, booked)
@@ -63,16 +73,20 @@ In this section, we will create a BigQuery dataset and a table, then insert some
       (9, 'Courtyard Zurich', 'Zurich', 'Upscale', '2024-04-03', '2024-04-13', FALSE),
       (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', FALSE);
     ```
-    > **Note:** Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL with your actual project ID and dataset name.
+
+    > **Note:** Replace `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` in the SQL
+    > with your actual project ID and dataset name.
 
     Then run the command below to execute the sql query:
+
     ```bash
     bq query --project_id=$GOOGLE_CLOUD_PROJECT --dataset_id=$BQ_DATASET_NAME --use_legacy_sql=false < insert_hotels_data.sql
     ```
 
 ## Step 2: Install and configure Toolbox
 
-In this section, we will download Toolbox, configure our tools in a `tools.yaml`, and then run the Toolbox server.
+In this section, we will download Toolbox, configure our tools in a
+`tools.yaml`, and then run the Toolbox server.
 
 1. Download the latest version of Toolbox as a binary:
 
@@ -94,10 +108,15 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
     chmod +x toolbox
     ```
 
-1. Write the following into a `tools.yaml` file. You must replace the `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your actual BigQuery project and dataset name. The `location` field is optional; if not specified, it defaults to 'us'. The table name `hotels` is used directly in the statements. 
+1. Write the following into a `tools.yaml` file. You must replace the
+   `YOUR_PROJECT_ID` and `YOUR_DATASET_NAME` placeholder in the config with your
+   actual BigQuery project and dataset name. The `location` field is optional;
+   if not specified, it defaults to 'us'. The table name `hotels` is used
+   directly in the statements.
 
     {{< notice tip >}}
-  Authentication with BigQuery is handled via Application Default Credentials (ADC). Ensure you have run `gcloud auth application-default login`.
+  Authentication with BigQuery is handled via Application Default Credentials
+  (ADC). Ensure you have run `gcloud auth application-default login`.
     {{< /notice >}}
 
     ```yaml
@@ -170,8 +189,9 @@ In this section, we will download Toolbox, configure our tools in a `tools.yaml`
         - cancel-hotel
     ```
 
-    For more info on tools, check out the [Tools](../../resources/tools/_index.md) section. 
-    
+    For more info on tools, check out the
+    [Tools](../../resources/tools/_index.md) section.
+
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash

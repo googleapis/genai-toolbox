@@ -13,7 +13,7 @@ It's compatible with the following sources:
 
 - [bigquery](../sources/bigquery.md)
 
-bigquery-get-table-info takes dataset and table parameters to specify 
+bigquery-get-table-info takes dataset and table parameters to specify
 the target table.
 
 ## Example
@@ -30,6 +30,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-get-table-info".                                                                          |
+| kind        |                   string                   |     true     | Must be "bigquery-get-table-info".                                                               |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

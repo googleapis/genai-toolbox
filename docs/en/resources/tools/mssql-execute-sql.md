@@ -30,6 +30,7 @@ tools:
     source: my-mssql-instance
     description: Use this tool to execute sql statement.
 ```
+
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                    |

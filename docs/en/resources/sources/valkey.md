@@ -10,9 +10,14 @@ description: >
 
 ## About
 
-Valkey is an open-source, in-memory data structure store that originated as a fork of Redis. It's designed to be used as a database, cache, and message broker, supporting a wide range of data structures like strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial indexes with radius queries.
+Valkey is an open-source, in-memory data structure store that originated as a
+fork of Redis. It's designed to be used as a database, cache, and message
+broker, supporting a wide range of data structures like strings, hashes, lists,
+sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial
+indexes with radius queries.
 
-If you're new to Valkey, you can find installation and getting started guides on the [official Valkey website](https://valkey.io/docs/getting-started/).
+If you're new to Valkey, you can find installation and getting started guides on
+the [official Valkey website](https://valkey.io/docs/getting-started/).
 
 ## Example
 

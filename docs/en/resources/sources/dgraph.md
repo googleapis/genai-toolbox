@@ -9,7 +9,10 @@ description: >
 
 ## About
 
-[Dgraph][dgraph-docs] is an open-source graph database. It is designed for real-time workloads, horizontal scalability, and data flexibility. Implemented as a distributed system, Dgraph processes queries in parallel to deliver the fastest result.
+[Dgraph][dgraph-docs] is an open-source graph database. It is designed for
+real-time workloads, horizontal scalability, and data flexibility. Implemented
+as a distributed system, Dgraph processes queries in parallel to deliver the
+fastest result.
 
 This source can connect to either a self-managed Dgraph cluster or one hosted on
 Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
@@ -52,7 +55,7 @@ instead of hardcoding your secrets into the configuration file.
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |  string  |     true     | Must be "dgraph".                                                                                |
-| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").                   |
+| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").               |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
 | apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |

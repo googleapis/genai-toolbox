@@ -12,8 +12,8 @@ A valkey tool executes a series of pre-defined Valkey commands against a
 Memorystore for Valkey instance.
 
 The specified Valkey commands are executed sequentially. Each command is
-represented as a string array, where the first element is the command name (e.g., SET,
-GET, HGETALL) and subsequent elements are its arguments.
+represented as a string array, where the first element is the command name
+(e.g., SET, GET, HGETALL) and subsequent elements are its arguments.
 
 ### Dynamic Command Parameters
 

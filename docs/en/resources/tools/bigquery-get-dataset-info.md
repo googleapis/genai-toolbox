@@ -13,7 +13,7 @@ It's compatible with the following sources:
 
 - [bigquery](../sources/bigquery.md)
 
-bigquery-get-dataset-info takes a dataset parameter to specify the dataset 
+bigquery-get-dataset-info takes a dataset parameter to specify the dataset
 on the given source.
 
 ## Example
@@ -30,6 +30,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-get-dataset-info".                                                                          |
+| kind        |                   string                   |     true     | Must be "bigquery-get-dataset-info".                                                             |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

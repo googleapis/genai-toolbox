@@ -54,7 +54,6 @@ AlloyDB or Cloud SQL over private IP), make sure your Cloud Run service and the
 database are in the same VPC network.
 {{< /notice >}}
 
-
 ## Create a service account
 
 1. Create a backend service account if you don't already have one:
@@ -63,7 +62,7 @@ database are in the same VPC network.
     gcloud iam service-accounts create toolbox-identity
     ```
 
-1.  Grant permissions to use secret manager:
+1. Grant permissions to use secret manager:
 
     ```bash
     gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -71,7 +70,8 @@ database are in the same VPC network.
         --role roles/secretmanager.secretAccessor
     ```
 
-1. Grant additional permissions to the service account that are specific to the source, e.g.:
+1. Grant additional permissions to the service account that are specific to the
+   source, e.g.:
     - [AlloyDB for PostgreSQL](../resources/sources/alloydb-pg.md#iam-permissions)
     - [Cloud SQL for PostgreSQL](../resources/sources/cloud-sql-pg.md#iam-permissions)
 
@@ -97,7 +97,8 @@ section.
     gcloud secrets versions add tools --data-file=tools.yaml
     ```
 
-1. Set an environment variable to the container image that you want to use for cloud run:
+1. Set an environment variable to the container image that you want to use for
+   cloud run:
 
     ```bash
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
@@ -134,12 +135,14 @@ section.
 
 You can connect to Toolbox Cloud Run instances directly through the SDK
 
-1. [Set up `Cloud Run Invoker` role access](https://cloud.google.com/run/docs/securing/managing-access#service-add-principals) to your Cloud Run service.
+1. [Set up `Cloud Run Invoker` role
+   access](https://cloud.google.com/run/docs/securing/managing-access#service-add-principals)
+   to your Cloud Run service.
 
 1. Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
    for the principle you set up the `Cloud Run Invoker` role access to.
-   
+
     {{< notice tip >}}
   If you're working in some other environment than local, set up [environment
     specific Default

@@ -13,8 +13,8 @@ A redis tool executes a series of pre-defined Redis commands against a
 Redis source.
 
 The specified Redis commands are executed sequentially. Each command is
-represented as a string list, where the first element is the command name (e.g., SET,
-GET, HGETALL) and subsequent elements are its arguments.
+represented as a string list, where the first element is the command name (e.g.,
+SET, GET, HGETALL) and subsequent elements are its arguments.
 
 ### Dynamic Command Parameters
 
