@@ -299,7 +299,7 @@ func TestMcpEndpoint(t *testing.T) {
 				name  string
 				url   string
 				isErr bool
-				body  jsonrpc.JSONRPCRequest
+				body  any
 				want  map[string]any
 			}{
 				{
@@ -445,6 +445,34 @@ func TestMcpEndpoint(t *testing.T) {
 						},
 					},
 				},
+				{
+					name:  "batch requests",
+					url:   "/",
+					isErr: true,
+					body: []any{
+						jsonrpc.JSONRPCRequest{
+							Jsonrpc: "1.0",
+							Id:      "batch-requests1",
+							Request: jsonrpc.Request{
+								Method: "foo",
+							},
+						},
+						jsonrpc.JSONRPCRequest{
+							Jsonrpc: jsonrpcVersion,
+							Id:      "batch-requests2",
+							Request: jsonrpc.Request{
+								Method: "tools/list",
+							},
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"error": map[string]any{
+							"code":    -32600.0,
+							"message": "not supporting batch requests",
+						},
+					},
+				},
 			}
 			for _, tc := range testCases {
 				t.Run(tc.name, func(t *testing.T) {
@@ -471,6 +499,10 @@ func TestMcpEndpoint(t *testing.T) {
 						var got map[string]any
 						if err := json.Unmarshal(body, &got); err != nil {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
+						}
+						// for decode failure, a random uuid is generated in server
+						if tc.want["id"] == nil {
+							tc.want["id"] = got["id"]
 						}
 						if !reflect.DeepEqual(got, tc.want) {
 							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
