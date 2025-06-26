@@ -7,7 +7,8 @@ description: >
 ---
 
 ## About
-A `bigquery-sql` tool executes a pre-defined SQL statement. It's compatible with 
+
+A `bigquery-sql` tool executes a pre-defined SQL statement. It's compatible with
 the following sources:
 
 - [bigquery](../sources/bigquery.md)

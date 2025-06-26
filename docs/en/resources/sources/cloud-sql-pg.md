@@ -85,8 +85,8 @@ To connect using IAM authentication:
 1. Prepare your database instance and user following this [guide][iam-guide].
 2. You could choose one of the two ways to log in:
     - Specify your IAM email as the `user`.
-    - Leave your `user` field blank. Toolbox
-            will fetch the [ADC][adc] automatically and log in using the email associated with it.
+    - Leave your `user` field blank. Toolbox will fetch the [ADC][adc]
+      automatically and log in using the email associated with it.
 
 3. Leave the `password` field blank.
 
@@ -115,13 +115,13 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                               |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                 |
-| user      |  string  |     false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified.                               |
-| password  |  string  |     false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.                                        |
-| ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                                          |
+|-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                                                  |
+| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                                              |
+| user      |  string  |     false    | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
+| password  |  string  |     false    | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
+| ipType    |  string  |     false    | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`.                              |
