@@ -36,24 +36,40 @@ accessed by our agent, and create a database user for Toolbox to connect with.
     Here, `postgres` denotes the default postgres superuser.
 
     {{< notice info >}}
+
 #### **Having trouble connecting?**
 
-* **Password Prompt:** If you are prompted for a password for the `postgres` user and do not know it (or a blank password doesn't work), your PostgreSQL installation might require a password or a different authentication method.
-* **`FATAL: role "postgres" does not exist`:** This error means the default `postgres` superuser role isn't available under that name on your system.
-* **`Connection refused`:** Ensure your PostgreSQL server is actually running. You can typically check with `sudo systemctl status postgresql` and start it with `sudo systemctl start postgresql` on Linux systems.
+* **Password Prompt:** If you are prompted for a password for the `postgres`
+  user and do not know it (or a blank password doesn't work), your PostgreSQL
+  installation might require a password or a different authentication method.
+* **`FATAL: role "postgres" does not exist`:** This error means the default
+  `postgres` superuser role isn't available under that name on your system.
+* **`Connection refused`:** Ensure your PostgreSQL server is actually running.
+  You can typically check with `sudo systemctl status postgresql` and start it
+  with `sudo systemctl start postgresql` on Linux systems.
 
 <br/>
 
 #### **Common Solution**
 
-For password issues or if the `postgres` role seems inaccessible directly, try switching to the `postgres` operating system user first. This user often has permission to connect without a password for local connections (this is called peer authentication).
+For password issues or if the `postgres` role seems inaccessible directly, try
+switching to the `postgres` operating system user first. This user often has
+permission to connect without a password for local connections (this is called
+peer authentication).
+
 ```bash
 sudo -i -u postgres
 psql -h 127.0.0.1
 ```
-Once you are in the `psql` shell using this method, you can proceed with the database creation steps below. Afterwards, type `\q` to exit `psql`, and then `exit` to return to your normal user shell.
 
-If desired, once connected to `psql` as the `postgres` OS user, you can set a password for the `postgres` *database* user using: `ALTER USER postgres WITH PASSWORD 'your_chosen_password';`. This would allow direct connection with `-U postgres` and a password next time.
+Once you are in the `psql` shell using this method, you can proceed with the
+database creation steps below. Afterwards, type `\q` to exit `psql`, and then
+`exit` to return to your normal user shell.
+
+If desired, once connected to `psql` as the `postgres` OS user, you can set a
+password for the `postgres` *database* user using: `ALTER USER postgres WITH
+PASSWORD 'your_chosen_password';`. This would allow direct connection with `-U
+postgres` and a password next time.
     {{< /notice >}}
 
 1. Create a new database and a new user:
@@ -77,7 +93,10 @@ If desired, once connected to `psql` as the `postgres` OS user, you can set a pa
     ```bash
     \q
     ```
-    (If you used `sudo -i -u postgres` and then `psql`, remember you might also need to type `exit` after `\q` to leave the `postgres` user's shell session.)
+
+    (If you used `sudo -i -u postgres` and then `psql`, remember you might also
+    need to type `exit` after `\q` to leave the `postgres` user's shell
+    session.)
 
 1. Connect to your database with your new user:
 
@@ -322,7 +341,7 @@ import os
 os.environ['GOOGLE_API_KEY'] = 'your-api-key'
 
 async def main():
-  with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
+  with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
 
       prompt = """
         You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -612,18 +631,22 @@ asyncio.run(run_application())
 
   {{< tabpane text=true persist=header >}}
 {{% tab header="ADK" lang="en" %}}
-To learn more about Agent Development Kit, check out the [ADK documentation.](https://google.github.io/adk-docs/)
+To learn more about Agent Development Kit, check out the [ADK
+documentation.](https://google.github.io/adk-docs/)
 {{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
-To learn more about Agents in LangChain, check out the [LangGraph Agent documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
+To learn more about Agents in LangChain, check out the [LangGraph Agent
+documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
-To learn more about Agents in LlamaIndex, check out the
-[LlamaIndex AgentWorkflow documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
+To learn more about Agents in LlamaIndex, check out the [LlamaIndex
+AgentWorkflow
+documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
 {{% /tab %}}
 {{% tab header="Core" lang="en" %}}
 To learn more about tool calling with Google GenAI, check out the
-[Google GenAI Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
+[Google GenAI
+Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
 {{% /tab %}}
 {{< /tabpane >}}
 

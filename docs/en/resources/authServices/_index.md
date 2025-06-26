@@ -62,7 +62,9 @@ token you will provide a function (that returns an id). This function is called
 when the tool is invoked. This allows you to cache and refresh the ID token as
 needed.
 
-The primary method for providing these getters is via the `auth_token_getters` parameter when loading tools, or the `add_auth_token_getter`() / `add_auth_token_getters()` methods on a loaded tool object.
+The primary method for providing these getters is via the `auth_token_getters`
+parameter when loading tools, or the `add_auth_token_getter`() /
+`add_auth_token_getters()` methods on a loaded tool object.
 
 ### Specifying tokens during load
 
@@ -77,7 +79,7 @@ async def get_auth_token():
     return "YOUR_ID_TOKEN" # Placeholder
 
 async def main():
-    async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
+    async with ToolboxClient("<http://127.0.0.1:5000>") as toolbox:
         auth_tool = await toolbox.load_tool(
             "get_sensitive_data",
             auth_token_getters={"my_auth_app_1": get_auth_token}
@@ -85,7 +87,7 @@ async def main():
         result = await auth_tool(param="value")
         print(result)
 
-if __name__ == "__main__":
+if **name** == "**main**":
     asyncio.run(main())
 {{< /tab >}}
 {{< tab header="LangChain" lang="Python" >}}
@@ -98,7 +100,7 @@ async def get_auth_token():
     return "YOUR_ID_TOKEN" # Placeholder
 
 async def main():
-    toolbox = ToolboxClient("http://127.0.0.1:5000")
+    toolbox = ToolboxClient("<http://127.0.0.1:5000>")
 
     auth_tool = await toolbox.aload_tool(
         "get_sensitive_data",
@@ -107,7 +109,7 @@ async def main():
     result = await auth_tool.ainvoke({"param": "value"})
     print(result)
 
-if __name__ == "__main__":
+if **name** == "**main**":
     asyncio.run(main())
 {{< /tab >}}
 {{< tab header="Llamaindex" lang="Python" >}}
@@ -120,7 +122,7 @@ async def get_auth_token():
     return "YOUR_ID_TOKEN" # Placeholder
 
 async def main():
-    toolbox = ToolboxClient("http://127.0.0.1:5000")
+    toolbox = ToolboxClient("<http://127.0.0.1:5000>")
 
     auth_tool = await toolbox.aload_tool(
         "get_sensitive_data",
@@ -129,7 +131,7 @@ async def main():
     # result = await auth_tool.acall(param="value")
     # print(result.content)
 
-if __name__ == "__main__":
+if **name** == "**main**":
     asyncio.run(main()){{< /tab >}}
 {{< /tabpane >}}
 
