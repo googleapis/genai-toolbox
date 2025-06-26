@@ -14,21 +14,21 @@ race, religion, or sexual identity and orientation.
 Examples of behavior that contributes to creating a positive environment
 include:
 
-*   Using welcoming and inclusive language
-*   Being respectful of differing viewpoints and experiences
-*   Gracefully accepting constructive criticism
-*   Focusing on what is best for the community
-*   Showing empathy towards other community members
+* Using welcoming and inclusive language
+* Being respectful of differing viewpoints and experiences
+* Gracefully accepting constructive criticism
+* Focusing on what is best for the community
+* Showing empathy towards other community members
 
 Examples of unacceptable behavior by participants include:
 
-*   The use of sexualized language or imagery and unwelcome sexual attention or
+* The use of sexualized language or imagery and unwelcome sexual attention or
     advances
-*   Trolling, insulting/derogatory comments, and personal or political attacks
-*   Public or private harassment
-*   Publishing others' private information, such as a physical or electronic
+* Trolling, insulting/derogatory comments, and personal or political attacks
+* Public or private harassment
+* Publishing others' private information, such as a physical or electronic
     address, without explicit permission
-*   Other conduct which could reasonably be considered inappropriate in a
+* Other conduct which could reasonably be considered inappropriate in a
     professional setting
 
 ## Our Responsibilities
@@ -75,7 +75,7 @@ receive and address reported violations of the code of conduct. They will then
 work with a committee consisting of representatives from the Open Source
 Programs Office and the Google Open Source Strategy team. If for any reason you
 are uncomfortable reaching out to the Project Steward, please email
-opensource@google.com.
+<opensource@google.com>.
 
 We will investigate every complaint, but you may not receive a direct response.
 We will use our discretion in determining when and how to follow up on reported
@@ -90,4 +90,4 @@ harassment or threats to anyone's safety, we may take action without notice.
 
 This Code of Conduct is adapted from the Contributor Covenant, version 1.4,
 available at
-https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+<https://www.contributor-covenant.org/version/1/4/code-of-conduct.html>

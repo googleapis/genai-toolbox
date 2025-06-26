@@ -63,8 +63,8 @@ mTLS.
 
 ### Database User
 
-Currently, this source only uses standard authentication. You will need to [create a
-SQL Server user][cloud-sql-users] to login to the database with.
+Currently, this source only uses standard authentication. You will need to
+[create a SQL Server user][cloud-sql-users] to login to the database with.
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/sqlserver/create-manage-users
 
@@ -96,7 +96,7 @@ instead of hardcoding your secrets into the configuration file.
 | kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                      |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
 | database  |  string  |     true     | Name of the Cloud SQL database to connect to (e.g. "my_db").                                |
 | ipAddress |  string  |     true     | IP address of the Cloud SQL instance to connect to.                                         |
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |

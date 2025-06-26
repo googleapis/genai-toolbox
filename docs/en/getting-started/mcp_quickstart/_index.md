@@ -199,7 +199,8 @@ In this section, we will download Toolbox, configure our tools in a
         - cancel-hotel
     ```
 
-    For more info on tools, check out the [Tools](../../resources/tools/_index.md) section.
+    For more info on tools, check out the
+    [Tools](../../resources/tools/_index.md) section.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 

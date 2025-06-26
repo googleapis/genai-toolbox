@@ -11,7 +11,6 @@ A tool represents an action your agent can take, such as running a SQL
 statement. You can define Tools as a map in the `tools` section of your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
-
 ```yaml
 tools:
  search_flights_by_number:
@@ -49,7 +48,6 @@ tools:
         type: string
         description: 1 to 4 digit number
 ```
-
 
 ## Specifying Parameters
 
@@ -89,7 +87,7 @@ the parameter.
 ### Array Parameters
 
 The `array` type is a list of items passed in as a single parameter.
-To use the `array` type, you must also specify what kind of items are 
+To use the `array` type, you must also specify what kind of items are
 in the list using the items field:
 
 ```yaml
@@ -120,11 +118,12 @@ Items in array should not have a default value. If provided, it will be ignored.
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
-information decoded from [ID tokens](../authsources/#specifying-id-tokens-from-clients) that
-are passed in request headers. They do not take input values in request bodies
-like other parameters. To use authenticated parameters, you must configure 
-the tool to map the required [authServices](../authservices) to 
-specific claims within the user's ID token.
+information decoded from [ID
+tokens](../authsources/#specifying-id-tokens-from-clients) that are passed in
+request headers. They do not take input values in request bodies like other
+parameters. To use authenticated parameters, you must configure the tool to map
+the required [authServices](../authservices) to specific claims within the
+user's ID token.
 
 ```yaml
   tools:
@@ -151,20 +150,22 @@ specific claims within the user's ID token.
 
 ### Template Parameters
 
-Template parameters types include `string`, `integer`, `float`, `boolean` types. In
-most cases, the description will be provided to the LLM as context on specifying
-the parameter. Template parameters will be inserted into the SQL statement before
-executing the prepared statement. They will be inserted without quotes, so to
-insert a string using template parameters, quotes must be explicitly added within
-the string.
+Template parameters types include `string`, `integer`, `float`, `boolean` types.
+In most cases, the description will be provided to the LLM as context on
+specifying the parameter. Template parameters will be inserted into the SQL
+statement before executing the prepared statement. They will be inserted without
+quotes, so to insert a string using template parameters, quotes must be
+explicitly added within the string.
 
 Template parameter arrays can also be used similarly to basic parameters, and array
-items must be strings. Once inserted into the SQL statement, the outer layer of quotes
-will be removed. Therefore to insert strings into the SQL statement, a set of quotes 
-must be explicitly added within the string.
+items must be strings. Once inserted into the SQL statement, the outer layer of
+quotes will be removed. Therefore to insert strings into the SQL statement, a
+set of quotes must be explicitly added within the string.
 
 {{< notice warning >}}
-Because template parameters can directly replace identifiers, column names, and table names, they are prone to SQL injections. Basic parameters are preferred for performance and safety reasons.
+Because template parameters can directly replace identifiers, column names, and
+table names, they are prone to SQL injections. Basic parameters are preferred
+for performance and safety reasons.
 {{< /notice >}}
 
 ```yaml
