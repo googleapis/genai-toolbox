@@ -17,7 +17,6 @@ through [OpenTelemetry](https://opentelemetry.io/). Additional flags can be
 passed to Toolbox to enable different logging behavior, or to export metrics
 through a specific [exporter](#exporter).
 
-
 ## Logging
 
 The following flags can be used to customize Toolbox logging:
@@ -27,7 +26,8 @@ The following flags can be used to customize Toolbox logging:
 | `--log-level`      | Preferred log level, allowed values: `debug`, `info`, `warn`, `error`. Default: `info`. |
 | `--logging-format` | Preferred logging format, allowed values: `standard`, `json`. Default: `standard`.      |
 
-__Example:__
+**Example:**
+
 ```bash
 ./toolbox --tools-file "tools.yaml" --log-level warn --logging-format json
 ```
@@ -35,6 +35,7 @@ __Example:__
 ### Level
 
 Toolbox supports the following log levels, including:
+
 | **Log level** | **Description**                                                                                                                                                                    |
 |---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Debug         | Debug logs typically contain information that is only useful during the debugging phase and may be of little value during production.                                              |
@@ -46,17 +47,18 @@ Toolbox will only output logs that are equal or more severe to the
 level that it is set. Below are the log levels that Toolbox supports in the
 order of severity.
 
-
 ### Format
 
 Toolbox supports both standard and structured logging format.
 
 The standard logging outputs log as string:
+
 ```
 2024-11-12T15:08:11.451377-08:00 INFO "Initialized 0 sources.\n"
 ```
 
 The structured logging outputs log as JSON:
+
 ```
 {
   "timestamp":"2024-11-04T16:45:11.987299-08:00",
@@ -66,9 +68,9 @@ The structured logging outputs log as JSON:
 }
 ```
 
-{{< notice tip >}} 
+{{< notice tip >}}
 `logging.googleapis.com/sourceLocation` shows the source code
-location information associated with the log entry, if any. 
+location information associated with the log entry, if any.
 {{< /notice >}}
 
 ## Telemetry
@@ -125,7 +127,6 @@ unified [resource][resource]. The list of resource attributes included are:
 | `service.name`                                                                            | Open telemetry service name. Defaulted to `toolbox`. User can set the service name via flag mentioned above to distinguish between different toolbox service. |
 | `service.version`                                                                         | The version of Toolbox used.                                                                                                                                  |
 
-
 [resource]: https://opentelemetry.io/docs/languages/go/resources/
 
 ### Exporter
@@ -151,9 +152,10 @@ Exporter][gcp-trace-exporter].
 [gcp-trace-exporter]:
     https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/trace
 
-{{< notice note >}} 
-If you're using Google Cloud Monitoring, the following APIs will need to be 
+{{< notice note >}}
+If you're using Google Cloud Monitoring, the following APIs will need to be
 enabled:
+
 - [Cloud Logging API](https://cloud.google.com/logging/docs/api/enable-api)
 - [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api)
 - [Cloud Trace API](https://cloud.google.com/apis/enableflow?apiid=cloudtrace.googleapis.com)
@@ -184,7 +186,7 @@ The following flags are used to determine Toolbox's telemetry configuration:
 | **flag**                   | **type** | **description**                                                                                                |
 |----------------------------|----------|----------------------------------------------------------------------------------------------------------------|
 | `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                      |
-| `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "http://127.0.0.1:4318"). |
+| `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "<http://127.0.0.1:4318>"). |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                 |
 
 In addition to the flags noted above, you can also make additional configuration
@@ -194,14 +196,16 @@ environmental variables.
 [sdk-configuration]:
     https://opentelemetry.io/docs/languages/sdk-configuration/general/
 
-__Examples:__
+**Examples:**
 
 To enable Google Cloud Exporter:
+
 ```bash
 ./toolbox --telemetry-gcp
 ```
 
 To enable OTLP Exporter, provide Collector endpoint:
+
 ```bash
 ./toolbox --telemetry-otlp="http://127.0.0.1:4553"
 ```
