@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-# Default values for genai-toolbox.
+# Default values for toolbox.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -32,14 +32,14 @@ name: toolbox
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 
 image:
-  # -- genai-toolbox image repository
+  # -- toolbox image repository
   repository: database-toolbox/toolbox/toolbox
-  # -- genai-toolbox image pull policy
+  # -- toolbox image pull policy
   pullPolicy: IfNotPresent
-  # -- genai-toolbox image tag
+  # -- toolbox image tag
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
-  # -- genai-toolbox image registry
+  # -- toolbox image registry
   registry: us-central1-docker.pkg.dev
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -56,8 +56,8 @@ serviceAccount:
   automount: true
   # Annotations to add to the service account
   annotations: {}
-  # iam.gke.io/gcp-service-account: "genai-toolbox@toolbox.iam.gserviceaccount.com"
-  # eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/genai-toolbox"
+  # iam.gke.io/gcp-service-account: "toolbox@toolbox.iam.gserviceaccount.com"
+  # eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/toolbox"
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
@@ -100,9 +100,9 @@ ingress:
       #   - path: /
       #     pathType: ImplementationSpecific
   tls: []
-  #  - secretName: genai-toolbox-tls
+  #  - secretName: toolbox-tls
   #    hosts:
-  #      - genai-toolbox-cluster.local
+  #      - toolbox-cluster.local
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

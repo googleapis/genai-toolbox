@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "genai-toolbox.fullname" . }}
+  name: {{ include "toolbox.fullname" . }}
   labels:
-    {{- include "genai-toolbox.labels" . | nindent 4 }}
+    {{- include "toolbox.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -35,7 +35,7 @@ spec:
             {{- end }}
             backend:
               service:
-                name: {{ include "genai-toolbox.fullname" $ }}
+                name: {{ include "toolbox.fullname" $ }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}

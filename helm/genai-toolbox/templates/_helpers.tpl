@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "genai-toolbox.name" -}}
+{{- define "toolbox.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "genai-toolbox.fullname" -}}
+{{- define "toolbox.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "genai-toolbox.chart" -}}
+{{- define "toolbox.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "genai-toolbox.labels" -}}
-helm.sh/chart: {{ include "genai-toolbox.chart" . }}
-{{ include "genai-toolbox.selectorLabels" . }}
+{{- define "toolbox.labels" -}}
+helm.sh/chart: {{ include "toolbox.chart" . }}
+{{ include "toolbox.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "genai-toolbox.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "genai-toolbox.name" . }}
+{{- define "toolbox.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "toolbox.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "genai-toolbox.serviceAccountName" -}}
+{{- define "toolbox.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "genai-toolbox.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "toolbox.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

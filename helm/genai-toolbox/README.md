@@ -1,6 +1,6 @@
 # MCP Toolbox for Databases Helm Chart
 
-This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io/genai-toolbox/getting-started/introduction/) on [Kubernetes](https://kubernetes.io) via the [Helm](https://helm.sh) package manager.
+This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io/toolbox/getting-started/introduction/) on [Kubernetes](https://kubernetes.io) via the [Helm](https://helm.sh) package manager.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -17,19 +17,19 @@ This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io
 # Add the Helm repository
 
 ```shell
-helm repo add mcp-toolbox https://googleapis.github.io/genai-toolbox
+helm repo add mcp-toolbox https://googleapis.github.io/toolbox
 helm repo update
 ```
 
 # Install the chart
 
 ```shell
-helm upgrade --install toolbox genai-toolbox/genai-toolbox -f values.yaml --namespace toolbox
+helm upgrade --install toolbox toolbox/toolbox -f values.yaml --namespace toolbox
 ```
 # (optional) Customize the chart values
 
 ```shell
-helm show values genai-toolbox/genai-toolbox > values.yaml
+helm show values toolbox/toolbox > values.yaml
 ```
 
 # Uninstall the chart
@@ -69,4 +69,4 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 | `resources` | CPU/memory resource requests and limits | `{ requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 1, memory: 512Mi } }` |
 | `securityContext` | Container-level security context | `{ runAsNonRoot: true, runAsUser: 1000, allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }` |
 | `serviceAccount.create` | Whether to create a ServiceAccount | true |
-| `serviceAccount.name` | Name of the ServiceAccount | genai-toolbox |
+| `serviceAccount.name` | Name of the ServiceAccount | toolbox |

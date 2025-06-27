@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "genai-toolbox.fullname" . }}
+  name: {{ include "toolbox.fullname" . }}
   labels:
-    {{- include "genai-toolbox.labels" . | nindent 4 }}
+    {{- include "toolbox.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "genai-toolbox.selectorLabels" . | nindent 6 }}
+      {{- include "toolbox.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "genai-toolbox.labels" . | nindent 8 }}
+        {{- include "toolbox.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -27,7 +27,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "genai-toolbox.serviceAccountName" . }}
+      serviceAccountName: {{ include "toolbox.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
