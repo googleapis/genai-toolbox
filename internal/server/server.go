@@ -46,11 +46,58 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
+	ConfigManager   *ConfigManager
+}
 
+type ConfigManager struct {
+	mu           sync.RWMutex
 	sources      map[string]sources.Source
 	authServices map[string]auth.AuthService
 	tools        map[string]tools.Tool
 	toolsets     map[string]tools.Toolset
+}
+
+func (m *ConfigManager) GetSource(sourceName string) (sources.Source, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	source, ok := m.sources[sourceName]
+	return source, ok
+}
+
+func (m *ConfigManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	authService, ok := m.authServices[authServiceName]
+	return authService, ok
+}
+
+func (m *ConfigManager) GetTool(toolName string) (tools.Tool, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	tool, ok := m.tools[toolName]
+	return tool, ok
+}
+
+func (m *ConfigManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	toolset, ok := m.toolsets[toolsetName]
+	return toolset, ok
+}
+
+func (m *ConfigManager) SetConfigs(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.sources = sourcesMap
+	m.authServices = authServicesMap
+	m.tools = toolsMap
+	m.toolsets = toolsetsMap
+}
+
+func (m *ConfigManager) GetAuthServiceMap() map[string]auth.AuthService {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.authServices
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -63,12 +110,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, cfg.Version)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		panic(err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		panic(err)
 	}
 
 	// initialize and validate the sources from configs
@@ -241,6 +288,14 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		sseSessions: make(map[string]*sseSession),
 	}
 
+	configManager := &ConfigManager{
+		mu:           sync.RWMutex{},
+		sources:      sourcesMap,
+		authServices: authServicesMap,
+		tools:        toolsMap,
+		toolsets:     toolsetsMap,
+	}
+
 	s := &Server{
 		version:         cfg.Version,
 		srv:             srv,
@@ -248,11 +303,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:          l,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
+		ConfigManager:   configManager,
 	}
 	// control plane
 	apiR, err := apiRouter(s)
