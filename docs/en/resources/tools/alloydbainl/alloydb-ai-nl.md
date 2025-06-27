@@ -8,7 +8,7 @@ description: >
   Language support to provide the ability to query the database directly using
   natural language.
 aliases:
-- /resources/tools/alloydb-ai-nl/
+- /resources/tools/alloydb-ai-nl
 ---
 
 ## About
