@@ -30,6 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
@@ -43,7 +44,7 @@ type Server struct {
 	listener        net.Listener
 	root            chi.Router
 	logger          log.Logger
-	instrumentation *Instrumentation
+	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
 
 	sources      map[string]sources.Source
@@ -52,7 +53,24 @@ type Server struct {
 	toolsets     map[string]tools.Toolset
 }
 
-func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, instrumentation *Instrumentation) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error) {
+func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
+	map[string]sources.Source,
+	map[string]auth.AuthService,
+	map[string]tools.Tool,
+	map[string]tools.Toolset,
+	error,
+) {
+	ctx = util.WithUserAgent(ctx, cfg.Version)
+	instrumentation, err := util.InstrumentationFromContext(ctx)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
@@ -162,16 +180,19 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig, l log.Logger, inst
 }
 
 // NewServer returns a Server object based on provided Config.
-func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, error) {
-	instrumentation, err := CreateTelemetryInstrumentation(cfg.Version)
+func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
+	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create telemetry instrumentation: %w", err)
+		return nil, err
 	}
 
 	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/init")
 	defer span.End()
 
-	ctx = util.WithUserAgent(ctx, cfg.Version)
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// set up http serving
 	r := chi.NewRouter()
@@ -207,7 +228,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	httpLogger := httplog.NewLogger("httplog", httpOpts)
 	r.Use(httplog.RequestLogger(httpLogger))
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := InitializeConfigs(ctx, cfg, l, instrumentation)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
 	}
