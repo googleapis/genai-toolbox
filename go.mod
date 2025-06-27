@@ -35,6 +35,7 @@ require (
 	github.com/valkey-io/valkey-go v1.0.62
 	go.mongodb.org/mongo-driver v1.17.4
 	github.com/valkey-io/valkey-go v1.0.61
+	github.com/valkey-io/valkey-go v1.0.62
 	go.opentelemetry.io/contrib/propagators/autoprop v0.61.0
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.36.0
