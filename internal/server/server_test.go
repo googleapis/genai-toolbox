@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestServe(t *testing.T) {
@@ -54,8 +55,16 @@ func TestServe(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
+	ctx = util.WithLogger(ctx, testLogger)
 
-	s, err := server.NewServer(ctx, cfg, testLogger)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
 	if err != nil {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
