@@ -7,6 +7,8 @@ description: >
   [AlloyDB AI](https://cloud.google.com/alloydb/ai) next-generation Natural 
   Language support to provide the ability to query the database directly using
   natural language.
+aliases:
+- /resources/tools/alloydb-ai-nl/
 ---
 
 ## About

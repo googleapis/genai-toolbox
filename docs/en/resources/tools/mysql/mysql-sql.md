@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "mysql-sql" tool executes a pre-defined SQL statement against a MySQL
   database.
+aliases:
+- /resources/tools/mysql-sql
 ---
 
 ## About

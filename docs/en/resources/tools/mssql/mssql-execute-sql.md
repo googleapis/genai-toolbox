@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "mssql-execute-sql" tool executes a SQL statement against a SQL Server
   database.
+aliases:
+- /resources/tools/mssql-execute-sql
 ---
 
 ## About

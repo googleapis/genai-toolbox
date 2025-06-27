@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "bigtable-sql" tool executes a pre-defined SQL statement against a Google 
   Cloud Bigtable instance.
+aliases:
+- /resources/tools/bigtable-sql
 ---
 
 ## About

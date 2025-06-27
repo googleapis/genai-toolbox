@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "couchbase-sql" tool executes a pre-defined SQL statement against a Couchbase
   database.
+aliases:
+- /resources/tools/couchbase-sql
 ---
 
 ## About

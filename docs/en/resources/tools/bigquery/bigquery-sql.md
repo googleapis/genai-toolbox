@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: >
   A "bigquery-sql" tool executes a pre-defined SQL statement.
+aliases:
+- /resources/tools/bigquery-sql
 ---
 
 ## About

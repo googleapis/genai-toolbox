@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "bigquery-get-table-info" tool retrieves metadata for a BigQuery table.
+aliases:
+- /resources/tools/bigquery-get-table-info
 ---
 
 ## About

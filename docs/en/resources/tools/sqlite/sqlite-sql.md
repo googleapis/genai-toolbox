@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: >
   Execute SQL statements against a SQLite database.
+aliases:
+- /resources/tools/sqlite-sql
 ---
 
 ## About

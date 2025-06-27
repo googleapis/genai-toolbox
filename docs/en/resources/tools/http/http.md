@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "http" tool sends out an HTTP request to an HTTP endpoint.
+aliases:
+- /resources/tools/http
 ---
 
 

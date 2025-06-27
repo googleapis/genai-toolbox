@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "bigquery-list-dataset-ids" tool returns all dataset IDs from the source.
+aliases:
+- /resources/tools/bigquery-list-dataset-ids
 ---
 
 ## About

@@ -4,7 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "redis" tool executes a set of pre-defined Redis commands against a Redis instance.
-
+aliases:
+- /resources/tools/redis
 ---
 
 ## About

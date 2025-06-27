@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "postgres-execute-sql" tool executes a SQL statement against a Postgres
   database.
+aliases:
+- /resources/tools/postgres-execute-sql
 ---
 
 ## About

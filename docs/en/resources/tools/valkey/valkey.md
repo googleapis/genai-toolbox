@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "valkey" tool executes a set of pre-defined Valkey commands against a Memorystore for Valkey instance.
+aliases:
+- /resources/tools/valkey
 ---
 
 ## About

@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "mysql-execute-sql" tool executes a SQL statement against a MySQL
   database.
+aliases:
+- /resources/tools/mysql-execute-sql
 ---
 
 ## About

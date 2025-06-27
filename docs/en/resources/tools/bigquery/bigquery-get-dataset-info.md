@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "bigquery-get-dataset-info" tool retrieves metadata for a BigQuery dataset.
+aliases:
+- /resources/tools/bigquery-get-dataset-info
 ---
 
 ## About

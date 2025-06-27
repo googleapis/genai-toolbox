@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "spanner-execute-sql" tool executes a SQL statement against a Spanner
   database.
+aliases:
+- /resources/tools/spanner-execute-sql
 ---
 
 ## About

@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "bigquery-list-table-ids" tool returns table IDs in a given BigQuery dataset.
+aliases:
+- /resources/tools/bigquery-list-table-ids
 ---
 
 ## About

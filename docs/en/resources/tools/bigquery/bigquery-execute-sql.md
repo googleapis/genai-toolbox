@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "bigquery-execute-sql" tool executes a SQL statement against BigQuery.
+aliases:
+- /resources/tools/bigquery-execute-sql
 ---
 
 ## About

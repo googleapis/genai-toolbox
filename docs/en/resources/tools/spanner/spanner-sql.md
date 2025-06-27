@@ -5,6 +5,8 @@ weight: 1
 description: > 
   A "spanner-sql" tool executes a pre-defined SQL statement against a Google 
   Cloud Spanner database.
+aliases:
+- /resources/tools/spanner-sql
 ---
 
 ## About
