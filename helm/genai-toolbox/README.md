@@ -17,7 +17,7 @@ This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io
 # Add the Helm repository
 
 ```shell
-helm repo add genai-toolbox https://googleapis.github.io/genai-toolbox
+helm repo add mcp-toolbox https://googleapis.github.io/genai-toolbox
 helm repo update
 ```
 
