@@ -51,11 +51,11 @@ type Config struct {
 	User                            string `yaml:"user" validate:"required"`
 	Password                        string `yaml:"password" validate:"required"`
 	Database                        string `yaml:"database" validate:"required"`
-	LoadBalance                     string `yaml:"load_balance"`                     // optional
-	TopologyKeys                    string `yaml:"topology_keys"`                    // optional
-	YBServersRefreshInterval        string `yaml:"yb_servers_refresh_interval"`      // optional
-	FallBackToTopologyKeysOnly      string `yaml:"fallback_to_topology_keys_only"`   // optional
-	FailedHostReconnectDelaySeconds string `yaml:"failed_host_reconnect_delay_secs"` // optional
+	LoadBalance                     string `yaml:"loadBalance"`
+	TopologyKeys                    string `yaml:"topologyKeys"`
+	YBServersRefreshInterval        string `yaml:"ybServersRefreshInterval"`
+	FallBackToTopologyKeysOnly      string `yaml:"fallbackToTopologyKeysOnly"`
+	FailedHostReconnectDelaySeconds string `yaml:"failedHostReconnectDelaySecs"`
 }
 
 func (r Config) SourceConfigKind() string {

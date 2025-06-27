@@ -45,7 +45,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			},
 		},
 		{
-			desc: "with load_balance only",
+			desc: "with loadBalance only",
 			in: `
 			sources:
 				my-yb-instance:
@@ -56,7 +56,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 					user: yb_user
 					password: yb_pass
 					database: yb_db
-					load_balance: true
+					loadBalance: true
 			`,
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
@@ -72,7 +72,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			},
 		},
 		{
-			desc: "load_balance with topology_keys",
+			desc: "loadBalance with topologyKeys",
 			in: `
 			sources:
 				my-yb-instance:
@@ -83,8 +83,8 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 					user: yb_user
 					password: yb_pass
 					database: yb_db
-					load_balance: true
-					topology_keys: zone1,zone2
+					loadBalance: true
+					topologyKeys: zone1,zone2
 			`,
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
@@ -112,9 +112,9 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 					user: yb_user
 					password: yb_pass
 					database: yb_db
-					load_balance: true
-					topology_keys: zone1
-					fallback_to_topology_keys_only: true
+					loadBalance: true
+					topologyKeys: zone1
+					fallbackToTopologyKeysOnly: true
 			`,
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
@@ -143,9 +143,9 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 					user: yb_user
 					password: yb_pass
 					database: yb_db
-					load_balance: true
-					yb_servers_refresh_interval: 20
-					failed_host_reconnect_delay_secs: 5
+					loadBalance: true
+					ybServersRefreshInterval: 20
+					failedHostReconnectDelaySecs: 5
 			`,
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
@@ -174,11 +174,11 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 					user: yb_user
 					password: yb_pass
 					database: yb_db
-					load_balance: true
-					topology_keys: zone1,zone2
-					fallback_to_topology_keys_only: true
-					yb_servers_refresh_interval: 30
-					failed_host_reconnect_delay_secs: 10
+					loadBalance: true
+					topologyKeys: zone1,zone2
+					fallbackToTopologyKeysOnly: true
+					ybServersRefreshInterval: 30
+					failedHostReconnectDelaySecs: 10
 			`,
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
