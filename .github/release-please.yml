@@ -32,4 +32,5 @@ extraFiles: [
     "docs/en/how-to/connect-ide/cloud_sql_pg_mcp.md",
     "docs/en/how-to/connect-ide/postgres_mcp.md",
     "docs/en/how-to/connect-ide/cloud_sql_mssql_mcp.md",
+    "helm/genai-toolbox/Chart.yaml"
 ]
