@@ -1,6 +1,6 @@
 # MCP Toolbox for Databases Helm Chart
 
-This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io/genai-toolbox/getting-started/introduction/) (formerly "Gen AI Toolbox for Databases") on [Kubernetes](https://kubernetes.io) via the [Helm](https://helm.sh) package manager.
+This chart installs the [MCP Toolbox for Databases](https://googleapis.github.io/genai-toolbox/getting-started/introduction/) on [Kubernetes](https://kubernetes.io) via the [Helm](https://helm.sh) package manager.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
