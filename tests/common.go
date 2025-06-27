@@ -365,6 +365,14 @@ func GetMysqlWants() (string, string, string) {
 	return select1Want, failInvocationWant, createTableStatement
 }
 
+// GetClickHouseWants return the expected wants for ClickHouse
+func GetClickHouseWants() (string, string, string) {
+	select1Want := "[{\"1\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: code: 62, message: Syntax error: failed at position 1 (line 1, col 1): SELEC 1;. Expected one of: EXPLAIN, SELECT, INSERT, DELETE, UPDATE, CREATE, ALTER, DROP, RENAME, SET, OPTIMIZE, USE, EXISTS, SHOW, DESCRIBE, DESC, WITH, SYSTEM, KILL, WATCH, CHECK"}],"isError":true}}`
+	createTableStatement := `"CREATE TABLE t (id UInt32, name String) ENGINE = Memory"`
+	return select1Want, failInvocationWant, createTableStatement
+}
+
 // SetupPostgresSQLTable creates and inserts data into a table of tool
 // compatible with postgres-sql tool
 func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
