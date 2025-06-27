@@ -127,6 +127,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	cols, err := results.Columns()
 	if err != nil {
@@ -153,25 +154,26 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		}
 		vMap := make(map[string]any)
 		for i, name := range cols {
+			val := rawValues[i]
+			if val == nil {
+				vMap[name] = nil
+				continue
+			}
+
 			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
 			// we'll need to cast it back to string
 			switch colTypes[i].DatabaseTypeName() {
 			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(rawValues[i].([]byte))
+				vMap[name] = string(val.([]byte))
 			default:
-				vMap[name] = rawValues[i]
+				vMap[name] = val
 			}
 		}
 		out = append(out, vMap)
 	}
 
-	err = results.Close()
-	if err != nil {
-		return nil, fmt.Errorf("unable to close rows: %w", err)
-	}
-
 	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered by results.Scan: %w", err)
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
 	}
 
 	return out, nil

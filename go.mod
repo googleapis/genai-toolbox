@@ -24,11 +24,11 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/json-iterator/go v1.1.12
-	github.com/microsoft/go-mssqldb v1.8.2
+	github.com/microsoft/go-mssqldb v1.9.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
-	github.com/redis/go-redis/v9 v9.10.0
+	github.com/redis/go-redis/v9 v9.11.0
 	github.com/spf13/cobra v1.9.1
-	github.com/valkey-io/valkey-go v1.0.61
+	github.com/valkey-io/valkey-go v1.0.62
 	go.opentelemetry.io/contrib/propagators/autoprop v0.61.0
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.36.0
@@ -38,7 +38,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.36.0
 	go.opentelemetry.io/otel/trace v1.36.0
 	golang.org/x/oauth2 v0.30.0
-	google.golang.org/api v0.238.0
+	google.golang.org/api v0.239.0
 	modernc.org/sqlite v1.38.0
 )
 
