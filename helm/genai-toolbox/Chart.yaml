@@ -1,6 +1,6 @@
 apiVersion: v2
 name: mcp-toolbox
-description: A Helm chart for Google GenAI Toolbox (formerly MCP Toolbox for Databases)
+description: A Helm chart for MCP Toolbox for Databases, an open source MCP server for databases.
 
 # MCP Toolbox for Databases is an open source MCP server for databases. 
 # It enables you to develop tools easier, faster, and more securely by handling the complexities
