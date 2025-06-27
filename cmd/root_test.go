@@ -32,7 +32,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgressql"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	"github.com/spf13/cobra"
 )
 
