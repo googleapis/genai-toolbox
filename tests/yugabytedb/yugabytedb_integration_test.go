@@ -57,13 +57,13 @@ func getYBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":         YBDB_SOURCE_KIND,
-		"host":         YBDB_HOST,
-		"port":         YBDB_PORT,
-		"database":     YBDB_DATABASE,
-		"user":         YBDB_USER,
-		"password":     YBDB_PASS,
-		"load_balance": YBDB_LB,
+		"kind":        YBDB_SOURCE_KIND,
+		"host":        YBDB_HOST,
+		"port":        YBDB_PORT,
+		"database":    YBDB_DATABASE,
+		"user":        YBDB_USER,
+		"password":    YBDB_PASS,
+		"loadBalance": YBDB_LB,
 	}
 }
 
@@ -131,7 +131,7 @@ func TestYugabyteDB(t *testing.T) {
 
 	toolsFile := tests.GetToolsConfig(sourceConfig, YBDB_TOOL_KIND, stmt1, stmt2)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, YBDB_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined)
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, YBDB_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -151,8 +151,8 @@ func TestYugabyteDB(t *testing.T) {
 
 	select1Want := "[{\"?column?\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
-	invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want := tests.GetNonSpannerInvokeParamWant()
+	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, false)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }

@@ -23,8 +23,8 @@ sources:
         database: yugabyte
         user: ${USER_NAME}
         password: ${PASSWORD}
-        load_balance: true
-        topology_keys: cloud.region.zone1:1,cloud.region.zone2:2
+        loadBalance: true
+        topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
 ```
 
 ## Reference
@@ -32,13 +32,13 @@ sources:
 | **field**                         | **type** | **required** | **description**                                                        |
 |-----------------------------------|:--------:|:------------:|------------------------------------------------------------------------|
 | kind                              |  string  |     true     | Must be "yugabytedb".                                                    |
-| host                              |  string  |     true     | IP address to connect to.                            |
-| port                              |  integer  |     true     | Port to connect to.                                       |
-| database                          |  string  |     true     | Name of the YugabyteDB database to connect to.            |
-| user                              |  string  |     true     | Name of the YugabyteDB user to connect as.           |
-| password                          |  string  |     true     | Password of the YugabyteDB user.                    |
-| load_balance                      |  boolean  |     false     | If true, enable uniform load balancing.                    |
-| topology_keys                     |  string  |     false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if load_balance is false.                    |
-| yb_servers_refresh_interval       |  integer  |     false     | The interval (in seconds) to refresh the servers list; ignored if load_balance is false                    |
-| fallback_to_topology_keys_only    |  boolean  |     false     | If set to true and topology_keys are specified, only connect to nodes specified in topology_keys                    |
-| failed_host_reconnect_delay_secs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes.                    |
+| host                              |  string  |     true     | IP address to connect to.                           |
+| port                              |  integer  |     true     | Port to connect to. The default port is 5433.                                      |
+| database                          |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.           |
+| user                              |  string  |     true     | Name of the YugabyteDB user to connect as. The default user is yugabyte.          |
+| password                          |  string  |     true     | Password of the YugabyteDB user. The default password is yugabyte.                   |
+| loadBalance                      |  boolean  |     false     | If true, enable uniform load balancing. The default loadBalance value is false.                   |
+| topologyKeys                     |  string  |     false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default.                   |
+| ybServersRefreshInterval       |  integer  |     false     | The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.                    |
+| fallbackToTopologyKeysOnly    |  boolean  |     false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                    |
+| failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
