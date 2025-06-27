@@ -3,5 +3,5 @@ title: "Redis"
 type: docs
 weight: 1
 description: > 
-  Redis Tools.
+  Tools that work with Redis Sources.
 ---

@@ -3,5 +3,5 @@ title: "MySQL"
 type: docs
 weight: 1
 description: > 
-  MySQL Tools.
+  Tools that work with MySQL Sources, such as Cloud SQL for MySQL.
 ---

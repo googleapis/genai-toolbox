@@ -3,5 +3,5 @@ title: "Neo4j"
 type: docs
 weight: 1
 description: > 
-  Neo4j Tools.
+  Tools that work with Neo4j Sources.
 ---

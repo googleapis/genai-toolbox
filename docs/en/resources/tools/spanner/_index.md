@@ -3,5 +3,5 @@ title: "Spanner"
 type: docs
 weight: 1
 description: > 
-  Spanner Tools.
+  Tools that work with Spanner Sources.
 ---
