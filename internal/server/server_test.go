@@ -147,27 +147,27 @@ func TestUpdateServer(t *testing.T) {
 			Name: "example-toolset", Tools: []*tools.Tool{},
 		},
 	}
-	err = server.UpdateServer(ctx, s, newSources, newAuth, newTools, newToolsets)
+	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
 
-	gotSource, _ := s.ConfigManager.GetSource("example-source")
-	if gotSource != newSources["example-source"] {
-		t.Errorf("error updating server, got: %s, want: %s", gotSource, newSources["example-source"])
+	gotSource, _ := s.ResourceMgr.GetSource("example-source")
+	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
+		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := s.ConfigManager.GetAuthService("example-auth")
-	if gotAuthService != newAuth["example-auth"] {
-		t.Errorf("error updating server, got: %s, want: %s", gotSource, newSources["example-auth"])
+	gotAuthService, _ := s.ResourceMgr.GetAuthService("example-auth")
+	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
+		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := s.ConfigManager.GetTool("example-tool")
-	if gotTool != newTools["example-tool"] {
-		t.Errorf("error updating server, got: %s, want: %s", gotSource, newSources["example-tool"])
+	gotTool, _ := s.ResourceMgr.GetTool("example-tool")
+	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
+		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.ConfigManager.GetToolset("example-toolset")
+	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
 	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"]); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}

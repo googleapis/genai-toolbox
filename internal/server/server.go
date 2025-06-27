@@ -46,7 +46,7 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
-	resourceMgr     *ResourceManager
+	ResourceMgr     *ResourceManager
 }
 
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
@@ -314,7 +314,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:          l,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		resourceMgr:     resourceManager,
+		ResourceMgr:     resourceManager,
 	}
 	// control plane
 	apiR, err := apiRouter(s)
@@ -333,18 +333,6 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	})
 
 	return s, nil
-}
-
-func UpdateServer(ctx context.Context, s *Server, sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) error {
-	l, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	l.DebugContext(ctx, "Attempting to update the server with reloaded configs")
-	s.ConfigManager.SetConfigs(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
-	// TODO: form of error handling? Can errors even occur within setConfig
-	return nil
 }
 
 // Listen starts a listener for the given Server instance.

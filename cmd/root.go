@@ -226,7 +226,7 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
-func handleDynamicReload(ctx context.Context, buf []byte, cfg *server.ServerConfig, s *server.Server) error {
+func handleDynamicReload(ctx context.Context, buf []byte, s *server.Server) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -246,19 +246,7 @@ func handleDynamicReload(ctx context.Context, buf []byte, cfg *server.ServerConf
 		return err
 	}
 
-	err = updateCfg(ctx, toolsFile, cfg)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to update server after reload: %w", err)
-		logger.WarnContext(ctx, errMsg.Error())
-		return err
-	}
-
-	err = server.UpdateServer(ctx, s, sourcesMap, authServicesMap, toolsMap, toolsetsMap)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to update server after reload: %w", err)
-		logger.WarnContext(ctx, errMsg.Error())
-		return err
-	}
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
 
 	return nil
 }
@@ -299,26 +287,10 @@ func validateReloadEdits(
 	}
 
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
-
-}
-
-func updateCfg(ctx context.Context, toolsFile ToolsFile, cfg *server.ServerConfig) error {
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	cfg.SourceConfigs, cfg.AuthServiceConfigs, cfg.ToolConfigs, cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
-	authSourceConfigs := toolsFile.AuthSources
-	if authSourceConfigs != nil {
-		logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-		cfg.AuthServiceConfigs = authSourceConfigs
-	}
-	return nil
 }
 
 // watchFile checks for changes in the provided yaml tools file.
-func watchFile(ctx context.Context, toolsFileName string, cfg *server.ServerConfig, s *server.Server) {
+func watchFile(ctx context.Context, toolsFileName string, s *server.Server) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -380,7 +352,7 @@ func watchFile(ctx context.Context, toolsFileName string, cfg *server.ServerConf
 				continue
 			}
 
-			err = handleDynamicReload(ctx, buf, cfg, s)
+			err = handleDynamicReload(ctx, buf, s)
 			if err != nil {
 				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", toolsFileName, err)
 				logger.WarnContext(ctx, errMsg.Error())
@@ -559,7 +531,7 @@ func run(cmd *Command) error {
 	}
 
 	// start watching for file changes to trigger dynamic reloading
-	go watchFile(ctx, cmd.tools_file, &cmd.cfg, s)
+	go watchFile(ctx, cmd.tools_file, s)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {
