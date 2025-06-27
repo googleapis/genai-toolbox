@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"regexp"
 	"runtime"
 	"strings"
@@ -1009,12 +1010,15 @@ func TestSingleEdit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to setup logger %s", err)
 	}
-
 	ctx = util.WithLogger(ctx, logger)
 
 	go watchFile(ctx, fileToWatch)
 
-	begunWatchingFile := regexp.MustCompile(fmt.Sprintf("DEBUG \"Now watching tools file %s\"", fileToWatch))
+	// escape backslash so regex doesn't fail on windows filepaths
+	regexEscapedPath := strings.ReplaceAll(fileToWatch, `\`, `\\\\*\\`)
+	regexEscapedPath = path.Clean(regexEscapedPath)
+
+	begunWatchingFile := regexp.MustCompile(fmt.Sprintf(`DEBUG "Now watching tools file %s"`, regexEscapedPath))
 	_, err = testutils.WaitForString(ctx, begunWatchingFile, pr)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for watcher to start: %s", err)
@@ -1025,7 +1029,7 @@ func TestSingleEdit(t *testing.T) {
 		t.Fatalf("error writing to file: %v", err)
 	}
 
-	detectedFileChange := regexp.MustCompile(fmt.Sprintf("DEBUG \"WRITE event detected in tools file: %s", fileToWatch))
+	detectedFileChange := regexp.MustCompile(fmt.Sprintf(`DEBUG "WRITE event detected in tools file: %s"`, regexEscapedPath))
 	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for file to detect write: %s", err)

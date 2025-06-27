@@ -30,10 +30,13 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
@@ -357,18 +360,49 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 	return loadAndMergeToolsFiles(ctx, allFiles)
 }
 
-func parse(ctx context.Context, buf []byte, logger log.Logger) {
-	logger.DebugContext(ctx, "Attempting to parse updated tools file.")
-	// time.Sleep(5 * time.Second)
-	// logger.DebugContext(ctx, "Parse finished.")
-	// TODO: add logic for parsing
+// validateReloadEdits checks that the reloaded tools file configs can initialized without failing
+func validateReloadEdits(
+	ctx context.Context, toolsFile ToolsFile,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error,
+) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	instrumentation, err := util.InstrumentationFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	logger.DebugContext(ctx, "Attempting to parse and validate reloaded tools file.")
+
+	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/reload")
+	defer span.End()
+
+	reloadedConfig := server.ServerConfig{
+		Version:            versionString,
+		SourceConfigs:      toolsFile.Sources,
+		AuthServiceConfigs: toolsFile.AuthServices,
+		ToolConfigs:        toolsFile.Tools,
+		ToolsetConfigs:     toolsFile.Toolsets,
+	}
+
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return nil, nil, nil, nil, err
+	}
+
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
 }
 
 // watchFile checks for changes in the provided yaml tools file.
 func watchFile(ctx context.Context, toolsFileName string) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(fmt.Errorf("unable to extract logger from context %w", err))
+		panic(err)
 	}
 
 	w, err := fsnotify.NewWatcher()
@@ -414,7 +448,7 @@ func watchFile(ctx context.Context, toolsFileName string) {
 			}
 
 			if e.Op == fsnotify.Write && filepath.Clean(e.Name) == cleanedFilename {
-				logger.DebugContext(ctx, fmt.Sprintf("%s event detected in tools file: %s", e.Op, e.Name))
+				logger.DebugContext(ctx, fmt.Sprintf("%s event detected in tools file: %s", e.Op, cleanedFilename))
 				debounce.Reset(debounceDelay)
 			}
 		case <-debounce.C:
@@ -422,10 +456,25 @@ func watchFile(ctx context.Context, toolsFileName string) {
 			logger.DebugContext(ctx, "re-reading tools file: %s", cleanedFilename)
 			buf, err := os.ReadFile(toolsFileName)
 			if err != nil {
-				logger.WarnContext(ctx, "error reading reloaded file", err)
-				return
+				errMsg := fmt.Errorf("unable to read reloaded tools file at %q: %w", toolsFileName, err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
 			}
-			parse(ctx, buf, logger)
+
+			toolsFile, err := parseToolsFile(ctx, buf)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", toolsFileName, err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
+			}
+
+			// TODO: will update when updateServer() function is added to use return values
+			_, _, _, _, err = validateReloadEdits(ctx, toolsFile)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
+			}
 		}
 	}
 }
@@ -590,9 +639,23 @@ func run(cmd *Command) error {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
 		cmd.cfg.AuthServiceConfigs = authSourceConfigs
 	}
+	if err != nil {
+		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to create telemetry instrumentation: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+
+	ctx = util.WithInstrumentation(ctx, instrumentation)
 
 	// start server
-	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
+	s, err := server.NewServer(ctx, cmd.cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())

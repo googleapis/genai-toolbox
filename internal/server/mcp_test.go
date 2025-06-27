@@ -693,7 +693,7 @@ func TestStdioSession(t *testing.T) {
 		}
 	}()
 
-	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
