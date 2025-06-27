@@ -46,9 +46,10 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
-	ResourceManager *ResourceManager
+	resourceMgr     *ResourceManager
 }
 
+// ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
 type ResourceManager struct {
 	mu           sync.RWMutex
 	sources      map[string]sources.Source
@@ -57,47 +58,63 @@ type ResourceManager struct {
 	toolsets     map[string]tools.Toolset
 }
 
-func (m *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	source, ok := m.sources[sourceName]
+func NewResourceManager(
+	sourcesMap map[string]sources.Source,
+	authServicesMap map[string]auth.AuthService,
+	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
+) *ResourceManager {
+	resourceMgr := &ResourceManager{
+		mu:           sync.RWMutex{},
+		sources:      sourcesMap,
+		authServices: authServicesMap,
+		tools:        toolsMap,
+		toolsets:     toolsetsMap,
+	}
+
+	return resourceMgr
+}
+
+func (r *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	source, ok := r.sources[sourceName]
 	return source, ok
 }
 
-func (m *ResourceManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	authService, ok := m.authServices[authServiceName]
+func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	authService, ok := r.authServices[authServiceName]
 	return authService, ok
 }
 
-func (m *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	tool, ok := m.tools[toolName]
+func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	tool, ok := r.tools[toolName]
 	return tool, ok
 }
 
-func (m *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	toolset, ok := m.toolsets[toolsetName]
+func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	toolset, ok := r.toolsets[toolsetName]
 	return toolset, ok
 }
 
-func (m *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.sources = sourcesMap
-	m.authServices = authServicesMap
-	m.tools = toolsMap
-	m.toolsets = toolsetsMap
+func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.sources = sourcesMap
+	r.authServices = authServicesMap
+	r.tools = toolsMap
+	r.toolsets = toolsetsMap
 }
 
-func (m *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.authServices
+func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.authServices
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -288,13 +305,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		sseSessions: make(map[string]*sseSession),
 	}
 
-	resourceManager := &ResourceManager{
-		mu:           sync.RWMutex{},
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
-	}
+	resourceManager := NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
 
 	s := &Server{
 		version:         cfg.Version,
@@ -303,7 +314,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:          l,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		ResourceManager: resourceManager,
+		resourceMgr:     resourceManager,
 	}
 	// control plane
 	apiR, err := apiRouter(s)
