@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhousesql
+package clickhouse
 
 import (
 	"context"
@@ -21,36 +21,28 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "clickhouse-sql"
+const sqlKind string = "clickhouse-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(sqlKind, newSQLConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", sqlKind))
 	}
 }
 
-func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+func newSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := SQLConfig{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
-type compatibleSource interface {
-	ClickHousePool() *sql.DB
-}
+// compatibleSource interface is defined in clickhousedescribetable.go
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &clickhouse.Source{}
-
-var compatibleSources = [...]string{clickhouse.SourceKind}
-
-type Config struct {
+type SQLConfig struct {
 	Name               string           `yaml:"name" validate:"required"`
 	Kind               string           `yaml:"kind" validate:"required"`
 	Source             string           `yaml:"source" validate:"required"`
@@ -62,13 +54,13 @@ type Config struct {
 }
 
 // validate interface
-var _ tools.ToolConfig = Config{}
+var _ tools.ToolConfig = SQLConfig{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg SQLConfig) ToolConfigKind() string {
+	return sqlKind
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg SQLConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -78,7 +70,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", sqlKind, compatibleSources)
 	}
 
 	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
@@ -90,9 +82,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// finish tool setup
-	t := Tool{
+	t := SQLTool{
 		Name:               cfg.Name,
-		Kind:               kind,
+		Kind:               sqlKind,
 		Parameters:         cfg.Parameters,
 		TemplateParameters: cfg.TemplateParameters,
 		AllParams:          allParameters,
@@ -106,9 +98,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 // validate interface
-var _ tools.Tool = Tool{}
+var _ tools.Tool = SQLTool{}
 
-type Tool struct {
+type SQLTool struct {
 	Name               string           `yaml:"name"`
 	Kind               string           `yaml:"kind"`
 	AuthRequired       []string         `yaml:"authRequired"`
@@ -122,7 +114,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t SQLTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -197,18 +189,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t SQLTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.AllParams, data, claims)
 }
 
-func (t Tool) Manifest() tools.Manifest {
+func (t SQLTool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
+func (t SQLTool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
+func (t SQLTool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

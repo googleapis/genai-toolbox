@@ -19,10 +19,13 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -35,18 +38,19 @@ var (
 	CLICKHOUSE_USER        = os.Getenv("CLICKHOUSE_USER")
 	CLICKHOUSE_PASS        = os.Getenv("CLICKHOUSE_PASS")
 	CLICKHOUSE_PROTOCOL    = os.Getenv("CLICKHOUSE_PROTOCOL") // native, http, https
+	// Note: tableNameTemplateParam is defined per test function
 )
 
 func getClickHouseVars(t *testing.T) map[string]any {
 	switch "" {
 	case CLICKHOUSE_DATABASE:
-		t.Fatal("'CLICKHOUSE_DATABASE' not set")
+		t.Skip("'CLICKHOUSE_DATABASE' not set")
 	case CLICKHOUSE_HOST:
-		t.Fatal("'CLICKHOUSE_HOST' not set")
+		t.Skip("'CLICKHOUSE_HOST' not set")
 	case CLICKHOUSE_PORT:
-		t.Fatal("'CLICKHOUSE_PORT' not set")
+		t.Skip("'CLICKHOUSE_PORT' not set")
 	case CLICKHOUSE_USER:
-		t.Fatal("'CLICKHOUSE_USER' not set")
+		t.Skip("'CLICKHOUSE_USER' not set")
 	}
 
 	// Set default protocol if not specified
@@ -95,6 +99,77 @@ func initClickHouseConnectionPool(host, port, user, pass, dbname, protocol strin
 	return pool, nil
 }
 
+// TestClickHouseIntegration runs comprehensive integration tests following the standard pattern
+func TestClickHouseIntegration(t *testing.T) {
+	sourceConfig := getClickHouseVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var args []string
+
+	pool, err := initClickHouseConnectionPool(CLICKHOUSE_HOST, CLICKHOUSE_PORT, CLICKHOUSE_USER, CLICKHOUSE_PASS, CLICKHOUSE_DATABASE, CLICKHOUSE_PROTOCOL)
+	if err != nil {
+		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
+	}
+	defer pool.Close()
+
+	// Test basic connection
+	err = pool.PingContext(ctx)
+	if err != nil {
+		t.Fatalf("unable to ping ClickHouse: %s", err)
+	}
+
+	// Test basic query
+	rows, err := pool.QueryContext(ctx, "SELECT 1 as test_value")
+	if err != nil {
+		t.Fatalf("unable to execute basic query: %s", err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		t.Fatalf("expected at least one row from basic query")
+	}
+
+	var testValue int
+	err = rows.Scan(&testValue)
+	if err != nil {
+		t.Fatalf("unable to scan result: %s", err)
+	}
+
+	if testValue != 1 {
+		t.Fatalf("expected test_value to be 1, got %d", testValue)
+	}
+
+	// Write a basic tools config and test the server endpoint
+	toolsFile := tests.GetToolsConfig(sourceConfig, CLICKHOUSE_TOOL_KIND, "SELECT 1;", "SELECT 1;")
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Run the required integration test suites
+	tests.RunToolGetTest(t)
+
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	select1Want, failInvocationWant, createTableStatement := tests.GetClickHouseWants()
+	invokeParamWant, mcpInvokeParamWant, tmplSelectAllWant, tmplSelect1Want := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tmplSelectAllWant, tmplSelect1Want, "", "", false, false)
+}
+
+// TestClickHouseBasicConnection tests basic ClickHouse connectivity
 func TestClickHouseBasicConnection(t *testing.T) {
 	sourceConfig := getClickHouseVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)

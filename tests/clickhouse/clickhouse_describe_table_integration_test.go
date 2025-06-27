@@ -23,7 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/clickhousedescribetable"
+	clickhousetools "github.com/googleapis/genai-toolbox/internal/tools/clickhouse"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
@@ -43,7 +43,7 @@ func TestDescribeTableBasic(t *testing.T) {
 	}
 
 	// Test tool configuration creation
-	toolConfig := clickhousedescribetable.Config{
+	toolConfig := clickhousetools.DescribeTableConfig{
 		Name:        "describe_table",
 		Kind:        "clickhouse-describe-table",
 		Source:      "test-clickhouse",
@@ -56,7 +56,7 @@ func TestDescribeTableBasic(t *testing.T) {
 	}
 
 	// Test parameter validation
-	expectedParams := []string{"database", "table"}
+	expectedParams := []string{"table_name"}
 	sourcesMap := map[string]sources.Source{
 		"test-clickhouse": &mockClickHouseSource{config: mockSourceConfig},
 	}
@@ -121,7 +121,7 @@ func TestDescribeTableWithRealConnection(t *testing.T) {
 	}
 
 	// Initialize describe_table tool
-	toolConfig := clickhousedescribetable.Config{
+	toolConfig := clickhousetools.DescribeTableConfig{
 		Name:        "describe_table",
 		Kind:        "clickhouse-describe-table",
 		Source:      "test-clickhouse",
@@ -205,7 +205,7 @@ func TestDescribeTableNotFound(t *testing.T) {
 	}
 
 	// Initialize describe_table tool
-	toolConfig := clickhousedescribetable.Config{
+	toolConfig := clickhousetools.DescribeTableConfig{
 		Name:        "describe_table",
 		Kind:        "clickhouse-describe-table",
 		Source:      "test-clickhouse",

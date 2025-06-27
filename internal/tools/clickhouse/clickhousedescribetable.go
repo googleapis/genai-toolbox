@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhousedescribetable
+package clickhouse
 
 import (
 	"context"
@@ -25,16 +25,16 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "clickhouse-describe-table"
+const describeTableKind string = "clickhouse-describe-table"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(describeTableKind, newDescribeTableConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", describeTableKind))
 	}
 }
 
-func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+func newDescribeTableConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := DescribeTableConfig{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ var _ compatibleSource = &clickhouse.Source{}
 
 var compatibleSources = [...]string{clickhouse.SourceKind}
 
-type Config struct {
+type DescribeTableConfig struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
@@ -59,13 +59,13 @@ type Config struct {
 }
 
 // validate interface
-var _ tools.ToolConfig = Config{}
+var _ tools.ToolConfig = DescribeTableConfig{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg DescribeTableConfig) ToolConfigKind() string {
+	return describeTableKind
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg DescribeTableConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -75,7 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", describeTableKind, compatibleSources)
 	}
 
 	tableParameter := tools.NewStringParameter("table_name", "The table name to describe.")
@@ -88,9 +88,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// finish tool setup
-	t := Tool{
+	t := DescribeTableTool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Kind:         describeTableKind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.ClickHousePool(),
@@ -101,9 +101,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 // validate interface
-var _ tools.Tool = Tool{}
+var _ tools.Tool = DescribeTableTool{}
 
-type Tool struct {
+type DescribeTableTool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
 	AuthRequired []string         `yaml:"authRequired"`
@@ -114,7 +114,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t DescribeTableTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	table, ok := sliceParams[0].(string)
 	if !ok {
@@ -247,19 +247,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	return result, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t DescribeTableTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t Tool) Manifest() tools.Manifest {
+func (t DescribeTableTool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
+func (t DescribeTableTool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
+func (t DescribeTableTool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 

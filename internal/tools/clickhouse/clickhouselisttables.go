@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhouselisttables
+package clickhouse
 
 import (
 	"context"
@@ -22,36 +22,28 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "clickhouse-list-tables"
+const listTablesKind string = "clickhouse-list-tables"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(listTablesKind, newListTablesConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", listTablesKind))
 	}
 }
 
-func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+func newListTablesConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := ListTablesConfig{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
-type compatibleSource interface {
-	ClickHousePool() *sql.DB
-}
+// compatibleSource interface is defined in clickhousedescribetable.go
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &clickhouse.Source{}
-
-var compatibleSources = [...]string{clickhouse.SourceKind}
-
-type Config struct {
+type ListTablesConfig struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
@@ -60,13 +52,13 @@ type Config struct {
 }
 
 // validate interface
-var _ tools.ToolConfig = Config{}
+var _ tools.ToolConfig = ListTablesConfig{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg ListTablesConfig) ToolConfigKind() string {
+	return listTablesKind
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg ListTablesConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -76,7 +68,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", listTablesKind, compatibleSources)
 	}
 
 	tableNamesParameter := tools.NewStringParameter("table_names", "Optional: A comma-separated list of table names. If empty, details for all tables in the current database will be listed.")
@@ -89,9 +81,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// finish tool setup
-	t := Tool{
+	t := ListTablesTool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Kind:         listTablesKind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.ClickHousePool(),
@@ -102,9 +94,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 // validate interface
-var _ tools.Tool = Tool{}
+var _ tools.Tool = ListTablesTool{}
 
-type Tool struct {
+type ListTablesTool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
 	AuthRequired []string         `yaml:"authRequired"`
@@ -115,7 +107,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t ListTablesTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	tableNamesParam, ok := sliceParams[0].(string)
 	if !ok {
@@ -231,18 +223,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t ListTablesTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t Tool) Manifest() tools.Manifest {
+func (t ListTablesTool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
+func (t ListTablesTool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
+func (t ListTablesTool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

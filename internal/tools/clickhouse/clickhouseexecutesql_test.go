@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhouselisttables_test
+package clickhouse
 
 import (
 	"testing"
@@ -21,10 +21,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/clickhouselisttables"
 )
 
-func TestParseFromYamlClickHouseListTables(t *testing.T) {
+func TestParseFromYamlClickHouseExecuteSQL(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,14 +38,14 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: clickhouse-list-tables
+					kind: clickhouse-execute-sql
 					source: my-instance
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": clickhouselisttables.Config{
+				"example_tool": ExecuteSQLConfig{
 					Name:         "example_tool",
-					Kind:         "clickhouse-list-tables",
+					Kind:         "clickhouse-execute-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

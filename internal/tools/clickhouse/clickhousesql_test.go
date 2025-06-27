@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhousesql
+package clickhouse
 
 import (
 	"strings"
@@ -26,13 +26,13 @@ import (
 )
 
 func TestConfig_ToolConfigKind(t *testing.T) {
-	config := Config{}
-	if config.ToolConfigKind() != kind {
-		t.Errorf("Expected %s, got %s", kind, config.ToolConfigKind())
+	config := SQLConfig{}
+	if config.ToolConfigKind() != sqlKind {
+		t.Errorf("Expected %s, got %s", sqlKind, config.ToolConfigKind())
 	}
 }
 
-func TestNewConfig(t *testing.T) {
+func TestNewSQLConfig(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("Failed to create context with logger: %v", err)
@@ -51,12 +51,12 @@ parameters:
 `
 
 	decoder := yaml.NewDecoder(strings.NewReader(yamlContent))
-	config, err := newConfig(ctx, "test-clickhouse-tool", decoder)
+	config, err := newSQLConfig(ctx, "test-clickhouse-tool", decoder)
 	if err != nil {
 		t.Fatalf("Failed to create config: %v", err)
 	}
 
-	clickhouseConfig, ok := config.(Config)
+	clickhouseConfig, ok := config.(SQLConfig)
 	if !ok {
 		t.Fatalf("Expected Config type, got %T", config)
 	}
@@ -75,10 +75,10 @@ parameters:
 	}
 }
 
-func TestConfig_Initialize_ValidSource(t *testing.T) {
-	config := Config{
+func TestSQLConfig_Initialize_ValidSource(t *testing.T) {
+	config := SQLConfig{
 		Name:        "test-tool",
-		Kind:        kind,
+		Kind:        sqlKind,
 		Source:      "test-clickhouse",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
@@ -97,7 +97,7 @@ func TestConfig_Initialize_ValidSource(t *testing.T) {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
 
-	clickhouseTool, ok := tool.(Tool)
+	clickhouseTool, ok := tool.(SQLTool)
 	if !ok {
 		t.Fatalf("Expected Tool type, got %T", tool)
 	}
@@ -107,10 +107,10 @@ func TestConfig_Initialize_ValidSource(t *testing.T) {
 	}
 }
 
-func TestConfig_Initialize_MissingSource(t *testing.T) {
-	config := Config{
+func TestSQLConfig_Initialize_MissingSource(t *testing.T) {
+	config := SQLConfig{
 		Name:        "test-tool",
-		Kind:        kind,
+		Kind:        sqlKind,
 		Source:      "missing-source",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
@@ -130,10 +130,10 @@ func TestConfig_Initialize_MissingSource(t *testing.T) {
 	}
 }
 
-func TestConfig_Initialize_IncompatibleSource(t *testing.T) {
-	config := Config{
+func TestSQLConfig_Initialize_IncompatibleSource(t *testing.T) {
+	config := SQLConfig{
 		Name:        "test-tool",
-		Kind:        kind,
+		Kind:        sqlKind,
 		Source:      "incompatible-source",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
@@ -157,8 +157,8 @@ func TestConfig_Initialize_IncompatibleSource(t *testing.T) {
 	}
 }
 
-func TestTool_Manifest(t *testing.T) {
-	tool := Tool{
+func TestSQLTool_Manifest(t *testing.T) {
+	tool := SQLTool{
 		manifest: tools.Manifest{
 			Description: "Test description",
 			Parameters:  []tools.ParameterManifest{},
@@ -171,8 +171,8 @@ func TestTool_Manifest(t *testing.T) {
 	}
 }
 
-func TestTool_McpManifest(t *testing.T) {
-	tool := Tool{
+func TestSQLTool_McpManifest(t *testing.T) {
+	tool := SQLTool{
 		mcpManifest: tools.McpManifest{
 			Name:        "test-tool",
 			Description: "Test description",
@@ -188,7 +188,7 @@ func TestTool_McpManifest(t *testing.T) {
 	}
 }
 
-func TestTool_Authorized(t *testing.T) {
+func TestSQLTool_Authorized(t *testing.T) {
 	tests := []struct {
 		name                 string
 		authRequired         []string
@@ -223,7 +223,7 @@ func TestTool_Authorized(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool := Tool{
+			tool := SQLTool{
 				AuthRequired: tt.authRequired,
 			}
 
@@ -235,11 +235,4 @@ func TestTool_Authorized(t *testing.T) {
 	}
 }
 
-// Mock incompatible source for testing
-type mockIncompatibleSource struct{}
-
-func (m *mockIncompatibleSource) SourceKind() string {
-	return "incompatible"
-}
-
-// This source doesn't implement ClickHousePool() method, making it incompatible
+// Mock incompatible source for SQL testing - see clickhousedescribetable_test.go for definition

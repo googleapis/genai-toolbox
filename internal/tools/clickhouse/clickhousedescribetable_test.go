@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhousedescribetable
+package clickhouse
 
 import (
 	"strings"
@@ -25,10 +25,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-func TestConfig_ToolConfigKind(t *testing.T) {
-	config := Config{}
-	if config.ToolConfigKind() != kind {
-		t.Errorf("Expected %s, got %s", kind, config.ToolConfigKind())
+func TestDescribeTableConfig_ToolConfigKind(t *testing.T) {
+	config := DescribeTableConfig{}
+	if config.ToolConfigKind() != describeTableKind {
+		t.Errorf("Expected %s, got %s", describeTableKind, config.ToolConfigKind())
 	}
 }
 
@@ -46,14 +46,14 @@ description: Test ClickHouse describe table tool
 `
 
 	decoder := yaml.NewDecoder(strings.NewReader(yamlContent))
-	config, err := newConfig(ctx, "test-clickhouse-describe-table", decoder)
+	config, err := newDescribeTableConfig(ctx, "test-clickhouse-describe-table", decoder)
 	if err != nil {
 		t.Fatalf("Failed to create config: %v", err)
 	}
 
-	clickhouseConfig, ok := config.(Config)
+	clickhouseConfig, ok := config.(DescribeTableConfig)
 	if !ok {
-		t.Fatalf("Expected Config type, got %T", config)
+		t.Fatalf("Expected DescribeTableConfig type, got %T", config)
 	}
 
 	if clickhouseConfig.Name != "test-clickhouse-describe-table" {
@@ -68,9 +68,9 @@ description: Test ClickHouse describe table tool
 }
 
 func TestConfig_Initialize_ValidSource(t *testing.T) {
-	config := Config{
+	config := DescribeTableConfig{
 		Name:        "test-tool",
-		Kind:        kind,
+		Kind:        describeTableKind,
 		Source:      "test-clickhouse",
 		Description: "Test tool",
 	}
@@ -87,7 +87,7 @@ func TestConfig_Initialize_ValidSource(t *testing.T) {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
 
-	clickhouseTool, ok := tool.(Tool)
+	clickhouseTool, ok := tool.(DescribeTableTool)
 	if !ok {
 		t.Fatalf("Expected Tool type, got %T", tool)
 	}
@@ -116,9 +116,9 @@ func TestConfig_Initialize_ValidSource(t *testing.T) {
 }
 
 func TestConfig_Initialize_MissingSource(t *testing.T) {
-	config := Config{
+	config := DescribeTableConfig{
 		Name:        "test-tool",
-		Kind:        kind,
+		Kind:        describeTableKind,
 		Source:      "missing-source",
 		Description: "Test tool",
 	}
@@ -137,9 +137,9 @@ func TestConfig_Initialize_MissingSource(t *testing.T) {
 }
 
 func TestConfig_Initialize_IncompatibleSource(t *testing.T) {
-	config := Config{
+	config := DescribeTableConfig{
 		Name:        "test-tool",
-		Kind:        kind,
+		Kind:        describeTableKind,
 		Source:      "incompatible-source",
 		Description: "Test tool",
 	}
@@ -162,7 +162,7 @@ func TestConfig_Initialize_IncompatibleSource(t *testing.T) {
 }
 
 func TestTool_Manifest(t *testing.T) {
-	tool := Tool{
+	tool := DescribeTableTool{
 		manifest: tools.Manifest{
 			Description: "Test description",
 			Parameters:  []tools.ParameterManifest{},
@@ -176,7 +176,7 @@ func TestTool_Manifest(t *testing.T) {
 }
 
 func TestTool_McpManifest(t *testing.T) {
-	tool := Tool{
+	tool := DescribeTableTool{
 		mcpManifest: tools.McpManifest{
 			Name:        "test-tool",
 			Description: "Test description",
@@ -227,7 +227,7 @@ func TestTool_Authorized(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool := Tool{
+			tool := DescribeTableTool{
 				AuthRequired: tt.authRequired,
 			}
 
