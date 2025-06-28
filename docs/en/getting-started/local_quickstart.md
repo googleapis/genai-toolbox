@@ -141,6 +141,48 @@ postgres` and a password next time.
     \q
     ```
 
+## Cloud Setup (Optional)
+
+If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using `vertexai=True` in the Core agent or a Google GenAI model), follow these one-time setup steps:
+
+1. **Create or select a Google Cloud project**
+   - You can do this from the [Google Cloud Console](https://console.cloud.google.com/).
+   - Make note of the Project ID, which you'll use in your code and CLI commands.
+
+2. **Install the Google Cloud CLI (gcloud)**
+   - Follow the official guide: https://cloud.google.com/sdk/docs/install
+
+3. **Authenticate with your Google account**
+   ```bash
+   gcloud auth application-default login
+   ```
+
+4. **Set your default project**
+   ```bash
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+5. **Enable the Vertex AI API**
+   ```bash
+   gcloud services enable aiplatform.googleapis.com
+   ```
+
+6. **(Optional) Set required environment variables**
+   These may be required by the GenAI SDK:
+   ```bash
+   export GOOGLE_CLOUD_PROJECT=your-project-id
+   export GOOGLE_GENAI_USE_VERTEXAI=true
+   # optionally, for location-specific setup
+   export GOOGLE_CLOUD_LOCATION=us-central1
+   ```
+
+7. **Update your agent code**
+   In files like `hotel_agent.py`, replace:
+   ```python
+   project="project-id"
+   ```
+   with your actual Google Cloud project ID.
+
 ## Step 2: Install and configure Toolbox
 
 In this section, we will download Toolbox, configure our tools in a
