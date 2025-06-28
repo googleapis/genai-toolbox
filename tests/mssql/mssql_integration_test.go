@@ -30,36 +30,36 @@ import (
 )
 
 var (
-	MSSQL_SOURCE_KIND = "mssql"
-	MSSQL_TOOL_KIND   = "mssql-sql"
-	MSSQL_DATABASE    = os.Getenv("MSSQL_DATABASE")
-	MSSQL_HOST        = os.Getenv("MSSQL_HOST")
-	MSSQL_PORT        = os.Getenv("MSSQL_PORT")
-	MSSQL_USER        = os.Getenv("MSSQL_USER")
-	MSSQL_PASS        = os.Getenv("MSSQL_PASS")
+	MssqlSourceKind = "mssql"
+	MssqlToolKind   = "mssql-sql"
+	MssqlDatabase   = os.Getenv("MSSQL_DATABASE")
+	MssqlHost       = os.Getenv("MSSQL_HOST")
+	MssqlPort       = os.Getenv("MSSQL_PORT")
+	MssqlUser       = os.Getenv("MSSQL_USER")
+	MssqlPass       = os.Getenv("MSSQL_PASS")
 )
 
 func getMsSQLVars(t *testing.T) map[string]any {
 	switch "" {
-	case MSSQL_DATABASE:
+	case MssqlDatabase:
 		t.Fatal("'MSSQL_DATABASE' not set")
-	case MSSQL_HOST:
+	case MssqlHost:
 		t.Fatal("'MSSQL_HOST' not set")
-	case MSSQL_PORT:
+	case MssqlPort:
 		t.Fatal("'MSSQL_PORT' not set")
-	case MSSQL_USER:
+	case MssqlUser:
 		t.Fatal("'MSSQL_USER' not set")
-	case MSSQL_PASS:
+	case MssqlPass:
 		t.Fatal("'MSSQL_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     MSSQL_SOURCE_KIND,
-		"host":     MSSQL_HOST,
-		"port":     MSSQL_PORT,
-		"database": MSSQL_DATABASE,
-		"user":     MSSQL_USER,
-		"password": MSSQL_PASS,
+		"kind":     MssqlSourceKind,
+		"host":     MssqlHost,
+		"port":     MssqlPort,
+		"database": MssqlDatabase,
+		"user":     MssqlUser,
+		"password": MssqlPass,
 	}
 }
 
@@ -90,7 +90,7 @@ func TestMssqlToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	pool, err := initMssqlConnection(MSSQL_HOST, MSSQL_PORT, MSSQL_USER, MSSQL_PASS, MSSQL_DATABASE)
+	pool, err := initMssqlConnection(MssqlHost, MssqlPort, MssqlUser, MssqlPass, MssqlDatabase)
 	if err != nil {
 		t.Fatalf("unable to create SQL Server connection pool: %s", err)
 	}
@@ -101,20 +101,20 @@ func TestMssqlToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMssqlParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupMsSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetMssqlParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupMsSQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupMsSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetMssqlAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupMsSQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MssqlToolKind, toolStatement1, toolStatement2)
 	toolsFile = tests.AddMssqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMssqlTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MSSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MssqlToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

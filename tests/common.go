@@ -28,7 +28,7 @@ import (
 )
 
 // GetToolsConfig returns a mock tools config file
-func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement, auth_tool_statement string) map[string]any {
+func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -51,7 +51,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
-				"statement":   param_tool_statement,
+				"statement":   paramToolStatement,
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
@@ -70,7 +70,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, param_tool_statement,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
-				"statement": auth_tool_statement,
+				"statement": authToolStatement,
 				"parameters": []map[string]any{
 					{
 						"name":        "email",
@@ -262,20 +262,20 @@ func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 
 // GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
 func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3);", tableName)
-	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
 	params := []any{"Alice", "Jane", "Sid"}
-	return create_statement, insert_statement, tool_statement, params
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // GetPostgresSQLAuthToolInfo returns statements and param of my-auth-tool for postgres-sql kind
 func GetPostgresSQLAuthToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT, email TEXT);", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES ($1, $2), ($3, $4)", tableName)
-	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
-	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
-	return create_statement, insert_statement, tool_statement, params
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT, email TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES ($1, $2), ($3, $4)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
+	params := []any{"Alice", ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // GetPostgresSQLTmplToolStatement returns statements and param for template parameter test cases for postgres-sql kind
@@ -287,20 +287,20 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 
 // GetMssqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
 func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid);", tableName)
-	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
 	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid")}
-	return create_statement, insert_statement, tool_statement, params
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // GetMssqlAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
 func GetMssqlAuthToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
-	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
-	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", SERVICE_ACCOUNT_EMAIL), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
-	return create_statement, insert_statement, tool_statement, params
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
+	params := []any{sql.Named("alice", "Alice"), sql.Named("aliceemail", ServiceAccountEmail), sql.Named("jane", "Jane"), sql.Named("janeemail", "janedoe@gmail.com")}
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // GetMssqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
@@ -312,20 +312,20 @@ func GetMssqlTmplToolStatement() (string, string) {
 
 // GetMysqlParamToolInfo returns statements and param for my-param-tool mysql-sql kind
 func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
-	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
 	params := []any{"Alice", "Jane", "Sid"}
-	return create_statement, insert_statement, tool_statement, params
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // GetMysqlAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
 func GetMysqlAuthToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
-	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
-	params := []any{"Alice", SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
-	return create_statement, insert_statement, tool_statement, params
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
+	params := []any{"Alice", ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // GetMysqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
@@ -367,20 +367,20 @@ func GetMysqlWants() (string, string, string) {
 
 // SetupPostgresSQLTable creates and inserts data into a table of tool
 // compatible with postgres-sql tool
-func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
+func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
 	err := pool.Ping(ctx)
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
 
 	// Create table
-	_, err = pool.Query(ctx, create_statement)
+	_, err = pool.Query(ctx, createStatement)
 	if err != nil {
 		t.Fatalf("unable to create test table %s: %s", tableName, err)
 	}
 
 	// Insert test data
-	_, err = pool.Query(ctx, insert_statement, params...)
+	_, err = pool.Query(ctx, insertStatement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}
@@ -396,20 +396,20 @@ func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 
 // SetupMsSQLTable creates and inserts data into a table of tool
 // compatible with mssql-sql tool
-func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
+func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
 	err := pool.PingContext(ctx)
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
 
 	// Create table
-	_, err = pool.QueryContext(ctx, create_statement)
+	_, err = pool.QueryContext(ctx, createStatement)
 	if err != nil {
 		t.Fatalf("unable to create test table %s: %s", tableName, err)
 	}
 
 	// Insert test data
-	_, err = pool.QueryContext(ctx, insert_statement, params...)
+	_, err = pool.QueryContext(ctx, insertStatement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}
@@ -425,20 +425,20 @@ func SetupMsSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_sta
 
 // SetupMySQLTable creates and inserts data into a table of tool
 // compatible with mysql-sql tool
-func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, create_statement, insert_statement, tableName string, params []any) func(*testing.T) {
+func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
 	err := pool.PingContext(ctx)
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
 
 	// Create table
-	_, err = pool.QueryContext(ctx, create_statement)
+	_, err = pool.QueryContext(ctx, createStatement)
 	if err != nil {
 		t.Fatalf("unable to create test table %s: %s", tableName, err)
 	}
 
 	// Insert test data
-	_, err = pool.QueryContext(ctx, insert_statement, params...)
+	_, err = pool.QueryContext(ctx, insertStatement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}

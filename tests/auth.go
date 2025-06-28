@@ -23,7 +23,7 @@ import (
 	"google.golang.org/api/idtoken"
 )
 
-var SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
+var ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 var ClientId = os.Getenv("CLIENT_ID")
 
 // GetGoogleIdToken retrieve and return the Google ID token
