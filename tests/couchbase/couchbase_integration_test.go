@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package couchbase
 
 import (
 	"context"
@@ -34,12 +34,11 @@ const (
 )
 
 var (
-	couchbaseConnection   = os.Getenv("COUCHBASE_CONNECTION")
-	couchbaseBucket       = os.Getenv("COUCHBASE_BUCKET")
-	couchbaseScope        = os.Getenv("COUCHBASE_SCOPE")
-	couchbaseUser         = os.Getenv("COUCHBASE_USER")
-	couchbasePass         = os.Getenv("COUCHBASE_PASS")
-	SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
+	couchbaseConnection = os.Getenv("COUCHBASE_CONNECTION")
+	couchbaseBucket     = os.Getenv("COUCHBASE_BUCKET")
+	couchbaseScope      = os.Getenv("COUCHBASE_SCOPE")
+	couchbaseUser       = os.Getenv("COUCHBASE_USER")
+	couchbasePass       = os.Getenv("COUCHBASE_PASS")
 )
 
 // getCouchbaseVars validates and returns Couchbase configuration variables
@@ -250,7 +249,7 @@ func getCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) 
 	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
 
 	params := []map[string]any{
-		{"name": "Alice", "email": SERVICE_ACCOUNT_EMAIL},
+		{"name": "Alice", "email": tests.ServiceAccountEmail},
 		{"name": "Jane", "email": "janedoe@gmail.com"},
 	}
 	return toolStatement, params

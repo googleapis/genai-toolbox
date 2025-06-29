@@ -36,28 +36,28 @@ import (
 )
 
 var (
-	SPANNER_SOURCE_KIND = "spanner"
-	SPANNER_TOOL_KIND   = "spanner-sql"
-	SPANNER_PROJECT     = os.Getenv("SPANNER_PROJECT")
-	SPANNER_DATABASE    = os.Getenv("SPANNER_DATABASE")
-	SPANNER_INSTANCE    = os.Getenv("SPANNER_INSTANCE")
+	SpannerSourceKind = "spanner"
+	SpannerToolKind   = "spanner-sql"
+	SpannerProject    = os.Getenv("SPANNER_PROJECT")
+	SpannerDatabase   = os.Getenv("SPANNER_DATABASE")
+	SpannerInstance   = os.Getenv("SPANNER_INSTANCE")
 )
 
 func getSpannerVars(t *testing.T) map[string]any {
 	switch "" {
-	case SPANNER_PROJECT:
+	case SpannerProject:
 		t.Fatal("'SPANNER_PROJECT' not set")
-	case SPANNER_DATABASE:
+	case SpannerDatabase:
 		t.Fatal("'SPANNER_DATABASE' not set")
-	case SPANNER_INSTANCE:
+	case SpannerInstance:
 		t.Fatal("'SPANNER_INSTANCE' not set")
 	}
 
 	return map[string]any{
-		"kind":     SPANNER_SOURCE_KIND,
-		"project":  SPANNER_PROJECT,
-		"instance": SPANNER_INSTANCE,
-		"database": SPANNER_DATABASE,
+		"kind":     SpannerSourceKind,
+		"project":  SpannerProject,
+		"instance": SpannerInstance,
+		"database": SpannerDatabase,
 	}
 }
 
@@ -96,7 +96,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	var args []string
 
 	// Create Spanner client
-	dataClient, adminClient, err := initSpannerClients(ctx, SPANNER_PROJECT, SPANNER_INSTANCE, SPANNER_DATABASE)
+	dataClient, adminClient, err := initSpannerClients(ctx, SpannerProject, SpannerInstance, SpannerDatabase)
 	if err != nil {
 		t.Fatalf("unable to create Spanner client: %s", err)
 	}
@@ -107,19 +107,19 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := getSpannerParamToolInfo(tableNameParam)
+	createStatement1, insertStatement1, toolStatement1, params1 := getSpannerParamToolInfo(tableNameParam)
 	dbString := fmt.Sprintf(
 		"projects/%s/instances/%s/databases/%s",
-		SPANNER_PROJECT,
-		SPANNER_INSTANCE,
-		SPANNER_DATABASE,
+		SpannerProject,
+		SpannerInstance,
+		SpannerDatabase,
 	)
-	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, create_statement1, insert_statement1, tableNameParam, dbString, params1)
+	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, createStatement1, insertStatement1, tableNameParam, dbString, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := getSpannerAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, create_statement2, insert_statement2, tableNameAuth, dbString, params2)
+	createStatement2, insertStatement2, toolStatement2, params2 := getSpannerAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, createStatement2, insertStatement2, tableNameAuth, dbString, params2)
 	defer teardownTable2(t)
 
 	// set up data for template param tool
@@ -128,7 +128,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	defer teardownTableTmpl(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SPANNER_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, toolStatement1, toolStatement2)
 	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
@@ -170,25 +170,25 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
 func getSpannerParamToolInfo(tableName string) (string, string, string, map[string]any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3)", tableName)
-	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3)", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
 	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid"}
-	return create_statement, insert_statement, tool_statement, params
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
 func getSpannerAuthToolInfo(tableName string) (string, string, string, map[string]any) {
-	create_statement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), email STRING(MAX)) PRIMARY KEY (id)", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, @name1, @email1), (2, @name2, @email2)", tableName)
-	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email", tableName)
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), email STRING(MAX)) PRIMARY KEY (id)", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, @name1, @email1), (2, @name2, @email2)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email", tableName)
 	params := map[string]any{
 		"name1":  "Alice",
-		"email1": tests.SERVICE_ACCOUNT_EMAIL,
+		"email1": tests.ServiceAccountEmail,
 		"name2":  "Jane",
 		"email2": "janedoe@gmail.com",
 	}
-	return create_statement, insert_statement, tool_statement, params
+	return createStatement, insertStatement, toolStatement, params
 }
 
 // setupSpannerTable creates and inserts data into a table of tool
@@ -352,7 +352,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 	return config
 }
 
-func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam, tableNameAuth string) {
+func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam, tableNameAuth string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -373,7 +373,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool-read-only/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -417,7 +417,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -455,7 +455,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParam
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         false,
-			want:          select_1_want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",

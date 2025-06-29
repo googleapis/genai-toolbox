@@ -30,32 +30,31 @@ import (
 )
 
 var (
-	NEO4J_SOURCE_KIND = "neo4j"
-	NEO4J_TOOL_KIND   = "neo4j-cypher"
-	NEO4J_DATABASE    = os.Getenv("NEO4J_DATABASE")
-	NEO4J_URI         = os.Getenv("NEO4J_URI")
-	NEO4J_USER        = os.Getenv("NEO4J_USER")
-	NEO4J_PASS        = os.Getenv("NEO4J_PASS")
+	Neo4jSourceKind = "neo4j"
+	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
+	Neo4jUri        = os.Getenv("NEO4J_URI")
+	Neo4jUser       = os.Getenv("NEO4J_USER")
+	Neo4jPass       = os.Getenv("NEO4J_PASS")
 )
 
 func getNeo4jVars(t *testing.T) map[string]any {
 	switch "" {
-	case NEO4J_DATABASE:
+	case Neo4jDatabase:
 		t.Fatal("'NEO4J_DATABASE' not set")
-	case NEO4J_URI:
+	case Neo4jUri:
 		t.Fatal("'NEO4J_URI' not set")
-	case NEO4J_USER:
+	case Neo4jUser:
 		t.Fatal("'NEO4J_USER' not set")
-	case NEO4J_PASS:
+	case Neo4jPass:
 		t.Fatal("'NEO4J_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     NEO4J_SOURCE_KIND,
-		"uri":      NEO4J_URI,
-		"database": NEO4J_DATABASE,
-		"user":     NEO4J_USER,
-		"password": NEO4J_PASS,
+		"kind":     Neo4jSourceKind,
+		"uri":      Neo4jUri,
+		"database": Neo4jDatabase,
+		"user":     Neo4jUser,
+		"password": Neo4jPass,
 	}
 }
 

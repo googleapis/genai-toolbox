@@ -37,20 +37,20 @@ import (
 )
 
 var (
-	BIGQUERY_SOURCE_KIND = "bigquery"
-	BIGQUERY_TOOL_KIND   = "bigquery-sql"
-	BIGQUERY_PROJECT     = os.Getenv("BIGQUERY_PROJECT")
+	BigquerySourceKind = "bigquery"
+	BigqueryToolKind   = "bigquery-sql"
+	BigqueryProject    = os.Getenv("BIGQUERY_PROJECT")
 )
 
 func getBigQueryVars(t *testing.T) map[string]any {
 	switch "" {
-	case BIGQUERY_PROJECT:
+	case BigqueryProject:
 		t.Fatal("'BIGQUERY_PROJECT' not set")
 	}
 
 	return map[string]any{
-		"kind":    BIGQUERY_SOURCE_KIND,
-		"project": BIGQUERY_PROJECT,
+		"kind":    BigquerySourceKind,
+		"project": BigqueryProject,
 	}
 }
 
@@ -76,7 +76,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initBigQueryConnection(BIGQUERY_PROJECT)
+	client, err := initBigQueryConnection(BigqueryProject)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
@@ -85,36 +85,36 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableName := fmt.Sprintf("param_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableNameParam := fmt.Sprintf("`%s.%s.%s`",
-		BIGQUERY_PROJECT,
+		BigqueryProject,
 		datasetName,
 		tableName,
 	)
 	tableNameAuth := fmt.Sprintf("`%s.%s.auth_table_%s`",
-		BIGQUERY_PROJECT,
+		BigqueryProject,
 		datasetName,
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 	tableNameTemplateParam := fmt.Sprintf("`%s.%s.template_param_table_%s`",
-		BIGQUERY_PROJECT,
+		BigqueryProject,
 		datasetName,
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := getBigQueryParamToolInfo(tableNameParam)
-	teardownTable1 := setupBigQueryTable(t, ctx, client, create_statement1, insert_statement1, datasetName, tableNameParam, params1)
+	createStatement1, insertStatement1, toolStatement1, params1 := getBigQueryParamToolInfo(tableNameParam)
+	teardownTable1 := setupBigQueryTable(t, ctx, client, createStatement1, insertStatement1, datasetName, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := getBigQueryAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupBigQueryTable(t, ctx, client, create_statement2, insert_statement2, datasetName, tableNameAuth, params2)
+	createStatement2, insertStatement2, toolStatement2, params2 := getBigQueryAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupBigQueryTable(t, ctx, client, createStatement2, insertStatement2, datasetName, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BIGQUERY_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, toolStatement1, toolStatement2)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BIGQUERY_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -176,7 +176,7 @@ func getBigQueryAuthToolInfo(tableName string) (string, string, string, []bigque
 	toolStatement := fmt.Sprintf(`
 		SELECT name FROM %s WHERE email = ?`, tableName)
 	params := []bigqueryapi.QueryParameter{
-		{Value: int64(1)}, {Value: "Alice"}, {Value: tests.SERVICE_ACCOUNT_EMAIL},
+		{Value: int64(1)}, {Value: "Alice"}, {Value: tests.ServiceAccountEmail},
 		{Value: int64(2)}, {Value: "Jane"}, {Value: "janedoe@gmail.com"},
 	}
 	return createStatement, insertStatement, toolStatement, params
@@ -189,7 +189,7 @@ func getBigQueryTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, create_statement, insert_statement, datasetName string, tableName string, params []bigqueryapi.QueryParameter) func(*testing.T) {
+func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, createStatement, insertStatement, datasetName string, tableName string, params []bigqueryapi.QueryParameter) func(*testing.T) {
 	// Create dataset
 	dataset := client.Dataset(datasetName)
 	_, err := dataset.Metadata(ctx)
@@ -206,7 +206,7 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	}
 
 	// Create table
-	createJob, err := client.Query(create_statement).Run(ctx)
+	createJob, err := client.Query(createStatement).Run(ctx)
 
 	if err != nil {
 		t.Fatalf("Failed to start create table job for %s: %v", tableName, err)
@@ -220,7 +220,7 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	}
 
 	// Insert test data
-	insertQuery := client.Query(insert_statement)
+	insertQuery := client.Query(insertStatement)
 	insertQuery.Parameters = params
 	insertJob, err := insertQuery.Run(ctx)
 	if err != nil {
@@ -340,7 +340,7 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
-func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokeParamWant, tableNameParam string) {
+func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -368,7 +368,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokePara
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -414,7 +414,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select_1_want, invokePara
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         false,
-			want:          select_1_want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",

@@ -32,43 +32,43 @@ import (
 )
 
 var (
-	ALLOYDB_AI_NL_SOURCE_KIND = "alloydb-postgres"
-	ALLOYDB_AI_NL_TOOL_KIND   = "alloydb-ai-nl"
-	ALLOYDB_AI_NL_PROJECT     = os.Getenv("ALLOYDB_AI_NL_PROJECT")
-	ALLOYDB_AI_NL_REGION      = os.Getenv("ALLOYDB_AI_NL_REGION")
-	ALLOYDB_AI_NL_CLUSTER     = os.Getenv("ALLOYDB_AI_NL_CLUSTER")
-	ALLOYDB_AI_NL_INSTANCE    = os.Getenv("ALLOYDB_AI_NL_INSTANCE")
-	ALLOYDB_AI_NL_DATABASE    = os.Getenv("ALLOYDB_AI_NL_DATABASE")
-	ALLOYDB_AI_NL_USER        = os.Getenv("ALLOYDB_AI_NL_USER")
-	ALLOYDB_AI_NL_PASS        = os.Getenv("ALLOYDB_AI_NL_PASS")
+	AlloydbAiNlSourceKind = "alloydb-postgres"
+	AlloydbAiNlToolKind   = "alloydb-ai-nl"
+	AlloydbAiNlProject    = os.Getenv("ALLOYDB_AI_NL_PROJECT")
+	AlloydbAiNlRegion     = os.Getenv("ALLOYDB_AI_NL_REGION")
+	AlloydbAiNlCluster    = os.Getenv("ALLOYDB_AI_NL_CLUSTER")
+	AlloydbAiNlInstance   = os.Getenv("ALLOYDB_AI_NL_INSTANCE")
+	AlloydbAiNlDatabase   = os.Getenv("ALLOYDB_AI_NL_DATABASE")
+	AlloydbAiNlUser       = os.Getenv("ALLOYDB_AI_NL_USER")
+	AlloydbAiNlPass       = os.Getenv("ALLOYDB_AI_NL_PASS")
 )
 
 func getAlloyDBAiNlVars(t *testing.T) map[string]any {
 	switch "" {
-	case ALLOYDB_AI_NL_PROJECT:
+	case AlloydbAiNlProject:
 		t.Fatal("'ALLOYDB_AI_NL_PROJECT' not set")
-	case ALLOYDB_AI_NL_REGION:
+	case AlloydbAiNlRegion:
 		t.Fatal("'ALLOYDB_AI_NL_REGION' not set")
-	case ALLOYDB_AI_NL_CLUSTER:
+	case AlloydbAiNlCluster:
 		t.Fatal("'ALLOYDB_AI_NL_CLUSTER' not set")
-	case ALLOYDB_AI_NL_INSTANCE:
+	case AlloydbAiNlInstance:
 		t.Fatal("'ALLOYDB_AI_NL_INSTANCE' not set")
-	case ALLOYDB_AI_NL_DATABASE:
+	case AlloydbAiNlDatabase:
 		t.Fatal("'ALLOYDB_AI_NL_DATABASE' not set")
-	case ALLOYDB_AI_NL_USER:
+	case AlloydbAiNlUser:
 		t.Fatal("'ALLOYDB_AI_NL_USER' not set")
-	case ALLOYDB_AI_NL_PASS:
+	case AlloydbAiNlPass:
 		t.Fatal("'ALLOYDB_AI_NL_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     ALLOYDB_AI_NL_SOURCE_KIND,
-		"project":  ALLOYDB_AI_NL_PROJECT,
-		"cluster":  ALLOYDB_AI_NL_CLUSTER,
-		"instance": ALLOYDB_AI_NL_INSTANCE,
-		"region":   ALLOYDB_AI_NL_REGION,
-		"database": ALLOYDB_AI_NL_DATABASE,
-		"user":     ALLOYDB_AI_NL_USER,
-		"password": ALLOYDB_AI_NL_PASS,
+		"kind":     AlloydbAiNlSourceKind,
+		"project":  AlloydbAiNlProject,
+		"cluster":  AlloydbAiNlCluster,
+		"instance": AlloydbAiNlInstance,
+		"region":   AlloydbAiNlRegion,
+		"database": AlloydbAiNlDatabase,
+		"user":     AlloydbAiNlUser,
+		"password": AlloydbAiNlPass,
 	}
 }
 
@@ -290,13 +290,13 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        ALLOYDB_AI_NL_TOOL_KIND,
+				"kind":        AlloydbAiNlToolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"nlConfig":    "my_nl_config",
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        ALLOYDB_AI_NL_TOOL_KIND,
+				"kind":        AlloydbAiNlToolKind,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				"nlConfig":    "my_nl_config",
@@ -315,7 +315,7 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        ALLOYDB_AI_NL_TOOL_KIND,
+				"kind":        AlloydbAiNlToolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"nlConfig":    "my_nl_config",
