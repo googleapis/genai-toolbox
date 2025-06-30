@@ -31,43 +31,43 @@ import (
 )
 
 var (
-	AlloydbPostgresSourceKind = "alloydb-postgres"
-	AlloydbPostgresToolKind   = "postgres-sql"
-	AlloydbPostgresProject    = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
-	AlloydbPostgresRegion     = os.Getenv("ALLOYDB_POSTGRES_REGION")
-	AlloydbPostgresCluster    = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
-	AlloydbPostgresInstance   = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
-	AlloydbPostgresDatabase   = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
-	AlloydbPostgresUser       = os.Getenv("ALLOYDB_POSTGRES_USER")
-	AlloydbPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASS")
+	AlloyDBPostgresSourceKind = "alloydb-postgres"
+	AlloyDBPostgresToolKind   = "postgres-sql"
+	AlloyDBPostgresProject    = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
+	AlloyDBPostgresRegion     = os.Getenv("ALLOYDB_POSTGRES_REGION")
+	AlloyDBPostgresCluster    = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
+	AlloyDBPostgresInstance   = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
+	AlloyDBPostgresDatabase   = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
+	AlloyDBPostgresUser       = os.Getenv("ALLOYDB_POSTGRES_USER")
+	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASS")
 )
 
 func getAlloyDBPgVars(t *testing.T) map[string]any {
 	switch "" {
-	case AlloydbPostgresProject:
+	case AlloyDBPostgresProject:
 		t.Fatal("'ALLOYDB_POSTGRES_PROJECT' not set")
-	case AlloydbPostgresRegion:
+	case AlloyDBPostgresRegion:
 		t.Fatal("'ALLOYDB_POSTGRES_REGION' not set")
-	case AlloydbPostgresCluster:
+	case AlloyDBPostgresCluster:
 		t.Fatal("'ALLOYDB_POSTGRES_CLUSTER' not set")
-	case AlloydbPostgresInstance:
+	case AlloyDBPostgresInstance:
 		t.Fatal("'ALLOYDB_POSTGRES_INSTANCE' not set")
-	case AlloydbPostgresDatabase:
+	case AlloyDBPostgresDatabase:
 		t.Fatal("'ALLOYDB_POSTGRES_DATABASE' not set")
-	case AlloydbPostgresUser:
+	case AlloyDBPostgresUser:
 		t.Fatal("'ALLOYDB_POSTGRES_USER' not set")
-	case AlloydbPostgresPass:
+	case AlloyDBPostgresPass:
 		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     AlloydbPostgresSourceKind,
-		"project":  AlloydbPostgresProject,
-		"cluster":  AlloydbPostgresCluster,
-		"instance": AlloydbPostgresInstance,
-		"region":   AlloydbPostgresRegion,
-		"database": AlloydbPostgresDatabase,
-		"user":     AlloydbPostgresUser,
-		"password": AlloydbPostgresPass,
+		"kind":     AlloyDBPostgresSourceKind,
+		"project":  AlloyDBPostgresProject,
+		"cluster":  AlloyDBPostgresCluster,
+		"instance": AlloyDBPostgresInstance,
+		"region":   AlloyDBPostgresRegion,
+		"database": AlloyDBPostgresDatabase,
+		"user":     AlloyDBPostgresUser,
+		"password": AlloyDBPostgresPass,
 	}
 }
 
@@ -123,7 +123,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	pool, err := initAlloyDBPgConnectionPool(AlloydbPostgresProject, AlloydbPostgresRegion, AlloydbPostgresCluster, AlloydbPostgresInstance, "public", AlloydbPostgresUser, AlloydbPostgresPass, AlloydbPostgresDatabase)
+	pool, err := initAlloyDBPgConnectionPool(AlloyDBPostgresProject, AlloyDBPostgresRegion, AlloyDBPostgresCluster, AlloyDBPostgresInstance, "public", AlloyDBPostgresUser, AlloyDBPostgresPass, AlloyDBPostgresDatabase)
 	if err != nil {
 		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}
@@ -144,10 +144,10 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, AlloydbPostgresToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, toolStatement1, toolStatement2)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloydbPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -193,7 +193,7 @@ func TestAlloyDBPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, AlloydbPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, AlloyDBPostgresToolKind)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
@@ -208,32 +208,32 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     AlloydbPostgresSourceKind,
-		"project":  AlloydbPostgresProject,
-		"cluster":  AlloydbPostgresCluster,
-		"instance": AlloydbPostgresInstance,
-		"region":   AlloydbPostgresRegion,
-		"database": AlloydbPostgresDatabase,
+		"kind":     AlloyDBPostgresSourceKind,
+		"project":  AlloyDBPostgresProject,
+		"cluster":  AlloyDBPostgresCluster,
+		"instance": AlloyDBPostgresInstance,
+		"region":   AlloyDBPostgresRegion,
+		"database": AlloyDBPostgresDatabase,
 		"user":     serviceAccountEmail,
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     AlloydbPostgresSourceKind,
-		"project":  AlloydbPostgresProject,
-		"cluster":  AlloydbPostgresCluster,
-		"instance": AlloydbPostgresInstance,
-		"region":   AlloydbPostgresRegion,
-		"database": AlloydbPostgresDatabase,
+		"kind":     AlloyDBPostgresSourceKind,
+		"project":  AlloyDBPostgresProject,
+		"cluster":  AlloyDBPostgresCluster,
+		"instance": AlloyDBPostgresInstance,
+		"region":   AlloyDBPostgresRegion,
+		"database": AlloyDBPostgresDatabase,
 		"password": "random",
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     AlloydbPostgresSourceKind,
-		"project":  AlloydbPostgresProject,
-		"cluster":  AlloydbPostgresCluster,
-		"instance": AlloydbPostgresInstance,
-		"region":   AlloydbPostgresRegion,
-		"database": AlloydbPostgresDatabase,
+		"kind":     AlloyDBPostgresSourceKind,
+		"project":  AlloyDBPostgresProject,
+		"cluster":  AlloyDBPostgresCluster,
+		"instance": AlloyDBPostgresInstance,
+		"region":   AlloyDBPostgresRegion,
+		"database": AlloyDBPostgresDatabase,
 	}
 	tcs := []struct {
 		name         string
@@ -258,7 +258,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, AlloydbPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, AlloyDBPostgresToolKind)
 			if err != nil {
 				if tc.isErr {
 					return

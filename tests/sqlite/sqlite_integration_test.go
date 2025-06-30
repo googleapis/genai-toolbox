@@ -29,15 +29,15 @@ import (
 )
 
 var (
-	SqliteSourceKind = "sqlite"
-	SqliteToolKind   = "sqlite-sql"
-	SqliteDatabase   = os.Getenv("SQLITE_DATABASE")
+	SQLiteSourceKind = "sqlite"
+	SQLiteToolKind   = "sqlite-sql"
+	SQLiteDatabase   = os.Getenv("SQLITE_DATABASE")
 )
 
 func getSQLiteVars(t *testing.T) map[string]any {
 	return map[string]any{
-		"kind":     SqliteSourceKind,
-		"database": SqliteDatabase,
+		"kind":     SQLiteSourceKind,
+		"database": SQLiteDatabase,
 	}
 }
 
@@ -103,7 +103,7 @@ func getSQLiteTmplToolStatement() (string, string) {
 }
 
 func TestSQLiteToolEndpoint(t *testing.T) {
-	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SqliteDatabase)
+	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SQLiteDatabase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,9 +131,9 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	setupSQLiteTestDB(t, ctx, db, createStatement2, insertStatement2, tableNameAuth, params2)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SqliteToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, toolStatement1, toolStatement2)
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SqliteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

@@ -32,55 +32,55 @@ import (
 )
 
 var (
-	AlloydbAiNlSourceKind = "alloydb-postgres"
-	AlloydbAiNlToolKind   = "alloydb-ai-nl"
-	AlloydbAiNlProject    = os.Getenv("ALLOYDB_AI_NL_PROJECT")
-	AlloydbAiNlRegion     = os.Getenv("ALLOYDB_AI_NL_REGION")
-	AlloydbAiNlCluster    = os.Getenv("ALLOYDB_AI_NL_CLUSTER")
-	AlloydbAiNlInstance   = os.Getenv("ALLOYDB_AI_NL_INSTANCE")
-	AlloydbAiNlDatabase   = os.Getenv("ALLOYDB_AI_NL_DATABASE")
-	AlloydbAiNlUser       = os.Getenv("ALLOYDB_AI_NL_USER")
-	AlloydbAiNlPass       = os.Getenv("ALLOYDB_AI_NL_PASS")
+	AlloyDBAINLSourceKind = "alloydb-postgres"
+	AlloyDBAINLToolKind   = "alloydb-ai-nl"
+	AlloyDBAINLProject    = os.Getenv("ALLOYDB_AI_NL_PROJECT")
+	AlloyDBAINLRegion     = os.Getenv("ALLOYDB_AI_NL_REGION")
+	AlloyDBAINLCluster    = os.Getenv("ALLOYDB_AI_NL_CLUSTER")
+	AlloyDBAINLInstance   = os.Getenv("ALLOYDB_AI_NL_INSTANCE")
+	AlloyDBAINLDatabase   = os.Getenv("ALLOYDB_AI_NL_DATABASE")
+	AlloyDBAINLUser       = os.Getenv("ALLOYDB_AI_NL_USER")
+	AlloyDBAINLPass       = os.Getenv("ALLOYDB_AI_NL_PASS")
 )
 
-func getAlloyDBAiNlVars(t *testing.T) map[string]any {
+func getAlloyDBAINLVars(t *testing.T) map[string]any {
 	switch "" {
-	case AlloydbAiNlProject:
+	case AlloyDBAINLProject:
 		t.Fatal("'ALLOYDB_AI_NL_PROJECT' not set")
-	case AlloydbAiNlRegion:
+	case AlloyDBAINLRegion:
 		t.Fatal("'ALLOYDB_AI_NL_REGION' not set")
-	case AlloydbAiNlCluster:
+	case AlloyDBAINLCluster:
 		t.Fatal("'ALLOYDB_AI_NL_CLUSTER' not set")
-	case AlloydbAiNlInstance:
+	case AlloyDBAINLInstance:
 		t.Fatal("'ALLOYDB_AI_NL_INSTANCE' not set")
-	case AlloydbAiNlDatabase:
+	case AlloyDBAINLDatabase:
 		t.Fatal("'ALLOYDB_AI_NL_DATABASE' not set")
-	case AlloydbAiNlUser:
+	case AlloyDBAINLUser:
 		t.Fatal("'ALLOYDB_AI_NL_USER' not set")
-	case AlloydbAiNlPass:
+	case AlloyDBAINLPass:
 		t.Fatal("'ALLOYDB_AI_NL_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     AlloydbAiNlSourceKind,
-		"project":  AlloydbAiNlProject,
-		"cluster":  AlloydbAiNlCluster,
-		"instance": AlloydbAiNlInstance,
-		"region":   AlloydbAiNlRegion,
-		"database": AlloydbAiNlDatabase,
-		"user":     AlloydbAiNlUser,
-		"password": AlloydbAiNlPass,
+		"kind":     AlloyDBAINLSourceKind,
+		"project":  AlloyDBAINLProject,
+		"cluster":  AlloyDBAINLCluster,
+		"instance": AlloyDBAINLInstance,
+		"region":   AlloyDBAINLRegion,
+		"database": AlloyDBAINLDatabase,
+		"user":     AlloyDBAINLUser,
+		"password": AlloyDBAINLPass,
 	}
 }
 
-func TestAlloyDBAiNlToolEndpoints(t *testing.T) {
-	sourceConfig := getAlloyDBAiNlVars(t)
+func TestAlloyDBAINLToolEndpoints(t *testing.T) {
+	sourceConfig := getAlloyDBAINLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
 	// Write config into a file and pass it to command
-	toolsFile := getAiNlToolsConfig(sourceConfig)
+	toolsFile := getAINLToolsConfig(sourceConfig)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -96,12 +96,12 @@ func TestAlloyDBAiNlToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runAiNlToolGetTest(t)
-	runAiNlToolInvokeTest(t)
-	runAiNlMCPToolCallMethod(t)
+	runAINLToolGetTest(t)
+	runAINLToolInvokeTest(t)
+	runAINLMCPToolCallMethod(t)
 }
 
-func runAiNlToolGetTest(t *testing.T) {
+func runAINLToolGetTest(t *testing.T) {
 	// Test tool get endpoint
 	tcs := []struct {
 		name string
@@ -156,7 +156,7 @@ func runAiNlToolGetTest(t *testing.T) {
 	}
 }
 
-func runAiNlToolInvokeTest(t *testing.T) {
+func runAINLToolInvokeTest(t *testing.T) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -276,7 +276,7 @@ func runAiNlToolInvokeTest(t *testing.T) {
 
 }
 
-func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
+func getAINLToolsConfig(sourceConfig map[string]any) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -290,13 +290,13 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        AlloydbAiNlToolKind,
+				"kind":        AlloyDBAINLToolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"nlConfig":    "my_nl_config",
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        AlloydbAiNlToolKind,
+				"kind":        AlloyDBAINLToolKind,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				"nlConfig":    "my_nl_config",
@@ -315,7 +315,7 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        AlloydbAiNlToolKind,
+				"kind":        AlloyDBAINLToolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"nlConfig":    "my_nl_config",
@@ -329,7 +329,7 @@ func getAiNlToolsConfig(sourceConfig map[string]any) map[string]any {
 	return toolsFile
 }
 
-func runAiNlMCPToolCallMethod(t *testing.T) {
+func runAINLMCPToolCallMethod(t *testing.T) {
 	sessionId := tests.RunInitialize(t, "2024-11-05")
 	header := map[string]string{}
 	if sessionId != "" {

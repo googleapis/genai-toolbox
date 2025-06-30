@@ -29,36 +29,36 @@ import (
 )
 
 var (
-	MysqlSourceKind = "mysql"
-	MysqlToolKind   = "mysql-sql"
-	MysqlDatabase   = os.Getenv("MYSQL_DATABASE")
-	MysqlHost       = os.Getenv("MYSQL_HOST")
-	MysqlPort       = os.Getenv("MYSQL_PORT")
-	MysqlUser       = os.Getenv("MYSQL_USER")
-	MysqlPass       = os.Getenv("MYSQL_PASS")
+	MySQLSourceKind = "mysql"
+	MySQLToolKind   = "mysql-sql"
+	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
+	MySQLHost       = os.Getenv("MYSQL_HOST")
+	MySQLPort       = os.Getenv("MYSQL_PORT")
+	MySQLUser       = os.Getenv("MYSQL_USER")
+	MySQLPass       = os.Getenv("MYSQL_PASS")
 )
 
 func getMySQLVars(t *testing.T) map[string]any {
 	switch "" {
-	case MysqlDatabase:
+	case MySQLDatabase:
 		t.Fatal("'MYSQL_DATABASE' not set")
-	case MysqlHost:
+	case MySQLHost:
 		t.Fatal("'MYSQL_HOST' not set")
-	case MysqlPort:
+	case MySQLPort:
 		t.Fatal("'MYSQL_PORT' not set")
-	case MysqlUser:
+	case MySQLUser:
 		t.Fatal("'MYSQL_USER' not set")
-	case MysqlPass:
+	case MySQLPass:
 		t.Fatal("'MYSQL_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     MysqlSourceKind,
-		"host":     MysqlHost,
-		"port":     MysqlPort,
-		"database": MysqlDatabase,
-		"user":     MysqlUser,
-		"password": MysqlPass,
+		"kind":     MySQLSourceKind,
+		"host":     MySQLHost,
+		"port":     MySQLPort,
+		"database": MySQLDatabase,
+		"user":     MySQLUser,
+		"password": MySQLPass,
 	}
 }
 
@@ -74,14 +74,14 @@ func initMySQLConnectionPool(host, port, user, pass, dbname string) (*sql.DB, er
 	return pool, nil
 }
 
-func TestMysqlToolEndpoints(t *testing.T) {
+func TestMySQLToolEndpoints(t *testing.T) {
 	sourceConfig := getMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	pool, err := initMySQLConnectionPool(MysqlHost, MysqlPort, MysqlUser, MysqlPass, MysqlDatabase)
+	pool, err := initMySQLConnectionPool(MySQLHost, MySQLPort, MySQLUser, MySQLPass, MySQLDatabase)
 	if err != nil {
 		t.Fatalf("unable to create MySQL connection pool: %s", err)
 	}
@@ -92,20 +92,20 @@ func TestMysqlToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetMysqlParamToolInfo(tableNameParam)
+	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetMySQLParamToolInfo(tableNameParam)
 	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetMysqlAuthToolInfo(tableNameAuth)
+	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetMySQLAuthToolInfo(tableNameAuth)
 	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MysqlToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MySQLToolKind, toolStatement1, toolStatement2)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMysqlTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MysqlToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -123,7 +123,7 @@ func TestMysqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetMysqlWants()
+	select1Want, failInvocationWant, createTableStatement := tests.GetMySQLWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)

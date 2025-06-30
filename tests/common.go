@@ -237,8 +237,8 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// AddMssqlExecuteSqlConfig gets the tools config for `mssql-execute-sql`
-func AddMssqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+// AddMSSQLExecuteSqlConfig gets the tools config for `mssql-execute-sql`
+func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -285,8 +285,8 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMssqlParamToolInfo returns statements and param for my-param-tool mssql-sql kind
-func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
+// GetMSSQLParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+func GetMSSQLParamToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
@@ -294,8 +294,8 @@ func GetMssqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// GetMssqlAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
-func GetMssqlAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMSSQLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
+func GetMSSQLAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (@alice, @aliceemail), (@jane, @janeemail);", tableName)
 	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = @email;", tableName)
@@ -303,15 +303,15 @@ func GetMssqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// GetMssqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
-func GetMssqlTmplToolStatement() (string, string) {
+// GetMSSQLTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMSSQLTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = @id"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = @name"
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMysqlParamToolInfo returns statements and param for my-param-tool mysql-sql kind
-func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
+// GetMySQLParamToolInfo returns statements and param for my-param-tool mysql-sql kind
+func GetMySQLParamToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
@@ -319,8 +319,8 @@ func GetMysqlParamToolInfo(tableName string) (string, string, string, []any) {
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// GetMysqlAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
-func GetMysqlAuthToolInfo(tableName string) (string, string, string, []any) {
+// GetMySQLAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
+func GetMySQLAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
 	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
@@ -328,8 +328,8 @@ func GetMysqlAuthToolInfo(tableName string) (string, string, string, []any) {
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// GetMysqlTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
-func GetMysqlTmplToolStatement() (string, string) {
+// GetMySQLTmplToolStatement returns statements and param for template parameter test cases for mysql-sql kind
+func GetMySQLTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
 	return tmplSelectCombined, tmplSelectFilterCombined
@@ -349,16 +349,16 @@ func GetPostgresWants() (string, string, string) {
 	return select1Want, failInvocationWant, createTableStatement
 }
 
-// GetMssqlWants return the expected wants for mssql
-func GetMssqlWants() (string, string, string) {
+// GetMSSQLWants return the expected wants for mssql
+func GetMSSQLWants() (string, string, string) {
 	select1Want := "[{\"\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(MAX))"`
 	return select1Want, failInvocationWant, createTableStatement
 }
 
-// GetMysqlWants return the expected wants for mysql
-func GetMysqlWants() (string, string, string) {
+// GetMySQLWants return the expected wants for mysql
+func GetMySQLWants() (string, string, string) {
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
