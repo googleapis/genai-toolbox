@@ -111,6 +111,14 @@ execute `toolbox` to start the server:
 ./toolbox --tools-file "tools.yaml"
 ```
 
+Toolbox also supports dynamic reloading of the tools configuration file, which
+is enabled by default. To disable this, please run with the `--disable-reload`
+flag.
+
+```sh
+./toolbox --disable-reload
+```
+
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
 

@@ -53,6 +53,8 @@ type ServerConfig struct {
 	TelemetryServiceName string
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
+	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
+	DisableReload bool
 }
 
 type logFormat string
