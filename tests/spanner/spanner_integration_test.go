@@ -107,7 +107,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createStatement1, insertStatement1, toolStatement1, params1 := getSpannerParamToolInfo(tableNameParam)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := getSpannerParamToolInfo(tableNameParam)
 	dbString := fmt.Sprintf(
 		"projects/%s/instances/%s/databases/%s",
 		SpannerProject,
@@ -118,7 +118,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, toolStatement2, params2 := getSpannerAuthToolInfo(tableNameAuth)
+	createStatement2, insertStatement2, authToolStatement, params2 := getSpannerAuthToolInfo(tableNameAuth)
 	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, createStatement2, insertStatement2, tableNameAuth, dbString, params2)
 	defer teardownTable2(t)
 
@@ -128,7 +128,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	defer teardownTableTmpl(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
@@ -152,10 +152,11 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	select1Want := "[{\"\":\"1\"}]"
 	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	invokeParamWant2 := `[{"id":"4","name":null}]`
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
 	failInvocationWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
 
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWant2)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
@@ -169,12 +170,13 @@ func TestSpannerToolEndpoints(t *testing.T) {
 }
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
-func getSpannerParamToolInfo(tableName string) (string, string, string, map[string]any) {
+func getSpannerParamToolInfo(tableName string) (string, string, string, string, map[string]any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3)", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3), (4, @name4)", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
-	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid"}
-	return createStatement, insertStatement, toolStatement, params
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id", tableName)
+	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid", "name4": nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 // getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
@@ -438,7 +440,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 			name:          "invoke my-exec-sql-tool insert entry",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (5, 'test_name')\"}", tableNameParam))),
 			want:          "null",
 			isErr:         false,
 		},

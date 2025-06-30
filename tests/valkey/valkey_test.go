@@ -101,17 +101,18 @@ func TestValkeyToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	select1Want, failInvocationWant, invokeParamWant, invokeParamWant2, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWant2)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func setupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {
-	keys := []string{"row1", "row2", "row3"}
+	keys := []string{"row1", "row2", "row3", "row4"}
 	commands := [][]string{
 		{"HSET", keys[0], "name", "Alice", "id", "1"},
 		{"HSET", keys[1], "name", "Jane", "id", "2"},
 		{"HSET", keys[2], "name", "Sid", "id", "3"},
+		{"HSET", keys[3], "name", "", "id", "4"},
 		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
 	}
 	builtCmds := make(valkey.Commands, len(commands))
