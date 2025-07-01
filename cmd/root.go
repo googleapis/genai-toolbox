@@ -226,6 +226,31 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	return toolsFile, nil
 }
 
+func handleDynamicReload(ctx context.Context, buf []byte, s *server.Server) error {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	toolsFile, err := parseToolsFile(ctx, buf)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to parse reloaded tools file: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return err
+	}
+
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return err
+	}
+
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+
+	return nil
+}
+
 // validateReloadEdits checks that the reloaded tools file configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile ToolsFile,
@@ -265,7 +290,7 @@ func validateReloadEdits(
 }
 
 // watchFile checks for changes in the provided yaml tools file.
-func watchFile(ctx context.Context, toolsFileName string) {
+func watchFile(ctx context.Context, toolsFileName string, s *server.Server) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -327,17 +352,9 @@ func watchFile(ctx context.Context, toolsFileName string) {
 				continue
 			}
 
-			toolsFile, err := parseToolsFile(ctx, buf)
+			err = handleDynamicReload(ctx, buf, s)
 			if err != nil {
 				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", toolsFileName, err)
-				logger.WarnContext(ctx, errMsg.Error())
-				continue
-			}
-
-			// TODO: will update when updateServer() function is added to use return values
-			_, _, _, _, err = validateReloadEdits(ctx, toolsFile)
-			if err != nil {
-				errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 				logger.WarnContext(ctx, errMsg.Error())
 				continue
 			}
@@ -514,7 +531,7 @@ func run(cmd *Command) error {
 	}
 
 	// start watching for file changes to trigger dynamic reloading
-	go watchFile(ctx, cmd.tools_file)
+	go watchFile(ctx, cmd.tools_file, s)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {

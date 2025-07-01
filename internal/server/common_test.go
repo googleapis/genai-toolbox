@@ -165,7 +165,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		resourceMgr:     resourceManager,
+		ResourceMgr:     resourceManager,
 	}
 
 	var r chi.Router

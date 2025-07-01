@@ -46,7 +46,7 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
-	resourceMgr     *ResourceManager
+	ResourceMgr     *ResourceManager
 }
 
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
@@ -127,12 +127,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, cfg.Version)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		panic(err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		panic(err)
 	}
 
 	// initialize and validate the sources from configs
@@ -314,7 +314,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:          l,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		resourceMgr:     resourceManager,
+		ResourceMgr:     resourceManager,
 	}
 	// control plane
 	apiR, err := apiRouter(s)

@@ -36,6 +36,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
@@ -947,7 +948,15 @@ func TestSingleEdit(t *testing.T) {
 	}
 	ctx = util.WithLogger(ctx, logger)
 
-	go watchFile(ctx, fileToWatch)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		t.Fatalf("failed to setup instrumentation %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	mockServer := &server.Server{}
+
+	go watchFile(ctx, fileToWatch, mockServer)
 
 	// escape backslash so regex doesn't fail on windows filepaths
 	regexEscapedPath := strings.ReplaceAll(fileToWatch, `\`, `\\\\*\\`)
