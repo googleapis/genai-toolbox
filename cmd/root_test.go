@@ -183,6 +183,13 @@ func TestServerConfigFlags(t *testing.T) {
 				Stdio: true,
 			}),
 		},
+		{
+			desc: "disable reload",
+			args: []string{"--disable-reload"},
+			want: withDefaults(server.ServerConfig{
+				DisableReload: true,
+			}),
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
