@@ -23,6 +23,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -92,8 +93,29 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) PostgresPool() *pgxpool.Pool {
-	return s.Pool
+func (s *Source) RunSQL(ctx context.Context, statement string, params any) (any, error) {
+	sliceParams := params.(tools.ParamValues).AsSlice()
+	results, err := s.Pool.Query(ctx, statement, sliceParams...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	fields := results.FieldDescriptions()
+
+	var out []any
+	for results.Next() {
+		v, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, f := range fields {
+			vMap[f.Name] = v[i]
+		}
+		out = append(out, vMap)
+	}
+
+	return out, nil
 }
 
 func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string) (*pgxpool.Pool, error) {
