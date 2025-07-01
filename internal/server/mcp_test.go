@@ -707,7 +707,7 @@ func TestStdioSession(t *testing.T) {
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		resourceMgr:     resourceManager,
+		ResourceMgr:     resourceManager,
 	}
 
 	in := bufio.NewReader(pr)
