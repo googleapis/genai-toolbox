@@ -16,7 +16,7 @@ package mongodbfindone_test
 
 import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodbfindone"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfindone"
 	"strings"
 	"testing"
 
