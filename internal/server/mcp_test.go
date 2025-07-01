@@ -424,7 +424,15 @@ func TestStdioSession(t *testing.T) {
 		sseSessions: make(map[string]*sseSession),
 	}
 
-	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: toolsMap, toolsets: toolsets}
+	resourceManager := NewResourceManager(nil, nil, toolsMap, toolsets)
+
+	server := &Server{
+		version:         fakeVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      sseManager,
+		resourceMgr:     resourceManager,
+	}
 
 	in := bufio.NewReader(pr)
 	stdioSession := NewStdioSession(server, in, pw)

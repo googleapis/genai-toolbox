@@ -46,11 +46,75 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
+	resourceMgr     *ResourceManager
+}
 
+// ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
+type ResourceManager struct {
+	mu           sync.RWMutex
 	sources      map[string]sources.Source
 	authServices map[string]auth.AuthService
 	tools        map[string]tools.Tool
 	toolsets     map[string]tools.Toolset
+}
+
+func NewResourceManager(
+	sourcesMap map[string]sources.Source,
+	authServicesMap map[string]auth.AuthService,
+	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
+) *ResourceManager {
+	resourceMgr := &ResourceManager{
+		mu:           sync.RWMutex{},
+		sources:      sourcesMap,
+		authServices: authServicesMap,
+		tools:        toolsMap,
+		toolsets:     toolsetsMap,
+	}
+
+	return resourceMgr
+}
+
+func (r *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	source, ok := r.sources[sourceName]
+	return source, ok
+}
+
+func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	authService, ok := r.authServices[authServiceName]
+	return authService, ok
+}
+
+func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	tool, ok := r.tools[toolName]
+	return tool, ok
+}
+
+func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	toolset, ok := r.toolsets[toolsetName]
+	return toolset, ok
+}
+
+func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.sources = sourcesMap
+	r.authServices = authServicesMap
+	r.tools = toolsMap
+	r.toolsets = toolsetsMap
+}
+
+func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.authServices
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -241,6 +305,8 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		sseSessions: make(map[string]*sseSession),
 	}
 
+	resourceManager := NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+
 	s := &Server{
 		version:         cfg.Version,
 		srv:             srv,
@@ -248,11 +314,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:          l,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
+		resourceMgr:     resourceManager,
 	}
 	// control plane
 	apiR, err := apiRouter(s)

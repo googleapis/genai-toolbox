@@ -409,7 +409,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, toolsetName 
 			err = fmt.Errorf("invalid mcp tools list request: %w", err)
 			return newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil), err
 		}
-		toolset, ok := s.toolsets[toolsetName]
+		toolset, ok := s.resourceMgr.GetToolset(toolsetName)
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
 			return newJSONRPCError(baseMessage.Id, mcp.INVALID_REQUEST, err.Error(), nil), err
@@ -429,7 +429,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, toolsetName 
 		toolName := req.Params.Name
 		toolArgument := req.Params.Arguments
 		logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
-		tool, ok := s.tools[toolName]
+		tool, ok := s.resourceMgr.GetTool(toolName)
 		if !ok {
 			err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 			return newJSONRPCError(baseMessage.Id, mcp.INVALID_PARAMS, err.Error(), nil), err
