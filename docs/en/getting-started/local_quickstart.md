@@ -257,6 +257,9 @@ In this section, we will download Toolbox, configure our tools in a
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+    {{< notice note >}}
+    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox
 
