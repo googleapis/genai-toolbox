@@ -154,7 +154,16 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: tools, toolsets: toolsets}
+	resourceManager := NewResourceManager(nil, nil, tools, toolsets)
+
+	server := Server{
+		version:         fakeVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      sseManager,
+		resourceMgr:     resourceManager,
+	}
+
 	var r chi.Router
 	switch router {
 	case "api":
