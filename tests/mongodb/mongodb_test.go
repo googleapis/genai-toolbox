@@ -29,20 +29,20 @@ import (
 var (
 	MONGODB_SOURCE_KIND = "mongodb"
 	MONGODB_TOOL_KIND   = "mongodb-find"
-	MONGODB_URL         = os.Getenv("MONGODB_URL")
+	MONGODB_URI         = os.Getenv("MONGODB_URI")
 	MONGODB_DATABASE    = os.Getenv("MONGODB_DATABASE")
 )
 
 func getMongoDBVars(t *testing.T) map[string]any {
 	switch "" {
-	case MONGODB_URL:
-		t.Fatal("'MONGODB_URL' not set")
+	case MONGODB_URI:
+		t.Fatal("'MONGODB_URI' not set")
 	case MONGODB_DATABASE:
 		t.Fatal("'MONGODB_DATABASE' not set")
 	}
 	return map[string]any{
 		"kind":     MONGODB_SOURCE_KIND,
-		"uri":      MONGODB_URL,
+		"uri":      MONGODB_URI,
 		"database": MONGODB_DATABASE,
 	}
 }
@@ -67,7 +67,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	database, err := initMongoDbDatabase(ctx, MONGODB_URL, MONGODB_DATABASE)
+	database, err := initMongoDbDatabase(ctx, MONGODB_URI, MONGODB_DATABASE)
 	if err != nil {
 		t.Fatalf("unable to create MongoDB connection: %s", err)
 	}
