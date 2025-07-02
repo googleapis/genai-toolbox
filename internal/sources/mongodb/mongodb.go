@@ -45,10 +45,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Uri      string `yaml:"uri" validate:"required"` // MongoDB Atlas connection URI
-	Database string `yaml:"database" validate:"required"`
+	Name string `yaml:"name" validate:"required"`
+	Kind string `yaml:"kind" validate:"required"`
+	Uri  string `yaml:"uri" validate:"required"` // MongoDB Atlas connection URI
 }
 
 func (r Config) SourceConfigKind() string {
@@ -68,10 +67,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:     r.Name,
-		Kind:     SourceKind,
-		Client:   client,
-		Database: client.Database(r.Database),
+		Name:   r.Name,
+		Kind:   SourceKind,
+		Client: client,
 	}
 	return s, nil
 }
@@ -79,10 +77,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Client   *mongo.Client
-	Database *mongo.Database
+	Name   string `yaml:"name"`
+	Kind   string `yaml:"kind"`
+	Client *mongo.Client
 }
 
 func (s *Source) SourceKind() string {
@@ -91,10 +88,6 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) MongoClient() *mongo.Client {
 	return s.Client
-}
-
-func (s *Source) DatabaseName() string {
-	return s.Database.Name()
 }
 
 func initMongoDBClient(ctx context.Context, tracer trace.Tracer, name, uri string) (*mongo.Client, error) {

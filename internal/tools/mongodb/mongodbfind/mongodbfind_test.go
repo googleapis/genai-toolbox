@@ -44,6 +44,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					kind: mongodb-find
 					source: my-instance
 					description: some description
+					database: test_db
 					collection: test_coll
 					filterPayload: |
 					    { name: {{json .name}} }
@@ -64,6 +65,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Kind:          "mongodb-find",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
+					Database:      "test_db",
 					Collection:    "test_coll",
 					Description:   "some description",
 					FilterPayload: "{ name: {{json .name}} }\n",

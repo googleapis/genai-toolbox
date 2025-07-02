@@ -53,6 +53,7 @@ type Config struct {
 	Source         string           `yaml:"source" validate:"required"`
 	AuthRequired   []string         `yaml:"authRequired" validate:"required"`
 	Description    string           `yaml:"description" validate:"required"`
+	Database       string           `yaml:"database" validate:"required"`
 	Collection     string           `yaml:"collection" validate:"required"`
 	FilterPayload  string           `yaml:"filterPayload" validate:"required"`
 	FilterParams   tools.Parameters `yaml:"filterParams" validate:"required"`
@@ -158,7 +159,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		SortParams:     cfg.SortParams,
 		Limit:          cfg.Limit,
 		AllParams:      allParameters,
-		database:       s.Database,
+		database:       s.Client.Database(cfg.Database),
 		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}, nil
