@@ -26,19 +26,18 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC -->
 
-- [MCP Toolbox for Databases](#mcp-toolbox-for-databases)
-    - [Why Toolbox?](#why-toolbox)
-    - [General Architecture](#general-architecture)
-    - [Getting Started](#getting-started)
-        - [Installing the server](#installing-the-server)
-        - [Running the server](#running-the-server)
-        - [Integrating your application](#integrating-your-application)
-    - [Configuration](#configuration)
-        - [Sources](#sources)
-        - [Tools](#tools)
-        - [Toolsets](#toolsets)
-    - [Versioning](#versioning)
-    - [Contributing](#contributing)
+- [Why Toolbox?](#why-toolbox)
+- [General Architecture](#general-architecture)
+- [Getting Started](#getting-started)
+  - [Installing the server](#installing-the-server)
+  - [Running the server](#running-the-server)
+  - [Integrating your application](#integrating-your-application)
+- [Configuration](#configuration)
+  - [Sources](#sources)
+  - [Tools](#tools)
+  - [Toolsets](#toolsets)
+- [Versioning](#versioning)
+- [Contributing](#contributing)
 
 <!-- /TOC -->
 ## Why Toolbox?
@@ -178,23 +177,23 @@ application. See below the list of Client SDKs for using various frameworks:
     pip install toolbox-core
     ```
 
-2. Load tools:
+1. Load tools:
 
     ```python
     from toolbox_core import ToolboxClient
 
     # update the url to point to your server
-    async with ToolboxClient("[http://127.0.0.1:5000](http://127.0.0.1:5000)") as client:
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
 
         # these tools can be passed to your application!
         tools = await client.load_toolset("toolset_name")
     ```
 
-    For more detailed instructions on using the Toolbox Core SDK, see the
-    [project's README][toolbox-core-readme].
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's README][toolbox-core-readme].
 
-    [toolbox-core]: https://pypi.org/project/toolbox-core/
-    [toolbox-core-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-core/README.md
+[toolbox-core]: https://pypi.org/project/toolbox-core/
+[toolbox-core-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-core/README.md
 
   </details>
   <details>
@@ -234,13 +233,13 @@ application. See below the list of Client SDKs for using various frameworks:
     pip install toolbox-llamaindex
     ```
 
-2. Load tools:
+1. Load tools:
 
     ```python
     from toolbox_llamaindex import ToolboxClient
 
     # update the url to point to your server
-    async with ToolboxClient("[http://127.0.0.1:5000](http://127.0.0.1:5000)") as client:
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
 
         # these tools can be passed to your application!
         tools = client.load_toolset()
@@ -269,7 +268,7 @@ application. See below the list of Client SDKs for using various frameworks:
     npm install @toolbox-sdk/core
     ```
 
-2. Load tools:
+1. Load tools:
 
     ```javascript
     import { ToolboxClient } from '@toolbox-sdk/core';
