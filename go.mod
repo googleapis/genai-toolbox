@@ -7,7 +7,7 @@ toolchain go1.24.4
 require (
 	cloud.google.com/go/alloydbconn v1.15.3
 	cloud.google.com/go/bigquery v1.69.0
-	cloud.google.com/go/bigtable v1.37.0
+	cloud.google.com/go/bigtable v1.38.0
 	cloud.google.com/go/cloudsqlconn v1.17.2
 	cloud.google.com/go/spanner v1.83.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
@@ -17,7 +17,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httplog/v2 v2.1.1
 	github.com/go-chi/render v1.0.3
-	github.com/go-playground/validator/v10 v10.26.0
+	github.com/go-playground/validator/v10 v10.27.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
