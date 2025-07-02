@@ -81,8 +81,8 @@ To connect using IAM authentication:
 1. Prepare your database instance and user following this [guide][iam-guide].
 2. You could choose one of the two ways to log in:
     - Specify your IAM email as the `user`.
-    - Leave your `user` field blank. Toolbox
-            will fetch the [ADC][adc] automatically and log in using the email associated with it.
+    - Leave your `user` field blank. Toolbox will fetch the [ADC][adc]
+      automatically and log in using the email associated with it.
 3. Leave the `password` field blank.
 
 [iam-guide]: https://cloud.google.com/alloydb/docs/database-users/manage-iam-auth

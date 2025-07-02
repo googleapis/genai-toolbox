@@ -62,15 +62,6 @@ func (p ParamValues) AsMap() map[string]interface{} {
 	return params
 }
 
-// AsReversedMap returns a map of ParamValue's values to names.
-func (p ParamValues) AsReversedMap() map[any]string {
-	params := make(map[any]string)
-	for _, p := range p {
-		params[p.Value] = p.Name
-	}
-	return params
-}
-
 // AsMapByOrderedKeys returns a map of a key's position to it's value, as necessary for Spanner PSQL.
 // Example { $1 -> "value1", $2 -> "value2" }
 func (p ParamValues) AsMapByOrderedKeys() map[string]interface{} {
