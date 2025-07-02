@@ -250,7 +250,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 
 	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), true, &filter)
+	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
 	if err != nil {
 		return nil, err
 	}
