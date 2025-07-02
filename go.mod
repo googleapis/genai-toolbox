@@ -7,7 +7,7 @@ toolchain go1.24.4
 require (
 	cloud.google.com/go/alloydbconn v1.15.3
 	cloud.google.com/go/bigquery v1.69.0
-	cloud.google.com/go/bigtable v1.37.0
+	cloud.google.com/go/bigtable v1.38.0
 	cloud.google.com/go/cloudsqlconn v1.17.2
 	cloud.google.com/go/spanner v1.83.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
