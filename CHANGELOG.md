@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.8.0](https://github.com/googleapis/genai-toolbox/compare/v0.7.0...v0.8.0) (2025-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **postgres,mssql,cloudsqlmssql:** encode source connection url for  sources ([#727](https://github.com/googleapis/genai-toolbox/issues/727))
+
+### Features
+
+* Add Redis Source and Tool ([#519](https://github.com/googleapis/genai-toolbox/issues/519)) ([f0aef29](https://github.com/googleapis/genai-toolbox/commit/f0aef29b0c2563e2a00277fbe2784f39f16d2835))
+* Add support for HTTP Tool pathParams ([#726](https://github.com/googleapis/genai-toolbox/issues/726)) ([fd300dc](https://github.com/googleapis/genai-toolbox/commit/fd300dc606d88bf9f7bba689e2cee4e3565537dd))
+* Add support for multiple YAML configuration files ([#760](https://github.com/googleapis/genai-toolbox/issues/760)) ([40679d7](https://github.com/googleapis/genai-toolbox/commit/40679d700eded50d19569923e2a71c51e907a8bf))
+* Add support for optional parameters ([#617](https://github.com/googleapis/genai-toolbox/issues/617)) ([4827771](https://github.com/googleapis/genai-toolbox/commit/4827771b78dee9a1284a898b749509b472061527)), closes [#475](https://github.com/googleapis/genai-toolbox/issues/475)
+* Add Valkey Source and Tool ([#532](https://github.com/googleapis/genai-toolbox/issues/532)) ([054ec19](https://github.com/googleapis/genai-toolbox/commit/054ec198b97ba9f36f67dd12b2eff0cc6bc4d080))
+* Support disable SSL verification for HTTP Source ([#674](https://github.com/googleapis/genai-toolbox/issues/674)) ([4055b0c](https://github.com/googleapis/genai-toolbox/commit/4055b0c3569c527560d7ad34262963b3dd4e282d))
+* Support MCP version 2025-03-26 ([#755](https://github.com/googleapis/genai-toolbox/issues/755)) ([474df57](https://github.com/googleapis/genai-toolbox/commit/474df57d62de683079f8d12c31db53396a545fd1))
+* **tools/bigquery:** Add templateParameters field for bigquery ([#699](https://github.com/googleapis/genai-toolbox/issues/699)) ([f5f771b](https://github.com/googleapis/genai-toolbox/commit/f5f771b0f3d159630ff602ff55c6c66b61981446))
+* **tools/bigtable:** Add templateParameters field for bigtable ([#692](https://github.com/googleapis/genai-toolbox/issues/692)) ([1c06771](https://github.com/googleapis/genai-toolbox/commit/1c067715fac06479eb0060d7067b73dba099ed92))
+* **tools/couchbase:** Add templateParameters field for couchbase ([#723](https://github.com/googleapis/genai-toolbox/issues/723)) ([9197186](https://github.com/googleapis/genai-toolbox/commit/9197186b8bea1ac4ec1b39c9c5c110807c8b2ba9))
+* **tools/spanner:** Add templateParameters field for spanner ([#691](https://github.com/googleapis/genai-toolbox/issues/691)) ([075dfa4](https://github.com/googleapis/genai-toolbox/commit/075dfa47e1fd92be4847bd0aec63296146b66455))
+* **tools/sqlitesql:** Add templateParameters field for sqlitesql ([#687](https://github.com/googleapis/genai-toolbox/issues/687)) ([75e254c](https://github.com/googleapis/genai-toolbox/commit/75e254c0a4ce690ca5fa4d1741550ce54734b226))
+
+
+### Bug Fixes
+
+* **bigquery,mssql:** Fix panic on tools with array param ([#722](https://github.com/googleapis/genai-toolbox/issues/722)) ([7a6644c](https://github.com/googleapis/genai-toolbox/commit/7a6644cf0c5413e5c803955c88a2cfd0a2233ed3))
+* Do not listen from port for stdio ([#719](https://github.com/googleapis/genai-toolbox/issues/719)) ([d51dbc7](https://github.com/googleapis/genai-toolbox/commit/d51dbc759ba493021d3ec6f5417fc04c21f7044f)), closes [#711](https://github.com/googleapis/genai-toolbox/issues/711)
+* Fix adk quickstart ([#741](https://github.com/googleapis/genai-toolbox/issues/741)) ([d8e2abe](https://github.com/googleapis/genai-toolbox/commit/d8e2abe2dde4abc8b0c4c5c711a8ad7b66495064))
+* Https://github.com/googleapis/genai-toolbox/issues/680 ([fd300dc](https://github.com/googleapis/genai-toolbox/commit/fd300dc606d88bf9f7bba689e2cee4e3565537dd))
+* **postgres,mssql,cloudsqlmssql:** Encode source connection url for  sources ([#727](https://github.com/googleapis/genai-toolbox/issues/727)) ([67964d9](https://github.com/googleapis/genai-toolbox/commit/67964d939f27320b63b5759f4b3f3fdaa0c76fbf)), closes [#717](https://github.com/googleapis/genai-toolbox/issues/717)
+* Set default value to field's type during unmarshalling ([#774](https://github.com/googleapis/genai-toolbox/issues/774)) ([fafed24](https://github.com/googleapis/genai-toolbox/commit/fafed2485839cf1acc1350e8a24103d2e6356ee0)), closes [#771](https://github.com/googleapis/genai-toolbox/issues/771)
+* **tools/mysqlexecutesql:** Handle nil panic and connection leak in Invoke ([#757](https://github.com/googleapis/genai-toolbox/issues/757)) ([7badba4](https://github.com/googleapis/genai-toolbox/commit/7badba42eefb34252be77b852a57d6bd78dd267d))
+* **tools/mysqlsql:** Handle nil panic and connection leak in invoke ([#758](https://github.com/googleapis/genai-toolbox/issues/758)) ([cbb4a33](https://github.com/googleapis/genai-toolbox/commit/cbb4a333517313744800d148840312e56340f3fd))
+
+
+### Miscellaneous Chores
+
+* Release 0.8.0 ([#769](https://github.com/googleapis/genai-toolbox/issues/769)) ([010c278](https://github.com/googleapis/genai-toolbox/commit/010c278cbfa8797c692d2428e194a5880f7d147d))
+
 ## [0.7.0](https://github.com/googleapis/genai-toolbox/compare/v0.6.0...v0.7.0) (2025-06-10)
 
 
