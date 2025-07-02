@@ -141,7 +141,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":          toolKind,
+				"kind":          "mongodb-find-one",
 				"source":        "my-instance",
 				"description":   "Simple tool to test end to end functionality.",
 				"collection":    "test_collection",
