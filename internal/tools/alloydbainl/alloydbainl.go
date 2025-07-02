@@ -16,7 +16,6 @@ package alloydbainl
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -161,28 +160,29 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	sliceParams := params.AsSlice()
 	allParamValues := make([]any, len(sliceParams)+1)
 	allParamValues[0] = fmt.Sprintf("%s", sliceParams[0]) // nl_question
-	allParamValues[1] = t.NLConfig                      // nl_config
+	allParamValues[1] = t.NLConfig                        // nl_config
 	for i, param := range sliceParams[1:] {
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
 
-	var jsonResult string
-	// QueryRow is perfect here, as we only expect one row and one column.
-	err := t.Pool.QueryRow(ctx, t.Statement, allParamValues...).Scan(&jsonResult)
+	results, err := t.Pool.Query(ctx, t.Statement, allParamValues...)
 	if err != nil {
-        // If no rows are returned by the function, QueryRow returns pgx.ErrNoRows.
-        // This is a valid case (the query found nothing), so we return an empty slice.
-		if err == pgx.ErrNoRows {
-			return []any{}, nil
-		}
-		return nil, fmt.Errorf("unable to execute query and scan result: %w. Query: %v, Values: %v", err, t.Statement, allParamValues)
+		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v", err, t.Statement, allParamValues)
 	}
 
-	// Now, unmarshal the JSON string contained in jsonResult into a slice of maps.
+	fields := results.FieldDescriptions()
+
 	var out []any
-	if err := json.Unmarshal([]byte(jsonResult), &out); err != nil {
-		// This handles cases where the result is not valid JSON.
-		return nil, fmt.Errorf("unable to parse JSON response from AlloyDB function: %w. Response was: %s", err, jsonResult)
+	for results.Next() {
+		v, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, f := range fields {
+			vMap[f.Name] = v[i]
+		}
+		out = append(out, vMap)
 	}
 
 	return out, nil
