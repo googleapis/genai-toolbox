@@ -26,21 +26,21 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC -->
 
-- [Why Toolbox?](#why-toolbox)
-- [General Architecture](#general-architecture)
-- [Getting Started](#getting-started)
-  - [Installing the server](#installing-the-server)
-  - [Running the server](#running-the-server)
-  - [Integrating your application](#integrating-your-application)
-- [Configuration](#configuration)
-  - [Sources](#sources)
-  - [Tools](#tools)
-  - [Toolsets](#toolsets)
-- [Versioning](#versioning)
-- [Contributing](#contributing)
+- [MCP Toolbox for Databases](#mcp-toolbox-for-databases)
+    - [Why Toolbox?](#why-toolbox)
+    - [General Architecture](#general-architecture)
+    - [Getting Started](#getting-started)
+        - [Installing the server](#installing-the-server)
+        - [Running the server](#running-the-server)
+        - [Integrating your application](#integrating-your-application)
+    - [Configuration](#configuration)
+        - [Sources](#sources)
+        - [Tools](#tools)
+        - [Toolsets](#toolsets)
+    - [Versioning](#versioning)
+    - [Contributing](#contributing)
 
 <!-- /TOC -->
-
 ## Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your
@@ -165,7 +165,12 @@ Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
-<summary>Core</summary>
+  <summary>Python</summary>
+  <br>
+  <blockquote>
+
+  <details open>
+    <summary>Core</summary>
 
 1. Install [Toolbox Core SDK][toolbox-core]:
 
@@ -173,27 +178,27 @@ application. See below the list of Client SDKs for using various frameworks:
     pip install toolbox-core
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```python
     from toolbox_core import ToolboxClient
 
     # update the url to point to your server
-    async with ToolboxClient("http://127.0.0.1:5000") as client:
+    async with ToolboxClient("[http://127.0.0.1:5000](http://127.0.0.1:5000)") as client:
 
         # these tools can be passed to your application!
         tools = await client.load_toolset("toolset_name")
     ```
 
-For more detailed instructions on using the Toolbox Core SDK, see the
-[project's README][toolbox-core-readme].
+    For more detailed instructions on using the Toolbox Core SDK, see the
+    [project's README][toolbox-core-readme].
 
-[toolbox-core]: https://pypi.org/project/toolbox-core/
-[toolbox-core-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-core/README.md
+    [toolbox-core]: https://pypi.org/project/toolbox-core/
+    [toolbox-core-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-core/README.md
 
-</details>
-<details>
-<summary>LangChain / LangGraph</summary>
+  </details>
+  <details>
+    <summary>LangChain / LangGraph</summary>
 
 1. Install [Toolbox LangChain SDK][toolbox-langchain]:
 
@@ -201,28 +206,27 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     pip install toolbox-langchain
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```python
     from toolbox_langchain import ToolboxClient
 
     # update the url to point to your server
-    async with ToolboxClient("http://127.0.0.1:5000") as client:
+    async with ToolboxClient("[http://127.0.0.1:5000](http://127.0.0.1:5000)") as client:
 
         # these tools can be passed to your application!
         tools = client.load_toolset()
     ```
 
-For more detailed instructions on using the Toolbox LangChain SDK, see the
-[project's README][toolbox-langchain-readme].
+    For more detailed instructions on using the Toolbox LangChain SDK, see the
+    [project's README][toolbox-langchain-readme].
 
-[toolbox-langchain]: https://pypi.org/project/toolbox-langchain/
-[toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md
+    [toolbox-langchain]: https://pypi.org/project/toolbox-langchain/
+    [toolbox-langchain-readme]: https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md
 
-</details>
-
-<details>
-<summary>LlamaIndex</summary>
+  </details>
+  <details>
+    <summary>LlamaIndex</summary>
 
 1. Install [Toolbox Llamaindex SDK][toolbox-llamaindex]:
 
@@ -230,24 +234,141 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
     pip install toolbox-llamaindex
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```python
     from toolbox_llamaindex import ToolboxClient
 
     # update the url to point to your server
-    async with ToolboxClient("http://127.0.0.1:5000") as client:
+    async with ToolboxClient("[http://127.0.0.1:5000](http://127.0.0.1:5000)") as client:
 
         # these tools can be passed to your application!
         tools = client.load_toolset()
     ```
 
-For more detailed instructions on using the Toolbox Llamaindex SDK, see the
-[project's README][toolbox-llamaindex-readme].
+    For more detailed instructions on using the Toolbox Llamaindex SDK, see the
+    [project's README][toolbox-llamaindex-readme].
 
-[toolbox-llamaindex]: https://pypi.org/project/toolbox-llamaindex/
-[toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
+    [toolbox-llamaindex]: https://pypi.org/project/toolbox-llamaindex/
+    [toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
 
+  </details>
+</details>
+</blockquote>
+<details>
+  <summary>JS</summary>
+  <br>
+  <blockquote>
+
+  <details open>
+    <summary>Core</summary>
+
+1. Install [Toolbox Core SDK][toolbox-core-js]:
+
+    ```bash
+    npm install @toolbox-sdk/core
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/core';
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const tools = await client.loadToolset('toolsetName');
+    ```
+
+    For more detailed instructions on using the Toolbox Core SDK, see the
+    [project's README][toolbox-core-js-readme].
+
+    [toolbox-core-js]: https://www.npmjs.com/package/@toolbox-sdk/core
+    [toolbox-core-js-readme]: https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md
+
+  </details>
+  <details>
+    <summary>LangChain / LangGraph</summary>
+
+1. Install [Toolbox Core SDK][toolbox-core-js]:
+
+    ```bash
+    npm install @toolbox-sdk/core
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/core';
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const toolboxTools = await client.loadToolset('toolsetName');
+
+    // Define the basics of the tool: name, description, schema and core logic
+    const getTool = (toolboxTool) => tool(currTool, {
+        name: toolboxTool.getName(),
+        description: toolboxTool.getDescription(),
+        schema: toolboxTool.getParamSchema()
+    });
+
+    // Use these tools in your Langchain/Langraph applications
+    const tools = toolboxTools.map(getTool);
+    ```
+
+  </details>
+  <details>
+    <summary>Genkit</summary>
+
+1. Install [Toolbox Core SDK][toolbox-core-js]:
+
+    ```bash
+    npm install @toolbox-sdk/core
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/core';
+    import { genkit } from 'genkit';
+
+    // Initialise genkit
+    const ai = genkit({
+        plugins: [
+            googleAI({
+                apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+            })
+        ],
+        model: googleAI.model('gemini-2.0-flash'),
+    });
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const toolboxTools = await client.loadToolset('toolsetName');
+
+    // Define the basics of the tool: name, description, schema and core logic
+    const getTool = (toolboxTool) => ai.defineTool({
+        name: toolboxTool.getName(),
+        description: toolboxTool.getDescription(),
+        schema: toolboxTool.getParamSchema()
+    }, toolboxTool)
+
+    // Use these tools in your Genkit applications
+    const tools = toolboxTools.map(getTool);
+    ```
+
+  </details>
+</details>
+</blockquote>
+  
 </details>
 
 ## Configuration
