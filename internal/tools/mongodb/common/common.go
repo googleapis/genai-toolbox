@@ -1,4 +1,4 @@
-package mongodbcommon
+package common
 
 import (
 	"bytes"

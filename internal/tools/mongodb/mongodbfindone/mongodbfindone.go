@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodbcommon"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -204,7 +204,7 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 
 	// Create a FuncMap to format array parameters
 	funcMap := template.FuncMap{
-		"json": mongodbcommon.ConvertParamToJSON,
+		"json": common.ConvertParamToJSON,
 	}
 	templ, err := template.New("project").Funcs(funcMap).Parse(projectPayload)
 	if err != nil {
@@ -230,7 +230,7 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := mongodbcommon.GetFilter(t.FilterParams, t.FilterPayload, paramsMap)
+	filterString, err := common.GetFilter(t.FilterParams, t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
