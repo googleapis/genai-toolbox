@@ -17,20 +17,21 @@ package mongodb
 import (
 	"context"
 	"fmt"
-	"github.com/googleapis/genai-toolbox/tests"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/googleapis/genai-toolbox/tests"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
-	MongoDbSourceKind = "mongodb"
-	MongoDbToolKind   = "mongodb-find"
-	MongoDbUri         = os.Getenv("MONGODB_URI")
-	MongoDbDatabase    = os.Getenv("MONGODB_DATABASE")
+	MongoDbSourceKind   = "mongodb"
+	MongoDbToolKind     = "mongodb-find"
+	MongoDbUri          = os.Getenv("MONGODB_URI")
+	MongoDbDatabase     = os.Getenv("MONGODB_DATABASE")
 	ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 )
 
@@ -42,9 +43,8 @@ func getMongoDBVars(t *testing.T) map[string]any {
 		t.Fatal("'MongoDbDatabase' not set")
 	}
 	return map[string]any{
-		"kind":     MongoDbSourceKind,
-		"uri":      MongoDbUri,
-		"database": MongoDbDatabase,
+		"kind": MongoDbSourceKind,
+		"uri":  MongoDbUri,
 	}
 }
 
@@ -170,13 +170,13 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 			},
 			"my-auth-tool": map[string]any{
-				"kind":           toolKind,
-				"source":         "my-instance",
-				"description":    "Tool to test authenticated parameters.",
-				"authRequired":   []string{},
-				"collection":     "test_collection",
-				"filterPayload":  `{ "email" : {{json .email }} }`,
-				"filterParams":   []map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Tool to test authenticated parameters.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "email" : {{json .email }} }`,
+				"filterParams": []map[string]any{
 					{
 						"name":        "email",
 						"type":        "string",
