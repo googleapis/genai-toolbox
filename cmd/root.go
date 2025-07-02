@@ -19,11 +19,13 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -418,7 +420,7 @@ func validateReloadEdits(
 }
 
 // watchChanges checks for changes in the provided yaml tools file(s) or folder.
-func watchChanges(ctx context.Context, cmd *Command, s *server.Server) {
+func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -432,36 +434,14 @@ func watchChanges(ctx context.Context, cmd *Command, s *server.Server) {
 
 	defer w.Close()
 
-	var relevantFiles []string
-	var watchFolder string
+	watchingFolder := false
+	var folderToWatch string
 
-	// dirs that will be added to watcher (fsnotify prefers watching directory then filtering for file)
-	watchDirs := make(map[string]bool)
-
-	// map for efficiently checking if a file is relevant
-	watchedFiles := make(map[string]bool)
-
-	if cmd.tools_folder != "" {
-		// watch an entire folder
-		cleanFolder := filepath.Clean(cmd.tools_folder)
-		watchDirs[cleanFolder] = true
-		watchFolder = cleanFolder
-		logger.DebugContext(ctx, fmt.Sprintf("Watching folder: %s", cleanFolder))
-	} else {
-		// watch only specific file(s)
-		if len(cmd.tools_files) > 0 {
-			relevantFiles = cmd.tools_files
-		} else if cmd.tools_file != "" {
-			relevantFiles = []string{cmd.tools_file}
-		} else {
-			relevantFiles = []string{"tools.yaml"}
-		}
-
-		for _, f := range relevantFiles {
-			cleanFile := filepath.Clean(f)
-			watchedFiles[cleanFile] = true
-			watchDirs[filepath.Dir(cleanFile)] = true
-			logger.DebugContext(ctx, fmt.Sprintf("Watching file: %s", cleanFile))
+	// if watchedFiles is empty, indicates that user passed entire folder instead
+	if len(watchedFiles) == 0 {
+		watchingFolder = true
+		for k := range watchDirs {
+			folderToWatch = k
 		}
 	}
 
@@ -507,7 +487,7 @@ func watchChanges(ctx context.Context, cmd *Command, s *server.Server) {
 			cleanedFilename := filepath.Clean(e.Name)
 			logger.DebugContext(ctx, fmt.Sprintf("%s event detected in %s", e.Op, cleanedFilename))
 
-			if cmd.tools_folder != "" && (strings.HasSuffix(cleanedFilename, "yaml") || strings.HasSuffix(cleanedFilename, "yml")) {
+			if watchingFolder && (strings.HasSuffix(cleanedFilename, "yaml") || strings.HasSuffix(cleanedFilename, "yml")) {
 				// case where we watch an entire folder
 				debounce.Reset(debounceDelay)
 			} else if watchedFiles[cleanedFilename] {
@@ -519,16 +499,16 @@ func watchChanges(ctx context.Context, cmd *Command, s *server.Server) {
 			debounce.Stop()
 			var reloadedToolsFile ToolsFile
 
-			if cmd.tools_folder != "" {
+			if watchingFolder {
 				logger.DebugContext(ctx, "Reloading tools folder.")
-				reloadedToolsFile, err = loadAndMergeToolsFolder(ctx, watchFolder)
+				reloadedToolsFile, err = loadAndMergeToolsFolder(ctx, folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, "error loading tools folder %s", err)
 					continue
 				}
 			} else {
 				logger.DebugContext(ctx, "Reloading tools file(s).")
-				reloadedToolsFile, err = loadAndMergeToolsFiles(ctx, relevantFiles)
+				reloadedToolsFile, err = loadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
 				if err != nil {
 					logger.WarnContext(ctx, "error loading tools files %s", err)
 					continue
@@ -623,6 +603,13 @@ func run(cmd *Command) error {
 	}()
 
 	var toolsFile ToolsFile
+	var relevantFiles []string
+
+	// map for efficiently checking if a file is relevant
+	watchedFiles := make(map[string]bool)
+
+	// dirs that will be added to watcher (fsnotify prefers watching directory then filtering for file)
+	watchDirs := make(map[string]bool)
 
 	if cmd.prebuiltConfig != "" {
 		// Make sure --prebuilt and --tools-file/--tools-files/--tools-folder flags are mutually exclusive
@@ -655,6 +642,9 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+
+		relevantFiles = cmd.tools_files
+
 		// Use multiple tools files
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
 		var err error
@@ -670,6 +660,9 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+
+		watchDirs[filepath.Clean(cmd.tools_folder)] = true
+
 		// Use tools folder
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
 		var err error
@@ -683,6 +676,9 @@ func run(cmd *Command) error {
 		if cmd.tools_file == "" {
 			cmd.tools_file = "tools.yaml"
 		}
+
+		relevantFiles = []string{cmd.tools_file}
+
 		// Read single tool file contents
 		buf, err := os.ReadFile(cmd.tools_file)
 		if err != nil {
@@ -757,8 +753,16 @@ func run(cmd *Command) error {
 	}
 
 	if !cmd.cfg.DisableReload {
+
+		// extract parent dir for relevant files and dedup
+		for _, f := range relevantFiles {
+			cleanFile := filepath.Clean(f)
+			watchedFiles[cleanFile] = true
+			watchDirs[filepath.Dir(cleanFile)] = true
+		}
+
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
-		go watchChanges(ctx, cmd, s)
+		go watchChanges(ctx, watchDirs, watchedFiles, s)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled

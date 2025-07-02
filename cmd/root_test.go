@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -1028,14 +1029,23 @@ func TestSingleEdit(t *testing.T) {
 
 	mockServer := &server.Server{}
 
-	go watchFile(ctx, fileToWatch, mockServer)
+	cleanFileToWatch := filepath.Clean(fileToWatch)
+	watchDir := filepath.Dir(cleanFileToWatch)
+
+	watchedFiles := map[string]bool{cleanFileToWatch: true}
+	watchDirs := map[string]bool{watchDir: true}
+
+	go watchChanges(ctx, watchDirs, watchedFiles, mockServer)
 
 	// escape backslash so regex doesn't fail on windows filepaths
-	regexEscapedPath := strings.ReplaceAll(fileToWatch, `\`, `\\\\*\\`)
-	regexEscapedPath = path.Clean(regexEscapedPath)
+	regexEscapedPathFile := strings.ReplaceAll(cleanFileToWatch, `\`, `\\\\*\\`)
+	regexEscapedPathFile = path.Clean(regexEscapedPathFile)
 
-	begunWatchingFile := regexp.MustCompile(fmt.Sprintf(`DEBUG "Now watching tools file %s"`, regexEscapedPath))
-	_, err = testutils.WaitForString(ctx, begunWatchingFile, pr)
+	regexEscapedPathDir := strings.ReplaceAll(watchDir, `\`, `\\\\*\\`)
+	regexEscapedPathDir = path.Clean(regexEscapedPathDir)
+
+	begunWatchingDir := regexp.MustCompile(fmt.Sprintf(`DEBUG "Added directory %s to watcher\."`, regexEscapedPathDir))
+	_, err = testutils.WaitForString(ctx, begunWatchingDir, pr)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for watcher to start: %s", err)
 	}
@@ -1045,7 +1055,7 @@ func TestSingleEdit(t *testing.T) {
 		t.Fatalf("error writing to file: %v", err)
 	}
 
-	detectedFileChange := regexp.MustCompile(fmt.Sprintf(`DEBUG "WRITE event detected in tools file: %s"`, regexEscapedPath))
+	detectedFileChange := regexp.MustCompile(fmt.Sprintf(`DEBUG "WRITE event detected in %s"`, regexEscapedPathFile))
 	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for file to detect write: %s", err)
