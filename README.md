@@ -40,6 +40,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 - [Contributing](#contributing)
 
 <!-- /TOC -->
+
 ## Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your
@@ -205,13 +206,13 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     pip install toolbox-langchain
     ```
 
-2. Load tools:
+1. Load tools:
 
     ```python
     from toolbox_langchain import ToolboxClient
 
     # update the url to point to your server
-    async with ToolboxClient("[http://127.0.0.1:5000](http://127.0.0.1:5000)") as client:
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
 
         # these tools can be passed to your application!
         tools = client.load_toolset()
