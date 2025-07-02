@@ -43,9 +43,8 @@ func getMongoDBVars(t *testing.T) map[string]any {
 		t.Fatal("'MongoDbDatabase' not set")
 	}
 	return map[string]any{
-		"kind":     MongoDbSourceKind,
-		"uri":      MongoDbUri,
-		"database": MongoDbDatabase,
+		"kind": MongoDbSourceKind,
+		"uri":  MongoDbUri,
 	}
 }
 
