@@ -32,11 +32,6 @@
 * **tools/mysqlexecutesql:** Handle nil panic and connection leak in Invoke ([#757](https://github.com/googleapis/genai-toolbox/issues/757)) ([7badba4](https://github.com/googleapis/genai-toolbox/commit/7badba42eefb34252be77b852a57d6bd78dd267d))
 * **tools/mysqlsql:** Handle nil panic and connection leak in invoke ([#758](https://github.com/googleapis/genai-toolbox/issues/758)) ([cbb4a33](https://github.com/googleapis/genai-toolbox/commit/cbb4a333517313744800d148840312e56340f3fd))
 
-
-### Miscellaneous Chores
-
-* Release 0.8.0 ([#769](https://github.com/googleapis/genai-toolbox/issues/769)) ([010c278](https://github.com/googleapis/genai-toolbox/commit/010c278cbfa8797c692d2428e194a5880f7d147d))
-
 ## [0.7.0](https://github.com/googleapis/genai-toolbox/compare/v0.6.0...v0.7.0) (2025-06-10)
 
 
