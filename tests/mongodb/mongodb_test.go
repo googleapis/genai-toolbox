@@ -27,23 +27,24 @@ import (
 )
 
 var (
-	MONGODB_SOURCE_KIND = "mongodb"
-	MONGODB_TOOL_KIND   = "mongodb-find"
-	MONGODB_URI         = os.Getenv("MONGODB_URI")
-	MONGODB_DATABASE    = os.Getenv("MONGODB_DATABASE")
+	MongoDbSourceKind = "mongodb"
+	MongoDbToolKind   = "mongodb-find"
+	MongoDbUri         = os.Getenv("MONGODB_URI")
+	MongoDbDatabase    = os.Getenv("MONGODB_DATABASE")
+	ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 )
 
 func getMongoDBVars(t *testing.T) map[string]any {
 	switch "" {
-	case MONGODB_URI:
-		t.Fatal("'MONGODB_URI' not set")
-	case MONGODB_DATABASE:
-		t.Fatal("'MONGODB_DATABASE' not set")
+	case MongoDbUri:
+		t.Fatal("'MongoDbUri' not set")
+	case MongoDbDatabase:
+		t.Fatal("'MongoDbDatabase' not set")
 	}
 	return map[string]any{
-		"kind":     MONGODB_SOURCE_KIND,
-		"uri":      MONGODB_URI,
-		"database": MONGODB_DATABASE,
+		"kind":     MongoDbSourceKind,
+		"uri":      MongoDbUri,
+		"database": MongoDbDatabase,
 	}
 }
 
@@ -67,7 +68,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	database, err := initMongoDbDatabase(ctx, MONGODB_URI, MONGODB_DATABASE)
+	database, err := initMongoDbDatabase(ctx, MongoDbUri, MongoDbDatabase)
 	if err != nil {
 		t.Fatalf("unable to create MongoDB connection: %s", err)
 	}
@@ -77,7 +78,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetMongoDBToolsConfig(sourceConfig, MONGODB_TOOL_KIND)
+	toolsFile := getMongoDBToolsConfig(sourceConfig, MongoDbToolKind)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -95,7 +96,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetMongoDBWants()
+	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := getMongoDBWants()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
@@ -104,11 +105,11 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 	collectionName := "test_collection"
 
 	documents := []map[string]any{
-		{"_id": 1, "id": 1, "name": "Alice"},
+		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
 		{"_id": 4, "id": 4, "name": "Bob"},
-		{"_id": 5, "id": 3, "name": "Alice"},
+		{"_id": 5, "id": 3, "name": "Alice", "email": "alice@gmail.com"},
 	}
 	for _, doc := range documents {
 		_, err := database.Collection(collectionName).InsertOne(ctx, doc)
@@ -125,4 +126,102 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 		}
 	}
 
+}
+
+func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": tests.ClientId,
+			},
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Simple tool to test end to end functionality.",
+				"collection":    "test_collection",
+				"filterPayload": `{ "_id" : 3 }`,
+				"filterParams":  []any{},
+			},
+			"my-param-tool": map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Tool to test invocation with params.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id" : {{ .id }}, "name" : {{json .name }} }`,
+				"filterParams": []map[string]any{
+					{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user id",
+					},
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
+			},
+			"my-auth-tool": map[string]any{
+				"kind":           toolKind,
+				"source":         "my-instance",
+				"description":    "Tool to test authenticated parameters.",
+				"authRequired":   []string{},
+				"collection":     "test_collection",
+				"filterPayload":  `{ "email" : {{json .email }} }`,
+				"filterParams":   []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authServices": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+				"projectPayload": `{ "_id": 0, "name" : 1 }`,
+			},
+			"my-auth-required-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test auth required invocation.",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+				"collection":    "test_collection",
+				"filterPayload": `{ "_id": 3, "id": 3 }`,
+				"filterParams":  []any{},
+			},
+			"my-fail-tool": map[string]any{
+				"kind":          toolKind,
+				"source":        "my-instance",
+				"description":   "Tool to test statement with incorrect syntax.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id" ; 1 }"}`,
+				"filterParams":  []any{},
+			},
+		},
+	}
+
+	return toolsFile
+
+}
+
+func getMongoDBWants() (string, string, string, string) {
+	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
+	failInvocationWant := `invalid JSON input: missing colon after key `
+	invokeParamWant := `[{"_id":5,"id":3,"name":"Alice"}]`
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
 }
