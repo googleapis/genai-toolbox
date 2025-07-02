@@ -515,17 +515,14 @@ func (p *StringParameter) GetDefault() any {
 	return *p.Default
 }
 
-// Manifest returns the manifest for the Parameter.
+// Manifest returns the manifest for the StringParameter.
 func (p *StringParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
 	authNames := make([]string, len(p.AuthServices))
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	var required bool
-	if p.Default == nil {
-		required = true
-	}
+	required := p.Default == nil
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
@@ -612,17 +609,14 @@ func (p *IntParameter) GetDefault() any {
 	return *p.Default
 }
 
-// Manifest returns the manifest for the Parameter.
+// Manifest returns the manifest for the IntParameter.
 func (p *IntParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
 	authNames := make([]string, len(p.AuthServices))
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	var required bool
-	if p.Default == nil {
-		required = true
-	}
+	required := p.Default == nil
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
@@ -707,17 +701,14 @@ func (p *FloatParameter) GetDefault() any {
 	return *p.Default
 }
 
-// Manifest returns the manifest for the Parameter.
+// Manifest returns the manifest for the FloatParameter.
 func (p *FloatParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
 	authNames := make([]string, len(p.AuthServices))
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	var required bool
-	if p.Default == nil {
-		required = true
-	}
+	required := p.Default == nil
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
@@ -791,17 +782,14 @@ func (p *BooleanParameter) GetDefault() any {
 	return *p.Default
 }
 
-// Manifest returns the manifest for the Parameter.
+// Manifest returns the manifest for the BooleanParameter.
 func (p *BooleanParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
 	authNames := make([]string, len(p.AuthServices))
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	var required bool
-	if p.Default == nil {
-		required = true
-	}
+	required := p.Default == nil
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
@@ -863,14 +851,14 @@ type ArrayParameter struct {
 func (p *ArrayParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	var rawItem struct {
 		CommonParameter `yaml:",inline"`
-		Default         *[]any                   `yaml:"default"`
+		Default         *[]any                  `yaml:"default"`
 		Items           util.DelayedUnmarshaler `yaml:"items"`
 	}
 	if err := unmarshal(&rawItem); err != nil {
 		return err
 	}
 	p.CommonParameter = rawItem.CommonParameter
-    p.Default = rawItem.Default
+	p.Default = rawItem.Default
 	i, err := parseParamFromDelayedUnmarshaler(ctx, &rawItem.Items)
 	if err != nil {
 		return fmt.Errorf("unable to parse 'items' field: %w", err)
@@ -918,11 +906,8 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		authNames[i] = a.Name
 	}
 	items := p.Items.Manifest()
-	var required bool
-	if p.Default == nil {
-		required = true
-		items.Required = true
-	}
+	required := p.Default == nil
+	items.Required = required
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,

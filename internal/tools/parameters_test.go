@@ -1000,7 +1000,7 @@ func TestParamManifest(t *testing.T) {
 				Required:     false,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
+				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 			},
 		},
 	}
