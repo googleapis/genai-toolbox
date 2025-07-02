@@ -43,8 +43,9 @@ func getMongoDBVars(t *testing.T) map[string]any {
 		t.Fatal("'MongoDbDatabase' not set")
 	}
 	return map[string]any{
-		"kind": MongoDbSourceKind,
-		"uri":  MongoDbUri,
+		"kind":     MongoDbSourceKind,
+		"uri":      MongoDbUri,
+		"database": MongoDbDatabase,
 	}
 }
 
@@ -147,7 +148,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"collection":    "test_collection",
 				"filterPayload": `{ "_id" : 3 }`,
 				"filterParams":  []any{},
-				"database":      MongoDbDatabase,
 			},
 			"my-param-tool": map[string]any{
 				"kind":          toolKind,
@@ -169,7 +169,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 					},
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
-				"database":       MongoDbDatabase,
 			},
 			"my-auth-tool": map[string]any{
 				"kind":          toolKind,
@@ -192,7 +191,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 					},
 				},
 				"projectPayload": `{ "_id": 0, "name" : 1 }`,
-				"database":       MongoDbDatabase,
 			},
 			"my-auth-required-tool": map[string]any{
 				"kind":        toolKind,
@@ -204,7 +202,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"collection":    "test_collection",
 				"filterPayload": `{ "_id": 3, "id": 3 }`,
 				"filterParams":  []any{},
-				"database":      MongoDbDatabase,
 			},
 			"my-fail-tool": map[string]any{
 				"kind":          toolKind,
@@ -214,7 +211,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"collection":    "test_collection",
 				"filterPayload": `{ "id" ; 1 }"}`,
 				"filterParams":  []any{},
-				"database":      MongoDbDatabase,
 			},
 		},
 	}
