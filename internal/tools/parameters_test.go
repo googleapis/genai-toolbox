@@ -150,7 +150,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewIntParameterWithDefault("my_integer", uint64(5), "this param is an int"),
+				tools.NewIntParameterWithDefault("my_integer", 5, "this param is an int"),
 			},
 		},
 		{
@@ -187,7 +187,7 @@ func TestParametersMarshal(t *testing.T) {
 				{
 					"name":        "my_array",
 					"type":        "array",
-					"default":     `["foo", "bar"]`,
+					"default":     []any{"foo", "bar"},
 					"description": "this param is an array of strings",
 					"items": map[string]string{
 						"name":        "my_string",
@@ -197,7 +197,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameterWithDefault("my_array", `["foo", "bar"]`, "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+				tools.NewArrayParameterWithDefault("my_array", []any{"foo", "bar"}, "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
 			},
 		},
 		{
@@ -206,7 +206,7 @@ func TestParametersMarshal(t *testing.T) {
 				{
 					"name":        "my_array",
 					"type":        "array",
-					"default":     "[1.0, 1.1]",
+					"default":     []any{1.0, 1.1},
 					"description": "this param is an array of floats",
 					"items": map[string]string{
 						"name":        "my_float",
@@ -216,7 +216,7 @@ func TestParametersMarshal(t *testing.T) {
 				},
 			},
 			want: tools.Parameters{
-				tools.NewArrayParameterWithDefault("my_array", "[1.0, 1.1]", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
+				tools.NewArrayParameterWithDefault("my_array", []any{1.0, 1.1}, "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
 			},
 		},
 	}
@@ -993,14 +993,14 @@ func TestParamManifest(t *testing.T) {
 		},
 		{
 			name: "array default",
-			in:   tools.NewArrayParameterWithDefault("foo-array", `["foo", "bar"]`, "bar", tools.NewStringParameter("foo-string", "bar")),
+			in:   tools.NewArrayParameterWithDefault("foo-array", []any{"foo", "bar"}, "bar", tools.NewStringParameter("foo-string", "bar")),
 			want: tools.ParameterManifest{
 				Name:         "foo-array",
 				Type:         "array",
 				Required:     false,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
+				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 			},
 		},
 	}
@@ -1073,7 +1073,7 @@ func TestMcpManifest(t *testing.T) {
 				tools.NewStringParameter("foo-string2", "bar"),
 				tools.NewIntParameterWithDefault("foo-int", 1, "bar"),
 				tools.NewIntParameter("foo-int2", "bar"),
-				tools.NewArrayParameterWithDefault("foo-array", []string{"hello", "world"}, "bar", tools.NewStringParameter("foo-string", "bar")),
+				tools.NewArrayParameterWithDefault("foo-array", []any{"hello", "world"}, "bar", tools.NewStringParameter("foo-string", "bar")),
 				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
 			},
 			want: tools.McpToolsSchema{
