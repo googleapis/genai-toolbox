@@ -101,11 +101,10 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	//select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := getMongoDBWants()
-	//tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
-	//tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := getMongoDBWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 
-	//
 	delete1Want := "[1]"
 	deleteManyWant := "[2]"
 	RunToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
@@ -545,4 +544,12 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 
 	return toolsFile
 
+}
+
+func getMongoDBWants() (string, string, string, string) {
+	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
+	failInvocationWant := `invalid JSON input: missing colon after key `
+	invokeParamWant := `[{"_id":5,"id":3,"name":"Alice"}]`
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
 }
