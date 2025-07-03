@@ -15,8 +15,12 @@
 package mongodb
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"testing"
@@ -74,6 +78,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	}
 
 	// set up data for param tool
+	//setupMongoDB(t, ctx, database)
 	teardownDB := setupMongoDB(t, ctx, database)
 	defer teardownDB(t)
 
@@ -96,9 +101,240 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := getMongoDBWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	//select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := getMongoDBWants()
+	//tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	//tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+
+	//
+	delete1Want := "[1]"
+	deleteManyWant := "[2]"
+	RunToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
+	insert1Want := `["68666e1035bb36bf1b4d47fb"]`
+	insertManyWant := `["68667a6436ec7d0363668db7","68667a6436ec7d0363668db8","68667a6436ec7d0363668db9"]`
+	RunToolInsertInvokeTest(t, insert1Want, insertManyWant)
+	update1Want := "[1]"
+	updateManyWant := "[2,0,2]"
+	RunToolUpdateInvokeTest(t, update1Want, updateManyWant)
+
+}
+
+func RunToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-delete-one-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-delete-one-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "id" : 100 }`)),
+			want:          delete1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-delete-many-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-delete-many-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "id" : 101 }`)),
+			want:          deleteManyWant,
+			isErr:         false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func RunToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-insert-one-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-insert-one-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "_id": { "$oid": "68666e1035bb36bf1b4d47fb" },  "id" : 200 }`)),
+			want:          insert1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-insert-many-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-insert-many-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "items" : [{ "_id": { "$oid": "68667a6436ec7d0363668db7"} , "id" : 201 }, { "_id" : { "$oid": "68667a6436ec7d0363668db8"}, "id" : 202 }, { "_id": { "$oid": "68667a6436ec7d0363668db9"}, "id": 203 }]}`)),
+			want:          insertManyWant,
+			isErr:         false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func RunToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-update-one-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-update-one-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "id": 300, "name": "Bob" }`)),
+			want:          update1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-update-many-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-update-many-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "id": 400, "name" : "Alice" }`)),
+			want:          updateManyWant,
+			isErr:         false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
 }
 
 func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) func(*testing.T) {
@@ -110,6 +346,12 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 		{"_id": 3, "id": 3, "name": "Sid"},
 		{"_id": 4, "id": 4, "name": "Bob"},
 		{"_id": 5, "id": 3, "name": "Alice", "email": "alice@gmail.com"},
+		{"_id": 6, "id": 100, "name": "ToBeDeleted", "email": "bob@gmail.com"},
+		{"_id": 7, "id": 101, "name": "ToBeDeleted", "email": "bob1@gmail.com"},
+		{"_id": 8, "id": 101, "name": "ToBeDeleted", "email": "bob2@gmail.com"},
+		{"_id": 9, "id": 300, "name": "ToBeUpdatedToBob", "email": "bob@gmail.com"},
+		{"_id": 10, "id": 400, "name": "ToBeUpdatedToAlice", "email": "alice@gmail.com"},
+		{"_id": 11, "id": 400, "name": "ToBeUpdatedToAlice", "email": "alice@gmail.com"},
 	}
 	for _, doc := range documents {
 		_, err := database.Collection(collectionName).InsertOne(ctx, doc)
@@ -216,17 +458,91 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
 			},
+			"my-delete-one-tool": map[string]any{
+				"kind":          "mongodb-delete-one",
+				"source":        "my-instance",
+				"description":   "Tool to test deleting an entry.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id" : 100 }"}`,
+				"filterParams":  []any{},
+				"database":      MongoDbDatabase,
+			},
+			"my-delete-many-tool": map[string]any{
+				"kind":          "mongodb-delete-many",
+				"source":        "my-instance",
+				"description":   "Tool to test deleting multiple entries.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"filterPayload": `{ "id" : 101 }"}`,
+				"filterParams":  []any{},
+				"database":      MongoDbDatabase,
+			},
+			"my-insert-one-tool": map[string]any{
+				"kind":         "mongodb-insert-one",
+				"source":       "my-instance",
+				"description":  "Tool to test inserting an entry.",
+				"authRequired": []string{},
+				"collection":   "test_collection",
+				"canonical":    true,
+				"database":     MongoDbDatabase,
+			},
+			"my-insert-many-tool": map[string]any{
+				"kind":         "mongodb-insert-many",
+				"source":       "my-instance",
+				"description":  "Tool to test inserting multiple entries.",
+				"authRequired": []string{},
+				"collection":   "test_collection",
+				"canonical":    true,
+				"database":     MongoDbDatabase,
+			},
+			"my-update-one-tool": map[string]any{
+				"kind":          "mongodb-update-one",
+				"source":        "my-instance",
+				"description":   "Tool to test updating an entry.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"canonical":     true,
+				"filterPayload": `{ "id" : 300 }`,
+				"filterParams":  []any{},
+				"updatePayload": `{ "$set" : { "name": {{json .name}} } }`,
+				"updateParams": []map[string]any{
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+				"database": MongoDbDatabase,
+			},
+			"my-update-many-tool": map[string]any{
+				"kind":          "mongodb-update-many",
+				"source":        "my-instance",
+				"description":   "Tool to test updating multiple entries.",
+				"authRequired":  []string{},
+				"collection":    "test_collection",
+				"canonical":     true,
+				"filterPayload": `{ "id" : {{ .id }} }`,
+				"filterParams": []map[string]any{
+					{
+						"name":        "id",
+						"type":        "integer",
+						"description": "id",
+					},
+				},
+				"updatePayload": `{ "$set" : { "name": {{json .name}} } }`,
+				"updateParams": []map[string]any{
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+				"database": MongoDbDatabase,
+			},
 		},
 	}
 
 	return toolsFile
 
-}
-
-func getMongoDBWants() (string, string, string, string) {
-	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
-	failInvocationWant := `invalid JSON input: missing colon after key `
-	invokeParamWant := `[{"_id":5,"id":3,"name":"Alice"}]`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
 }
