@@ -135,6 +135,7 @@ out the resources in the [How-to section](../../how-to/_index.md)
 Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
+#### Python
 {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
 
@@ -201,3 +202,115 @@ For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 
 {{% /tab %}}
 {{< /tabpane >}}
+
+#### JS
+
+Once you've installed the [Toolbox Core
+SDK](https://www.npmjs.com/package/@toolbox-sdk/core), you can load
+tools:
+
+{{< tabpane text=true persist=header >}}
+{{% tab header="Core" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="LangChain/Langraph" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+
+// Define the basics of the tool: name, description, schema and core logic
+const getTool = (toolboxTool) => tool(currTool, {
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    schema: toolboxTool.getParamSchema()
+});
+
+// Use these tools in your Langchain/Langraph applications
+const tools = toolboxTools.map(getTool);
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="Genkit" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+import { genkit } from 'genkit';
+
+// Initialise genkit
+const ai = genkit({
+    plugins: [
+        googleAI({
+            apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+        })
+    ],
+    model: googleAI.model('gemini-2.0-flash'),
+});
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+
+// Define the basics of the tool: name, description, schema and core logic
+const getTool = (toolboxTool) => ai.defineTool({
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    schema: toolboxTool.getParamSchema()
+}, toolboxTool)
+
+// Use these tools in your Genkit applications
+const tools = toolboxTools.map(getTool);
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="LlamaIndex" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+import { tool } from "llamaindex";
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+
+// Define the basics of the tool: name, description, schema and core logic
+const getTool = (toolboxTool) => tool({
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    parameters: toolboxTool.getParams(),
+    execute: toolboxTool
+});;
+
+// Use these tools in your LlamaIndex applications
+const tools = toolboxTools.map(getTool);
+
+{{< /highlight >}}
+
+{{% /tab %}}
+{{< /tabpane >}}
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
