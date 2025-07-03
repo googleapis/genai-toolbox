@@ -256,7 +256,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </details>
 </blockquote>
 <details>
-  <summary>JS</summary>
+  <summary>Javascript/Typescript</summary>
   <br>
   <blockquote>
 
