@@ -203,7 +203,7 @@ For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 {{% /tab %}}
 {{< /tabpane >}}
 
-#### JS
+#### Javascript/Typescript
 
 Once you've installed the [Toolbox Core
 SDK](https://www.npmjs.com/package/@toolbox-sdk/core), you can load
