@@ -33,8 +33,8 @@ import (
 )
 
 var (
-	HTTP_SOURCE_KIND = "http"
-	HTTP_TOOL_KIND   = "http"
+	HttpSourceKind = "http"
+	HttpToolKind   = "http"
 )
 
 func getHTTPSourceConfig(t *testing.T) map[string]any {
@@ -44,7 +44,7 @@ func getHTTPSourceConfig(t *testing.T) map[string]any {
 	}
 	idToken = "Bearer " + idToken
 	return map[string]any{
-		"kind":    HTTP_SOURCE_KIND,
+		"kind":    HttpSourceKind,
 		"headers": map[string]string{"Authorization": idToken},
 	}
 }
@@ -245,7 +245,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	toolsFile := getHTTPToolsConfig(sourceConfig, HTTP_TOOL_KIND)
+	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolKind)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)

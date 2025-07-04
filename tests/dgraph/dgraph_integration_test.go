@@ -30,20 +30,19 @@ import (
 )
 
 var (
-	DGRAPH_SOURCE_KIND = "dgraph"
-	DGRAPH_TOOL_KIND   = "dgraph-dql"
-	DGRAPH_API_KEY     = "api-key"
-	DGRAPH_URL         = os.Getenv("DGRAPH_URL")
+	DgraphSourceKind = "dgraph"
+	DgraphApiKey     = "api-key"
+	DgraphUrl        = os.Getenv("DGRAPH_URL")
 )
 
 func getDgraphVars(t *testing.T) map[string]any {
-	if DGRAPH_URL == "" {
+	if DgraphUrl == "" {
 		t.Fatal("'DGRAPH_URL' not set")
 	}
 	return map[string]any{
-		"kind":      DGRAPH_SOURCE_KIND,
-		"dgraphUrl": DGRAPH_URL,
-		"apiKey":    DGRAPH_API_KEY,
+		"kind":      DgraphSourceKind,
+		"dgraphUrl": DgraphUrl,
+		"apiKey":    DgraphApiKey,
 	}
 }
 

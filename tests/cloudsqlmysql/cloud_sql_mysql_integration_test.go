@@ -32,40 +32,40 @@ import (
 )
 
 var (
-	CLOUD_SQL_MYSQL_SOURCE_KIND = "cloud-sql-mysql"
-	CLOUD_SQL_MYSQL_TOOL_KIND   = "mysql-sql"
-	CLOUD_SQL_MYSQL_PROJECT     = os.Getenv("CLOUD_SQL_MYSQL_PROJECT")
-	CLOUD_SQL_MYSQL_REGION      = os.Getenv("CLOUD_SQL_MYSQL_REGION")
-	CLOUD_SQL_MYSQL_INSTANCE    = os.Getenv("CLOUD_SQL_MYSQL_INSTANCE")
-	CLOUD_SQL_MYSQL_DATABASE    = os.Getenv("CLOUD_SQL_MYSQL_DATABASE")
-	CLOUD_SQL_MYSQL_USER        = os.Getenv("CLOUD_SQL_MYSQL_USER")
-	CLOUD_SQL_MYSQL_PASS        = os.Getenv("CLOUD_SQL_MYSQL_PASS")
+	CloudSQLMySQLSourceKind = "cloud-sql-mysql"
+	CloudSQLMySQLToolKind   = "mysql-sql"
+	CloudSQLMySQLProject    = os.Getenv("CLOUD_SQL_MYSQL_PROJECT")
+	CloudSQLMySQLRegion     = os.Getenv("CLOUD_SQL_MYSQL_REGION")
+	CloudSQLMySQLInstance   = os.Getenv("CLOUD_SQL_MYSQL_INSTANCE")
+	CloudSQLMySQLDatabase   = os.Getenv("CLOUD_SQL_MYSQL_DATABASE")
+	CloudSQLMySQLUser       = os.Getenv("CLOUD_SQL_MYSQL_USER")
+	CloudSQLMySQLPass       = os.Getenv("CLOUD_SQL_MYSQL_PASS")
 )
 
 func getCloudSQLMySQLVars(t *testing.T) map[string]any {
 	switch "" {
-	case CLOUD_SQL_MYSQL_PROJECT:
+	case CloudSQLMySQLProject:
 		t.Fatal("'CLOUD_SQL_MYSQL_PROJECT' not set")
-	case CLOUD_SQL_MYSQL_REGION:
+	case CloudSQLMySQLRegion:
 		t.Fatal("'CLOUD_SQL_MYSQL_REGION' not set")
-	case CLOUD_SQL_MYSQL_INSTANCE:
+	case CloudSQLMySQLInstance:
 		t.Fatal("'CLOUD_SQL_MYSQL_INSTANCE' not set")
-	case CLOUD_SQL_MYSQL_DATABASE:
+	case CloudSQLMySQLDatabase:
 		t.Fatal("'CLOUD_SQL_MYSQL_DATABASE' not set")
-	case CLOUD_SQL_MYSQL_USER:
+	case CloudSQLMySQLUser:
 		t.Fatal("'CLOUD_SQL_MYSQL_USER' not set")
-	case CLOUD_SQL_MYSQL_PASS:
+	case CloudSQLMySQLPass:
 		t.Fatal("'CLOUD_SQL_MYSQL_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     CLOUD_SQL_MYSQL_SOURCE_KIND,
-		"project":  CLOUD_SQL_MYSQL_PROJECT,
-		"instance": CLOUD_SQL_MYSQL_INSTANCE,
-		"region":   CLOUD_SQL_MYSQL_REGION,
-		"database": CLOUD_SQL_MYSQL_DATABASE,
-		"user":     CLOUD_SQL_MYSQL_USER,
-		"password": CLOUD_SQL_MYSQL_PASS,
+		"kind":     CloudSQLMySQLSourceKind,
+		"project":  CloudSQLMySQLProject,
+		"instance": CloudSQLMySQLInstance,
+		"region":   CloudSQLMySQLRegion,
+		"database": CloudSQLMySQLDatabase,
+		"user":     CloudSQLMySQLUser,
+		"password": CloudSQLMySQLPass,
 	}
 }
 
@@ -97,14 +97,14 @@ func initCloudSQLMySQLConnectionPool(project, region, instance, ipType, user, pa
 	return db, nil
 }
 
-func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
+func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	pool, err := initCloudSQLMySQLConnectionPool(CLOUD_SQL_MYSQL_PROJECT, CLOUD_SQL_MYSQL_REGION, CLOUD_SQL_MYSQL_INSTANCE, "public", CLOUD_SQL_MYSQL_USER, CLOUD_SQL_MYSQL_PASS, CLOUD_SQL_MYSQL_DATABASE)
+	pool, err := initCloudSQLMySQLConnectionPool(CloudSQLMySQLProject, CloudSQLMySQLRegion, CloudSQLMySQLInstance, "public", CloudSQLMySQLUser, CloudSQLMySQLPass, CloudSQLMySQLDatabase)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
@@ -115,20 +115,20 @@ func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMysqlParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetMySQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMysqlAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetMySQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLMySQLToolKind, toolStatement1, toolStatement2)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMysqlTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CLOUD_SQL_MYSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLMySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -146,7 +146,7 @@ func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetMysqlWants()
+	select1Want, failInvocationWant, createTableStatement := tests.GetMySQLWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
@@ -155,7 +155,7 @@ func TestCloudSQLMysqlToolEndpoints(t *testing.T) {
 }
 
 // Test connection with different IP type
-func TestCloudSQLMysqlIpConnection(t *testing.T) {
+func TestCloudSQLMySQLIpConnection(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 
 	tcs := []struct {
@@ -174,7 +174,7 @@ func TestCloudSQLMysqlIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MYSQL_TOOL_KIND)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMySQLToolKind)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
