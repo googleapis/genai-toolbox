@@ -53,6 +53,8 @@ type ServerConfig struct {
 	TelemetryServiceName string
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
+	// WebUI indicates if Toolbox UI endpoints (/web) are available
+	WebUI bool
 }
 
 type logFormat string
