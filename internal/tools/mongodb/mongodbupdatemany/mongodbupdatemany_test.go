@@ -53,6 +53,12 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
                           type: string
                           description: small description
 					canonical: true
+					updatePayload: |
+					    { $set: { name: {{json .name}} } }
+					updateParams:
+                        - name: name 
+                          type: string
+                          description: small description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdatemany.Config{
@@ -64,6 +70,16 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Collection:    "test_coll",
 					FilterPayload: "{ name: {{json .name}} }\n",
 					FilterParams: tools.Parameters{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					UpdatePayload: "{ $set: { name: {{json .name}} } }\n",
+					UpdateParams: tools.Parameters{
 						&tools.StringParameter{
 							CommonParameter: tools.CommonParameter{
 								Name: "name",
@@ -121,6 +137,13 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
                         - name: name 
                           type: string
                           description: small description
+					canonical: true
+					updatePayload: |
+					  { $set: { name: {{json .name}} } }
+					updateParams:
+						- name: data
+						  type: string
+						  description: the content in json
 			`,
 			err: `unable to parse tool "example_tool" as kind "mongodb-update-many"`,
 		},

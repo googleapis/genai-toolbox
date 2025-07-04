@@ -204,7 +204,7 @@ func RunToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 			name:          "invoke my-insert-one-tool",
 			api:           "http://127.0.0.1:5000/api/tool/my-insert-one-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{ "_id": { "$oid": "68666e1035bb36bf1b4d47fb" },  "id" : 200 }`)),
+			requestBody:   bytes.NewBuffer([]byte(`{ "data" : "{ \"_id\": { \"$oid\": \"68666e1035bb36bf1b4d47fb\" },  \"id\" : 200 }" }"`)),
 			want:          insert1Want,
 			isErr:         false,
 		},
@@ -212,7 +212,7 @@ func RunToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 			name:          "invoke my-insert-many-tool",
 			api:           "http://127.0.0.1:5000/api/tool/my-insert-many-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{ "items" : [{ "_id": { "$oid": "68667a6436ec7d0363668db7"} , "id" : 201 }, { "_id" : { "$oid": "68667a6436ec7d0363668db8"}, "id" : 202 }, { "_id": { "$oid": "68667a6436ec7d0363668db9"}, "id": 203 }]}`)),
+			requestBody:   bytes.NewBuffer([]byte(`{ "data" : "[{ \"_id\": { \"$oid\": \"68667a6436ec7d0363668db7\"} , \"id\" : 201 }, { \"_id\" : { \"$oid\": \"68667a6436ec7d0363668db8\"}, \"id\" : 202 }, { \"_id\": { \"$oid\": \"68667a6436ec7d0363668db9\"}, \"id\": 203 }]" }`)),
 			want:          insertManyWant,
 			isErr:         false,
 		},
@@ -484,7 +484,14 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired": []string{},
 				"collection":   "test_collection",
 				"canonical":    true,
-				"database":     MongoDbDatabase,
+				"payloadParams": []map[string]any{
+					{
+						"name":        "data",
+						"type":        "string",
+						"description": "the content in json",
+					},
+				},
+				"database": MongoDbDatabase,
 			},
 			"my-insert-many-tool": map[string]any{
 				"kind":         "mongodb-insert-many",
@@ -493,7 +500,14 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired": []string{},
 				"collection":   "test_collection",
 				"canonical":    true,
-				"database":     MongoDbDatabase,
+				"payloadParams": []map[string]any{
+					{
+						"name":        "data",
+						"type":        "string",
+						"description": "the content in json",
+					},
+				},
+				"database": MongoDbDatabase,
 			},
 			"my-update-one-tool": map[string]any{
 				"kind":          "mongodb-update-one",

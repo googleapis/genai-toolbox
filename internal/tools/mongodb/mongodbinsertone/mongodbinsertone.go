@@ -15,7 +15,7 @@ package mongodbinsertone
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -24,6 +24,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"slices"
 )
 
 const kind string = "mongodb-insert-one"
@@ -43,14 +44,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	AuthRequired []string `yaml:"authRequired" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	Database     string   `yaml:"database" validate:"required"`
-	Collection   string   `yaml:"collection" validate:"required"`
-	Canonical    bool     `yaml:"canonical" validate:"required"` //i want to force the user to choose
+	Name          string           `yaml:"name" validate:"required"`
+	Kind          string           `yaml:"kind" validate:"required"`
+	Source        string           `yaml:"source" validate:"required"`
+	AuthRequired  []string         `yaml:"authRequired" validate:"required"`
+	Description   string           `yaml:"description" validate:"required"`
+	Database      string           `yaml:"database" validate:"required"`
+	Collection    string           `yaml:"collection" validate:"required"`
+	Canonical     bool             `yaml:"canonical" validate:"required"` //i want to force the user to choose
+	PayloadParams tools.Parameters `yaml:"payloadParams" validate:"required"`
 }
 
 // validate interface
@@ -73,24 +75,35 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongo-query`", kind)
 	}
 
-	paramManifest := make([]tools.ParameterManifest, 0)
-	concatRequiredManifest := []string{}
+	// Create parameter MCP manifest
+	paramManifest := slices.Concat(
+		cfg.PayloadParams.Manifest(),
+	)
+	if paramManifest == nil {
+		paramManifest = make([]tools.ParameterManifest, 0)
+	}
+
+	payloadMcpManifest := cfg.PayloadParams.McpManifest()
+
+	// Concatenate parameters for MCP `required` field
+	concatRequiredManifest := slices.Concat(
+		payloadMcpManifest.Required,
+	)
+	if concatRequiredManifest == nil {
+		concatRequiredManifest = []string{}
+	}
+
+	// Concatenate parameters for MCP `properties` field
 	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
+	for name, p := range payloadMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
 
 	// Create a new McpToolsSchema with all parameters
 	paramMcpManifest := tools.McpToolsSchema{
 		Type:       "object",
 		Properties: concatPropertiesManifest,
 		Required:   concatRequiredManifest,
-	}
-
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across filterParams, projectParams, and sortParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -101,14 +114,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
-		Collection:   cfg.Collection,
-		Canonical:    cfg.Canonical,
-		database:     s.Client.Database(cfg.Database),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:          cfg.Name,
+		Kind:          kind,
+		AuthRequired:  cfg.AuthRequired,
+		Collection:    cfg.Collection,
+		Canonical:     cfg.Canonical,
+		PayloadParams: cfg.PayloadParams,
+		database:      s.Client.Database(cfg.Database),
+		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:   mcpManifest,
 	}, nil
 }
 
@@ -116,12 +130,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	AuthRequired []string `yaml:"authRequired"`
-	Description  string   `yaml:"description"`
-	Collection   string   `yaml:"collection"`
-	Canonical    bool     `yaml:"canonical" validation:"required"`
+	Name          string           `yaml:"name"`
+	Kind          string           `yaml:"kind"`
+	AuthRequired  []string         `yaml:"authRequired"`
+	Description   string           `yaml:"description"`
+	Collection    string           `yaml:"collection"`
+	Canonical     bool             `yaml:"canonical" validation:"required"`
+	PayloadParams tools.Parameters `yaml:"payloadParams" validate:"required"`
 
 	database    *mongo.Database
 	manifest    tools.Manifest
@@ -129,15 +144,17 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	paramsMap := params.AsMap()
-
-	jsonData, err := json.Marshal(paramsMap)
-	if err != nil {
-		return nil, err
+	if len(params) == 0 {
+		return nil, errors.New("no input found")
+	}
+	// use the first, assume it's a string
+	var jsonData, ok = params[0].Value.(string)
+	if !ok {
+		return nil, errors.New("no input found")
 	}
 
 	var data interface{}
-	err = bson.UnmarshalExtJSON(jsonData, t.Canonical, &data)
+	err := bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -151,12 +168,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	// we allow all the data to go through
-	var params = tools.ParamValues{}
-	for k, v := range data {
-		params = append(params, tools.ParamValue{Name: k, Value: v})
-	}
-	return params, nil
+	return tools.ParseParams(t.PayloadParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -15,6 +15,7 @@
 package mongodbinsertmany_test
 
 import (
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertmany"
 	"strings"
 	"testing"
@@ -46,6 +47,10 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					database: test_db
 					collection: test_coll
 					canonical: true
+					payloadParams:
+						- name: data
+						  type: string
+						  description: the content in json
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbinsertmany.Config{
@@ -57,6 +62,15 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Collection:   "test_coll",
 					Description:  "some description",
 					Canonical:    true,
+					PayloadParams: tools.Parameters{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{
+								Name: "data",
+								Type: "string",
+								Desc: "the content in json",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -98,6 +112,10 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 					source: my-instance
 					description: some description
 					collection: test_coll
+					payloadParams:
+						- name: data
+						  type: string
+						  description: the content in json
 			`,
 			err: `unable to parse tool "example_tool" as kind "mongodb-insert-many"`,
 		},
