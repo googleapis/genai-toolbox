@@ -47,6 +47,14 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeleteone"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfindone"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertmany"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertone"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
@@ -71,6 +79,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
@@ -347,7 +356,7 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 
 	// Combine both file lists
 	allFiles := append(yamlFiles, ymlFiles...)
-	
+
 	if len(allFiles) == 0 {
 		return ToolsFile{}, fmt.Errorf("no YAML files found in directory %q", folderPath)
 	}
