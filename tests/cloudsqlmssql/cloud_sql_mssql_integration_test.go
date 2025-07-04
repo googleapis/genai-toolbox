@@ -33,49 +33,49 @@ import (
 )
 
 var (
-	CLOUD_SQL_MSSQL_SOURCE_KIND = "cloud-sql-mssql"
-	CLOUD_SQL_MSSQL_TOOL_KIND   = "mssql-sql"
-	CLOUD_SQL_MSSQL_PROJECT     = os.Getenv("CLOUD_SQL_MSSQL_PROJECT")
-	CLOUD_SQL_MSSQL_REGION      = os.Getenv("CLOUD_SQL_MSSQL_REGION")
-	CLOUD_SQL_MSSQL_INSTANCE    = os.Getenv("CLOUD_SQL_MSSQL_INSTANCE")
-	CLOUD_SQL_MSSQL_DATABASE    = os.Getenv("CLOUD_SQL_MSSQL_DATABASE")
-	CLOUD_SQL_MSSQL_IP          = os.Getenv("CLOUD_SQL_MSSQL_IP")
-	CLOUD_SQL_MSSQL_USER        = os.Getenv("CLOUD_SQL_MSSQL_USER")
-	CLOUD_SQL_MSSQL_PASS        = os.Getenv("CLOUD_SQL_MSSQL_PASS")
+	CloudSQLMSSQLSourceKind = "cloud-sql-mssql"
+	CloudSQLMSSQLToolKind   = "mssql-sql"
+	CloudSQLMSSQLProject    = os.Getenv("CLOUD_SQL_MSSQL_PROJECT")
+	CloudSQLMSSQLRegion     = os.Getenv("CLOUD_SQL_MSSQL_REGION")
+	CloudSQLMSSQLInstance   = os.Getenv("CLOUD_SQL_MSSQL_INSTANCE")
+	CloudSQLMSSQLDatabase   = os.Getenv("CLOUD_SQL_MSSQL_DATABASE")
+	CloudSQLMSSQLIp         = os.Getenv("CLOUD_SQL_MSSQL_IP")
+	CloudSQLMSSQLUser       = os.Getenv("CLOUD_SQL_MSSQL_USER")
+	CloudSQLMSSQLPass       = os.Getenv("CLOUD_SQL_MSSQL_PASS")
 )
 
-func getCloudSQLMssqlVars(t *testing.T) map[string]any {
+func getCloudSQLMSSQLVars(t *testing.T) map[string]any {
 	switch "" {
-	case CLOUD_SQL_MSSQL_PROJECT:
+	case CloudSQLMSSQLProject:
 		t.Fatal("'CLOUD_SQL_MSSQL_PROJECT' not set")
-	case CLOUD_SQL_MSSQL_REGION:
+	case CloudSQLMSSQLRegion:
 		t.Fatal("'CLOUD_SQL_MSSQL_REGION' not set")
-	case CLOUD_SQL_MSSQL_INSTANCE:
+	case CloudSQLMSSQLInstance:
 		t.Fatal("'CLOUD_SQL_MSSQL_INSTANCE' not set")
-	case CLOUD_SQL_MSSQL_IP:
+	case CloudSQLMSSQLIp:
 		t.Fatal("'CLOUD_SQL_MSSQL_IP' not set")
-	case CLOUD_SQL_MSSQL_DATABASE:
+	case CloudSQLMSSQLDatabase:
 		t.Fatal("'CLOUD_SQL_MSSQL_DATABASE' not set")
-	case CLOUD_SQL_MSSQL_USER:
+	case CloudSQLMSSQLUser:
 		t.Fatal("'CLOUD_SQL_MSSQL_USER' not set")
-	case CLOUD_SQL_MSSQL_PASS:
+	case CloudSQLMSSQLPass:
 		t.Fatal("'CLOUD_SQL_MSSQL_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":      CLOUD_SQL_MSSQL_SOURCE_KIND,
-		"project":   CLOUD_SQL_MSSQL_PROJECT,
-		"instance":  CLOUD_SQL_MSSQL_INSTANCE,
-		"ipAddress": CLOUD_SQL_MSSQL_IP,
-		"region":    CLOUD_SQL_MSSQL_REGION,
-		"database":  CLOUD_SQL_MSSQL_DATABASE,
-		"user":      CLOUD_SQL_MSSQL_USER,
-		"password":  CLOUD_SQL_MSSQL_PASS,
+		"kind":      CloudSQLMSSQLSourceKind,
+		"project":   CloudSQLMSSQLProject,
+		"instance":  CloudSQLMSSQLInstance,
+		"ipAddress": CloudSQLMSSQLIp,
+		"region":    CloudSQLMSSQLRegion,
+		"database":  CloudSQLMSSQLDatabase,
+		"user":      CloudSQLMSSQLUser,
+		"password":  CloudSQLMSSQLPass,
 	}
 }
 
 // Copied over from cloud_sql_mssql.go
-func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
+func initCloudSQLMSSQLConnection(project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	// Create dsn
 	query := fmt.Sprintf("database=%s&cloudsql=%s:%s:%s", dbname, project, region, instance)
 	url := &url.URL{
@@ -110,14 +110,14 @@ func initCloudSQLMssqlConnection(project, region, instance, ipAddress, ipType, u
 	return db, nil
 }
 
-func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
-	sourceConfig := getCloudSQLMssqlVars(t)
+func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
+	sourceConfig := getCloudSQLMSSQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	db, err := initCloudSQLMssqlConnection(CLOUD_SQL_MSSQL_PROJECT, CLOUD_SQL_MSSQL_REGION, CLOUD_SQL_MSSQL_INSTANCE, CLOUD_SQL_MSSQL_IP, "public", CLOUD_SQL_MSSQL_USER, CLOUD_SQL_MSSQL_PASS, CLOUD_SQL_MSSQL_DATABASE)
+	db, err := initCloudSQLMSSQLConnection(CloudSQLMSSQLProject, CloudSQLMSSQLRegion, CloudSQLMSSQLInstance, CloudSQLMSSQLIp, "public", CloudSQLMSSQLUser, CloudSQLMSSQLPass, CloudSQLMSSQLDatabase)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
@@ -128,20 +128,20 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMssqlParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupMsSQLTable(t, ctx, db, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetMSSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupMsSQLTable(t, ctx, db, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMssqlAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupMsSQLTable(t, ctx, db, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetMSSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupMsSQLTable(t, ctx, db, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND, tool_statement1, tool_statement2)
-	toolsFile = tests.AddMssqlExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMssqlTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CLOUD_SQL_MSSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLMSSQLToolKind, toolStatement1, toolStatement2)
+	toolsFile = tests.AddMSSQLExecuteSqlConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMSSQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLMSSQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -159,7 +159,7 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetMssqlWants()
+	select1Want, failInvocationWant, createTableStatement := tests.GetMSSQLWants()
 	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
@@ -168,8 +168,8 @@ func TestCloudSQLMssqlToolEndpoints(t *testing.T) {
 }
 
 // Test connection with different IP type
-func TestCloudSQLMssqlIpConnection(t *testing.T) {
-	sourceConfig := getCloudSQLMssqlVars(t)
+func TestCloudSQLMSSQLIpConnection(t *testing.T) {
+	sourceConfig := getCloudSQLMSSQLVars(t)
 
 	tcs := []struct {
 		name   string
@@ -187,7 +187,7 @@ func TestCloudSQLMssqlIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_MSSQL_TOOL_KIND)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMSSQLToolKind)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
