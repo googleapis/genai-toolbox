@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/googleapis/genai-toolbox/compare/v0.8.0...v0.8.1) (2025-07-04)
+
+
+### Bug Fixes
+
+* Fix docs preview deployment pipeline ([#787](https://github.com/googleapis/genai-toolbox/issues/787)) ([0a93b04](https://github.com/googleapis/genai-toolbox/commit/0a93b0482c8d3c64b324e67408d408f5576ecaf3))
+
 ## [0.8.0](https://github.com/googleapis/genai-toolbox/compare/v0.7.0...v0.8.0) (2025-07-02)
 
 
