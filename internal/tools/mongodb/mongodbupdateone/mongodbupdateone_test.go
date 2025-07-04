@@ -53,10 +53,10 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
                           type: string
                           description: small description
 					updatePayload: |
-					    { $set : {{json .item}} }
+					    { $set : { item: {{json .item}} } }
 					updateParams:
                         - name: item
-                          type: object
+                          type: string
                           description: small description
 					canonical: true
 					upsert: true
@@ -75,6 +75,16 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 						&tools.StringParameter{
 							CommonParameter: tools.CommonParameter{
 								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					UpdatePayload: "{ $set : { item: {{json .item}} } }\n",
+					UpdateParams: tools.Parameters{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{
+								Name: "item",
 								Type: "string",
 								Desc: "small description",
 							},
