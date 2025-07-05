@@ -1,10 +1,9 @@
 ---
-title: "Quickstart (Local) using Js SDK"
+title: "Quickstart (Local) using JS SDK"
 type: docs
 weight: 2
 description: >
-  How to get started running Toolbox locally with Javascript, PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
-  [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
+  How to get started running Toolbox locally with JavaScript, PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [LlamaIndex](https://www.llamaindex.ai/), or [GenkitJS](https://github.com/genkit-ai/genkit). This guide covers setup and integration for each framework using the JS SDK.
 ---
 
 ## Before you begin
@@ -272,3 +271,276 @@ In this section, we will download Toolbox, configure our tools in a
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+
+---
+
+## Step 3: Set up your Node.js project
+
+In this step, you'll create a new folder for your project, initialize it with `npm`, and install the required dependencies.
+
+1. Create a new folder for your project and navigate into it:
+
+    ```bash
+    mkdir my-agent-app
+    cd my-agent-app
+    ```
+
+1. Initialize a new Node.js project:
+
+    ```bash
+    npm init -y
+    ```
+
+1. Create a new file in the root directory:
+   
+    ```bash
+    touch index.js
+    ```
+
+**Suggestion:**  
+> We recommend the following folder structure for your project:
+>
+> ```
+> my-agent-app/
+> ├── .env                  # For environment variables (e.g., API keys)
+> ├── index.js              # Main application file
+> ├── package.json
+> └── node_modules/
+> ```
+>
+> - Place your main code in `index.js`.
+> - Store sensitive information like API keys in a `.env` file (never commit this to version control).
+
+---
+
+## Step 4: Install dependencies for your orchestration framework
+
+Depending on which orchestration framework you want to use, install the relevant dependencies:
+
+{{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="bash" >}}
+npm install langchain @genai-toolbox/sdk @langchain/google-vertexai dotenv
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
+npm install @llamaindex/core @llamaindex/llms-google-genai @genai-toolbox/sdk dotenv
+{{< /tab >}}
+{{< tab header="GenkitJS" lang="bash" >}}
+npm install @genkit-ai/core @genkit-ai/google-vertexai @genai-toolbox/sdk dotenv
+{{< /tab >}}
+{{< /tabpane >}}
+
+---
+
+## Step 5: Add your application code
+
+Below are sample code templates for each framework. Replace the sample code with your actual implementation as needed.
+
+{{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="js" >}}
+// index.js
+
+import "dotenv/config";
+import { ChatVertexAI } from "@langchain/google-vertexai";
+import { ToolboxClient } from "@toolbox-sdk/core";
+import { tool } from "@langchain/core/tools";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+
+const prompt = `
+You're a helpful hotel assistant. You handle hotel searching, booking, and
+cancellations. When the user searches for a hotel, mention its name, id,
+location and price tier. Always mention hotel ids while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
+`;
+
+const queries = [
+  "Find hotels in Basel with Basel in its name.",
+  "Can you book the Hilton Basel for me?",
+  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+  "My check in dates would be from April 10, 2024 to April 19, 2024.",
+];
+
+async function runApplication() {
+  console.log("Starting hotel agent...");
+
+  const model = new ChatVertexAI({
+    model: "gemini-2.0-flash-001",
+    temperature: 0,
+  });
+
+  const client = new ToolboxClient("http://127.0.0.1:5000");
+  const toolboxTools = await client.loadToolset("my-toolset");
+
+  console.log(`Loaded ${toolboxTools.length} tools from Toolbox`);
+
+  const tools = toolboxTools
+    .map((t) => {
+      return tool(t, {
+        name: t.toolName,
+        description: t.description,
+        schema: t.params,
+      });
+    })
+    .filter(Boolean);
+
+  const modelWithTools = model.bindTools(tools);
+
+  let messages = [new HumanMessage(prompt)];
+
+  for (const query of queries) {
+    console.log(`\nUser: ${query}`);
+
+    messages.push(new HumanMessage(query));
+
+    for (let step = 0; step < 5; step++) {
+      const response = await modelWithTools.invoke(messages);
+
+      if (!response.tool_calls || response.tool_calls.length === 0) {
+        console.log("Agent:", response.content);
+        messages.push(response);
+        break;
+      }
+
+      console.log("Agent decided to use tools:", response.tool_calls);
+      messages.push(response);
+
+      const toolMessages = await Promise.all(
+        response.tool_calls.map(async (call) => {
+          const toolToCall = tools.find((t) => t.name === call.name);
+          if (!toolToCall) {
+            return new ToolMessage({
+              content: `Error: Tool ${call.name} not found`,
+              tool_call_id: call.id,
+            });
+          }
+          try {
+            const result = await toolToCall.invoke(call.args);
+            return new ToolMessage({
+              content: JSON.stringify(result ?? "No result returned."),
+              tool_call_id: call.id,
+            });
+          } catch (e) {
+            return new ToolMessage({
+              content: `Error: ${e.message}`,
+              tool_call_id: call.id,
+            });
+          }
+        })
+      );
+
+      messages.push(...toolMessages);
+    }
+  }
+  if (client.close) {
+    await client.close();
+  }
+}
+
+runApplication()
+  .catch(console.error)
+  .finally(() => console.log("\nApplication finished."));
+
+{{< /tab >}}
+
+{{< tab header="LlamaIndex" lang="js" >}}
+// index.js
+
+import "dotenv/config";
+import { LlamaIndexAgent } from "@llamaindex/core";
+import { GoogleGenAI } from "@llamaindex/llms-google-genai";
+import { ToolboxClient } from "@genai-toolbox/sdk";
+
+// Sample prompt and queries
+const prompt = `
+You're a helpful hotel assistant. You handle hotel searching, booking, and cancellations.
+... (same as above) ...
+`;
+
+const queries = [
+  "Find hotels in Basel with Basel in its name.",
+  // ...more queries...
+];
+
+async function runApplication() {
+  const llm = new GoogleGenAI({
+    model: "gemini-2.0-flash-001",
+    // Add any required config here
+  });
+
+  const client = new ToolboxClient("http://127.0.0.1:5000");
+  const tools = await client.loadToolset("my-toolset");
+
+  const agent = new LlamaIndexAgent({
+    llm,
+    tools,
+    systemPrompt: prompt,
+  });
+
+  for (const query of queries) {
+    const response = await agent.run(query);
+    console.log(response);
+  }
+
+  if (client.close) await client.close();
+}
+
+runApplication().catch(console.error);
+{{< /tab >}}
+
+{{< tab header="GenkitJS" lang="js" >}}
+// index.js
+
+import "dotenv/config";
+import { defineFlow } from "@genkit-ai/core";
+import { vertexAI } from "@genkit-ai/google-vertexai";
+import { ToolboxClient } from "@genai-toolbox/sdk";
+
+// Sample prompt and queries
+const prompt = `
+You're a helpful hotel assistant. You handle hotel searching, booking, and cancellations.
+... (same as above) ...
+`;
+
+const queries = [
+  "Find hotels in Basel with Basel in its name.",
+  // ...more queries...
+];
+
+async function runApplication() {
+  const model = vertexAI.chat({
+    model: "gemini-2.0-flash-001",
+    temperature: 0,
+  });
+
+  const client = new ToolboxClient("http://127.0.0.1:5000");
+  const tools = await client.loadToolset("my-toolset");
+
+  // Sample GenkitJS flow (replace with actual logic)
+  const flow = defineFlow("hotelAgent", async (input) => {
+    // Integrate tools and model as needed
+    return await model.sendMessage([prompt, input]);
+  });
+
+  for (const query of queries) {
+    const response = await flow(query);
+    console.log(response);
+  }
+
+  if (client.close) await client.close();
+}
+
+runApplication().catch(console.error);
+{{< /tab >}}
+{{< /tabpane >}}
+
+---
+
+## Step 6: Run your application
+
+Make sure your Toolbox server is running (`./toolbox --tools-file "tools.yaml"`), then run your script [make sure you are in the root directory]:
+
+```bash
+node index.js
+```
