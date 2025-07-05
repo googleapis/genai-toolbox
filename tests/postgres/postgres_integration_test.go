@@ -98,17 +98,17 @@ func TestPostgres(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
 	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	createStatement2, insertStatement2, authToolStatement, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
@@ -130,8 +130,8 @@ func TestPostgres(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want, failInvocationWant, createTableStatement := tests.GetPostgresWants()
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeParamWant2, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWant2)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
