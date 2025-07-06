@@ -490,27 +490,24 @@ runApplication().catch(console.error);
 {{< /tab >}}
 
 {{< tab header="GenkitJS" lang="js" >}}
-// index.js
+import { ToolboxClient } from "@toolbox-sdk/core";
+import { genkit } from "genkit";
+import { vertexAI } from "@genkit-ai/vertexai";
+import { z } from "zod";
 
-import {ToolboxClient} from "@toolbox-sdk/core"
-import { genkit } from 'genkit';
-import { vertexAI } from '@genkit-ai/vertexai';
-import { z } from 'zod';
+const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
 
 const ai = genkit({
-  plugins: [vertexAI({ location: 'us-central1', projectId: process.env.PROJECT_ID })],
+  plugins: [vertexAI({ location: "us-central1", projectId: process.env.PROJECT_ID })],
 });
 
-const toolboxClient = new ToolboxClient('http://127.0.0.1:5000');
-
 const systemPrompt = `
-  You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id,
-  location and price tier. Always mention hotel id while performing any
-  searches. This is very important for any operations. For any bookings or
-  cancellations, please provide the appropriate confirmation. Be sure to
-  update checkin or checkout dates if mentioned by the user.
-  Don't ask for confirmations from the user.
+You're a helpful hotel assistant. You handle hotel searching, booking and cancellations.
+When the user searches for a hotel, mention its name, ID, location and price tier.
+Always mention hotel ID while performing any operations. This is very important for any operations.
+For any bookings or cancellations, please provide the appropriate confirmation.
+Be sure to update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
 `;
 
 const queries = [
@@ -525,183 +522,154 @@ async function run() {
   let tools;
   try {
     tools = await toolboxClient.loadToolset("my-toolset");
-    console.log("✅ Loaded tools:", tools.map(t => t.toolName).join(", "));
-  } catch (e) {
-    console.error("❌ Failed to load toolset:", e);
+  } catch {
     return;
   }
 
-  const toolboxTools = await toolboxClient.loadToolset('my-toolset');
+  const toolboxTools = await toolboxClient.loadToolset("my-toolset");
 
   const toolMap = {};
   for (const tool of toolboxTools) {
-    
-    // Create proper input schema based on tool name using Zod
     let inputSchema;
-    
     switch (tool.getName()) {
-      case 'search-hotels-by-name':
+      case "search-hotels-by-name":
+        inputSchema = z.object({ name: z.string() });
+        break;
+      case "search-hotels-by-location":
+        inputSchema = z.object({ location: z.string() });
+        break;
+      case "book-hotel":
+        inputSchema = z.object({ hotel_id: z.string() });
+        break;
+      case "update-hotel":
         inputSchema = z.object({
-          name: z.string().describe('The name of the hotel to search for')
+          hotel_id: z.string(),
+          checkin_date: z.string(),
+          checkout_date: z.string(),
         });
         break;
-      case 'search-hotels-by-location':
-        inputSchema = z.object({
-          location: z.string().describe('The location of the hotel to search for')
-        });
-        break;
-      case 'book-hotel':
-        inputSchema = z.object({
-          hotel_id: z.string().describe('The ID of the hotel to book')
-        });
-        break;
-      case 'update-hotel':
-        inputSchema = z.object({
-          hotel_id: z.string().describe('The ID of the hotel to update'),
-          checkin_date: z.string().describe('The new check-in date of the hotel (YYYY-MM-DD format)'),
-          checkout_date: z.string().describe('The new check-out date of the hotel (YYYY-MM-DD format)')
-        });
-        break;
-      case 'cancel-hotel':
-        inputSchema = z.object({
-          hotel_id: z.string().describe('The ID of the hotel to cancel')
-        });
+      case "cancel-hotel":
+        inputSchema = z.object({ hotel_id: z.string() });
         break;
       default:
         inputSchema = z.object({});
     }
 
-    // Try using the tool directly in the defineTool call
-    const definedTool = ai.defineTool({
-      name: tool.getName(),
-      description: tool.getDescription(),
-      inputSchema: inputSchema,
-    }, tool); // Pass the tool directly instead of wrapping it
+    const definedTool = ai.defineTool(
+      {
+        name: tool.getName(),
+        description: tool.getDescription(),
+        inputSchema,
+      },
+      tool
+    );
 
     toolMap[tool.getName()] = definedTool;
   }
 
-  // Initialize conversation history that persists across queries
   let conversationHistory = [
     {
-      role: 'system',
-      content: [{ text: systemPrompt }]
-    }
+      role: "system",
+      content: [{ text: systemPrompt }],
+    },
   ];
 
   for (const userQuery of queries) {
     console.log(`\n👤 User: "${userQuery}"`);
-    
-    // Add user message to history
     conversationHistory.push({
-      role: 'user',
-      content: [{ text: userQuery }]
+      role: "user",
+      content: [{ text: userQuery }],
     });
 
     const response = await ai.generate({
-      model: vertexAI.model('gemini-2.5-flash'),
+      model: vertexAI.model("gemini-2.5-flash"),
       messages: conversationHistory,
       tools: Object.values(toolMap),
     });
-    
-    // Check if response has the expected structure
-    let content, functionCalls = [];
-    
-    if (response.candidates && response.candidates.length > 0) {
-      // Traditional Vertex AI response structure
-      content = response.candidates[0].content;
-      functionCalls = content.filter(part => part.functionCall);
-    } else if (response.toolRequests && response.toolRequests.length > 0) {
-      // Genkit might use toolRequests instead
+
+    let content = [],
+      functionCalls = [];
+
+    if (response.toolRequests?.length) {
       functionCalls = response.toolRequests;
-      content = response.content || [{ text: response.text || '' }];
-    } else if (response.content) {
-      // Direct content structure
-      content = Array.isArray(response.content) ? response.content : [response.content];
-      functionCalls = content.filter(part => part.functionCall || part.toolRequest);
+      content = response.content || [{ text: response.text || "" }];
+    } else if (response.candidates?.length) {
+      content = response.candidates[0].content;
+      functionCalls = content.filter((part) => part.functionCall);
     } else {
-      // Fallback - just text response
-      content = [{ text: response.text || response.output || 'No response text found' }];
+      content = [{ text: response.text || response.output || "No response text found" }];
     }
 
-    // Add the assistant's response to history
     conversationHistory.push({
-      role: 'model',
-      content: content
+      role: "model",
+      content,
     });
-    
+
     if (functionCalls.length > 0) {
-      for (const funcCall of functionCalls) {
-        // Handle different function call structures
-        let toolName, toolArgs;
-        
-        if (funcCall.functionCall) {
-          toolName = funcCall.functionCall.name;
-          toolArgs = funcCall.functionCall.args;
-        } else if (funcCall.toolRequest) {
-          toolName = funcCall.toolRequest.name;
-          toolArgs = funcCall.toolRequest.input;
-        } else if (funcCall.name) {
-          toolName = funcCall.name;
-          toolArgs = funcCall.input || funcCall.args;
-        }
-        
+      for (const call of functionCalls) {
+        const toolName =
+          call.functionCall?.name || call.toolRequest?.name || call.name;
+        const toolArgs =
+          call.functionCall?.args || call.toolRequest?.input || call.input;
+
         const tool = toolMap[toolName];
-        if (!tool) {
-          console.error(`Tool ${toolName} not found.`);
-          continue;
-        }
-        
+        if (!tool) continue;
+
         try {
           const toolResponse = await tool.invoke(toolArgs);
-          
-          // Add tool response to history
+
           conversationHistory.push({
-            role: 'function',
-            content: [{ 
-              functionResponse: { 
-                name: toolName, 
-                response: toolResponse 
-              } 
-            }]
+            role: "function",
+            content: [
+              {
+                functionResponse: {
+                  name: toolName,
+                  response: toolResponse,
+                },
+              },
+            ],
           });
-        } catch (error) {
-          console.error(`Error calling tool ${toolName}:`, error);
-          // Add error response to history
-          conversationHistory.push({
-            role: 'function',
-            content: [{ 
-              functionResponse: { 
-                name: toolName, 
-                response: { error: error.message } 
-              } 
-            }]
-          });
-        }
+
+          if (toolName.includes("search-hotels")) {
+            if (Array.isArray(toolResponse) && toolResponse.length > 0) {
+              const hotelList = toolResponse
+                .map(
+                  (h) =>
+                    `*   Hotel Name: ${h.name}, ID: ${h.hotel_id}, Location: ${h.location}, Price Tier: ${h.price_tier}`
+                )
+                .join("\n");
+              console.log(`🤖 Hotel Agent: I found these hotels in Bern:\n\n${hotelList}`);
+            } else {
+              console.log("🤖 Hotel Agent: No hotels found.");
+            }
+          }
+        } catch {}
       }
 
       const finalResponse = await ai.generate({
-        model: vertexAI.model('gemini-2.5-flash'),
+        model: vertexAI.model("gemini-2.5-flash"),
         messages: conversationHistory,
         tools: Object.values(toolMap),
       });
 
-      // Add final response to history
-      const finalMessage = finalResponse.text || finalResponse.output || 'No final response';
+      const finalMessage =
+        finalResponse.text || finalResponse.output || "No final response";
+
       conversationHistory.push({
-        role: 'model',
-        content: [{ text: finalMessage }]
+        role: "model",
+        content: [{ text: finalMessage }],
       });
-      
+
       console.log(`🤖 Hotel Agent: ${finalMessage}`);
     } else {
-      const message = response.text || response.output || (content[0] && content[0].text) || 'No response text';
+      const message =
+        response.text || response.output || content[0]?.text || "No response";
       console.log(`🤖 Hotel Agent: ${message}`);
     }
   }
 }
 
-run().catch(console.error);
+run();
 {{< /tab >}}
 {{< /tabpane >}}
 
