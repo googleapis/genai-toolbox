@@ -16,6 +16,7 @@ package mcpserver
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/goccy/go-yaml"
@@ -144,7 +145,8 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
+// TODO: run gofunc and maintain session + add auth
+func (s *Source) getSession(ctx context.Context) (*mcp.ClientSession, error) {
 	var transport mcp.Transport
 	switch s.Transport {
 	case SSE:
@@ -154,9 +156,12 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 	default:
 		transport = mcp.NewStdioTransport()
 	}
+	return s.Client.Connect(ctx, transport)
+}
 
+func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 	fmt.Printf("Attempting to connect? to endpoint %s\n", s.Endpoint)
-	session, err := s.Client.Connect(ctx, transport)
+	session, err := s.getSession(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MCP server: %w", err)
 	}
@@ -182,13 +187,13 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 			toolProperties[toolArgKey] = tools.ParameterMcpManifest{
 				Type:        toolArgumentValue.Type,
 				Description: toolArgumentValue.Description,
-				// Items:       &tools.ParameterMcpManifest{},
 			}
 		}
 
 		if tool.InputSchema.Required != nil {
 			requiredArgs = tool.InputSchema.Required
 		}
+		var toolCallParameters = make(tools.Parameters, len(toolProperties))
 
 		mcpTools[i] = MCPServerTool{
 			Source: s,
@@ -207,7 +212,7 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 				},
 			},
 			// Parameters: tool.InputSchema.ContentSchema,
-			Parameters: tools.Parameters{},
+			Parameters: toolCallParameters,
 		}
 	}
 
@@ -240,12 +245,65 @@ type MCPServerTool struct {
 }
 
 func (t MCPServerTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	// paramsMap := params.AsMap()
-	return nil, fmt.Errorf("invoke not implemented for MCPServerTool: %s", t.Name)
+	// Call a tool on the server.
+	session, err := t.Source.getSession(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer session.Close()
+
+	toolCallRequest := &mcp.CallToolParams{
+		Name:      t.Name,
+		Arguments: params.AsMap(),
+	}
+	res, err := session.CallTool(ctx, toolCallRequest)
+	if err != nil {
+		log.Fatalf("CallTool failed: %v", err)
+	}
+	if res.IsError {
+		log.Fatal("tool failed")
+	}
+
+	var r = make([]any, 0, len(res.Content))
+	for _, c := range res.Content {
+		log.Print(c.(*mcp.TextContent).Text)
+		r = append(r, res.Content)
+	}
+
+	return r, nil
 }
 
 func (t MCPServerTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claimsMap)
+	params := make([]tools.ParamValue, 0, len(data))
+	for k, v := range data {
+		// paramAuthServices := p.GetAuthServices()
+		name := k
+		// if len(paramAuthServices) == 0 {
+		// 	// parse non auth-required parameter
+		// 	var ok bool
+		// 	v, ok = data[name]
+		// 	if !ok {
+		// 		v = p.GetDefault()
+		// 		if v == nil {
+		// 			return nil, fmt.Errorf("parameter %q is required", name)
+		// 		}
+		// 	}
+		// } else {
+		// 	// parse authenticated parameter
+		// 	var err error
+		// 	v, err = parseFromAuthService(paramAuthServices, claimsMap)
+		// 	if err != nil {
+		// 		return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
+		// 	}
+		// }
+		// newV, err := p.Parse(v)
+		// if err != nil {
+		// 	return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+		// }
+		params = append(params, tools.ParamValue{Name: name, Value: v})
+	}
+	return params, nil
+	// return tools.ParseParams(t.Parameters, data, claimsMap)
 }
 
 func (t MCPServerTool) Manifest() tools.Manifest {
