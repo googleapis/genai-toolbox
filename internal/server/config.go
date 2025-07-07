@@ -264,8 +264,8 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 }
 
 // DoesSourceDynamicallyAddTools returns true if the source dynamically adds tools.
-func DoesSourceDynamicallyAddTools(s sources.Source) bool {
-	switch s.SourceKind() {
+func DoesSourceDynamicallyAddTools(source sources.Source) bool {
+	switch source.SourceKind() {
 	case mcpserver.SourceKind:
 		return true
 	default:
@@ -274,19 +274,12 @@ func DoesSourceDynamicallyAddTools(s sources.Source) bool {
 }
 
 // BuildDynamicTools will return the tool definitions for the source.
-func BuildDynamicTools(ctx context.Context, s sources.Source) ([]tools.Tool, error) {
-	// Do we want to return an error for unsupported? -- missed code
-	switch s.SourceKind() {
-	case mcpserver.SourceKind:
-		// Type assertion with the comma-ok idiom for safe conversion
-		if mcpSourceServer, ok := s.(*mcpserver.Source); ok {
-			return mcpSourceServer.GetTools(ctx)
-		} else {
-			// Conversion failed (myInterface did not hold a MyStruct)
-			fmt.Println("Type assertion failed: myInterface is not a MyStruct")
-		}
-		return []tools.Tool{}, nil
+func BuildDynamicTools(ctx context.Context, source sources.Source) ([]tools.Tool, error) {
+	switch s := source.(type) {
+	case *mcpserver.Source:
+		return s.GetTools(ctx)
 	default:
-		return nil, fmt.Errorf("source %q does not support dynamic tools creation", s.SourceKind())
+		// Do we want to return an error for unsupported? -- missed code
+		return nil, fmt.Errorf("source %q does not support dynamic tools creation. Was this not implemented?", s.SourceKind())
 	}
 }
