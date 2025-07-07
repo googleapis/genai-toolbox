@@ -353,9 +353,9 @@ func GetMySQLTmplToolStatement() (string, string) {
 
 func GetNonSpannerInvokeParamWant() (string, string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-	invokeParamWant2 := "[{\"id\":4,\"name\":null}]"
+	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, invokeParamWant2, mcpInvokeParamWant
+	return invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 // GetPostgresWants return the expected wants for postgres
@@ -474,9 +474,9 @@ func GetRedisValkeyWants() (string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
 	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	invokeParamWant2 := `[{"id":"4","name":""}]`
+	invokeParamWantNull := `[{"id":"4","name":""}]`
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, invokeParamWant2, mcpInvokeParamWant
+	return select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {

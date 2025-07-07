@@ -76,7 +76,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWant2 string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -113,7 +113,7 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWa
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool2/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 4}`)),
-			want:          invokeParamWant2,
+			want:          invokeParamWantNull,
 			isErr:         false,
 		},
 		{
