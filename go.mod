@@ -25,6 +25,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/json-iterator/go v1.1.12
 	github.com/microsoft/go-mssqldb v1.9.2
+	github.com/modelcontextprotocol/go-sdk v0.1.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/spf13/cobra v1.9.1
@@ -131,7 +132,7 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	golang.org/x/tools v0.33.0 // indirect
+	golang.org/x/tools v0.34.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect

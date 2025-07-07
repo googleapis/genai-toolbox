@@ -71,6 +71,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mcpserver"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
@@ -347,7 +348,7 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 
 	// Combine both file lists
 	allFiles := append(yamlFiles, ymlFiles...)
-	
+
 	if len(allFiles) == 0 {
 		return ToolsFile{}, fmt.Errorf("no YAML files found in directory %q", folderPath)
 	}

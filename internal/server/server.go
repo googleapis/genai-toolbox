@@ -99,6 +99,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
+	dynamicToolsSourceMap := make(map[string]sources.Source)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
 			childCtx, span := instrumentation.Tracer.Start(
@@ -118,6 +119,11 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 			return nil, err
 		}
 		sourcesMap[name] = s
+		if DoesSourceDynamicallyAddTools(s) {
+			// if the source can dynamically add tools, we need to add it to the map
+			// so that we can create the tools dyanmically later.
+			dynamicToolsSourceMap[name] = s
+		}
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
@@ -168,6 +174,37 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 		toolsMap[name] = t
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+
+	// dynamically create the mcp server tools following our rules
+	// dynamicTools := make(map[string]tools.Tool)
+	for name, source := range dynamicToolsSourceMap {
+		tools, err := func() ([]tools.Tool, error) {
+			// TODO: add tracing
+			childCtx, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/source/dynamictools/add",
+				trace.WithAttributes(attribute.String("source_kind", source.SourceKind())),
+				trace.WithAttributes(attribute.String("source_name", name)),
+			)
+			defer span.End()
+			fmt.Println("hello")
+			newDynamicTools, err := BuildDynamicTools(childCtx, source)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
+			}
+			return newDynamicTools, nil
+		}()
+		fmt.Println("hello")
+		if err != nil {
+			return nil, err
+		}
+		for _, tool := range tools {
+			// TODO: change toolsMap -> dynamicTools and merge
+			// add the tool to the tools map, always replace if found
+			toolsMap[tool.McpManifest().Name] = tool
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d dynamic tools sources.", len(dynamicToolsSourceMap)))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))

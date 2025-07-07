@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/mcpserver"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -260,4 +261,32 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
 	}
 	return nil
+}
+
+// DoesSourceDynamicallyAddTools returns true if the source dynamically adds tools.
+func DoesSourceDynamicallyAddTools(s sources.Source) bool {
+	switch s.SourceKind() {
+	case mcpserver.SourceKind:
+		return true
+	default:
+		return false
+	}
+}
+
+// BuildDynamicTools will return the tool definitions for the source.
+func BuildDynamicTools(ctx context.Context, s sources.Source) ([]tools.Tool, error) {
+	// Do we want to return an error for unsupported? -- missed code
+	switch s.SourceKind() {
+	case mcpserver.SourceKind:
+		// Type assertion with the comma-ok idiom for safe conversion
+		if mcpSourceServer, ok := s.(*mcpserver.Source); ok {
+			return mcpSourceServer.GetTools(ctx)
+		} else {
+			// Conversion failed (myInterface did not hold a MyStruct)
+			fmt.Println("Type assertion failed: myInterface is not a MyStruct")
+		}
+		return []tools.Tool{}, nil
+	default:
+		return nil, fmt.Errorf("source %q does not support dynamic tools creation", s.SourceKind())
+	}
 }
