@@ -982,6 +982,103 @@ func TestEnvVarReplacement(t *testing.T) {
 
 }
 
+// normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
+// this prevents needing multiple "want" cases for TestResolveWatcherInputs
+func normalizeFilepaths(m map[string]bool) map[string]bool {
+	newMap := make(map[string]bool)
+	for k, v := range m {
+		newMap[filepath.ToSlash(k)] = v
+	}
+	return newMap
+}
+
+func TestResolveWatcherInputs(t *testing.T) {
+	tcs := []struct {
+		description      string
+		toolsFile        string
+		toolsFiles       []string
+		toolsFolder      string
+		wantWatchDirs    map[string]bool
+		wantWatchedFiles map[string]bool
+	}{
+		{
+			description:      "single tools file",
+			toolsFile:        "tools_folder/example_tools.yaml",
+			toolsFiles:       []string{},
+			toolsFolder:      "",
+			wantWatchDirs:    map[string]bool{"tools_folder": true},
+			wantWatchedFiles: map[string]bool{"tools_folder/example_tools.yaml": true},
+		},
+		{
+			description:      "default tools file (root dir)",
+			toolsFile:        "tools.yaml",
+			toolsFiles:       []string{},
+			toolsFolder:      "",
+			wantWatchDirs:    map[string]bool{".": true},
+			wantWatchedFiles: map[string]bool{"tools.yaml": true},
+		},
+		{
+			description:   "multiple files in different folders",
+			toolsFile:     "",
+			toolsFiles:    []string{"tools_folder/example_tools.yaml", "tools_folder2/example_tools.yaml"},
+			toolsFolder:   "",
+			wantWatchDirs: map[string]bool{"tools_folder": true, "tools_folder2": true},
+			wantWatchedFiles: map[string]bool{
+				"tools_folder/example_tools.yaml":  true,
+				"tools_folder2/example_tools.yaml": true,
+			},
+		},
+		{
+			description:   "multiple files in same folder",
+			toolsFile:     "",
+			toolsFiles:    []string{"tools_folder/example_tools.yaml", "tools_folder/example_tools2.yaml"},
+			toolsFolder:   "",
+			wantWatchDirs: map[string]bool{"tools_folder": true},
+			wantWatchedFiles: map[string]bool{
+				"tools_folder/example_tools.yaml":  true,
+				"tools_folder/example_tools2.yaml": true,
+			},
+		},
+		{
+			description: "multiple files in different levels",
+			toolsFile:   "",
+			toolsFiles: []string{
+				"tools_folder/example_tools.yaml",
+				"tools_folder/special_tools/example_tools2.yaml"},
+			toolsFolder:   "",
+			wantWatchDirs: map[string]bool{"tools_folder": true, "tools_folder/special_tools": true},
+			wantWatchedFiles: map[string]bool{
+				"tools_folder/example_tools.yaml":                true,
+				"tools_folder/special_tools/example_tools2.yaml": true,
+			},
+		},
+		{
+			description:      "tools folder",
+			toolsFile:        "",
+			toolsFiles:       []string{},
+			toolsFolder:      "tools_folder",
+			wantWatchDirs:    map[string]bool{"tools_folder": true},
+			wantWatchedFiles: map[string]bool{},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			gotWatchDirs, gotWatchedFiles := resolveWatcherInputs(tc.toolsFile, tc.toolsFiles, tc.toolsFolder)
+
+			normalizedGotWatchDirs := normalizeFilepaths(gotWatchDirs)
+			normalizedGotWatchedFiles := normalizeFilepaths(gotWatchedFiles)
+
+			if diff := cmp.Diff(tc.wantWatchDirs, normalizedGotWatchDirs); diff != "" {
+				t.Errorf("incorrect watchDirs: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantWatchedFiles, normalizedGotWatchedFiles); diff != "" {
+				t.Errorf("incorrect watchedFiles: diff %v", diff)
+			}
+
+		})
+	}
+}
+
 // helper function for testing file detection in dynamic reloading
 func tmpFileWithCleanup(content []byte) (string, func(), error) {
 	f, err := os.CreateTemp("", "*")

@@ -440,8 +440,16 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 	// if watchedFiles is empty, indicates that user passed entire folder instead
 	if len(watchedFiles) == 0 {
 		watchingFolder = true
-		for k := range watchDirs {
-			folderToWatch = k
+
+		// validate that watchDirs only has single element
+		if len(watchDirs) > 1 {
+			logger.WarnContext(ctx, "error setting watcher, expected single tools folder if no file(s) are defined.")
+			return
+		}
+
+		for onlyKey := range watchDirs {
+			folderToWatch = onlyKey
+			break
 		}
 	}
 
@@ -449,9 +457,9 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 		err := w.Add(dir)
 		if err != nil {
 			logger.WarnContext(ctx, fmt.Sprintf("Error adding path %s to watcher: %s", dir, err))
-		} else {
-			logger.DebugContext(ctx, fmt.Sprintf("Added directory %s to watcher.", dir))
+			break
 		}
+		logger.DebugContext(ctx, fmt.Sprintf("Added directory %s to watcher.", dir))
 	}
 
 	// debounce timer is used to prevent multiple writes triggering multiple reloads
@@ -480,6 +488,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 				return
 			}
 
+			// only check for write events which indicate user saved a new tools file
 			if e.Op != fsnotify.Write {
 				continue
 			}
@@ -487,11 +496,11 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			cleanedFilename := filepath.Clean(e.Name)
 			logger.DebugContext(ctx, fmt.Sprintf("%s event detected in %s", e.Op, cleanedFilename))
 
-			if watchingFolder && (strings.HasSuffix(cleanedFilename, "yaml") || strings.HasSuffix(cleanedFilename, "yml")) {
-				// case where we watch an entire folder
-				debounce.Reset(debounceDelay)
-			} else if watchedFiles[cleanedFilename] {
-				// case where we watch specific files
+			folderChanged := watchingFolder &&
+				(strings.HasSuffix(cleanedFilename, ".yaml") || strings.HasSuffix(cleanedFilename, ".yml"))
+
+			if folderChanged || watchedFiles[cleanedFilename] {
+				// indicates the write event is on a relevant file
 				debounce.Reset(debounceDelay)
 			}
 
@@ -537,6 +546,33 @@ func updateLogLevel(stdio bool, logLevel string) bool {
 		}
 	}
 	return false
+}
+
+func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder string) (map[string]bool, map[string]bool) {
+	var relevantFiles []string
+
+	// map for efficiently checking if a file is relevant
+	watchedFiles := make(map[string]bool)
+
+	// dirs that will be added to watcher (fsnotify prefers watching directory then filtering for file)
+	watchDirs := make(map[string]bool)
+
+	if len(toolsFiles) > 0 {
+		relevantFiles = toolsFiles
+	} else if toolsFolder != "" {
+		watchDirs[filepath.Clean(toolsFolder)] = true
+	} else {
+		relevantFiles = []string{toolsFile}
+	}
+
+	// extract parent dir for relevant files and dedup
+	for _, f := range relevantFiles {
+		cleanFile := filepath.Clean(f)
+		watchedFiles[cleanFile] = true
+		watchDirs[filepath.Dir(cleanFile)] = true
+	}
+
+	return watchDirs, watchedFiles
 }
 
 func run(cmd *Command) error {
@@ -603,13 +639,6 @@ func run(cmd *Command) error {
 	}()
 
 	var toolsFile ToolsFile
-	var relevantFiles []string
-
-	// map for efficiently checking if a file is relevant
-	watchedFiles := make(map[string]bool)
-
-	// dirs that will be added to watcher (fsnotify prefers watching directory then filtering for file)
-	watchDirs := make(map[string]bool)
 
 	if cmd.prebuiltConfig != "" {
 		// Make sure --prebuilt and --tools-file/--tools-files/--tools-folder flags are mutually exclusive
@@ -643,8 +672,6 @@ func run(cmd *Command) error {
 			return errMsg
 		}
 
-		relevantFiles = cmd.tools_files
-
 		// Use multiple tools files
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
 		var err error
@@ -661,8 +688,6 @@ func run(cmd *Command) error {
 			return errMsg
 		}
 
-		watchDirs[filepath.Clean(cmd.tools_folder)] = true
-
 		// Use tools folder
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
 		var err error
@@ -676,8 +701,6 @@ func run(cmd *Command) error {
 		if cmd.tools_file == "" {
 			cmd.tools_file = "tools.yaml"
 		}
-
-		relevantFiles = []string{cmd.tools_file}
 
 		// Read single tool file contents
 		buf, err := os.ReadFile(cmd.tools_file)
@@ -752,15 +775,9 @@ func run(cmd *Command) error {
 		}()
 	}
 
+	watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)
+
 	if !cmd.cfg.DisableReload {
-
-		// extract parent dir for relevant files and dedup
-		for _, f := range relevantFiles {
-			cleanFile := filepath.Clean(f)
-			watchedFiles[cleanFile] = true
-			watchDirs[filepath.Dir(cleanFile)] = true
-		}
-
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
 		go watchChanges(ctx, watchDirs, watchedFiles, s)
 	}
