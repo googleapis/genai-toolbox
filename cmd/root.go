@@ -19,11 +19,13 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -361,17 +363,10 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 	return loadAndMergeToolsFiles(ctx, allFiles)
 }
 
-func handleDynamicReload(ctx context.Context, buf []byte, s *server.Server) error {
+func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Server) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
-	}
-
-	toolsFile, err := parseToolsFile(ctx, buf)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to parse reloaded tools file: %w", err)
-		logger.WarnContext(ctx, errMsg.Error())
-		return err
 	}
 
 	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile)
@@ -424,8 +419,8 @@ func validateReloadEdits(
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
 }
 
-// watchFile checks for changes in the provided yaml tools file.
-func watchFile(ctx context.Context, toolsFileName string, s *server.Server) {
+// watchChanges checks for changes in the provided yaml tools file(s) or folder.
+func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -439,13 +434,33 @@ func watchFile(ctx context.Context, toolsFileName string, s *server.Server) {
 
 	defer w.Close()
 
-	err = w.Add(filepath.Dir(toolsFileName))
-	if err != nil {
-		logger.WarnContext(ctx, "error adding the tools file to watcher %s", err)
+	watchingFolder := false
+	var folderToWatch string
+
+	// if watchedFiles is empty, indicates that user passed entire folder instead
+	if len(watchedFiles) == 0 {
+		watchingFolder = true
+
+		// validate that watchDirs only has single element
+		if len(watchDirs) > 1 {
+			logger.WarnContext(ctx, "error setting watcher, expected single tools folder if no file(s) are defined.")
+			return
+		}
+
+		for onlyKey := range watchDirs {
+			folderToWatch = onlyKey
+			break
+		}
 	}
 
-	cleanedFilename := filepath.Clean(toolsFileName)
-	logger.DebugContext(ctx, fmt.Sprintf("Now watching tools file %s", cleanedFilename))
+	for dir := range watchDirs {
+		err := w.Add(dir)
+		if err != nil {
+			logger.WarnContext(ctx, fmt.Sprintf("Error adding path %s to watcher: %s", dir, err))
+			break
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("Added directory %s to watcher.", dir))
+	}
 
 	// debounce timer is used to prevent multiple writes triggering multiple reloads
 	debounceDelay := 100 * time.Millisecond
@@ -473,23 +488,45 @@ func watchFile(ctx context.Context, toolsFileName string, s *server.Server) {
 				return
 			}
 
-			if e.Op == fsnotify.Write && filepath.Clean(e.Name) == cleanedFilename {
-				logger.DebugContext(ctx, fmt.Sprintf("%s event detected in tools file: %s", e.Op, cleanedFilename))
-				debounce.Reset(debounceDelay)
-			}
-		case <-debounce.C:
-			debounce.Stop()
-			logger.DebugContext(ctx, "re-reading tools file: %s", cleanedFilename)
-			buf, err := os.ReadFile(toolsFileName)
-			if err != nil {
-				errMsg := fmt.Errorf("unable to read reloaded tools file at %q: %w", toolsFileName, err)
-				logger.WarnContext(ctx, errMsg.Error())
+			// only check for write events which indicate user saved a new tools file
+			if e.Op != fsnotify.Write {
 				continue
 			}
 
-			err = handleDynamicReload(ctx, buf, s)
+			cleanedFilename := filepath.Clean(e.Name)
+			logger.DebugContext(ctx, fmt.Sprintf("%s event detected in %s", e.Op, cleanedFilename))
+
+			folderChanged := watchingFolder &&
+				(strings.HasSuffix(cleanedFilename, ".yaml") || strings.HasSuffix(cleanedFilename, ".yml"))
+
+			if folderChanged || watchedFiles[cleanedFilename] {
+				// indicates the write event is on a relevant file
+				debounce.Reset(debounceDelay)
+			}
+
+		case <-debounce.C:
+			debounce.Stop()
+			var reloadedToolsFile ToolsFile
+
+			if watchingFolder {
+				logger.DebugContext(ctx, "Reloading tools folder.")
+				reloadedToolsFile, err = loadAndMergeToolsFolder(ctx, folderToWatch)
+				if err != nil {
+					logger.WarnContext(ctx, "error loading tools folder %s", err)
+					continue
+				}
+			} else {
+				logger.DebugContext(ctx, "Reloading tools file(s).")
+				reloadedToolsFile, err = loadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
+				if err != nil {
+					logger.WarnContext(ctx, "error loading tools files %s", err)
+					continue
+				}
+			}
+
+			err = handleDynamicReload(ctx, reloadedToolsFile, s)
 			if err != nil {
-				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", toolsFileName, err)
+				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", reloadedToolsFile, err)
 				logger.WarnContext(ctx, errMsg.Error())
 				continue
 			}
@@ -509,6 +546,33 @@ func updateLogLevel(stdio bool, logLevel string) bool {
 		}
 	}
 	return false
+}
+
+func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder string) (map[string]bool, map[string]bool) {
+	var relevantFiles []string
+
+	// map for efficiently checking if a file is relevant
+	watchedFiles := make(map[string]bool)
+
+	// dirs that will be added to watcher (fsnotify prefers watching directory then filtering for file)
+	watchDirs := make(map[string]bool)
+
+	if len(toolsFiles) > 0 {
+		relevantFiles = toolsFiles
+	} else if toolsFolder != "" {
+		watchDirs[filepath.Clean(toolsFolder)] = true
+	} else {
+		relevantFiles = []string{toolsFile}
+	}
+
+	// extract parent dir for relevant files and dedup
+	for _, f := range relevantFiles {
+		cleanFile := filepath.Clean(f)
+		watchedFiles[cleanFile] = true
+		watchDirs[filepath.Dir(cleanFile)] = true
+	}
+
+	return watchDirs, watchedFiles
 }
 
 func run(cmd *Command) error {
@@ -607,6 +671,7 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+
 		// Use multiple tools files
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
 		var err error
@@ -622,6 +687,7 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+
 		// Use tools folder
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
 		var err error
@@ -635,6 +701,7 @@ func run(cmd *Command) error {
 		if cmd.tools_file == "" {
 			cmd.tools_file = "tools.yaml"
 		}
+
 		// Read single tool file contents
 		buf, err := os.ReadFile(cmd.tools_file)
 		if err != nil {
@@ -708,9 +775,11 @@ func run(cmd *Command) error {
 		}()
 	}
 
+	watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)
+
 	if !cmd.cfg.DisableReload {
-		// start watching for file changes to trigger dynamic reloading
-		go watchFile(ctx, cmd.tools_file, s)
+		// start watching the file(s) or folder for changes to trigger dynamic reloading
+		go watchChanges(ctx, watchDirs, watchedFiles, s)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled
