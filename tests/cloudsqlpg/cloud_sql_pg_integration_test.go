@@ -31,40 +31,40 @@ import (
 )
 
 var (
-	CLOUD_SQL_POSTGRES_SOURCE_KIND = "cloud-sql-postgres"
-	CLOUD_SQL_POSTGRES_TOOL_KIND   = "postgres-sql"
-	CLOUD_SQL_POSTGRES_PROJECT     = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
-	CLOUD_SQL_POSTGRES_REGION      = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
-	CLOUD_SQL_POSTGRES_INSTANCE    = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
-	CLOUD_SQL_POSTGRES_DATABASE    = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
-	CLOUD_SQL_POSTGRES_USER        = os.Getenv("CLOUD_SQL_POSTGRES_USER")
-	CLOUD_SQL_POSTGRES_PASS        = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
+	CloudSQLPostgresSourceKind = "cloud-sql-postgres"
+	CloudSQLPostgresToolKind   = "postgres-sql"
+	CloudSQLPostgresProject    = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
+	CloudSQLPostgresRegion     = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
+	CloudSQLPostgresInstance   = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
+	CloudSQLPostgresDatabase   = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
+	CloudSQLPostgresUser       = os.Getenv("CLOUD_SQL_POSTGRES_USER")
+	CloudSQLPostgresPass       = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
 )
 
 func getCloudSQLPgVars(t *testing.T) map[string]any {
 	switch "" {
-	case CLOUD_SQL_POSTGRES_PROJECT:
+	case CloudSQLPostgresProject:
 		t.Fatal("'CLOUD_SQL_POSTGRES_PROJECT' not set")
-	case CLOUD_SQL_POSTGRES_REGION:
+	case CloudSQLPostgresRegion:
 		t.Fatal("'CLOUD_SQL_POSTGRES_REGION' not set")
-	case CLOUD_SQL_POSTGRES_INSTANCE:
+	case CloudSQLPostgresInstance:
 		t.Fatal("'CLOUD_SQL_POSTGRES_INSTANCE' not set")
-	case CLOUD_SQL_POSTGRES_DATABASE:
+	case CloudSQLPostgresDatabase:
 		t.Fatal("'CLOUD_SQL_POSTGRES_DATABASE' not set")
-	case CLOUD_SQL_POSTGRES_USER:
+	case CloudSQLPostgresUser:
 		t.Fatal("'CLOUD_SQL_POSTGRES_USER' not set")
-	case CLOUD_SQL_POSTGRES_PASS:
+	case CloudSQLPostgresPass:
 		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
-		"project":  CLOUD_SQL_POSTGRES_PROJECT,
-		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-		"region":   CLOUD_SQL_POSTGRES_REGION,
-		"database": CLOUD_SQL_POSTGRES_DATABASE,
-		"user":     CLOUD_SQL_POSTGRES_USER,
-		"password": CLOUD_SQL_POSTGRES_PASS,
+		"kind":     CloudSQLPostgresSourceKind,
+		"project":  CloudSQLPostgresProject,
+		"instance": CloudSQLPostgresInstance,
+		"region":   CloudSQLPostgresRegion,
+		"database": CloudSQLPostgresDatabase,
+		"user":     CloudSQLPostgresUser,
+		"password": CloudSQLPostgresPass,
 	}
 }
 
@@ -108,7 +108,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	pool, err := initCloudSQLPgConnectionPool(CLOUD_SQL_POSTGRES_PROJECT, CLOUD_SQL_POSTGRES_REGION, CLOUD_SQL_POSTGRES_INSTANCE, "public", CLOUD_SQL_POSTGRES_USER, CLOUD_SQL_POSTGRES_PASS, CLOUD_SQL_POSTGRES_DATABASE)
+	pool, err := initCloudSQLPgConnectionPool(CloudSQLPostgresProject, CloudSQLPostgresRegion, CloudSQLPostgresInstance, "public", CloudSQLPostgresUser, CloudSQLPostgresPass, CloudSQLPostgresDatabase)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
@@ -119,20 +119,20 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, toolStatement1, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, toolStatement2, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLPostgresToolKind, toolStatement1, toolStatement2)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CLOUD_SQL_POSTGRES_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -178,7 +178,7 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLPostgresToolKind)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
@@ -189,32 +189,32 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 func TestCloudSQLPgIAMConnection(t *testing.T) {
 	getCloudSQLPgVars(t)
 	// service account email used for IAM should trim the suffix
-	serviceAccountEmail := strings.TrimSuffix(tests.SERVICE_ACCOUNT_EMAIL, ".gserviceaccount.com")
+	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
-		"project":  CLOUD_SQL_POSTGRES_PROJECT,
-		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-		"region":   CLOUD_SQL_POSTGRES_REGION,
-		"database": CLOUD_SQL_POSTGRES_DATABASE,
+		"kind":     CloudSQLPostgresSourceKind,
+		"project":  CloudSQLPostgresProject,
+		"instance": CloudSQLPostgresInstance,
+		"region":   CloudSQLPostgresRegion,
+		"database": CloudSQLPostgresDatabase,
 		"user":     serviceAccountEmail,
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
-		"project":  CLOUD_SQL_POSTGRES_PROJECT,
-		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-		"region":   CLOUD_SQL_POSTGRES_REGION,
-		"database": CLOUD_SQL_POSTGRES_DATABASE,
+		"kind":     CloudSQLPostgresSourceKind,
+		"project":  CloudSQLPostgresProject,
+		"instance": CloudSQLPostgresInstance,
+		"region":   CloudSQLPostgresRegion,
+		"database": CloudSQLPostgresDatabase,
 		"password": "random",
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     CLOUD_SQL_POSTGRES_SOURCE_KIND,
-		"project":  CLOUD_SQL_POSTGRES_PROJECT,
-		"instance": CLOUD_SQL_POSTGRES_INSTANCE,
-		"region":   CLOUD_SQL_POSTGRES_REGION,
-		"database": CLOUD_SQL_POSTGRES_DATABASE,
+		"kind":     CloudSQLPostgresSourceKind,
+		"project":  CloudSQLPostgresProject,
+		"instance": CloudSQLPostgresInstance,
+		"region":   CloudSQLPostgresRegion,
+		"database": CloudSQLPostgresDatabase,
 	}
 	tcs := []struct {
 		name         string
@@ -239,7 +239,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CLOUD_SQL_POSTGRES_TOOL_KIND)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLPostgresToolKind)
 			if err != nil {
 				if tc.isErr {
 					return

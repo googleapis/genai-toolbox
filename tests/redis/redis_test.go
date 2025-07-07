@@ -27,23 +27,23 @@ import (
 )
 
 var (
-	REDIS_SOURCE_KIND = "redis"
-	REDIS_TOOL_KIND   = "redis"
-	REDIS_ADDRESS     = os.Getenv("REDIS_ADDRESS")
-	REDIS_PASS        = os.Getenv("REDIS_PASS")
+	RedisSourceKind = "redis"
+	RedisToolKind   = "redis"
+	RedisAddress    = os.Getenv("REDIS_ADDRESS")
+	RedisPass       = os.Getenv("REDIS_PASS")
 )
 
 func getRedisVars(t *testing.T) map[string]any {
 	switch "" {
-	case REDIS_ADDRESS:
+	case RedisAddress:
 		t.Fatal("'REDIS_ADDRESS' not set")
-	case REDIS_PASS:
+	case RedisPass:
 		t.Fatal("'REDIS_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     REDIS_SOURCE_KIND,
-		"address":  []string{REDIS_ADDRESS},
-		"password": REDIS_PASS,
+		"kind":     RedisSourceKind,
+		"address":  []string{RedisAddress},
+		"password": RedisPass,
 	}
 }
 
@@ -70,7 +70,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initRedisClient(ctx, REDIS_ADDRESS, REDIS_PASS)
+	client, err := initRedisClient(ctx, RedisAddress, RedisPass)
 	if err != nil {
 		t.Fatalf("unable to create Redis connection: %s", err)
 	}
@@ -80,7 +80,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, REDIS_TOOL_KIND)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, RedisToolKind)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -109,7 +109,7 @@ func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(
 		{"HSET", keys[0], "id", 1, "name", "Alice"},
 		{"HSET", keys[1], "id", 2, "name", "Jane"},
 		{"HSET", keys[2], "id", 3, "name", "Sid"},
-		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", "Alice"},
+		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
 	}
 	for _, c := range commands {
 		resp := client.Do(ctx, c...)
