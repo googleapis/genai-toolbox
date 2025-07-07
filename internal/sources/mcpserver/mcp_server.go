@@ -168,6 +168,8 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 		return nil, fmt.Errorf("failed to list/tools on MCP server of %s: %w", s.Name, err)
 	}
 
+	// Required args is empty when there are none defined as required
+	var requiredArgs = []string{}
 	var mcpTools []MCPServerTool = make([]MCPServerTool, len(remoteServerTools.Tools))
 	for i, tool := range remoteServerTools.Tools {
 		// TODO: Refactor or reuse the model jsonschema.Schema shape
@@ -180,8 +182,12 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 			toolProperties[toolArgKey] = tools.ParameterMcpManifest{
 				Type:        toolArgumentValue.Type,
 				Description: toolArgumentValue.Description,
-				Items:       &tools.ParameterMcpManifest{},
+				// Items:       &tools.ParameterMcpManifest{},
 			}
+		}
+
+		if tool.InputSchema.Required != nil {
+			requiredArgs = tool.InputSchema.Required
 		}
 
 		mcpTools[i] = MCPServerTool{
@@ -197,7 +203,7 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 				InputSchema: tools.McpToolsSchema{
 					Type:       tool.InputSchema.Type,
 					Properties: toolProperties,
-					Required:   tool.InputSchema.Required,
+					Required:   requiredArgs,
 				},
 			},
 			// Parameters: tool.InputSchema.ContentSchema,
