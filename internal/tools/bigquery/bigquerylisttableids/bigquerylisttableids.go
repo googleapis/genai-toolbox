@@ -79,8 +79,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
+	projectParameter := tools.NewStringParameterWithDefault("project", s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
 	datasetParameter := tools.NewStringParameter("dataset", "The dataset to list table ids.")
-	parameters := tools.Parameters{datasetParameter}
+	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -117,14 +118,17 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-
 	sliceParams := params.AsSlice()
-	datasetId, ok := sliceParams[0].(string)
+	projectId, ok := sliceParams[0].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
+	datasetId, ok := sliceParams[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[1])
+	}
 
-	dsHandle := t.Client.Dataset(datasetId)
+	dsHandle := t.Client.DatasetInProject(projectId, datasetId)
 
 	var tableIds []any
 	tableIterator := dsHandle.Tables(ctx)

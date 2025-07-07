@@ -78,9 +78,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
+	projectParameter := tools.NewStringParameterWithDefault("project", s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset and table.")
 	datasetParameter := tools.NewStringParameter("dataset", "The table's parent dataset.")
 	tableParameter := tools.NewStringParameter("table", "The table to get metadata information.")
-	parameters := tools.Parameters{datasetParameter, tableParameter}
+	parameters := tools.Parameters{projectParameter, datasetParameter, tableParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -118,21 +119,25 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
-	datasetId, ok := sliceParams[0].(string)
+	projectId, ok := sliceParams[0].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
-	tableId, ok := sliceParams[1].(string)
+	datasetId, ok := sliceParams[1].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[1])
 	}
+	tableId, ok := sliceParams[2].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[2])
+	}
 
-	dsHandle := t.Client.Dataset(datasetId)
+	dsHandle := t.Client.DatasetInProject(projectId, datasetId)
 	tableHandle := dsHandle.Table(tableId)
 
 	metadata, err := tableHandle.Metadata(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metadata for table %s.%s.%s: %w", t.Client.Project(), datasetId, tableId, err)
+		return nil, fmt.Errorf("failed to get metadata for table %s.%s.%s: %w", projectId, datasetId, tableId, err)
 	}
 
 	return []any{metadata}, nil
