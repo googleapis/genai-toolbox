@@ -212,12 +212,11 @@ func convertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 	case "string":
 		tempSlice := make([]string, len(s))
 		for j, item := range s {
-			if s, ok := item.(string); ok {
-				tempSlice[j] = s
-			} else {
+			s, ok := item.(string)
+			if !ok {
 				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be string, got %T", paramName, j, item)
 			}
-			typedSlice = tempSlice
+			tempSlice[j] = s
 		}
 		typedSlice = tempSlice
 	case "integer":
@@ -233,21 +232,21 @@ func convertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 	case "float":
 		tempSlice := make([]float64, len(s))
 		for j, item := range s {
-			if f, ok := item.(float64); ok {
-				tempSlice[j] = f
-			} else {
+			f, ok := item.(float64)
+			if !ok {
 				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be float, got %T", paramName, j, item)
 			}
+			tempSlice[j] = f
 		}
 		typedSlice = tempSlice
 	case "boolean":
 		tempSlice := make([]bool, len(s))
 		for j, item := range s {
-			if b, ok := item.(bool); ok {
-				tempSlice[j] = b
-			} else {
+			b, ok := item.(bool)
+			if !ok {
 				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be boolean, got %T", paramName, j, item)
 			}
+			tempSlice[j] = b
 		}
 		typedSlice = tempSlice
 	}
