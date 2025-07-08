@@ -102,17 +102,17 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	)
 
 	// set up data for param tool
-	createStatement1, insertStatement1, toolStatement1, params1 := getBigQueryParamToolInfo(tableNameParam)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := getBigQueryParamToolInfo(tableNameParam)
 	teardownTable1 := setupBigQueryTable(t, ctx, client, createStatement1, insertStatement1, datasetName, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, toolStatement2, params2 := getBigQueryAuthToolInfo(tableNameAuth)
+	createStatement2, insertStatement2, authToolStatement, params2 := getBigQueryAuthToolInfo(tableNameAuth)
 	teardownTable2 := setupBigQueryTable(t, ctx, client, createStatement2, insertStatement2, datasetName, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
@@ -138,8 +138,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "[{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
 		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),
@@ -154,18 +154,20 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-param-tool for bigquery kind
-func getBigQueryParamToolInfo(tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
+func getBigQueryParamToolInfo(tableName string) (string, string, string, string, []bigqueryapi.QueryParameter) {
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING);`, tableName)
 	insertStatement := fmt.Sprintf(`
-		INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?);`, tableName)
+		INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, NULL);`, tableName)
 	toolStatement := fmt.Sprintf(`SELECT * FROM %s WHERE id = ? OR name = ? ORDER BY id;`, tableName)
+	toolStatement2 := fmt.Sprintf(`SELECT * FROM %s WHERE id = ? ORDER BY id;`, tableName)
 	params := []bigqueryapi.QueryParameter{
 		{Value: int64(1)}, {Value: "Alice"},
 		{Value: int64(2)}, {Value: "Jane"},
 		{Value: int64(3)}, {Value: "Sid"},
+		{Value: int64(4)},
 	}
-	return createStatement, insertStatement, toolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 // getBigQueryAuthToolInfo returns statements and param of my-auth-tool for bigquery kind

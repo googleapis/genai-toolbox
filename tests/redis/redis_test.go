@@ -99,17 +99,18 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(*testing.T) {
-	keys := []string{"row1", "row2", "row3"}
+	keys := []string{"row1", "row2", "row3", "row4"}
 	commands := [][]any{
 		{"HSET", keys[0], "id", 1, "name", "Alice"},
 		{"HSET", keys[1], "id", 2, "name", "Jane"},
 		{"HSET", keys[2], "id", 3, "name", "Sid"},
+		{"HSET", keys[3], "id", 4, "name", nil},
 		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
 	}
 	for _, c := range commands {
