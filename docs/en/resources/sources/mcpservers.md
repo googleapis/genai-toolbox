@@ -90,7 +90,7 @@ The supported transports are the following:
 This source supports static authentication methods with a desired header:
 
 - `none` - MCP servers without auth
-- `apiKey` - Using the `API-KEY` header
+- `apiKey` - Using the `X-API-KEY` header
 - `bearer` - Using the `Authorization` header and adding the `Bearer $AUTHSECRET`
 
 > The default authentication mode is `none` and the `authSecret` is required if the authentication mode is needed.
