@@ -61,7 +61,9 @@ func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, 
 			},
 		},
 		ServerInfo: mcputil.Implementation{
-			Name:    mcputil.SERVER_NAME,
+			BaseMetadata: mcputil.BaseMetadata{
+				Name: mcputil.SERVER_NAME,
+			},
 			Version: toolboxVersion,
 		},
 	}
