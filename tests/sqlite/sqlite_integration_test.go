@@ -81,15 +81,14 @@ func setupSQLiteTestDB(t *testing.T, ctx context.Context, db *sql.DB, createStat
 	}
 }
 
-func getSQLiteParamToolInfo(tableName string) (string, string, string, string, []any) {
+func getSQLiteParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
-	params := []any{"Alice", "Jane", "Sid", nil}
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	params := []any{"Alice", "Jane", "Sid"}
-	return createStatement, insertStatement, toolStatement, toolStatement, arrayToolStatement, params
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 func getSQLiteAuthToolInfo(tableName string) (string, string, string, []any) {

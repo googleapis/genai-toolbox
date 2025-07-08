@@ -176,10 +176,9 @@ func getSpannerParamToolInfo(tableName string) (string, string, string, string, 
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3), (4, @name4)", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id", tableName)
-	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid", "name4": nil}
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN UNNEST(@ids) AND name IN UNNEST(@names)", tableName)
-	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid"}
-	return createStatement, insertStatement, toolStatement, paramToolStmt2, arrayToolStatement, params
+	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid", "name4": nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
