@@ -102,17 +102,17 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	)
 
 	// set up data for param tool
-	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := getBigQueryParamToolInfo(tableNameParam)
-	teardownTable1 := setupBigQueryTable(t, ctx, client, createStatement1, insertStatement1, datasetName, tableNameParam, params1)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
+	teardownTable1 := setupBigQueryTable(t, ctx, client, createParamTableStmt, insertParamTableStmt, datasetName, tableNameParam, paramTestParams)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, authToolStatement, params2 := getBigQueryAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupBigQueryTable(t, ctx, client, createStatement2, insertStatement2, datasetName, tableNameAuth, params2)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getBigQueryAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupBigQueryTable(t, ctx, client, createAuthTableStmt, insertAuthTableStmt, datasetName, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
@@ -154,20 +154,21 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-param-tool for bigquery kind
-func getBigQueryParamToolInfo(tableName string) (string, string, string, string, []bigqueryapi.QueryParameter) {
+func getBigQueryParamToolInfo(tableName string) (string, string, string, string, string, []bigqueryapi.QueryParameter) {
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING);`, tableName)
 	insertStatement := fmt.Sprintf(`
 		INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, NULL);`, tableName)
 	toolStatement := fmt.Sprintf(`SELECT * FROM %s WHERE id = ? OR name = ? ORDER BY id;`, tableName)
 	toolStatement2 := fmt.Sprintf(`SELECT * FROM %s WHERE id = ? ORDER BY id;`, tableName)
+	arrayToolStatememt := fmt.Sprintf(`SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);`, tableName)
 	params := []bigqueryapi.QueryParameter{
 		{Value: int64(1)}, {Value: "Alice"},
 		{Value: int64(2)}, {Value: "Jane"},
 		{Value: int64(3)}, {Value: "Sid"},
 		{Value: int64(4)},
 	}
-	return createStatement, insertStatement, toolStatement, toolStatement2, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatememt, params
 }
 
 // getBigQueryAuthToolInfo returns statements and param of my-auth-tool for bigquery kind

@@ -103,13 +103,13 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameTemplateParam := "template_param_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// Set up data for param tool
-	paramToolStatement1, paramToolStatement2, params1 := getCouchbaseParamToolInfo(collectionNameParam)
-	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
+	paramToolStatement, paramToolStmt2, arrayToolStatement, paramTestParams := getCouchbaseParamToolInfo(collectionNameParam)
+	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, paramTestParams)
 	defer teardownCollection1(t)
 
 	// Set up data for auth tool
-	authToolStatement, params2 := getCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, params2)
+	authToolStatement, authTestParams := getCouchbaseAuthToolInfo(collectionNameAuth)
+	teardownCollection2 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, authTestParams)
 	defer teardownCollection2(t)
 
 	// Setup up table for template param tool
@@ -118,7 +118,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	defer teardownCollection3(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, paramToolStmt2, arrayToolStatement, authToolStatement)
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -231,7 +231,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 }
 
 // getCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
-func getCouchbaseParamToolInfo(collectionName string) (string, string, []map[string]any) {
+func getCouchbaseParamToolInfo(collectionName string) (string, string, string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
@@ -240,13 +240,16 @@ func getCouchbaseParamToolInfo(collectionName string) (string, string, []map[str
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) order by meta().id",
 		collectionName, collectionName)
 
+	arrayToolStatemnt := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
+		"%s.* FROM %s WHERE meta().id IN $idArray AND name IN $nameArray order by meta().id", collectionName, collectionName)
+
 	params := []map[string]any{
 		{"name": "Alice"},
 		{"name": "Jane"},
 		{"name": "Sid"},
 		{"name": nil},
 	}
-	return toolStatement, toolStatement2, params
+	return toolStatement, toolStatement2, arrayToolStatemnt, params
 }
 
 // getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind

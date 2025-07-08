@@ -131,6 +131,14 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWa
 			isErr:         true,
 		},
 		{
+			name:          "invoke my-array-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "name": "Alice", "Sid", "RandomName"}`)),
+			want:          invokeParamWant,
+			isErr:         false,
+		},
+		{
 			name:          "Invoke my-auth-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
@@ -622,6 +630,26 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 	}{
 		{
 			name:          "MCP Invoke my-param-tool",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "my-param-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name": "my-param-tool",
+					"arguments": map[string]any{
+						"id":   int(3),
+						"name": "Alice",
+					},
+				},
+			},
+			want: invokeParamWant,
+		},
+		{
+			name:          "MCP Invoke my-param-tool with array",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{

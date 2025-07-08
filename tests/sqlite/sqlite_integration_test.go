@@ -87,7 +87,9 @@ func getSQLiteParamToolInfo(tableName string) (string, string, string, string, [
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, toolStatement2, params
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	params := []any{"Alice", "Jane", "Sid"}
+	return createStatement, insertStatement, toolStatement, toolStatement, arrayToolStatement, params
 }
 
 func getSQLiteAuthToolInfo(tableName string) (string, string, string, []any) {
@@ -125,15 +127,15 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := getSQLiteParamToolInfo(tableNameParam)
-	setupSQLiteTestDB(t, ctx, db, createStatement1, insertStatement1, tableNameParam, params1)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := getSQLiteParamToolInfo(tableNameParam)
+	setupSQLiteTestDB(t, ctx, db, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, authToolStatement, params2 := getSQLiteAuthToolInfo(tableNameAuth)
-	setupSQLiteTestDB(t, ctx, db, createStatement2, insertStatement2, tableNameAuth, params2)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getSQLiteAuthToolInfo(tableNameAuth)
+	setupSQLiteTestDB(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
