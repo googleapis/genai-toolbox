@@ -86,7 +86,7 @@ func getSQLiteParamToolInfo(tableName string) (string, string, string, string, s
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
-	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY({{.idArray}}) AND name = ANY({{.nameArray}});", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
 	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
@@ -135,6 +135,36 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
+	toolsMap := toolsFile["tools"].(map[string]any)
+	toolsMap["my-array-tool"] = map[string]any{
+		"kind":        SQLiteToolKind,
+		"source":      "my-instance",
+		"description": "Tool to test invocation with array params.",
+		"statement":   arrayToolStmt,
+		"templateParameters": []any{
+			map[string]any{
+				"name":        "idArray",
+				"type":        "array",
+				"description": "ID array",
+				"items": map[string]any{
+					"name":        "id",
+					"type":        "integer",
+					"description": "ID",
+				},
+			},
+			map[string]any{
+				"name":        "nameArray",
+				"type":        "array",
+				"description": "user name array",
+				"items": map[string]any{
+					"name":        "name",
+					"type":        "string",
+					"description": "user name",
+				},
+			},
+		},
+	}
+
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
