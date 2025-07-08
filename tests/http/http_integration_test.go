@@ -59,6 +59,8 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 		handleTool0(w, r)
 	case "tool1":
 		handleTool1(w, r)
+	case "tool1a":
+		handleTool1a(w, r)
 	case "tool2":
 		handleTool2(w, r)
 	case "tool3":
@@ -127,6 +129,27 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+// handler function for the test server
+func handleTool1a(w http.ResponseWriter, r *http.Request) {
+	// expect GET method
+	if r.Method != http.MethodGet {
+		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "4" {
+		response := `[{"id":4,"name":null}]`
+		_, err := w.Write([]byte(response))
+		if err != nil {
+			http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		}
+		return
+	}
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
@@ -261,9 +284,9 @@ func TestHttpToolEndpoints(t *testing.T) {
 	}
 
 	select1Want := `["Hello","World"]`
-	invokeParamWant, _ := tests.GetNonSpannerInvokeParamWant()
+	invokeParamWant, invokeParamWantNull, _ := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	runAdvancedHTTPInvokeTest(t)
 }
 
@@ -382,6 +405,16 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 `,
 				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
 				"headers":    map[string]string{"Content-Type": "application/json"},
+			},
+			"my-param-tool2": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/tool1a",
+				"description": "some description",
+				"queryParams": []tools.Parameter{
+					tools.NewIntParameter("id", "user ID")},
+				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-auth-tool": map[string]any{
 				"kind":        toolKind,
