@@ -134,6 +134,25 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 
+	for i, p := range t.Parameters {
+		name := p.GetName()
+		value := newParams[i].Value
+
+		// Spanner only accepts typed slices as input
+		// This checks if the param is an array.
+		// If yes, convert []any to typed slice (e.g []string, []int)
+		switch arrayParam := value.(type) {
+		case []any:
+			var err error
+			itemType := p.McpManifest().Items.Type
+			value, err = tools.ConvertAnySliceToTyped(arrayParam, itemType, name)
+			if err != nil {
+				return nil, fmt.Errorf("unable to convert []any to typed slice: %w", err)
+			}
+		}
+		newParams[i] = tools.ParamValue{Name: name, Value: value}
+	}
+
 	// Execute the SQL query with parameters
 	rows, err := t.Db.QueryContext(ctx, newStatement, newParams.AsSlice()...)
 	if err != nil {
