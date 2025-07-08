@@ -71,6 +71,12 @@ type Tool interface {
 	Authorized([]string) bool
 }
 
+// DynamicToolSource is a source type that can dynamically create tools
+type DynamicToolSource interface {
+	// The tools array that are dynamically created
+	GetTools(context.Context) ([]Tool, error)
+}
+
 // Manifest is the representation of tools sent to Client SDKs.
 type Manifest struct {
 	Description  string              `json:"description"`

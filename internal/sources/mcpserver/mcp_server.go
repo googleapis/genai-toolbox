@@ -16,7 +16,7 @@ package mcpserver
 import (
 	"context"
 	"fmt"
-	"log"
+	"net/http"
 	"net/url"
 
 	"github.com/goccy/go-yaml"
@@ -40,8 +40,9 @@ type TransportType string
 
 const (
 	STDIO TransportType = "stdio"
-	SSE   TransportType = "sse" // Deprecated
-	HTTP  TransportType = "http"
+	// MCP Specification deprecated this transport
+	SSE  TransportType = "sse"
+	HTTP TransportType = "http"
 )
 
 type AuthMethod string
@@ -62,7 +63,13 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, AuthMethod: None} // Default auth method
+	// Default auth method -> None, Transport -> http, SpecVersion -> MARCH_25
+	actual := Config{
+		Name:        name,
+		AuthMethod:  None,
+		Transport:   HTTP,
+		SpecVersion: MAR_2025,
+	}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -73,8 +80,8 @@ type Config struct {
 	Name        string        `yaml:"name" validate:"required"`
 	Kind        string        `yaml:"kind" validate:"required"`
 	Endpoint    string        `yaml:"endpoint" validate:"required"`
-	SpecVersion SpecVersion   `yaml:"specVersion" validate:"required"`
-	Transport   TransportType `yaml:"transport" validate:"required"`
+	SpecVersion SpecVersion   `yaml:"specVersion"`
+	Transport   TransportType `yaml:"transport"`
 	AuthMethod  AuthMethod    `yaml:"authMethod"`
 	AuthSecret  string        `yaml:"authSecret"`
 }
@@ -95,8 +102,8 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unsupported specVersion: %s", c.SpecVersion)
 	}
 
+	// TODO: support stdio -- can we only have one max stdio server?
 	// Validate the transport type is supported
-	// TODO: support stdio
 	if c.Transport != SSE && c.Transport != HTTP {
 		return nil, fmt.Errorf("unsupported transport type: %s", c.Transport)
 	}
@@ -148,18 +155,30 @@ func (s *Source) SourceKind() string {
 // TODO: run gofunc and maintain session + add auth
 func (s *Source) getSession(ctx context.Context) (*mcp.ClientSession, error) {
 	var transport mcp.Transport
+	var defaultHeaders = map[string]string{}
+	switch s.AuthMethod {
+	case Bearer:
+		defaultHeaders["Authorization"] = fmt.Sprintf("Bearer %s", s.AuthSecret)
+	case ApiKey:
+		defaultHeaders["X-API-KEY"] = s.AuthSecret
+	}
+	var client *http.Client = http.DefaultClient
+	// 	Transport: ,
+	// }
+	// client.Transport
+
 	switch s.Transport {
 	case SSE:
-		transport = mcp.NewSSEClientTransport(s.Endpoint, &mcp.SSEClientTransportOptions{})
+		transport = mcp.NewSSEClientTransport(s.Endpoint, &mcp.SSEClientTransportOptions{HTTPClient: client})
 	case HTTP:
-		transport = mcp.NewStreamableClientTransport(s.Endpoint, &mcp.StreamableClientTransportOptions{})
+		transport = mcp.NewStreamableClientTransport(s.Endpoint, &mcp.StreamableClientTransportOptions{HTTPClient: client})
 	default:
 		transport = mcp.NewStdioTransport()
 	}
 	return s.Client.Connect(ctx, transport)
 }
 
-func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
+func (s Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 	fmt.Printf("Attempting to connect? to endpoint %s\n", s.Endpoint)
 	session, err := s.getSession(ctx)
 	if err != nil {
@@ -187,6 +206,8 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 			toolProperties[toolArgKey] = tools.ParameterMcpManifest{
 				Type:        toolArgumentValue.Type,
 				Description: toolArgumentValue.Description,
+				// TODO: recurse or DFS for complex objects
+				// Items: ,
 			}
 		}
 
@@ -196,7 +217,7 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 		var toolCallParameters = make(tools.Parameters, len(toolProperties))
 
 		mcpTools[i] = MCPServerTool{
-			Source: s,
+			Source: &s,
 			Name:   tool.Name,
 			manifest: tools.Manifest{
 				Description: tool.Description,
@@ -228,12 +249,6 @@ func toToolboxTools(structs []MCPServerTool) []tools.Tool {
 	return interfaces
 }
 
-// remote-mcp-a:
-//     kind: mcp-server
-//     endpoint: https://mcp-a.example.com
-//     version: "2024-11-05"
-//     apiKey: "secret"
-
 var _ tools.Tool = MCPServerTool{}
 
 type MCPServerTool struct {
@@ -248,7 +263,7 @@ func (t MCPServerTool) Invoke(ctx context.Context, params tools.ParamValues) ([]
 	// Call a tool on the server.
 	session, err := t.Source.getSession(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer session.Close()
 
@@ -257,18 +272,13 @@ func (t MCPServerTool) Invoke(ctx context.Context, params tools.ParamValues) ([]
 		Arguments: params.AsMap(),
 	}
 	res, err := session.CallTool(ctx, toolCallRequest)
-	if err != nil {
-		log.Fatalf("CallTool failed: %v", err)
-	}
-	if res.IsError {
-		log.Fatal("tool failed")
+	if err != nil || res.IsError {
+		return nil, fmt.Errorf("call mcp tool failed: %v", err)
 	}
 
+	// TODO: Work around..Make Invoke call return []mcp.Content
 	var r = make([]any, 0, len(res.Content))
-	for _, c := range res.Content {
-		log.Print(c.(*mcp.TextContent).Text)
-		r = append(r, res.Content)
-	}
+	r = append(r, res.Content)
 
 	return r, nil
 }
