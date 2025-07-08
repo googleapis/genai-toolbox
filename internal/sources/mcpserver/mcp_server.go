@@ -154,7 +154,6 @@ func (s *Source) SourceKind() string {
 
 // TODO: run gofunc and maintain session + add auth
 func (s *Source) getSession(ctx context.Context) (*mcp.ClientSession, error) {
-	var transport mcp.Transport
 	var defaultHeaders = map[string]string{}
 	switch s.AuthMethod {
 	case Bearer:
@@ -162,11 +161,15 @@ func (s *Source) getSession(ctx context.Context) (*mcp.ClientSession, error) {
 	case ApiKey:
 		defaultHeaders["X-API-KEY"] = s.AuthSecret
 	}
-	var client *http.Client = http.DefaultClient
-	// 	Transport: ,
-	// }
-	// client.Transport
+	var httpTransport = &CustomAuthTransport{
+		RoundTripper: http.DefaultTransport,
+		Headers:      defaultHeaders,
+	}
+	var client *http.Client = &http.Client{
+		Transport: httpTransport,
+	}
 
+	var transport mcp.Transport
 	switch s.Transport {
 	case SSE:
 		transport = mcp.NewSSEClientTransport(s.Endpoint, &mcp.SSEClientTransportOptions{HTTPClient: client})
@@ -178,7 +181,7 @@ func (s *Source) getSession(ctx context.Context) (*mcp.ClientSession, error) {
 	return s.Client.Connect(ctx, transport)
 }
 
-func (s Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
+func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 	fmt.Printf("Attempting to connect? to endpoint %s\n", s.Endpoint)
 	session, err := s.getSession(ctx)
 	if err != nil {
@@ -217,7 +220,7 @@ func (s Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 		var toolCallParameters = make(tools.Parameters, len(toolProperties))
 
 		mcpTools[i] = MCPServerTool{
-			Source: &s,
+			Source: s,
 			Name:   tool.Name,
 			manifest: tools.Manifest{
 				Description: tool.Description,
@@ -327,4 +330,24 @@ func (t MCPServerTool) McpManifest() tools.McpManifest {
 func (t MCPServerTool) Authorized(verifiedAuthServices []string) bool {
 	// TODO:
 	return true
+}
+
+// http utilities
+
+// CustomAuthTransport implements http.RoundTripper and adds the custom headers.
+type CustomAuthTransport struct {
+	// Embed http.RoundTripper to delegate the actual request execution.
+	// This allows chaining with other transports or using the default.
+	http.RoundTripper
+	Headers map[string]string
+}
+
+func (t *CustomAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Update the http headers to support auth
+	for k, v := range t.Headers {
+		req.Header.Add(k, v)
+	}
+
+	// Call the underlying RoundTripper to execute the request.
+	return t.RoundTripper.RoundTrip(req)
 }
