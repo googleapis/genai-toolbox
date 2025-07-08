@@ -489,7 +489,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			}
 
 			// only check for write events which indicate user saved a new tools file
-			if e.Op != fsnotify.Write {
+			if !e.Has(fsnotify.Write) {
 				continue
 			}
 
