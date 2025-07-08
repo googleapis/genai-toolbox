@@ -109,11 +109,17 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 	return nil, fmt.Errorf("missing or invalid authentication header")
 }
 
+// CheckParamRequired checks if a parameter is required based on the required and default field.
+func CheckParamRequired(required bool, defaultV any) bool {
+	return required && defaultV == nil
+}
+
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
 func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
-		var v any
+		var v, newV any
+		var err error
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
 		if len(paramAuthServices) == 0 {
@@ -122,21 +128,23 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 			v, ok = data[name]
 			if !ok {
 				v = p.GetDefault()
-				if v == nil {
+				// if the parameter is required and no value given, throw an error
+				if CheckParamRequired(p.GetRequired(), v) {
 					return nil, fmt.Errorf("parameter %q is required", name)
 				}
 			}
 		} else {
 			// parse authenticated parameter
-			var err error
 			v, err = parseFromAuthService(paramAuthServices, claimsMap)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
 			}
 		}
-		newV, err := p.Parse(v)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+		if v != nil {
+			newV, err = p.Parse(v)
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+			}
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
 	}
@@ -248,6 +256,7 @@ type Parameter interface {
 	GetName() string
 	GetType() string
 	GetDefault() any
+	GetRequired() bool
 	GetAuthServices() []ParamAuthService
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
@@ -378,7 +387,7 @@ func (ps Parameters) McpManifest() McpToolsSchema {
 		name := p.GetName()
 		properties[name] = p.McpManifest()
 		// parameters that doesn't have a default value are added to the required field
-		if p.GetDefault() == nil {
+		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
 			required = append(required, name)
 		}
 	}
@@ -412,6 +421,7 @@ type CommonParameter struct {
 	Name         string             `yaml:"name" validate:"required"`
 	Type         string             `yaml:"type" validate:"required"`
 	Desc         string             `yaml:"description" validate:"required"`
+	Required     *bool              `yaml:"required"`
 	AuthServices []ParamAuthService `yaml:"authServices"`
 	AuthSources  []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 }
@@ -424,6 +434,15 @@ func (p *CommonParameter) GetName() string {
 // GetType returns the type specified for the Parameter.
 func (p *CommonParameter) GetType() string {
 	return p.Type
+}
+
+// GetRequired returns the type specified for the Parameter.
+func (p *CommonParameter) GetRequired() bool {
+	// parameters are defaulted to required
+	if p.Required == nil {
+		return true
+	}
+	return *p.Required
 }
 
 // McpManifest returns the MCP manifest for the Parameter.
@@ -475,6 +494,19 @@ func NewStringParameterWithDefault(name string, defaultV, desc string) *StringPa
 	}
 }
 
+// NewStringParameterWithRequired is a convenience function for initializing a StringParameter.
+func NewStringParameterWithRequired(name string, desc string, required bool) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeString,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
+	}
+}
+
 // NewStringParameterWithAuth is a convenience function for initializing a StringParameter with a list of ParamAuthService.
 func NewStringParameterWithAuth(name string, desc string, authServices []ParamAuthService) *StringParameter {
 	return &StringParameter{
@@ -522,11 +554,11 @@ func (p *StringParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -554,6 +586,19 @@ func NewIntParameterWithDefault(name string, defaultV int, desc string) *IntPara
 			AuthServices: nil,
 		},
 		Default: &defaultV,
+	}
+}
+
+// NewIntParameterWithRequired is a convenience function for initializing a IntParameter.
+func NewIntParameterWithRequired(name string, desc string, required bool) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeInt,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
 	}
 }
 
@@ -616,11 +661,11 @@ func (p *IntParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -648,6 +693,19 @@ func NewFloatParameterWithDefault(name string, defaultV float64, desc string) *F
 			AuthServices: nil,
 		},
 		Default: &defaultV,
+	}
+}
+
+// NewFloatParameterWithRequired is a convenience function for initializing a FloatParameter.
+func NewFloatParameterWithRequired(name string, desc string, required bool) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeFloat,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
 	}
 }
 
@@ -708,11 +766,11 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -740,6 +798,19 @@ func NewBooleanParameterWithDefault(name string, defaultV bool, desc string) *Bo
 			AuthServices: nil,
 		},
 		Default: &defaultV,
+	}
+}
+
+// NewBooleanParameterWithRequired is a convenience function for initializing a BooleanParameter.
+func NewBooleanParameterWithRequired(name string, desc string, required bool) *BooleanParameter {
+	return &BooleanParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeBool,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
 	}
 }
 
@@ -789,11 +860,11 @@ func (p *BooleanParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -823,6 +894,20 @@ func NewArrayParameterWithDefault(name string, defaultV []any, desc string, item
 		},
 		Items:   items,
 		Default: &defaultV,
+	}
+}
+
+// NewArrayParameterWithRequired is a convenience function for initializing a ArrayParameter with default value.
+func NewArrayParameterWithRequired(name string, desc string, required bool, items Parameter) *ArrayParameter {
+	return &ArrayParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeArray,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
+		Items: items,
 	}
 }
 
@@ -910,12 +995,13 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		authNames[i] = a.Name
 	}
 	items := p.Items.Manifest()
-	required := p.Default == nil
-	items.Required = required
+	// if required value is true, or there's no default value
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
+	items.Required = r
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 		Items:        &items,
