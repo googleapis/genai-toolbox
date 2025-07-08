@@ -494,7 +494,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			}
 
 			cleanedFilename := filepath.Clean(e.Name)
-			logger.DebugContext(ctx, fmt.Sprintf("%s event detected in %s", e.Op, cleanedFilename))
+			logger.DebugContext(ctx, fmt.Sprintf("WRITE event detected in %s", cleanedFilename))
 
 			folderChanged := watchingFolder &&
 				(strings.HasSuffix(cleanedFilename, ".yaml") || strings.HasSuffix(cleanedFilename, ".yml"))
