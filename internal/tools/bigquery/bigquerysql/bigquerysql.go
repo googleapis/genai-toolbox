@@ -143,7 +143,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		case []any:
 			var err error
 			itemType := p.McpManifest().Items.Type
-			value, err = convertAnySliceToTyped(arrayParam, itemType, name)
+			value, err = tools.ConvertAnySliceToTyped(arrayParam, itemType, name)
 			if err != nil {
 				return nil, fmt.Errorf("unable to convert []any to typed slice: %w", err)
 			}
@@ -204,51 +204,4 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func convertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
-	var typedSlice any
-	switch itemType {
-	case "string":
-		tempSlice := make([]string, len(s))
-		for j, item := range s {
-			s, ok := item.(string)
-			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be string, got %T", paramName, j, item)
-			}
-			tempSlice[j] = s
-		}
-		typedSlice = tempSlice
-	case "integer":
-		tempSlice := make([]int64, len(s))
-		for j, item := range s {
-			i, ok := item.(int)
-			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
-			}
-			tempSlice[j] = int64(i)
-		}
-		typedSlice = tempSlice
-	case "float":
-		tempSlice := make([]float64, len(s))
-		for j, item := range s {
-			f, ok := item.(float64)
-			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be float, got %T", paramName, j, item)
-			}
-			tempSlice[j] = f
-		}
-		typedSlice = tempSlice
-	case "boolean":
-		tempSlice := make([]bool, len(s))
-		for j, item := range s {
-			b, ok := item.(bool)
-			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be boolean, got %T", paramName, j, item)
-			}
-			tempSlice[j] = b
-		}
-		typedSlice = tempSlice
-	}
-	return typedSlice, nil
 }

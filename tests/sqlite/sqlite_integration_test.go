@@ -86,7 +86,7 @@ func getSQLiteParamToolInfo(tableName string) (string, string, string, string, s
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
-	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
 	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }

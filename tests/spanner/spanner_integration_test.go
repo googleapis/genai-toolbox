@@ -176,7 +176,7 @@ func getSpannerParamToolInfo(tableName string) (string, string, string, string, 
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3), (4, @name4)", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id", tableName)
-	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN UNNEST(@ids) AND name IN UNNEST(@names)", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN UNNEST(@idArray) AND name IN UNNEST(@nameArray)", tableName)
 	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid", "name4": nil}
 	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }

@@ -89,7 +89,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, p
 						"type":        "array",
 						"description": "ID array",
 						"items": map[string]any{
-							"name":        "name",
+							"name":        "id",
 							"type":        "integer",
 							"description": "ID",
 						},
@@ -334,7 +334,7 @@ func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, st
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid), (@nil);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id;", tableName)
-	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(@id) OR name = ANY(@p2);", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(@idArray) OR name = ANY(@p2);", tableName)
 	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid"), sql.Named("nil", nil)}
 	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
