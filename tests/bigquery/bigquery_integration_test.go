@@ -139,7 +139,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "[{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
 		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),

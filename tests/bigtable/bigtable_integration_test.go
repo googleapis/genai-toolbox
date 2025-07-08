@@ -119,7 +119,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
 	invokeParamWant, _, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	invokeParamWantNull := `[{"id":4,"name":""}]`
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(

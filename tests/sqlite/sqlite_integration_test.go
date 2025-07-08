@@ -135,36 +135,6 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
-	toolsMap := toolsFile["tools"].(map[string]any)
-	toolsMap["my-array-tool"] = map[string]any{
-		"kind":        SQLiteToolKind,
-		"source":      "my-instance",
-		"description": "Tool to test invocation with array params.",
-		"statement":   arrayToolStmt,
-		"templateParameters": []any{
-			map[string]any{
-				"name":        "idArray",
-				"type":        "array",
-				"description": "ID array",
-				"items": map[string]any{
-					"name":        "id",
-					"type":        "integer",
-					"description": "ID",
-				},
-			},
-			map[string]any{
-				"name":        "nameArray",
-				"type":        "array",
-				"description": "user name array",
-				"items": map[string]any{
-					"name":        "name",
-					"type":        "string",
-					"description": "user name",
-				},
-			},
-		},
-	}
-
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -187,7 +157,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
 	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, false)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }

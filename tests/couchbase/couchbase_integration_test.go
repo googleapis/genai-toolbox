@@ -141,7 +141,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	failMcpInvocationWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: parsing failure | {\\\"statement\\\":\\\"SELEC 1;\\\""
 
 	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failMcpInvocationWant)
 
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(

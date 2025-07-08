@@ -76,7 +76,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string, supportsArray bool) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -136,7 +136,7 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWa
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"]}`)),
 			want:          invokeParamWant,
-			isErr:         false,
+			isErr:         !supportsArray,
 		},
 		{
 			name:          "Invoke my-auth-tool with auth token",
