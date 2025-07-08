@@ -1141,7 +1141,7 @@ func TestSingleEdit(t *testing.T) {
 	regexEscapedPathDir := strings.ReplaceAll(watchDir, `\`, `\\\\*\\`)
 	regexEscapedPathDir = path.Clean(regexEscapedPathDir)
 
-	begunWatchingDir := regexp.MustCompile(fmt.Sprintf(`DEBUG "Added directory %s to watcher\."`, regexEscapedPathDir))
+	begunWatchingDir := regexp.MustCompile(fmt.Sprintf(`DEBUG "Added directory %s to watcher."`, regexEscapedPathDir))
 	_, err = testutils.WaitForString(ctx, begunWatchingDir, pr)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for watcher to start: %s", err)
