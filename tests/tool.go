@@ -134,7 +134,7 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWa
 			name:          "invoke my-array-tool",
 			api:           "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"]}`)),
+			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"]}, "fieldsArray": ["name", "id"]`)),
 			want:          invokeParamWant,
 			isErr:         !supportsArray,
 		},

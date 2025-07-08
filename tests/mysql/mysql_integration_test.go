@@ -126,7 +126,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 
 	select1Want, failInvocationWant, createTableStatement := tests.GetMySQLWants()
 	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, false)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
