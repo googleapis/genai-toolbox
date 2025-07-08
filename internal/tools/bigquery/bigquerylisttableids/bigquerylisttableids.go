@@ -27,6 +27,8 @@ import (
 )
 
 const kind string = "bigquery-list-table-ids"
+const projectKey string = "project"
+const datasetKey string = "dataset"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -79,8 +81,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault("project", s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
-	datasetParameter := tools.NewStringParameter("dataset", "The dataset to list table ids.")
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
+	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to list table ids.")
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.McpManifest{
@@ -118,14 +120,15 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	sliceParams := params.AsSlice()
-	projectId, ok := sliceParams[0].(string)
+	mapParams := params.AsMap()
+	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
-	datasetId, ok := sliceParams[1].(string)
+
+	datasetId, ok := mapParams[datasetKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[1])
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
 	}
 
 	dsHandle := t.Client.DatasetInProject(projectId, datasetId)

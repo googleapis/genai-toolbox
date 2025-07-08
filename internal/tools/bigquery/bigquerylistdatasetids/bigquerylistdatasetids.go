@@ -27,6 +27,7 @@ import (
 )
 
 const kind string = "bigquery-list-dataset-ids"
+const projectKey string = "project"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -79,7 +80,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault("project", s.BigQueryClient().Project(), "The Google Cloud project to list dataset ids.")
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project to list dataset ids.")
 
 	parameters := tools.Parameters{projectParameter}
 
@@ -118,10 +119,10 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	sliceParams := params.AsSlice()
-	projectId, ok := sliceParams[0].(string)
+	mapParams := params.AsMap()
+	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
 	datasetIterator := t.Client.Datasets(ctx)
 	datasetIterator.ProjectID = projectId
