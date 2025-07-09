@@ -330,6 +330,7 @@ pip install google-genai
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="python" >}}
 {{% include "quickstart_samples/python/adk.py" %}}
+{{</ tab >}}
 {{< tab header="LangChain" lang="python" >}}
 import asyncio
 
