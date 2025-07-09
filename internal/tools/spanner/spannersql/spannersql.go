@@ -194,6 +194,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		}
 		newParams[i] = tools.ParamValue{Name: name, Value: value}
 	}
+
 	mapParams, err := getMapParams(newParams, t.dialect)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)

@@ -563,14 +563,14 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
-				"commands":    [][]string{{"HMGET", "row1", "{{.fieldsArray}}"}, {"HMGET", "row3", "{{.fieldsArray}}"}},
+				"commands":    [][]string{{"HGETALL", "row1"}, {"$cmdArray"}},
 				"parameters": []any{
 					map[string]any{
-						"name":        "fieldsArray",
+						"name":        "cmdArray",
 						"type":        "array",
-						"description": "fields array",
+						"description": "cmd array",
 						"items": map[string]any{
-							"name":        "name",
+							"name":        "cmd",
 							"type":        "string",
 							"description": "field",
 						},
