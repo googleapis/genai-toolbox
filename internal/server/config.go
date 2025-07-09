@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/mcpserver"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -263,23 +262,9 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 	return nil
 }
 
-// DoesSourceDynamicallyAddTools returns true if the source dynamically adds tools.
-func DoesSourceDynamicallyAddTools(source sources.Source) bool {
-	switch source.SourceKind() {
-	case mcpserver.SourceKind:
-		return true
-	default:
-		return false
-	}
-}
+// IsDynamicToolSource returns true if the source dynamically adds tools.
+func IsDynamicToolSource(source sources.Source) bool {
+	_, ok := source.(tools.DynamicToolSource)
 
-// BuildDynamicTools will return the tool definitions for the source.
-func BuildDynamicTools(ctx context.Context, source sources.Source) ([]tools.Tool, error) {
-	switch s := source.(type) {
-	case *mcpserver.Source:
-		return s.GetTools(ctx)
-	default:
-		// Do we want to return an error for unsupported? -- missed code
-		return nil, fmt.Errorf("source %q does not support dynamic tools creation. Was this not implemented?", s.SourceKind())
-	}
+	return ok
 }

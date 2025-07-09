@@ -99,7 +99,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
-	dynamicToolsSourceMap := make(map[string]sources.Source)
+	dynamicToolsSourceMap := make(map[string]tools.DynamicToolSource)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
 			childCtx, span := instrumentation.Tracer.Start(
@@ -119,10 +119,10 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 			return nil, err
 		}
 		sourcesMap[name] = s
-		if DoesSourceDynamicallyAddTools(s) {
+		if IsDynamicToolSource(s) {
 			// if the source can dynamically add tools, we need to add it to the map
 			// so that we can create the tools dyanmically later.
-			dynamicToolsSourceMap[name] = s
+			dynamicToolsSourceMap[name] = s.(tools.DynamicToolSource)
 		}
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
@@ -175,26 +175,22 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
 
-	// dynamically create the mcp server tools following our rules
+	// dynamically create the tools for the source
 	// dynamicTools := make(map[string]tools.Tool)
 	for name, source := range dynamicToolsSourceMap {
 		tools, err := func() ([]tools.Tool, error) {
-			// TODO: add tracing
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/dynamictools/add",
-				trace.WithAttributes(attribute.String("source_kind", source.SourceKind())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			fmt.Println("hello")
-			newDynamicTools, err := BuildDynamicTools(childCtx, source)
+			newDynamicTools, err := source.GetTools(childCtx)
 			if err != nil {
-				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
+				return nil, fmt.Errorf("unable to fetch tools for source %q: %w", name, err)
 			}
 			return newDynamicTools, nil
 		}()
-		fmt.Println("hello")
 		if err != nil {
 			return nil, err
 		}
