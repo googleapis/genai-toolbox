@@ -15,6 +15,7 @@
 package mcpserver_test
 
 import (
+	"fmt"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
@@ -49,37 +50,30 @@ func TestParseFromYaml(t *testing.T) {
 					SpecVersion: mcpserver.MAR_2025,
 					Transport:   mcpserver.HTTP,
 					AuthMethod:  mcpserver.None,
+					AuthSecret:  "",
 				},
 			},
 		},
-		// {
-		// 	desc: "advanced example",
-		// 	in: `
-		// 	sources:
-		// 		my-http-instance:
-		// 			kind: http
-		// 			baseUrl: http://test_server/
-		// 			timeout: 10s
-		// 			headers:
-		// 				Authorization: test_header
-		// 				Custom-Header: custom
-		// 			queryParams:
-		// 				api-key: test_api_key
-		// 				param: param-value
-		// 			disableSslVerification: true
-		// 	`,
-		// 	want: map[string]sources.SourceConfig{
-		// 		"my-http-instance": http.Config{
-		// 			Name:                   "my-http-instance",
-		// 			Kind:                   http.SourceKind,
-		// 			BaseURL:                "http://test_server/",
-		// 			Timeout:                "10s",
-		// 			DefaultHeaders:         map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
-		// 			QueryParams:            map[string]string{"api-key": "test_api_key", "param": "param-value"},
-		// 			DisableSslVerification: true,
-		// 		},
-		// 	},
-		// },
+		{
+			desc: "defaults example",
+			in: `
+			sources:
+				my-mcp-server:
+					kind: mcp-server
+					endpoint: http://127.0.0.1:8080/mcp
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-mcp-server": mcpserver.Config{
+					Name:        "my-mcp-server",
+					Kind:        mcpserver.SourceKind,
+					Endpoint:    "http://127.0.0.1:8080/mcp",
+					SpecVersion: mcpserver.MAR_2025,
+					Transport:   mcpserver.HTTP,
+					AuthMethod:  mcpserver.None,
+					AuthSecret:  "",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -98,51 +92,112 @@ func TestParseFromYaml(t *testing.T) {
 	}
 }
 
-func TestFailParseFromYaml(t *testing.T) {
-	tcs := []struct {
-		desc string
-		in   string
-		err  string
-	}{
-		{
-			desc: "extra field",
-			in: `
-			sources:
-				my-http-instance:
-					kind: http
-					baseUrl: http://test_server/
-					timeout: 10s
-					headers:
-						Authorization: test_header
-					queryParams:
-						api-key: test_api_key
-					project: test-project
-			`,
-			err: "unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s",
-		},
-		{
-			desc: "missing required field",
-			in: `
-			sources:
-				my-http-instance:
-					baseUrl: http://test_server/
-			`,
-			err: "missing 'kind' field for source \"my-http-instance\"",
-		},
-	}
+func TestParseSpecVersionFromYaml(t *testing.T) {
+	tcs := []mcpserver.SpecVersion{mcpserver.NOV_2024, mcpserver.MAR_2025, mcpserver.JUN_2025}
 	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
+		t.Run(string(tc), func(t *testing.T) {
+			template := `
+			sources:
+				my-mcp-server:
+					kind: mcp-server
+					endpoint: http://127.0.0.1:8080/mcp
+					specVersion: %s
+			`
+			in := fmt.Sprintf(template, string(tc))
+			want := map[string]sources.SourceConfig{
+				"my-mcp-server": mcpserver.Config{
+					Name:        "my-mcp-server",
+					Kind:        mcpserver.SourceKind,
+					Endpoint:    "http://127.0.0.1:8080/mcp",
+					SpecVersion: tc,
+					Transport:   mcpserver.HTTP,
+					AuthMethod:  mcpserver.None,
+				},
+			}
 			got := struct {
 				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
 			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
-			if err == nil {
-				t.Fatalf("expect parsing to fail")
+			err := yaml.Unmarshal(testutils.FormatYaml(in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			errStr := err.Error()
-			if errStr != tc.err {
-				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			if !cmp.Equal(want, got.Sources) {
+				t.Fatalf("incorrect parse: want %v, got %v", want, got.Sources)
+			}
+		})
+	}
+}
+
+func TestParseTransportTypeFromYaml(t *testing.T) {
+	tcs := []mcpserver.TransportType{mcpserver.STDIO, mcpserver.SSE, mcpserver.HTTP}
+	for _, tc := range tcs {
+		t.Run(string(tc), func(t *testing.T) {
+			template := `
+			sources:
+				my-mcp-server:
+					kind: mcp-server
+					endpoint: http://127.0.0.1:8080/mcp
+					transport: %s
+			`
+			in := fmt.Sprintf(template, tc)
+			want := map[string]sources.SourceConfig{
+				"my-mcp-server": mcpserver.Config{
+					Name:        "my-mcp-server",
+					Kind:        mcpserver.SourceKind,
+					Endpoint:    "http://127.0.0.1:8080/mcp",
+					SpecVersion: mcpserver.MAR_2025,
+					Transport:   tc,
+					AuthMethod:  mcpserver.None,
+				},
+			}
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(want, got.Sources) {
+				t.Fatalf("incorrect parse: want %v, got %v", want, got.Sources)
+			}
+		})
+	}
+}
+
+func TestParseAuthMethodFromYaml(t *testing.T) {
+	tcs := []mcpserver.AuthMethod{mcpserver.None, mcpserver.ApiKey, mcpserver.Bearer}
+	for _, tc := range tcs {
+		t.Run(string(tc), func(t *testing.T) {
+			template := `
+			sources:
+				my-mcp-server:
+					kind: mcp-server
+					endpoint: http://127.0.0.1:8080/mcp
+					authMethod: %s
+			`
+			in := fmt.Sprintf(template, tc)
+			want := map[string]sources.SourceConfig{
+				"my-mcp-server": mcpserver.Config{
+					Name:        "my-mcp-server",
+					Kind:        mcpserver.SourceKind,
+					Endpoint:    "http://127.0.0.1:8080/mcp",
+					SpecVersion: mcpserver.MAR_2025,
+					Transport:   mcpserver.HTTP,
+					AuthMethod:  tc,
+				},
+			}
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(want, got.Sources) {
+				t.Fatalf("incorrect parse: want %v, got %v", want, got.Sources)
 			}
 		})
 	}
