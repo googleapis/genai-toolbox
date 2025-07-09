@@ -45,6 +45,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
@@ -69,6 +70,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
@@ -347,7 +349,7 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 
 	// Combine both file lists
 	allFiles := append(yamlFiles, ymlFiles...)
-	
+
 	if len(allFiles) == 0 {
 		return ToolsFile{}, fmt.Errorf("no YAML files found in directory %q", folderPath)
 	}
