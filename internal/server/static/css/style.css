@@ -1,0 +1,89 @@
+body {
+    display: flex;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Trebuchet MS';
+    background-color: #f8f9fa;
+}
+
+.left-nav {
+    flex: 0 0 200px;
+    background-color: #fff;
+    box-shadow: 4px 0px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    align-items: center;
+}
+
+.nav-logo {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.nav-logo img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.left-nav ul {
+    font-family: 'Verdana';
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.left-nav ul li {
+    margin-bottom: 5px;
+}
+
+.left-nav ul li a {
+    display: flex; 
+    align-items: center; 
+    padding: 12px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 0;
+}
+
+.left-nav ul li a:hover {
+    background-color: #e9e9e9;
+    border-radius: 35px;
+}
+
+.left-nav ul li a.active {
+    background-color: #d0d0d0;
+    font-weight: bold;
+    border-radius: 35px;
+}
+
+.main-content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-bar {
+    background-color: #fff;
+    padding: 30px 30px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.top-bar span {
+    font-weight: bold;
+    font-size: 1.2em;
+    font-family: 'Trebuchet MS';
+    color: #333;
+}
+
+.content {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
