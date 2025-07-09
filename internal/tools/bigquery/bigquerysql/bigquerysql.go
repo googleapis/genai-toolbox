@@ -142,10 +142,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		switch arrayParam := value.(type) {
 		case []any:
 			var err error
-			itemType := p.McpManifest().Items.Type
-			value, err = tools.ConvertAnySliceToTyped(arrayParam, itemType, name)
+			itemType := p.GetItems().GetType()
+			value, err = tools.ConvertAnySliceToTyped(arrayParam, itemType)
 			if err != nil {
-				return nil, fmt.Errorf("unable to convert []any to typed slice: %w", err)
+				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
 			}
 		}
 

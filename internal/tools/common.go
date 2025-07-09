@@ -25,7 +25,7 @@ func IsValidName(s string) bool {
 	return validName.MatchString(s)
 }
 
-func ConvertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
+func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {
 	var typedSlice any
 	switch itemType {
 	case "string":
@@ -33,7 +33,7 @@ func ConvertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 		for j, item := range s {
 			s, ok := item.(string)
 			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be string, got %T", paramName, j, item)
+				return nil, fmt.Errorf("expected item at index %d to be string, got %T", j, item)
 			}
 			tempSlice[j] = s
 		}
@@ -43,7 +43,7 @@ func ConvertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 		for j, item := range s {
 			i, ok := item.(int)
 			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be integer, got %T", paramName, j, item)
+				return nil, fmt.Errorf("expected item at index %d to be integer, got %T", j, item)
 			}
 			tempSlice[j] = int64(i)
 		}
@@ -53,7 +53,7 @@ func ConvertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 		for j, item := range s {
 			f, ok := item.(float64)
 			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be float, got %T", paramName, j, item)
+				return nil, fmt.Errorf("expected item at index %d to be float, got %T", j, item)
 			}
 			tempSlice[j] = f
 		}
@@ -63,7 +63,7 @@ func ConvertAnySliceToTyped(s []any, itemType, paramName string) (any, error) {
 		for j, item := range s {
 			b, ok := item.(bool)
 			if !ok {
-				return nil, fmt.Errorf("parameter '%s': expected item at index %d to be boolean, got %T", paramName, j, item)
+				return nil, fmt.Errorf("expected item at index %d to be boolean, got %T", j, item)
 			}
 			tempSlice[j] = b
 		}

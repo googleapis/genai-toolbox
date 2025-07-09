@@ -247,6 +247,7 @@ type Parameter interface {
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
 	GetType() string
+	GetItems() Parameter
 	GetDefault() any
 	GetAuthServices() []ParamAuthService
 	Parse(any) (any, error)
@@ -515,6 +516,10 @@ func (p *StringParameter) GetDefault() any {
 	return *p.Default
 }
 
+func (p *StringParameter) GetItems() Parameter {
+	return nil
+}
+
 // Manifest returns the manifest for the StringParameter.
 func (p *StringParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
@@ -609,6 +614,10 @@ func (p *IntParameter) GetDefault() any {
 	return *p.Default
 }
 
+func (p *IntParameter) GetItems() Parameter {
+	return nil
+}
+
 // Manifest returns the manifest for the IntParameter.
 func (p *IntParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
@@ -701,6 +710,10 @@ func (p *FloatParameter) GetDefault() any {
 	return *p.Default
 }
 
+func (p *FloatParameter) GetItems() Parameter {
+	return nil
+}
+
 // Manifest returns the manifest for the FloatParameter.
 func (p *FloatParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
@@ -780,6 +793,10 @@ func (p *BooleanParameter) GetDefault() any {
 		return nil
 	}
 	return *p.Default
+}
+
+func (p *BooleanParameter) GetItems() Parameter {
+	return nil
 }
 
 // Manifest returns the manifest for the BooleanParameter.
@@ -896,6 +913,10 @@ func (p *ArrayParameter) GetDefault() any {
 		return nil
 	}
 	return *p.Default
+}
+
+func (p *ArrayParameter) GetItems() Parameter {
+	return p.Items
 }
 
 // Manifest returns the manifest for the ArrayParameter.

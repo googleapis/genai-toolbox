@@ -154,7 +154,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	return out, nil
 }
 
-// Helper function to replace parameters in the commands
+// replaceCommandsParams is a helper function to replace parameters in the commands
+
 func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]string, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
