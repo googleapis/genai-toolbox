@@ -2,10 +2,10 @@ module github.com/googleapis/genai-toolbox
 
 go 1.23.8
 
-toolchain go1.24.4
+toolchain go1.24.5
 
 require (
-	cloud.google.com/go/alloydbconn v1.15.3
+	cloud.google.com/go/alloydbconn v1.15.4
 	cloud.google.com/go/bigquery v1.69.0
 	cloud.google.com/go/bigtable v1.38.0
 	cloud.google.com/go/cloudsqlconn v1.17.2
@@ -48,7 +48,7 @@ require golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 require (
 	cel.dev/expr v0.23.0 // indirect
 	cloud.google.com/go v0.121.2 // indirect
-	cloud.google.com/go/alloydb v1.16.1 // indirect
+	cloud.google.com/go/alloydb v1.18.0 // indirect
 	cloud.google.com/go/auth v0.16.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
@@ -136,7 +136,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	modernc.org/libc v1.65.10 // indirect
