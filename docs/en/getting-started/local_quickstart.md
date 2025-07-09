@@ -329,7 +329,7 @@ pip install google-genai
    code to create an agent:
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="python" >}}
-{% include "quickstart_samples/python/adk.py" %}
+{{% include "quickstart_samples/python/adk.py" %}}
 {{< tab header="LangChain" lang="python" >}}
 import asyncio
 
