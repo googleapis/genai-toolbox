@@ -4,7 +4,7 @@ sources:
     project: ${DATAPLEX_PROJECT}
 
 tools:
-  dataplex-search-entries:
+  search_entries:
     kind: dataplex-search-entries
     source: dataplex-source
     description: |
@@ -73,3 +73,6 @@ tools:
         type: string
         description: "Keyword search query for entries"
 
+toolsets:
+  dataplex-tools:
+    - search_entries
