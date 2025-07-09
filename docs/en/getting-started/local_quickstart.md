@@ -35,7 +35,7 @@ accessed by our agent, and create a database user for Toolbox to connect with.
 
     Here, `postgres` denotes the default postgres superuser.
 
-    {{% pageinfo color="warning" %}}
+    {{< notice info >}}
 
 #### **Having trouble connecting?**
 
@@ -70,7 +70,7 @@ If desired, once connected to `psql` as the `postgres` OS user, you can set a
 password for the `postgres` *database* user using: `ALTER USER postgres WITH
 PASSWORD 'your_chosen_password';`. This would allow direct connection with `-U
 postgres` and a password next time.
-    {{< /pageinfo >}}
+    {{< /notice >}}
 
 1. Create a new database and a new user:
 
