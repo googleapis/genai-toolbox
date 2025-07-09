@@ -182,13 +182,13 @@ func (s *Source) getSession(ctx context.Context) (*mcp.ClientSession, error) {
 }
 
 func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
-	fmt.Printf("Attempting to connect? to endpoint %s\n", s.Endpoint)
+	// fmt.Printf("Attempting to connect? to endpoint %s\n", s.Endpoint)
 	session, err := s.getSession(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MCP server: %w", err)
 	}
 	defer session.Close()
-	fmt.Println("Connecting?")
+	// fmt.Println("Connecting?")
 
 	remoteServerTools, err := session.ListTools(ctx, &mcp.ListToolsParams{})
 	if err != nil {
@@ -200,9 +200,9 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 	var mcpTools []MCPServerTool = make([]MCPServerTool, len(remoteServerTools.Tools))
 	for i, tool := range remoteServerTools.Tools {
 		// TODO: Refactor or reuse the model jsonschema.Schema shape
-		fmt.Println(tool.Name)
-		fmt.Println(tool.InputSchema.Type)
-		fmt.Println(tool.OutputSchema)
+		// fmt.Println(tool.Name)
+		// fmt.Println(tool.InputSchema.Type)
+		// fmt.Println(tool.OutputSchema)
 
 		var toolProperties = map[string]tools.ParameterMcpManifest{}
 		for toolArgKey, toolArgumentValue := range tool.InputSchema.Properties {
@@ -237,6 +237,7 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 			},
 			// Parameters: tool.InputSchema.ContentSchema,
 			Parameters: toolCallParameters,
+			// TODO: Support output shape
 		}
 	}
 
@@ -328,7 +329,7 @@ func (t MCPServerTool) McpManifest() tools.McpManifest {
 }
 
 func (t MCPServerTool) Authorized(verifiedAuthServices []string) bool {
-	// TODO:
+	// TODO: Add Authorized feature
 	return true
 }
 
