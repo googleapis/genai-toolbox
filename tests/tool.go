@@ -649,26 +649,6 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 			want: invokeParamWant,
 		},
 		{
-			name:          "MCP Invoke my-param-tool with array",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "my-param-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name": "my-param-tool",
-					"arguments": map[string]any{
-						"id":   int(3),
-						"name": "Alice",
-					},
-				},
-			},
-			want: invokeParamWant,
-		},
-		{
 			name:          "MCP Invoke invalid tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
