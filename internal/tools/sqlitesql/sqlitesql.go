@@ -138,7 +138,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		name := p.GetName()
 		value := newParams[i].Value
 
-		// Spanner only accepts typed slices as input
+		// SQLite only accepts typed slices as input
 		// This checks if the param is an array.
 		// If yes, convert []any to typed slice (e.g []string, []int)
 		switch arrayParam := value.(type) {

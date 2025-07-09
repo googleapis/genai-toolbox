@@ -236,12 +236,13 @@ func getCouchbaseParamToolInfo(collectionName string) (string, string, string, [
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
 		collectionName, collectionName)
+
 	toolStatement2 := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) order by meta().id",
 		collectionName, collectionName)
 
 	arrayToolStatemnt := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
-		"%s.* FROM %s WHERE meta().id IN $idArray AND name IN $nameArray order by meta().id", collectionName, collectionName)
+		"%s.* FROM %s WHERE TONUMBER(meta().id) IN $idArray AND name IN $nameArray order by meta().id", collectionName, collectionName)
 
 	params := []map[string]any{
 		{"name": "Alice"},
