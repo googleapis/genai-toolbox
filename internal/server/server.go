@@ -176,7 +176,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
 
 	// dynamically create the tools for the source
-	// dynamicTools := make(map[string]tools.Tool)
+	dynamicToolsMap := make(map[string]tools.Tool)
 	for name, source := range dynamicToolsSourceMap {
 		tools, err := func() ([]tools.Tool, error) {
 			childCtx, span := instrumentation.Tracer.Start(
@@ -195,11 +195,11 @@ func NewServer(ctx context.Context, cfg ServerConfig, l log.Logger) (*Server, er
 			return nil, err
 		}
 		for _, tool := range tools {
-			// TODO: change toolsMap -> dynamicTools and merge
 			// add the tool to the tools map, always replace if found
-			toolsMap[tool.McpManifest().Name] = tool
+			dynamicToolsMap[tool.McpManifest().Name] = tool
 		}
 	}
+	MergeTools(toolsMap, dynamicToolsMap)
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d dynamic tools sources.", len(dynamicToolsSourceMap)))
 
 	// create a default toolset that contains all tools
