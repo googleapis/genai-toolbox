@@ -186,7 +186,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		switch arrayParam := value.(type) {
 		case []any:
 			var err error
-			itemType := p.GetItems().GetType()
+			itemType := p.(*tools.ArrayParameter).GetItems().GetType()
 			value, err = tools.ConvertAnySliceToTyped(arrayParam, itemType)
 			if err != nil {
 				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
