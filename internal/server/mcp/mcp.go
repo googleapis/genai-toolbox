@@ -99,10 +99,12 @@ func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId,
 		return v20250618.ProcessMethod(ctx, id, method, toolset, tools, body)
 	case v20250326.PROTOCOL_VERSION:
 		return v20250326.ProcessMethod(ctx, id, method, toolset, tools, body)
-	case v20241105.PROTOCOL_VERSION:
-		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
 	default:
-		err := fmt.Errorf("invalid protocol version: %s", mcpVersion)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, body)
 	}
+}
+
+// VerifyProtocolVersion verifies if the version string is valid.
+func VerifyProtocolVersion(version string) bool {
+	return slices.Contains(SUPPORTED_PROTOCOL_VERSIONS, version)
 }
