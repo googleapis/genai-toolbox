@@ -28,7 +28,7 @@ import (
 )
 
 // GetToolsConfig returns a mock tools config file
-func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, authToolStatement string) map[string]any {
+func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, paramToolStatement2, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -62,6 +62,19 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, a
 						"name":        "name",
 						"type":        "string",
 						"description": "user name",
+					},
+				},
+			},
+			"my-param-tool2": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test invocation with params.",
+				"statement":   paramToolStatement2,
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
 					},
 				},
 			},
@@ -261,12 +274,13 @@ func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 }
 
 // GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
-func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, []any) {
+func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3), ($4);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
-	params := []any{"Alice", "Jane", "Sid"}
-	return createStatement, insertStatement, toolStatement, params
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 // GetPostgresSQLAuthToolInfo returns statements and param of my-auth-tool for postgres-sql kind
@@ -286,12 +300,13 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 }
 
 // GetMSSQLParamToolInfo returns statements and param for my-param-tool mssql-sql kind
-func GetMSSQLParamToolInfo(tableName string) (string, string, string, []any) {
+func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid), (@nil);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
-	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid")}
-	return createStatement, insertStatement, toolStatement, params
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id;", tableName)
+	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid"), sql.Named("nil", nil)}
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 // GetMSSQLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
@@ -311,12 +326,13 @@ func GetMSSQLTmplToolStatement() (string, string) {
 }
 
 // GetMySQLParamToolInfo returns statements and param for my-param-tool mysql-sql kind
-func GetMySQLParamToolInfo(tableName string) (string, string, string, []any) {
+func GetMySQLParamToolInfo(tableName string) (string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	params := []any{"Alice", "Jane", "Sid"}
-	return createStatement, insertStatement, toolStatement, params
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 // GetMySQLAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
@@ -335,10 +351,11 @@ func GetMySQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string) {
+func GetNonSpannerInvokeParamWant() (string, string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
+	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, mcpInvokeParamWant
+	return invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 // GetPostgresWants return the expected wants for postgres
@@ -453,12 +470,13 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 }
 
 // GetRedisWants return the expected wants for redis
-func GetRedisValkeyWants() (string, string, string, string) {
+func GetRedisValkeyWants() (string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
 	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	invokeParamWantNull := `[{"id":"4","name":""}]`
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant
+	return select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
@@ -494,6 +512,19 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 						"name":        "name",
 						"type":        "string",
 						"description": "user name",
+					},
+				},
+			},
+			"my-param-tool2": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test invocation with params.",
+				"commands":    [][]string{{"HGETALL", "row4"}},
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
 					},
 				},
 			},
@@ -534,7 +565,5 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 			},
 		},
 	}
-
 	return toolsFile
-
 }

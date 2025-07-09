@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -80,12 +81,13 @@ func setupSQLiteTestDB(t *testing.T, ctx context.Context, db *sql.DB, createStat
 	}
 }
 
-func getSQLiteParamToolInfo(tableName string) (string, string, string, []any) {
+func getSQLiteParamToolInfo(tableName string) (string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	params := []any{"Alice", "Jane", "Sid"}
-	return createStatement, insertStatement, toolStatement, params
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 func getSQLiteAuthToolInfo(tableName string) (string, string, string, []any) {
@@ -123,15 +125,15 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createStatement1, insertStatement1, toolStatement1, params1 := getSQLiteParamToolInfo(tableNameParam)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := getSQLiteParamToolInfo(tableNameParam)
 	setupSQLiteTestDB(t, ctx, db, createStatement1, insertStatement1, tableNameParam, params1)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, toolStatement2, params2 := getSQLiteAuthToolInfo(tableNameAuth)
+	createStatement2, insertStatement2, authToolStatement, params2 := getSQLiteAuthToolInfo(tableNameAuth)
 	setupSQLiteTestDB(t, ctx, db, createStatement2, insertStatement2, tableNameAuth, params2)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -143,7 +145,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -153,8 +155,8 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }

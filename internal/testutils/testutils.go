@@ -15,9 +15,12 @@
 package testutils
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -41,4 +44,64 @@ func ContextWithNewLogger() (context.Context, error) {
 		return nil, fmt.Errorf("unable to create logger: %s", err)
 	}
 	return util.WithLogger(ctx, logger), nil
+}
+
+// WaitForString waits until the server logs a single line that matches the provided regex.
+// returns the output of whatever the server sent so far.
+func WaitForString(ctx context.Context, re *regexp.Regexp, pr io.ReadCloser) (string, error) {
+	in := bufio.NewReader(pr)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// read lines in background, sending result of each read over a channel
+	// this allows us to use in.ReadString without blocking
+	type result struct {
+		s   string
+		err error
+	}
+	output := make(chan result)
+	go func() {
+		defer close(output)
+		for {
+			select {
+			case <-ctx.Done():
+				// if the context is canceled, the orig thread will send back the error
+				// so we can just exit the goroutine here
+				return
+			default:
+				// otherwise read a line from the output
+				s, err := in.ReadString('\n')
+				if err != nil {
+					output <- result{err: err}
+					return
+				}
+				output <- result{s: s}
+				// if that last string matched, exit the goroutine
+				if re.MatchString(s) {
+					return
+				}
+			}
+		}
+	}()
+
+	// collect the output until the ctx is canceled, an error was hit,
+	// or match was found (which is indicated the channel is closed)
+	var sb strings.Builder
+	for {
+		select {
+		case <-ctx.Done():
+			// if ctx is done, return that error
+			return sb.String(), ctx.Err()
+		case o, ok := <-output:
+			if !ok {
+				// match was found!
+				return sb.String(), nil
+			}
+			if o.err != nil {
+				// error was found!
+				return sb.String(), o.err
+			}
+			sb.WriteString(o.s)
+		}
+	}
 }

@@ -479,12 +479,12 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		}
 		return v, res, err
 	default:
-		toolset, ok := s.toolsets[toolsetName]
+		toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
 			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.tools, body)
+		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), body)
 		return "", res, err
 	}
 }

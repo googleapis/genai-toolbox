@@ -23,6 +23,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 )
 
 // DecodeJSON decodes a given reader into an interface using the json decoder.
@@ -98,10 +99,25 @@ func WithLogger(ctx context.Context, logger log.Logger) context.Context {
 	return context.WithValue(ctx, loggerKey, logger)
 }
 
-// LoggerFromContext retreives the logger or return an error
+// LoggerFromContext retrieves the logger or return an error
 func LoggerFromContext(ctx context.Context) (log.Logger, error) {
 	if logger, ok := ctx.Value(loggerKey).(log.Logger); ok {
 		return logger, nil
 	}
 	return nil, fmt.Errorf("unable to retrieve logger")
+}
+
+const instrumentationKey contextKey = "instrumentation"
+
+// WithInstrumentation adds an instrumentation into the context as a value
+func WithInstrumentation(ctx context.Context, instrumentation *telemetry.Instrumentation) context.Context {
+	return context.WithValue(ctx, instrumentationKey, instrumentation)
+}
+
+// InstrumentationFromContext retrieves the instrumentation or return an error
+func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation, error) {
+	if instrumentation, ok := ctx.Value(instrumentationKey).(*telemetry.Instrumentation); ok {
+		return instrumentation, nil
+	}
+	return nil, fmt.Errorf("unable to retrieve instrumentation")
 }

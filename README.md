@@ -151,6 +151,8 @@ execute `toolbox` to start the server:
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
+> [!NOTE]
+> Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -165,7 +167,7 @@ Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
 <details open>
-  <summary>Python</summary>
+  <summary>Python (<a href="https://github.com/googleapis/mcp-toolbox-sdk-python">Github</a>)</summary>
   <br>
   <blockquote>
 
@@ -256,7 +258,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </details>
 </blockquote>
 <details>
-  <summary>Javascript/Typescript</summary>
+  <summary>Javascript/Typescript (<a href="https://github.com/googleapis/mcp-toolbox-sdk-js">Github</a>)</summary>
   <br>
   <blockquote>
 
