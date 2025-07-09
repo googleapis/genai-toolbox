@@ -58,6 +58,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
 	"github.com/spf13/cobra"
@@ -78,6 +80,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
@@ -347,7 +350,7 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 
 	// Combine both file lists
 	allFiles := append(yamlFiles, ymlFiles...)
-	
+
 	if len(allFiles) == 0 {
 		return ToolsFile{}, fmt.Errorf("no YAML files found in directory %q", folderPath)
 	}
