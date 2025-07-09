@@ -183,11 +183,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		// Spanner only accepts typed slices as input
 		// This checks if the param is an array.
 		// If yes, convert []any to typed slice (e.g []string, []int)
-		switch arrayParam := value.(type) {
-		case []any:
+		switch arrayParam := p.(type) {
+		case *tools.ArrayParameter:
+			arrayParamValue, ok := value.([]any)
+			if !ok {
+				return nil, fmt.Errorf("unable to convert parameter `%s` to []any %w", name, err)
+			}
+			itemType := arrayParam.GetItems().GetType()
 			var err error
-			itemType := p.(*tools.ArrayParameter).GetItems().GetType()
-			value, err = tools.ConvertAnySliceToTyped(arrayParam, itemType)
+			value, err = tools.ConvertAnySliceToTyped(arrayParamValue, itemType)
 			if err != nil {
 				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
 			}
