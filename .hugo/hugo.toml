@@ -50,6 +50,10 @@ enableRobotsTXT = true
 [markup.goldmark.renderer]
   unsafe= true 
 
+[markup.highlight]
+  noClasses = false
+  style = "tango"
+
 [outputFormats]
   [outputFormats.LLMS]
     mediaType = "text/plain"
