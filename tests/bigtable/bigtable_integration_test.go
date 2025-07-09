@@ -80,7 +80,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
 	paramTestStatement := fmt.Sprintf("SELECT TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM %s WHERE TO_INT64(cf['id']) = @id OR CAST(cf['name'] AS string) = @name;", tableName)
 	paramTestStatement2 := fmt.Sprintf("SELECT TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM %s WHERE TO_INT64(cf['id']) = @id;", tableName)
-	arrayTestStatement := fmt.Sprintf("SELECT * FROM %s WHERE TO_INT64(cf['id']) IN @ids AND CAST(cf['name'] AS string) IN @names;", tableName)
+	arrayTestStatement := fmt.Sprintf("SELECT * FROM %s WHERE TO_INT64(cf['id']) = ANY(@idArray) AND CAST(cf['name'] AS string) = ANY (@nameArray);", tableName)
 	teardownTable1 := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
 	defer teardownTable1(t)
 
