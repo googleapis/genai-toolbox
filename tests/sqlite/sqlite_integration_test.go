@@ -25,19 +25,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
-	SQLITE_SOURCE_KIND = "sqlite"
-	SQLITE_TOOL_KIND   = "sqlite-sql"
-	SQLITE_DATABASE    = os.Getenv("SQLITE_DATABASE")
+	SQLiteSourceKind = "sqlite"
+	SQLiteToolKind   = "sqlite-sql"
+	SQLiteDatabase   = os.Getenv("SQLITE_DATABASE")
 )
 
 func getSQLiteVars(t *testing.T) map[string]any {
 	return map[string]any{
-		"kind":     SQLITE_SOURCE_KIND,
-		"database": SQLITE_DATABASE,
+		"kind":     SQLiteSourceKind,
+		"database": SQLiteDatabase,
 	}
 }
 
@@ -80,20 +81,21 @@ func setupSQLiteTestDB(t *testing.T, ctx context.Context, db *sql.DB, createStat
 	}
 }
 
-func getSQLiteParamToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?);", tableName)
-	tool_statement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	params := []any{"Alice", "Jane", "Sid"}
-	return create_statement, insert_statement, tool_statement, params
+func getSQLiteParamToolInfo(tableName string) (string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, params
 }
 
 func getSQLiteAuthToolInfo(tableName string) (string, string, string, []any) {
-	create_statement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT)", tableName)
-	insert_statement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?,?) RETURNING id, name, email;", tableName)
-	tool_statement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
-	params := []any{"Alice", tests.SERVICE_ACCOUNT_EMAIL, "Jane", "janedoe@gmail.com"}
-	return create_statement, insert_statement, tool_statement, params
+	createStatement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT)", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?,?) RETURNING id, name, email;", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
+	params := []any{"Alice", tests.ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
 }
 
 func getSQLiteTmplToolStatement() (string, string) {
@@ -103,7 +105,7 @@ func getSQLiteTmplToolStatement() (string, string) {
 }
 
 func TestSQLiteToolEndpoint(t *testing.T) {
-	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SQLITE_DATABASE)
+	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SQLiteDatabase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,17 +125,17 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := getSQLiteParamToolInfo(tableNameParam)
-	setupSQLiteTestDB(t, ctx, db, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := getSQLiteParamToolInfo(tableNameParam)
+	setupSQLiteTestDB(t, ctx, db, createStatement1, insertStatement1, tableNameParam, params1)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := getSQLiteAuthToolInfo(tableNameAuth)
-	setupSQLiteTestDB(t, ctx, db, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, authToolStatement, params2 := getSQLiteAuthToolInfo(tableNameAuth)
+	setupSQLiteTestDB(t, ctx, db, createStatement2, insertStatement2, tableNameAuth, params2)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SQLITE_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLITE_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -143,7 +145,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -153,8 +155,8 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }

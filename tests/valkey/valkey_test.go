@@ -22,24 +22,25 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/valkey-io/valkey-go"
 )
 
 var (
-	VALKEY_SOURCE_KIND = "valkey"
-	VALKEY_TOOL_KIND   = "valkey"
-	VALKEY_ADDRESS     = os.Getenv("VALKEY_ADDRESS")
+	ValkeySourceKind = "valkey"
+	ValkeyToolKind   = "valkey"
+	ValkeyAddress    = os.Getenv("VALKEY_ADDRESS")
 )
 
 func getValkeyVars(t *testing.T) map[string]any {
 	switch "" {
-	case VALKEY_ADDRESS:
+	case ValkeyAddress:
 		t.Fatal("'VALKEY_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":         VALKEY_SOURCE_KIND,
-		"address":      []string{VALKEY_ADDRESS},
+		"kind":         ValkeySourceKind,
+		"address":      []string{ValkeyAddress},
 		"disableCache": true,
 	}
 }
@@ -73,7 +74,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initValkeyClient(ctx, []string{VALKEY_ADDRESS})
+	client, err := initValkeyClient(ctx, []string{ValkeyAddress})
 	if err != nil {
 		t.Fatalf("unable to create Valkey connection: %s", err)
 	}
@@ -83,7 +84,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, VALKEY_TOOL_KIND)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, ValkeyToolKind)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -93,7 +94,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -101,18 +102,19 @@ func TestValkeyToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func setupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {
-	keys := []string{"row1", "row2", "row3"}
+	keys := []string{"row1", "row2", "row3", "row4"}
 	commands := [][]string{
 		{"HSET", keys[0], "name", "Alice", "id", "1"},
 		{"HSET", keys[1], "name", "Jane", "id", "2"},
 		{"HSET", keys[2], "name", "Sid", "id", "3"},
-		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", "Alice"},
+		{"HSET", keys[3], "name", "", "id", "4"},
+		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
 	}
 	builtCmds := make(valkey.Commands, len(commands))
 

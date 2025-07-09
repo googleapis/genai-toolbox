@@ -25,41 +25,42 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	POSTGRES_SOURCE_KIND = "postgres"
-	POSTGRES_TOOL_KIND   = "postgres-sql"
-	POSTGRES_DATABASE    = os.Getenv("POSTGRES_DATABASE")
-	POSTGRES_HOST        = os.Getenv("POSTGRES_HOST")
-	POSTGRES_PORT        = os.Getenv("POSTGRES_PORT")
-	POSTGRES_USER        = os.Getenv("POSTGRES_USER")
-	POSTGRES_PASS        = os.Getenv("POSTGRES_PASS")
+	PostgresSourceKind = "postgres"
+	PostgresToolKind   = "postgres-sql"
+	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
+	PostgresHost       = os.Getenv("POSTGRES_HOST")
+	PostgresPort       = os.Getenv("POSTGRES_PORT")
+	PostgresUser       = os.Getenv("POSTGRES_USER")
+	PostgresPass       = os.Getenv("POSTGRES_PASS")
 )
 
 func getPostgresVars(t *testing.T) map[string]any {
 	switch "" {
-	case POSTGRES_DATABASE:
+	case PostgresDatabase:
 		t.Fatal("'POSTGRES_DATABASE' not set")
-	case POSTGRES_HOST:
+	case PostgresHost:
 		t.Fatal("'POSTGRES_HOST' not set")
-	case POSTGRES_PORT:
+	case PostgresPort:
 		t.Fatal("'POSTGRES_PORT' not set")
-	case POSTGRES_USER:
+	case PostgresUser:
 		t.Fatal("'POSTGRES_USER' not set")
-	case POSTGRES_PASS:
+	case PostgresPass:
 		t.Fatal("'POSTGRES_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     POSTGRES_SOURCE_KIND,
-		"host":     POSTGRES_HOST,
-		"port":     POSTGRES_PORT,
-		"database": POSTGRES_DATABASE,
-		"user":     POSTGRES_USER,
-		"password": POSTGRES_PASS,
+		"kind":     PostgresSourceKind,
+		"host":     PostgresHost,
+		"port":     PostgresPort,
+		"database": PostgresDatabase,
+		"user":     PostgresUser,
+		"password": PostgresPass,
 	}
 }
 
@@ -87,7 +88,7 @@ func TestPostgres(t *testing.T) {
 
 	var args []string
 
-	pool, err := initPostgresConnectionPool(POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASS, POSTGRES_DATABASE)
+	pool, err := initPostgresConnectionPool(PostgresHost, PostgresPort, PostgresUser, PostgresPass, PostgresDatabase)
 	if err != nil {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
@@ -98,20 +99,20 @@ func TestPostgres(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, authToolStatement, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, POSTGRES_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, POSTGRES_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -121,7 +122,7 @@ func TestPostgres(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -130,8 +131,8 @@ func TestPostgres(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want, failInvocationWant, createTableStatement := tests.GetPostgresWants()
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())

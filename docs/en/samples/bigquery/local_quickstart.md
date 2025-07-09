@@ -179,7 +179,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.7.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.8.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -292,6 +292,9 @@ to use BigQuery, and then run the Toolbox server.
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+    {{< notice note >}}
+    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox
 

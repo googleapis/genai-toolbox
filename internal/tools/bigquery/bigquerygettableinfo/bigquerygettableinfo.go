@@ -26,6 +26,9 @@ import (
 )
 
 const kind string = "bigquery-get-table-info"
+const projectKey string = "project"
+const datasetKey string = "dataset"
+const tableKey string = "table"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -78,9 +81,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	datasetParameter := tools.NewStringParameter("dataset", "The table's parent dataset.")
-	tableParameter := tools.NewStringParameter("table", "The table to get metadata information.")
-	parameters := tools.Parameters{datasetParameter, tableParameter}
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset and table.")
+	datasetParameter := tools.NewStringParameter(datasetKey, "The table's parent dataset.")
+	tableParameter := tools.NewStringParameter(tableKey, "The table to get metadata information.")
+	parameters := tools.Parameters{projectParameter, datasetParameter, tableParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -117,22 +121,28 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	sliceParams := params.AsSlice()
-	datasetId, ok := sliceParams[0].(string)
+	mapParams := params.AsMap()
+	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
-	}
-	tableId, ok := sliceParams[1].(string)
-	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[1])
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
 
-	dsHandle := t.Client.Dataset(datasetId)
+	datasetId, ok := mapParams[datasetKey].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
+	}
+
+	tableId, ok := mapParams[tableKey].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", tableKey)
+	}
+
+	dsHandle := t.Client.DatasetInProject(projectId, datasetId)
 	tableHandle := dsHandle.Table(tableId)
 
 	metadata, err := tableHandle.Metadata(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metadata for table %s.%s.%s: %w", t.Client.Project(), datasetId, tableId, err)
+		return nil, fmt.Errorf("failed to get metadata for table %s.%s.%s: %w", projectId, datasetId, tableId, err)
 	}
 
 	return []any{metadata}, nil

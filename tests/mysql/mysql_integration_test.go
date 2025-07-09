@@ -25,40 +25,41 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
-	MYSQL_SOURCE_KIND = "mysql"
-	MYSQL_TOOL_KIND   = "mysql-sql"
-	MYSQL_DATABASE    = os.Getenv("MYSQL_DATABASE")
-	MYSQL_HOST        = os.Getenv("MYSQL_HOST")
-	MYSQL_PORT        = os.Getenv("MYSQL_PORT")
-	MYSQL_USER        = os.Getenv("MYSQL_USER")
-	MYSQL_PASS        = os.Getenv("MYSQL_PASS")
+	MySQLSourceKind = "mysql"
+	MySQLToolKind   = "mysql-sql"
+	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
+	MySQLHost       = os.Getenv("MYSQL_HOST")
+	MySQLPort       = os.Getenv("MYSQL_PORT")
+	MySQLUser       = os.Getenv("MYSQL_USER")
+	MySQLPass       = os.Getenv("MYSQL_PASS")
 )
 
 func getMySQLVars(t *testing.T) map[string]any {
 	switch "" {
-	case MYSQL_DATABASE:
+	case MySQLDatabase:
 		t.Fatal("'MYSQL_DATABASE' not set")
-	case MYSQL_HOST:
+	case MySQLHost:
 		t.Fatal("'MYSQL_HOST' not set")
-	case MYSQL_PORT:
+	case MySQLPort:
 		t.Fatal("'MYSQL_PORT' not set")
-	case MYSQL_USER:
+	case MySQLUser:
 		t.Fatal("'MYSQL_USER' not set")
-	case MYSQL_PASS:
+	case MySQLPass:
 		t.Fatal("'MYSQL_PASS' not set")
 	}
 
 	return map[string]any{
-		"kind":     MYSQL_SOURCE_KIND,
-		"host":     MYSQL_HOST,
-		"port":     MYSQL_PORT,
-		"database": MYSQL_DATABASE,
-		"user":     MYSQL_USER,
-		"password": MYSQL_PASS,
+		"kind":     MySQLSourceKind,
+		"host":     MySQLHost,
+		"port":     MySQLPort,
+		"database": MySQLDatabase,
+		"user":     MySQLUser,
+		"password": MySQLPass,
 	}
 }
 
@@ -74,14 +75,14 @@ func initMySQLConnectionPool(host, port, user, pass, dbname string) (*sql.DB, er
 	return pool, nil
 }
 
-func TestMysqlToolEndpoints(t *testing.T) {
+func TestMySQLToolEndpoints(t *testing.T) {
 	sourceConfig := getMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	pool, err := initMySQLConnectionPool(MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASS, MYSQL_DATABASE)
+	pool, err := initMySQLConnectionPool(MySQLHost, MySQLPort, MySQLUser, MySQLPass, MySQLDatabase)
 	if err != nil {
 		t.Fatalf("unable to create MySQL connection pool: %s", err)
 	}
@@ -92,20 +93,20 @@ func TestMysqlToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	create_statement1, insert_statement1, tool_statement1, params1 := tests.GetMysqlParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, create_statement1, insert_statement1, tableNameParam, params1)
+	createStatement1, insertStatement1, paramToolStatement1, paramToolStatement2, params1 := tests.GetMySQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, createStatement1, insertStatement1, tableNameParam, params1)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	create_statement2, insert_statement2, tool_statement2, params2 := tests.GetMysqlAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, create_statement2, insert_statement2, tableNameAuth, params2)
+	createStatement2, insertStatement2, authToolStatement, params2 := tests.GetMySQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, createStatement2, insertStatement2, tableNameAuth, params2)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MYSQL_TOOL_KIND, tool_statement1, tool_statement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MySQLToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMysqlTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MYSQL_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -115,7 +116,7 @@ func TestMysqlToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -123,9 +124,9 @@ func TestMysqlToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetMysqlWants()
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	select1Want, failInvocationWant, createTableStatement := tests.GetMySQLWants()
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())

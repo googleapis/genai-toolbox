@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tests
+package couchbase
 
 import (
 	"context"
@@ -25,6 +25,7 @@ import (
 
 	"github.com/couchbase/gocb/v2"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -34,12 +35,11 @@ const (
 )
 
 var (
-	couchbaseConnection   = os.Getenv("COUCHBASE_CONNECTION")
-	couchbaseBucket       = os.Getenv("COUCHBASE_BUCKET")
-	couchbaseScope        = os.Getenv("COUCHBASE_SCOPE")
-	couchbaseUser         = os.Getenv("COUCHBASE_USER")
-	couchbasePass         = os.Getenv("COUCHBASE_PASS")
-	SERVICE_ACCOUNT_EMAIL = os.Getenv("SERVICE_ACCOUNT_EMAIL")
+	couchbaseConnection = os.Getenv("COUCHBASE_CONNECTION")
+	couchbaseBucket     = os.Getenv("COUCHBASE_BUCKET")
+	couchbaseScope      = os.Getenv("COUCHBASE_SCOPE")
+	couchbaseUser       = os.Getenv("COUCHBASE_USER")
+	couchbasePass       = os.Getenv("COUCHBASE_PASS")
 )
 
 // getCouchbaseVars validates and returns Couchbase configuration variables
@@ -103,7 +103,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameTemplateParam := "template_param_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// Set up data for param tool
-	paramToolStatement, params1 := getCouchbaseParamToolInfo(collectionNameParam)
+	paramToolStatement1, paramToolStatement2, params1 := getCouchbaseParamToolInfo(collectionNameParam)
 	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, params1)
 	defer teardownCollection1(t)
 
@@ -118,7 +118,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	defer teardownCollection3(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement1, paramToolStatement2, authToolStatement)
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -129,7 +129,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -140,8 +140,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	select1Want := "[{\"$1\":1}]"
 	failMcpInvocationWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: parsing failure | {\\\"statement\\\":\\\"SELEC 1;\\\""
 
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failMcpInvocationWant)
 
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
@@ -231,18 +231,22 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 }
 
 // getCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
-func getCouchbaseParamToolInfo(collectionName string) (string, []map[string]any) {
+func getCouchbaseParamToolInfo(collectionName string) (string, string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
+		collectionName, collectionName)
+	toolStatement2 := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
+		"%s.* FROM %s WHERE meta().id = TOSTRING($id) order by meta().id",
 		collectionName, collectionName)
 
 	params := []map[string]any{
 		{"name": "Alice"},
 		{"name": "Jane"},
 		{"name": "Sid"},
+		{"name": nil},
 	}
-	return toolStatement, params
+	return toolStatement, toolStatement2, params
 }
 
 // getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
@@ -250,7 +254,7 @@ func getCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) 
 	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
 
 	params := []map[string]any{
-		{"name": "Alice", "email": SERVICE_ACCOUNT_EMAIL},
+		{"name": "Alice", "email": tests.ServiceAccountEmail},
 		{"name": "Jane", "email": "janedoe@gmail.com"},
 	}
 	return toolStatement, params
