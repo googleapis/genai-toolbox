@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
@@ -45,13 +46,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Host     string `yaml:"host" validate:"required"`
-	Port     string `yaml:"port" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
+	Name         string `yaml:"name" validate:"required"`
+	Kind         string `yaml:"kind" validate:"required"`
+	Host         string `yaml:"host" validate:"required"`
+	Port         string `yaml:"port" validate:"required"`
+	User         string `yaml:"user" validate:"required"`
+	Password     string `yaml:"password" validate:"required"`
+	Database     string `yaml:"database" validate:"required"`
+	QueryTimeout string `yaml:"queryTimeout"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -59,7 +61,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
+	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -93,13 +95,22 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
-func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
+func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, queryTimeout string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+
+	// Add query timeout to DSN if specified
+	if queryTimeout != "" {
+		timeout, err := time.ParseDuration(queryTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("invalid queryTimeout %q: %w", queryTimeout, err)
+		}
+		dsn += "&readTimeout=" + timeout.String()
+	}
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)
