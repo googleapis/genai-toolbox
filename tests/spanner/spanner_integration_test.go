@@ -90,7 +90,7 @@ func initSpannerClients(ctx context.Context, project, instance, dbname string) (
 
 func TestSpannerToolEndpoints(t *testing.T) {
 	sourceConfig := getSpannerVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -232,13 +232,13 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 			Statements: []string{fmt.Sprintf("DROP TABLE %s", tableName)},
 		})
 		if err != nil {
-			t.Errorf("unable to start drop table operation: %s", err)
+			t.Errorf("unable to start drop %s operation: %s", tableName, err)
 			return
 		}
 
-		err = op.Wait(ctx)
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
+		opErr := op.Wait(ctx)
+		if opErr != nil {
+			t.Errorf("Teardown failed: %s", opErr)
 		}
 	}
 }
