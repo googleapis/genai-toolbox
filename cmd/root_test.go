@@ -1152,7 +1152,8 @@ func TestSingleEdit(t *testing.T) {
 		t.Fatalf("error writing to file: %v", err)
 	}
 
-	detectedFileChange := regexp.MustCompile(fmt.Sprintf(`DEBUG "WRITE event detected in %s"`, regexEscapedPathFile))
+	// only check substring of DEBUG message due to some OS/editors firing different operations
+	detectedFileChange := regexp.MustCompile(fmt.Sprintf(`event detected in %s"`, regexEscapedPathFile))
 	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
 	if err != nil {
 		t.Fatalf("timeout or error waiting for file to detect write: %s", err)
