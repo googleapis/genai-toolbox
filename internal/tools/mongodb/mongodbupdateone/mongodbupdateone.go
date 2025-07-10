@@ -178,7 +178,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	updateString, err := common.GetUpdate(t.UpdateParams, t.UpdatePayload, paramsMap)
 
 	var update = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(updateString), false, &update)
+	err = bson.UnmarshalExtJSON([]byte(updateString), t.Canonical, &update)
 	if err != nil {
 		return nil, err
 	}

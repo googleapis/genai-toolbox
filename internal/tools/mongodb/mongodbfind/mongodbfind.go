@@ -262,7 +262,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 	defer cur.Close(ctx)
 
-	var data = []interface{}{}
+	var data = []any{}
 	err = cur.All(context.TODO(), &data)
 	if err != nil {
 		return nil, err
