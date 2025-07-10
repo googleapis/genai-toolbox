@@ -246,51 +246,53 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 
 	var conflicts []string
 
-	for fileIndex, file := range files {
-		// Check for conflicts and merge sources
-		for name, source := range file.Sources {
-			if _, exists := merged.Sources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.Sources[name] = source
+	merge := func(fileIndex int, new, existing any) {
+		switch n := new.(type) {
+		case server.SourceConfigs:
+			e := existing.(server.SourceConfigs)
+			for name, item := range n {
+				if _, exists := e[name]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
+				} else {
+					e[name] = item
+				}
+			}
+		case server.AuthServiceConfigs:
+			e := existing.(server.AuthServiceConfigs)
+			for name, item := range n {
+				if _, exists := e[name]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("authService '%s' (file #%d)", name, fileIndex+1))
+				} else {
+					e[name] = item
+				}
+			}
+		case server.ToolConfigs:
+			e := existing.(server.ToolConfigs)
+			for name, item := range n {
+				if _, exists := e[name]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("tool '%s' (file #%d)", name, fileIndex+1))
+				} else {
+					e[name] = item
+				}
+			}
+		case server.ToolsetConfigs:
+			e := existing.(server.ToolsetConfigs)
+			for name, item := range n {
+				if _, exists := e[name]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("toolset '%s' (file #%d)", name, fileIndex+1))
+				} else {
+					e[name] = item
+				}
 			}
 		}
+	}
 
-		// Check for conflicts and merge authSources (deprecated, but still support)
-		for name, authSource := range file.AuthSources {
-			if _, exists := merged.AuthSources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("authSource '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.AuthSources[name] = authSource
-			}
-		}
-
-		// Check for conflicts and merge authServices
-		for name, authService := range file.AuthServices {
-			if _, exists := merged.AuthServices[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("authService '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.AuthServices[name] = authService
-			}
-		}
-
-		// Check for conflicts and merge tools
-		for name, tool := range file.Tools {
-			if _, exists := merged.Tools[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("tool '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.Tools[name] = tool
-			}
-		}
-
-		// Check for conflicts and merge toolsets
-		for name, toolset := range file.Toolsets {
-			if _, exists := merged.Toolsets[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("toolset '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.Toolsets[name] = toolset
-			}
-		}
+	for i, file := range files {
+		merge(i, file.Sources, merged.Sources)
+		merge(i, file.AuthSources, merged.AuthServices)
+		merge(i, file.AuthServices, merged.AuthServices)
+		merge(i, file.Tools, merged.Tools)
+		merge(i, file.Toolsets, merged.Toolsets)
 	}
 
 	// If conflicts were detected, return an error
