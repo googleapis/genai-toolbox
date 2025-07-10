@@ -118,15 +118,17 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
-	// TODO: this can be optimized later with some caching
-	m := tools.ToolsetManifest{
-		ServerVersion: s.version,
-		ToolsManifest: map[string]tools.Manifest{
-			toolName: tool.Manifest(),
-		},
+	
+	// Use cached manifest for better performance
+	manifest, ok := s.GetCachedToolManifest(toolName)
+	if !ok {
+		err = fmt.Errorf("failed to get tool manifest for %q", toolName)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
 	}
 
-	render.JSON(w, r, m)
+	render.JSON(w, r, manifest)
 }
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.

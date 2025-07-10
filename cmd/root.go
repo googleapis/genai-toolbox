@@ -377,6 +377,10 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 	}
 
 	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	
+	// Clear manifest cache since tools may have changed
+	s.ClearManifestCache()
+	logger.InfoContext(ctx, "Successfully reloaded tools and cleared manifest cache")
 
 	return nil
 }
@@ -464,21 +468,33 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 	// debounce timer is used to prevent multiple writes triggering multiple reloads
 	debounceDelay := 100 * time.Millisecond
-	debounce := time.NewTimer(1 * time.Minute)
+	debounce := time.NewTimer(debounceDelay)
 	debounce.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			logger.DebugContext(ctx, "file watcher context cancelled")
+			// Ensure timer is stopped to prevent goroutine leak
+			if !debounce.Stop() {
+				<-debounce.C
+			}
 			return
 		case err, ok := <-w.Errors:
 			if !ok {
 				logger.WarnContext(ctx, "file watcher was closed unexpectedly")
+				// Ensure timer is stopped to prevent goroutine leak
+				if !debounce.Stop() {
+					<-debounce.C
+				}
 				return
 			}
 			if err != nil {
 				logger.WarnContext(ctx, "file watcher error %s", err)
+				// Ensure timer is stopped to prevent goroutine leak
+				if !debounce.Stop() {
+					<-debounce.C
+				}
 				return
 			}
 
@@ -724,11 +740,6 @@ func run(cmd *Command) error {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
 		cmd.cfg.AuthServiceConfigs = authSourceConfigs
 	}
-	if err != nil {
-		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
 	if err != nil {
@@ -795,8 +806,11 @@ func run(cmd *Command) error {
 		defer cancel()
 		cmd.logger.WarnContext(shutdownContext, "Shutting down gracefully...")
 		err := s.Shutdown(shutdownContext)
-		if err == context.DeadlineExceeded {
-			return fmt.Errorf("graceful shutdown timed out... forcing exit")
+		if err != nil {
+			if shutdownContext.Err() == context.DeadlineExceeded {
+				return fmt.Errorf("graceful shutdown timed out... forcing exit")
+			}
+			cmd.logger.ErrorContext(shutdownContext, fmt.Sprintf("Error during shutdown: %v", err))
 		}
 	}
 
