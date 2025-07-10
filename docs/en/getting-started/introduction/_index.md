@@ -331,23 +331,25 @@ tools:
 package main
 
 import (
-  "github.com/googleapis/mcp-toolbox-sdk-go/core"
-  "context"
+	"context"
+	"log"
+
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
 )
 
 func main() {
-  // update the url to point to your server
-  URL := "http://127.0.0.1:5000";
-  ctx := context.Background()
+	// update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
 
-  client, err := core.NewToolboxClient(URL)
-  if err != nil {
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
 	}
 
-  // Framework agnostic tools
-  tools, err := client.LoadToolset("toolsetName", ctx)
-  if err != nil {
+	// Framework agnostic tools
+	tools, err := client.LoadToolset("toolsetName", ctx)
+	if err != nil {
 		log.Fatalf("Failed to load tools: %v", err)
 	}
 }
@@ -360,48 +362,49 @@ func main() {
 package main
 
 import (
-  "context"
-  "encoding/json"
+	"context"
+	"encoding/json"
+	"log"
 
-  "github.com/googleapis/mcp-toolbox-sdk-go/core"
-  "github.com/tmc/langchaingo/llms"
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"github.com/tmc/langchaingo/llms"
 )
 
 func main() {
-  // Make sure to add the error checks
-  // update the url to point to your server
-  URL := "http://127.0.0.1:5000"
-  ctx := context.Background()
+	// Make sure to add the error checks
+	// update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
 
-  client, err := core.NewToolboxClient(URL)
-  if err != nil {
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
 	}
 
-  // Framework agnostic tool
-  tool, err := client.LoadTool("toolName", ctx)
-  if err != nil {
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
 		log.Fatalf("Failed to load tools: %v", err)
 	}
 
-  // Fetch the tool's input schema
-  inputschema, err := tool.InputSchema()
-  if err != nil {
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
 		log.Fatalf("Failed to fetch inputSchema: %v", err)
 	}
 
-  var paramsSchema map[string]any
-  _ = json.Unmarshal(inputschema, &paramsSchema)
+	var paramsSchema map[string]any
+	_ = json.Unmarshal(inputschema, &paramsSchema)
 
-  // Use this tool with LangChainGo
-  langChainTool := llms.Tool{
-    Type: "function",
-    Function: &llms.FunctionDefinition{
-      Name:        tool.Name(),
-      Description: tool.Description(),
-      Parameters:  paramsSchema,
-    },
-  }
+	// Use this tool with LangChainGo
+	langChainTool := llms.Tool{
+		Type: "function",
+		Function: &llms.FunctionDefinition{
+			Name:        tool.Name(),
+			Description: tool.Description(),
+			Parameters:  paramsSchema,
+		},
+	}
 }
 {{< /highlight >}}
 
@@ -411,60 +414,61 @@ func main() {
 {{< highlight go >}}
 package main
 import (
-  "context"
-  "encoding/json"
+	"context"
+	"encoding/json"
+	"log"
 
-  "github.com/firebase/genkit/go/ai"
-  "github.com/firebase/genkit/go/genkit"
-  "github.com/googleapis/mcp-toolbox-sdk-go/core"
-  "github.com/invopop/jsonschema"
+	"github.com/firebase/genkit/go/ai"
+	"github.com/firebase/genkit/go/genkit"
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"github.com/invopop/jsonschema"
 )
 
 func main() {
-  // Make sure to add the error checks
-  // Update the url to point to your server
-  URL := "http://127.0.0.1:5000"
-  ctx := context.Background()
-  g, err := genkit.Init(ctx)
+	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+	g, err := genkit.Init(ctx)
 
-  client, err := core.NewToolboxClient(URL)
-  if err != nil {
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
 	}
 
-  // Framework agnostic tool
-  tool, err := client.LoadTool("toolName", ctx)
-  if err != nil {
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
 		log.Fatalf("Failed to load tools: %v", err)
 	}
 
-  // Fetch the tool's input schema
-  inputschema, err := tool.InputSchema()
-  if err != nil {
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
 		log.Fatalf("Failed to fetch inputSchema: %v", err)
 	}
 
-  var schema *jsonschema.Schema
-  _ = json.Unmarshal(inputschema, &schema)
+	var schema *jsonschema.Schema
+	_ = json.Unmarshal(inputschema, &schema)
 
-  executeFn := func(ctx *ai.ToolContext, input any) (string, error) {
-    result, err := tool.Invoke(ctx, input.(map[string]any))
-    if err != nil {
-      // Propagate errors from the tool invocation.
-      return "", err
-    }
+	executeFn := func(ctx *ai.ToolContext, input any) (string, error) {
+		result, err := tool.Invoke(ctx, input.(map[string]any))
+		if err != nil {
+			// Propagate errors from the tool invocation.
+			return "", err
+		}
 
-    return result.(string), nil
-  }
+		return result.(string), nil
+	}
 
-  // Use this tool with Genkit Go
-  genkitTool := genkit.DefineToolWithInputSchema(
-    g,
-    tool.Name(),
-    tool.Description(),
-    schema,
-    executeFn,
-  )
+	// Use this tool with Genkit Go
+	genkitTool := genkit.DefineToolWithInputSchema(
+		g,
+		tool.Name(),
+		tool.Description(),
+		schema,
+		executeFn,
+	)
 }
 {{< /highlight >}}
 
@@ -475,49 +479,50 @@ func main() {
 package main
 
 import (
-  "context"
-  "encoding/json"
+	"context"
+	"encoding/json"
+	"log"
 
-  "github.com/googleapis/mcp-toolbox-sdk-go/core"
-  "google.golang.org/genai"
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"google.golang.org/genai"
 )
 
 func main() {
-  // Make sure to add the error checks
-  // Update the url to point to your server
-  URL := "http://127.0.0.1:5000"
-  ctx := context.Background()
+	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
 
-  client, err := core.NewToolboxClient(URL)
-  if err != nil {
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
 	}
 
-  // Framework agnostic tool
-  tool, err := client.LoadTool("toolName", ctx)
-  if err != nil {
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
 		log.Fatalf("Failed to load tools: %v", err)
 	}
 
-  // Fetch the tool's input schema
-  inputschema, err := tool.InputSchema()
-  if err != nil {
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
 		log.Fatalf("Failed to fetch inputSchema: %v", err)
 	}
 
-  var schema *genai.Schema
-  _ = json.Unmarshal(inputschema, &schema)
+	var schema *genai.Schema
+	_ = json.Unmarshal(inputschema, &schema)
 
-  funcDeclaration := &genai.FunctionDeclaration{
-    Name:        tool.Name(),
-    Description: tool.Description(),
-    Parameters:  schema,
-  }
+	funcDeclaration := &genai.FunctionDeclaration{
+		Name:        tool.Name(),
+		Description: tool.Description(),
+		Parameters:  schema,
+	}
 
-  // Use this tool with Go GenAI
-  genAITool := &genai.Tool{
-    FunctionDeclarations: []*genai.FunctionDeclaration{funcDeclaration},
-  }
+	// Use this tool with Go GenAI
+	genAITool := &genai.Tool{
+		FunctionDeclarations: []*genai.FunctionDeclaration{funcDeclaration},
+	}
 }
 {{< /highlight >}}
 
@@ -529,47 +534,48 @@ func main() {
 package main
 
 import (
-  "context"
-  "encoding/json"
+	"context"
+	"encoding/json"
+	"log"
 
-  "github.com/googleapis/mcp-toolbox-sdk-go/core"
-  openai "github.com/openai/openai-go"
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	openai "github.com/openai/openai-go"
 )
 
 func main() {
-  // Make sure to add the error checks
-  // Update the url to point to your server
-  URL := "http://127.0.0.1:5000"
-  ctx := context.Background()
+	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
 
-  client, err := core.NewToolboxClient(URL)
-  if err != nil {
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
 	}
 
-  // Framework agnostic tool
-  tool, err := client.LoadTool("toolName", ctx)
-  if err != nil {
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
 		log.Fatalf("Failed to load tools: %v", err)
 	}
 
-  // Fetch the tool's input schema
-  inputschema, err := tool.InputSchema()
-  if err != nil {
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
 		log.Fatalf("Failed to fetch inputSchema: %v", err)
 	}
 
-  var paramsSchema openai.FunctionParameters
-  _ = json.Unmarshal(inputschema, &paramsSchema)
+	var paramsSchema openai.FunctionParameters
+	_ = json.Unmarshal(inputschema, &paramsSchema)
 
-  // Use this tool with OpenAI Go
-  openAITool := openai.ChatCompletionToolParam{
-    Function: openai.FunctionDefinitionParam{
-      Name:        tool.Name(),
-      Description: openai.String(tool.Description()),
-      Parameters:  paramsSchema,
-    },
-  }
+	// Use this tool with OpenAI Go
+	openAITool := openai.ChatCompletionToolParam{
+		Function: openai.FunctionDefinitionParam{
+			Name:        tool.Name(),
+			Description: openai.String(tool.Description()),
+			Parameters:  paramsSchema,
+		},
+	}
 }
 {{< /highlight >}}
 
