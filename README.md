@@ -377,6 +377,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
   <details open>
     <summary>Core</summary>
+
 1. Install [Toolbox Go SDK][toolbox-go]:
 
     ```bash
