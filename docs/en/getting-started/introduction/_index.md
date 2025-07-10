@@ -585,4 +585,4 @@ func main() {
 For more detailed instructions on using the Toolbox Go SDK, see the
 [project's README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
-For end-to-end samples on using the Toolbox Go SDK with orchestration frameworks, see the [project's sameples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+For end-to-end samples on using the Toolbox Go SDK with orchestration frameworks, see the [project's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
