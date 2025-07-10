@@ -898,6 +898,10 @@ func (p *ArrayParameter) GetDefault() any {
 	return *p.Default
 }
 
+func (p *ArrayParameter) GetItems() Parameter {
+	return p.Items
+}
+
 // Manifest returns the manifest for the ArrayParameter.
 func (p *ArrayParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest

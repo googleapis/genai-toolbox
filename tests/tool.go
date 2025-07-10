@@ -76,7 +76,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string, supportsArray bool) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -129,6 +129,14 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWa
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 1}`)),
 			isErr:         true,
+		},
+		{
+			name:          "invoke my-array-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
+			want:          invokeParamWant,
+			isErr:         !supportsArray,
 		},
 		{
 			name:          "Invoke my-auth-tool with auth token",
