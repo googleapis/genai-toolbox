@@ -473,4 +473,4 @@ By participating in this project you agree to abide by its terms. See
 
 ## Community
 
-Join our [discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers.
+Join our [discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers!
