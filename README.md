@@ -38,6 +38,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Toolsets](#toolsets)
 - [Versioning](#versioning)
 - [Contributing](#contributing)
+- [Community](#community)
 
 <!-- /TOC -->
 
@@ -469,3 +470,7 @@ to get started.
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms. See
 [Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
+
+## Community
+
+Join our [discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers.
