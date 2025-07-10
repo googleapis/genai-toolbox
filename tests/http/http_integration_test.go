@@ -287,7 +287,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 	select1Want := `["Hello","World"]`
 	invokeParamWant, invokeParamWantNull, _ := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, false)
 	runAdvancedHTTPInvokeTest(t)
 }
 
