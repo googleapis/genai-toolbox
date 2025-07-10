@@ -15,6 +15,7 @@
 package tools
 
 import (
+	"fmt"
 	"regexp"
 )
 
@@ -22,4 +23,51 @@ var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)
 
 func IsValidName(s string) bool {
 	return validName.MatchString(s)
+}
+
+func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {
+	var typedSlice any
+	switch itemType {
+	case "string":
+		tempSlice := make([]string, len(s))
+		for j, item := range s {
+			s, ok := item.(string)
+			if !ok {
+				return nil, fmt.Errorf("expected item at index %d to be string, got %T", j, item)
+			}
+			tempSlice[j] = s
+		}
+		typedSlice = tempSlice
+	case "integer":
+		tempSlice := make([]int64, len(s))
+		for j, item := range s {
+			i, ok := item.(int)
+			if !ok {
+				return nil, fmt.Errorf("expected item at index %d to be integer, got %T", j, item)
+			}
+			tempSlice[j] = int64(i)
+		}
+		typedSlice = tempSlice
+	case "float":
+		tempSlice := make([]float64, len(s))
+		for j, item := range s {
+			f, ok := item.(float64)
+			if !ok {
+				return nil, fmt.Errorf("expected item at index %d to be float, got %T", j, item)
+			}
+			tempSlice[j] = f
+		}
+		typedSlice = tempSlice
+	case "boolean":
+		tempSlice := make([]bool, len(s))
+		for j, item := range s {
+			b, ok := item.(bool)
+			if !ok {
+				return nil, fmt.Errorf("expected item at index %d to be boolean, got %T", j, item)
+			}
+			tempSlice[j] = b
+		}
+		typedSlice = tempSlice
+	}
+	return typedSlice, nil
 }

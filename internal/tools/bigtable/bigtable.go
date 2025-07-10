@@ -122,29 +122,43 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
+func getBigtableType(paramType string) (bigtable.SQLType, error) {
+	switch paramType {
+	case "boolean":
+		return bigtable.BoolSQLType{}, nil
+	case "string":
+		return bigtable.StringSQLType{}, nil
+	case "integer":
+		return bigtable.Int64SQLType{}, nil
+	case "float":
+		return bigtable.Float64SQLType{}, nil
+	case "array":
+		return bigtable.ArraySQLType{}, nil
+	default:
+		return nil, fmt.Errorf("unknow param type %s", paramType)
+	}
+}
+
 func getMapParamsType(tparams tools.Parameters, params tools.ParamValues) (map[string]bigtable.SQLType, error) {
-	paramTypeMap := make(map[string]string)
+	btParamTypes := make(map[string]bigtable.SQLType)
 	for _, p := range tparams {
-		paramTypeMap[p.GetName()] = p.GetType()
-	}
-
-	btParams := make(map[string]bigtable.SQLType)
-	for _, p := range params {
-		switch paramTypeMap[p.Name] {
-		case "boolean":
-			btParams[p.Name] = bigtable.BoolSQLType{}
-		case "string":
-			btParams[p.Name] = bigtable.StringSQLType{}
-		case "integer":
-			btParams[p.Name] = bigtable.Int64SQLType{}
-		case "float":
-			btParams[p.Name] = bigtable.Float64SQLType{}
-		case "array":
-			btParams[p.Name] = bigtable.ArraySQLType{}
+		if p.GetType() == "array" {
+			itemType, err := getBigtableType(p.Manifest().Items.Type)
+			if err != nil {
+				return nil, err
+			}
+			btParamTypes[p.GetName()] = bigtable.ArraySQLType{
+				ElemType: itemType,
+			}
+			continue
 		}
+		paramType, err := getBigtableType(p.GetType())
+		if err != nil {
+			return nil, err
+		}
+		btParamTypes[p.GetName()] = paramType
 	}
-
-	return btParams, nil
+	return btParamTypes, nil
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
