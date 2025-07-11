@@ -47,6 +47,8 @@ type Server struct {
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
 	ResourceMgr     *ResourceManager
+	manifestCache   map[string]tools.ToolsetManifest
+	manifestMutex   sync.RWMutex
 }
 
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
@@ -114,13 +116,23 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.authServices
+	// Return a copy to prevent race conditions
+	result := make(map[string]auth.AuthService, len(r.authServices))
+	for k, v := range r.authServices {
+		result[k] = v
+	}
+	return result
 }
 
 func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.tools
+	// Return a copy to prevent race conditions
+	result := make(map[string]tools.Tool, len(r.tools))
+	for k, v := range r.tools {
+		result[k] = v
+	}
+	return result
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -318,6 +330,8 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+		manifestCache:   make(map[string]tools.ToolsetManifest),
+		manifestMutex:   sync.RWMutex{},
 	}
 	// control plane
 	apiR, err := apiRouter(s)
@@ -372,4 +386,41 @@ func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writ
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
 	return s.srv.Shutdown(ctx)
+}
+
+// GetCachedToolManifest returns a cached tool manifest for the given tool name.
+// If not cached, it creates and caches the manifest.
+func (s *Server) GetCachedToolManifest(toolName string) (tools.ToolsetManifest, bool) {
+	s.manifestMutex.RLock()
+	if cached, exists := s.manifestCache[toolName]; exists {
+		s.manifestMutex.RUnlock()
+		return cached, true
+	}
+	s.manifestMutex.RUnlock()
+
+	// Cache miss - create and cache the manifest
+	tool, ok := s.ResourceMgr.GetTool(toolName)
+	if !ok {
+		return tools.ToolsetManifest{}, false
+	}
+
+	manifest := tools.ToolsetManifest{
+		ServerVersion: s.version,
+		ToolsManifest: map[string]tools.Manifest{
+			toolName: tool.Manifest(),
+		},
+	}
+
+	s.manifestMutex.Lock()
+	s.manifestCache[toolName] = manifest
+	s.manifestMutex.Unlock()
+
+	return manifest, true
+}
+
+// ClearManifestCache clears the manifest cache, useful when tools are reloaded.
+func (s *Server) ClearManifestCache() {
+	s.manifestMutex.Lock()
+	s.manifestCache = make(map[string]tools.ToolsetManifest)
+	s.manifestMutex.Unlock()
 }
