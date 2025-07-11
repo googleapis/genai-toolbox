@@ -1166,6 +1166,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
+	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -1225,6 +1226,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"cloud-sql-mssql-database-tools": tools.ToolsetConfig{
 					Name:      "cloud-sql-mssql-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "dataplex prebuilt tools",
+			in:   dataplex_config,
+			wantToolset: server.ToolsetConfigs{
+				"dataplex-tools": tools.ToolsetConfig{
+					Name:      "dataplex-tools",
+					ToolNames: []string{"search_entries"},
 				},
 			},
 		},
