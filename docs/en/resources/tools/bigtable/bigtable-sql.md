@@ -19,11 +19,11 @@ instance. It's compatible with any of the following sources:
 ### GoogleSQL
 
 Bigtable supports SQL queries. The integration with Toolbox supports `googlesql`
-dialect, the specified SQL statement is executed as a [data manipulation
-language (DML)][bigtable-googlesql] statements, and specified parameters will
-inserted according to their name: e.g. `@name`.
+dialect. The specified SQL statement is executed as a [data manipulation
+language (DML)][bigtable-googlesql] statement. **Please note that Bigtable's GoogleSQL support for DML statements might be limited to certain query types.** Specified parameters will be inserted according to their name: e.g. `@name`. For detailed information on supported DML statements and use cases, refer to the [Google Cloud Bigtable GoogleSQL overview][bigtable-googlesql#usecase].
 
 [bigtable-googlesql]: https://cloud.google.com/bigtable/docs/googlesql-overview
+[bigtable-googlesql#usecase]: https://cloud.google.com/bigtable/docs/googlesql-overview#use-cases
 
 ## Example
 
