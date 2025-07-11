@@ -73,9 +73,6 @@ tools:
         type: string
         description: "Keyword search query for entries"
 
-<<<<<<< HEAD
 toolsets:
   dataplex-tools:
     - search_entries
-=======
->>>>>>> 0c863b3 (feat: Add Dataplex source and search entry tool)
