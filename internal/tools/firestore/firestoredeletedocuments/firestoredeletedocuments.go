@@ -126,7 +126,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
 	}
 
-	// Convert []any to []string
 	documentPaths := make([]string, len(documentPathsRaw))
 	for i, pathRaw := range documentPathsRaw {
 		path, ok := pathRaw.(string)
@@ -160,7 +159,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	for i, job := range jobs {
 		docData := make(map[string]any)
 		docData["path"] = documentPaths[i]
-		
+
 		// Wait for the job to complete and get the result
 		_, err := job.Results()
 		if err != nil {
@@ -169,7 +168,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		} else {
 			docData["success"] = true
 		}
-		
+
 		results[i] = docData
 	}
 

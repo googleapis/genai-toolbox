@@ -118,13 +118,13 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	mapParams := params.AsMap()
-	
+
 	var collectionRefs []*firestoreapi.CollectionRef
 	var err error
-	
+
 	// Check if parentPath is provided
 	parentPath, hasParent := mapParams[parentPathKey].(string)
-	
+
 	if hasParent && parentPath != "" {
 		// List subcollections of the specified document
 		docRef := t.Client.Doc(parentPath)
@@ -146,12 +146,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		collData := make(map[string]any)
 		collData["id"] = collRef.ID
 		collData["path"] = collRef.Path
-		
+
 		// If this is a subcollection, include parent information
 		if collRef.Parent != nil {
 			collData["parent"] = collRef.Parent.Path
 		}
-		
+
 		results[i] = collData
 	}
 

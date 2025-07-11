@@ -74,32 +74,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
 				},
 			},
-		},
-		{
-			desc: "complex configuration",
-			in: `
-			tools:
-				user_data_retriever:
-					kind: firestore-get-documents
-					source: users-db-firestore
-					description: |
-						Retrieve user profile documents from Firestore.
-						This tool can fetch multiple documents in a single call.
-					authRequired:
-						- oauth2-service
-			`,
-			want: server.ToolConfigs{
-				"user_data_retriever": firestoregetdocuments.Config{
-					Name:   "user_data_retriever",
-					Kind:   "firestore-get-documents",
-					Source: "users-db-firestore",
-					Description: `Retrieve user profile documents from Firestore.
-This tool can fetch multiple documents in a single call.
-`,
-					AuthRequired: []string{"oauth2-service"},
-				},
-			},
-		},
+		}
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

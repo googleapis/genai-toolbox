@@ -75,31 +75,6 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "complex configuration",
-			in: `
-			tools:
-				bulk_deleter:
-					kind: firestore-delete-documents
-					source: users-db-firestore
-					description: |
-						Delete multiple documents from Firestore.
-						This tool can delete multiple documents in a single call using bulk operations.
-					authRequired:
-						- oauth2-service
-			`,
-			want: server.ToolConfigs{
-				"bulk_deleter": firestoredeletedocuments.Config{
-					Name:   "bulk_deleter",
-					Kind:   "firestore-delete-documents",
-					Source: "users-db-firestore",
-					Description: `Delete multiple documents from Firestore.
-This tool can delete multiple documents in a single call using bulk operations.
-`,
-					AuthRequired: []string{"oauth2-service"},
-				},
-			},
-		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

@@ -126,7 +126,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
 	}
 
-	// Convert []any to []string
 	documentPaths := make([]string, len(documentPathsRaw))
 	for i, pathRaw := range documentPathsRaw {
 		path, ok := pathRaw.(string)
@@ -154,14 +153,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		docData := make(map[string]any)
 		docData["path"] = documentPaths[i]
 		docData["exists"] = snapshot.Exists()
-		
+
 		if snapshot.Exists() {
 			docData["data"] = snapshot.Data()
 			docData["createTime"] = snapshot.CreateTime
 			docData["updateTime"] = snapshot.UpdateTime
 			docData["readTime"] = snapshot.ReadTime
 		}
-		
+
 		results[i] = docData
 	}
 

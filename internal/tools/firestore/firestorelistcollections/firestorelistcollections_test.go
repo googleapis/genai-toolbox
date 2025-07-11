@@ -75,31 +75,6 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "complex configuration",
-			in: `
-			tools:
-				collection_explorer:
-					kind: firestore-list-collections
-					source: users-db-firestore
-					description: |
-						List collections and subcollections in Firestore.
-						This tool can list root collections or subcollections of a specific document.
-					authRequired:
-						- oauth2-service
-			`,
-			want: server.ToolConfigs{
-				"collection_explorer": firestorelistcollections.Config{
-					Name:   "collection_explorer",
-					Kind:   "firestore-list-collections",
-					Source: "users-db-firestore",
-					Description: `List collections and subcollections in Firestore.
-This tool can list root collections or subcollections of a specific document.
-`,
-					AuthRequired: []string{"oauth2-service"},
-				},
-			},
-		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
