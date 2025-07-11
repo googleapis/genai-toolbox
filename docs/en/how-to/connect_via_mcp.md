@@ -63,6 +63,10 @@ When running with stdio, Toolbox will listen via stdio instead of acting as a
 remote HTTP server. Logs will be set to the `warn` level by default. `debug` and
 `info` logs are not supported with stdio.
 
+{{< notice note >}}
+Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+{{< /notice >}}
+
 ### Connecting via HTTP
 
 Toolbox supports the HTTP transport protocol with and without SSE.

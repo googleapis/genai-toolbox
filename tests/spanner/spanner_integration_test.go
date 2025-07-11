@@ -31,6 +31,7 @@ import (
 	database "cloud.google.com/go/spanner/admin/database/apiv1"
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/tests"
 )
@@ -90,7 +91,7 @@ func initSpannerClients(ctx context.Context, project, instance, dbname string) (
 
 func TestSpannerToolEndpoints(t *testing.T) {
 	sourceConfig := getSpannerVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -107,19 +108,19 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createStatement1, insertStatement1, toolStatement1, params1 := getSpannerParamToolInfo(tableNameParam)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := getSpannerParamToolInfo(tableNameParam)
 	dbString := fmt.Sprintf(
 		"projects/%s/instances/%s/databases/%s",
 		SpannerProject,
 		SpannerInstance,
 		SpannerDatabase,
 	)
-	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, createStatement1, insertStatement1, tableNameParam, dbString, params1)
+	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, createParamTableStmt, insertParamTableStmt, tableNameParam, dbString, paramTestParams)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createStatement2, insertStatement2, toolStatement2, params2 := getSpannerAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, createStatement2, insertStatement2, tableNameAuth, dbString, params2)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getSpannerAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, dbString, authTestParams)
 	defer teardownTable2(t)
 
 	// set up data for template param tool
@@ -128,7 +129,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	defer teardownTableTmpl(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, toolStatement1, toolStatement2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
 	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
@@ -141,7 +142,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -152,10 +153,11 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	select1Want := "[{\"\":\"1\"}]"
 	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
+	invokeParamWantNull := `[{"id":"4","name":null}]`
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
 	failInvocationWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
 
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
@@ -169,12 +171,14 @@ func TestSpannerToolEndpoints(t *testing.T) {
 }
 
 // getSpannerToolInfo returns statements and param for my-param-tool for spanner-sql kind
-func getSpannerParamToolInfo(tableName string) (string, string, string, map[string]any) {
+func getSpannerParamToolInfo(tableName string) (string, string, string, string, string, map[string]any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3)", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3), (4, @name4)", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @name", tableName)
-	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid"}
-	return createStatement, insertStatement, toolStatement, params
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN UNNEST(@idArray) AND name IN UNNEST(@nameArray)", tableName)
+	params := map[string]any{"name1": "Alice", "name2": "Jane", "name3": "Sid", "name4": nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
@@ -230,13 +234,13 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 			Statements: []string{fmt.Sprintf("DROP TABLE %s", tableName)},
 		})
 		if err != nil {
-			t.Errorf("unable to start drop table operation: %s", err)
+			t.Errorf("unable to start drop %s operation: %s", tableName, err)
 			return
 		}
 
-		err = op.Wait(ctx)
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
+		opErr := op.Wait(ctx)
+		if opErr != nil {
+			t.Errorf("Teardown failed: %s", opErr)
 		}
 	}
 }
@@ -438,7 +442,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 			name:          "invoke my-exec-sql-tool insert entry",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (5, 'test_name')\"}", tableNameParam))),
 			want:          "null",
 			isErr:         false,
 		},

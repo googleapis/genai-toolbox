@@ -177,6 +177,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 // replaceCommandsParams is a helper function to replace parameters in the commands
+
 func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
@@ -186,12 +187,12 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 	}
 	newCommands := make([][]any, len(commands))
 	for i, cmd := range commands {
-		newCmd := make([]any, len(cmd))
-		for j, part := range cmd {
+		newCmd := make([]any, 0)
+		for _, part := range cmd {
 			v, ok := paramMap[part]
 			if !ok {
 				// Command part is not a Parameter placeholder
-				newCmd[j] = part
+				newCmd = append(newCmd, part)
 				continue
 			}
 			if typeMap[part] == "array" {
@@ -202,7 +203,7 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 				}
 				continue
 			}
-			newCmd[j] = fmt.Sprintf("%s", v)
+			newCmd = append(newCmd, fmt.Sprintf("%s", v))
 		}
 		newCommands[i] = newCmd
 	}

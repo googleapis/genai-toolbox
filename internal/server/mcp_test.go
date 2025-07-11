@@ -693,14 +693,22 @@ func TestStdioSession(t *testing.T) {
 		}
 	}()
 
-	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
 	sseManager := newSseManager(ctx)
 
-	server := &Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: toolsMap, toolsets: toolsets}
+	resourceManager := NewResourceManager(nil, nil, toolsMap, toolsets)
+
+	server := &Server{
+		version:         fakeVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      sseManager,
+		ResourceMgr:     resourceManager,
+	}
 
 	in := bufio.NewReader(pr)
 	stdioSession := NewStdioSession(server, in, pw)
