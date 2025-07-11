@@ -317,3 +317,272 @@ const tools = toolboxTools.map(getTool);
 
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
+#### Go
+
+Once you've installed the [Toolbox Go
+SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
+
+{{< tabpane text=true persist=header >}}
+{{% tab header="Core" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+)
+
+func main() {
+	// update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+	}
+
+	// Framework agnostic tools
+	tools, err := client.LoadToolset("toolsetName", ctx)
+	if err != nil {
+		log.Fatalf("Failed to load tools: %v", err)
+	}
+}
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="LangChain Go" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"log"
+
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"github.com/tmc/langchaingo/llms"
+)
+
+func main() {
+	// Make sure to add the error checks
+	// update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+	}
+
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
+		log.Fatalf("Failed to load tools: %v", err)
+	}
+
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
+		log.Fatalf("Failed to fetch inputSchema: %v", err)
+	}
+
+	var paramsSchema map[string]any
+	_ = json.Unmarshal(inputschema, &paramsSchema)
+
+	// Use this tool with LangChainGo
+	langChainTool := llms.Tool{
+		Type: "function",
+		Function: &llms.FunctionDefinition{
+			Name:        tool.Name(),
+			Description: tool.Description(),
+			Parameters:  paramsSchema,
+		},
+	}
+}
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="Genkit Go" lang="en" %}}
+
+{{< highlight go >}}
+package main
+import (
+	"context"
+	"encoding/json"
+	"log"
+
+	"github.com/firebase/genkit/go/ai"
+	"github.com/firebase/genkit/go/genkit"
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"github.com/invopop/jsonschema"
+)
+
+func main() {
+	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+	g, err := genkit.Init(ctx)
+
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+	}
+
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
+		log.Fatalf("Failed to load tools: %v", err)
+	}
+
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
+		log.Fatalf("Failed to fetch inputSchema: %v", err)
+	}
+
+	var schema *jsonschema.Schema
+	_ = json.Unmarshal(inputschema, &schema)
+
+	executeFn := func(ctx *ai.ToolContext, input any) (string, error) {
+		result, err := tool.Invoke(ctx, input.(map[string]any))
+		if err != nil {
+			// Propagate errors from the tool invocation.
+			return "", err
+		}
+
+		return result.(string), nil
+	}
+
+	// Use this tool with Genkit Go
+	genkitTool := genkit.DefineToolWithInputSchema(
+		g,
+		tool.Name(),
+		tool.Description(),
+		schema,
+		executeFn,
+	)
+}
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="Go GenAI" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"log"
+
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"google.golang.org/genai"
+)
+
+func main() {
+	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+	}
+
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
+		log.Fatalf("Failed to load tools: %v", err)
+	}
+
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
+		log.Fatalf("Failed to fetch inputSchema: %v", err)
+	}
+
+	var schema *genai.Schema
+	_ = json.Unmarshal(inputschema, &schema)
+
+	funcDeclaration := &genai.FunctionDeclaration{
+		Name:        tool.Name(),
+		Description: tool.Description(),
+		Parameters:  schema,
+	}
+
+	// Use this tool with Go GenAI
+	genAITool := &genai.Tool{
+		FunctionDeclarations: []*genai.FunctionDeclaration{funcDeclaration},
+	}
+}
+{{< /highlight >}}
+
+{{% /tab %}}
+
+{{% tab header="OpenAI Go" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"log"
+
+	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	openai "github.com/openai/openai-go"
+)
+
+func main() {
+	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+	}
+
+	// Framework agnostic tool
+	tool, err := client.LoadTool("toolName", ctx)
+	if err != nil {
+		log.Fatalf("Failed to load tools: %v", err)
+	}
+
+	// Fetch the tool's input schema
+	inputschema, err := tool.InputSchema()
+	if err != nil {
+		log.Fatalf("Failed to fetch inputSchema: %v", err)
+	}
+
+	var paramsSchema openai.FunctionParameters
+	_ = json.Unmarshal(inputschema, &paramsSchema)
+
+	// Use this tool with OpenAI Go
+	openAITool := openai.ChatCompletionToolParam{
+		Function: openai.FunctionDefinitionParam{
+			Name:        tool.Name(),
+			Description: openai.String(tool.Description()),
+			Parameters:  paramsSchema,
+		},
+	}
+}
+{{< /highlight >}}
+
+{{% /tab %}}
+{{< /tabpane >}}
+
+For more detailed instructions on using the Toolbox Go SDK, see the
+[project's README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
+
+For end-to-end samples on using the Toolbox Go SDK with orchestration frameworks, see the [project's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
