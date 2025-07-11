@@ -345,11 +345,11 @@ type CustomAuthTransport struct {
 
 func (t *CustomAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// Update the http headers to support auth
-	req.Clone(req.Context())
+	cloned := req.Clone(req.Context())
 	for k, v := range t.Headers {
-		req.Header.Add(k, v)
+		cloned.Header.Add(k, v)
 	}
 
 	// Call the underlying RoundTripper to execute the request.
-	return t.RoundTripper.RoundTrip(req)
+	return t.RoundTripper.RoundTrip(cloned)
 }
