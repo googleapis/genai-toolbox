@@ -21,6 +21,21 @@ tools:
         description: "Lists detailed schema information (object type, columns, constraints, indexes, owner, comment) as JSON for user-created tables. Filters by a comma-separated list of names. If names are omitted, lists all tables in the specified database and schema."
         statement: |
            WITH
+           input_param AS (
+                SELECT ? AS param -- Single bind variable here
+           )
+           ,
+           all_tables_mode AS (
+                SELECT COALESCE(TRIM(param), '') = '' AS is_all_tables
+                FROM input_param
+           ) --SELECT * FROM all_tables_mode;
+           ,
+           filtered_table_names AS (
+                SELECT DISTINCT TRIM(LOWER(value)) AS table_name
+                FROM input_param, all_tables_mode, TABLE(SPLIT_TO_TABLE(param, ','))
+                WHERE NOT is_all_tables
+           ) -- SELECT * FROM filtered_table_names;
+           ,
            table_info AS (
                 SELECT
                     t.TABLE_CATALOG,
@@ -30,16 +45,14 @@ tools:
                     t.TABLE_OWNER,
                     t.COMMENT
                 FROM
-                    ${SNOWFLAKE_DATABASE}.INFORMATION_SCHEMA.TABLES t
+                    all_tables_mode
+                    CROSS JOIN ${SNOWFLAKE_DATABASE}.INFORMATION_SCHEMA.TABLES T
                 WHERE
                     t.TABLE_TYPE = 'BASE TABLE'
                     AND t.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
                     -- AND t.TABLE_SCHEMA = ''${SNOWFLAKE_SCHEMA}'' -- Comment out this line to give access to all schemata
-                    AND LOWER(T.TABLE_NAME) IN (
-                        SELECT TRIM(LOWER(value))
-                            FROM TABLE(SPLIT_TO_TABLE(TRIM($1), ','))
-                    )
-            )
+                    AND is_all_tables OR LOWER(T.TABLE_NAME) IN (SELECT table_name FROM filtered_table_names)
+            ) -- SELECT * FROM table_info;
             ,
             columns_info AS (
                 SELECT
@@ -108,8 +121,3 @@ tools:
             - name: table_names
               type: string
               description: "Optional: A comma-separated list of table names. If empty, details for all tables in the specified database and schema will be listed."
-
-toolsets:
-    snowflake-database-tools:
-        - execute_sql
-        - list_tables
