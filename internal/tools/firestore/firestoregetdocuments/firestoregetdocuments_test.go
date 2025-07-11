@@ -74,7 +74,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
 				},
 			},
-		}
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
