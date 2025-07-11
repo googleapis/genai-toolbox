@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "toolbox.fullname" . }}
+  labels:
+    {{- include "toolbox.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.options.port }}
+      targetPort: {{ .Values.options.port }}
+  selector:
+    {{- include "toolbox.selectorLabels" . | nindent 4 }}
