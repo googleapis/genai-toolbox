@@ -11,13 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package main
-
-import (
-	"github.com/googleapis/genai-toolbox/cmd"
-)
-
-func main() {
-	cmd.Execute()
-}
+# see releases page for other versions
+export VERSION=0.9.0
+curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
+chmod +x toolbox./toolbox --tools-file "tools.yaml"
+toolbox help
