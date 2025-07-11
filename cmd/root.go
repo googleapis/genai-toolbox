@@ -488,13 +488,14 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 				return
 			}
 
-			// only check for write events which indicate user saved a new tools file
-			if !e.Has(fsnotify.Write) {
+			// only check for events which indicate user saved a new tools file
+			// multiple operations checked due to various file update methods across editors
+			if !e.Has(fsnotify.Write | fsnotify.Create | fsnotify.Rename) {
 				continue
 			}
 
 			cleanedFilename := filepath.Clean(e.Name)
-			logger.DebugContext(ctx, fmt.Sprintf("WRITE event detected in %s", cleanedFilename))
+			logger.DebugContext(ctx, fmt.Sprintf("%s event detected in %s", e.Op, cleanedFilename))
 
 			folderChanged := watchingFolder &&
 				(strings.HasSuffix(cleanedFilename, ".yaml") || strings.HasSuffix(cleanedFilename, ".yml"))
@@ -723,11 +724,6 @@ func run(cmd *Command) error {
 	if authSourceConfigs != nil {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
 		cmd.cfg.AuthServiceConfigs = authSourceConfigs
-	}
-	if err != nil {
-		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
 	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
