@@ -153,7 +153,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, errors.New("no input found")
 	}
 
-	var data interface{}
+	var data any
 	err := bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
 	if err != nil {
 		return nil, err

@@ -218,7 +218,7 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 		return nil, fmt.Errorf("error replacing project payload: %s", err)
 	}
 
-	var projection interface{}
+	var projection any
 	err = bson.Unmarshal(result.Bytes(), &projection)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
@@ -252,7 +252,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, res.Err()
 	}
 
-	var data interface{}
+	var data any
 	err = res.Decode(&data)
 	if err != nil {
 		return nil, err

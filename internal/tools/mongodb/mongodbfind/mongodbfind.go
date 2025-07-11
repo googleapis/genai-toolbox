@@ -222,7 +222,7 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 		return nil, fmt.Errorf("error replacing projection payload: %s", err)
 	}
 
-	var projection interface{}
+	var projection any
 	err = bson.UnmarshalExtJSON(result.Bytes(), false, &projection)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
