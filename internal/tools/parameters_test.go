@@ -51,6 +51,20 @@ func TestParametersMarshal(t *testing.T) {
 			},
 		},
 		{
+			name: "string not required",
+			in: []map[string]any{
+				{
+					"name":        "my_string",
+					"type":        "string",
+					"description": "this param is a string",
+					"required":    false,
+				},
+			},
+			want: tools.Parameters{
+				tools.NewStringParameterWithRequired("my_string", "this param is a string", false),
+			},
+		},
+		{
 			name: "int",
 			in: []map[string]any{
 				{
@@ -61,6 +75,20 @@ func TestParametersMarshal(t *testing.T) {
 			},
 			want: tools.Parameters{
 				tools.NewIntParameter("my_integer", "this param is an int"),
+			},
+		},
+		{
+			name: "int not required",
+			in: []map[string]any{
+				{
+					"name":        "my_integer",
+					"type":        "integer",
+					"description": "this param is an int",
+					"required":    false,
+				},
+			},
+			want: tools.Parameters{
+				tools.NewIntParameterWithRequired("my_integer", "this param is an int", false),
 			},
 		},
 		{
@@ -77,6 +105,20 @@ func TestParametersMarshal(t *testing.T) {
 			},
 		},
 		{
+			name: "float not required",
+			in: []map[string]any{
+				{
+					"name":        "my_float",
+					"type":        "float",
+					"description": "my param is a float",
+					"required":    false,
+				},
+			},
+			want: tools.Parameters{
+				tools.NewFloatParameterWithRequired("my_float", "my param is a float", false),
+			},
+		},
+		{
 			name: "bool",
 			in: []map[string]any{
 				{
@@ -87,6 +129,20 @@ func TestParametersMarshal(t *testing.T) {
 			},
 			want: tools.Parameters{
 				tools.NewBooleanParameter("my_bool", "this param is a boolean"),
+			},
+		},
+		{
+			name: "bool not required",
+			in: []map[string]any{
+				{
+					"name":        "my_bool",
+					"type":        "boolean",
+					"description": "this param is a boolean",
+					"required":    false,
+				},
+			},
+			want: tools.Parameters{
+				tools.NewBooleanParameterWithRequired("my_bool", "this param is a boolean", false),
 			},
 		},
 		{
@@ -105,6 +161,25 @@ func TestParametersMarshal(t *testing.T) {
 			},
 			want: tools.Parameters{
 				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+			},
+		},
+		{
+			name: "string array not required",
+			in: []map[string]any{
+				{
+					"name":        "my_array",
+					"type":        "array",
+					"description": "this param is an array of strings",
+					"required":    false,
+					"items": map[string]string{
+						"name":        "my_string",
+						"type":        "string",
+						"description": "string item",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewArrayParameterWithRequired("my_array", "this param is an array of strings", false, tools.NewStringParameter("my_string", "string item")),
 			},
 		},
 		{
@@ -673,6 +748,38 @@ func TestParametersParse(t *testing.T) {
 			in:   map[string]any{},
 			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
 		},
+		{
+			name: "string not required",
+			params: tools.Parameters{
+				tools.NewStringParameterWithRequired("my_string", "this param is a string", false),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: nil}},
+		},
+		{
+			name: "int not required",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRequired("my_int", "this param is an int", false),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: nil}},
+		},
+		{
+			name: "float not required",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRequired("my_float", "this param is a float", false),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: nil}},
+		},
+		{
+			name: "bool not required",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithRequired("my_bool", "this param is a bool", false),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: nil}},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1003,6 +1110,38 @@ func TestParamManifest(t *testing.T) {
 				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 			},
 		},
+		{
+			name: "string not required",
+			in:   tools.NewStringParameterWithRequired("foo-string", "bar", false),
+			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "int not required",
+			in:   tools.NewIntParameterWithRequired("foo-int", "bar", false),
+			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "float not required",
+			in:   tools.NewFloatParameterWithRequired("foo-float", "bar", false),
+			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "boolean not required",
+			in:   tools.NewBooleanParameterWithRequired("foo-bool", "bar", false),
+			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "array not required",
+			in:   tools.NewArrayParameterWithRequired("foo-array", "bar", false, tools.NewStringParameter("foo-string", "bar")),
+			want: tools.ParameterManifest{
+				Name:         "foo-array",
+				Type:         "array",
+				Required:     false,
+				Description:  "bar",
+				AuthServices: []string{},
+				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1071,6 +1210,8 @@ func TestMcpManifest(t *testing.T) {
 			in: tools.Parameters{
 				tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
 				tools.NewStringParameter("foo-string2", "bar"),
+				tools.NewStringParameterWithRequired("foo-string-req", "bar", true),
+				tools.NewStringParameterWithRequired("foo-string-not-req", "bar", false),
 				tools.NewIntParameterWithDefault("foo-int", 1, "bar"),
 				tools.NewIntParameter("foo-int2", "bar"),
 				tools.NewArrayParameterWithDefault("foo-array", []any{"hello", "world"}, "bar", tools.NewStringParameter("foo-string", "bar")),
@@ -1079,10 +1220,12 @@ func TestMcpManifest(t *testing.T) {
 			want: tools.McpToolsSchema{
 				Type: "object",
 				Properties: map[string]tools.ParameterMcpManifest{
-					"foo-string":  tools.ParameterMcpManifest{Type: "string", Description: "bar"},
-					"foo-string2": tools.ParameterMcpManifest{Type: "string", Description: "bar"},
-					"foo-int":     tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
-					"foo-int2":    tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+					"foo-string":         tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					"foo-string2":        tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					"foo-string-req":     tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					"foo-string-not-req": tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+					"foo-int":            tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+					"foo-int2":           tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
 					"foo-array": tools.ParameterMcpManifest{
 						Type:        "array",
 						Description: "bar",
@@ -1094,7 +1237,7 @@ func TestMcpManifest(t *testing.T) {
 						Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
 					},
 				},
-				Required: []string{"foo-string2", "foo-int2", "foo-array2"},
+				Required: []string{"foo-string2", "foo-string-req", "foo-int2", "foo-array2"},
 			},
 		},
 	}
@@ -1498,6 +1641,48 @@ func TestFailResolveTemplateParameters(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestCheckParamRequired(t *testing.T) {
+	tcs := []struct {
+		name     string
+		required bool
+		defaultV any
+		want     bool
+	}{
+		{
+			name:     "required and no default",
+			required: true,
+			defaultV: nil,
+			want:     true,
+		},
+		{
+			name:     "required and default",
+			required: true,
+			defaultV: "foo",
+			want:     false,
+		},
+		{
+			name:     "not required and no default",
+			required: false,
+			defaultV: nil,
+			want:     false,
+		},
+		{
+			name:     "not required and default",
+			required: false,
+			defaultV: "foo",
+			want:     false,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tools.CheckParamRequired(tc.required, tc.defaultV)
+			if got != tc.want {
+				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})
 	}
