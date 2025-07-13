@@ -725,11 +725,6 @@ func run(cmd *Command) error {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
 		cmd.cfg.AuthServiceConfigs = authSourceConfigs
 	}
-	if err != nil {
-		errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
 	if err != nil {
