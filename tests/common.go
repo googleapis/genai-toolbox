@@ -649,3 +649,36 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 	}
 	return toolsFile
 }
+
+func GetDuckDbParamToolInfo(tableName string) (string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, $1), (2, $2), (3, $3), (4, $4);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * EXCLUDE (id) FROM %s WHERE id = $1 OR name = $2 order by id;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2);", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
+}
+
+// GetDuckDbAuthToolInfo returns statements and param of my-auth-tool for duckdb-sql kind
+func GetDuckDbAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER PRIMARY KEY, name TEXT, email TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, $1, $2), (2, $3, $4)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
+	params := []any{"Alice", ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+func GetDuckDbWants() (string, string, string) {
+	select1Want := "[{\"1\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Parser Error: syntax error at or near \"SELEC\""}],"isError":true}}`
+	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
+	return select1Want, failInvocationWant, createTableStatement
+}
+
+func GetDuckDbInvokeParamWant() (string, string, string) {
+	invokeParamWant := "[{\"name\":\"Alice\"},{\"name\":\"Sid\"}]"
+	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"name\":\"Alice\"}"},{"type":"text","text":"{\"name\":\"Sid\"}"}]}}`
+	return invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
+}
