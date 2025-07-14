@@ -20,6 +20,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mcpserver"
@@ -122,8 +123,14 @@ func TestParseSpecVersionFromYaml(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", want, got.Sources)
+
+			wantCfg, wantOk := want["my-mcp-server"].(mcpserver.Config)
+			gotCfg, gotOk := got.Sources["my-mcp-server"].(mcpserver.Config)
+			if !wantOk || !gotOk {
+				t.Fatalf("type assertion failed: wantOk=%v gotOk=%v", wantOk, gotOk)
+			}
+			if !cmp.Equal(wantCfg, gotCfg, cmpopts.IgnoreUnexported(mcpserver.Config{})) {
+				t.Fatalf("incorrect parse: want %v, got %v", wantCfg, gotCfg)
 			}
 		})
 	}
@@ -159,8 +166,14 @@ func TestParseTransportTypeFromYaml(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", want, got.Sources)
+
+			wantCfg, wantOk := want["my-mcp-server"].(mcpserver.Config)
+			gotCfg, gotOk := got.Sources["my-mcp-server"].(mcpserver.Config)
+			if !wantOk || !gotOk {
+				t.Fatalf("type assertion failed: wantOk=%v gotOk=%v", wantOk, gotOk)
+			}
+			if !cmp.Equal(wantCfg, gotCfg, cmpopts.IgnoreUnexported(mcpserver.Config{})) {
+				t.Fatalf("incorrect parse: want %v, got %v", wantCfg, gotCfg)
 			}
 		})
 	}
@@ -196,8 +209,14 @@ func TestParseAuthMethodFromYaml(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", want, got.Sources)
+
+			wantCfg, wantOk := want["my-mcp-server"].(mcpserver.Config)
+			gotCfg, gotOk := got.Sources["my-mcp-server"].(mcpserver.Config)
+			if !wantOk || !gotOk {
+				t.Fatalf("type assertion failed: wantOk=%v gotOk=%v", wantOk, gotOk)
+			}
+			if !cmp.Equal(wantCfg, gotCfg, cmpopts.IgnoreUnexported(mcpserver.Config{})) {
+				t.Fatalf("incorrect parse: want %v, got %v", wantCfg, gotCfg)
 			}
 		})
 	}
