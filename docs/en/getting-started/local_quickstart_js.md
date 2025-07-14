@@ -285,24 +285,24 @@ from Toolbox.
 
 1. In a new terminal, install the SDK package.
 
-```bash
-npm install langchain @toolbox-sdk/core
-```
+    ```bash
+    npm install langchain @toolbox-sdk/core
+    ```
 
 1. Install other required dependencies
 
    {{< tabpane persist=header >}}
-   {{< tab header="LangChain" lang="bash" >}}
+{{< tab header="LangChain" lang="bash" >}}
 npm install langchain @langchain/google-vertexai
-   {{< /tab >}}
-   {{< tab header="GenkitJS" lang="bash" >}}
+{{< /tab >}}
+{{< tab header="GenkitJS" lang="bash" >}}
 npm install genkit @genkit-ai/vertexai
-   {{< /tab >}}
-   {{< /tabpane >}}
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
 
-{{< tabpane persist=header >}}
+    {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
 
 import { ChatVertexAI } from "@langchain/google-vertexai";
