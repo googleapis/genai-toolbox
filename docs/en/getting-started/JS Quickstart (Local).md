@@ -532,7 +532,7 @@ run();
 {{< /tab >}}
 {{< /tabpane >}}
 
-6. Make sure your Toolbox server is running (`./toolbox --tools-file "tools.yaml"`), then run your agent [make sure you are in the root directory]:
+1. Run your agent, and observe the results:
 
     ```sh
     node hotelAgent.js
