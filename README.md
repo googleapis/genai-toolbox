@@ -3,7 +3,7 @@
 # MCP Toolbox for Databases
 
 [![Docs](https://img.shields.io/badge/docs-MCP_Toolbox-blue)](https://googleapis.github.io/genai-toolbox/)
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badges&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
 
 > [!NOTE]
