@@ -286,7 +286,7 @@ First let's create a new folder for your project, initialize it with `npm`, and 
     cd my-agent-app
     ```
 
-1. Initialize a new Node.js project:
+1. (Optional) Initialize a Node.js project:
 
     ```bash
     npm init -y
