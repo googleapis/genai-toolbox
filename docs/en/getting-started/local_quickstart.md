@@ -1,5 +1,5 @@
 ---
-title: "Quickstart (Local)"
+title: "Python Quickstart (Local)"
 type: docs
 weight: 2
 description: >
