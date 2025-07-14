@@ -17,15 +17,14 @@ This guide assumes you have already done the following:
 
 If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using Gemini or PaLM models), follow these one-time setup steps:
 
-> - [Install the Google Cloud CLI]
-> - [Set up Application Default Credentials (ADC)]
+1. [Install the Google Cloud CLI]
+1. [Set up Application Default Credentials (ADC)]
+1. Set your project and enable Vertex AI
 
-#### Set your project and enable Vertex AI
-
-```bash
-gcloud config set project YOUR_PROJECT_ID
-gcloud services enable aiplatform.googleapis.com
-```
+    ```bash
+    gcloud config set project YOUR_PROJECT_ID
+    gcloud services enable aiplatform.googleapis.com
+    ```
 
 [Node.js (v18 or higher)]: https://nodejs.org/
 [install-postgres]: https://www.postgresql.org/download/
