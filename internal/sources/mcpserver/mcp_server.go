@@ -94,7 +94,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	// Validate the endpoint is valid uri
 	_, err := url.ParseRequestURI(c.Endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse endpoint %v", err)
+		return nil, fmt.Errorf("failed when parsing endpoint: %v", err)
 	}
 
 	// Validate the spec version is supported
