@@ -22,28 +22,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/redis/go-redis/v9"
 )
 
 var (
-	REDIS_SOURCE_KIND = "redis"
-	REDIS_TOOL_KIND   = "redis"
-	REDIS_ADDRESS     = os.Getenv("REDIS_ADDRESS")
-	REDIS_PASS        = os.Getenv("REDIS_PASS")
+	RedisSourceKind = "redis"
+	RedisToolKind   = "redis"
+	RedisAddress    = os.Getenv("REDIS_ADDRESS")
+	RedisPass       = os.Getenv("REDIS_PASS")
 )
 
 func getRedisVars(t *testing.T) map[string]any {
 	switch "" {
-	case REDIS_ADDRESS:
+	case RedisAddress:
 		t.Fatal("'REDIS_ADDRESS' not set")
-	case REDIS_PASS:
+	case RedisPass:
 		t.Fatal("'REDIS_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     REDIS_SOURCE_KIND,
-		"address":  []string{REDIS_ADDRESS},
-		"password": REDIS_PASS,
+		"kind":     RedisSourceKind,
+		"address":  []string{RedisAddress},
+		"password": RedisPass,
 	}
 }
 
@@ -70,7 +71,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	client, err := initRedisClient(ctx, REDIS_ADDRESS, REDIS_PASS)
+	client, err := initRedisClient(ctx, RedisAddress, RedisPass)
 	if err != nil {
 		t.Fatalf("unable to create Redis connection: %s", err)
 	}
@@ -80,7 +81,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, REDIS_TOOL_KIND)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, RedisToolKind)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -90,7 +91,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -98,18 +99,19 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(*testing.T) {
-	keys := []string{"row1", "row2", "row3"}
+	keys := []string{"row1", "row2", "row3", "row4"}
 	commands := [][]any{
 		{"HSET", keys[0], "id", 1, "name", "Alice"},
 		{"HSET", keys[1], "id", 2, "name", "Jane"},
 		{"HSET", keys[2], "id", 3, "name", "Sid"},
-		{"HSET", tests.SERVICE_ACCOUNT_EMAIL, "name", "Alice"},
+		{"HSET", keys[3], "id", 4, "name", nil},
+		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
 	}
 	for _, c := range commands {
 		resp := client.Do(ctx, c...)

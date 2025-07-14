@@ -26,24 +26,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
-	DGRAPH_SOURCE_KIND = "dgraph"
-	DGRAPH_TOOL_KIND   = "dgraph-dql"
-	DGRAPH_API_KEY     = "api-key"
-	DGRAPH_URL         = os.Getenv("DGRAPH_URL")
+	DgraphSourceKind = "dgraph"
+	DgraphApiKey     = "api-key"
+	DgraphUrl        = os.Getenv("DGRAPH_URL")
 )
 
 func getDgraphVars(t *testing.T) map[string]any {
-	if DGRAPH_URL == "" {
+	if DgraphUrl == "" {
 		t.Fatal("'DGRAPH_URL' not set")
 	}
 	return map[string]any{
-		"kind":      DGRAPH_SOURCE_KIND,
-		"dgraphUrl": DGRAPH_URL,
-		"apiKey":    DGRAPH_API_KEY,
+		"kind":      DgraphSourceKind,
+		"dgraphUrl": DgraphUrl,
+		"apiKey":    DgraphApiKey,
 	}
 }
 
@@ -79,7 +79,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)

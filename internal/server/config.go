@@ -53,6 +53,8 @@ type ServerConfig struct {
 	TelemetryServiceName string
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
+	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
+	DisableReload bool
 }
 
 type logFormat string
@@ -270,9 +272,12 @@ func IsDynamicToolSource(source sources.Source) bool {
 }
 
 // MergeTools merges the locally defines tools and the dynamic tools maps in place. The operation is as follows:
+//
 // (a) conflict between local Toolbox's tools vs imported server's tools: take precedence on local tool.
+//
 // (b) conflict between two imported server: last imported tool will be selected.
-// We expect the dynamicTools to already have (b) satisfied.
+//
+//	We expect the dynamicTools to already have (b) satisfied.
 func MergeTools(localToolsMap map[string]tools.Tool, dynamicToolsMap map[string]tools.Tool) {
 	for toolName, tool := range dynamicToolsMap {
 		_, ok := localToolsMap[toolName]

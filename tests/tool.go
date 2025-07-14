@@ -76,7 +76,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string, supportsArray bool) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -109,18 +109,34 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant string) {
 			isErr:         false,
 		},
 		{
-			name:          "Invoke my-tool without parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			name:          "invoke my-param-tool2 with nil response",
+			api:           "http://127.0.0.1:5000/api/tool/my-param-tool2/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"id": 4}`)),
+			want:          invokeParamWantNull,
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-param-tool without parameters",
+			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
-			name:          "Invoke my-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			name:          "Invoke my-param-tool with insufficient parameters",
+			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 1}`)),
 			isErr:         true,
+		},
+		{
+			name:          "invoke my-array-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
+			want:          invokeParamWant,
+			isErr:         !supportsArray,
 		},
 		{
 			name:          "Invoke my-auth-tool with auth token",
@@ -428,7 +444,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 	}
 }
 
-func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select_1_want string) {
+func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select1Want string) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -449,7 +465,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			want:          select_1_want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -489,7 +505,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         false,
-			want:          select_1_want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
@@ -597,7 +613,7 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want string) {
+func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant string) {
 	sessionId := RunInitialize(t, "2024-11-05")
 	header := map[string]string{}
 	if sessionId != "" {
@@ -715,7 +731,7 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, fail_invocation_want st
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: fail_invocation_want,
+			want: failInvocationWant,
 		},
 	}
 	for _, tc := range invokeTcs {

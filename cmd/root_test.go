@@ -16,23 +16,33 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
+	"fmt"
+	"io"
 	"os"
+	"path"
+	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -172,6 +182,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--stdio"},
 			want: withDefaults(server.ServerConfig{
 				Stdio: true,
+			}),
+		},
+		{
+			desc: "disable reload",
+			args: []string{"--disable-reload"},
+			want: withDefaults(server.ServerConfig{
+				DisableReload: true,
 			}),
 		},
 	}
@@ -963,6 +980,184 @@ func TestEnvVarReplacement(t *testing.T) {
 		})
 	}
 
+}
+
+// normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
+// this prevents needing multiple "want" cases for TestResolveWatcherInputs
+func normalizeFilepaths(m map[string]bool) map[string]bool {
+	newMap := make(map[string]bool)
+	for k, v := range m {
+		newMap[filepath.ToSlash(k)] = v
+	}
+	return newMap
+}
+
+func TestResolveWatcherInputs(t *testing.T) {
+	tcs := []struct {
+		description      string
+		toolsFile        string
+		toolsFiles       []string
+		toolsFolder      string
+		wantWatchDirs    map[string]bool
+		wantWatchedFiles map[string]bool
+	}{
+		{
+			description:      "single tools file",
+			toolsFile:        "tools_folder/example_tools.yaml",
+			toolsFiles:       []string{},
+			toolsFolder:      "",
+			wantWatchDirs:    map[string]bool{"tools_folder": true},
+			wantWatchedFiles: map[string]bool{"tools_folder/example_tools.yaml": true},
+		},
+		{
+			description:      "default tools file (root dir)",
+			toolsFile:        "tools.yaml",
+			toolsFiles:       []string{},
+			toolsFolder:      "",
+			wantWatchDirs:    map[string]bool{".": true},
+			wantWatchedFiles: map[string]bool{"tools.yaml": true},
+		},
+		{
+			description:   "multiple files in different folders",
+			toolsFile:     "",
+			toolsFiles:    []string{"tools_folder/example_tools.yaml", "tools_folder2/example_tools.yaml"},
+			toolsFolder:   "",
+			wantWatchDirs: map[string]bool{"tools_folder": true, "tools_folder2": true},
+			wantWatchedFiles: map[string]bool{
+				"tools_folder/example_tools.yaml":  true,
+				"tools_folder2/example_tools.yaml": true,
+			},
+		},
+		{
+			description:   "multiple files in same folder",
+			toolsFile:     "",
+			toolsFiles:    []string{"tools_folder/example_tools.yaml", "tools_folder/example_tools2.yaml"},
+			toolsFolder:   "",
+			wantWatchDirs: map[string]bool{"tools_folder": true},
+			wantWatchedFiles: map[string]bool{
+				"tools_folder/example_tools.yaml":  true,
+				"tools_folder/example_tools2.yaml": true,
+			},
+		},
+		{
+			description: "multiple files in different levels",
+			toolsFile:   "",
+			toolsFiles: []string{
+				"tools_folder/example_tools.yaml",
+				"tools_folder/special_tools/example_tools2.yaml"},
+			toolsFolder:   "",
+			wantWatchDirs: map[string]bool{"tools_folder": true, "tools_folder/special_tools": true},
+			wantWatchedFiles: map[string]bool{
+				"tools_folder/example_tools.yaml":                true,
+				"tools_folder/special_tools/example_tools2.yaml": true,
+			},
+		},
+		{
+			description:      "tools folder",
+			toolsFile:        "",
+			toolsFiles:       []string{},
+			toolsFolder:      "tools_folder",
+			wantWatchDirs:    map[string]bool{"tools_folder": true},
+			wantWatchedFiles: map[string]bool{},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			gotWatchDirs, gotWatchedFiles := resolveWatcherInputs(tc.toolsFile, tc.toolsFiles, tc.toolsFolder)
+
+			normalizedGotWatchDirs := normalizeFilepaths(gotWatchDirs)
+			normalizedGotWatchedFiles := normalizeFilepaths(gotWatchedFiles)
+
+			if diff := cmp.Diff(tc.wantWatchDirs, normalizedGotWatchDirs); diff != "" {
+				t.Errorf("incorrect watchDirs: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantWatchedFiles, normalizedGotWatchedFiles); diff != "" {
+				t.Errorf("incorrect watchedFiles: diff %v", diff)
+			}
+
+		})
+	}
+}
+
+// helper function for testing file detection in dynamic reloading
+func tmpFileWithCleanup(content []byte) (string, func(), error) {
+	f, err := os.CreateTemp("", "*")
+	if err != nil {
+		return "", nil, err
+	}
+	cleanup := func() { os.Remove(f.Name()) }
+
+	if _, err := f.Write(content); err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	if err := f.Close(); err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	return f.Name(), cleanup, err
+}
+
+func TestSingleEdit(t *testing.T) {
+	ctx, cancelCtx := context.WithTimeout(context.Background(), time.Minute)
+	defer cancelCtx()
+
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	defer pr.Close()
+
+	fileToWatch, cleanup, err := tmpFileWithCleanup([]byte("initial content"))
+	if err != nil {
+		t.Fatalf("error editing tools file %s", err)
+	}
+	defer cleanup()
+
+	logger, err := log.NewStdLogger(pw, pw, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to setup logger %s", err)
+	}
+	ctx = util.WithLogger(ctx, logger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		t.Fatalf("failed to setup instrumentation %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	mockServer := &server.Server{}
+
+	cleanFileToWatch := filepath.Clean(fileToWatch)
+	watchDir := filepath.Dir(cleanFileToWatch)
+
+	watchedFiles := map[string]bool{cleanFileToWatch: true}
+	watchDirs := map[string]bool{watchDir: true}
+
+	go watchChanges(ctx, watchDirs, watchedFiles, mockServer)
+
+	// escape backslash so regex doesn't fail on windows filepaths
+	regexEscapedPathFile := strings.ReplaceAll(cleanFileToWatch, `\`, `\\\\*\\`)
+	regexEscapedPathFile = path.Clean(regexEscapedPathFile)
+
+	regexEscapedPathDir := strings.ReplaceAll(watchDir, `\`, `\\\\*\\`)
+	regexEscapedPathDir = path.Clean(regexEscapedPathDir)
+
+	begunWatchingDir := regexp.MustCompile(fmt.Sprintf(`DEBUG "Added directory %s to watcher."`, regexEscapedPathDir))
+	_, err = testutils.WaitForString(ctx, begunWatchingDir, pr)
+	if err != nil {
+		t.Fatalf("timeout or error waiting for watcher to start: %s", err)
+	}
+
+	err = os.WriteFile(fileToWatch, []byte("modification"), 0777)
+	if err != nil {
+		t.Fatalf("error writing to file: %v", err)
+	}
+
+	// only check substring of DEBUG message due to some OS/editors firing different operations
+	detectedFileChange := regexp.MustCompile(fmt.Sprintf(`event detected in %s"`, regexEscapedPathFile))
+	_, err = testutils.WaitForString(ctx, detectedFileChange, pr)
+	if err != nil {
+		t.Fatalf("timeout or error waiting for file to detect write: %s", err)
+	}
 }
 
 func TestPrebuiltTools(t *testing.T) {

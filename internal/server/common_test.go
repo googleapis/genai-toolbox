@@ -147,14 +147,23 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to setup otel: %s", err)
 	}
 
-	instrumentation, err := CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
 	sseManager := newSseManager(ctx)
 
-	server := Server{version: fakeVersionString, logger: testLogger, instrumentation: instrumentation, sseManager: sseManager, tools: tools, toolsets: toolsets}
+	resourceManager := NewResourceManager(nil, nil, tools, toolsets)
+
+	server := Server{
+		version:         fakeVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      sseManager,
+		ResourceMgr:     resourceManager,
+	}
+
 	var r chi.Router
 	switch router {
 	case "api":
