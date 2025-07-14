@@ -19,7 +19,7 @@ instance. It's compatible with any of the following sources:
 ### GoogleSQL
 
 Bigtable supports SQL queries. The integration with Toolbox supports `googlesql`
-dialect. The specified SQL statement is executed as a [data manipulation
+dialect, the specified SQL statement is executed as a [data manipulation
 language (DML)][bigtable-googlesql] statements, and specified parameters will inserted according to their name: e.g. `@name`.
 
 {{<notice note>}}
