@@ -117,22 +117,18 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	mapParams := params.AsMap()
-	documentPathsRaw, ok := mapParams[documentPathsKey].([]any)
-	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected an array", documentPathsKey)
+	
+	var documentPaths []string
+	
+	switch v := mapParams[documentPathsKey].(type) {
+	case []string:
+		documentPaths = v
+	default:
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected an array of strings", documentPathsKey)
 	}
 
-	if len(documentPathsRaw) == 0 {
+	if len(documentPaths) == 0 {
 		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
-	}
-
-	documentPaths := make([]string, len(documentPathsRaw))
-	for i, pathRaw := range documentPathsRaw {
-		path, ok := pathRaw.(string)
-		if !ok {
-			return nil, fmt.Errorf("element %d in '%s' is not a string", i, documentPathsKey)
-		}
-		documentPaths[i] = path
 	}
 
 	// Create a BulkWriter to handle multiple deletions efficiently

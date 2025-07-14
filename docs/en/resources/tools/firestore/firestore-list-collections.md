@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-A `firestore-list-collections` tool lists collections in Firestore, either at the root level or as subcollections of a specific document.
+A `firestore-list-collections` tool lists [collections](https://firebase.google.com/docs/firestore/data-model#collections) in Firestore, either at the root level or as [subcollections](https://firebase.google.com/docs/firestore/data-model#subcollections) of a specific document.
 It's compatible with the following sources:
 
 - [firestore](../sources/firestore.md)
