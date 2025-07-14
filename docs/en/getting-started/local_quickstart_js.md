@@ -11,7 +11,7 @@ description: >
 This guide assumes you have already done the following:
 
 1. Installed [Node.js (v18 or higher)].
-2. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
+1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
 
@@ -277,15 +277,6 @@ In this section, we will download Toolbox, configure our tools in a
 In this section, we will write and run an agent that will load the Tools
 from Toolbox.
 
-First let's create a new folder for your project, initialize it with `npm`, and install the required dependencies.
-
-1. Create a new folder for your project and navigate into it:
-
-    ```bash
-    mkdir my-agent-app
-    cd my-agent-app
-    ```
-
 1. (Optional) Initialize a Node.js project:
 
     ```bash
@@ -298,7 +289,7 @@ First let's create a new folder for your project, initialize it with `npm`, and 
     touch index.js
     ```
 
-4. Install required dependencies
+1. Install required dependencies
 
    {{< tabpane persist=header >}}
    {{< tab header="LangChain" lang="bash" >}}
@@ -309,7 +300,7 @@ npm install @toolbox-sdk/core genkit @genkit-ai/vertexai dotenv
    {{< /tab >}}
    {{< /tabpane >}}
 
-5. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
+1. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
 
 {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
