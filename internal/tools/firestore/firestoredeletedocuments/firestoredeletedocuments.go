@@ -126,13 +126,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
 	}
 
-	documentPaths := make([]string, len(documentPathsRaw))
-	for i, pathRaw := range documentPathsRaw {
-		path, ok := pathRaw.(string)
-		if !ok {
-			return nil, fmt.Errorf("element %d in '%s' is not a string", i, documentPathsKey)
-		}
-		documentPaths[i] = path
+	// Use ConvertAnySliceToTyped to convert the slice
+	typedSlice, err := tools.ConvertAnySliceToTyped(documentPathsRaw, "string")
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert document paths: %w", err)
+	}
+
+	documentPaths, ok := typedSlice.([]string)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type conversion error for document paths")
 	}
 
 	// Create a BulkWriter to handle multiple deletions efficiently
