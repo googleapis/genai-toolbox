@@ -3,7 +3,7 @@ title: "Python Quickstart (Local)"
 type: docs
 weight: 2
 description: >
-  How to get started running Toolbox locally with Python, PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
+  How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
   [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
 ---
 
@@ -673,3 +673,7 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
     ```sh
     python hotel_agent.py
     ```
+
+{{< notice info >}}
+For more information, visit the [Python SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-python).
+{{</ notice >}}

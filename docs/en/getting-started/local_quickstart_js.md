@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running Toolbox locally with JavaScript, PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/) and [GenkitJS](https://genkit.dev/docs/get-started/).
+  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/) and [GenkitJS](https://genkit.dev/docs/get-started/).
 ---
 
 ## Before you begin
@@ -283,7 +283,7 @@ from Toolbox.
     npm init -y
     ```
 
-1. In a new terminal, install the SDK package.
+1. In a new terminal, install the [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
 
     ```bash
     npm install langchain @toolbox-sdk/core
@@ -485,3 +485,7 @@ run();
     ```sh
     node hotelAgent.js
     ```
+
+{{< notice info >}}
+For more information, visit the [JS SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-js).
+{{</ notice >}}
