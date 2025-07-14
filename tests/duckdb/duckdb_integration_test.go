@@ -17,7 +17,7 @@ import (
 
 var (
 	DuckDbKind = "duckdb-sql"
-	dbPath     = "/tmp/hotel_test.db"
+	dbPath     = "/tmp/users.db"
 )
 
 func getDuckDbVars() map[string]any {
