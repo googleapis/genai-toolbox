@@ -12,7 +12,7 @@ aliases:
 
 A `duckdb-sql` tool executes SQL statements against a [DuckDB](https://duckdb.org/) database. It is compatible with any DuckDB source configuration as defined in the [DuckDB source documentation](../sources/duckdb.md).
 
-DuckDB uses the `?` placeholder for parameters in SQL statements, following a similar approach to SQLite. Parameters are bound in the order they are provided. The `statement` field supports any valid DuckDB SQL statement, including `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other DDL statements.
+DuckDB uses the `?` placeholder for parameters in SQL statements. Parameters are bound in the order they are provided. The `statement` field supports any valid DuckDB SQL statement, including `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other DDL statements.
 
 DuckDB's SQL dialect closely follows the conventions of the PostgreSQL dialect, with a few exceptions listed in the [DuckDB PostgreSQL Compatibility documentation](https://duckdb.org/docs/stable/sql/postgresql_compatibility). For an introduction to DuckDB's SQL dialect, refer to the [DuckDB SQL Introduction](https://duckdb.org/docs/stable/sql/introduction).
 
@@ -29,7 +29,6 @@ For more details, see the [DuckDB SQL Introduction](https://duckdb.org/docs/stab
 ```yaml
 tools:
   search-users:
-    name: search-users
     kind: duckdb-sql
     source: my-duckdb
     description: Search users by name and age
@@ -45,12 +44,11 @@ tools:
 
 ## Example with Template Parameters
 
-> **Note:** Template parameters allow direct modifications to the SQL statement, including identifiers, column names, and table names, which makes them more vulnerable to SQL injections. Using basic parameters (see above) is recommended for performance and safety. For more details, see the [templateParameters](#template-parameters) section.
+> **Note:** Template parameters allow direct modifications to the SQL statement, including identifiers, column names, and table names, which makes them more vulnerable to SQL injections. Using basic parameters (see above) is recommended for performance and safety. For more details, see the [templateParameters](_index#template-parameters) section.
 
 ```yaml
 tools:
   list_table:
-    name: list-table
     kind: duckdb-sql
     source: my-duckdb
     statement: |
@@ -73,11 +71,10 @@ tools:
 
 | **field**          | **type**                        | **required** | **description**                                                                                                                            |
 |--------------------|:-------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| name               | string                         |     true     | A unique identifier for the tool.                                                                                                          |
 | kind               | string                         |     true     | Must be "duckdb-sql".                                                                                                                      |
 | source             | string                         |     true     | Name of the DuckDB source configuration (see [DuckDB source documentation](../sources/duckdb.md)).                                         |
 | description        | string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          | string                         |     true     | The SQL statement to execute.                                                                                                              |
 | authRequired       | []string                       |    false     | List of authentication requirements for the tool (if any).                                                                                 |
-| parameters         | [parameters](#specifying-parameters)       |    false     | List of parameters that will be inserted into the SQL statement using `?` placeholders.                                                     |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of template parameters that will be inserted into the SQL statement before executing the prepared statement.                           |
+| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of parameters that will be inserted into the SQL statement                      |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of template parameters that will be inserted into the SQL statement before executing the prepared statement.                           |
