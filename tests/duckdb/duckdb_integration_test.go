@@ -75,7 +75,7 @@ func TestDuckDb(t *testing.T) {
 	toolsFile := tests.GetToolsConfig(sourceConfig, DuckDbKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, DuckDbKind, tmplSelectCombined, tmplSelectFilterCombined, "")
-
+	defer os.Remove(dbPath)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)

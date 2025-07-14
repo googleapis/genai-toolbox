@@ -624,7 +624,10 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select1Want string) {
 	// Get ID token
-	idToken := "client_id"
+	idToken, err := GetGoogleIdToken(ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
