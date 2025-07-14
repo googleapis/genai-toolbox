@@ -647,7 +647,7 @@ asyncio.run(run_application())
 {{< /tab >}}
 {{< /tabpane >}}
 
-  {{< tabpane text=true persist=header >}}
+    {{< tabpane text=true persist=header >}}
 {{% tab header="ADK" lang="en" %}}
 To learn more about Agent Development Kit, check out the [ADK
 documentation.](https://google.github.io/adk-docs/)
