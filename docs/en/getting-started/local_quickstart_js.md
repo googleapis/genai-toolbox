@@ -283,20 +283,20 @@ from Toolbox.
     npm init -y
     ```
 
-1. Create a new file in the root directory:
+1. In a new terminal, install the SDK package.
 
-    ```bash
-    touch index.js
-    ```
+```bash
+npm install langchain @toolbox-sdk/core
+```
 
-1. Install required dependencies
+1. Install other required dependencies
 
    {{< tabpane persist=header >}}
    {{< tab header="LangChain" lang="bash" >}}
-npm install langchain @toolbox-sdk/core @langchain/google-vertexai dotenv
+npm install langchain @langchain/google-vertexai
    {{< /tab >}}
    {{< tab header="GenkitJS" lang="bash" >}}
-npm install @toolbox-sdk/core genkit @genkit-ai/vertexai dotenv
+npm install genkit @genkit-ai/vertexai
    {{< /tab >}}
    {{< /tabpane >}}
 
