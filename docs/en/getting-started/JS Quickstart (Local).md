@@ -659,5 +659,5 @@ run();
 6. Make sure your Toolbox server is running (`./toolbox --tools-file "tools.yaml"`), then run your agent [make sure you are in the root directory]:
 
     ```sh
-    node index.js
+    node hotelAgent.js
     ```
