@@ -22,6 +22,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -200,29 +201,11 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 		return nil, fmt.Errorf("failed to list/tools on MCP server of %s: %w", s.Name, err)
 	}
 
-	// Required args is empty when there are none defined as required
-	var requiredArgs = []string{}
 	var mcpTools []MCPServerTool = make([]MCPServerTool, len(remoteServerTools.Tools))
 	for i, tool := range remoteServerTools.Tools {
-		// TODO: Refactor or reuse the model jsonschema.Schema shape
-		// fmt.Println(tool.Name)
-		// fmt.Println(tool.InputSchema.Type)
-		// fmt.Println(tool.OutputSchema)
-
-		var toolProperties = map[string]tools.ParameterMcpManifest{}
-		for toolArgKey, toolArgumentValue := range tool.InputSchema.Properties {
-			toolProperties[toolArgKey] = tools.ParameterMcpManifest{
-				Type:        toolArgumentValue.Type,
-				Description: toolArgumentValue.Description,
-				// TODO: recurse or DFS for complex objects
-				// Items: ,
-			}
-		}
-
-		if tool.InputSchema.Required != nil {
-			requiredArgs = tool.InputSchema.Required
-		}
-		var toolCallParameters = make(tools.Parameters, len(toolProperties))
+		var inputSchema tools.McpToolsSchema = GetInputSchema(tool)
+		var outputSchema tools.McpToolsSchema = GetOutputSchema(tool)
+		var toolCallParameters = make(tools.Parameters, len(inputSchema.Properties))
 
 		mcpTools[i] = MCPServerTool{
 			Source: s,
@@ -232,13 +215,10 @@ func (s *Source) GetTools(ctx context.Context) ([]tools.Tool, error) {
 				Parameters:  []tools.ParameterManifest{},
 			},
 			mcpManifest: tools.McpManifest{
-				Name:        tool.Name,
-				Description: tool.Description,
-				InputSchema: tools.McpToolsSchema{
-					Type:       tool.InputSchema.Type,
-					Properties: toolProperties,
-					Required:   requiredArgs,
-				},
+				Name:         tool.Name,
+				Description:  tool.Description,
+				InputSchema:  inputSchema,
+				OutputSchema: outputSchema,
 			},
 			// Parameters: tool.InputSchema.ContentSchema,
 			Parameters: toolCallParameters,
@@ -356,4 +336,35 @@ func (t *CustomAuthTransport) RoundTrip(req *http.Request) (*http.Response, erro
 
 	// Call the underlying RoundTripper to execute the request.
 	return t.RoundTripper.RoundTrip(req)
+}
+
+func GetInputSchema(tool *mcp.Tool) tools.McpToolsSchema {
+	return readMcpSchema(tool.InputSchema)
+}
+
+func GetOutputSchema(tool *mcp.Tool) tools.McpToolsSchema {
+	return readMcpSchema(tool.OutputSchema)
+}
+
+func readMcpSchema(mcpToolSchema *jsonschema.Schema) tools.McpToolsSchema {
+	// Required args is empty when there are none defined as required
+	var requiredArgs = []string{}
+
+	// Convert the MCP tool schema to the toolbox schema
+	var properties = make(map[string]tools.ParameterMcpManifest, len(mcpToolSchema.Properties))
+	for k, v := range mcpToolSchema.Properties {
+		properties[k] = tools.ParameterMcpManifest{
+			Type:        v.Type,
+			Description: v.Description,
+		}
+	}
+	if mcpToolSchema.Required != nil {
+		requiredArgs = mcpToolSchema.Required
+	}
+
+	return tools.McpToolsSchema{
+		Type:       mcpToolSchema.Type,
+		Properties: properties,
+		Required:   requiredArgs,
+	}
 }

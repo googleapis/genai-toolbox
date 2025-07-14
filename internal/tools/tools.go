@@ -92,6 +92,8 @@ type McpManifest struct {
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	InputSchema McpToolsSchema `json:"inputSchema,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	OutputSchema McpToolsSchema `json:"outputSchema,omitempty"`
 }
 
 // Helper function that returns if a tool invocation request is authorized
