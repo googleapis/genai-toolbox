@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 2
 description: >
-  How to get started running Toolbox locally with JavaScript, PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [LlamaIndex](https://ts.llamaindex.ai/), or [GenkitJS](https://genkit.dev/docs/get-started/).
+  How to get started running Toolbox locally with JavaScript, PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/) and [GenkitJS](https://genkit.dev/docs/get-started/).
 ---
 
 ## Before you begin
@@ -304,9 +304,6 @@ First let's create a new folder for your project, initialize it with `npm`, and 
    {{< tab header="LangChain" lang="bash" >}}
 npm install langchain @genai-toolbox/sdk @langchain/google-vertexai dotenv
    {{< /tab >}}
-   {{< tab header="LlamaIndex" lang="bash" >}}
-npm install @llamaindex/core @llamaindex/llms-google-genai @genai-toolbox/sdk dotenv
-   {{< /tab >}}
    {{< tab header="GenkitJS" lang="bash" >}}
 npm install @toolbox-sdk/core genkit @genkit-ai/vertexai dotenv
    {{< /tab >}}
@@ -393,50 +390,6 @@ runApplication()
   .catch(console.error)
   .finally(() => console.log("\nApplication finished."));
 
-{{< /tab >}}
-
-{{< tab header="LlamaIndex" lang="js" >}}
-
-import "dotenv/config";
-import { LlamaIndexAgent } from "@llamaindex/core";
-import { GoogleGenAI } from "@llamaindex/llms-google-genai";
-import { ToolboxClient } from "@genai-toolbox/sdk";
-
-// Sample prompt and queries
-const prompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and cancellations.
-... (same as above) ...
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  // ...more queries...
-];
-
-async function runApplication() {
-  const llm = new GoogleGenAI({
-    model: "gemini-2.0-flash-001",
-    // Add any required config here
-  });
-
-  const client = new ToolboxClient("http://127.0.0.1:5000");
-  const tools = await client.loadToolset("my-toolset");
-
-  const agent = new LlamaIndexAgent({
-    llm,
-    tools,
-    systemPrompt: prompt,
-  });
-
-  for (const query of queries) {
-    const response = await agent.run(query);
-    console.log(response);
-  }
-
-  if (client.close) await client.close();
-}
-
-runApplication().catch(console.error);
 {{< /tab >}}
 
 {{< tab header="GenkitJS" lang="js" >}}
