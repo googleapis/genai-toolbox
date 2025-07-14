@@ -73,7 +73,7 @@ The `orderBy` parameter should be a JSON string with the following structure:
 ```
 
 Direction values:
-- `ASCENDING` (default if not specified)
+- `ASCENDING`
 - `DESCENDING`
 
 ## Example Usage
