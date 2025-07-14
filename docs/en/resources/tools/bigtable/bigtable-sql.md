@@ -23,11 +23,10 @@ dialect, the specified SQL statement is executed as a [data manipulation
 language (DML)][bigtable-googlesql] statements, and specified parameters will inserted according to their name: e.g. `@name`.
 
 {{<notice note>}}
-  Bigtable's GoogleSQL support for DML statements might be limited to certain query types. For detailed information on supported DML statements and use cases, refer to the [Google Cloud Bigtable GoogleSQL use cases](bigtable-googlesql#usecases).
+  Bigtable's GoogleSQL support for DML statements might be limited to certain query types. For detailed information on supported DML statements and use cases, refer to the [Bigtable GoogleSQL use cases](https://cloud.google.com/bigtable/docs/googlesql-overview#use-cases).
 {{</notice>}}
 
 [bigtable-googlesql]: https://cloud.google.com/bigtable/docs/googlesql-overview
-[bigtable-googlesql#usecases]: https://cloud.google.com/bigtable/docs/googlesql-overview#use-cases
 
 ## Example
 
