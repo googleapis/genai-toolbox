@@ -440,184 +440,93 @@ runApplication().catch(console.error);
 {{< /tab >}}
 
 {{< tab header="GenkitJS" lang="js" >}}
+
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { genkit } from "genkit";
-import { vertexAI } from "@genkit-ai/vertexai";
-import { z } from "zod";
-
-const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
-
-const ai = genkit({
-  plugins: [vertexAI({ location: "us-central1", projectId: process.env.PROJECT_ID })],
-});
+import { googleAI } from '@genkit-ai/googleai';
 
 const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking and cancellations.
-When the user searches for a hotel, mention its name, ID, location and price tier.
-Always mention hotel ID while performing any operations. This is very important for any operations.
-For any bookings or cancellations, please provide the appropriate confirmation.
-Be sure to update checkin or checkout dates if mentioned by the user.
+You're a helpful hotel assistant. You handle hotel searching, booking, and
+cancellations. When the user searches for a hotel, mention its name, id,
+location and price tier. Always mention hotel ids while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
 Don't ask for confirmations from the user.
 `;
 
 const queries = [
-  "Find hotels in Bern with Bern in it's name.",
-  "Please book the hotel  Best Western Bern for me.",
-  "This is too expensive. Please cancel it.",
-  "Please book Comfort Inn Bern for me",
-  "My check in dates for my booking would be from April 10, 2024 to April 19, 2024.",
+  "Find hotels in Basel with Basel in its name.",
+  "Can you book the Hilton Basel for me?",
+  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+  "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
 async function run() {
-  let tools;
-  try {
-    tools = await toolboxClient.loadToolset("my-toolset");
-  } catch {
-    return;
-  }
+  const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
+
+  const ai = genkit({
+    plugins: [
+      googleAI({
+        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+      })
+    ],
+    model: googleAI.model('gemini-2.0-flash'),
+  });
 
   const toolboxTools = await toolboxClient.loadToolset("my-toolset");
+  const toolMap = Object.fromEntries(
+    toolboxTools.map((tool) => {
+      const definedTool = ai.defineTool(
+        {
+          name: tool.getName(),
+          description: tool.getDescription(),
+          inputSchema: tool.getParamSchema(),
+        },
+        tool
+      );
+      return [tool.getName(), definedTool];
+    })
+  );
+  const tools = Object.values(toolMap);
 
-  const toolMap = {};
-  for (const tool of toolboxTools) {
-    let inputSchema;
-    switch (tool.getName()) {
-      case "search-hotels-by-name":
-        inputSchema = z.object({ name: z.string() });
-        break;
-      case "search-hotels-by-location":
-        inputSchema = z.object({ location: z.string() });
-        break;
-      case "book-hotel":
-        inputSchema = z.object({ hotel_id: z.string() });
-        break;
-      case "update-hotel":
-        inputSchema = z.object({
-          hotel_id: z.string(),
-          checkin_date: z.string(),
-          checkout_date: z.string(),
-        });
-        break;
-      case "cancel-hotel":
-        inputSchema = z.object({ hotel_id: z.string() });
-        break;
-      default:
-        inputSchema = z.object({});
-    }
+  let conversationHistory = [{ role: "system", content: [{ text: systemPrompt }] }];
 
-    const definedTool = ai.defineTool(
-      {
-        name: tool.getName(),
-        description: tool.getDescription(),
-        inputSchema,
-      },
-      tool
-    );
-
-    toolMap[tool.getName()] = definedTool;
-  }
-
-  let conversationHistory = [
-    {
-      role: "system",
-      content: [{ text: systemPrompt }],
-    },
-  ];
-
-  for (const userQuery of queries) {
-    console.log(`\n👤 User: "${userQuery}"`);
-    conversationHistory.push({
-      role: "user",
-      content: [{ text: userQuery }],
-    });
-
+  for (const query of queries) {
+    conversationHistory.push({ role: "user", content: [{ text: query }] });
     const response = await ai.generate({
-      model: vertexAI.model("gemini-2.5-flash"),
       messages: conversationHistory,
-      tools: Object.values(toolMap),
+      tools: tools,
     });
+    conversationHistory.push(response.message);
 
-    let content = [],
-      functionCalls = [];
-
-    if (response.toolRequests?.length) {
-      functionCalls = response.toolRequests;
-      content = response.content || [{ text: response.text || "" }];
-    } else if (response.candidates?.length) {
-      content = response.candidates[0].content;
-      functionCalls = content.filter((part) => part.functionCall);
-    } else {
-      content = [{ text: response.text || response.output || "No response text found" }];
-    }
-
-    conversationHistory.push({
-      role: "model",
-      content,
-    });
-
-    if (functionCalls.length > 0) {
-      for (const call of functionCalls) {
-        const toolName =
-          call.functionCall?.name || call.toolRequest?.name || call.name;
-        const toolArgs =
-          call.functionCall?.args || call.toolRequest?.input || call.input;
-
-        const tool = toolMap[toolName];
-        if (!tool) continue;
-
-        try {
-          const toolResponse = await tool.invoke(toolArgs);
-
-          conversationHistory.push({
-            role: "function",
-            content: [
-              {
-                functionResponse: {
-                  name: toolName,
-                  response: toolResponse,
-                },
-              },
-            ],
-          });
-
-          if (toolName.includes("search-hotels")) {
-            if (Array.isArray(toolResponse) && toolResponse.length > 0) {
-              const hotelList = toolResponse
-                .map(
-                  (h) =>
-                    `*   Hotel Name: ${h.name}, ID: ${h.hotel_id}, Location: ${h.location}, Price Tier: ${h.price_tier}`
-                )
-                .join("\n");
-              console.log(`🤖 Hotel Agent: I found these hotels in Bern:\n\n${hotelList}`);
-            } else {
-              console.log("🤖 Hotel Agent: No hotels found.");
-            }
+    const toolRequests = response.toolRequests;
+    if (toolRequests?.length > 0) {
+      // Execute tools concurrently and collect their responses.
+      const toolResponses = await Promise.all(
+        toolRequests.map(async (call) => {
+          try {
+            const toolOutput = await toolMap[call.name].invoke(call.input);
+            return { role: "tool", content: [{ toolResponse: { name: call.name, output: toolOutput } }] };
+          } catch (e) {
+            console.error(`Error executing tool ${call.name}:`, e);
+            return { role: "tool", content: [{ toolResponse: { name: call.name, output: { error: e.message } } }] };
           }
-        } catch {}
-      }
-
-      const finalResponse = await ai.generate({
-        model: vertexAI.model("gemini-2.5-flash"),
-        messages: conversationHistory,
-        tools: Object.values(toolMap),
-      });
-
-      const finalMessage =
-        finalResponse.text || finalResponse.output || "No final response";
-
-      conversationHistory.push({
-        role: "model",
-        content: [{ text: finalMessage }],
-      });
-
-      console.log(`🤖 Hotel Agent: ${finalMessage}`);
-    } else {
-      const message =
-        response.text || response.output || content[0]?.text || "No response";
-      console.log(`🤖 Hotel Agent: ${message}`);
+        })
+      );
+      
+      conversationHistory.push(...toolResponses);
+      
+      // Call the AI again with the tool results.
+      response = await ai.generate({ messages: conversationHistory, tools });
+      conversationHistory.push(response.message);
     }
+    
+    console.log(response.text);
   }
 }
+
+run();
 
 run();
 {{< /tab >}}
