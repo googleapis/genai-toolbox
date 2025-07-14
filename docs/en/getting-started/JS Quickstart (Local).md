@@ -298,7 +298,7 @@ First let's create a new folder for your project, initialize it with `npm`, and 
     touch index.js
     ```
 
-4. Next, depending on which orchestration framework you want to use, install the relevant dependencies:
+4. Install required dependencies
 
    {{< tabpane persist=header >}}
    {{< tab header="LangChain" lang="bash" >}}
