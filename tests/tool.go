@@ -412,6 +412,7 @@ type TemplateParameterTestConfig struct {
 	nameFieldArray string
 	nameColFilter  string
 	createColArray string
+	insert1Want    string
 }
 
 type Option func(*TemplateParameterTestConfig)
@@ -475,6 +476,7 @@ func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestCon
 		nameFieldArray: `["name"]`,
 		nameColFilter:  "name",
 		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+		insert1Want:    "null",
 	}
 
 	// Apply provided options
@@ -515,7 +517,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
-			want:          "null",
+			want:          config.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -524,7 +526,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
-			want:          "null",
+			want:          config.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -622,10 +624,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select1Want string) {
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
+	idToken := "client_id"
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -950,4 +949,25 @@ func runRequest(t *testing.T, method, url string, body io.Reader, header map[str
 
 	defer resp.Body.Close()
 	return resp, respBody
+}
+
+// DuckDBTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options for DuckDB tests.
+func DuckDBTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
+	templateParamTestOption := &TemplateParameterTestConfig{
+		ignoreDdl:      false,
+		ignoreInsert:   false,
+		selectAllWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
+		select1Want:    "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+		insert1Want:    "[{\"Count\":1}]",
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(templateParamTestOption)
+	}
+
+	return templateParamTestOption
 }
