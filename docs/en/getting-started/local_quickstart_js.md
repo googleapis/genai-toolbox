@@ -1,7 +1,7 @@
 ---
 title: "JS Quickstart (Local)"
 type: docs
-weight: 2
+weight: 3
 description: >
   How to get started running Toolbox locally with JavaScript, PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/) and [GenkitJS](https://genkit.dev/docs/get-started/).
 ---
