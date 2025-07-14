@@ -312,7 +312,7 @@ npm install @toolbox-sdk/core genkit @genkit-ai/vertexai dotenv
    {{< /tab >}}
    {{< /tabpane >}}
 
-5. Now copy the below code in your `index.js` file based on your orchestration framework.
+5. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
 
 {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
