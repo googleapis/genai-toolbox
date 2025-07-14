@@ -293,7 +293,7 @@ from Toolbox.
 
    {{< tabpane persist=header >}}
    {{< tab header="LangChain" lang="bash" >}}
-npm install langchain @genai-toolbox/sdk @langchain/google-vertexai dotenv
+npm install langchain @toolbox-sdk/core @langchain/google-vertexai dotenv
    {{< /tab >}}
    {{< tab header="GenkitJS" lang="bash" >}}
 npm install @toolbox-sdk/core genkit @genkit-ai/vertexai dotenv
