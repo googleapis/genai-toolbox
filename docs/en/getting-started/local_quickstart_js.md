@@ -311,6 +311,9 @@ import { tool } from "@langchain/core/tools";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver } from "@langchain/langgraph";
 
+// Replace it with your API key
+process.env.GOOGLE_API_KEY = 'your-api-key';
+
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
 cancellations. When the user searches for a hotel, mention its name, id,
@@ -388,6 +391,9 @@ runApplication()
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { genkit } from "genkit";
 import { googleAI } from '@genkit-ai/googleai';
+
+// Replace it with your API key
+process.env.GOOGLE_API_KEY = 'your-api-key';
 
 const systemPrompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
