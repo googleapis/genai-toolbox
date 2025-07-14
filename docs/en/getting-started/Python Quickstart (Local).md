@@ -653,7 +653,7 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
 {{% /tab %}}
 {{< /tabpane >}}
 
-4. Run your agent, and observe the results:
+1. Run your agent, and observe the results:
 
     ```sh
     python hotel_agent.py
