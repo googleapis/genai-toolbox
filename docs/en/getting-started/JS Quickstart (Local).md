@@ -317,11 +317,11 @@ npm install @toolbox-sdk/core genkit @genkit-ai/vertexai dotenv
 {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
 
-import "dotenv/config";
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { MemorySaver } from "@langchain/langgraph";
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -341,84 +341,51 @@ const queries = [
 ];
 
 async function runApplication() {
-  console.log("Starting hotel agent...");
-
   const model = new ChatVertexAI({
-    model: "gemini-2.0-flash-001",
-    temperature: 0,
+    model: "gemini-2.0-flash",
   });
+
 
   const client = new ToolboxClient("http://127.0.0.1:5000");
   const toolboxTools = await client.loadToolset("my-toolset");
 
-  console.log(`Loaded ${toolboxTools.length} tools from Toolbox`);
+  // Define the basics of the tool: name, description, schema and core logic
+  const getTool = (toolboxTool) => tool(toolboxTool, {
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    schema: toolboxTool.getParamSchema()
+  });
+  const tools = toolboxTools.map(getTool);
 
-  const tools = toolboxTools
-    .map((t) => {
-      return tool(t, {
-        name: t.toolName,
-        description: t.description,
-        schema: t.params,
-      });
-    })
-    .filter(Boolean);
+  const agent = createReactAgent({
+    llm: model,
+    tools: tools,
+    checkpointer: new MemorySaver(),
+    systemPrompt: prompt,
+  });
 
-  const modelWithTools = model.bindTools(tools);
+  const langGraphConfig = {
+    configurable: {
+        thread_id: "test-thread",
+    },
+  };
 
-  let messages = [new HumanMessage(prompt)];
 
   for (const query of queries) {
-    console.log(`\nUser: ${query}`);
-
-    messages.push(new HumanMessage(query));
-
-    for (let step = 0; step < 5; step++) {
-      const response = await modelWithTools.invoke(messages);
-
-      if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.log("Agent:", response.content);
-        messages.push(response);
-        break;
-      }
-
-      console.log("Agent decided to use tools:", response.tool_calls);
-      messages.push(response);
-
-      const toolMessages = await Promise.all(
-        response.tool_calls.map(async (call) => {
-          const toolToCall = tools.find((t) => t.name === call.name);sources:
-    my-valkey-instance:
-     kind: valkey
-     address:
-       - 10.128.0.2:6379
-     useGCPIAM: true
-
-          if (!toolToCall) {
-            return new ToolMessage({
-              content: `Error: Tool ${call.name} not found`,
-              tool_call_id: call.id,
-            });
-          }
-          try {
-            const result = await toolToCall.invoke(call.args);
-            return new ToolMessage({
-              content: JSON.stringify(result ?? "No result returned."),
-              tool_call_id: call.id,
-            });
-          } catch (e) {
-            return new ToolMessage({
-              content: `Error: ${e.message}`,
-              tool_call_id: call.id,
-            });
-          }
-        })
-      );
-
-      messages.push(...toolMessages);
-    }
-  }
-  if (client.close) {
-    await client.close();
+    const agentOutput = await agent.invoke(
+    {
+        messages: [
+        {
+            role: "user",
+            content: query,
+        },
+        ],
+        verbose: true,
+    },
+    langGraphConfig
+    );
+    const response = agentOutput.messages[agentOutput.messages.length - 1].content;
+    console.log(response);
   }
 }
 
