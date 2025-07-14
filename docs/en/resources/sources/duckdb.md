@@ -37,7 +37,6 @@ For a persistent DuckDB database:
 ```yaml
 sources:
     my-duckdb:
-        name: "my-duckdb"
         kind: "duckdb"
         dbFilePath: "/path/to/database.db"
         configurations:
@@ -60,7 +59,6 @@ sources:
 
 | **field**         | **type**          | **required** | **description**                                                                 |
 |-------------------|:-----------------:|:------------:|---------------------------------------------------------------------------------|
-| name              | string            |     true     | A unique identifier for the DuckDB instance.                                     |
 | kind              | string            |     true     | Must be "duckdb".                                                               |
 | dbFilePath        | string            |    false     | Path to the DuckDB database file. Omit for an in-memory database.                |
 | configurations    | map[string]string |    false     | Additional DuckDB configuration options (e.g., `memory_limit`, `threads`).       |
