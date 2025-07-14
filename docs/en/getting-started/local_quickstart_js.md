@@ -477,8 +477,6 @@ async function run() {
 }
 
 run();
-
-run();
 {{< /tab >}}
 {{< /tabpane >}}
 
