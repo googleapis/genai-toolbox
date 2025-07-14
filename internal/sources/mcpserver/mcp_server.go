@@ -118,8 +118,13 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("authSecret is required when authMethod is set")
 	}
 
-	// TODO: Hook into ToolsListHandler option
-	var client *mcp.Client = mcp.NewClient("TODO: Toolbox Client Name", "TODO: Toolbox Client version", &mcp.ClientOptions{})
+	// TODO: Add the genai toolbox version info here
+	var mcpImplementation = mcp.Implementation{
+		Name:    "genai-toolbox-client",
+		Version: "0.1.0",
+	}
+	// TODO: Hook into ToolListChangedHandler option for refresh
+	var client *mcp.Client = mcp.NewClient(&mcpImplementation, &mcp.ClientOptions{})
 
 	// client := mcp.NewClient()
 	src := &Source{

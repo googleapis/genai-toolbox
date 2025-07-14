@@ -1022,6 +1022,8 @@ github.com/modelcontextprotocol/go-sdk v0.1.1-0.20250707185452-aebd2449813d h1:+
 github.com/modelcontextprotocol/go-sdk v0.1.1-0.20250707185452-aebd2449813d/go.mod h1:DcXfbr7yl7e35oMpzHfKw2nUYRjhIGS2uou/6tdsTB0=
 github.com/modelcontextprotocol/go-sdk v0.1.1-0.20250710183323-bfa5e30cd125 h1:SqKsPOc2tL0ykTfm06Gl2id9MohWmjHeGmLNLccDnw8=
 github.com/modelcontextprotocol/go-sdk v0.1.1-0.20250710183323-bfa5e30cd125/go.mod h1:0sL9zUKKs2FTTkeCCVnKqbLJTw5TScefPAzojjU459E=
+github.com/modelcontextprotocol/go-sdk v0.2.0 h1:PESNYOmyM1c369tRkzXLY5hHrazj8x9CY1Xu0fLCryM=
+github.com/modelcontextprotocol/go-sdk v0.2.0/go.mod h1:0sL9zUKKs2FTTkeCCVnKqbLJTw5TScefPAzojjU459E=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
