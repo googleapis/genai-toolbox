@@ -221,6 +221,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
+	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -797,6 +798,9 @@ func run(cmd *Command) error {
 			return errMsg
 		}
 		cmd.logger.InfoContext(ctx, "Server ready to serve!")
+		if cmd.cfg.UI {
+			cmd.logger.InfoContext(ctx, "Toolbox UI is up and running at: http://localhost:5000/ui")
+		}
 
 		go func() {
 			defer close(srvErr)
