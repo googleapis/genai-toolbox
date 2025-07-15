@@ -535,6 +535,33 @@ func TestMcpEndpoint(t *testing.T) {
 	}
 }
 
+func TestInvalidProtocolVersionHeader(t *testing.T) {
+	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	header := map[string]string{}
+	header["MCP-Protocol-Version"] = "foo"
+
+	resp, body, err := runRequest(ts, http.MethodPost, "/", nil, header)
+	if resp.Status != "400 Bad Request" {
+		t.Fatalf("unexpected status: %s", resp.Status)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	want := "invalid protocol version: foo"
+	if got["error"] != want {
+		t.Fatalf("unexpected error message: got %s, want %s", got["error"], want)
+	}
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+}
+
 func TestDeleteEndpoint(t *testing.T) {
 	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
