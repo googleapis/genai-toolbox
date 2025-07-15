@@ -72,6 +72,7 @@
 - name: 'tests: run'
   color: 3DED97
   description: Label to trigger Github Action tests.
+  
 - name: 'docs: deploy-preview'
   color: BFDADC
   description: Label to trigger Github Action docs preview.
