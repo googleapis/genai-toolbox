@@ -133,6 +133,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/tool/invoke")
 	r = r.WithContext(ctx)
+	ctx = util.WithLogger(r.Context(), s.logger)
 
 	toolName := chi.URLParam(r, "toolName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
