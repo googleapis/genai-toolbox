@@ -71,6 +71,12 @@ type Tool interface {
 	Authorized([]string) bool
 }
 
+// DynamicToolSource is a source type that can dynamically create tools
+type DynamicToolSource interface {
+	// The tools array that are dynamically created
+	GetTools(context.Context) ([]Tool, error)
+}
+
 // Manifest is the representation of tools sent to Client SDKs.
 type Manifest struct {
 	Description  string              `json:"description"`
@@ -86,6 +92,8 @@ type McpManifest struct {
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	InputSchema McpToolsSchema `json:"inputSchema,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	OutputSchema McpToolsSchema `json:"outputSchema,omitempty"`
 }
 
 // Helper function that returns if a tool invocation request is authorized

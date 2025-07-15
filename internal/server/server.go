@@ -143,6 +143,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
+	dynamicToolsSourceMap := make(map[string]tools.DynamicToolSource)
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
 			childCtx, span := instrumentation.Tracer.Start(
@@ -162,6 +163,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return nil, nil, nil, nil, err
 		}
 		sourcesMap[name] = s
+		if IsDynamicToolSource(s) {
+			// if the source can dynamically add tools, we need to add it to the map
+			// so that we can create the tools dyanmically later.
+			dynamicToolsSourceMap[name] = s.(tools.DynamicToolSource)
+		}
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
 
@@ -212,6 +218,33 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		toolsMap[name] = t
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+
+	// dynamically create the tools for the source
+	dynamicToolsMap := make(map[string]tools.Tool)
+	for name, source := range dynamicToolsSourceMap {
+		tools, err := func() ([]tools.Tool, error) {
+			childCtx, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/source/dynamictools/add",
+				trace.WithAttributes(attribute.String("source_name", name)),
+			)
+			defer span.End()
+			newDynamicTools, err := source.GetTools(childCtx)
+			if err != nil {
+				return nil, fmt.Errorf("unable to fetch tools for source %q: %w", name, err)
+			}
+			return newDynamicTools, nil
+		}()
+		if err != nil {
+			return nil, nil, nil, nil, err
+		}
+		for _, tool := range tools {
+			// add the tool to the tools map, always replace if found
+			dynamicToolsMap[tool.McpManifest().Name] = tool
+		}
+	}
+	MergeTools(toolsMap, dynamicToolsMap)
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d dynamic tools sources.", len(dynamicToolsSourceMap)))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
