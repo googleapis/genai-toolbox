@@ -17,6 +17,27 @@ It's compatible with the following sources:
 
 dataplex-search-entries requires a `query` parameter as input based on which entries are filtered and returned to the user.
 
+## Requirements
+
+### IAM Permissions
+
+Dataplex uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Dataplex resources. Toolbox will use your 
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when 
+interacting with [Dataplex][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Dataplex Universal Catalog IAM permissions][iam-permissions] 
+and [Dataplex Universal Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
 ## Example
 
 ```yaml
@@ -38,4 +59,3 @@ tools:
 | kind        |                   string                   |     true     | Must be "dataplex-search-entries".                                                               |
 | source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
-| parameters  | [parameters](_index#specifying-parameters) |     true     | List of [parameters](_index#specifying-parameters) that will be passed                           |
