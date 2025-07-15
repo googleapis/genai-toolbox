@@ -275,7 +275,11 @@ func getURL(baseURL, path string, pathParams, queryParams tools.Parameters, defa
 	// Set dynamic query parameters
 	query := parsedURL.Query()
 	for _, p := range queryParams {
-		query.Add(p.GetName(), fmt.Sprintf("%v", paramsMap[p.GetName()]))
+		v := paramsMap[p.GetName()]
+		if v == nil {
+			v = ""
+		}
+		query.Add(p.GetName(), fmt.Sprintf("%v", v))
 	}
 	parsedURL.RawQuery = query.Encode()
 	return parsedURL.String(), nil
