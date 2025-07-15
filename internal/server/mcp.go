@@ -357,6 +357,12 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		protocolVersion = v20250326.PROTOCOL_VERSION
 	}
 
+	// check if client have `MCP-Protocol-Version` header
+	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
+	if headerProtocolVersion != "" {
+		protocolVersion = headerProtocolVersion
+	}
+
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
