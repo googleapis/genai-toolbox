@@ -1,0 +1,139 @@
+package kuzudb
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/kuzudb"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/kuzudb/go-kuzu"
+)
+
+var kind string = "kuzudb-cypher"
+
+type KuzuDBToolConfig struct {
+	Name               string           `yaml:"name" validate:"required"`
+	Kind               string           `yaml:"kind" validate:"required"`
+	Source             string           `yaml:"source" validate:"required"`
+	Description        string           `yaml:"description" validate:"required"`
+	Statement          string           `yaml:"statement" validate:"required"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+}
+
+type compatibleSource interface {
+	KuzuDB() *kuzu.Connection
+}
+
+// validate compatible sources are still compatible
+var _ compatibleSource = &kuzudb.KuzuDbSource{}
+var compatibleSources = [...]string{kuzudb.KuzuDbKind}
+
+// Initialize implements tools.ToolConfig.
+func (k KuzuDBToolConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	rawS, ok := srcs[k.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", k.Source)
+	}
+
+	// verify the source is compatible
+	s, ok := rawS.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+	}
+
+	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(k.TemplateParameters, k.Parameters)
+
+	mcpManifest := tools.McpManifest{
+		Name:        k.Name,
+		Description: k.Description,
+		InputSchema: paramMcpManifest,
+	}
+
+	// finish tool setup
+	t := KuzuDBTool{
+		Name:               k.Name,
+		Kind:               kind,
+		Parameters:         k.Parameters,
+		TemplateParameters: k.TemplateParameters,
+		AllParams:          allParameters,
+		Statement:          k.Statement,
+		AuthRequired:       k.AuthRequired,
+		Connection:         s.KuzuDB(),
+		manifest:           tools.Manifest{Description: k.Description, Parameters: paramManifest, AuthRequired: k.AuthRequired},
+		mcpManifest:        mcpManifest,
+	}
+	return t, nil
+}
+
+// ToolConfigKind implements tools.ToolConfig.
+func (k KuzuDBToolConfig) ToolConfigKind() string {
+	return kind
+}
+
+var _ tools.ToolConfig = KuzuDBToolConfig{}
+
+type KuzuDBTool struct {
+	Name string `yaml:"name" validate:"required"`
+
+	Kind               string           `yaml:"kind"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	AllParams          tools.Parameters `yaml:"allParams"`
+
+	Connection  *kuzu.Connection
+	Statement   string `yaml:"statement"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
+}
+
+// Authorized implements tools.Tool.
+func (k KuzuDBTool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(k.AuthRequired, verifiedAuthServices)
+}
+
+// Invoke implements tools.Tool.
+func (k KuzuDBTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+	conn := k.Connection
+	result, err := conn.Query(k.Statement)
+	if err != nil {
+		panic(err)
+	}
+	defer result.Close()
+	var out []any
+	for result.HasNext() {
+		tuple, err := result.Next()
+		if err != nil {
+			panic(err)
+		}
+		defer tuple.Close()
+		// The result is a tuple, which can be converted to a slice.
+		slice, err := tuple.GetAsSlice()
+		if err != nil {
+			panic(err)
+		}
+		out = append(out, slice...)
+	}
+
+	return out, nil
+}
+
+// Manifest implements tools.Tool.
+func (k KuzuDBTool) Manifest() tools.Manifest {
+	return k.manifest
+}
+
+// McpManifest implements tools.Tool.
+func (k KuzuDBTool) McpManifest() tools.McpManifest {
+	return k.mcpManifest
+}
+
+// ParseParams implements tools.Tool.
+func (k KuzuDBTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(k.AllParams, data, claimsMap)
+}
+
+var _ tools.Tool = KuzuDBTool{}
