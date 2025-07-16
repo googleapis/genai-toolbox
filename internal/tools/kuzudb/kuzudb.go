@@ -100,24 +100,31 @@ func (k KuzuDBTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any
 	conn := k.Connection
 	result, err := conn.Query(k.Statement)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 	defer result.Close()
+	cols := result.GetColumnNames()
 	var out []any
 	for result.HasNext() {
 		tuple, err := result.Next()
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
 		defer tuple.Close()
+
 		// The result is a tuple, which can be converted to a slice.
 		slice, err := tuple.GetAsSlice()
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("unable to slice row: %w", err)
 		}
-		out = append(out, slice...)
+		rowMap := make(map[string]interface{})
+		for i, col := range cols {
+			val := slice[i]
+			// Store the value in the map
+			rowMap[col] = val
+		}
+		out = append(out, rowMap)
 	}
-
 	return out, nil
 }
 

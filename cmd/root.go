@@ -53,6 +53,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/kuzudb"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
@@ -61,6 +62,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
+
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
@@ -77,6 +79,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/kuzudb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"

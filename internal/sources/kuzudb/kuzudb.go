@@ -27,10 +27,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type KuzuDbConfig struct {
-	Name          string            `yaml:"name" validate:"required"`
-	Kind          string            `yaml:"kind" validate:"required"`
-	Database      string            `yaml:"database" validate:"required"`
-	Configuration kuzu.SystemConfig `yaml:"configuration,omitempty"`
+	Name     string `yaml:"name" validate:"required"`
+	Kind     string `yaml:"kind" validate:"required"`
+	Database string `yaml:"database" validate:"required"`
+	// Configuration kuzu.SystemConfig `yaml:"configuration,omitempty"`
 }
 
 // SourceKind implements sources.Source.
@@ -46,6 +46,7 @@ func (c KuzuDbConfig) Initialize(ctx context.Context, tracer trace.Tracer) (sour
 	}
 
 	source := &KuzuDbSource{
+		Name:       c.Name,
 		Kind:       KuzuDbKind,
 		Connection: conn,
 	}
@@ -60,6 +61,7 @@ func (c KuzuDbConfig) SourceConfigKind() string {
 var _ sources.SourceConfig = KuzuDbConfig{}
 
 type KuzuDbSource struct {
+	Name       string `yaml:"name" validate:"required"`
 	Kind       string `yaml:"kind" validated:"required"`
 	Connection *kuzu.Connection
 }
