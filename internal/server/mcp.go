@@ -357,6 +357,17 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		protocolVersion = v20250326.PROTOCOL_VERSION
 	}
 
+	// check if client have `MCP-Protocol-Version` header
+	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
+	if headerProtocolVersion != "" {
+		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
+			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+			return
+		}
+		protocolVersion = headerProtocolVersion
+	}
+
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
@@ -387,6 +398,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
 		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
+		return
 	}
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName)
@@ -429,10 +441,6 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-
-	if protocolVersion == "" {
-		protocolVersion = v20241105.PROTOCOL_VERSION
 	}
 
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
