@@ -45,7 +45,19 @@ func apiRouter(s *Server) (chi.Router, error) {
 		r.Post("/invoke", func(w http.ResponseWriter, r *http.Request) { toolInvokeHandler(s, w, r) })
 	})
 
+	r.Route("/authServices", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) { authServiceHandler(s, w, r) })
+	})
+
 	return r, nil
+}
+
+func authServiceHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, _ := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/authServices/get")
+	r = r.WithContext(ctx)
+
+	authMap := s.ResourceMgr.GetAuthServiceMap()
+	render.JSON(w, r, authMap)
 }
 
 // toolsetHandler handles the request for information about a Toolset.

@@ -21,7 +21,7 @@
  * @param {!HTMLInputElement} prettifyCheckbox The checkbox to control JSON formatting.
  * @param {function(?Object): void} updateLastResults Callback to store the last results.
  */
-export async function handleRunTool(toolId, form, responseArea, parameters, prettifyCheckbox, updateLastResults) {
+export async function handleRunTool(toolId, form, responseArea, parameters, prettifyCheckbox, updateLastResults, headers) {
     responseArea.value = 'Running tool...';
     updateLastResults(null);
     const formData = new FormData(form);
@@ -42,12 +42,9 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
             // handle missing values for non-boolean types
             if (RAW_VALUE === null || RAW_VALUE === undefined || RAW_VALUE === '') {
                 if (param.required) {
-                    const errorMessage = `Error: Required parameter "${NAME}" is missing.`;
-                    console.warn(errorMessage);
-                    responseArea.value = errorMessage;
-                    return; 
+                    console.warn(`Required parameter ${param.name} is missing.`);
                 }
-                console.debug(`Optional parameter ${NAME} is missing, skipping.`);
+                typedParams[param.name] = null;
                 continue;
             }
 
@@ -67,11 +64,11 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
 
                 if (ELEMENT_TYPE === 'number') {
                     typedParams[NAME] = parsedArray.map((item, index) => {
-                        const num = Number(item);
-                        if (isNaN(num)) {
+                        const NUM = Number(item);
+                        if (isNaN(NUM)) {
                             throw new Error(`Invalid number "${item}" found in array for ${NAME} at index ${index}.`);
                         }
-                        return num;
+                        return NUM;
                     });
                 } else if (ELEMENT_TYPE === 'boolean') {
                     typedParams[NAME] = parsedArray.map(item => item === true || String(item).toLowerCase() === 'true');
@@ -81,11 +78,11 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
             } else {
                 switch (VALUE_TYPE) {
                     case 'number':
-                        const num = Number(RAW_VALUE);
-                        if (isNaN(num)) {
+                        const NUM = Number(RAW_VALUE);
+                        if (isNaN(NUM)) {
                             throw new Error(`Invalid number input for ${NAME}: ${RAW_VALUE}`);
                         }
-                        typedParams[NAME] = num;
+                        typedParams[NAME] = NUM;
                         break;
                     case 'string':
                     default:
@@ -104,7 +101,7 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
     try {
         const response = await fetch(`/api/tool/${toolId}/invoke`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: headers,
             body: JSON.stringify(typedParams)
         });
         if (!response.ok) {

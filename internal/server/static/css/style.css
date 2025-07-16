@@ -118,13 +118,6 @@ body {
     border-bottom: 1px solid #eee;
 }
 
-.content {
-    padding: 20px;
-    flex-grow: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
 .tool-button {
     display: flex;
     align-items: center;
@@ -274,6 +267,92 @@ body {
 
     &:hover {
         background-color: #357ae8; 
+    }
+}
+
+.edit-headers-btn {
+    background-color: rgb(97, 97, 97);
+    color: white;
+    border: none;
+    border-radius: 30px; 
+    padding: 10px 30px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 1em;
+    font-weight: bolder;
+    transition: background-color 0.3s ease;
+}
+
+.header-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+
+    .header-modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+
+        h5 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        .headers-textarea {
+            width: calc(100% - 16px);
+            padding: 8px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-height: 150px;
+        }
+
+        .header-modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+
+            button {
+                padding: 10px 20px;
+                border: none;
+                font: inherit;
+                font-weight: bolder;
+                cursor: pointer;
+                border-radius: 30px;
+                align-items: center;
+                color: white;
+                transition: background-color 0.3s ease;
+            }
+
+            .save-headers-btn {
+                background-color: #000000;
+                 &:hover {
+                    background-color: #333333;
+                }
+            }
+
+            .close-headers-btn {
+                background-color: #727272;
+                 &:hover {
+                    background-color: #5e5e5e;
+                }
+            }
+        }
     }
 }
 
