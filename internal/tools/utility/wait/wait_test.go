@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package waitfor_test
+package wait_test
 
 import (
 	"testing"
@@ -22,10 +22,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 
-	waitfor "github.com/googleapis/genai-toolbox/internal/tools/utility/wait-for"
+	wait "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 )
 
-func TestParseFromYamlWaitFor(t *testing.T) {
+func TestParseFromYamlWait(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -40,16 +40,16 @@ func TestParseFromYamlWaitFor(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: wait-for
+					kind: wait
 					description: some description
 					timeout: 10s
 					authRequired:
 						- my-google-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": waitfor.Config{
+				"example_tool": wait.Config{
 					Name:         "example_tool",
-					Kind:         "wait-for",
+					Kind:         "wait",
 					Description:  "some description",
 					Timeout:      "10s",
 					AuthRequired: []string{"my-google-auth-service"},

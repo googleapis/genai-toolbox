@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
-func RunWaitForTool(t *testing.T) {
+func RunWaitTool(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -37,7 +37,7 @@ func RunWaitForTool(t *testing.T) {
 	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-wait-for-tool": map[string]any{
-				"kind":        "wait-for",
+				"kind":        "wait",
 				"description": "Wait for a specified duration.",
 				"timeout":     "30s",
 			},

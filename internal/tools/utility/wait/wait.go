@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package waitfor
+package wait
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "wait-for"
+const kind string = "wait"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
