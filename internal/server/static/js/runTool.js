@@ -23,7 +23,7 @@ import { isParamIncluded } from "./toolDisplay.js";
  * @param {!HTMLInputElement} prettifyCheckbox The checkbox to control JSON formatting.
  * @param {function(?Object): void} updateLastResults Callback to store the last results.
  */
-export async function handleRunTool(toolId, form, responseArea, parameters, prettifyCheckbox, updateLastResults) {
+export async function handleRunTool(toolId, form, responseArea, parameters, prettifyCheckbox, updateLastResults, headers) {
     const formData = new FormData(form);
     const typedParams = {};
     responseArea.value = 'Running tool...';
@@ -82,7 +82,7 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
     try {
         const response = await fetch(`/api/tool/${toolId}/invoke`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: headers,
             body: JSON.stringify(typedParams)
         });
         if (!response.ok) {

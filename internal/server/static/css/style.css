@@ -1,3 +1,11 @@
+:root {
+    --toolbox-blue: #4285f4;
+    --text-primary-gray: #444444;
+    --text-secondary-gray: #6e6e6e;
+    --button-primary: var(--toolbox-blue);
+    --button-secondary: #616161;
+}
+
 body {
     display: flex;
     height: 100vh;
@@ -113,8 +121,43 @@ body {
 .content {
     padding: 20px;
     flex-grow: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-y: auto; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font: inherit;
+    font-size: 1em;
+    font-weight: bolder;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+.btn--run {
+    background-color: var(--button-primary);
+}
+
+.btn--editHeaders {
+    background-color: var(--button-secondary)
+}
+
+.btn--saveHeaders {
+    background-color: var(--button-primary)
+}
+
+.btn--closeHeaders {
+    background-color: var(--button-secondary)
 }
 
 .tool-button {
@@ -203,7 +246,7 @@ body {
     border: 1px solid #eee;
 
     h5 {
-        color: #4285f4;
+        color: var(--toolbox-blue);
         margin-top: 0;
         font-weight: bold;
     }
@@ -216,12 +259,12 @@ body {
     padding-right: 6px; 
     font-weight: bold;
     font-size: 0.9em;
-    color: #555;
+    color: var(--text-secondary-gray);
 }
 
 .params-disclaimer {
     font-style: italic;
-    color: #555;
+    color: var(--text-secondary-gray);
     font-size: 0.8em;
     margin-bottom: 10px; 
     width: 100%; 
@@ -267,7 +310,7 @@ body {
         border-radius: initial;
         vertical-align: middle;
         margin-right: 4px;
-        accent-color: #4285f4;
+        accent-color: var(--toolbox-blue);
         flex-grow: 0; 
     }
 }
@@ -298,7 +341,7 @@ body {
         border-radius: initial;
         vertical-align: middle;
         margin-right: 0; 
-        accent-color: #4285f4;
+        accent-color: var(--toolbox-blue);
     }
 }
 
@@ -309,13 +352,13 @@ body {
     border-radius: initial;
     vertical-align: middle;
     margin: 0;
-    accent-color: #4285f4;
+    accent-color: var(--toolbox-blue);
 }
 
 .checkbox-bool-label {
     margin-left: 5px; 
     font-style: italic;
-    color: #555;
+    color: var(--text-primary-gray);
 }
 
 .checkbox-bool-label.disabled {
@@ -326,7 +369,7 @@ body {
 .param-label-extras {
   font-style: italic;
   font-weight: lighter;
-  color: rgb(125, 125, 125);
+  color: var(--text-secondary-gray);
 }
 
 .auth-param-input {
@@ -336,23 +379,54 @@ body {
 
 .run-button-container {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-end; 
+    gap: 20px;
 }
 
-.run-tool-btn {
-    background-color: #4285f4ff;
-    color: white;
-    border: none;
-    border-radius: 30px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font: inherit;
-    font-size: 1em;
-    font-weight: bolder;
-    transition: background-color 0.3s ease;
+.header-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
 
-    &:hover {
-        background-color: #357ae8;
+    .header-modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+
+        h5 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        .headers-textarea {
+            width: calc(100% - 16px);
+            padding: 8px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-height: 150px;
+        }
+
+        .header-modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+        }
     }
 }
 
