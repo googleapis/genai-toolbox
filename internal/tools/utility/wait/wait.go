@@ -54,7 +54,7 @@ func (cfg Config) ToolConfigKind() string {
 	return kind
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 	durationParameter := tools.NewStringParameter("duration", "The duration to wait for, specified as a string (e.g., '10s', '2m', '1h').")
 	parameters := tools.Parameters{durationParameter}
 
