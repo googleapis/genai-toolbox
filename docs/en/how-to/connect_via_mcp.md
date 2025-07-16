@@ -20,8 +20,9 @@ The native SDKs can be combined with MCP clients in many cases.
 
 Toolbox currently supports the following versions of MCP specification:
 
-* [2024-11-05](https://modelcontextprotocol.io/specification/2024-11-05)
+* [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18)
 * [2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26)
+* [2024-11-05](https://modelcontextprotocol.io/specification/2024-11-05)
 
 ### Toolbox AuthZ/AuthN Not Supported by MCP
 
