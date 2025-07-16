@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/kuzudb"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -11,6 +12,20 @@ import (
 )
 
 var kind string = "kuzudb-cypher"
+
+func init() {
+	if !tools.Register(kind, newConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := KuzuDBToolConfig{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
 
 type KuzuDBToolConfig struct {
 	Name               string           `yaml:"name" validate:"required"`

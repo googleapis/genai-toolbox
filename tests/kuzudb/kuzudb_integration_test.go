@@ -106,12 +106,12 @@ func getToolConfig(paramToolStatement, paramToolStatement2 string) map[string]an
 		"sources": map[string]any{
 			"my-instance": getSourceConfig(),
 		},
-		"authServices": map[string]any{
-			"my-google-auth": map[string]any{
-				"kind":     "google",
-				"clientId": tests.ClientId,
-			},
-		},
+		// "authServices": map[string]any{
+		// 	"my-google-auth": map[string]any{
+		// 		"kind":     "google",
+		// 		"clientId": tests.ClientId,
+		// 	},
+		// },
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
 				"kind":        toolKind,
