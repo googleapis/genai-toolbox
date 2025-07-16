@@ -26,7 +26,7 @@ sources:
     my-valkey-instance:
      kind: valkey
      address:
-       - 127.0.0.1
+       - 127.0.0.1:6379
      username: ${YOUR_USERNAME}
      password: ${YOUR_PASSWORD}
      # database: 0
@@ -50,7 +50,7 @@ sources:
     my-valkey-instance:
      kind: valkey
      address:
-       - 127.0.0.1
+       - 127.0.0.1:6379
      useGCPIAM: true
 ```
 
