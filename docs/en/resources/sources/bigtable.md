@@ -68,3 +68,8 @@ sources:
 | kind      |  string  |     true     | Must be "bigtable".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | instance  |  string  |     true     | Name of the Bigtable instance.                                                |
+
+## Example Tools
+
+- [`bigtable-sql`](../tools/bigtable/bigtable-sql.md)
+  Run SQL-like queries over Bigtable rows.

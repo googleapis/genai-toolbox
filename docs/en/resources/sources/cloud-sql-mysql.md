@@ -101,3 +101,11 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                   |
 | password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`. |
+
+## Example Tools
+
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
+  Execute pre-defined prepared SQL queries in MySQL.
+
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+  Run parameterized SQL queries in Cloud SQL for MySQL.

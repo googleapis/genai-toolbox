@@ -52,3 +52,11 @@ instead of hardcoding your secrets into the configuration file.
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
+
+## Example Tools
+
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+  Execute SQL queries as prepared statements in PostgreSQL.
+
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+  Run parameterized SQL statements in PostgreSQL.

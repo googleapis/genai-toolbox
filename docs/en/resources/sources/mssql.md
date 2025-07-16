@@ -52,3 +52,11 @@ instead of hardcoding your secrets into the configuration file.
 | database  |  string  |     true     | Name of the SQL Server database to connect to (e.g. "my_db").          |
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-user").            |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                  |
+
+## Example Tools
+
+- [`mssql-sql`](../tools/mssql/mssql-sql.md)  
+  Execute pre-defined SQL Server queries with placeholder parameters.
+
+- [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
+  Run parameterized SQL Server queries in SQL Server.

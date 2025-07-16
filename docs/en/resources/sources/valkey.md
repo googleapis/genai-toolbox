@@ -67,3 +67,8 @@ sources:
 | database     |   int    |    false     | The Valkey database to connect to. Not applicable for cluster enabled instances. The default database is `0`.                    |
 | useGCPIAM    |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                 |
 | disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                                                 |
+
+## Example Tools
+
+- [`valkey`](../tools/valkey/valkey.md)  
+  Issue Valkey (Redis-compatible) commands.

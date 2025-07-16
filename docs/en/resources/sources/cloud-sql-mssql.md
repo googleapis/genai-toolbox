@@ -102,3 +102,11 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                       |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
+
+## Example Tools
+
+- [`mssql-sql`](../tools/mssql/mssql-sql.md)  
+  Execute pre-defined SQL Server queries with placeholder parameters.
+
+- [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
+  Run parameterized SQL Server queries in Cloud SQL for SQL Server.

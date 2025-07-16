@@ -53,3 +53,11 @@ instead of hardcoding your secrets into the configuration file.
 | user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
 | password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
 | queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+
+## Example Tools
+
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
+  Execute pre-defined prepared SQL queries in MySQL.
+
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+  Run parameterized SQL queries in MySQL.

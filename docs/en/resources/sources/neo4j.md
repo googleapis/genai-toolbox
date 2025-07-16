@@ -49,3 +49,8 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the Neo4j user to connect as (e.g. "neo4j").                 |
 | password  |  string  |     true     | Password of the Neo4j user (e.g. "my-password").                     |
 | database  |  string  |     true     | Name of the Neo4j database to connect to (e.g. "neo4j").             |
+
+## Example Tools
+
+- [`neo4j-cypher`](../tools/neo4j/neo4j-cypher.md)  
+  Run Cypher queries against your Neo4j graph database.

@@ -94,3 +94,8 @@ sources:
 | useGCPIAM      |  string  |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                |
 
 [auth]: https://cloud.google.com/memorystore/docs/redis/about-redis-auth
+
+## Example Tools
+
+- [`redis`](../tools/redis/redis.md)  
+  Run Redis commands and interact with key-value pairs.
