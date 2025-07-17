@@ -26,7 +26,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	return actual, nil
 }
 
-// Todo: rethink naming
 type KuzuDbConfig struct {
 	Name              string `yaml:"name" validate:"required" `
 	Kind              string `yaml:"kind" validate:"required"`
@@ -75,7 +74,6 @@ func (k *KuzuDbSource) KuzuDB() *kuzu.Connection {
 
 var _ sources.Source = &KuzuDbSource{}
 
-// TODO configure custom config
 func initKuzuDbConnection(ctx context.Context, tracer trace.Tracer, config KuzuDbConfig) (*kuzu.Connection, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, KuzuDbKind, config.Name)
@@ -96,7 +94,13 @@ func initKuzuDbConnection(ctx context.Context, tracer trace.Tracer, config KuzuD
 	if config.MaxNumThreads != 0 {
 		systemConfig.MaxNumThreads = config.MaxNumThreads
 	}
-	db, err := kuzu.OpenDatabase(config.Database, systemConfig)
+	var db *kuzu.Database
+	var err error
+	if config.Database != "" {
+		db, err = kuzu.OpenDatabase(config.Database, systemConfig)
+	} else {
+		db, err = kuzu.OpenInMemoryDatabase(systemConfig)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %w", err)
 	}

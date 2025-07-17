@@ -14,23 +14,23 @@ import (
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/kuzudb/go-kuzu"
 )
 
 var (
-	database = "/tmp/example.kuzu"
-	toolKind = "kuzudb-cypher"
+	database   = "/tmp/example.kuzu"
+	toolKind   = "kuzudb-cypher"
+	sourceKind = "kuzudb"
 )
 
 func getSourceConfig() map[string]any {
 	return map[string]any{
-		"name":     "kuzudb",
-		"kind":     "kuzudb",
-		"database": database,
-		// "configuration": map[string]any{
-		// 	"maxnumthreads": 10,
-		// },
+		"name":          sourceKind,
+		"kind":          sourceKind,
+		"database":      database,
+		"maxNumThreads": 10,
 	}
 }
 func initKuzuDbConnection() error {
@@ -74,7 +74,9 @@ func TestKuzuDbToolEndpoints(t *testing.T) {
 	var args []string
 
 	paramToolStatement, paramToolStatement2 := createParamQueries()
+	templateStatement, templateStatement2 := createTemplateQueries()
 	toolsFile := getToolConfig(paramToolStatement, paramToolStatement2)
+	toolsFile = addTemplateParamConfig(t, toolsFile, toolKind, templateStatement, templateStatement2)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -109,12 +111,12 @@ func getToolConfig(paramToolStatement, paramToolStatement2 string) map[string]an
 		"sources": map[string]any{
 			"my-instance": getSourceConfig(),
 		},
-		// "authServices": map[string]any{
-		// 	"my-google-auth": map[string]any{
-		// 		"kind":     "google",
-		// 		"clientId": tests.ClientId,
-		// 	},
-		// },
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": tests.ClientId,
+			},
+		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
 				"kind":        toolKind,
@@ -252,4 +254,56 @@ func runToolInvokeTest(t *testing.T) {
 			}
 		})
 	}
+}
+
+func addTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+	toolsMap, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+
+	toolsMap["create-table-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "create node table {{.tableName}}({{array .columns}})",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("columns", "The columns to create", tools.NewStringParameter("column", "A column name that will be created")),
+		},
+	}
+	toolsMap["insert-table-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Insert tool with template parameters",
+		"statement":   "create (u:{{.tableName}} {name:'Alice', age:20})",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("columns", "The columns to insert into", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+			tools.NewStringParameter("values", "The values to insert as a comma separated string"),
+		},
+	}
+	toolsMap["select-templateParams-combined-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   tmplSelectCombined,
+		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   tmplSelectFilterCombined,
+		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewStringParameter("columnFilter", "some description"),
+		},
+	}
+	config["tools"] = toolsMap
+	return config
 }
