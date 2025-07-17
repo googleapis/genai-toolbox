@@ -78,6 +78,18 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
+			"my-simple-schema-tool": map[string]any{
+				"kind":          "neo4j-db-schema",
+				"source":        "my-neo4j-instance",
+				"description":   "Simple tool to test end to end functionality.",
+				"disableDbInfo": true,
+				"disableErrors": true,
+			},
+			"my-simple-execute-cypher-tool": map[string]any{
+				"kind":        "neo4j-execute-cypher",
+				"source":      "my-neo4j-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -101,12 +113,42 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		want map[string]any
 	}{
 		{
-			name: "get my-simple-tool",
+			name: "get my-simple-cypher-tool",
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/",
 			want: map[string]any{
 				"my-simple-cypher-tool": map[string]any{
 					"description":  "Simple tool to test end to end functionality.",
 					"parameters":   []any{},
+					"authRequired": []any{},
+				},
+			},
+		},
+		{
+			name: "get my-simple-schema-tool",
+			api:  "http://127.0.0.1:5000/api/tool/my-simple-schema-tool/",
+			want: map[string]any{
+				"my-simple-schema-tool": map[string]any{
+					"description":  "Simple tool to test end to end functionality.",
+					"parameters":   []any{},
+					"authRequired": []any{},
+				},
+			},
+		},
+		{
+			name: "get my-simple-execute-cypher-tool",
+			api:  "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/",
+			want: map[string]any{
+				"my-simple-execute-cypher-tool": map[string]any{
+					"description": "Simple tool to test end to end functionality.",
+					"parameters": []any{
+						map[string]any{
+							"name":        "cypher",
+							"type":        "string",
+							"required":    true,
+							"description": "The cypher to execute.",
+							"authSources": []any{},
+						},
+					},
 					"authRequired": []any{},
 				},
 			},
@@ -150,6 +192,18 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			name:        "invoke my-simple-cypher-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "[{\"a\":1}]",
+		},
+		{
+			name:        "invoke my-simple-schema-tool",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-schema-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "[{\"nodeLabels\":null,\"relationships\":null,\"constraints\":null,\"indexes\":null,\"databaseInfo\":{\"name\":\"\",\"version\":\"\"},\"statistics\":{\"totalNodes\":0,\"totalRelationships\":0,\"totalProperties\":0,\"nodesByLabel\":null,\"relationshipsByType\":null,\"propertiesByLabel\":null,\"propertiesByRelType\":null}}]",
+		},
+		{
+			name:        "invoke my-simple-execute-cypher-tool",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RETURN 1 as a;"}`)),
 			want:        "[{\"a\":1}]",
 		},
 	}

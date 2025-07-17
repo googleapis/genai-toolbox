@@ -53,11 +53,16 @@ var _ compatibleSource = &neo4jsc.Source{}
 var compatibleSources = [...]string{neo4jsc.SourceKind}
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name                 string   `yaml:"name" validate:"required"`
+	Kind                 string   `yaml:"kind" validate:"required"`
+	Source               string   `yaml:"source" validate:"required"`
+	Description          string   `yaml:"description" validate:"required"`
+	AuthRequired         []string `yaml:"authRequired"`
+	DisableDbInfo        bool     `yaml:"disableDbInfo"`        // If true, skips extracting database info (like version, edition)
+	DisableErrors        bool     `yaml:"disableErrors"`        // If true, skips collecting errors during schema extraction
+	DisableIndexes       bool     `yaml:"disableIndexes"`       // If true, skips extracting indexes
+	DisableConstraints   bool     `yaml:"disableConstraints"`   // If true, skips extracting constraints
+	DisableRelationships bool     `yaml:"disableRelationships"` // If true, skips extracting relationships outside of APOC schema
 }
 
 // validate interface
@@ -95,6 +100,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		Driver:       s.Neo4jDriver(),
 		Database:     s.Neo4jDatabase(),
+		conf:         &cfg,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -112,6 +118,7 @@ type SchemaInfo struct {
 	Indexes       []Index        `json:"indexes"`
 	DatabaseInfo  DatabaseInfo   `json:"databaseInfo"`
 	Statistics    Statistics     `json:"statistics"`
+	Errors        []string       `json:"errors,omitempty"`
 }
 
 // NodeLabel represents a node label with its properties
@@ -213,6 +220,7 @@ type Tool struct {
 
 	Driver      neo4j.DriverWithContext
 	Database    string
+	conf        *Config
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -244,114 +252,127 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 // extractSchema extracts the complete schema from Neo4j
 func (t Tool) extractSchema(ctx context.Context) (*SchemaInfo, error) {
 	schema := &SchemaInfo{}
-
-	var wg = sync.WaitGroup{}
 	var lock sync.Mutex
-	errCh := make(chan error)
-	defer close(errCh)
 
-	// Extract database info
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		dbInfo, err := t.extractDatabaseInfo(ctx)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to extract database info: %w", err)
-			return
-		}
-		lock.Lock()
-		defer lock.Unlock()
-		schema.DatabaseInfo = *dbInfo
-	}()
+	// Define extraction tasks
+	type extractionTask struct {
+		name     string
+		fn       func() error
+		disabled bool
+	}
 
-	// Get APOC schema - this provides most of what we need
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		apocSchema, err := t.GetAPOCSchema(ctx)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to get APOC schema: %w", err)
-			return
-		}
-		nodeLabels, relationships, stats := processAPOCSchema(apocSchema)
-
-		// Process APOC schema to populate node labels and relationships
-		lock.Lock()
-		defer lock.Unlock()
-		schema.NodeLabels = nodeLabels
-		schema.Relationships = relationships
-		schema.Statistics = *stats
-	}()
-
-	// Extract relationships (need a separate query for counts and properties)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		relationships, err := t.extractRelationships(ctx)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to extract relationships: %w", err)
-			return
-		}
-		lock.Lock()
-		defer lock.Unlock()
-
-		// Merge extracted relationships with APOC schema relationships
-		for _, rel := range relationships {
-			// Check if relationship already exists in the schema
-			origRel, found := findRelationship(schema.Relationships, rel.Type, rel.StartNode, rel.EndNode)
-			if !found {
-				schema.Relationships = append(schema.Relationships, rel)
-				continue
-			}
-
-			// If not found, add the new relationship, otherwise skip it since it was already discovered
-			for _, prop := range origRel.Properties {
-				_, found = findProperty(origRel.Properties, prop.Name)
-				if found {
-					continue
+	tasks := []extractionTask{
+		{
+			name:     "database info",
+			disabled: t.conf.DisableDbInfo,
+			fn: func() error {
+				dbInfo, err := t.extractDatabaseInfo(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to extract database info: %w", err)
 				}
-				origRel.Properties = append(origRel.Properties, prop)
+
+				lock.Lock()
+				defer lock.Unlock()
+				schema.DatabaseInfo = *dbInfo
+				return nil
+			},
+		},
+		{
+			name: "APOC schema",
+			fn: func() error {
+				apocSchema, err := t.GetAPOCSchema(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to get APOC schema: %w", err)
+				}
+				nodeLabels, relationships, stats := processAPOCSchema(apocSchema)
+
+				lock.Lock()
+				defer lock.Unlock()
+				schema.NodeLabels = nodeLabels
+				schema.Statistics = *stats
+
+				// If outside APOC relationships extraction is disabled, we are adding APOC relationships to the schema
+				if t.conf.DisableRelationships {
+					schema.Relationships = relationships
+				}
+				return nil
+			},
+		},
+		{
+			name:     "relationships",
+			disabled: t.conf.DisableRelationships,
+			fn: func() error {
+				relationships, err := t.extractRelationships(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to extract relationships: %w", err)
+				}
+				schema.Relationships = relationships
+				return nil
+			},
+		},
+		{
+			name:     "constraints",
+			disabled: t.conf.DisableConstraints,
+			fn: func() error {
+				constraints, err := t.extractConstraints(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to extract constraints: %w", err)
+				}
+
+				lock.Lock()
+				defer lock.Unlock()
+				schema.Constraints = constraints
+				return nil
+			},
+		},
+		{
+			name:     "indexes",
+			disabled: t.conf.DisableIndexes,
+			fn: func() error {
+				indexes, err := t.extractIndexes(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to extract indexes: %w", err)
+				}
+
+				lock.Lock()
+				defer lock.Unlock()
+				schema.Indexes = indexes
+				return nil
+			},
+		},
+	}
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(tasks))
+
+	// Execute all tasks concurrently
+	for _, task := range tasks {
+		if task.disabled {
+			continue
+		}
+		wg.Add(1)
+		go func(t extractionTask) {
+			defer wg.Done()
+			if err := t.fn(); err != nil {
+				errCh <- err
+				return
 			}
-		}
-	}()
-
-	// Extract constraints (need separate query for names)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		constraints, err := t.extractConstraints(ctx)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to extract constraints: %w", err)
-		}
-		lock.Lock()
-		defer lock.Unlock()
-		schema.Constraints = constraints
-	}()
-
-	// Extract indexes (need separate query for names)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		indexes, err := t.extractIndexes(ctx)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to extract indexes: %w", err)
-		}
-		lock.Lock()
-		defer lock.Unlock()
-		schema.Indexes = indexes
-	}()
+		}(task)
+	}
 
 	// Wait for all goroutines to finish
 	wg.Wait()
 
-	// Collect all errors from goroutines if any and return the first one with collected information
-	select {
-	case err := <-errCh:
+	// Collect any errors that occurred
+	close(errCh)
+	if t.conf.DisableErrors {
+		return schema, nil // If errors are disabled, return the schema without errors
+	}
+
+	for err := range errCh {
 		if err != nil {
-			return nil, fmt.Errorf("error during schema extraction: %w", err)
+			schema.Errors = append(schema.Errors, err.Error())
 		}
-	default:
-		// No errors, proceed with the schema
 	}
 	return schema, nil
 }

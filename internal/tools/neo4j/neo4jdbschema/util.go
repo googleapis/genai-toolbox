@@ -200,23 +200,3 @@ func updateRelationshipPatterns(relationships []Relationship, apocSchema *APOCSc
 		}
 	}
 }
-
-// findRelationship finds a relationship in the schema by type, start node and end node
-func findRelationship(relationships []Relationship, relType, startNode, endNode string) (*Relationship, bool) {
-	for _, rel := range relationships {
-		if rel.Type == relType && rel.StartNode == startNode && rel.EndNode == endNode {
-			return &rel, true
-		}
-	}
-	return nil, false
-}
-
-// findProperty finds a property in a node label or relationship by name
-func findProperty(properties []PropertyInfo, name string) (*PropertyInfo, bool) {
-	for _, prop := range properties {
-		if prop.Name == name {
-			return &prop, true
-		}
-	}
-	return nil, false
-}
