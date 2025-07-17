@@ -33,7 +33,7 @@ sources:
     my-redis-instance:
      kind: redis
      address:
-       - 127.0.0.1
+       - 127.0.0.1:6379
      username: ${MY_USER_NAME}
      password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
      # database: 0
@@ -58,7 +58,7 @@ sources:
     my-redis-cluster-instance:
      kind: memorystore-redis
      address:
-       - 127.0.0.1
+       - 127.0.0.1:6379
      password: ${MY_AUTH_STRING}
      # useGCPIAM: false
      # clusterEnabled: false
@@ -74,7 +74,8 @@ using IAM authentication:
 sources:
     my-redis-cluster-instance:
      kind: memorystore-redis
-     address: 127.0.0.1
+     address:
+       - 127.0.0.1:6379
      useGCPIAM: true
      clusterEnabled: true
 ```
