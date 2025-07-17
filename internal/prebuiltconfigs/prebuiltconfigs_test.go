@@ -29,6 +29,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		"cloud-sql-mysql",
 		"cloud-sql-postgres",
 		"firestore",
+		"looker",
 		"postgres",
 		"spanner-postgres",
 		"spanner",
