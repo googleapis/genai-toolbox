@@ -55,6 +55,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
