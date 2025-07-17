@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -39,8 +41,8 @@ func initKuzuDbConnection() error {
 		"create rel table livesin(from user to city)",
 		"create (u:user {name:'Alice', age:20})",
 		"create (u:user {name:'Jane', age:30})",
-		"create (u:city {name:'London', 100})",
-		"create (u:city {name:'New York', 200})",
+		"create (u:city {name:'London', population:100})",
+		"create (u:city {name:'New York', population:200})",
 		"match (u1:user), (u2:user) where u1.name='Alice' and u2.name='Jane' create (u1)-[:follows {since: 2019}]->(u2)",
 		"match (u:user), (c:city) where u.name='Alice' and c.name='New York' create (u)-[:livesin]->(c)",
 	}
@@ -55,7 +57,7 @@ func initKuzuDbConnection() error {
 	for _, q := range queries {
 		_, err := conn.Query(q)
 		if err != nil {
-			return err
+			log.Fatal(err)
 		}
 	}
 	return nil
@@ -64,6 +66,8 @@ func initKuzuDbConnection() error {
 func TestKuzuDbToolEndpoints(t *testing.T) {
 	initKuzuDbConnection()
 	defer os.Remove(database)
+	defer os.Remove(fmt.Sprintf("%s.lock", database))
+	defer os.Remove(fmt.Sprintf("%s.wal", database))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -71,7 +75,6 @@ func TestKuzuDbToolEndpoints(t *testing.T) {
 
 	paramToolStatement, paramToolStatement2 := createParamQueries()
 	toolsFile := getToolConfig(paramToolStatement, paramToolStatement2)
-
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -89,14 +92,14 @@ func TestKuzuDbToolEndpoints(t *testing.T) {
 }
 
 func createParamQueries() (string, string) {
-	toolStatement := "match (u:user {name:'?'}) return a.*"
-	toolStatement2 := "match (a:user)-[:follows {since:?}]->(b:user) return a.name, b.name"
+	toolStatement := "match (u:user {name:$name}) return u.*"
+	toolStatement2 := "match (a:user)-[:follows {since:$year}]->(b:user) return a.name, b.name"
 	return toolStatement, toolStatement2
 }
 
 func createTemplateQueries() (string, string) {
-	toolStatement := "match (u:{{.tableName}}} {name:'?'}) return a.*"
-	toolStatement2 := "match (a:{{.tableName}})-[:{{.relTableName}} {since:?}]->(b:{{.tableName}}) return a.name, b.name"
+	toolStatement := "match (u:{{.tableName}}} {name:$name}) return a.*"
+	toolStatement2 := "match (a:{{.tableName}})-[:{{.relTableName}} {since:$year}]->(b:{{.tableName}}) return a.name, b.name"
 	return toolStatement, toolStatement2
 }
 
@@ -117,7 +120,7 @@ func getToolConfig(paramToolStatement, paramToolStatement2 string) map[string]an
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
+				"statement":   "Match (a) return a.name;",
 			},
 			"my-param-tool": map[string]any{
 				"kind":        toolKind,
@@ -172,7 +175,7 @@ func runToolInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          "map[a.age:20 a.name:Alice]",
+			want:          "[{\"a.name\":\"London\"},{\"a.name\":\"New York\"},{\"a.name\":\"Alice\"},{\"a.name\":\"Jane\"}]",
 			isErr:         false,
 		},
 		{
@@ -180,7 +183,7 @@ func runToolInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"name": "Alice"}`)),
-			want:          "map[a.age:20 a.name:Alice]",
+			want:          "[{\"u.age\":20,\"u.name\":\"Alice\"}]",
 			isErr:         false,
 		},
 		{
@@ -188,7 +191,7 @@ func runToolInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool2/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"year": 2019}`)),
-			want:          "map[sinc:2022 user1:Zhang user2:Noura]",
+			want:          "[{\"a.name\":\"Alice\",\"b.name\":\"Jane\"}]",
 			isErr:         false,
 		},
 		{
@@ -196,7 +199,7 @@ func runToolInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-param-tool2/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"year": 2020}`)),
-			want:          "invokeParamWantNull",
+			want:          "null",
 			isErr:         false,
 		},
 		{
@@ -247,6 +250,7 @@ func runToolInvokeTest(t *testing.T) {
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
+			fmt.Println()
 		})
 	}
 }
