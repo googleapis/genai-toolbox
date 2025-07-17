@@ -28,14 +28,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type KuzuDBToolConfig struct {
-	Name               string           `yaml:"name" validate:"required"`
-	Kind               string           `yaml:"kind" validate:"required"`
-	Source             string           `yaml:"source" validate:"required"`
-	Description        string           `yaml:"description" validate:"required"`
-	Statement          string           `yaml:"statement" validate:"required"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description" validate:"required"`
+	Statement    string           `yaml:"statement" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 type compatibleSource interface {
@@ -59,26 +58,22 @@ func (k KuzuDBToolConfig) Initialize(srcs map[string]sources.Source) (tools.Tool
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(k.TemplateParameters, k.Parameters)
-
 	mcpManifest := tools.McpManifest{
 		Name:        k.Name,
 		Description: k.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: k.Parameters.McpManifest(),
 	}
 
 	// finish tool setup
 	t := KuzuDBTool{
-		Name:               k.Name,
-		Kind:               kind,
-		Parameters:         k.Parameters,
-		TemplateParameters: k.TemplateParameters,
-		AllParams:          allParameters,
-		Statement:          k.Statement,
-		AuthRequired:       k.AuthRequired,
-		Connection:         s.KuzuDB(),
-		manifest:           tools.Manifest{Description: k.Description, Parameters: paramManifest, AuthRequired: k.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Name:         k.Name,
+		Kind:         kind,
+		Parameters:   k.Parameters,
+		Statement:    k.Statement,
+		AuthRequired: k.AuthRequired,
+		Connection:   s.KuzuDB(),
+		manifest:     tools.Manifest{Description: k.Description, Parameters: k.Parameters.Manifest(), AuthRequired: k.AuthRequired},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
@@ -93,11 +88,9 @@ var _ tools.ToolConfig = KuzuDBToolConfig{}
 type KuzuDBTool struct {
 	Name string `yaml:"name" validate:"required"`
 
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Connection  *kuzu.Connection
 	Statement   string `yaml:"statement"`
@@ -162,7 +155,7 @@ func (k KuzuDBTool) McpManifest() tools.McpManifest {
 
 // ParseParams implements tools.Tool.
 func (k KuzuDBTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(k.AllParams, data, claimsMap)
+	return tools.ParseParams(k.Parameters, data, claimsMap)
 }
 
 var _ tools.Tool = KuzuDBTool{}

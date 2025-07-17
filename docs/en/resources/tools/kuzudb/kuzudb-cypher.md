@@ -71,4 +71,3 @@ tools:
 | statement            | string                                | true         | Cypher statement to execute.                                                   |
 | authRequired         | []string                              | false        | List of authentication requirements for executing the query (if applicable).    |
 | parameters           | [parameters](_index#specifying-parameters) | false    | List of parameters used with the Cypher statement.                              |
-| templateParameters   | [parameters](_index#specifying-parameters) | false    | List of template parameters for dynamic query construction (if applicable).     |
