@@ -18,7 +18,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertmany"
 
 	yaml "github.com/goccy/go-yaml"
@@ -63,15 +62,6 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Collection:   "test_coll",
 					Description:  "some description",
 					Canonical:    true,
-					PayloadParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{
-								Name: "data",
-								Type: "string",
-								Desc: "the content in json",
-							},
-						},
-					},
 				},
 			},
 		},

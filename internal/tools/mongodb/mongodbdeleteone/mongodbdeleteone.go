@@ -74,7 +74,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*mongosrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongo-query`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
 	}
 
 	// Create a slice for all parameters

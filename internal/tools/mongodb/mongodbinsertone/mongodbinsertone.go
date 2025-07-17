@@ -30,6 +30,8 @@ import (
 
 const kind string = "mongodb-insert-one"
 
+const dataParamsKey = "data"
+
 func init() {
 	if !tools.Register(kind, newConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", kind))
@@ -45,15 +47,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name          string           `yaml:"name" validate:"required"`
-	Kind          string           `yaml:"kind" validate:"required"`
-	Source        string           `yaml:"source" validate:"required"`
-	AuthRequired  []string         `yaml:"authRequired" validate:"required"`
-	Description   string           `yaml:"description" validate:"required"`
-	Database      string           `yaml:"database" validate:"required"`
-	Collection    string           `yaml:"collection" validate:"required"`
-	Canonical     bool             `yaml:"canonical" validate:"required"` //i want to force the user to choose
-	PayloadParams tools.Parameters `yaml:"payloadParams" validate:"required"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	AuthRequired []string `yaml:"authRequired" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	Database     string   `yaml:"database" validate:"required"`
+	Collection   string   `yaml:"collection" validate:"required"`
+	Canonical    bool     `yaml:"canonical" validate:"required"` //i want to force the user to choose
 }
 
 // validate interface
@@ -73,38 +74,33 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*mongosrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongo-query`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
 	}
+
+	payloadParams := tools.NewStringParameterWithRequired(dataParamsKey, "the JSON payload to insert, should be a JSON object", true)
+	parameters := tools.Parameters{payloadParams}
 
 	// Create parameter MCP manifest
 	paramManifest := slices.Concat(
-		cfg.PayloadParams.Manifest(),
+		parameters.Manifest(),
 	)
+
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	payloadMcpManifest := cfg.PayloadParams.McpManifest()
-
-	// Concatenate parameters for MCP `required` field
-	concatRequiredManifest := slices.Concat(
-		payloadMcpManifest.Required,
-	)
-	if concatRequiredManifest == nil {
-		concatRequiredManifest = []string{}
-	}
+	payloadMcpManifest := payloadParams.McpManifest()
 
 	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
-	for name, p := range payloadMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
+	concatPropertiesManifest := map[string]tools.ParameterMcpManifest{
+		dataParamsKey: payloadMcpManifest,
 	}
 
 	// Create a new McpToolsSchema with all parameters
 	paramMcpManifest := tools.McpToolsSchema{
 		Type:       "object",
 		Properties: concatPropertiesManifest,
-		Required:   concatRequiredManifest,
+		Required:   []string{dataParamsKey},
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -120,7 +116,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:  cfg.AuthRequired,
 		Collection:    cfg.Collection,
 		Canonical:     cfg.Canonical,
-		PayloadParams: cfg.PayloadParams,
+		PayloadParams: parameters,
 		database:      s.Client.Database(cfg.Database),
 		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:   mcpManifest,
