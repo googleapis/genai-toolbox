@@ -54,6 +54,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
