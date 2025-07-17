@@ -17,7 +17,7 @@ sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial
 indexes with radius queries.
 
 If you're new to Valkey, you can find installation and getting started guides on
-the [official Valkey website](https://valkey.io/docs/getting-started/).
+the [official Valkey website](https://valkey.io/topics/).
 
 ## Example
 
