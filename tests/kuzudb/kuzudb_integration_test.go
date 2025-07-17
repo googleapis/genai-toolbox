@@ -250,7 +250,6 @@ func runToolInvokeTest(t *testing.T) {
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
-			fmt.Println()
 		})
 	}
 }

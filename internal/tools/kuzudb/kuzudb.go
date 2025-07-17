@@ -114,13 +114,12 @@ func (k KuzuDBTool) Authorized(verifiedAuthServices []string) bool {
 func (k KuzuDBTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	conn := k.Connection
 	paramsMap := params.AsMap()
-	fmt.Println(paramsMap)
-	fmt.Printf("Query is %s\n", k.Statement)
-	preparedStatement, err := conn.Prepare(k.Statement)
 
+	preparedStatement, err := conn.Prepare(k.Statement)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate prepared statement %w", err)
 	}
+
 	result, err := conn.Execute(preparedStatement, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
