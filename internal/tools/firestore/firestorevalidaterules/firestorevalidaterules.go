@@ -196,7 +196,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 }
 
 func (t Tool) processValidationResponse(response *firebaserules.TestRulesetResponse, source string) ValidationResult {
-	if response.Issues == nil || len(response.Issues) == 0 {
+	if len(response.Issues) == 0 {
 		return ValidationResult{
 			Valid:      true,
 			IssueCount: 0,
