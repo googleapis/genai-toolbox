@@ -426,6 +426,29 @@ steps:
           valkey \
           valkey
     
+  - id: "oceanbase"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "OCEANBASE_HOST=$_OCEANBASE_HOST"
+      - "OCEANBASE_PORT=$_OCEANBASE_PORT"
+      - "OCEANBASE_USER=$_OCEANBASE_USER"
+      - "OCEANBASE_PASSWORD=$_OCEANBASE_PASSWORD"
+      - "OCEANBASE_DATABASE=$_OCEANBASE_DATABASE"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "OceanBase" \
+          oceanbase \
+          oceanbase
+
 
 availableSecrets:
   secretManager:
