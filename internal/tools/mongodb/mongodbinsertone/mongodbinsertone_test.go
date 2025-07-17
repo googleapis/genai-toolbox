@@ -47,10 +47,6 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					database: test_db
 					collection: test_coll
 					canonical: true
-					payloadParams:
-						- name: data
-						  type: string
-						  description: the content in json
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbinsertone.Config{
@@ -104,10 +100,6 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 					description: some description
 					collection: test_coll
 					canonical: true
-					payloadParams:
-						- name: data
-						  type: string
-						  description: the content in json
 			`,
 			err: `unable to parse tool "example_tool" as kind "mongodb-insert-one"`,
 		},
