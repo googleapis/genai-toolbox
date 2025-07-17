@@ -301,11 +301,11 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	select1Want := `["Hello","World"]`
-	invokeParamWant, invokeParamWantNull, _, _ := tests.GetNonSpannerInvokeParamWant()
-	nullWant := "[null]"
+	select1Want := `"hello world"`
+	invokeParamWant, invokeIdNullWant, _, _ := tests.GetNonSpannerInvokeParamWant()
+	nullWant := "null"
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, nullWant, true, false)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
 	runAdvancedHTTPInvokeTest(t)
 }
 
@@ -409,7 +409,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"requestBody": "{}",
 				"description": "Simple tool to test end to end functionality.",
 			},
-			"my-param-tool": map[string]any{
+			"my-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"method":      "GET",
@@ -425,7 +425,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
-			"my-param-tool-id": map[string]any{
+			"my-tool-by-id": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"method":      "GET",
@@ -435,7 +435,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					tools.NewIntParameter("id", "user ID")},
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
-			"my-param-tool-name": map[string]any{
+			"my-tool-by-name": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"method":      "GET",

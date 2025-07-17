@@ -140,8 +140,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	select1Want := "[{\"$1\":1}]"
 	failMcpInvocationWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: parsing failure | {\\\"statement\\\":\\\"SELEC 1;\\\""
 
-	invokeParamWant, invokeParamWantNull, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, nullWant, true, true)
+	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failMcpInvocationWant)
 
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
@@ -230,7 +230,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 }
 
-// getCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
+// getCouchbaseParamToolInfo returns statements and params for my-tool couchbase-sql kind
 func getCouchbaseParamToolInfo(collectionName string) (string, string, string, string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+

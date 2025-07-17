@@ -47,7 +47,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
 			},
-			"my-param-tool": map[string]any{
+			"my-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -65,7 +65,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 					},
 				},
 			},
-			"my-param-tool-id": map[string]any{
+			"my-tool-by-id": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -78,7 +78,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 					},
 				},
 			},
-			"my-param-tool-name": map[string]any{
+			"my-tool-by-name": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -315,7 +315,7 @@ func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
+// GetPostgresSQLParamToolInfo returns statements and param for my-tool postgres-sql kind
 func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3), ($4);", tableName)
@@ -343,7 +343,7 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMSSQLParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+// GetMSSQLParamToolInfo returns statements and param for my-tool mssql-sql kind
 func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid), (@nil);", tableName)
@@ -371,7 +371,7 @@ func GetMSSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMySQLParamToolInfo returns statements and param for my-param-tool mysql-sql kind
+// GetMySQLParamToolInfo returns statements and param for my-tool mysql-sql kind
 func GetMySQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
@@ -401,10 +401,10 @@ func GetMySQLTmplToolStatement() (string, string) {
 
 func GetNonSpannerInvokeParamWant() (string, string, string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
+	invokeIdNullWant := "[{\"id\":4,\"name\":null}]"
 	nullWant := "null"
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, invokeParamWantNull, nullWant, mcpInvokeParamWant
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
+	return invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
 }
 
 // GetPostgresWants return the expected wants for postgres
@@ -523,10 +523,10 @@ func GetRedisValkeyWants() (string, string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
 	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	invokeParamWantNull := `[{"id":"4","name":""}]`
+	invokeIdNullWant := `[{"id":"4","name":""}]`
 	nullWant := `["null"]`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, nullWant, mcpInvokeParamWant
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
 }
 
 func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
@@ -547,7 +547,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				"description": "Simple tool to test end to end functionality.",
 				"commands":    [][]string{{"PING"}},
 			},
-			"my-param-tool": map[string]any{
+			"my-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -565,7 +565,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 					},
 				},
 			},
-			"my-param-tool-id": map[string]any{
+			"my-tool-by-id": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -578,7 +578,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 					},
 				},
 			},
-			"my-param-tool-name": map[string]any{
+			"my-tool-by-name": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
