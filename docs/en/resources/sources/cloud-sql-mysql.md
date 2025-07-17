@@ -102,7 +102,7 @@ instead of hardcoding your secrets into the configuration file.
 | password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`. |
 
-## Example Tools
+## Available Tools
 
 - [`mysql-sql`](../tools/mysql/mysql-sql.md)  
   Execute pre-defined prepared SQL queries in MySQL.

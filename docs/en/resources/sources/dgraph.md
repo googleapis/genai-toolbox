@@ -61,7 +61,7 @@ instead of hardcoding your secrets into the configuration file.
 | apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |
 | namespace   |  uint64  |     false    | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                                |
 
-## Example Tools
+## Available Tools
 
 - [`dgraph-dql`](../tools/dgraph/dgraph-dql.md)  
   Run DQL (Dgraph Query Language) queries.

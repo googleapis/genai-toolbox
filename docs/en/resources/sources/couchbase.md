@@ -43,7 +43,7 @@ sources:
 | profile              | string   |    false     | Name of the connection profile to apply.                |
 | queryScanConsistency | integer  |    false     | Query scan consistency. Controls the consistency guarantee for index scanning. Values: 1 for "not_bounded" (fastest option, but results may not include the most recent operations), 2 for "request_plus" (highest consistency level, includes all operations up until the query started, but incurs a performance penalty). If not specified, defaults to the Couchbase Go SDK default. |
 
-## Example Tools
+## Available Tools
 
 - [`couchbase-sql`](../tools/couchbase/couchbase-sql.md)  
   Run SQL++ statements on Couchbase with parameterized input.

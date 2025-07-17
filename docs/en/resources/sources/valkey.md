@@ -68,7 +68,7 @@ sources:
 | useGCPIAM    |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                 |
 | disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                                                 |
 
-## Example Tools
+## Available Tools
 
 - [`valkey`](../tools/valkey/valkey.md)  
   Issue Valkey (Redis-compatible) commands.

@@ -53,7 +53,7 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
 
-## Example Tools
+## Available Tools
 
 - [`postgres-sql`](../tools/postgres/postgres-sql.md)  
   Execute SQL queries as prepared statements in PostgreSQL.

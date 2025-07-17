@@ -103,7 +103,7 @@ instead of hardcoding your secrets into the configuration file.
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                       |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
 
-## Example Tools
+## Available Tools
 
 - [`mssql-sql`](../tools/mssql/mssql-sql.md)  
   Execute pre-defined SQL Server queries with placeholder parameters.

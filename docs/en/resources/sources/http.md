@@ -48,7 +48,7 @@ instead of hardcoding your secrets into the configuration file.
 
 [parse-duration-doc]: https://pkg.go.dev/time#ParseDuration
 
-## Example Tools
+## Available Tools
 
 - [`http`](../tools/http/http.md)  
   Make HTTP requests to REST APIs or other web services.

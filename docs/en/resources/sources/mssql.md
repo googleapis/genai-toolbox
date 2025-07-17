@@ -53,7 +53,7 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-user").            |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                  |
 
-## Example Tools
+## Available Tools
 
 - [`mssql-sql`](../tools/mssql/mssql-sql.md)  
   Execute pre-defined SQL Server queries with placeholder parameters.

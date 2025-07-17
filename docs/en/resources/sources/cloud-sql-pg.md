@@ -126,7 +126,7 @@ instead of hardcoding your secrets into the configuration file.
 | password  |  string  |     false    | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |     false    | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`.                              |
 
-## Example Tools
+## Available Tools
 
 - [`postgres-sql`](../tools/postgres/postgres-sql.md)  
   Execute SQL queries as prepared statements in PostgreSQL.
