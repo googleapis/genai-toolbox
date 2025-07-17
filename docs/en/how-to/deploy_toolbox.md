@@ -152,13 +152,12 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 1. Import and initialize the toolbox client with the URL retrieved above:
 
     ```python
-    from functools import partial
     from toolbox_core import ToolboxClient, auth_methods
 
     # Replace with the Cloud Run service URL generated in the previous step.
     URL = "https://cloud-run-url.app"
 
-    auth_token_provider = partial(auth_methods.aget_google_id_token, URL) # can also use sync method
+    auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
     async with ToolboxClient(
         URL,
