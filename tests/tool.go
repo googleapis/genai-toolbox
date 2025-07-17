@@ -76,7 +76,7 @@ func RunToolGetTest(t *testing.T) {
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWantNull string, supportsArray bool) {
+func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeIdNullWant, nullString string, supportNullParam, supportsArray bool) {
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -101,31 +101,39 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeParamWa
 			isErr:         false,
 		},
 		{
-			name:          "invoke my-param-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
+			name:          "invoke my-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
 			want:          invokeParamWant,
 			isErr:         false,
 		},
 		{
-			name:          "invoke my-param-tool2 with nil response",
-			api:           "http://127.0.0.1:5000/api/tool/my-param-tool2/invoke",
+			name:          "invoke my-tool-by-id with nil response",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 4}`)),
-			want:          invokeParamWantNull,
+			want:          invokeIdNullWant,
 			isErr:         false,
 		},
 		{
-			name:          "Invoke my-param-tool without parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
+			name:          "invoke my-tool-by-name with nil response",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          nullString,
+			isErr:         !supportNullParam,
+		},
+		{
+			name:          "Invoke my-tool without parameters",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
-			name:          "Invoke my-param-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-param-tool/invoke",
+			name:          "Invoke my-tool with insufficient parameters",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 1}`)),
 			isErr:         true,
@@ -629,17 +637,17 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 		want          string
 	}{
 		{
-			name:          "MCP Invoke my-param-tool",
+			name:          "MCP Invoke my-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
-				Id:      "my-param-tool",
+				Id:      "my-tool",
 				Request: jsonrpc.Request{
 					Method: "tools/call",
 				},
 				Params: map[string]any{
-					"name": "my-param-tool",
+					"name": "my-tool",
 					"arguments": map[string]any{
 						"id":   int(3),
 						"name": "Alice",
@@ -666,7 +674,7 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 		},
 		{
-			name:          "MCP Invoke my-param-tool without parameters",
+			name:          "MCP Invoke my-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
@@ -676,14 +684,14 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					Method: "tools/call",
 				},
 				Params: map[string]any{
-					"name":      "my-param-tool",
+					"name":      "my-tool",
 					"arguments": map[string]any{},
 				},
 			},
 			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
 		},
 		{
-			name:          "MCP Invoke my-param-tool with insufficient parameters",
+			name:          "MCP Invoke my-tool with insufficient parameters",
 			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
@@ -693,7 +701,7 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					Method: "tools/call",
 				},
 				Params: map[string]any{
-					"name":      "my-param-tool",
+					"name":      "my-tool",
 					"arguments": map[string]any{"id": 1},
 				},
 			},
