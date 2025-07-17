@@ -20,6 +20,7 @@ extraFiles: [
     "README.md",
     "docs/en/getting-started/introduction/_index.md",
     "docs/en/getting-started/local_quickstart.md",
+    "docs/en/getting-started/local_quickstart_js.md",
     "docs/en/getting-started/mcp_quickstart/_index.md",
     "docs/en/samples/bigquery/local_quickstart.md",
     "docs/en/samples/bigquery/mcp_quickstart/_index.md",

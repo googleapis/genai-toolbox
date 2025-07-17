@@ -67,7 +67,7 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to write tools file: %s", err)
 	}
-	args = append(args, "--tools_file", path)
+	args = append(args, "--tools-file", path)
 
 	ctx, cancel := context.WithCancel(ctx)
 	// Open a pipe for tracking the output from the cmd
