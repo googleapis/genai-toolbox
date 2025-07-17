@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/api/firebaserules/v1"
 	"google.golang.org/api/option"
 )
 
@@ -64,11 +65,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	if err != nil {
 		return nil, err
 	}
+
+	// Initialize Firebase Rules client
+	rulesClient, err := initFirebaseRulesConnection(ctx, r.Project)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Firebase Rules client: %w", err)
+	}
+
 	s := &Source{
-		Name:     r.Name,
-		Kind:     SourceKind,
-		Client:   client,
-		Database: r.Database,
+		Name:        r.Name,
+		Kind:        SourceKind,
+		Client:      client,
+		RulesClient: rulesClient,
+		ProjectId:   r.Project,
 	}
 	return s, nil
 }
@@ -77,10 +86,11 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	// Firestore struct with client
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Client   *firestore.Client
-	Database string `yaml:"database"`
+	Name        string `yaml:"name"`
+	Kind        string `yaml:"kind"`
+	Client      *firestore.Client
+	RulesClient *firebaserules.Service
+	ProjectId   string `yaml:"projectId"`
 }
 
 func (s *Source) SourceKind() string {
@@ -90,6 +100,14 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) FirestoreClient() *firestore.Client {
 	return s.Client
+}
+
+func (s *Source) FirebaseRulesClient() *firebaserules.Service {
+	return s.RulesClient
+}
+
+func (s *Source) GetProjectId() string {
+	return s.ProjectId
 }
 
 func initFirestoreConnection(
@@ -119,4 +137,17 @@ func initFirestoreConnection(
 	}
 
 	return client, nil
+}
+
+func initFirebaseRulesConnection(
+	ctx context.Context,
+	project string,
+) (*firebaserules.Service, error) {
+	// Create the Firebase Rules client
+	rulesClient, err := firebaserules.NewService(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Firebase Rules client for project %q: %w", project, err)
+	}
+
+	return rulesClient, nil
 }
