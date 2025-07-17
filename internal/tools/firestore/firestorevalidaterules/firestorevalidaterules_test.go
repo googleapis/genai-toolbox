@@ -12,306 +12,145 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package firestorevalidaterules
+package firestorevalidaterules_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/api/firebaserules/v1"
+	yaml "github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 )
 
-func TestConfig_ToolConfigKind(t *testing.T) {
-	cfg := Config{}
-	assert.Equal(t, kind, cfg.ToolConfigKind())
-}
-
-func TestConfig_Initialize(t *testing.T) {
-	tests := []struct {
-		name    string
-		cfg     Config
-		srcs    map[string]sources.Source
-		wantErr bool
-		errMsg  string
+func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
 	}{
 		{
-			name: "valid configuration",
-			cfg: Config{
-				Name:        "test-validate-rules",
-				Kind:        kind,
-				Source:      "firestore",
-				Description: "Test validate rules tool",
-			},
-			srcs: map[string]sources.Source{
-				"firestore": &firestoreds.Source{
-					Name: "firestore",
-					Kind: firestoreds.SourceKind,
+			desc: "basic example",
+			in: `
+			tools:
+				validate_rules_tool:
+					kind: firestore-validate-rules
+					source: my-firestore-instance
+					description: Validate Firestore security rules
+			`,
+			want: server.ToolConfigs{
+				"validate_rules_tool": firestorevalidaterules.Config{
+					Name:         "validate_rules_tool",
+					Kind:         "firestore-validate-rules",
+					Source:       "my-firestore-instance",
+					Description:  "Validate Firestore security rules",
+					AuthRequired: []string{},
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name: "missing source",
-			cfg: Config{
-				Name:        "test-validate-rules",
-				Kind:        kind,
-				Source:      "nonexistent",
-				Description: "Test validate rules tool",
+			desc: "with auth requirements",
+			in: `
+			tools:
+				secure_validate_rules:
+					kind: firestore-validate-rules
+					source: prod-firestore
+					description: Validate rules with authentication
+					authRequired:
+						- google-auth-service
+						- api-key-service
+			`,
+			want: server.ToolConfigs{
+				"secure_validate_rules": firestorevalidaterules.Config{
+					Name:         "secure_validate_rules",
+					Kind:         "firestore-validate-rules",
+					Source:       "prod-firestore",
+					Description:  "Validate rules with authentication",
+					AuthRequired: []string{"google-auth-service", "api-key-service"},
+				},
 			},
-			srcs:    map[string]sources.Source{},
-			wantErr: true,
-			errMsg:  "no source named \"nonexistent\" configured",
-		},
-		{
-			name: "incompatible source",
-			cfg: Config{
-				Name:        "test-validate-rules",
-				Kind:        kind,
-				Source:      "incompatible",
-				Description: "Test validate rules tool",
-			},
-			srcs: map[string]sources.Source{
-				"incompatible": &mockIncompatibleSource{},
-			},
-			wantErr: true,
-			errMsg:  "invalid source for \"firestore-validate-rules\" tool",
 		},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tool, err := tt.cfg.Initialize(tt.srcs)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, tool)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
 	}
 }
 
-func TestTool_ParseParams(t *testing.T) {
-	tool := Tool{
-		Parameters: createParameters(),
+func TestParseFromYamlMultipleTools(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	tests := []struct {
-		name    string
-		data    map[string]any
-		wantErr bool
-	}{
-		{
-			name: "valid parameters",
-			data: map[string]any{
-				"source": "rules_version = '2';",
-			},
-			wantErr: false,
+	in := `
+	tools:
+		validate_dev_rules:
+			kind: firestore-validate-rules
+			source: dev-firestore
+			description: Validate development environment rules
+			authRequired:
+				- dev-auth
+		validate_staging_rules:
+			kind: firestore-validate-rules
+			source: staging-firestore
+			description: Validate staging environment rules
+		validate_prod_rules:
+			kind: firestore-validate-rules
+			source: prod-firestore
+			description: Validate production environment rules
+			authRequired:
+				- prod-auth
+				- admin-auth
+	`
+	want := server.ToolConfigs{
+		"validate_dev_rules": firestorevalidaterules.Config{
+			Name:         "validate_dev_rules",
+			Kind:         "firestore-validate-rules",
+			Source:       "dev-firestore",
+			Description:  "Validate development environment rules",
+			AuthRequired: []string{"dev-auth"},
 		},
-		{
-			name: "empty source",
-			data: map[string]any{
-				"source": "",
-			},
-			wantErr: false, // ParseParams doesn't validate emptiness
+		"validate_staging_rules": firestorevalidaterules.Config{
+			Name:         "validate_staging_rules",
+			Kind:         "firestore-validate-rules",
+			Source:       "staging-firestore",
+			Description:  "Validate staging environment rules",
+			AuthRequired: []string{},
 		},
-		{
-			name:    "missing source",
-			data:    map[string]any{},
-			wantErr: false, // ParseParams doesn't validate required
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			params, err := tool.ParseParams(tt.data, nil)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, params)
-			}
-		})
-	}
-}
-
-func TestTool_Manifest(t *testing.T) {
-	tool := Tool{
-		manifest: tools.Manifest{
-			Description: "Test description",
-			Parameters: []tools.ManifestParameter{
-				{
-					Name:        "source",
-					Type:        "string",
-					Description: "The Firestore Rules source code to validate",
-					Required:    true,
-				},
-			},
+		"validate_prod_rules": firestorevalidaterules.Config{
+			Name:         "validate_prod_rules",
+			Kind:         "firestore-validate-rules",
+			Source:       "prod-firestore",
+			Description:  "Validate production environment rules",
+			AuthRequired: []string{"prod-auth", "admin-auth"},
 		},
 	}
 
-	manifest := tool.Manifest()
-	assert.Equal(t, "Test description", manifest.Description)
-	assert.Len(t, manifest.Parameters, 1)
-	assert.Equal(t, "source", manifest.Parameters[0].Name)
-}
-
-func TestTool_McpManifest(t *testing.T) {
-	tool := Tool{
-		mcpManifest: tools.McpManifest{
-			Name:        "test-validate-rules",
-			Description: "Test description",
-			InputSchema: tools.McpInputSchema{
-				Type: "object",
-				Properties: map[string]tools.McpProperty{
-					"source": {
-						Type:        "string",
-						Description: "The Firestore Rules source code to validate",
-					},
-				},
-				Required: []string{"source"},
-			},
-		},
+	got := struct {
+		Tools server.ToolConfigs `yaml:"tools"`
+	}{}
+	// Parse contents
+	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	if err != nil {
+		t.Fatalf("unable to unmarshal: %s", err)
 	}
-
-	manifest := tool.McpManifest()
-	assert.Equal(t, "test-validate-rules", manifest.Name)
-	assert.Equal(t, "Test description", manifest.Description)
-	assert.Contains(t, manifest.InputSchema.Properties, "source")
-}
-
-func TestTool_Authorized(t *testing.T) {
-	tests := []struct {
-		name                 string
-		authRequired         []string
-		verifiedAuthServices []string
-		expected             bool
-	}{
-		{
-			name:                 "no auth required",
-			authRequired:         []string{},
-			verifiedAuthServices: []string{},
-			expected:             true,
-		},
-		{
-			name:                 "auth required and provided",
-			authRequired:         []string{"google"},
-			verifiedAuthServices: []string{"google"},
-			expected:             true,
-		},
-		{
-			name:                 "auth required but not provided",
-			authRequired:         []string{"google"},
-			verifiedAuthServices: []string{},
-			expected:             false,
-		},
+	if diff := cmp.Diff(want, got.Tools); diff != "" {
+		t.Fatalf("incorrect parse: diff %v", diff)
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tool := Tool{
-				AuthRequired: tt.authRequired,
-			}
-			result := tool.Authorized(tt.verifiedAuthServices)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestTool_formatRulesetIssues(t *testing.T) {
-	tool := Tool{}
-	
-	source := `rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    allow read, write: if true;
-  }
-}`
-
-	issues := []Issue{
-		{
-			Description: "Missing semicolon",
-			Severity:    "ERROR",
-			SourcePosition: SourcePosition{
-				Line:          4,
-				Column:        31,
-				CurrentOffset: 95,
-				EndOffset:     99,
-			},
-		},
-	}
-
-	result := tool.formatRulesetIssues(issues, source)
-	
-	assert.Contains(t, result, "Found 1 issue(s)")
-	assert.Contains(t, result, "ERROR: Missing semicolon")
-	assert.Contains(t, result, "[Ln 4, Col 31]")
-	assert.Contains(t, result, "allow read, write: if true;")
-}
-
-func TestTool_processValidationResponse(t *testing.T) {
-	tool := Tool{}
-	
-	tests := []struct {
-		name     string
-		response *firebaserules.TestRulesetResponse
-		source   string
-		wantValid bool
-		wantCount int
-	}{
-		{
-			name: "no issues",
-			response: &firebaserules.TestRulesetResponse{
-				Issues: []*firebaserules.Issue{},
-			},
-			source:    "test source",
-			wantValid: true,
-			wantCount: 0,
-		},
-		{
-			name: "with issues",
-			response: &firebaserules.TestRulesetResponse{
-				Issues: []*firebaserules.Issue{
-					{
-						Description: "Test issue",
-						Severity:    "ERROR",
-						SourcePosition: &firebaserules.SourcePosition{
-							Line:          1,
-							Column:        1,
-							CurrentOffset: 0,
-							EndOffset:     4,
-						},
-					},
-				},
-			},
-			source:    "test source",
-			wantValid: false,
-			wantCount: 1,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tool.processValidationResponse(tt.response, tt.source)
-			assert.Equal(t, tt.wantValid, result.Valid)
-			assert.Equal(t, tt.wantCount, result.IssueCount)
-			if tt.wantValid {
-				assert.Contains(t, result.FormattedIssues, "No errors detected")
-			} else {
-				assert.Contains(t, result.FormattedIssues, "issue(s)")
-			}
-		})
-	}
-}
-
-// mockIncompatibleSource is a mock source that doesn't implement compatibleSource
-type mockIncompatibleSource struct{}
-
-func (m *mockIncompatibleSource) SourceKind() string {
-	return "mock"
 }
