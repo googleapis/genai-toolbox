@@ -7,24 +7,18 @@
     <link rel="stylesheet" href="/ui/css/style.css">
 </head>
 <body>
-    <nav class="left-nav">
-        <div class="nav-logo">
-            <img src="/ui/assets/mcptoolboxlogo.png" alt="App Logo">
-        </div>
-        <ul>
-            <li><a href="/ui/sources">Sources</a></li>
-            <li><a href="/ui/authservices">Auth Services</a></li>
-            <li><a href="/ui/tools">Tools</a></li>
-            <li><a href="/ui/toolsets">Toolsets</a></li>
-        </ul>
-    </nav>
+    <div id="navbar-container" data-active-nav=""></div>
+    <div id="main-content-container"></div>
 
-    <div class="main-content-area", align="center">
-        <div class="top-bar">
-        </div>
-        <main class="content">
-            <h1>Homepage</h1>
-        </main>
-    </div>
+    <script src="/ui/js/navbar.js"></script>
+    <script src="/ui/js/mainContent.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            const activeNav = navbarContainer.getAttribute('data-active-nav');
+            renderNavbar('navbar-container', activeNav);
+            renderMainContent('main-content-container', '')
+        });
+    </script>
 </body>
 </html>

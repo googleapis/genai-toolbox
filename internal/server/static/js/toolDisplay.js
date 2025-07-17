@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// helper function to create form inputs for parameters
+/**
+ * Helper function to create form inputs for parameters.
+ */
 function createParamInput(param, toolId) {
     const paramItem = document.createElement('div');
     paramItem.className = 'param-item';
 
     const label = document.createElement('label');
-    const inputId = `param-${toolId}-${param.name}`;
-    label.setAttribute('for', inputId);
+    const INPUT_ID = `param-${toolId}-${param.name}`;
+    const NAME_TEXT = document.createTextNode(param.name);
+    label.setAttribute('for', INPUT_ID);
+    label.appendChild(NAME_TEXT);
 
-    const nameText = document.createTextNode(param.name);
-    label.appendChild(nameText);
-
-    const isAuthParam = param.authServices && param.authServices.length > 0;
+    const IS_AUTH_PARAM = param.authServices && param.authServices.length > 0;
     let additionalLabelText = '';
-    if (isAuthParam) {
+    if (IS_AUTH_PARAM) {
         additionalLabelText += ' (auth)';
     }
     if (!param.required) {
@@ -41,7 +42,8 @@ function createParamInput(param, toolId) {
     }
     paramItem.appendChild(label);
 
-    let placeholderText = param.label;
+    // Build parameter's value input box.
+    const PLACEHOLDER_LABEL = param.label;
     let inputElement;
     if (param.type === 'textarea') { 
         inputElement = document.createElement('textarea');
@@ -49,74 +51,75 @@ function createParamInput(param, toolId) {
     } else if(param.type === 'checkbox') {
         inputElement = document.createElement('input');
         inputElement.type = 'checkbox';
-        inputElement.title = placeholderText;
+        inputElement.title = PLACEHOLDER_LABEL;
     } else {
         inputElement = document.createElement('input');
         inputElement.type = param.type;
     }
     
-    inputElement.id = inputId;
+    inputElement.id = INPUT_ID;
     inputElement.name = param.name;
-    if (isAuthParam) {
+    if (IS_AUTH_PARAM) {
         inputElement.disabled = true;
         inputElement.classList.add('auth-param-input'); 
         if (param.type !== 'checkbox') {
             inputElement.placeholder = param.authServices;
         }
     } else if (param.type !== 'checkbox') {
-        inputElement.placeholder = placeholderText.trim();
+        inputElement.placeholder = PLACEHOLDER_LABEL.trim();
     }
     paramItem.appendChild(inputElement);
     return paramItem;
 }
 
-// renders the tool display area
+/**
+ * Renders the tool display area.
+ */
 export function renderToolInterface(tool, containerElement) {
+    const TOOL_ID = tool.id;
     containerElement.innerHTML = '';
-    const toolId = tool.id;
 
     const gridContainer = document.createElement('div');
     gridContainer.className = 'tool-details-grid';
 
     const toolInfoContainer = document.createElement('div');
-    toolInfoContainer.className = 'tool-info';
-
     const nameBox = document.createElement('div');
+    const descBox = document.createElement('div');
+
     nameBox.className = 'tool-box tool-name';
     nameBox.innerHTML = `<h5>Name:</h5><p>${tool.name}</p>`;
-    toolInfoContainer.appendChild(nameBox);
-
-    const descBox = document.createElement('div');
     descBox.className = 'tool-box tool-description';
     descBox.innerHTML = `<h5>Description:</h5><p>${tool.description}</p>`;
-    toolInfoContainer.appendChild(descBox);
 
+    toolInfoContainer.className = 'tool-info';
+    toolInfoContainer.appendChild(nameBox);
+    toolInfoContainer.appendChild(descBox);
     gridContainer.appendChild(toolInfoContainer);
 
     const paramsContainer = document.createElement('div');
+    const form = document.createElement('form');
     paramsContainer.className = 'tool-params tool-box';
     paramsContainer.innerHTML = '<h5>Parameters:</h5>';
-    const form = document.createElement('form');
-    form.id = `tool-params-form-${toolId}`;
+    form.id = `tool-params-form-${TOOL_ID}`;
 
     tool.parameters.forEach(param => {
-        form.appendChild(createParamInput(param, toolId));
+        form.appendChild(createParamInput(param, TOOL_ID));
     });
     paramsContainer.appendChild(form);
 
     gridContainer.appendChild(paramsContainer);
     containerElement.appendChild(gridContainer);
 
+    const RESPONSE_AREA_ID = `tool-response-area-${TOOL_ID}`;
     const responseContainer = document.createElement('div');
-    responseContainer.className = 'tool-response tool-box';
-
     const responseHeader = document.createElement('h5');
+    const responseArea = document.createElement('textarea');
+
     responseHeader.textContent = 'Response:';
+    responseContainer.className = 'tool-response tool-box';
     responseContainer.appendChild(responseHeader);
 
-    const responseAreaId = `tool-response-area-${toolId}`;
-    const responseArea = document.createElement('textarea');
-    responseArea.id = responseAreaId;
+    responseArea.id = RESPONSE_AREA_ID;
     responseArea.readOnly = true;
     responseArea.placeholder = 'Results will appear here...';
     responseArea.rows = 10;

@@ -14,6 +14,10 @@
 
 import { renderToolInterface } from "./toolDisplay.js";
 
+/**
+ * These functions runs after the browser finishes loading and parsing HTML structure.
+ * This ensures that elements can be safely accessed.
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const toolDisplayArea = document.getElementById('tool-display-area');
     const secondaryPanelContent = document.getElementById('secondary-panel-content');
