@@ -80,10 +80,7 @@ func handleTool0(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	response := []string{
-		"Hello",
-		"World",
-	}
+	response := "hello world"
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
@@ -164,7 +161,7 @@ func handleTool2(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.URL.Query().Get("email")
 	if email != "" {
-		response := `{"name":"Alice"}`
+		response := `[{"name":"Alice"}]`
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			http.Error(w, "Failed to write response", http.StatusInternalServerError)
@@ -246,10 +243,7 @@ func handleTool3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return a JSON array as the response
-	response := []any{
-		"Hello", "World",
-	}
+	response := "hello world"
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
@@ -284,7 +278,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	select1Want := `["Hello","World"]`
+	select1Want := `"hello world"`
 	invokeParamWant, invokeParamWantNull, _ := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, false)
@@ -307,7 +301,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`)),
-			want:          `["Hello","World"]`,
+			want:          `"hello world"`,
 			isErr:         false,
 		},
 		{
