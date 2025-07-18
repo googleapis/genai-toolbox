@@ -1,3 +1,17 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package neo4jdbschema
 
 import (
@@ -144,7 +158,6 @@ func TestProcessAPOCSchema(t *testing.T) {
 		name      string
 		input     *APOCSchemaResult
 		wantNodes []NodeLabel
-		wantRels  []Relationship
 		wantStats *Statistics
 	}{
 		{
@@ -153,15 +166,11 @@ func TestProcessAPOCSchema(t *testing.T) {
 				Value: map[string]APOCEntity{},
 			},
 			wantNodes: nil,
-			wantRels:  nil,
 			wantStats: &Statistics{
 				NodesByLabel:        map[string]int64{},
 				RelationshipsByType: map[string]int64{},
 				PropertiesByLabel:   map[string]int64{},
 				PropertiesByRelType: map[string]int64{},
-				TotalNodes:          0,
-				TotalRelationships:  0,
-				TotalProperties:     0,
 			},
 		},
 		{
@@ -172,18 +181,8 @@ func TestProcessAPOCSchema(t *testing.T) {
 						Type:  "node",
 						Count: 100,
 						Properties: map[string]APOCProperty{
-							"name": {
-								Type:      "STRING",
-								Unique:    false,
-								Indexed:   true,
-								Existence: false,
-							},
-							"age": {
-								Type:      "INTEGER",
-								Unique:    false,
-								Indexed:   false,
-								Existence: false,
-							},
+							"name": {Type: "STRING", Indexed: true},
+							"age":  {Type: "INTEGER"},
 						},
 					},
 				},
@@ -193,123 +192,52 @@ func TestProcessAPOCSchema(t *testing.T) {
 					Name:  "Person",
 					Count: 100,
 					Properties: []PropertyInfo{
-						{
-							Name:      "age",
-							Types:     []string{"INTEGER"},
-							Unique:    false,
-							Indexed:   false,
-							Mandatory: false,
-						},
-						{
-							Name:      "name",
-							Types:     []string{"STRING"},
-							Unique:    false,
-							Indexed:   true,
-							Mandatory: false,
-						},
+						{Name: "age", Types: []string{"INTEGER"}},
+						{Name: "name", Types: []string{"STRING"}, Indexed: true},
 					},
 				},
 			},
-			wantRels: nil,
 			wantStats: &Statistics{
-				NodesByLabel: map[string]int64{
-					"Person": 100,
-				},
+				NodesByLabel:        map[string]int64{"Person": 100},
 				RelationshipsByType: map[string]int64{},
-				PropertiesByLabel: map[string]int64{
-					"Person": 200, // 2 properties * 100 nodes
-				},
+				PropertiesByLabel:   map[string]int64{"Person": 200},
 				PropertiesByRelType: map[string]int64{},
 				TotalNodes:          100,
-				TotalRelationships:  0,
 				TotalProperties:     200,
 			},
 		},
 		{
-			name: "simple relationship only",
+			name: "relationship is ignored",
 			input: &APOCSchemaResult{
 				Value: map[string]APOCEntity{
-					"FOLLOWS": {
-						Type:  "relationship",
-						Count: 50,
-						Properties: map[string]APOCProperty{
-							"since": {
-								Type:      "DATE",
-								Unique:    false,
-								Indexed:   false,
-								Existence: false,
-							},
-						},
-					},
+					"FOLLOWS": {Type: "relationship", Count: 50},
 				},
 			},
 			wantNodes: nil,
-			wantRels: []Relationship{
-				{
-					Type:  "FOLLOWS",
-					Count: 50,
-					Properties: []PropertyInfo{
-						{
-							Name:    "since",
-							Types:   []string{"DATE"},
-							Unique:  false,
-							Indexed: false,
-						},
-					},
-				},
-			},
 			wantStats: &Statistics{
 				NodesByLabel:        map[string]int64{},
-				RelationshipsByType: map[string]int64{"FOLLOWS": 50},
+				RelationshipsByType: map[string]int64{},
 				PropertiesByLabel:   map[string]int64{},
-				PropertiesByRelType: map[string]int64{"FOLLOWS": 50}, // 1 property * 50 rels
-				TotalNodes:          0,
-				TotalRelationships:  50,
-				TotalProperties:     50,
+				PropertiesByRelType: map[string]int64{},
 			},
 		},
 		{
-			name: "nodes and relationships with patterns",
+			name: "nodes and relationships, only nodes are processed",
 			input: &APOCSchemaResult{
 				Value: map[string]APOCEntity{
 					"Person": {
 						Type:  "node",
 						Count: 100,
 						Properties: map[string]APOCProperty{
-							"name": {
-								Type:      "STRING",
-								Unique:    true,
-								Indexed:   true,
-								Existence: true,
-							},
-						},
-						Relationships: map[string]APOCRelationshipInfo{
-							"FOLLOWS": {
-								Direction: "out",
-								Labels:    []string{"Person"},
-								Count:     80,
-							},
+							"name": {Type: "STRING", Unique: true, Indexed: true, Existence: true},
 						},
 					},
 					"Post": {
-						Type:  "node",
-						Count: 200,
-						Properties: map[string]APOCProperty{
-							"content": {
-								Type:    "STRING",
-								Indexed: false,
-							},
-						},
+						Type:       "node",
+						Count:      200,
+						Properties: map[string]APOCProperty{"content": {Type: "STRING"}},
 					},
-					"FOLLOWS": {
-						Type:  "relationship",
-						Count: 80,
-						Properties: map[string]APOCProperty{
-							"since": {
-								Type: "DATE",
-							},
-						},
-					},
+					"FOLLOWS": {Type: "relationship", Count: 80},
 				},
 			},
 			wantNodes: []NodeLabel{
@@ -317,186 +245,34 @@ func TestProcessAPOCSchema(t *testing.T) {
 					Name:  "Post",
 					Count: 200,
 					Properties: []PropertyInfo{
-						{
-							Name:      "content",
-							Types:     []string{"STRING"},
-							Indexed:   false,
-							Unique:    false,
-							Mandatory: false,
-						},
+						{Name: "content", Types: []string{"STRING"}},
 					},
 				},
 				{
 					Name:  "Person",
 					Count: 100,
 					Properties: []PropertyInfo{
-						{
-							Name:      "name",
-							Types:     []string{"STRING"},
-							Unique:    true,
-							Indexed:   true,
-							Mandatory: true,
-						},
-					},
-				},
-			},
-			wantRels: []Relationship{
-				{
-					Type:      "FOLLOWS",
-					Count:     80,
-					StartNode: "Person",
-					EndNode:   "Person",
-					Properties: []PropertyInfo{
-						{
-							Name:    "since",
-							Types:   []string{"DATE"},
-							Unique:  false,
-							Indexed: false,
-						},
+						{Name: "name", Types: []string{"STRING"}, Unique: true, Indexed: true, Mandatory: true},
 					},
 				},
 			},
 			wantStats: &Statistics{
-				NodesByLabel: map[string]int64{
-					"Person": 100,
-					"Post":   200,
-				},
-				RelationshipsByType: map[string]int64{
-					"FOLLOWS": 80,
-				},
-				PropertiesByLabel: map[string]int64{
-					"Person": 100, // 1 property * 100 nodes
-					"Post":   200, // 1 property * 200 nodes
-				},
-				PropertiesByRelType: map[string]int64{
-					"FOLLOWS": 80, // 1 property * 80 rels
-				},
-				TotalNodes:         300,
-				TotalRelationships: 80,
-				TotalProperties:    380,
-			},
-		},
-		{
-			name: "process schema from test.json",
-			input: &APOCSchemaResult{
-				Value: map[string]APOCEntity{
-					"ASSIGNED_TO": {Type: "relationship", Count: 614391, Properties: map[string]APOCProperty{}},
-					"BELONGS_TO":  {Type: "relationship", Count: 584877, Properties: map[string]APOCProperty{}},
-					"Database": {
-						Type:  "node",
-						Count: 29376,
-						Properties: map[string]APOCProperty{
-							"dbid":    {Type: "STRING", Unique: true, Indexed: true},
-							"db_name": {Type: "STRING"},
-						},
-						Relationships: map[string]APOCRelationshipInfo{
-							"ASSIGNED_TO": {Direction: "out", Labels: []string{"Project"}, Count: 0},
-						},
-					},
-					"Project": {
-						Type:  "node",
-						Count: 585016,
-						Properties: map[string]APOCProperty{
-							"project_id":   {Type: "STRING", Unique: true, Indexed: true},
-							"project_name": {Type: "STRING"},
-						},
-						Relationships: map[string]APOCRelationshipInfo{
-							"ASSIGNED_TO": {Direction: "out", Labels: []string{"Organization", "Database"}, Count: 50},
-						},
-					},
-					"Organization": {
-						Type:  "node",
-						Count: 584702,
-						Properties: map[string]APOCProperty{
-							"org_id":           {Type: "STRING", Unique: true, Indexed: true},
-							"org_display_name": {Type: "STRING"},
-						},
-						Relationships: map[string]APOCRelationshipInfo{
-							"ASSIGNED_TO": {Direction: "in", Labels: []string{"Project"}, Count: 1046},
-							"BELONGS_TO":  {Direction: "in", Labels: []string{"BillingAccount"}, Count: 1099},
-						},
-					},
-				},
-			},
-			// Nodes should be sorted by count desc
-			wantNodes: []NodeLabel{
-				{
-					Name:  "Project",
-					Count: 585016,
-					Properties: []PropertyInfo{ // Properties sorted alphabetically
-						{Name: "project_id", Types: []string{"STRING"}, Unique: true, Indexed: true},
-						{Name: "project_name", Types: []string{"STRING"}},
-					},
-				},
-				{
-					Name:  "Organization",
-					Count: 584702,
-					Properties: []PropertyInfo{
-						{Name: "org_display_name", Types: []string{"STRING"}},
-						{Name: "org_id", Types: []string{"STRING"}, Unique: true, Indexed: true},
-					},
-				},
-				{
-					Name:  "Database",
-					Count: 29376,
-					Properties: []PropertyInfo{
-						{Name: "db_name", Types: []string{"STRING"}},
-						{Name: "dbid", Types: []string{"STRING"}, Unique: true, Indexed: true},
-					},
-				},
-			},
-			// Relationships should be sorted by count desc
-			wantRels: []Relationship{
-				{
-					Type: "ASSIGNED_TO", Count: 614391,
-					// Pattern detection finds Project->Organization has highest count (50 vs 0)
-					StartNode: "Project", EndNode: "Organization",
-					Properties: []PropertyInfo{},
-				},
-				{
-					Type:       "BELONGS_TO",
-					Count:      584877,
-					StartNode:  "", // No "out" relationships found for BELONGS_TO, so pattern is empty
-					EndNode:    "",
-					Properties: []PropertyInfo{},
-				},
-			},
-			wantStats: &Statistics{
-				TotalNodes:         1199094, // 585016 + 584702 + 29376
-				TotalRelationships: 1199268, // 614391 + 584877
-				TotalProperties:    2398188, // (585016*2 + 584702*2 + 29376*2) + (614391*0 + 584877*0)
-				NodesByLabel: map[string]int64{
-					"Project":      585016,
-					"Organization": 584702,
-					"Database":     29376,
-				},
-				RelationshipsByType: map[string]int64{
-					"ASSIGNED_TO": 614391,
-					"BELONGS_TO":  584877,
-				},
-				PropertiesByLabel: map[string]int64{
-					"Project":      1170032, // 585016 * 2
-					"Organization": 1169404, // 584702 * 2 -- CORRECTED
-					"Database":     58752,   // 29376 * 2
-				},
-				PropertiesByRelType: map[string]int64{
-					"ASSIGNED_TO": 0,
-					"BELONGS_TO":  0,
-				},
+				NodesByLabel:        map[string]int64{"Person": 100, "Post": 200},
+				RelationshipsByType: map[string]int64{},
+				PropertiesByLabel:   map[string]int64{"Person": 100, "Post": 200},
+				PropertiesByRelType: map[string]int64{},
+				TotalNodes:          300,
+				TotalProperties:     300,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNodes, gotRels, gotStats := processAPOCSchema(tt.input)
+			gotNodes, gotStats := processAPOCSchema(tt.input)
 
 			if diff := cmp.Diff(tt.wantNodes, gotNodes); diff != "" {
 				t.Errorf("processAPOCSchema() node labels mismatch (-want +got):\n%s", diff)
-			}
-
-			if diff := cmp.Diff(tt.wantRels, gotRels); diff != "" {
-				t.Errorf("processAPOCSchema() relationships mismatch (-want +got):\n%s", diff)
 			}
 
 			if diff := cmp.Diff(tt.wantStats, gotStats); diff != "" {
@@ -504,4 +280,104 @@ func TestProcessAPOCSchema(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProcessNoneAPOCSchema(t *testing.T) {
+	t.Run("full schema processing", func(t *testing.T) {
+		nodeCounts := map[string]int64{"Person": 10, "City": 5}
+		nodePropsMap := map[string]map[string]map[string]bool{
+			"Person": {"name": {"STRING": true}, "age": {"INTEGER": true}},
+			"City":   {"name": {"STRING": true, "TEXT": true}},
+		}
+		relCounts := map[string]int64{"LIVES_IN": 8}
+		relPropsMap := map[string]map[string]map[string]bool{
+			"LIVES_IN": {"since": {"DATE": true}},
+		}
+		relConnectivity := map[string]struct {
+			startNode string
+			endNode   string
+			count     int64
+		}{
+			"LIVES_IN": {startNode: "Person", endNode: "City", count: 8},
+		}
+
+		wantNodes := []NodeLabel{
+			{
+				Name:  "Person",
+				Count: 10,
+				Properties: []PropertyInfo{
+					{Name: "age", Types: []string{"INTEGER"}},
+					{Name: "name", Types: []string{"STRING"}},
+				},
+			},
+			{
+				Name:  "City",
+				Count: 5,
+				Properties: []PropertyInfo{
+					{Name: "name", Types: []string{"STRING", "TEXT"}},
+				},
+			},
+		}
+		wantRels := []Relationship{
+			{
+				Type:      "LIVES_IN",
+				Count:     8,
+				StartNode: "Person",
+				EndNode:   "City",
+				Properties: []PropertyInfo{
+					{Name: "since", Types: []string{"DATE"}},
+				},
+			},
+		}
+		wantStats := &Statistics{
+			TotalNodes:          15,
+			TotalRelationships:  8,
+			TotalProperties:     (10*2 + 5*1) + (8 * 1), // 25 + 8 = 33
+			NodesByLabel:        map[string]int64{"Person": 10, "City": 5},
+			RelationshipsByType: map[string]int64{"LIVES_IN": 8},
+			PropertiesByLabel:   map[string]int64{"Person": 2, "City": 1},
+			PropertiesByRelType: map[string]int64{"LIVES_IN": 1},
+		}
+
+		gotNodes, gotRels, gotStats := processNoneAPOCSchema(nodeCounts, nodePropsMap, relCounts, relPropsMap, relConnectivity)
+
+		if diff := cmp.Diff(wantNodes, gotNodes); diff != "" {
+			t.Errorf("processNoneAPOCSchema() nodes mismatch (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(wantRels, gotRels); diff != "" {
+			t.Errorf("processNoneAPOCSchema() relationships mismatch (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(wantStats, gotStats); diff != "" {
+			t.Errorf("processNoneAPOCSchema() stats mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("empty schema", func(t *testing.T) {
+		gotNodes, gotRels, gotStats := processNoneAPOCSchema(
+			map[string]int64{},
+			map[string]map[string]map[string]bool{},
+			map[string]int64{},
+			map[string]map[string]map[string]bool{},
+			map[string]struct {
+				startNode string
+				endNode   string
+				count     int64
+			}{},
+		)
+
+		if len(gotNodes) != 0 {
+			t.Errorf("expected 0 nodes, got %d", len(gotNodes))
+		}
+		if len(gotRels) != 0 {
+			t.Errorf("expected 0 relationships, got %d", len(gotRels))
+		}
+		if diff := cmp.Diff(&Statistics{
+			NodesByLabel:        map[string]int64{},
+			RelationshipsByType: map[string]int64{},
+			PropertiesByLabel:   map[string]int64{},
+			PropertiesByRelType: map[string]int64{},
+		}, gotStats); diff != "" {
+			t.Errorf("processNoneAPOCSchema() stats mismatch (-want +got):\n%s", diff)
+		}
+	})
 }

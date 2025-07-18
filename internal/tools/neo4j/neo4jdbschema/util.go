@@ -1,9 +1,22 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package neo4jdbschema
 
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 )
@@ -35,10 +48,9 @@ func mapToAPOCSchema(schemaMap map[string]any) (*APOCSchemaResult, error) {
 	return &APOCSchemaResult{Value: entities}, nil
 }
 
-// ProcessAPOCSchema converts APOC schema to our format
-func processAPOCSchema(apocSchema *APOCSchemaResult) ([]NodeLabel, []Relationship, *Statistics) {
+// processAPOCSchema converts APOC schema to our format
+func processAPOCSchema(apocSchema *APOCSchemaResult) ([]NodeLabel, *Statistics) {
 	var nodeLabels []NodeLabel
-	var relationships []Relationship
 
 	stats := &Statistics{
 		NodesByLabel:        make(map[string]int64),
@@ -78,125 +90,172 @@ func processAPOCSchema(apocSchema *APOCSchemaResult) ([]NodeLabel, []Relationshi
 			// Update statistics
 			stats.NodesByLabel[name] = entity.Count
 			stats.TotalNodes += entity.Count
-			stats.PropertiesByLabel[name] = int64(len(entity.Properties)) * entity.Count
 
-			// Find most common relationship patterns
-			if len(entity.Relationships) > 0 {
-				for relType, relInfo := range entity.Relationships {
-					if relInfo.Direction == "out" && len(relInfo.Labels) > 0 {
-						// Check if we need to update relationship info
-						for i, rel := range relationships {
-							if rel.Type == relType {
-								// Update with a pattern if this is more common
-								if relInfo.Count > 0 {
-									relationships[i].StartNode = name
-									if len(relInfo.Labels) > 0 {
-										relationships[i].EndNode = relInfo.Labels[0]
-									}
-								}
-								break
-							}
-						}
-					}
-				}
-			}
-		} else if entity.Type == "relationship" {
-			// Process relationship type
-			rel := Relationship{
-				Type:       name,
-				Count:      entity.Count,
-				Properties: []PropertyInfo{}, // Initialize properties
-			}
-
-			// Convert properties
-			for propName, propInfo := range entity.Properties {
-				prop := PropertyInfo{
-					Name:    propName,
-					Types:   []string{propInfo.Type},
-					Unique:  propInfo.Unique,
-					Indexed: propInfo.Indexed,
-				}
-				rel.Properties = append(rel.Properties, prop)
-			}
-
-			// Sort properties by name
-			sort.Slice(rel.Properties, func(i, j int) bool {
-				return rel.Properties[i].Name < rel.Properties[j].Name
-			})
-
-			relationships = append(relationships, rel)
-
-			// Update statistics
-			stats.RelationshipsByType[name] = entity.Count
-			stats.TotalRelationships += entity.Count
-			stats.PropertiesByRelType[name] = int64(len(entity.Properties)) * entity.Count
+			cnt := int64(len(entity.Properties)) * entity.Count
+			stats.PropertiesByLabel[name] = cnt
+			stats.TotalProperties += cnt
 		}
-	}
-
-	// Calculate total properties
-	for _, count := range stats.PropertiesByLabel {
-		stats.TotalProperties += count
-	}
-	for _, count := range stats.PropertiesByRelType {
-		stats.TotalProperties += count
 	}
 
 	// Sort by count descending
 	sort.Slice(nodeLabels, func(i, j int) bool {
 		return nodeLabels[i].Count > nodeLabels[j].Count
 	})
-	sort.Slice(relationships, func(i, j int) bool {
-		return relationships[i].Count > relationships[j].Count
-	})
 
-	// Update relationship patterns by checking node relationships
-	updateRelationshipPatterns(relationships, apocSchema)
-
-	return nodeLabels, relationships, stats
+	// If maps or lists are empty, set them to nil for cleaner JSON output
+	if len(nodeLabels) == 0 {
+		nodeLabels = nil
+	}
+	if len(stats.NodesByLabel) == 0 {
+		stats.NodesByLabel = nil
+	}
+	if len(stats.PropertiesByLabel) == 0 {
+		stats.PropertiesByLabel = nil
+	}
+	return nodeLabels, stats
 }
 
-// updateRelationshipPatterns finds common patterns for relationships
-func updateRelationshipPatterns(relationships []Relationship, apocSchema *APOCSchemaResult) {
-	// Track patterns for each relationship type
-	patternCounts := make(map[string]map[string]int64) // relType -> pattern -> count
+// processNoneAPOCSchema converts non APOC schema data into our format
+func processNoneAPOCSchema(
+	nodeCounts map[string]int64,
+	nodePropsMap map[string]map[string]map[string]bool,
+	relCounts map[string]int64,
+	relPropsMap map[string]map[string]map[string]bool,
+	relConnectivity map[string]struct {
+		startNode string
+		endNode   string
+		count     int64
+	},
+) ([]NodeLabel, []Relationship, *Statistics) {
+	nodeLabels := make([]NodeLabel, 0, len(nodePropsMap))
+	stats := &Statistics{
+		NodesByLabel:        make(map[string]int64, len(nodeCounts)),
+		RelationshipsByType: make(map[string]int64, len(relCounts)),
+		PropertiesByLabel:   make(map[string]int64),
+		PropertiesByRelType: make(map[string]int64),
+	}
 
-	for nodeName, entity := range apocSchema.Value {
-		if entity.Type != "node" {
-			continue
+	// Process node labels
+	processedLabels := make(map[string]bool)
+
+	// First, process labels with properties
+	for label, props := range nodePropsMap {
+		count := nodeCounts[label]
+		properties := make([]PropertyInfo, 0, len(props))
+
+		for key, types := range props {
+			typeList := make([]string, 0, len(types))
+			for tp := range types {
+				typeList = append(typeList, tp)
+			}
+			sort.Strings(typeList)
+			properties = append(properties, PropertyInfo{
+				Name:  key,
+				Types: typeList,
+			})
 		}
 
-		for relType, relInfo := range entity.Relationships {
-			if relInfo.Direction == "out" && len(relInfo.Labels) > 0 && relInfo.Count > 0 {
-				pattern := fmt.Sprintf("%s->%s", nodeName, relInfo.Labels[0])
+		sort.Slice(properties, func(i, j int) bool {
+			return properties[i].Name < properties[j].Name
+		})
 
-				if patternCounts[relType] == nil {
-					patternCounts[relType] = make(map[string]int64)
-				}
-				patternCounts[relType][pattern] += relInfo.Count
-			}
+		nodeLabels = append(nodeLabels, NodeLabel{
+			Name:       label,
+			Count:      count,
+			Properties: properties,
+		})
+
+		stats.NodesByLabel[label] = count
+		stats.TotalNodes += count
+		stats.PropertiesByLabel[label] = int64(len(properties))
+		stats.TotalProperties += int64(len(properties)) * count
+		processedLabels[label] = true
+	}
+
+	// Then, include labels that have counts but no properties sampled
+	for label, count := range nodeCounts {
+		if !processedLabels[label] {
+			nodeLabels = append(nodeLabels, NodeLabel{
+				Name:       label,
+				Count:      count,
+				Properties: []PropertyInfo{},
+			})
+			stats.NodesByLabel[label] = count
+			stats.TotalNodes += count
 		}
 	}
 
-	// Update relationships with the most common pattern
-	for i, rel := range relationships {
-		if patterns, exists := patternCounts[rel.Type]; exists {
-			var maxPattern string
-			var maxCount int64
-
-			for pattern, count := range patterns {
-				if count > maxCount {
-					maxCount = count
-					maxPattern = pattern
-				}
-			}
-
-			if maxPattern != "" {
-				parts := strings.Split(maxPattern, "->")
-				if len(parts) == 2 {
-					relationships[i].StartNode = parts[0]
-					relationships[i].EndNode = parts[1]
-				}
-			}
+	// Sort node labels by count (descending) then by name
+	sort.Slice(nodeLabels, func(i, j int) bool {
+		if nodeLabels[i].Count != nodeLabels[j].Count {
+			return nodeLabels[i].Count > nodeLabels[j].Count
 		}
+		return nodeLabels[i].Name < nodeLabels[j].Name
+	})
+
+	// Process relationships
+	relationships := make([]Relationship, 0, len(relCounts))
+
+	for relType, count := range relCounts {
+		properties := make([]PropertyInfo, 0)
+
+		if props, exists := relPropsMap[relType]; exists {
+			for key, types := range props {
+				typeList := make([]string, 0, len(types))
+				for tp := range types {
+					typeList = append(typeList, tp)
+				}
+				sort.Strings(typeList)
+				properties = append(properties, PropertyInfo{
+					Name:  key,
+					Types: typeList,
+				})
+			}
+
+			sort.Slice(properties, func(i, j int) bool {
+				return properties[i].Name < properties[j].Name
+			})
+		}
+
+		conn := relConnectivity[relType]
+		relationships = append(relationships, Relationship{
+			Type:       relType,
+			Count:      count,
+			StartNode:  conn.startNode,
+			EndNode:    conn.endNode,
+			Properties: properties,
+		})
+
+		stats.RelationshipsByType[relType] = count
+		stats.TotalRelationships += count
+		stats.PropertiesByRelType[relType] = int64(len(properties))
+		stats.TotalProperties += int64(len(properties)) * count
 	}
+
+	// Sort relationships by count (descending) then by type
+	sort.Slice(relationships, func(i, j int) bool {
+		if relationships[i].Count != relationships[j].Count {
+			return relationships[i].Count > relationships[j].Count
+		}
+		return relationships[i].Type < relationships[j].Type
+	})
+
+	// If maps or lists are empty, set them to nil for cleaner JSON output
+	if len(nodeLabels) == 0 {
+		nodeLabels = nil
+	}
+	if len(stats.NodesByLabel) == 0 {
+		stats.NodesByLabel = nil
+	}
+	if len(stats.RelationshipsByType) == 0 {
+		stats.RelationshipsByType = nil
+	}
+	if len(stats.PropertiesByLabel) == 0 {
+		stats.PropertiesByLabel = nil
+	}
+	if len(stats.PropertiesByRelType) == 0 {
+		stats.PropertiesByRelType = nil
+	}
+
+	return nodeLabels, relationships, stats
 }

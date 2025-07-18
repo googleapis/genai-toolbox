@@ -28,15 +28,27 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/joho/godotenv"
 )
 
 var (
 	Neo4jSourceKind = "neo4j"
-	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
-	Neo4jUri        = os.Getenv("NEO4J_URI")
-	Neo4jUser       = os.Getenv("NEO4J_USER")
-	Neo4jPass       = os.Getenv("NEO4J_PASS")
+	Neo4jDatabase   string
+	Neo4jUri        string
+	Neo4jUser       string
+	Neo4jPass       string
 )
+
+func init() {
+	// Load environment variables from .env file if it exists,
+	// this simplifies local testing without needing to set environment variables manually
+	_ = godotenv.Load()
+
+	Neo4jDatabase = os.Getenv("NEO4J_DATABASE")
+	Neo4jUri = os.Getenv("NEO4J_URI")
+	Neo4jUser = os.Getenv("NEO4J_USER")
+	Neo4jPass = os.Getenv("NEO4J_PASS")
+}
 
 func getNeo4jVars(t *testing.T) map[string]any {
 	switch "" {
@@ -79,11 +91,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"statement":   "RETURN 1 as a;",
 			},
 			"my-simple-schema-tool": map[string]any{
-				"kind":          "neo4j-db-schema",
-				"source":        "my-neo4j-instance",
-				"description":   "Simple tool to test end to end functionality.",
-				"disableDbInfo": true,
-				"disableErrors": true,
+				"kind":             "neo4j-db-schema",
+				"source":           "my-neo4j-instance",
+				"description":      "Simple tool to test end to end functionality.",
+				"disableDbInfo":    true, // Disable database info retrieval to avoid issues in test environments
+				"disableAPOCUsage": true, // Disable APOC usage because it may not be available in the test environment
 			},
 			"my-simple-execute-cypher-tool": map[string]any{
 				"kind":        "neo4j-execute-cypher",
@@ -156,7 +168,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
+			var resp *http.Response
+			resp, err = http.Get(tc.api)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
@@ -209,7 +222,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
+			var resp *http.Response
+			resp, err = http.Post(tc.api, "application/json", tc.requestBody)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
