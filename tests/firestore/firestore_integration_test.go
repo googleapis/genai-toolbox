@@ -132,6 +132,8 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
 	runFirestoreDeleteDocumentsTest(t, docPath3)
 	runFirestoreQueryCollectionTest(t, testCollectionName)
+	runFirestoreGetRulesTest(t)
+	runFirestoreValidateRulesTest(t)
 }
 
 func runFirestoreToolGetTest(t *testing.T) {
@@ -196,6 +198,169 @@ func runFirestoreToolGetTest(t *testing.T) {
 			wantJSON, _ := json.Marshal(tc.want)
 			if string(gotJSON) != string(wantJSON) {
 				t.Logf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func runFirestoreValidateRulesTest(t *testing.T) {
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		wantRegex   string
+		isErr       bool
+	}{
+		{
+			name:        "validate valid rules",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{
+				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
+			}`)),
+			wantRegex:   `"valid":true.*"issueCount":0`,
+			isErr:       false,
+		},
+		{
+			name:        "validate rules with syntax error",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{
+				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;;\n    }\n  }\n}"
+			}`)),
+			wantRegex:   `"valid":false.*"issueCount":[1-9]`,
+			isErr:       false,
+		},
+		{
+			name:        "validate rules with missing version",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{
+				"source": "service cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
+			}`)),
+			wantRegex:   `"valid":false.*"issueCount":[1-9]`,
+			isErr:       false,
+		},
+		{
+			name:        "validate empty rules",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"source": ""}`)),
+			isErr:       true,
+		},
+		{
+			name:        "missing source parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			isErr:       true,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if tc.wantRegex != "" {
+				matched, err := regexp.MatchString(tc.wantRegex, got)
+				if err != nil {
+					t.Fatalf("invalid regex pattern: %v", err)
+				}
+				if !matched {
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+				}
+			}
+		})
+	}
+}
+
+func runFirestoreGetRulesTest(t *testing.T) {
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		wantRegex   string
+		isErr       bool
+	}{
+		{
+			name:        "get firestore rules",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-get-rules/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			wantRegex:   `"content":"[^"]+"`, // Should contain at least one of these fields
+			isErr:       false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				// The test might fail if there are no active rules in the project, which is acceptable
+				if strings.Contains(string(bodyBytes), "no active Firestore rules") {
+					t.Skipf("No active Firestore rules found in the project")
+					return
+				}
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if tc.wantRegex != "" {
+				matched, err := regexp.MatchString(tc.wantRegex, got)
+				if err != nil {
+					t.Fatalf("invalid regex pattern: %v", err)
+				}
+				if !matched {
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+				}
 			}
 		})
 	}
@@ -393,6 +558,16 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"kind":        "firestore-query-collection",
 			"source":      "my-instance",
 			"description": "Query a Firestore collection",
+		},
+		"firestore-get-rules": map[string]any{
+			"kind":        "firestore-get-rules",
+			"source":      "my-instance",
+			"description": "Get Firestore security rules",
+		},
+		"firestore-validate-rules": map[string]any{
+			"kind":        "firestore-validate-rules",
+			"source":      "my-instance",
+			"description": "Validate Firestore security rules",
 		},
 	}
 
