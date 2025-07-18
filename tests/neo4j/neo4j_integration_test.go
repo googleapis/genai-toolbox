@@ -110,8 +110,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
+	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer waitCancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
@@ -211,7 +211,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			name:        "invoke my-simple-schema-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-schema-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"nodeLabels\":null,\"relationships\":null,\"constraints\":null,\"indexes\":null,\"databaseInfo\":{\"name\":\"\",\"version\":\"\"},\"statistics\":{\"totalNodes\":0,\"totalRelationships\":0,\"totalProperties\":0,\"nodesByLabel\":null,\"relationshipsByType\":null,\"propertiesByLabel\":null,\"propertiesByRelType\":null}}]",
+			want:        "{\"nodeLabels\":null,\"relationships\":null,\"constraints\":null,\"indexes\":null,\"databaseInfo\":{\"name\":\"\",\"version\":\"\"},\"statistics\":{\"totalNodes\":0,\"totalRelationships\":0,\"totalProperties\":0,\"nodesByLabel\":null,\"relationshipsByType\":null,\"propertiesByLabel\":null,\"propertiesByRelType\":null}}",
 		},
 		{
 			name:        "invoke my-simple-execute-cypher-tool",

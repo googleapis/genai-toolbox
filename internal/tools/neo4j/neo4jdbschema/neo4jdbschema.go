@@ -229,7 +229,7 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	var schema *SchemaInfo
 
 	// Check if the schema was already cached and if so, return it
@@ -249,7 +249,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	// Cache the schema for future use
 	t.cache.Set("schema", schema, time.Duration(t.conf.CacheExpireMinutes)*time.Minute)
 
-	return []any{schema}, nil
+	return schema, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {

@@ -123,7 +123,7 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	cypherQuery, ok := params.AsMap()["cypher"]
 	if !ok {
 		return nil, fmt.Errorf("missing required parameter 'cypher'")
