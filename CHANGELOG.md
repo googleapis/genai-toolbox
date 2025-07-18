@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.10.0](https://github.com/googleapis/genai-toolbox/compare/v0.9.0...v0.10.0) (2025-07-18)
+
+
+### Features
+
+* Add `Map` parameters support ([#928](https://github.com/googleapis/genai-toolbox/issues/928)) ([4468bc9](https://github.com/googleapis/genai-toolbox/commit/4468bc920bbf27dce4ab160197587b7c12fcd20f))
+* Add Firestore as Source ([#786](https://github.com/googleapis/genai-toolbox/issues/786)) ([2bb790e](https://github.com/googleapis/genai-toolbox/commit/2bb790e4f8194b677fe0ba40122d409d0e3e687e))
+* Add support for null optional parameter ([#802](https://github.com/googleapis/genai-toolbox/issues/802)) ([a817b12](https://github.com/googleapis/genai-toolbox/commit/a817b120ca5e09ce80eb8d7544ebbe81fc28b082)), closes [#736](https://github.com/googleapis/genai-toolbox/issues/736)
+* Create wait for tool ([#885](https://github.com/googleapis/genai-toolbox/issues/885)) ([ed5ef4c](https://github.com/googleapis/genai-toolbox/commit/ed5ef4caea10ba1dbc49c0fc0a0d2b91cf341d3b))
+* **docs:** Enhance Bigtable GoogleSQL DML clarity ([e681a7e](https://github.com/googleapis/genai-toolbox/commit/e681a7e36c1deb6b451f4890af15ad126eb80505))
+* **server/mcp:** Support MCP version 2025-06-18 ([#898](https://github.com/googleapis/genai-toolbox/issues/898)) ([313d3ca](https://github.com/googleapis/genai-toolbox/commit/313d3ca0d084a3a6e7ac9a21a862aa31bf3edadd))
+
+
+### Bug Fixes
+
+* Https://github.com/googleapis/genai-toolbox/issues/883 ([8cc91ee](https://github.com/googleapis/genai-toolbox/commit/8cc91ee3f796683d19b535d82c7b6d6b08cb2905))
+* **prebuilt/cloud-sql-mysql:** Update list_table tool ([#924](https://github.com/googleapis/genai-toolbox/issues/924)) ([2083ba5](https://github.com/googleapis/genai-toolbox/commit/2083ba50483951e9ee6101bb832aa68823cd96a5))
+* Redis and Valkey docs ([#912](https://github.com/googleapis/genai-toolbox/issues/912)) ([8cc91ee](https://github.com/googleapis/genai-toolbox/commit/8cc91ee3f796683d19b535d82c7b6d6b08cb2905))
+* **server/api:** Add logger to context in tool invoke handler ([#891](https://github.com/googleapis/genai-toolbox/issues/891)) ([8ce311f](https://github.com/googleapis/genai-toolbox/commit/8ce311f256481e8f11ecb4aa505b95a562f394ef))
+* **tools/bigquery-execute-sql:** Ensure invoke always returns a non-null value ([#925](https://github.com/googleapis/genai-toolbox/issues/925)) ([9a55b80](https://github.com/googleapis/genai-toolbox/commit/9a55b804821a6ccfcd157bcfaee7e599c4a5cb63))
+
 ## [0.9.0](https://github.com/googleapis/genai-toolbox/compare/v0.8.0...v0.9.0) (2025-07-11)
 
 
