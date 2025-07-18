@@ -115,8 +115,6 @@ in the list using the items field:
 Items in array should not have a default value. If provided, it will be ignored.
 {{< /notice >}}
 
-Of course! Here is the documentation for the map parameter type, following the format you provided.
-
 ### Map Parameters
 
 The map type is a collection of key-value pairs. It can be configured in two ways:
