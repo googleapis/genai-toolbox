@@ -139,7 +139,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("no rules files found in ruleset")
 	}
 
-	return []any{ruleset}, nil
+	return ruleset, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

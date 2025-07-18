@@ -192,7 +192,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	// Process the response
 	result := t.processValidationResponse(response, source)
 	
-	return []any{result}, nil
+	return result, nil
 }
 
 func (t Tool) processValidationResponse(response *firebaserules.TestRulesetResponse, source string) ValidationResult {
