@@ -54,6 +54,32 @@ func TestParseFromYamlMssql(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with encrypt field",
+			in: `
+			sources:
+				my-mssql-instance:
+					kind: mssql
+					host: 0.0.0.0
+					port: my-port
+					database: my_db
+					user: my_user
+					password: my_pass
+					encrypt: strict
+			`,
+			want: server.SourceConfigs{
+				"my-mssql-instance": mssql.Config{
+					Name:     "my-mssql-instance",
+					Kind:     mssql.SourceKind,
+					Host:     "0.0.0.0",
+					Port:     "my-port",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+					Encrypt:  "strict",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -120,50 +146,6 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
-			}
-		})
-	}
-}
-
-// TestParseEncryptField checks that the encrypt field is parsed correctly from YAML.
-func TestParseEncryptField(t *testing.T) {
-	tests := []struct {
-		desc    string
-		encrypt string
-		want    string
-	}{
-		{"empty encrypt", "", ""},
-		{"encrypt true", "true", "true"},
-		{"encrypt disable", "disable", "disable"},
-		{"encrypt strict", "strict", "strict"},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.desc, func(t *testing.T) {
-			yamlInput := `
-sources:
-  my-mssql-instance:
-    kind: mssql
-    host: 0.0.0.0
-    port: my-port
-    database: my_db
-    user: my_user
-    password: my_pass
-    encrypt: ` + tc.encrypt + `
-`
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			err := yaml.Unmarshal(testutils.FormatYaml(yamlInput), &got)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			cfg, ok := got.Sources["my-mssql-instance"].(mssql.Config)
-			if !ok {
-				t.Fatalf("unexpected config type")
-			}
-			if cfg.Encrypt != tc.want {
-				t.Errorf("Encrypt: got %q, want %q", cfg.Encrypt, tc.want)
 			}
 		})
 	}
