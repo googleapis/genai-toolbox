@@ -11,6 +11,11 @@ description: >
 A `couchbase` source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.
 
+## Available Tools
+
+- [`couchbase-sql`](../tools/couchbase/couchbase-sql.md)  
+  Run SQL++ statements on Couchbase with parameterized input.
+
 ## Example
 
 ```yaml
@@ -42,8 +47,3 @@ sources:
 | noSslVerify          | boolean  |    false     | If true, skip server certificate verification. **Warning:** This option should only be used in development or testing environments. Disabling SSL verification poses significant security risks in production as it makes your connection vulnerable to man-in-the-middle attacks. |
 | profile              | string   |    false     | Name of the connection profile to apply.                |
 | queryScanConsistency | integer  |    false     | Query scan consistency. Controls the consistency guarantee for index scanning. Values: 1 for "not_bounded" (fastest option, but results may not include the most recent operations), 2 for "request_plus" (highest consistency level, includes all operations up until the query started, but incurs a performance penalty). If not specified, defaults to the Couchbase Go SDK default. |
-
-## Available Tools
-
-- [`couchbase-sql`](../tools/couchbase/couchbase-sql.md)  
-  Run SQL++ statements on Couchbase with parameterized input.

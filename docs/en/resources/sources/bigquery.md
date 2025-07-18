@@ -34,6 +34,26 @@ avoiding full table scans or complex filters.
 [bigquery-quickstart-cli]: https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
 [bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
+## Available Tools
+
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
+
+- [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
+  Execute structured queries using parameters.
+
+- [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
+  Retrieve metadata for a specific dataset.
+
+- [`bigquery-get-table-info`](../tools/bigquery/bigquery-get-table-info.md)  
+  Retrieve metadata for a specific table.
+
+- [`bigquery-list-dataset-ids`](../tools/bigquery/bigquery-list-dataset-ids.md)  
+  List available dataset IDs.
+
+- [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
+  List tables in a given dataset.
+
 ## Requirements
 
 ### IAM Permissions
@@ -71,23 +91,3 @@ sources:
 | kind      |  string  |     true     | Must be "bigquery".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | location  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
-
-## Available Tools
-
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-- [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
-  Execute structured queries using parameters.
-
-- [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
-  Retrieve metadata for a specific dataset.
-
-- [`bigquery-get-table-info`](../tools/bigquery/bigquery-get-table-info.md)  
-  Retrieve metadata for a specific table.
-
-- [`bigquery-list-dataset-ids`](../tools/bigquery/bigquery-list-dataset-ids.md)  
-  List available dataset IDs.
-
-- [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
-  List tables in a given dataset.

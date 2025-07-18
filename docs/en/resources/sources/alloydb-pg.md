@@ -22,6 +22,17 @@ cluster][alloydb-free-trial].
 [alloydb-docs]: https://cloud.google.com/alloydb/docs
 [alloydb-free-trial]: https://cloud.google.com/alloydb/docs/create-free-trial-cluster
 
+## Available Tools
+
+- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
+  Use natural language queries on AlloyDB, powered by AlloyDB AI.
+
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+  Execute SQL queries as prepared statements in AlloyDB Postgres.
+
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+  Run parameterized SQL statements in AlloyDB Postgres.
+
 ## Requirements
 
 ### IAM Permissions
@@ -122,14 +133,3 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
-
-## Available Tools
-
-- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
-  Use natural language queries on AlloyDB, powered by AlloyDB AI.
-
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
-  Execute SQL queries as prepared statements in AlloyDB Postgres.
-
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
-  Run parameterized SQL statements in AlloyDB Postgres.

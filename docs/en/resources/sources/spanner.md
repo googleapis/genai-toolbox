@@ -23,6 +23,14 @@ the Google Cloud console][spanner-quickstart].
 [spanner-quickstart]:
     https://cloud.google.com/spanner/docs/create-query-database-console
 
+## Available Tools
+
+- [`spanner-sql`](../tools/spanner/spanner-sql.md)  
+  Execute SQL on Google Cloud Spanner.
+
+- [`spanner-execute-sql`](../tools/spanner/spanner-execute-sql.md)  
+  Run structured and parameterized queries on Spanner.
+
 ## Requirements
 
 ### IAM Permissions
@@ -63,11 +71,3 @@ sources:
 | instance  |  string  |     true     | Name of the Spanner instance.                                                                                       |
 | database  |  string  |     true     | Name of the database on the Spanner instance                                                                        |
 | dialect   |  string  |    false     | Name of the dialect type of the Spanner database, must be either `googlesql` or `postgresql`. Default: `googlesql`. |
-
-## Available Tools
-
-- [`spanner-sql`](../tools/spanner/spanner-sql.md)  
-  Execute SQL on Google Cloud Spanner.
-
-- [`spanner-execute-sql`](../tools/spanner/spanner-execute-sql.md)  
-  Run structured and parameterized queries on Spanner.

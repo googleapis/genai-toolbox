@@ -21,6 +21,11 @@ Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
 [dgraph-docs]: https://dgraph.io/docs
 [dgraph-login]: https://cloud.dgraph.io/login
 
+## Available Tools
+
+- [`dgraph-dql`](../tools/dgraph/dgraph-dql.md)  
+  Run DQL (Dgraph Query Language) queries.
+
 ## Requirements
 
 ### Database User
@@ -60,8 +65,3 @@ instead of hardcoding your secrets into the configuration file.
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
 | apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |
 | namespace   |  uint64  |     false    | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                                |
-
-## Available Tools
-
-- [`dgraph-dql`](../tools/dgraph/dgraph-dql.md)  
-  Run DQL (Dgraph Query Language) queries.

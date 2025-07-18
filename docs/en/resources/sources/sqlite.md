@@ -22,6 +22,11 @@ SQLite has the following notable characteristics:
 - Zero-configuration - no setup or administration needed
 - Transactional with ACID properties
 
+## Available Tools
+
+- [`sqlite-sql`](../tools/sqlite/sqlite-sql.md)  
+  Run SQL queries against a local SQLite database.
+
 ## Requirements
 
 ### Database File
@@ -65,8 +70,3 @@ SQLite connections are configured with these defaults for optimal performance:
 
 - `MaxOpenConns`: 1 (SQLite only supports one writer at a time)
 - `MaxIdleConns`: 1
-
-## Available Tools
-
-- [`sqlite-sql`](../tools/sqlite/sqlite-sql.md)  
-  Run SQL queries against a local SQLite database.

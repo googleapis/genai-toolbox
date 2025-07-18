@@ -18,6 +18,11 @@ geospatial indexes with radius queries.
 If you are new to Redis, you can find installation and getting started guides on
 the [official Redis website](https://redis.io/docs/getting-started/).
 
+## Available Tools
+
+- [`redis`](../tools/redis/redis.md)  
+  Run Redis commands and interact with key-value pairs.
+
 ## Requirements
 
 ### Redis
@@ -94,8 +99,3 @@ sources:
 | useGCPIAM      |  string  |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                |
 
 [auth]: https://cloud.google.com/memorystore/docs/redis/about-redis-auth
-
-## Available Tools
-
-- [`redis`](../tools/redis/redis.md)  
-  Run Redis commands and interact with key-value pairs.
