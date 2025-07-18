@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery
+package firestore
 
 import (
 	"context"
 	"fmt"
 
-	bigqueryapi "cloud.google.com/go/bigquery"
+	"cloud.google.com/go/firestore"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/oauth2/google"
-	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/firebaserules/v1"
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "bigquery"
+const SourceKind string = "firestore"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -48,92 +47,107 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	// BigQuery configs
+	// Firestore configs
 	Name     string `yaml:"name" validate:"required"`
 	Kind     string `yaml:"kind" validate:"required"`
 	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Database string `yaml:"database"` // Optional, defaults to "(default)"
 }
 
 func (r Config) SourceConfigKind() string {
-	// Returns BigQuery source kind
+	// Returns Firestore source kind
 	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	// Initializes a BigQuery Google SQL source
-	client, restService, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+	// Initializes a Firestore source
+	client, err := initFirestoreConnection(ctx, tracer, r.Name, r.Project, r.Database)
 	if err != nil {
 		return nil, err
+	}
+
+	// Initialize Firebase Rules client
+	rulesClient, err := initFirebaseRulesConnection(ctx, r.Project)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Firebase Rules client: %w", err)
 	}
 
 	s := &Source{
 		Name:        r.Name,
 		Kind:        SourceKind,
 		Client:      client,
-		RestService: restService,
-		Location:    r.Location,
+		RulesClient: rulesClient,
+		ProjectId:   r.Project,
 	}
 	return s, nil
-
 }
 
 var _ sources.Source = &Source{}
 
 type Source struct {
-	// BigQuery Google SQL struct with client
+	// Firestore struct with client
 	Name        string `yaml:"name"`
 	Kind        string `yaml:"kind"`
-	Client      *bigqueryapi.Client
-	RestService *bigqueryrestapi.Service
-	Location    string `yaml:"location"`
+	Client      *firestore.Client
+	RulesClient *firebaserules.Service
+	ProjectId   string `yaml:"projectId"`
 }
 
 func (s *Source) SourceKind() string {
-	// Returns BigQuery Google SQL source kind
+	// Returns Firestore source kind
 	return SourceKind
 }
 
-func (s *Source) BigQueryClient() *bigqueryapi.Client {
+func (s *Source) FirestoreClient() *firestore.Client {
 	return s.Client
 }
 
-func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
-	return s.RestService
+func (s *Source) FirebaseRulesClient() *firebaserules.Service {
+	return s.RulesClient
 }
 
-func initBigQueryConnection(
+func (s *Source) GetProjectId() string {
+	return s.ProjectId
+}
+
+func initFirestoreConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
 	name string,
 	project string,
-	location string,
-) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	database string,
+) (*firestore.Client, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
-	}
-
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// Initialize the high-level BigQuery client
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	// If database is not specified, use the default database
+	if database == "" {
+		database = "(default)"
+	}
+
+	// Create the Firestore client
+	client, err := firestore.NewClientWithDatabase(ctx, project, database, option.WithUserAgent(userAgent))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
+		return nil, fmt.Errorf("failed to create Firestore client for project %q and database %q: %w", project, database, err)
 	}
-	client.Location = location
 
-	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	return client, nil
+}
+
+func initFirebaseRulesConnection(
+	ctx context.Context,
+	project string,
+) (*firebaserules.Service, error) {
+	// Create the Firebase Rules client
+	rulesClient, err := firebaserules.NewService(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+		return nil, fmt.Errorf("failed to create Firebase Rules client for project %q: %w", project, err)
 	}
 
-	return client, restService, nil
+	return rulesClient, nil
 }
