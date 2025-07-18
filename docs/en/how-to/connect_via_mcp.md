@@ -20,18 +20,16 @@ The native SDKs can be combined with MCP clients in many cases.
 
 Toolbox currently supports the following versions of MCP specification:
 
-* [2024-11-05](https://spec.modelcontextprotocol.io/specification/2024-11-05/)
+* [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18)
+* [2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26)
+* [2024-11-05](https://modelcontextprotocol.io/specification/2024-11-05)
 
-### Features Not Supported by MCP
+### Toolbox AuthZ/AuthN Not Supported by MCP
 
-Toolbox has several features that are not yet supported in the MCP specification:
-
-* **AuthZ/AuthN:** There are no auth implementation in the `2024-11-05`
-  specification. This includes:
+The auth implementation in Toolbox is not supported in MCP's auth specification.
+This includes:
   * [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
   * [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
-* **Notifications:** Currently, editing Toolbox Tools requires a server restart.
-  Clients should reload tools on disconnect to get the latest version.
 
 ## Connecting to Toolbox with an MCP client
 
@@ -71,7 +69,7 @@ Toolbox enables dynamic reloading by default. To disable, use the `--disable-rel
 
 Toolbox supports the HTTP transport protocol with and without SSE.
 
-{{< tabpane text=true >}} {{% tab header="HTTP with SSE" lang="en" %}}
+{{< tabpane text=true >}} {{% tab header="HTTP with SSE (deprecated)" lang="en" %}}
 Add the following configuration to your MCP client configuration:
 
 ```bash
@@ -87,11 +85,25 @@ Add the following configuration to your MCP client configuration:
 
 If you would like to connect to a specific toolset, replace `url` with
 `"http://127.0.0.1:5000/mcp/{toolset_name}/sse"`.
-{{% /tab %}} {{% tab header="HTTP POST" lang="en" %}}
-Connect to Toolbox HTTP POST via `http://127.0.0.1:5000/mcp`.
 
-If you would like to connect to a specific toolset, connect via
-`http://127.0.0.1:5000/mcp/{toolset_name}`.
+HTTP with SSE is only supported in version `2024-11-05` and is currently
+deprecated.
+{{% /tab %}} {{% tab header="Streamable HTTP" lang="en" %}}
+Add the following configuration to your MCP client configuration:
+
+```bash
+{
+  "mcpServers": {
+    "toolbox": {
+      "type": "http",
+      "url": "http://127.0.0.1:5000/mcp",
+    }
+  }
+}
+```
+
+If you would like to connect to a specific toolset, replace `url` with
+`"http://127.0.0.1:5000/mcp/{toolset_name}"`.
 {{% /tab %}} {{< /tabpane >}}
 
 ### Using the MCP Inspector with Toolbox
@@ -118,7 +130,7 @@ testing and debugging Toolbox server.
 1. Click the `Connect` button. It might take awhile to spin up Toolbox. Voila!
    You should be able to inspect your toolbox tools!
 {{% /tab %}}
-{{% tab header="HTTP with SSE" lang="en" %}}
+{{% tab header="HTTP with SSE (deprecated)" lang="en" %}}
 1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
 
 1. In a separate terminal, run Inspector directly through `npx`:
@@ -131,6 +143,23 @@ testing and debugging Toolbox server.
 
 1. For `URL`, type in `http://127.0.0.1:5000/mcp/sse` to use all tool or
    `http//127.0.0.1:5000/mcp/{toolset_name}/sse` to use a specific toolset.
+
+1. Click the `Connect` button. Voila! You should be able to inspect your toolbox
+   tools!
+{{% /tab %}}
+{{% tab header="Streamable HTTP" lang="en" %}}
+1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
+
+1. In a separate terminal, run Inspector directly through `npx`:
+
+    ```bash
+    npx @modelcontextprotocol/inspector
+    ```
+
+1. For `Transport Type` dropdown menu, select `Streamable HTTP`.
+
+1. For `URL`, type in `http://127.0.0.1:5000/mcp` to use all tool or
+   `http//127.0.0.1:5000/mcp/{toolset_name}` to use a specific toolset.
 
 1. Click the `Connect` button. Voila! You should be able to inspect your toolbox
    tools!

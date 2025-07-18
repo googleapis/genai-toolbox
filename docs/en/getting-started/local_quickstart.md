@@ -1,9 +1,9 @@
 ---
-title: "Quickstart (Local)"
+title: "Python Quickstart (Local)"
 type: docs
 weight: 2
 description: >
-  How to get started running Toolbox locally with Python, PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
+  How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
   [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
 ---
 
@@ -14,8 +14,21 @@ description: >
 This guide assumes you have already done the following:
 
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
-   your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv])
-1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres]
+   your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
+1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
+
+### Cloud Setup (Optional)
+
+If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using `vertexai=True` or a Google GenAI model), follow these one-time setup steps for local development:
+
+1. [Install the Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+1. [Set up Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
+1. Set your project and enable Vertex AI
+
+    ```bash
+    gcloud config set project YOUR_PROJECT_ID
+    gcloud services enable aiplatform.googleapis.com
+    ```
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
@@ -140,6 +153,7 @@ postgres` and a password next time.
     ```bash
     \q
     ```
+
 
 ## Step 2: Install and configure Toolbox
 
@@ -632,7 +646,7 @@ asyncio.run(run_application())
 {{< /tab >}}
 {{< /tabpane >}}
 
-  {{< tabpane text=true persist=header >}}
+    {{< tabpane text=true persist=header >}}
 {{% tab header="ADK" lang="en" %}}
 To learn more about Agent Development Kit, check out the [ADK
 documentation.](https://google.github.io/adk-docs/)
@@ -658,3 +672,7 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
     ```sh
     python hotel_agent.py
     ```
+
+{{< notice info >}}
+For more information, visit the [Python SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-python).
+{{</ notice >}}
