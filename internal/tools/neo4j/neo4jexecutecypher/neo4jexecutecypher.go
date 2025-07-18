@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4j
+package neo4jexecutecypher
 
 import (
 	"context"
 	"fmt"
 
-	yaml "github.com/goccy/go-yaml"
-	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/classifier"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-const kind string = "neo4j-cypher"
+const kind string = "neo4j-execute-cypher"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -53,13 +53,12 @@ var _ compatibleSource = &neo4jsc.Source{}
 var compatibleSources = [...]string{neo4jsc.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	Statement    string           `yaml:"statement" validate:"required"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	IsReadonly   bool     `yaml:"isReadonly,omitempty"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -77,27 +76,32 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
+	var s compatibleSource
+	s, ok = rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
+	cypherParameter := tools.NewStringParameter("cypher", "The cypher to execute.")
+	parameters := tools.Parameters{cypherParameter}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
+		InputSchema: parameters.McpManifest(),
 	}
 
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
+		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
+		IsReadonly:   cfg.IsReadonly,
 		Driver:       s.Neo4jDriver(),
 		Database:     s.Neo4jDatabase(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		classifier:   classifier.NewQueryClassifier(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
@@ -111,19 +115,37 @@ type Tool struct {
 	Kind         string           `yaml:"kind"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
-
-	Driver      neo4j.DriverWithContext
-	Database    string
-	Statement   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	IsReadonly   bool             `yaml:"isReadonly"`
+	Driver       neo4j.DriverWithContext
+	Database     string
+	classifier   *classifier.QueryClassifier
+	manifest     tools.Manifest
+	mcpManifest  tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	paramsMap := params.AsMap()
+	cypherQuery, ok := params.AsMap()["cypher"]
+	if !ok {
+		return nil, fmt.Errorf("missing required parameter 'cypher'")
+	}
+
+	var cypherStr string
+	if cypherStr, ok = cypherQuery.(string); !ok || cypherStr == "" {
+		return nil, fmt.Errorf("parameter 'cypher' must be a non-empty string")
+	}
+
+	// validate the cypher query before executing
+	cf := t.classifier.Classify(cypherStr)
+	if cf.Error != nil {
+		return nil, cf.Error
+	}
+
+	if cf.Type == classifier.WriteQuery && t.IsReadonly {
+		return nil, fmt.Errorf("this tool is read-only and cannot execute write queries")
+	}
 
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
-	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, t.Statement, paramsMap,
+	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, cypherStr, nil,
 		neo4j.EagerResultTransformer, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
