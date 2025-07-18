@@ -35,7 +35,7 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
-        encrypt: strict
+        # encrypt: strict
 ```
 
 {{< notice tip >}}
