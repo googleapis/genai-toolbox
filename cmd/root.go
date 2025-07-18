@@ -53,6 +53,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeleteone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
