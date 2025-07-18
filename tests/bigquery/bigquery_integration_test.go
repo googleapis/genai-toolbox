@@ -392,6 +392,14 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			isErr:         false,
 		},
 		{
+			name:          "invoke my-exec-sql-tool with no matching rows",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 999\"}", tableNameParam))),
+			want:          `"The query returned 0 rows."`,
+			isErr:         false,
+		},
+		{
 			name:          "invoke my-exec-sql-tool drop table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
