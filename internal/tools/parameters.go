@@ -1111,7 +1111,7 @@ func (p *MapParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interfa
 		return err
 	}
 
-	// Only validate valueType if it's actually provided.
+	// Validate `ValueType` to be one of the supported basic types
 	if rawItem.ValueType != "" {
 		if _, err := getPrototypeParameter(rawItem.ValueType); err != nil {
 			return err
