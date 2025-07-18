@@ -177,7 +177,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		}
 		out = append(out, vMap)
 	}
-	if len(out) == 0 {
+	if out == nil {
 		return "The query returned 0 rows.", nil
 	}
 	return out, nil
