@@ -46,10 +46,6 @@ tools:
     kind: dataplex-search-entries
     source: my-dataplex-source
     description: Use this tool to get all the entries based on user query.
-    parameters:
-      - name: query
-        type: string
-        description: "Keyword search query for entries"
 ```
 
 ## Reference
