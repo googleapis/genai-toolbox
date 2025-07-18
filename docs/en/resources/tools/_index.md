@@ -77,12 +77,12 @@ the parameter.
         description: Airline unique 2 letter identifier
 ```
 
-| **field**   | **type**        | **required** | **description**                                                             |
-|-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |  string         |     true     | Name of the parameter.                                                      |
-| type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, the parameter is not required. |
-| description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
+| **field**   |    **type**    | **required** | **description**                                                             |
+|-------------|:--------------:|:------------:|-----------------------------------------------------------------------------|
+| name        |     string     |     true     | Name of the parameter.                                                      |
+| type        |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
+| default     | parameter type |    false     | Default value of the parameter. If provided, the parameter is not required. |
+| description |     string     |     true     | Natural language description of the parameter to describe it to the agent.  |
 
 ### Array Parameters
 
@@ -107,12 +107,49 @@ in the list using the items field:
 |-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
 | name        |      string      |     true     | Name of the parameter.                                                      |
 | type        |      string      |     true     | Must be "array"                                                             |
-| default     |  parameter type  |     false    | Default value of the parameter. If provided, the parameter is not required. |
+| default     |  parameter type  |    false     | Default value of the parameter. If provided, the parameter is not required. |
 | description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
 
 {{< notice note >}}
 Items in array should not have a default value. If provided, it will be ignored.
+{{< /notice >}}
+
+### Object Parameters
+
+The object type is a collection of key-value pairs passed in as a single
+parameter. To use the object type, you must specify the schema for each
+key-value pair using the properties field.
+
+```yaml
+parameters:
+      - name: new_user
+        type: object
+        description: A new user's profile information.
+        properties:
+          name:
+            type: string
+            description: The full name of the user.
+          age:
+            type: integer
+            description: The age of the user.
+          is_subscriber:
+            type: boolean
+            description: Whether the user is a subscriber.
+    statement: |
+      INSERT INTO users (name, age, is_subscriber) VALUES ($1->>'name', ($1->>'age')::integer, ($1->>'is_subscriber')::boolean);
+```
+
+| **field**   |         **type**         | **required** | **description**                                                                                                     |
+|-------------|:------------------------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
+| name        |          string          |     true     | Name of the parameter.                                                                                              |
+| type        |          string          |     true     | Must be "object"                                                                                                    |
+| default     |      parameter type      |    false     | Default value of the parameter. If provided, the parameter is not required.                                         |
+| description |          string          |     true     | Natural language description of the parameter to describe it to the agent.                                          |
+| properties  | map of parameter objects |     true     | A map where each key is a property name and each value is a Parameter object defining the schema for that property. |
+
+{{< notice note >}}
+Properties within an object should not have a default value. If provided, it will be ignored. A default can only be provided for the top-level object parameter.
 {{< /notice >}}
 
 ### Authenticated Parameters
@@ -143,10 +180,10 @@ user's ID token.
                 field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                         |
-|-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
+| **field** | **type** | **required** | **description**                                                                 |
+|-----------|:--------:|:------------:|---------------------------------------------------------------------------------|
 | name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token. |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.   |
 
 ### Template Parameters
 
@@ -195,12 +232,12 @@ tools:
           description: Name of a column to select
 ```
 
-| **field**   | **type**         | **required**  | **description**                                                                     |
-|-------------|:----------------:|:-------------:|-------------------------------------------------------------------------------------|
-| name        |  string          |     true      | Name of the template parameter.                                                     |
-| type        |  string          |     true      | Must be one of "string", "integer", "float", "boolean" "array"                      |
-| description |  string          |     true      | Natural language description of the template parameter to describe it to the agent. |
-| items       | parameter object |true (if array)| Specify a Parameter object for the type of the values in the array (string only).   |
+| **field**   |     **type**     |  **required**   | **description**                                                                     |
+|-------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
+| name        |      string      |      true       | Name of the template parameter.                                                     |
+| type        |      string      |      true       | Must be one of "string", "integer", "float", "boolean" "array"                      |
+| description |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
+| items       | parameter object | true (if array) | Specify a Parameter object for the type of the values in the array (string only).   |
 
 ## Authorized Invocations
 

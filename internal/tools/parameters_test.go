@@ -23,6 +23,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -201,6 +202,31 @@ func TestParametersMarshal(t *testing.T) {
 			},
 		},
 		{
+			name: "object",
+			in: []map[string]any{
+				{
+					"name":        "my_object",
+					"type":        "object",
+					"description": "this param is an object",
+					"properties": map[string]any{
+						"k1": map[string]any{
+							"name":        "k1",
+							"type":        "float",
+							"description": "float property",
+						},
+						"k2": map[string]any{
+							"name":        "k2",
+							"type":        "string",
+							"description": "string property",
+						},
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewObjectParameter("my_object", "this param is an object", map[string]tools.Parameter{"k1": tools.NewFloatParameter("k1", "float property"), "k2": tools.NewStringParameter("k2", "string property")}, nil),
+			},
+		},
+		{
 			name: "string default",
 			in: []map[string]any{
 				{
@@ -294,6 +320,37 @@ func TestParametersMarshal(t *testing.T) {
 				tools.NewArrayParameterWithDefault("my_array", []any{1.0, 1.1}, "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
 			},
 		},
+		{
+			name: "object",
+			in: []map[string]any{
+				{
+					"name":        "my_object",
+					"type":        "object",
+					"default":     map[string]any{"hello": "world"},
+					"description": "this param is an object",
+					"properties": map[string]any{
+						"k1": map[string]any{
+							"name":        "k1",
+							"type":        "float",
+							"description": "float property",
+						},
+						"k2": map[string]any{
+							"name":        "k2",
+							"type":        "string",
+							"description": "string property",
+						},
+					},
+					"additionalProperties": map[string]any{
+						"name":        "strProperty",
+						"type":        "string",
+						"description": "string property",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewObjectParameterWithDefault("my_object", map[string]any{"hello": "world"}, "this param is an object", map[string]tools.Parameter{"k1": tools.NewFloatParameter("k1", "float property"), "k2": tools.NewStringParameter("k2", "string property")}, tools.NewStringParameter("strProperty", "string property")),
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -350,13 +407,13 @@ func TestAuthParametersMarshal(t *testing.T) {
 			},
 		},
 		{
-			name: "string with authSources",
+			name: "string with authServices",
 			in: []map[string]any{
 				{
 					"name":        "my_string",
 					"type":        "string",
 					"description": "this param is a string",
-					"authSources": []map[string]string{
+					"authServices": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -396,13 +453,13 @@ func TestAuthParametersMarshal(t *testing.T) {
 			},
 		},
 		{
-			name: "int with authSources",
+			name: "int with authServices",
 			in: []map[string]any{
 				{
 					"name":        "my_integer",
 					"type":        "integer",
 					"description": "this param is an int",
-					"authSources": []map[string]string{
+					"authServices": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -442,13 +499,13 @@ func TestAuthParametersMarshal(t *testing.T) {
 			},
 		},
 		{
-			name: "float with authSources",
+			name: "float with authServices",
 			in: []map[string]any{
 				{
 					"name":        "my_float",
 					"type":        "float",
 					"description": "my param is a float",
-					"authSources": []map[string]string{
+					"authServices": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -488,13 +545,13 @@ func TestAuthParametersMarshal(t *testing.T) {
 			},
 		},
 		{
-			name: "bool with authSources",
+			name: "bool with authServices",
 			in: []map[string]any{
 				{
 					"name":        "my_bool",
 					"type":        "boolean",
 					"description": "this param is a boolean",
-					"authSources": []map[string]string{
+					"authServices": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -539,7 +596,7 @@ func TestAuthParametersMarshal(t *testing.T) {
 			},
 		},
 		{
-			name: "string array with authSources",
+			name: "string array with authServices",
 			in: []map[string]any{
 				{
 					"name":        "my_array",
@@ -550,7 +607,7 @@ func TestAuthParametersMarshal(t *testing.T) {
 						"type":        "string",
 						"description": "string item",
 					},
-					"authSources": []map[string]string{
+					"authServices": []map[string]string{
 						{
 							"name":  "my-google-auth-service",
 							"field": "user_id",
@@ -594,6 +651,46 @@ func TestAuthParametersMarshal(t *testing.T) {
 				tools.NewArrayParameterWithAuth("my_array", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item"), authServices),
 			},
 		},
+		{
+			name: "object",
+			in: []map[string]any{
+				{
+					"name":        "my_object",
+					"type":        "object",
+					"description": "this param is an object",
+					"authServices": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
+					"properties": map[string]any{
+						"k1": map[string]any{
+							"name":        "k1",
+							"type":        "float",
+							"description": "float property",
+						},
+						"k2": map[string]any{
+							"name":        "k2",
+							"type":        "string",
+							"description": "string property",
+						},
+					},
+					"additionalProperties": map[string]any{
+						"name":        "strProperty",
+						"type":        "string",
+						"description": "string property",
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewObjectParameterWithAuth("my_object", "this param is an object", authServices, map[string]tools.Parameter{"k1": tools.NewFloatParameter("k1", "float property"), "k2": tools.NewStringParameter("k2", "string property")}, tools.NewStringParameter("strProperty", "string property")),
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -617,10 +714,11 @@ func TestAuthParametersMarshal(t *testing.T) {
 
 func TestParametersParse(t *testing.T) {
 	tcs := []struct {
-		name   string
-		params tools.Parameters
-		in     map[string]any
-		want   tools.ParamValues
+		name    string
+		params  tools.Parameters
+		in      map[string]any
+		want    tools.ParamValues
+		wantErr bool
 	}{
 		{
 			name: "string",
@@ -640,6 +738,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": 4,
 			},
+			wantErr: true,
 		},
 		{
 			name: "int",
@@ -659,16 +758,17 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 14.5,
 			},
+			wantErr: true,
 		},
 		{
-			name: "not int (big)",
+			name: "int from json.Number",
 			params: tools.Parameters{
 				tools.NewIntParameter("my_int", "this param is an int"),
 			},
 			in: map[string]any{
-				"my_int": math.MaxInt64,
+				"my_int": json.Number("9223372036854775807"),
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: math.MaxInt64}},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: int(math.MaxInt64)}},
 		},
 		{
 			name: "float",
@@ -688,6 +788,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_float": true,
 			},
+			wantErr: true,
 		},
 		{
 			name: "bool",
@@ -707,6 +808,7 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": 1.5,
 			},
+			wantErr: true,
 		},
 		{
 			name: "string default",
@@ -780,44 +882,103 @@ func TestParametersParse(t *testing.T) {
 			in:   map[string]any{},
 			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: nil}},
 		},
+		{
+			name: "array of strings",
+			params: tools.Parameters{
+				tools.NewArrayParameter("my_array", "an array", tools.NewStringParameter("item", "a string item")),
+			},
+			in:   map[string]any{"my_array": []any{"a", "b", "c"}},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_array", Value: []any{"a", "b", "c"}}},
+		},
+		{
+			name: "array with item type mismatch",
+			params: tools.Parameters{
+				tools.NewArrayParameter("my_array", "an array", tools.NewIntParameter("item", "an int item")),
+			},
+			in:      map[string]any{"my_array": []any{1, "b", 3}},
+			wantErr: true,
+		},
+		{
+			name: "array not required",
+			params: tools.Parameters{
+				tools.NewArrayParameterWithRequired("my_array", "an array", false, tools.NewStringParameter("item", "a string item")),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_array", Value: nil}},
+		},
+		{
+			name: "array with default",
+			params: tools.Parameters{
+				tools.NewArrayParameterWithDefault("my_array", []any{"x", "y"}, "an array", tools.NewStringParameter("item", "a string item")),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_array", Value: []any{"x", "y"}}},
+		},
+		{
+			name: "object",
+			params: tools.Parameters{
+				tools.NewObjectParameter("my_object", "an object", map[string]tools.Parameter{
+					"key1": tools.NewStringParameter("key1", "string value"),
+					"key2": tools.NewIntParameter("key2", "int value"),
+				}, nil),
+			},
+			in: map[string]any{"my_object": map[string]any{
+				"key1": "hello",
+				"key2": 123,
+			}},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_object", Value: map[string]any{
+				"key1": "hello",
+				"key2": 123,
+			}}},
+		},
+		{
+			name: "object with property type mismatch",
+			params: tools.Parameters{
+				tools.NewObjectParameter("my_object", "an object", map[string]tools.Parameter{
+					"key1": tools.NewStringParameter("key1", "string value"),
+				}, nil),
+			},
+			in:      map[string]any{"my_object": map[string]any{"key1": 123}},
+			wantErr: true,
+		},
+		{
+			name: "object with missing required property",
+			params: tools.Parameters{
+				tools.NewObjectParameter("my_object", "an object", map[string]tools.Parameter{
+					"required_key": tools.NewStringParameter("required_key", "a required value"),
+				}, nil),
+			},
+			in:      map[string]any{"my_object": map[string]any{"another_key": "foo"}},
+			wantErr: true,
+		},
+		{
+			name: "object with default",
+			params: tools.Parameters{
+				tools.NewObjectParameterWithDefault("my_object", map[string]any{"key1": "default"}, "an object", map[string]tools.Parameter{
+					"key1": tools.NewStringParameter("key1", "string value"),
+				}, nil),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_object", Value: map[string]any{"key1": "default"}}},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// parse map to bytes
-			data, err := json.Marshal(tc.in)
-			if err != nil {
-				t.Fatalf("unable to marshal input to yaml: %s", err)
-			}
-			// parse bytes to object
-			var m map[string]any
+			got, err := tools.ParseParams(tc.params, tc.in, make(map[string]map[string]any))
 
-			d := json.NewDecoder(bytes.NewReader(data))
-			d.UseNumber()
-			err = d.Decode(&m)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-
-			wantErr := len(tc.want) == 0 // error is expected if no items in want
-			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]map[string]any))
-			if err != nil {
-				if wantErr {
-					return
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error but got nil")
 				}
+				return
+			}
+
+			if err != nil {
 				t.Fatalf("unexpected error from ParseParams: %s", err)
 			}
-			if wantErr {
-				t.Fatalf("expected error but Param parsed successfully: %s", gotAll)
-			}
-			for i, got := range gotAll {
-				want := tc.want[i]
-				if got != want {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
-				gotType, wantType := reflect.TypeOf(got), reflect.TypeOf(want)
-				if gotType != wantType {
-					t.Fatalf("unexpected value: got %q, want %q", got, want)
-				}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("ParseParams() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -1075,7 +1236,27 @@ func TestParamManifest(t *testing.T) {
 				Required:     true,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
+				Items: &tools.ParameterManifest{
+					Name:         "foo-string",
+					Type:         "string",
+					Required:     true,
+					Description:  "bar",
+					AuthServices: []string{}},
+			},
+		},
+		{
+			name: "object",
+			in:   tools.NewObjectParameter("foo-object", "bar", map[string]tools.Parameter{"propertyName": tools.NewStringParameter("property", "property desc")}, tools.NewStringParameter("strProperty", "string property")),
+			want: tools.ParameterManifest{
+				Name:         "foo-object",
+				Type:         "object",
+				Required:     true,
+				Description:  "bar",
+				AuthServices: []string{},
+				Properties: map[string]*tools.ParameterManifest{"propertyName": {
+					Name: "property", Type: "string",
+					Required: true, Description: "property desc", AuthServices: []string{}}},
+				AdditionalProperties: &tools.ParameterManifest{Name: "strProperty", Type: "string", Required: true, Description: "string property", AuthServices: []string{}},
 			},
 		},
 		{
@@ -1142,12 +1323,25 @@ func TestParamManifest(t *testing.T) {
 				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 			},
 		},
+		{
+			name: "object default",
+			in:   tools.NewObjectParameterWithDefault("object-default", map[string]any{"hello": "world"}, "bar", map[string]tools.Parameter{"k1": tools.NewFloatParameter("k1", "float property")}, nil),
+			want: tools.ParameterManifest{
+				Name:                 "object-default",
+				Type:                 "object",
+				Required:             false,
+				Description:          "bar",
+				AuthServices:         []string{},
+				Properties:           map[string]*tools.ParameterManifest{"k1": {Name: "k1", Type: "float", Required: true, Description: "float property", AuthServices: []string{}}},
+				AdditionalProperties: &tools.ParameterManifest{},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.in.Manifest()
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -1188,12 +1382,22 @@ func TestParamMcpManifest(t *testing.T) {
 				Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
 			},
 		},
+		{
+			name: "object",
+			in:   tools.NewObjectParameter("foo-object", "bar", map[string]tools.Parameter{"k1": tools.NewStringParameter("k1", "bar")}, tools.NewStringParameter("p1", "additional property")),
+			want: tools.ParameterMcpManifest{
+				Type:                 "object",
+				Description:          "bar",
+				Properties:           map[string]*tools.ParameterMcpManifest{"k1": {Type: "string", Description: "bar"}},
+				AdditionalProperties: &tools.ParameterMcpManifest{Type: "string", Description: "additional property"},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.in.McpManifest()
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -1206,7 +1410,7 @@ func TestMcpManifest(t *testing.T) {
 		want tools.McpToolsSchema
 	}{
 		{
-			name: "string",
+			name: "various parameters",
 			in: tools.Parameters{
 				tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
 				tools.NewStringParameter("foo-string2", "bar"),
@@ -1214,38 +1418,41 @@ func TestMcpManifest(t *testing.T) {
 				tools.NewStringParameterWithRequired("foo-string-not-req", "bar", false),
 				tools.NewIntParameterWithDefault("foo-int", 1, "bar"),
 				tools.NewIntParameter("foo-int2", "bar"),
-				tools.NewArrayParameterWithDefault("foo-array", []any{"hello", "world"}, "bar", tools.NewStringParameter("foo-string", "bar")),
-				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
+				tools.NewArrayParameterWithDefault("foo-array", []any{"hello", "world"}, "bar", tools.NewStringParameter("foo-string-item", "bar")),
+				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string-item2", "bar")),
+				tools.NewObjectParameter("foo-object", "bar", map[string]tools.Parameter{"k1": tools.NewFloatParameter("k1", "float property")}, nil),
 			},
 			want: tools.McpToolsSchema{
 				Type: "object",
 				Properties: map[string]tools.ParameterMcpManifest{
-					"foo-string":         tools.ParameterMcpManifest{Type: "string", Description: "bar"},
-					"foo-string2":        tools.ParameterMcpManifest{Type: "string", Description: "bar"},
-					"foo-string-req":     tools.ParameterMcpManifest{Type: "string", Description: "bar"},
-					"foo-string-not-req": tools.ParameterMcpManifest{Type: "string", Description: "bar"},
-					"foo-int":            tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
-					"foo-int2":           tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
-					"foo-array": tools.ParameterMcpManifest{
+					"foo-string":         {Type: "string", Description: "bar"},
+					"foo-string2":        {Type: "string", Description: "bar"},
+					"foo-string-req":     {Type: "string", Description: "bar"},
+					"foo-string-not-req": {Type: "string", Description: "bar"},
+					"foo-int":            {Type: "integer", Description: "bar"},
+					"foo-int2":           {Type: "integer", Description: "bar"},
+					"foo-array": {
 						Type:        "array",
 						Description: "bar",
 						Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
 					},
-					"foo-array2": tools.ParameterMcpManifest{
+					"foo-array2": {
 						Type:        "array",
 						Description: "bar",
 						Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
 					},
+					"foo-object": {Type: "object", Description: "bar", Properties: map[string]*tools.ParameterMcpManifest{"k1": {Type: "float", Description: "float property"}}, AdditionalProperties: &tools.ParameterMcpManifest{}},
 				},
-				Required: []string{"foo-string2", "foo-string-req", "foo-int2", "foo-array2"},
+				Required: []string{"foo-array2", "foo-int2", "foo-object", "foo-string-req", "foo-string2"},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.in.McpManifest()
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("unexpected manifest: got %+v, want %+v", got, tc.want)
+			opts := cmpopts.SortSlices(func(a, b string) bool { return a < b })
+			if diff := cmp.Diff(tc.want, got, opts); diff != "" {
+				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
 		})
 	}
