@@ -157,7 +157,7 @@ type ValidationResult struct {
 	RawIssues      []Issue `json:"rawIssues,omitempty"`
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	mapParams := params.AsMap()
 
 	// Get source parameter

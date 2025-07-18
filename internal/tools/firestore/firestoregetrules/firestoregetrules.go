@@ -117,7 +117,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	// Get the latest release for Firestore
 	releaseName := fmt.Sprintf("projects/%s/releases/cloud.firestore", t.ProjectId)
 	release, err := t.RulesClient.Projects.Releases.Get(releaseName).Context(ctx).Do()

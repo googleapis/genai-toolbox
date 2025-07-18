@@ -432,7 +432,7 @@ func (t Tool) buildQuery(params *queryParameters) (*firestoreapi.Query, error) {
 }
 
 // executeQuery runs the query and formats the results
-func (t Tool) executeQuery(ctx context.Context, query *firestoreapi.Query, analyzeQuery bool) ([]any, error) {
+func (t Tool) executeQuery(ctx context.Context, query *firestoreapi.Query, analyzeQuery bool) (any, error) {
 	docIterator := query.Documents(ctx)
 	docs, err := docIterator.GetAll()
 	if err != nil {
