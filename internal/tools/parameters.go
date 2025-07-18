@@ -32,6 +32,7 @@ const (
 	typeFloat  = "float"
 	typeBool   = "boolean"
 	typeArray  = "array"
+	typeMap    = "map"
 )
 
 // ParamValues is an ordered list of ParamValue
@@ -367,6 +368,17 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
+	case typeMap:
+		a := &MapParameter{}
+		if err := dec.DecodeContext(ctx, a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+		}
+		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
+			a.AuthServices = append(a.AuthServices, a.AuthSources...)
+			a.AuthSources = nil
+		}
+		return a, nil
 	}
 	return nil, fmt.Errorf("%q is not valid type for a parameter", t)
 }
@@ -401,19 +413,21 @@ func (ps Parameters) McpManifest() McpToolsSchema {
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
-	Name         string             `json:"name"`
-	Type         string             `json:"type"`
-	Required     bool               `json:"required"`
-	Description  string             `json:"description"`
-	AuthServices []string           `json:"authSources"`
-	Items        *ParameterManifest `json:"items,omitempty"`
+	Name                 string             `json:"name"`
+	Type                 string             `json:"type"`
+	Required             bool               `json:"required"`
+	Description          string             `json:"description"`
+	AuthServices         []string           `json:"authSources"`
+	Items                *ParameterManifest `json:"items,omitempty"`
+	AdditionalProperties any                `json:"AdditionalProperties,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
 type ParameterMcpManifest struct {
-	Type        string                `json:"type"`
-	Description string                `json:"description"`
-	Items       *ParameterMcpManifest `json:"items,omitempty"`
+	Type                 string                `json:"type"`
+	Description          string                `json:"description"`
+	Items                *ParameterMcpManifest `json:"items,omitempty"`
+	AdditionalProperties any                   `json:"AdditionalProperties,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
@@ -1020,5 +1034,208 @@ func (p *ArrayParameter) McpManifest() ParameterMcpManifest {
 		Type:        p.Type,
 		Description: p.Desc,
 		Items:       &items,
+	}
+}
+
+// MapParameter is a parameter representing a map with string keys. If ValueType is
+// specified (e.g., "string"), values are validated against that type. If ValueType
+// is empty, it is treated as a generic map[string]any.
+type MapParameter struct {
+	CommonParameter `yaml:",inline"`
+	Default         *map[string]any `yaml:"default,omitempty"`
+	ValueType       string          `yaml:"valueType,omitempty"`
+}
+
+// Ensure MapParameter implements the Parameter interface.
+var _ Parameter = &MapParameter{}
+
+// NewMapParameter is a convenience function for initializing a MapParameter.
+func NewMapParameter(name string, desc string, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name: name,
+			Type: "map",
+			Desc: desc,
+		},
+		ValueType: valueType,
+	}
+}
+
+// NewMapParameterWithDefault is a convenience function for initializing a MapParameter with a default value.
+func NewMapParameterWithDefault(name string, defaultV map[string]any, desc string, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name: name,
+			Type: "map",
+			Desc: desc,
+		},
+		ValueType: valueType,
+		Default:   &defaultV,
+	}
+}
+
+// NewMapParameterWithRequired is a convenience function for initializing a MapParameter as required.
+func NewMapParameterWithRequired(name string, desc string, required bool, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name:     name,
+			Type:     "map",
+			Desc:     desc,
+			Required: &required,
+		},
+		ValueType: valueType,
+	}
+}
+
+// NewMapParameterWithAuth is a convenience function for initializing a MapParameter with auth services.
+func NewMapParameterWithAuth(name string, desc string, valueType string, authServices []ParamAuthService) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         "map",
+			Desc:         desc,
+			AuthServices: authServices,
+		},
+		ValueType: valueType,
+	}
+}
+
+// UnmarshalYAML handles parsing the MapParameter from YAML input.
+func (p *MapParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	var rawItem struct {
+		CommonParameter `yaml:",inline"`
+		Default         *map[string]any `yaml:"default"`
+		ValueType       string          `yaml:"valueType"`
+	}
+	if err := unmarshal(&rawItem); err != nil {
+		return err
+	}
+
+	// Only validate valueType if it's actually provided.
+	if rawItem.ValueType != "" {
+		if _, err := getPrototypeParameter(rawItem.ValueType); err != nil {
+			return err
+		}
+	}
+
+	p.CommonParameter = rawItem.CommonParameter
+	p.Default = rawItem.Default
+	p.ValueType = rawItem.ValueType
+	return nil
+}
+
+// getPrototypeParameter is a helper factory to create a temporary parameter
+// based on a type string for parsing and manifest generation.
+func getPrototypeParameter(typeName string) (Parameter, error) {
+	switch typeName {
+	case "string":
+		return NewStringParameter("", ""), nil
+	case "integer":
+		return NewIntParameter("", ""), nil
+	case "boolean":
+		return NewBooleanParameter("", ""), nil
+	case "float":
+		return NewFloatParameter("", ""), nil
+	default:
+		return nil, fmt.Errorf("unsupported valueType %q for map parameter", typeName)
+	}
+}
+
+// Parse validates and parses an incoming value for the map parameter.
+func (p *MapParameter) Parse(v any) (any, error) {
+	convertedData, err := util.ConvertNumbers(v)
+	if err != nil {
+		return nil, fmt.Errorf("error converting json.Number: %s", err)
+	}
+
+	convertedMap := convertedData.(map[string]any)
+
+	// If no valueType is specified, accept any values and return the map directly.
+	if p.ValueType == "" {
+		return convertedMap, nil
+	}
+
+	// Otherwise, get a prototype and parse each value in the map.
+	prototype, err := getPrototypeParameter(p.ValueType)
+	if err != nil {
+		return nil, err
+	}
+
+	rtn := make(map[string]any, len(convertedMap))
+	for key, val := range convertedMap {
+		parsedVal, err := prototype.Parse(val)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse value for key %q: %w", key, err)
+		}
+		rtn[key] = parsedVal
+	}
+	return rtn, nil
+}
+
+func (p *MapParameter) GetAuthServices() []ParamAuthService {
+	return p.AuthServices
+}
+
+func (p *MapParameter) GetDefault() any {
+	if p.Default == nil {
+		return nil
+	}
+	return *p.Default
+}
+
+func (p *MapParameter) GetValueType() string {
+	return p.ValueType
+}
+
+// Manifest returns the manifest for the MapParameter.
+func (p *MapParameter) Manifest() ParameterManifest {
+	authNames := make([]string, len(p.AuthServices))
+	for i, a := range p.AuthServices {
+		authNames[i] = a.Name
+	}
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
+
+	var additionalProperties any
+	if p.ValueType != "" {
+		prototype, err := getPrototypeParameter(p.ValueType)
+		if err != nil {
+			panic(err)
+		}
+		valueSchema := prototype.Manifest()
+		additionalProperties = &valueSchema
+	} else {
+		// If no valueType is given, allow any properties.
+		additionalProperties = true
+	}
+
+	return ParameterManifest{
+		Name:                 p.Name,
+		Type:                 "object",
+		Required:             r,
+		Description:          p.Desc,
+		AuthServices:         authNames,
+		AdditionalProperties: additionalProperties,
+	}
+}
+
+// McpManifest returns the MCP manifest for the MapParameter.
+func (p *MapParameter) McpManifest() ParameterMcpManifest {
+	var additionalProperties any
+	if p.ValueType != "" {
+		prototype, err := getPrototypeParameter(p.ValueType)
+		if err != nil {
+			panic(err)
+		}
+		valueSchema := prototype.McpManifest()
+		additionalProperties = &valueSchema
+	} else {
+		// If no valueType is given, allow any properties.
+		additionalProperties = true
+	}
+
+	return ParameterMcpManifest{
+		Type:                 "object",
+		Description:          p.Desc,
+		AdditionalProperties: additionalProperties,
 	}
 }
