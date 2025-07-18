@@ -199,48 +199,38 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 		resp, err := t.Client.Do(req)
 		if err != nil {
 			fmt.Printf("error making HTTP request during polling: %s, retrying in %v\n", err, delay)
-			time.Sleep(delay)
-			delay = time.Duration(float64(delay) * multiplier)
-			if delay > maxDelay {
-				delay = maxDelay
-			}
-			retries++
-			continue
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return nil, fmt.Errorf("error reading response body during polling: %w", err)
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("unexpected status code during polling: %d, response body: %s", resp.StatusCode, string(body))
-		}
-
-		var data map[string]any
-		if err := json.Unmarshal(body, &data); err != nil {
-			// If not a JSON object, we can't check the condition.
-			// We'll just keep polling.
 		} else {
-			if val, ok := data["done"]; ok {
-				if fmt.Sprintf("%v", val) == "true" {
-					if _, ok := data["error"]; ok {
-						return nil, fmt.Errorf("operation finished with error: %s", string(body))
-					}
+			body, err := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if err != nil {
+				return nil, fmt.Errorf("error reading response body during polling: %w", err)
+			}
 
-					if strings.Contains(t.Name, "alloydb") {
-						if msg, ok := t.generateAlloyDBConnectionMessage(data); ok {
-							return msg, nil
+			if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("unexpected status code during polling: %d, response body: %s", resp.StatusCode, string(body))
+			}
+
+			var data map[string]any
+			if err := json.Unmarshal(body, &data); err == nil {
+				if val, ok := data["done"]; ok {
+					if fmt.Sprintf("%v", val) == "true" {
+						if _, ok := data["error"]; ok {
+							return nil, fmt.Errorf("operation finished with error: %s", string(body))
 						}
-					}
 
-					return string(body), nil
+						if strings.Contains(t.Name, "alloydb") {
+							if msg, ok := t.generateAlloyDBConnectionMessage(data); ok {
+								return msg, nil
+							}
+						}
+
+						return string(body), nil
+					}
 				}
 			}
+			fmt.Printf("Operation not complete, retrying in %v\n", delay)
 		}
 
-		fmt.Printf("Operation not complete, retrying in %v\n", delay)
 		time.Sleep(delay)
 		delay = time.Duration(float64(delay) * multiplier)
 		if delay > maxDelay {
