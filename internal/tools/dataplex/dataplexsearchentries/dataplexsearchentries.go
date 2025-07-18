@@ -80,6 +80,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
+	query := tools.NewStringParameter("query", "Keyword search query for entries.")
+	parameters := tools.Parameters{query}
+
 	_, paramManifest, paramMcpManifest := tools.ProcessParameters(nil, cfg.Parameters)
 
 	mcpManifest := tools.McpManifest{
@@ -91,7 +94,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := &SearchTool{
 		Name:          cfg.Name,
 		Kind:          kind,
-		Parameters:    cfg.Parameters,
+		Parameters:    parameters,
 		AuthRequired:  cfg.AuthRequired,
 		CatalogClient: s.CatalogClient(),
 		ProjectID:     s.ProjectID(),
@@ -120,7 +123,7 @@ func (t *SearchTool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
 
@@ -130,7 +133,7 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) ([]an
 	}
 
 	it := t.CatalogClient.SearchEntries(ctx, req)
-	var results []any
+	var results []*dataplexpb.SearchEntriesResult
 	for {
 		entry, err := it.Next()
 		if err != nil {

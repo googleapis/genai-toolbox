@@ -68,10 +68,6 @@ tools:
       If there are multiple entries found, you should present the list of entries to the user and ask them to choose one.
       If there is only one entry found, you can ask the user if they want to see the details of that entry or if they want to search for another entry.
       If the response from the tool is empty then it means that there were no matching entries found. Notify the user about this and ask them to provide a more specific query.
-    parameters:
-      - name: query
-        type: string
-        description: "Keyword search query for entries"
 
 toolsets:
   dataplex-tools:
