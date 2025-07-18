@@ -1167,6 +1167,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
+	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -1236,6 +1237,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"dataplex-tools": tools.ToolsetConfig{
 					Name:      "dataplex-tools",
 					ToolNames: []string{"search_entries"},
+        },
+			},
+		},
+		{
+			name: "firestore prebuilt tools",
+			in:   firestoreconfig,
+			wantToolset: server.ToolsetConfigs{
+				"firestore-database-tools": tools.ToolsetConfig{
+					Name:      "firestore-database-tools",
+					ToolNames: []string{"firestore-get-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
 				},
 			},
 		},
