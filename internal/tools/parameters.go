@@ -1143,15 +1143,20 @@ func getPrototypeParameter(typeName string) (Parameter, error) {
 
 // Parse validates and parses an incoming value for the map parameter.
 func (p *MapParameter) Parse(v any) (any, error) {
-	convertedData, err := util.ConvertNumbers(v)
-	if err != nil {
-		return nil, fmt.Errorf("error converting json.Number: %s", err)
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil, &ParseTypeError{p.Name, p.Type, m}
 	}
-
-	convertedMap := convertedData.(map[string]any)
-
-	// If no valueType is specified, accept any values and return the map directly.
+	// for generic maps, convert json.Numbers to their corresponding types
 	if p.ValueType == "" {
+		convertedData, err := util.ConvertNumbers(m)
+		if err != nil {
+			panic(err)
+		}
+		convertedMap, ok := convertedData.(map[string]any)
+		if !ok {
+			panic("Error casting return value from util.ConvertNumbers() to map[string]any.")
+		}
 		return convertedMap, nil
 	}
 
@@ -1161,8 +1166,8 @@ func (p *MapParameter) Parse(v any) (any, error) {
 		return nil, err
 	}
 
-	rtn := make(map[string]any, len(convertedMap))
-	for key, val := range convertedMap {
+	rtn := make(map[string]any, len(m))
+	for key, val := range m {
 		parsedVal, err := prototype.Parse(val)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse value for key %q: %w", key, err)
