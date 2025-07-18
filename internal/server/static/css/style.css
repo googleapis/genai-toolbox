@@ -1,3 +1,11 @@
+.content {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto; 
+    display: flex; 
+    flex-direction: column; 
+}
+
 body {
     display: flex;
     height: 100vh;
@@ -170,12 +178,19 @@ body {
     gap: 20px;
     margin: 0 0 20px 0;
     align-items: start;
+    flex-shrink: 0;
 }
 
 .tool-info {
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+.tool-execution-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; 
 }
 
 .tool-params {
@@ -238,6 +253,28 @@ body {
 .auth-param-input {
     background-color: #e0e0e0;
     cursor: not-allowed;
+}
+
+.run-button-container {
+    display: flex;
+    justify-content: flex-end; 
+}
+
+.run-tool-btn {
+    background-color: #4285f4ff;
+    color: white;
+    border: none;
+    border-radius: 30px; 
+    padding: 10px 20px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 1em;
+    font-weight: bolder;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+        background-color: #357ae8; 
+    }
 }
 
 .tool-response {

@@ -15,7 +15,7 @@
 /**
  * Renders the main content area into the HTML.
  * @param {string} containerId The ID of the DOM element to inject the content into.
- * @param {string | null} idString The id of the item inside the main content area.
+ * @param {string} idString The id of the item inside the main content area.
  */
 function renderMainContent(containerId, idString) {
     const mainContentContainer = document.getElementById(containerId);

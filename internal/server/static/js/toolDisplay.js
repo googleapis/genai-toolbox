@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { handleRunTool, displayResults } from './runTool.js';
+
 /**
  * Helper function to create form inputs for parameters.
  */
@@ -78,6 +80,14 @@ function createParamInput(param, toolId) {
 export function renderToolInterface(tool, containerElement) {
     const TOOL_ID = tool.id;
     containerElement.innerHTML = '';
+    const toolId = tool.id;
+
+    let lastResults = null;
+
+    // function to update lastResults so we can toggle json
+    const updateLastResults = (newResults) => {
+        lastResults = newResults;
+    };
 
     const gridContainer = document.createElement('div');
     gridContainer.className = 'tool-details-grid';
@@ -106,24 +116,70 @@ export function renderToolInterface(tool, containerElement) {
         form.appendChild(createParamInput(param, TOOL_ID));
     });
     paramsContainer.appendChild(form);
+    gridContainer.appendChild(paramsContainer); 
 
-    gridContainer.appendChild(paramsContainer);
     containerElement.appendChild(gridContainer);
 
     const RESPONSE_AREA_ID = `tool-response-area-${TOOL_ID}`;
+    const runButtonContainer = document.createElement('div');
+    const runButton = document.createElement('button');
+    
+    runButton.className = 'run-tool-btn';
+    runButton.textContent = 'Run Tool';
+    runButtonContainer.className = 'run-button-container';
+    runButtonContainer.appendChild(runButton);
+    containerElement.appendChild(runButtonContainer); 
+
+    // response Area (bottom)
     const responseContainer = document.createElement('div');
+    const responseHeaderControls = document.createElement('div');
     const responseHeader = document.createElement('h5');
     const responseArea = document.createElement('textarea');
 
-    responseHeader.textContent = 'Response:';
     responseContainer.className = 'tool-response tool-box';
-    responseContainer.appendChild(responseHeader);
+    responseHeaderControls.className = 'response-header-controls';
+    responseHeader.textContent = 'Response:';
+    responseHeaderControls.appendChild(responseHeader);
+
+    // prettify box
+    const PRETTIFY_ID = `prettify-${toolId}`;
+    const prettifyDiv = document.createElement('div');
+    const prettifyLabel = document.createElement('label');
+    const prettifyCheckbox = document.createElement('input');
+
+    prettifyDiv.className = 'prettify-container';
+    prettifyLabel.setAttribute('for', PRETTIFY_ID);
+    prettifyLabel.textContent = 'Prettify JSON';
+    prettifyLabel.className = 'prettify-label';
+
+    prettifyCheckbox.type = 'checkbox';
+    prettifyCheckbox.id = PRETTIFY_ID;
+    prettifyCheckbox.checked = true;
+    prettifyCheckbox.className = 'prettify-checkbox';
+
+    prettifyDiv.appendChild(prettifyLabel);
+    prettifyDiv.appendChild(prettifyCheckbox);
+
+    responseHeaderControls.appendChild(prettifyDiv);
+    responseContainer.appendChild(responseHeaderControls);
 
     responseArea.id = RESPONSE_AREA_ID;
     responseArea.readOnly = true;
     responseArea.placeholder = 'Results will appear here...';
+    responseArea.className = 'tool-response-area';
     responseArea.rows = 10;
     responseContainer.appendChild(responseArea);
 
     containerElement.appendChild(responseContainer);
+
+    prettifyCheckbox.addEventListener('change', () => {
+        if (lastResults) {
+            displayResults(lastResults, responseArea, prettifyCheckbox.checked);
+        }
+    });
+
+    runButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        handleRunTool(toolId, form, responseArea, tool.parameters, prettifyCheckbox, updateLastResults);
+    });
 }
