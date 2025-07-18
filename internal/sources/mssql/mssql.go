@@ -54,9 +54,7 @@ type Config struct {
 	User     string `yaml:"user" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 	Database string `yaml:"database" validate:"required"`
-
-	// Encrypt allowed values can reference the README of the github.com/microsoft/go-mssqldb package
-	Encrypt string `yaml:"encrypt"`
+	Encrypt  string `yaml:"encrypt"`
 }
 
 func (r Config) SourceConfigKind() string {
