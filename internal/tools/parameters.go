@@ -1151,11 +1151,11 @@ func (p *MapParameter) Parse(v any) (any, error) {
 	if p.ValueType == "" {
 		convertedData, err := util.ConvertNumbers(m)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("failed to parse integer or float values in map: %s", err)
 		}
 		convertedMap, ok := convertedData.(map[string]any)
 		if !ok {
-			panic("Error casting return value from util.ConvertNumbers() to map[string]any.")
+			return nil, fmt.Errorf("internal error: ConvertNumbers should return a map, but got type %T", convertedData)
 		}
 		return convertedMap, nil
 	}
