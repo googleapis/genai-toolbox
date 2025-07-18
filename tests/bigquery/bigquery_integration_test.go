@@ -138,6 +138,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
+	chatWant := `(?s)## Schema Resolved.*## Retrieval Query.*## SQL Generated.*Answer:`
 	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
@@ -151,6 +152,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
+	runBigQueryChatInvokeTest(t, datasetName, tableName, chatWant)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-param-tool for bigquery kind
@@ -336,6 +338,19 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-get-table-info",
 		"source":      "my-instance",
 		"description": "Tool to show dataset metadata",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-chat-tool"] = map[string]any{
+		"kind":        "bigquery-chat",
+		"source":      "my-instance",
+		"description": "Tool to chat with BigQuery",
+	}
+	tools["my-auth-chat-tool"] = map[string]any{
+		"kind":        "bigquery-chat",
+		"source":      "my-instance",
+		"description": "Tool to chat with BigQuery",
 		"authRequired": []string{
 			"my-google-auth",
 		},
@@ -936,6 +951,97 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 
 			if !strings.Contains(got, tc.want) {
 				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryChatInvokeTest(t *testing.T, datasetName, tableName, chatWant string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	tableRefsJSON := fmt.Sprintf(`[{"projectId":"%s","datasetId":"%s","tableId":"%s"}]`, BigqueryProject, datasetName, tableName)
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-chat-tool successfully",
+			api:           "http://127.0.0.1:5000/api/tool/my-chat-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
+				tableRefsJSON,
+			))),
+			want:  chatWant,
+			isErr: false,
+		},
+		{
+			name:          "invoke my-auth-chat-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-chat-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
+				tableRefsJSON,
+			))),
+			want:  chatWant,
+			isErr: false,
+		},
+		{
+			name:          "invoke my-auth-chat-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-chat-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"user_query_with_context": "What are the names in the table?"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			wantPattern := regexp.MustCompile(tc.want)
+			if !wantPattern.MatchString(got) {
+				t.Fatalf("response did not match the expected pattern.\nFull response:\n%s", got)
 			}
 		})
 	}
