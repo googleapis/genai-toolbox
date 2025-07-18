@@ -170,7 +170,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, fmt.Errorf("error populating pipeline: %s", err)
 	}
 
-	var pipeline = bson.D{}
+	var pipeline = []bson.M{}
 	err = bson.UnmarshalExtJSON([]byte(pipelineString), false, &pipeline)
 	if err != nil {
 		return nil, err
@@ -179,8 +179,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if t.ReadOnly {
 		//fail if we do a merge or an out
 		for _, stage := range pipeline {
-			if stage.Key == "$merge" || stage.Key == "$out" {
-				return nil, fmt.Errorf("not a read-only pipeline: %s", stage)
+			for key, _ := range stage {
+				if key == "$merge" || key == "$out" {
+					return nil, fmt.Errorf("this is not a read-only pipeline: %+v", stage)
+				}
 			}
 		}
 	}
