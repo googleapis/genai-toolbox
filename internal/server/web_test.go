@@ -35,6 +35,14 @@ func TestWebEndpoint(t *testing.T) {
 			wantContentType: "text/html; charset=utf-8",
 			wantPageTitle:   "Toolbox UI",
 		},
+		{
+			name:            "web tools page GET",
+			method:          http.MethodGet,
+			path:            "/tools",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html; charset=utf-8",
+			wantPageTitle:   "Tools View",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
