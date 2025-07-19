@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongodbfind_test
+package mongodbaggregate_test
 
 import (
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	"strings"
 	"testing"
-
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 func TestParseFromYamlMongoQuery(t *testing.T) {
@@ -42,35 +41,30 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-aggregate
 					source: my-instance
 					description: some description
 					database: test_db
 					collection: test_coll
-					filterPayload: |
-					    { name: {{json .name}} }
-					filterParams:
+					readOnly: true
+					pipelinePayload: |
+					    [{ $match: { name: {{json .name}} }}]
+					pipelineParams:
                         - name: name 
                           type: string
                           description: small description
-					projectPayload: |
-					  { name: 1, age: 1 }
-					projectParams: []
-					sortPayload: |
-					  { timestamp: -1 }
-					sortParams: []
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mongodbfind.Config{
-					Name:          "example_tool",
-					Kind:          "mongodb-find",
-					Source:        "my-instance",
-					AuthRequired:  []string{},
-					Database:      "test_db",
-					Collection:    "test_coll",
-					Description:   "some description",
-					FilterPayload: "{ name: {{json .name}} }\n",
-					FilterParams: tools.Parameters{
+				"example_tool": mongodbaggregate.Config{
+					Name:            "example_tool",
+					Kind:            "mongodb-aggregate",
+					Source:          "my-instance",
+					AuthRequired:    []string{},
+					Database:        "test_db",
+					Collection:      "test_coll",
+					Description:     "some description",
+					PipelinePayload: "[{ $match: { name: {{json .name}} }}]\n",
+					PipelineParams: tools.Parameters{
 						&tools.StringParameter{
 							CommonParameter: tools.CommonParameter{
 								Name: "name",
@@ -79,10 +73,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					ProjectPayload: "{ name: 1, age: 1 }\n",
-					ProjectParams:  tools.Parameters{},
-					SortPayload:    "{ timestamp: -1 }\n",
-					SortParams:     tools.Parameters{},
+					ReadOnly: true,
 				},
 			},
 		},
@@ -120,14 +111,14 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-aggregate
 					source: my-instance
 					description: some description
 					collection: test_coll
-					filterPayload: |
-					  { name : {{json .name}} }
+					pipelinePayload: |
+					  [{ $match: { name : {{json .name}} }}]
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-find"`,
+			err: `unable to parse tool "example_tool" as kind "mongodb-aggregate"`,
 		},
 	}
 	for _, tc := range tcs {

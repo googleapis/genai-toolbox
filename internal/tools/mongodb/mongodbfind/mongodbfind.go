@@ -18,14 +18,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
+	"text/template"
+
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"slices"
-	"text/template"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -81,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*mongosrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongo-query`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
 	}
 
 	// Create a slice for all parameters
@@ -222,7 +223,7 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 		return nil, fmt.Errorf("error replacing projection payload: %s", err)
 	}
 
-	var projection interface{}
+	var projection any
 	err = bson.UnmarshalExtJSON(result.Bytes(), false, &projection)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
@@ -240,7 +241,7 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := common.GetFilter(t.FilterParams, t.FilterPayload, paramsMap)
+	filterString, err := common.ParsePayloadTemplate(t.FilterParams, t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
@@ -262,7 +263,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 	defer cur.Close(ctx)
 
-	var data = []interface{}{}
+	var data = []any{}
 	err = cur.All(context.TODO(), &data)
 	if err != nil {
 		return nil, err

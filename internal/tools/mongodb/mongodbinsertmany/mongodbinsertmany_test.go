@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongodbfind_test
+package mongodbinsertmany_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertmany"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -42,47 +41,23 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-insert-many
 					source: my-instance
 					description: some description
 					database: test_db
 					collection: test_coll
-					filterPayload: |
-					    { name: {{json .name}} }
-					filterParams:
-                        - name: name 
-                          type: string
-                          description: small description
-					projectPayload: |
-					  { name: 1, age: 1 }
-					projectParams: []
-					sortPayload: |
-					  { timestamp: -1 }
-					sortParams: []
+					canonical: true
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mongodbfind.Config{
-					Name:          "example_tool",
-					Kind:          "mongodb-find",
-					Source:        "my-instance",
-					AuthRequired:  []string{},
-					Database:      "test_db",
-					Collection:    "test_coll",
-					Description:   "some description",
-					FilterPayload: "{ name: {{json .name}} }\n",
-					FilterParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{
-								Name: "name",
-								Type: "string",
-								Desc: "small description",
-							},
-						},
-					},
-					ProjectPayload: "{ name: 1, age: 1 }\n",
-					ProjectParams:  tools.Parameters{},
-					SortPayload:    "{ timestamp: -1 }\n",
-					SortParams:     tools.Parameters{},
+				"example_tool": mongodbinsertmany.Config{
+					Name:         "example_tool",
+					Kind:         "mongodb-insert-many",
+					Source:       "my-instance",
+					AuthRequired: []string{},
+					Database:     "test_db",
+					Collection:   "test_coll",
+					Description:  "some description",
+					Canonical:    true,
 				},
 			},
 		},
@@ -120,14 +95,12 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-insert-many
 					source: my-instance
 					description: some description
 					collection: test_coll
-					filterPayload: |
-					  { name : {{json .name}} }
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-find"`,
+			err: `unable to parse tool "example_tool" as kind "mongodb-insert-many"`,
 		},
 	}
 	for _, tc := range tcs {

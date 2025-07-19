@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongodbfind_test
+package mongodbdeletemany_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -42,7 +42,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-delete-many
 					source: my-instance
 					description: some description
 					database: test_db
@@ -53,17 +53,11 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
                         - name: name 
                           type: string
                           description: small description
-					projectPayload: |
-					  { name: 1, age: 1 }
-					projectParams: []
-					sortPayload: |
-					  { timestamp: -1 }
-					sortParams: []
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mongodbfind.Config{
+				"example_tool": mongodbdeletemany.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-find",
+					Kind:          "mongodb-delete-many",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",
@@ -79,10 +73,6 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					ProjectPayload: "{ name: 1, age: 1 }\n",
-					ProjectParams:  tools.Parameters{},
-					SortPayload:    "{ timestamp: -1 }\n",
-					SortParams:     tools.Parameters{},
 				},
 			},
 		},
@@ -120,14 +110,14 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-delete-many
 					source: my-instance
 					description: some description
 					collection: test_coll
 					filterPayload: |
 					  { name : {{json .name}} }
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-find"`,
+			err: `unable to parse tool "example_tool" as kind "mongodb-delete-many"`,
 		},
 	}
 	for _, tc := range tcs {

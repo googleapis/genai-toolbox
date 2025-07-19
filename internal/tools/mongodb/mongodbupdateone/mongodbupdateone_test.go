@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongodbfind_test
+package mongodbupdateone_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
+	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -42,7 +42,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-update-one
 					source: my-instance
 					description: some description
 					database: test_db
@@ -53,22 +53,24 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
                         - name: name 
                           type: string
                           description: small description
-					projectPayload: |
-					  { name: 1, age: 1 }
-					projectParams: []
-					sortPayload: |
-					  { timestamp: -1 }
-					sortParams: []
+					updatePayload: |
+					    { $set : { item: {{json .item}} } }
+					updateParams:
+                        - name: item
+                          type: string
+                          description: small description
+					canonical: true
+					upsert: true
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mongodbfind.Config{
+				"example_tool": mongodbupdateone.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-find",
+					Kind:          "mongodb-update-one",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
-					Description:   "some description",
+					Canonical:     true,
 					FilterPayload: "{ name: {{json .name}} }\n",
 					FilterParams: tools.Parameters{
 						&tools.StringParameter{
@@ -79,10 +81,18 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					ProjectPayload: "{ name: 1, age: 1 }\n",
-					ProjectParams:  tools.Parameters{},
-					SortPayload:    "{ timestamp: -1 }\n",
-					SortParams:     tools.Parameters{},
+					UpdatePayload: "{ $set : { item: {{json .item}} } }\n",
+					UpdateParams: tools.Parameters{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{
+								Name: "item",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					Upsert:      true,
+					Description: "some description",
 				},
 			},
 		},
@@ -120,14 +130,13 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					kind: mongodb-update-one
 					source: my-instance
 					description: some description
 					collection: test_coll
 					filterPayload: |
-					  { name : {{json .name}} }
-			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-find"`,
+					  { name : {{json .name}} }`,
+			err: `unable to parse tool "example_tool" as kind "mongodb-update-one"`,
 		},
 	}
 	for _, tc := range tcs {
