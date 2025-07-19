@@ -115,6 +115,9 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	update1Want := "[1]"
 	updateManyWant := "[2,0,2]"
 	RunToolUpdateInvokeTest(t, update1Want, updateManyWant)
+	aggegate1Want := "[2]"
+	aggegateManyWant := "[500,501]"
+	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
 
 }
 
@@ -336,6 +339,78 @@ func RunToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 		})
 	}
 }
+func RunToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateManyWant string) {
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-aggregate-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-aggregate-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "name": "Jane" }`)),
+			want:          aggregate1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-aggregate-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-aggregate-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
+			want:          aggregateManyWant,
+			isErr:         false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
 
 func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) func(*testing.T) {
 	collectionName := "test_collection"
@@ -352,6 +427,8 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 		{"_id": 9, "id": 300, "name": "ToBeUpdatedToBob", "email": "bob@gmail.com"},
 		{"_id": 10, "id": 400, "name": "ToBeUpdatedToAlice", "email": "alice@gmail.com"},
 		{"_id": 11, "id": 400, "name": "ToBeUpdatedToAlice", "email": "alice@gmail.com"},
+		{"_id": 12, "id": 500, "name": "ToBeAggregated", "email": "agatha@gmail.com"},
+		{"_id": 13, "id": 501, "name": "ToBeAggregated", "email": "agatha@gmail.com"},
 	}
 	for _, doc := range documents {
 		_, err := database.Collection(collectionName).InsertOne(ctx, doc)
@@ -584,6 +661,23 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"updatePayload": `{ "$set" : { "name": {{json .name}} } }`,
 				"updateParams": []map[string]any{
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+				"database": MongoDbDatabase,
+			},
+			"my-aggregate-tool": map[string]any{
+				"kind":            "mongodb-aggregate",
+				"source":          "my-instance",
+				"description":     "Tool to test an aggregation.",
+				"authRequired":    []string{},
+				"collection":      "test_collection",
+				"canonical":       true,
+				"pipelinePayload": `[{ "$match" : { "name": {{json .name}} } }, { "$project" : { "id" : 1 }}]`,
+				"pipelineParams": []map[string]any{
 					{
 						"name":        "name",
 						"type":        "string",
