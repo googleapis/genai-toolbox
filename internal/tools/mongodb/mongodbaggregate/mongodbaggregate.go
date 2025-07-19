@@ -202,6 +202,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, err
 	}
 
+	if len(data) == 0 {
+		return []any{}, nil
+	}
+
 	var final []any
 	for _, item := range data {
 		tmp, _ := bson.MarshalExtJSON(item, false, false)

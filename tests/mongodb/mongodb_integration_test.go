@@ -378,7 +378,7 @@ func RunToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 			api:           "http://127.0.0.1:5000/api/tool/my-read-write-aggregate-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
-			want:          "",
+			want:          "[]",
 			isErr:         false,
 		},
 	}
