@@ -365,6 +365,14 @@ func RunToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 			want:          aggregateManyWant,
 			isErr:         false,
 		},
+		{
+			name:          "invoke my-read-only-aggregate-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-read-only-aggregate-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
+			want:          "",
+			isErr:         true,
+		},
 	}
 
 	for _, tc := range invokeTcs {
@@ -663,6 +671,24 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"collection":      "test_collection",
 				"canonical":       true,
 				"pipelinePayload": `[{ "$match" : { "name": {{json .name}} } }, { "$project" : { "id" : 1, "_id" : 0 }}]`,
+				"pipelineParams": []map[string]any{
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+				},
+				"database": MongoDbDatabase,
+			},
+			"my-read-only-aggregate-tool": map[string]any{
+				"kind":            "mongodb-aggregate",
+				"source":          "my-instance",
+				"description":     "Tool to test an aggregation.",
+				"authRequired":    []string{},
+				"collection":      "test_collection",
+				"canonical":       true,
+				"readOnly":        true,
+				"pipelinePayload": `[{ "$match" : { "name": {{json .name}} } }, { "$out" : "target_collection" }]`,
 				"pipelineParams": []map[string]any{
 					{
 						"name":        "name",
