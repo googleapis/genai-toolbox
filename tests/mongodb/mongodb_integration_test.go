@@ -115,8 +115,8 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	update1Want := "[1]"
 	updateManyWant := "[2,0,2]"
 	RunToolUpdateInvokeTest(t, update1Want, updateManyWant)
-	aggegate1Want := "[2]"
-	aggegateManyWant := "[500,501]"
+	aggregate1Want := "[2]"
+	aggregateManyWant := "[500,501]"
 	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
 
 }
