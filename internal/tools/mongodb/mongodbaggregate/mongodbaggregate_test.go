@@ -116,7 +116,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 					description: some description
 					collection: test_coll
 					pipelinePayload: |
-					  [{ $match:{ name : {{json .name}} }}]
+					  [{ $match: { name : {{json .name}} }}]
 			`,
 			err: `unable to parse tool "example_tool" as kind "mongodb-aggregate"`,
 		},

@@ -115,8 +115,8 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	update1Want := "[1]"
 	updateManyWant := "[2,0,2]"
 	RunToolUpdateInvokeTest(t, update1Want, updateManyWant)
-	aggregate1Want := "[2]"
-	aggregateManyWant := "[500,501]"
+	aggregate1Want := `[{"id":2}]`
+	aggregateManyWant := `[{"id":500},{"id":501}]`
 	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
 
 }
@@ -600,14 +600,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired": []string{},
 				"collection":   "test_collection",
 				"canonical":    true,
-				"payloadParams": []map[string]any{
-					{
-						"name":        "data",
-						"type":        "string",
-						"description": "the content in json",
-					},
-				},
-				"database": MongoDbDatabase,
+				"database":     MongoDbDatabase,
 			},
 			"my-insert-many-tool": map[string]any{
 				"kind":         "mongodb-insert-many",
@@ -616,14 +609,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired": []string{},
 				"collection":   "test_collection",
 				"canonical":    true,
-				"payloadParams": []map[string]any{
-					{
-						"name":        "data",
-						"type":        "string",
-						"description": "the content in json",
-					},
-				},
-				"database": MongoDbDatabase,
+				"database":     MongoDbDatabase,
 			},
 			"my-update-one-tool": map[string]any{
 				"kind":          "mongodb-update-one",
@@ -676,7 +662,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired":    []string{},
 				"collection":      "test_collection",
 				"canonical":       true,
-				"pipelinePayload": `[{ "$match" : { "name": {{json .name}} } }, { "$project" : { "id" : 1 }}]`,
+				"pipelinePayload": `[{ "$match" : { "name": {{json .name}} } }, { "$project" : { "id" : 1, "_id" : 0 }}]`,
 				"pipelineParams": []map[string]any{
 					{
 						"name":        "name",

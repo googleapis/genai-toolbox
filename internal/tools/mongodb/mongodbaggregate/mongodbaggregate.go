@@ -55,6 +55,7 @@ type Config struct {
 	Collection      string           `yaml:"collection" validate:"required"`
 	PipelinePayload string           `yaml:"pipelinePayload" validate:"required"`
 	PipelineParams  tools.Parameters `yaml:"pipelineParams" validate:"required"`
+	Canonical       bool             `yaml:"canonical"`
 	ReadOnly        bool             `yaml:"readOnly"`
 }
 
@@ -135,6 +136,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Collection:      cfg.Collection,
 		PipelinePayload: cfg.PipelinePayload,
 		PipelineParams:  cfg.PipelineParams,
+		Canonical:       cfg.Canonical,
 		ReadOnly:        cfg.ReadOnly,
 		AllParams:       allParameters,
 		database:        s.Client.Database(cfg.Database),
@@ -154,6 +156,7 @@ type Tool struct {
 	Collection      string           `yaml:"collection"`
 	PipelinePayload string           `yaml:"pipelinePayload"`
 	PipelineParams  tools.Parameters `yaml:"pipelineParams"`
+	Canonical       bool             `yaml:"canonical"`
 	ReadOnly        bool             `yaml:"readOnly"`
 	AllParams       tools.Parameters `yaml:"allParams"`
 
@@ -171,7 +174,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	}
 
 	var pipeline = []bson.M{}
-	err = bson.UnmarshalExtJSON([]byte(pipelineString), false, &pipeline)
+	err = bson.UnmarshalExtJSON([]byte(pipelineString), t.Canonical, &pipeline)
 	if err != nil {
 		return nil, err
 	}
