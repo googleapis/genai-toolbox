@@ -15,6 +15,14 @@ reputation for reliability, feature robustness, and performance.
 
 [pg-docs]: https://www.postgresql.org/
 
+## Available Tools
+
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+  Execute SQL queries as prepared statements in PostgreSQL.
+
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+  Run parameterized SQL statements in PostgreSQL.
+
 ## Requirements
 
 ### Database User

@@ -22,6 +22,17 @@ cluster][alloydb-free-trial].
 [alloydb-docs]: https://cloud.google.com/alloydb/docs
 [alloydb-free-trial]: https://cloud.google.com/alloydb/docs/create-free-trial-cluster
 
+## Available Tools
+
+- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
+  Use natural language queries on AlloyDB, powered by AlloyDB AI.
+
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+  Execute SQL queries as prepared statements in AlloyDB Postgres.
+
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+  Run parameterized SQL statements in AlloyDB Postgres.
+
 ## Requirements
 
 ### IAM Permissions

@@ -21,6 +21,11 @@ Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
 [dgraph-docs]: https://dgraph.io/docs
 [dgraph-login]: https://cloud.dgraph.io/login
 
+## Available Tools
+
+- [`dgraph-dql`](../tools/dgraph/dgraph-dql.md)  
+  Run DQL (Dgraph Query Language) queries.
+
 ## Requirements
 
 ### Database User
