@@ -54,6 +54,32 @@ func TestParseFromYamlMssql(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with encrypt field",
+			in: `
+			sources:
+				my-mssql-instance:
+					kind: mssql
+					host: 0.0.0.0
+					port: my-port
+					database: my_db
+					user: my_user
+					password: my_pass
+					encrypt: strict
+			`,
+			want: server.SourceConfigs{
+				"my-mssql-instance": mssql.Config{
+					Name:     "my-mssql-instance",
+					Kind:     mssql.SourceKind,
+					Host:     "0.0.0.0",
+					Port:     "my-port",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+					Encrypt:  "strict",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
