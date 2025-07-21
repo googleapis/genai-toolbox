@@ -28,4 +28,4 @@ sources:
 | **field** | **type** | **required** | **description**                                                               |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "dataplex".                                                           |
-| project   |  string  |     true     | Id of the GCP project (e.g. "my-project-id").                                 |
+| project   |  string  |     true     | Id of the GCP quota and billing project (e.g. "my-project-id").               |
