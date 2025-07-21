@@ -34,13 +34,13 @@ type ServerConfig struct {
 	// Port is the port the server will listen on.
 	Port int
 	// SourceConfigs defines what sources of data are available for tools.
-	SourceConfigs SourceConfigs
+	SourceConfigs SourceConfigs `yaml:"sources"`
 	// AuthServiceConfigs defines what sources of authentication are available for tools.
-	AuthServiceConfigs AuthServiceConfigs
+	AuthServiceConfigs AuthServiceConfigs `yaml:"authServices"`
 	// ToolConfigs defines what tools are available.
-	ToolConfigs ToolConfigs
+	ToolConfigs ToolConfigs `yaml:"tools"`
 	// ToolsetConfigs defines what tools are available.
-	ToolsetConfigs ToolsetConfigs
+	ToolsetConfigs ToolsetConfigs `yaml:"toolsets"`
 	// LoggingFormat defines whether structured loggings are used.
 	LoggingFormat logFormat
 	// LogLevel defines the levels to log.
