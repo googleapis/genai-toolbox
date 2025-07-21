@@ -28,27 +28,15 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-	"github.com/joho/godotenv"
 )
 
 var (
 	Neo4jSourceKind = "neo4j"
-	Neo4jDatabase   string
-	Neo4jUri        string
-	Neo4jUser       string
-	Neo4jPass       string
+	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
+	Neo4jUri        = os.Getenv("NEO4J_URI")
+	Neo4jUser       = os.Getenv("NEO4J_USER")
+	Neo4jPass       = os.Getenv("NEO4J_PASS")
 )
-
-func init() {
-	// Load environment variables from .env file if it exists,
-	// this simplifies local testing without needing to set environment variables manually
-	_ = godotenv.Load()
-
-	Neo4jDatabase = os.Getenv("NEO4J_DATABASE")
-	Neo4jUri = os.Getenv("NEO4J_URI")
-	Neo4jUser = os.Getenv("NEO4J_USER")
-	Neo4jPass = os.Getenv("NEO4J_PASS")
-}
 
 func getNeo4jVars(t *testing.T) map[string]any {
 	switch "" {
@@ -126,8 +114,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var resp *http.Response
-			resp, err = http.Get(tc.api)
+			resp, err := http.Get(tc.api)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
@@ -168,8 +155,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var resp *http.Response
-			resp, err = http.Post(tc.api, "application/json", tc.requestBody)
+			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}

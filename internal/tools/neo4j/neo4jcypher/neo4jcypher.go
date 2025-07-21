@@ -77,8 +77,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// verify the source is compatible
-	var s compatibleSource
-	s, ok = rawS.(compatibleSource)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
