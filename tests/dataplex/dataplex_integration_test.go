@@ -15,7 +15,10 @@
 package dataplex
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"net/http"
 	"os"
 	"regexp"
 	"testing"
@@ -65,7 +68,8 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
+	runDataplexSearchEntriesToolGetTest(t)
+	runDataplexSearchEntriesToolInvokeTest(t)
 }
 
 func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
@@ -84,4 +88,90 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 	}
 
 	return toolsFile
+}
+
+func runDataplexSearchEntriesToolGetTest(t *testing.T) {
+	resp, err := http.Get("http://127.0.0.1:5000/api/tool/my-search-entries-tool/")
+	if err != nil {
+		t.Fatalf("error making GET request: %s", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected status code 200, got %d", resp.StatusCode)
+	}
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error decoding response body: %s", err)
+	}
+	got, ok := body["tools"]
+	if !ok {
+		t.Fatalf("unable to find 'tools' key in response body")
+	}
+
+	toolsMap, ok := got.(map[string]interface{})
+	if !ok {
+		t.Fatalf("tools is not a map")
+	}
+	tool, ok := toolsMap["my-search-entries-tool"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("tool not found in manifest")
+	}
+	params, ok := tool["parameters"].([]interface{})
+	if !ok {
+		t.Fatalf("parameters not found")
+	}
+	paramNames := []string{}
+	for _, param := range params {
+		paramMap, ok := param.(map[string]interface{})
+		if ok {
+			paramNames = append(paramNames, paramMap["name"].(string))
+		}
+	}
+	expected := []string{"name", "pageSize", "pageToken", "orderBy", "query"}
+	for _, want := range expected {
+		found := false
+		for _, got := range paramNames {
+			if got == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected parameter %q not found in tool parameters", want)
+		}
+	}
+}
+
+func runDataplexSearchEntriesToolInvokeTest(t *testing.T) {
+	body := []byte(`{"query":"displayname=users parent:test_dataset"}`)
+	resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-search-entries-tool/invoke", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatalf("error making POST request: %s", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("response status code is not 200")
+	}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("error parsing response body")
+	}
+	resultStr, ok := result["result"].(string)
+	if !ok {
+		t.Fatalf("expected 'result' to be a string, got %T", result["result"])
+	}
+	var entries []interface{}
+	if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+		t.Fatalf("error unmarshalling result string: %v", err)
+	}
+	if len(entries) == 0 {
+		t.Fatalf("expected at least one entry in the result, got 0, entries: %v", entries)
+	}
+	entry, ok := entries[0].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected first entry to be a map, got %T", entries[0])
+	}
+	if _, ok := entry["dataplex_entry"]; !ok {
+		t.Fatalf("expected entry to have 'dataplex_entry' field, got %v", entry)
+	}
 }
