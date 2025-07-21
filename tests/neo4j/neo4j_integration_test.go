@@ -86,8 +86,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
-	defer waitCancel()
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
