@@ -14,8 +14,3 @@ node_modules
 
 # coverage
 .coverage
-
-.env
-toolbox-env/
-.gemini/
-toolbox
