@@ -1161,6 +1161,7 @@ func TestSingleEdit(t *testing.T) {
 }
 
 func TestPrebuiltTools(t *testing.T) {
+	alloydb_control_plane_config, _ := prebuiltconfigs.Get("alloydb-control-plane")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
@@ -1179,6 +1180,16 @@ func TestPrebuiltTools(t *testing.T) {
 		in          []byte
 		wantToolset server.ToolsetConfigs
 	}{
+		{
+			name: "alloydb control plane prebuilt tools",
+			in:   alloydb_control_plane_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb-postgres-control-plane-tools": tools.ToolsetConfig{
+					Name:      "alloydb-postgres-control-plane-tools",
+					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance"},
+				},
+			},
+		},
 		{
 			name: "alloydb prebuilt tools",
 			in:   alloydb_config,
