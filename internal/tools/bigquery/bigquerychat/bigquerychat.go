@@ -215,13 +215,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	// Call the streaming API
 	response, err := getStream(chatURL, payload, headers, t.MaxQueryResultRows)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response from chat API: %w", err)
 	}
 
 	return response, nil
 }
+
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }
@@ -238,25 +238,15 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func getProperty(data map[string]any, fieldName string, defaultValue string) string {
-	if val, ok := data[fieldName]; ok {
-		if val == nil {
-			return defaultValue
-		}
-		return fmt.Sprintf("%v", val)
-	}
-	return defaultValue
-}
-
-func getStream(url string, payload ChatPayload, headers map[string]string, maxRows int) (string, error) {
+func getStream(url string, payload ChatPayload, headers map[string]string, maxRows int) ([]map[string]any, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal payload: %w", err)
+		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -265,17 +255,17 @@ func getStream(url string, payload ChatPayload, headers map[string]string, maxRo
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("API returned non-200 status: %d %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("API returned non-200 status: %d %s", resp.StatusCode, string(body))
 	}
 
 	var acc strings.Builder
-	var messages []string
+	var messages []map[string]any
 	scanner := bufio.NewScanner(resp.Body)
 
 	for scanner.Scan() {
@@ -301,66 +291,58 @@ func getStream(url string, payload ChatPayload, headers map[string]string, maxRo
 		}
 
 		// Successfully parsed a JSON object, now handle it
+		var newMessage map[string]any
 		if sysMsg, ok := dataJSON["systemMessage"].(map[string]any); ok {
 			if text, ok := sysMsg["text"].(map[string]any); ok {
-				messages = appendMessage(messages, handleTextResponse(text))
+				newMessage = handleTextResponse(text)
 			} else if schema, ok := sysMsg["schema"].(map[string]any); ok {
-				messages = appendMessage(messages, handleSchemaResponse(schema))
+				newMessage = handleSchemaResponse(schema)
 			} else if data, ok := sysMsg["data"].(map[string]any); ok {
-				messages = appendMessage(messages, handleDataResponse(data, maxRows))
+				newMessage = handleDataResponse(data, maxRows)
 			}
 		} else if errData, ok := dataJSON["error"].(map[string]any); ok {
-			messages = appendMessage(messages, handleError(errData))
+			newMessage = handleError(errData)
 		}
 
+		messages = appendMessage(messages, newMessage)
 		acc.Reset()
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("error reading stream: %w", err)
+		return nil, fmt.Errorf("error reading stream: %w", err)
 	}
 
-	return strings.Join(messages, "\n\n"), nil
-}
-
-func formatSectionTitle(text string) string {
-	return fmt.Sprintf("## %s", text)
+	return messages, nil
 }
 
 func formatBqTableRef(tableRef map[string]any) string {
-	return fmt.Sprintf("%s.%s.%s",
-		getProperty(tableRef, "projectId", ""),
-		getProperty(tableRef, "datasetId", ""),
-		getProperty(tableRef, "tableId", ""),
-	)
+	projectID, _ := tableRef["projectId"].(string)
+	datasetID, _ := tableRef["datasetId"].(string)
+	tableID, _ := tableRef["tableId"].(string)
+	return fmt.Sprintf("%s.%s.%s", projectID, datasetID, tableID)
 }
 
-func formatSchemaAsMarkdown(data map[string]any) string {
+func formatSchemaAsDict(data map[string]any) map[string]any {
+	headers := []string{"Column", "Type", "Description", "Mode"}
 	fieldsVal, ok := data["fields"].([]any)
-	if !ok || len(fieldsVal) == 0 {
-		return "No schema fields found."
+	if !ok {
+		return map[string]any{"headers": headers, "rows": []any{}}
 	}
 
-	headers := []string{"Column", "Type", "Description", "Mode"}
-	var table strings.Builder
-	table.WriteString(fmt.Sprintf("| %s |\n", strings.Join(headers, " | ")))
-	table.WriteString(fmt.Sprintf("|%s|\n", strings.Repeat("---|", len(headers))))
-
+	var rows [][]any
 	for _, fieldVal := range fieldsVal {
 		if field, ok := fieldVal.(map[string]any); ok {
-			row := []string{
-				getProperty(field, "name", ""),
-				getProperty(field, "type", ""),
-				getProperty(field, "description", "-"),
-				getProperty(field, "mode", ""),
-			}
-			table.WriteString(fmt.Sprintf("| %s |\n", strings.Join(row, " | ")))
+			name, _ := field["name"].(string)
+			typ, _ := field["type"].(string)
+			desc, _ := field["description"].(string)
+			mode, _ := field["mode"].(string)
+			rows = append(rows, []any{name, typ, desc, mode})
 		}
 	}
-	return table.String()
+	return map[string]any{"headers": headers, "rows": rows}
 }
 
-func formatDatasourceAsMarkdown(datasource map[string]any) string {
+func formatDatasourceAsDict(datasource map[string]any) map[string]any {
 	var sourceName string
 	if ref, ok := datasource["bigqueryTableReference"].(map[string]any); ok {
 		sourceName = formatBqTableRef(ref)
@@ -368,72 +350,74 @@ func formatDatasourceAsMarkdown(datasource map[string]any) string {
 
 	var schema map[string]any
 	if s, ok := datasource["schema"].(map[string]any); ok {
-		schema = s
+		schema = formatSchemaAsDict(s)
 	}
 
-	schemaMarkdown := formatSchemaAsMarkdown(schema)
-	return fmt.Sprintf("**Source:** `%s`\n%s", sourceName, schemaMarkdown)
+	return map[string]any{"source_name": sourceName, "schema": schema}
 }
 
-func handleTextResponse(resp map[string]any) string {
+func handleTextResponse(resp map[string]any) map[string]any {
+	var parts []string
 	if partsVal, ok := resp["parts"].([]any); ok {
-		var parts []string
 		for _, p := range partsVal {
 			if partStr, ok := p.(string); ok {
 				parts = append(parts, partStr)
 			}
 		}
-		return "Answer: " + strings.Join(parts, "")
 	}
-	return "Answer: Not provided."
+	return map[string]any{"Answer": strings.Join(parts, "")}
 }
 
-func handleSchemaResponse(resp map[string]any) string {
+func handleSchemaResponse(resp map[string]any) map[string]any {
 	if query, ok := resp["query"].(map[string]any); ok {
-		return getProperty(query, "question", "")
+		if question, ok := query["question"].(string); ok {
+			return map[string]any{"Question": question}
+		}
 	}
 	if result, ok := resp["result"].(map[string]any); ok {
-		title := formatSectionTitle("Schema Resolved")
-		var formattedSources []string
+		var formattedSources []map[string]any
 		if datasources, ok := result["datasources"].([]any); ok {
 			for _, dsVal := range datasources {
 				if ds, ok := dsVal.(map[string]any); ok {
-					formattedSources = append(formattedSources, formatDatasourceAsMarkdown(ds))
+					formattedSources = append(formattedSources, formatDatasourceAsDict(ds))
 				}
 			}
 		}
-		return fmt.Sprintf("%s\nData sources:\n%s", title, strings.Join(formattedSources, "\n\n"))
+		return map[string]any{"Schema Resolved": formattedSources}
 	}
-	return ""
+	return nil
 }
 
-func handleDataResponse(resp map[string]any, maxRows int) string {
+func handleDataResponse(resp map[string]any, maxRows int) map[string]any {
 	if query, ok := resp["query"].(map[string]any); ok {
-		title := formatSectionTitle("Retrieval Query")
-		return fmt.Sprintf("%s\n**Query Name:** %s\n**Question:** %s", title, getProperty(query, "name", "N/A"), getProperty(query, "question", "N/A"))
+		queryName, _ := query["name"].(string)
+		question, _ := query["question"].(string)
+		return map[string]any{
+			"Retrieval Query": map[string]any{
+				"Query Name": queryName,
+				"Question":   question,
+			},
+		}
 	}
 	if sql, ok := resp["generatedSql"].(string); ok {
-		title := formatSectionTitle("SQL Generated")
-		return fmt.Sprintf("%s\n```sql\n%s\n```", title, sql)
+		return map[string]any{"SQL Generated": sql}
 	}
 	if result, ok := resp["result"].(map[string]any); ok {
-		title := formatSectionTitle("Data Retrieved")
 		schema, _ := result["schema"].(map[string]any)
 		dataRows, _ := result["data"].([]any)
 		fieldsVal, _ := schema["fields"].([]any)
 
-		var fields []string
+		var headers []string
 		for _, f := range fieldsVal {
 			if fieldMap, ok := f.(map[string]any); ok {
-				fields = append(fields, getProperty(fieldMap, "name", ""))
+				if name, ok := fieldMap["name"].(string); ok {
+					headers = append(headers, name)
+				}
 			}
 		}
 
 		totalRows := len(dataRows)
-		headerLine := fmt.Sprintf("| %s |", strings.Join(fields, " | "))
-		separatorLine := fmt.Sprintf("|%s|", strings.Repeat("---|", len(fields)))
-		tableLines := []string{headerLine, separatorLine}
-
+		var compactRows [][]any
 		numRowsToDisplay := totalRows
 		if numRowsToDisplay > maxRows {
 			numRowsToDisplay = maxRows
@@ -441,40 +425,49 @@ func handleDataResponse(resp map[string]any, maxRows int) string {
 
 		for _, rowVal := range dataRows[:numRowsToDisplay] {
 			if rowDict, ok := rowVal.(map[string]any); ok {
-				var rowValues []string
-				for _, field := range fields {
-					rowValues = append(rowValues, fmt.Sprintf("%v", rowDict[field]))
+				var rowValues []any
+				for _, header := range headers {
+					rowValues = append(rowValues, rowDict[header])
 				}
-				tableLines = append(tableLines, fmt.Sprintf("| %s |", strings.Join(rowValues, " | ")))
+				compactRows = append(compactRows, rowValues)
 			}
 		}
-		tableMarkdown := strings.Join(tableLines, "\n")
 
+		summary := fmt.Sprintf("Showing all %d rows.", totalRows)
 		if totalRows > maxRows {
-			tableMarkdown += fmt.Sprintf("\n\n... *and %d more rows*.", totalRows-maxRows)
+			summary = fmt.Sprintf("Showing the first %d of %d total rows.", numRowsToDisplay, totalRows)
 		}
-		return fmt.Sprintf("%s\n%s", title, tableMarkdown)
+
+		return map[string]any{
+			"Data Retrieved": map[string]any{
+				"headers": headers,
+				"rows":    compactRows,
+				"summary": summary,
+			},
+		}
 	}
-	return ""
+	return nil
 }
 
-func handleError(resp map[string]any) string {
-	title := formatSectionTitle("Error")
-	code := getProperty(resp, "code", "N/A")
-	message := getProperty(resp, "message", "No message provided.")
-	return fmt.Sprintf("%s\n**Code:** %s\n**Message:** %s", title, code, message)
+func handleError(resp map[string]any) map[string]any {
+	code, _ := resp["code"].(float64) // JSON numbers are float64 by default
+	message, _ := resp["message"].(string)
+	return map[string]any{
+		"Error": map[string]any{
+			"Code":    int(code), // Convert to int for cleaner output
+			"Message": message,
+		},
+	}
 }
 
-// Go version of _append_message, returns a new slice
-func appendMessage(messages []string, newMessage string) []string {
-	if newMessage == "" {
+func appendMessage(messages []map[string]any, newMessage map[string]any) []map[string]any {
+	if newMessage == nil {
 		return messages
 	}
-	if len(messages) > 0 && strings.HasPrefix(messages[len(messages)-1], "## Data Retrieved") {
-		// Replace the last element
-		messages[len(messages)-1] = newMessage
-		return messages
+	if len(messages) > 0 {
+		if _, ok := messages[len(messages)-1]["Data Retrieved"]; ok {
+			messages = messages[:len(messages)-1] // Replace last element
+		}
 	}
-	// Append
 	return append(messages, newMessage)
 }

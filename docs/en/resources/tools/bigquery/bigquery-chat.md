@@ -21,8 +21,9 @@ and Python code, and formulate an answer. This function returns a detailed, sequ
 log of this entire process, which includes any generated SQL or Python code, the data 
 retrieved, and the final text answer.
 
-For a service overview and tutorials on setup and authentication, refer to the official 
-[Google Cloud documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
+**Note**: This tool requires additional setup in your project. Please refer to the 
+official [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview)
+for instructions.
 
 It's compatible with the following sources:
 
