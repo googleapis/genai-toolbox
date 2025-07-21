@@ -53,12 +53,11 @@ var _ compatibleSource = &dataplexds.Source{}
 var compatibleSources = [...]string{dataplexds.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -80,15 +79,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	query := tools.NewStringParameter("query", "Keyword search query for entries.")
-	parameters := tools.Parameters{query}
-
-	_, paramManifest, paramMcpManifest := tools.ProcessParameters(nil, cfg.Parameters)
+	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
+	name := tools.NewStringParameterWithDefault("name", fmt.Sprintf("projects/%s/locations/global", s.ProjectID()), "The project to which the request should be attributed in the following form: projects/{project}/locations/global")
+	pageSize := tools.NewIntParameterWithDefault("pageSize", 100, "Number of results in the search page.")
+	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
+	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
+	parameters := tools.Parameters{query, name, pageSize, pageToken, orderBy}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: parameters.McpManifest(),
 	}
 
 	t := &SearchTool{
@@ -100,7 +101,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		ProjectID:     s.ProjectID(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   paramManifest,
+			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
@@ -126,13 +127,23 @@ func (t *SearchTool) Authorized(verifiedAuthServices []string) bool {
 func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
+	name, _ := paramsMap["name"].(string)
+	pageSize, _ := paramsMap["pageSize"].(int32)
+	pageToken, _ := paramsMap["pageToken"].(string)
+	orderBy, _ := paramsMap["orderBy"].(string)
 
 	req := &dataplexpb.SearchEntriesRequest{
-		Query: query,
-		Name:  fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
+		Query:     query,
+		Name:      name,
+		PageSize:  pageSize,
+		PageToken: pageToken,
+		OrderBy:   orderBy,
 	}
 
 	it := t.CatalogClient.SearchEntries(ctx, req)
+	if it == nil {
+		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
+	}
 	var results []*dataplexpb.SearchEntriesResult
 	for {
 		entry, err := it.Next()
