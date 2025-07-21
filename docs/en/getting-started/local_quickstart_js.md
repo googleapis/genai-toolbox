@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/) and [GenkitJS](https://genkit.dev/docs/get-started/).
+  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
 ---
 
 ## Before you begin
@@ -489,6 +489,7 @@ import { createMemory, staticBlock, tool } from "llamaindex";
 import { ToolboxClient } from "@toolbox-sdk/core";
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
+process.env.GOOGLE_API_KEY = 'your-api-key'; // Replace it with your API key
 
 const prompt = `
 
@@ -512,22 +513,19 @@ async function main() {
   // Connect to MCP Toolbox
   const client = new ToolboxClient(TOOLBOX_URL);
   const toolboxTools = await client.loadToolset("my-toolset");
-  const wrappedTools = toolboxTools.map((mcpTool) => {
+  const tools = toolboxTools.map((toolboxTool) => {
     return tool({
-      name: mcpTool.getName(),
-      description: mcpTool.getDescription(),
-      parameters: mcpTool.getParamSchema(),
-      execute: mcpTool,
+      name: toolboxTool.getName(),
+      description: toolboxTool.getDescription(),
+      parameters: toolboxTool.getParamSchema(),
+      execute: toolboxTool,
     });
   });
 
   // Initialize LLM
   const llm = gemini({
     model: GEMINI_MODEL.GEMINI_2_0_FLASH,
-    vertex: {
-      project: "my-project-id", // Replace with yours
-      location: "us-central1",
-    },
+    apiKey: process.env.GOOGLE_API_KEY,
   });
 
   const memory = createMemory({
@@ -540,7 +538,7 @@ async function main() {
 
   // Create the Agent
   const myAgent = agent({
-    tools: wrappedTools,
+    tools: tools,
     llm,
     memory,
     systemPrompt: prompt,
@@ -563,7 +561,7 @@ async function main() {
   console.log("Agent run finished.");
 }
 
-void main();
+main();
 
 {{< /tab >}}
 
