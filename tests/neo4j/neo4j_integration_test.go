@@ -28,15 +28,27 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/joho/godotenv"
 )
 
 var (
 	Neo4jSourceKind = "neo4j"
-	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
-	Neo4jUri        = os.Getenv("NEO4J_URI")
-	Neo4jUser       = os.Getenv("NEO4J_USER")
-	Neo4jPass       = os.Getenv("NEO4J_PASS")
+	Neo4jDatabase   string
+	Neo4jUri        string
+	Neo4jUser       string
+	Neo4jPass       string
 )
+
+func init() {
+	// Load environment variables from .env file if it exists,
+	// this simplifies local testing without needing to set environment variables manually
+	_ = godotenv.Load()
+
+	Neo4jDatabase = os.Getenv("NEO4J_DATABASE")
+	Neo4jUri = os.Getenv("NEO4J_URI")
+	Neo4jUser = os.Getenv("NEO4J_USER")
+	Neo4jPass = os.Getenv("NEO4J_PASS")
+}
 
 func getNeo4jVars(t *testing.T) map[string]any {
 	switch "" {
@@ -86,8 +98,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
+	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer waitCancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
@@ -101,7 +113,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		want map[string]any
 	}{
 		{
-			name: "get my-simple-tool",
+			name: "get my-simple-cypher-tool",
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/",
 			want: map[string]any{
 				"my-simple-cypher-tool": map[string]any{
@@ -114,7 +126,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
+			var resp *http.Response
+			resp, err = http.Get(tc.api)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
@@ -155,7 +168,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
+			var resp *http.Response
+			resp, err = http.Post(tc.api, "application/json", tc.requestBody)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
