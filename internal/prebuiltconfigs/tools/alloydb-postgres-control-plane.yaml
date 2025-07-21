@@ -5,6 +5,7 @@ sources:
     headers:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
+
 tools:
   alloydb-create-cluster:
     kind: http
@@ -124,6 +125,7 @@ tools:
         type: string
         description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
         default: ""
+
 toolsets:
   alloydb-postgres-control-plane-tools:
     - alloydb-create-cluster

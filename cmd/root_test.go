@@ -1161,7 +1161,7 @@ func TestSingleEdit(t *testing.T) {
 }
 
 func TestPrebuiltTools(t *testing.T) {
-	alloydb_control_plane_config, _ := prebuiltconfigs.Get("alloydb-control-plane")
+	alloydb_control_plane_config, _ := prebuiltconfigs.Get("alloydb-postgres-control-plane")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
