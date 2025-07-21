@@ -106,7 +106,7 @@ docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 To install Toolbox using Homebrew on macOS or Linux:
 
 ```sh
-brew install genai-toolbox
+brew install mcp-toolbox
 ```
 {{% /tab %}}
 {{% tab header="Compile from source" lang="en" %}}
