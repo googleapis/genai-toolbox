@@ -117,6 +117,38 @@ in the list using the items field:
 Items in array should not have a `default` or `required` value. If provided, it will be ignored.
 {{< /notice >}}
 
+### Map Parameters
+
+The map type is a collection of key-value pairs. It can be configured in two ways:
+
+- Generic Map: By default, it accepts values of any primitive type (string, number, boolean), allowing for mixed data.
+- Typed Map: By setting the valueType field, you can enforce that all values
+  within the map must be of the same specified type.
+
+#### Generic Map (Mixed Value Types)
+
+This is the default behavior when valueType is omitted. It's useful for passing a flexible group of settings.
+
+```yaml
+    parameters:
+          - name: execution_context
+            type: map
+            description: A flexible set of key-value pairs for the execution environment.
+```
+
+#### Typed Map
+
+Specify valueType to ensure all values in the map are of the same type. An error
+will be thrown in case of value type mismatch.
+
+```yaml
+ parameters:
+      - name: user_scores
+        type: map
+        description: A map of user IDs to their scores. All scores must be integers.
+        valueType: integer # This enforces the value type for all entries.
+```
+
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user

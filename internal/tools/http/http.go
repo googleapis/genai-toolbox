@@ -275,7 +275,11 @@ func getURL(baseURL, path string, pathParams, queryParams tools.Parameters, defa
 	// Set dynamic query parameters
 	query := parsedURL.Query()
 	for _, p := range queryParams {
-		query.Add(p.GetName(), fmt.Sprintf("%v", paramsMap[p.GetName()]))
+		v := paramsMap[p.GetName()]
+		if v == nil {
+			v = ""
+		}
+		query.Add(p.GetName(), fmt.Sprintf("%v", v))
 	}
 	parsedURL.RawQuery = query.Encode()
 	return parsedURL.String(), nil
@@ -299,7 +303,7 @@ func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string,
 	return allHeaders, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 
 	// Calculate request body
@@ -345,15 +349,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	var data any
 	if err = json.Unmarshal(body, &data); err != nil {
 		// if unable to unmarshal data, return result as string.
-		return []any{string(body)}, nil
+		return string(body), nil
 	}
-	// if data is a list, return as is.
-	dataList, ok := data.([]any)
-	if ok {
-		return dataList, nil
-	}
-	// if data is not a list (e.g. single map), return data in list.
-	return []any{data}, nil
+	return data, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

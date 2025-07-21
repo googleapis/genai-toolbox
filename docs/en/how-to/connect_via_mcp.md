@@ -69,7 +69,7 @@ Toolbox enables dynamic reloading by default. To disable, use the `--disable-rel
 
 Toolbox supports the HTTP transport protocol with and without SSE.
 
-{{< tabpane text=true >}} {{% tab header="HTTP with SSE" lang="en" %}}
+{{< tabpane text=true >}} {{% tab header="HTTP with SSE (deprecated)" lang="en" %}}
 Add the following configuration to your MCP client configuration:
 
 ```bash
@@ -130,7 +130,7 @@ testing and debugging Toolbox server.
 1. Click the `Connect` button. It might take awhile to spin up Toolbox. Voila!
    You should be able to inspect your toolbox tools!
 {{% /tab %}}
-{{% tab header="HTTP with SSE" lang="en" %}}
+{{% tab header="HTTP with SSE (deprecated)" lang="en" %}}
 1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
 
 1. In a separate terminal, run Inspector directly through `npx`:

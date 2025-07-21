@@ -1,0 +1,42 @@
+sources:
+  firestore-source:
+    kind: firestore
+    project: ${FIRESTORE_PROJECT}
+    database: ${FIRESTORE_DATABASE}  # Optional, defaults to "(default)" if not specified
+
+tools:
+  firestore-get-documents:
+    kind: firestore-get-documents
+    source: firestore-source
+    description: Gets multiple documents from Firestore by their paths
+  firestore-list-collections:
+    kind: firestore-list-collections
+    source: firestore-source
+    description: List Firestore collections for a given parent path
+  firestore-delete-documents:
+    kind: firestore-delete-documents
+    source: firestore-source
+    description: Delete multiple documents from Firestore
+  firestore-query-collection:
+    kind: firestore-query-collection
+    source: firestore-source
+    description: | 
+      Retrieves one or more Firestore documents from a collection in a database in the current project by a collection with a full document path. 
+      Use this if you know the exact path of a collection and the filtering clause you would like for the document.
+  firestore-get-rules:
+    kind: firestore-get-rules
+    source: firestore-source
+    description: Retrieves the active Firestore security rules for the current project
+  firestore-validate-rules:
+    kind: firestore-validate-rules
+    source: firestore-source
+    description: Checks the provided Firestore Rules source for syntax and validation errors. Provide the source code to validate.
+
+toolsets:
+  firestore-database-tools:
+    - firestore-get-documents
+    - firestore-list-collections
+    - firestore-delete-documents
+    - firestore-query-collection
+    - firestore-get-rules
+    - firestore-validate-rules
