@@ -115,7 +115,7 @@ type Tool struct {
 	Kind         string           `yaml:"kind"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
-	IsReadonly   bool             `yaml:"isReadonly"`
+	ReadOnly   bool             `yaml:"readOnly"`
 	Database     string
 	Driver       neo4j.DriverWithContext
 	classifier   *classifier.QueryClassifier
