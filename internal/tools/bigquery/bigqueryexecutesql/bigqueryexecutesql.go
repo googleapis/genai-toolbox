@@ -200,8 +200,6 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 // dryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-
-// dryRunQuery performs a dry run of the SQL query to validate it and get metadata.
 func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
 	jobToInsert := &bigqueryrestapi.Job{
