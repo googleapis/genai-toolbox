@@ -1,9 +1,9 @@
 ---
 title: "Quickstart (MCP)"
 type: docs
-weight: 3
+weight: 5
 description: >
-  How to get started running Toolbox locally with MCP Inspector. 
+  How to get started running Toolbox locally with MCP Inspector.
 ---
 
 ## Overview
