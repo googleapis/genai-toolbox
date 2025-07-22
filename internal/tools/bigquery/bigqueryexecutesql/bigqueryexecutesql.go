@@ -125,7 +125,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
-	location := defaultIfEmpty(t.Client.Location, "US")
+	location := t.Client.Location
+	if location == "" {
+		location = "US"
+	}
 
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), location, sql)
 	if err != nil {
@@ -225,12 +228,4 @@ func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
 	}
 	return insertResponse, nil
-}
-
-// Helper function to handle default location
-func defaultIfEmpty(value string, defaultValue string) string {
-	if value == "" {
-		return defaultValue
-	}
-	return value
 }
