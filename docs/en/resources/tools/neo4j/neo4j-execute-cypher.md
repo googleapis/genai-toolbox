@@ -19,6 +19,10 @@ For security, the tool can be configured to be read-only. If the `isReadonly` fl
 
 The Cypher query uses standard [Neo4j Cypher](https://neo4j.com/docs/cypher-manual/current/queries/) syntax and supports all Cypher features, including pattern matching, filtering, and aggregation.
 
+`neo4j-execute-cypher` takes one input parameter `cypher` and run the cypher query against the `source`.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
 
 ## Example
 
