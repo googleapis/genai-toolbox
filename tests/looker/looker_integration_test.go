@@ -29,7 +29,7 @@ import (
 
 var (
 	LookerSourceKind   = "looker"
-	LookerToolKind     = "looker_get_models"
+	LookerToolKind     = "looker-get-models"
 	LookerBaseUrl      = os.Getenv("LOOKER_BASE_URL")
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
