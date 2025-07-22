@@ -57,7 +57,7 @@ type Config struct {
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
-	IsReadonly   bool     `yaml:"isReadonly,omitempty"`
+	ReadOnly   bool     `yaml:"readOnly"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
