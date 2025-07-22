@@ -127,7 +127,12 @@ func initBigQueryConnection(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
-	client.Location = location
+
+	if location == "" {
+		client.Location = "US"
+	} else {
+		client.Location = location
+	}
 
 	// Initialize the low-level BigQuery REST service using the same credentials
 	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
