@@ -129,10 +129,9 @@ func initBigQueryConnection(
 	}
 
 	if location == "" {
-		client.Location = "US"
-	} else {
-		client.Location = location
+		location = "US"
 	}
+	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
 	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
