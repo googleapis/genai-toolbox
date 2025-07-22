@@ -63,7 +63,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"

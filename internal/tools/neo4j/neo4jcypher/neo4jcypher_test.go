@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4j_test
+package neo4jcypher
 
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -54,7 +53,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 						  description: country parameter description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": neo4j.Config{
+				"example_tool": Config{
 					Name:         "example_tool",
 					Kind:         "neo4j-cypher",
 					Source:       "my-neo4j-instance",
@@ -74,7 +73,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
