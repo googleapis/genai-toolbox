@@ -57,7 +57,7 @@ type Config struct {
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
-	ReadOnly   bool     `yaml:"readOnly"`
+	ReadOnly     bool     `yaml:"readOnly"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -97,7 +97,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		IsReadonly:   cfg.IsReadonly,
+		ReadOnly:     cfg.ReadOnly,
 		Driver:       s.Neo4jDriver(),
 		Database:     s.Neo4jDatabase(),
 		classifier:   classifier.NewQueryClassifier(),
@@ -115,7 +115,7 @@ type Tool struct {
 	Kind         string           `yaml:"kind"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
-	ReadOnly   bool             `yaml:"readOnly"`
+	ReadOnly     bool             `yaml:"readOnly"`
 	Database     string
 	Driver       neo4j.DriverWithContext
 	classifier   *classifier.QueryClassifier
@@ -140,7 +140,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, cf.Error
 	}
 
-	if cf.Type == classifier.WriteQuery && t.IsReadonly {
+	if cf.Type == classifier.WriteQuery && t.ReadOnly {
 		return nil, fmt.Errorf("this tool is read-only and cannot execute write queries")
 	}
 

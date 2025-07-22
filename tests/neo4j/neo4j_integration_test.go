@@ -88,7 +88,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"kind":        "neo4j-execute-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "A readonly cypher execution tool.",
-				"isReadonly":  true,
+				"readOnly":    true,
 			},
 		},
 	}

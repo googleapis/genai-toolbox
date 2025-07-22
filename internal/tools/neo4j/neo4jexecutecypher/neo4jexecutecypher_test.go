@@ -55,6 +55,30 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "readonly example",
+			in: `
+			tools:
+				example_tool:
+					kind: neo4j-execute-cypher
+					source: my-neo4j-instance
+					description: some tool description
+					readOnly: true
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"example_tool": Config{
+					Name:         "example_tool",
+					Kind:         "neo4j-execute-cypher",
+					Source:       "my-neo4j-instance",
+					ReadOnly:     true,
+					Description:  "some tool description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

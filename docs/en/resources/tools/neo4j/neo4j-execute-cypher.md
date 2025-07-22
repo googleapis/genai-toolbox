@@ -31,7 +31,7 @@ tools:
   query_neo4j:
     kind: neo4j-execute-cypher
     source: my-neo4j-prod-db
-    isReadonly: true
+    readOnly: true
     description: |
       Use this tool to execute a Cypher query against the production database.
       Only read-only queries are allowed.
@@ -49,5 +49,5 @@ tools:
 | kind        |                   string                   |     true     | Must be "neo4j-cypher".                                                                         |
 | source      |                   string                   |     true     | Name of the source the Cypher query should execute on.                                          |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
-| isReadonly  |                   boolean                  |     false    | If set to `true`, the tool will reject any write operations in the Cypher query. Default is `false`. |
+| readOnly    |                   boolean                  |     false    | If set to `true`, the tool will reject any write operations in the Cypher query. Default is `false`. |
 
