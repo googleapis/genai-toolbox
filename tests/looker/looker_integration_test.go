@@ -29,7 +29,6 @@ import (
 
 var (
 	LookerSourceKind   = "looker"
-	LookerToolKind     = "looker-get-models"
 	LookerBaseUrl      = os.Getenv("LOOKER_BASE_URL")
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
@@ -76,8 +75,28 @@ func TestLooker(t *testing.T) {
 			"my-instance": sourceConfig,
 		},
 		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        LookerToolKind,
+			"get_models": map[string]any{
+				"kind":        "looker-get-models",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_explores": map[string]any{
+				"kind":        "looker-get-explores",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_dimensions": map[string]any{
+				"kind":        "looker-get-dimensions",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_measures": map[string]any{
+				"kind":        "looker-get-measures",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"query": map[string]any{
+				"kind":        "looker-query",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -98,8 +117,181 @@ func TestLooker(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
+	tests.RunToolGetTestByName(t, "get_models",
+		map[string]any{
+			"get_models": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_explores",
+		map[string]any{
+			"get_explores": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explores.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_dimensions",
+		map[string]any{
+			"get_dimensions": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore containing the dimensions.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_measures",
+		map[string]any{
+			"get_measures": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore containing the measures.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "query",
+		map[string]any{
+			"query": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore to be queried.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The fields to be retrieved.",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be returned in the query",
+							"name":        "field",
+							"required":    true,
+							"type":        "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"AdditionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The filters for the query",
+						"name":                 "filters",
+						"required":             false,
+						"type":                 "object",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a pivot in the query",
+							"name":        "pivot_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a sort in the query",
+							"name":        "sort_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The row limit.",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query timezone.",
+						"name":        "tz",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 
 	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
-	tests.RunToolInvokeSimpleTest(t, wantResult)
+	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
+
+	wantResult = "{\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
+	tests.RunToolInvokeParametersTest(t, "get_explores", []byte(`{"model": "system__activity"}`), wantResult)
+
+	wantResult = "{\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
+	tests.RunToolInvokeParametersTest(t, "get_dimensions", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
+
+	wantResult = "{\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
+	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
+
+	wantResult = "{\"look.count\":"
+	tests.RunToolInvokeParametersTest(t, "query", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
 }
