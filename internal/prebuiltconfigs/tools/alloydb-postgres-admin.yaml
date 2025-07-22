@@ -117,7 +117,7 @@ tools:
         default: ""
 
 toolsets:
-  alloydb-postgres-control-plane-tools:
+  alloydb-postgres-admin-tools:
     - alloydb-create-cluster
     - alloydb-operations-get
     - alloydb-create-instance
