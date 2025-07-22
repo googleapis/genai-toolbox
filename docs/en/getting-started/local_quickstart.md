@@ -162,7 +162,7 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Download the latest version of Toolbox as a binary:
 
-    {{< notice tip >}}
+    {{< notice important >}}
   Select the
   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
   corresponding to your OS and CPU architecture.
