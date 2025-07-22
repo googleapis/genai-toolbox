@@ -15,35 +15,33 @@ This tool is intended for developer assistant workflows with human-in-the-loop a
 ## Example
 
 ```yaml
-  my-http-source:
+sources:
+  alloydb-api-source:
     kind: http
+    baseUrl: https://alloydb.googleapis.com
+    headers:
+      Authorization: Bearer ${API_KEY}
+      Content-Type: application/json
 
 tools:
-  wait-for-alloydb-op:
+  alloydb-operations-get:
     kind: alloydb-wait-for-operation
-    source: my-google-source
-    description: >
-      Waits for an AlloyDB operation to complete.
+    source: alloydb-api-source
+    description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+    delay: 1s
+    maxDelay: 4m
+    multiplier: 2
+    maxRetries: 10
 ```
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                                                                                                               |
-| ----------- | :------: | :----------: | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be `alloydb-wait-for-operation`.                                                                                                         |
-| source      |  string  |     true     | The name of the HTTP source to use for polling. See the `http` source documentation for more details. The source must be of kind `http` and should be configured with Google authentication. |
-| description |  string  |    false     | A description of the tool.                                                                                                                    |
-| delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                                               |
-| maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                                               |
-| multiplier  |  float   |    false     | The multiplier for the polling delay. The delay is multiplied by this value after each request. Defaults to 2.0.                                |
-| maxRetries  |   int    |    false     | The maximum number of polling attempts before giving up. Defaults to 10.                                                                      |
-
-### Input Parameters
-
-The tool takes the following parameters as input:
-
-| **field**      | **type** | **required** | **description**                               |
-| -------------- | :------: | :----------: | --------------------------------------------- |
-| project        |  string  |     true     | The Google Cloud project ID.                  |
-| location       |  string  |     true     | The location of the AlloyDB cluster.          |
-| operation_id   |  string  |     true     | The ID of the operation to wait for.          |
+| **field**   | **type** | **required** | **description**                                                                                                  |
+| ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
+| kind        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
+| source      |  string  |     true     | Name of the source the HTTP request should be sent to.                                                           |
+| description |  string  |    false     | A description of the tool.                                                                                       |
+| delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |
+| maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                  |
+| multiplier  |  float   |    false     | The multiplier for the polling delay. The delay is multiplied by this value after each request. Defaults to 2.0. |
+| maxRetries  |   int    |    false     | The maximum number of polling attempts before giving up. Defaults to 10.                                         |
