@@ -81,8 +81,9 @@ the parameter.
 |-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
 | name        |  string         |     true     | Name of the parameter.                                                      |
 | type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, the parameter is not required. |
 | description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
+| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.    |
+| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                   |
 
 ### Array Parameters
 
@@ -107,12 +108,13 @@ in the list using the items field:
 |-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
 | name        |      string      |     true     | Name of the parameter.                                                      |
 | type        |      string      |     true     | Must be "array"                                                             |
-| default     |  parameter type  |     false    | Default value of the parameter. If provided, the parameter is not required. |
 | description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
+| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.     |
+| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                    |
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
 
 {{< notice note >}}
-Items in array should not have a default value. If provided, it will be ignored.
+Items in array should not have a `default` or `required` value. If provided, it will be ignored.
 {{< /notice >}}
 
 ### Map Parameters
