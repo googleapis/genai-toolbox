@@ -121,7 +121,7 @@ Items in array should not have a `default` or `required` value. If provided, it 
 
 The map type is a collection of key-value pairs. It can be configured in two ways:
 
-- Generic Map: By default, it accepts values of any primitive type (string, number, boolean), allowing for mixed data.
+- Generic Map: By default, it accepts values of any primitive type (string, integer, float, boolean), allowing for mixed data.
 - Typed Map: By setting the valueType field, you can enforce that all values
   within the map must be of the same specified type.
 
