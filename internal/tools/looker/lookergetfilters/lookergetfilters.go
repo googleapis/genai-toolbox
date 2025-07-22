@@ -27,7 +27,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker_get_filters"
+const kind string = "looker-get-filters"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

@@ -18,7 +18,7 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_get_looks` takes four parameters, the `title`, `desc`, `limit`
+`looker-get-looks` takes four parameters, the `title`, `desc`, `limit`
 and `offset`.
 
 Title and description use SQL style wildcards and are case insensitive.
@@ -31,7 +31,7 @@ default to 100 and 0.
 ```yaml
 tools:
     get_looks:
-        kind: looker_get_looks
+        kind: looker-get-looks
         source: looker-source
         description: |
           get_looks Tool
@@ -55,6 +55,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_get_looks"                                                                       |
+| kind        |                   string                   |     true     | Must be "looker-get-looks"                                                                       |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

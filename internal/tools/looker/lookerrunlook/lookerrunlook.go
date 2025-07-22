@@ -28,7 +28,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker_run_look"
+const kind string = "looker-run-look"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

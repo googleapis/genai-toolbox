@@ -9,7 +9,7 @@ sources:
 
 tools:
     get_models:
-        kind: looker_get_models
+        kind: looker-get-models
         source: looker-source
         description: |
           The get_models tool retrieves the list of LookML models in the Looker system.
@@ -17,7 +17,7 @@ tools:
           It takes no parameters.
 
     get_explores:
-        kind: looker_get_explores
+        kind: looker-get-explores
         source: looker-source
         description: |
           The get_explores tool retrieves the list of explores defined in a LookML model
@@ -26,7 +26,7 @@ tools:
           It takes one parameter, the model_name looked up from get_models.
 
     get_dimensions:
-        kind: looker_get_dimensions
+        kind: looker-get-dimensions
         source: looker-source
         description: |
           The get_dimensions tool retrieves the list of dimensions defined in
@@ -36,7 +36,7 @@ tools:
           explore_name looked up from get_explores.
 
     get_measures:
-        kind: looker_get_measures
+        kind: looker-get-measures
         source: looker-source
         description: |
           The get_measures tool retrieves the list of measures defined in
@@ -46,7 +46,7 @@ tools:
           explore_name looked up from get_explores.
 
     get_filters:
-        kind: looker_get_filters
+        kind: looker-get-filters
         source: looker-source
         description: |
           The get_filters tool retrieves the list of filters defined in
@@ -56,7 +56,7 @@ tools:
           explore_name looked up from get_explores.
 
     get_parameters:
-        kind: looker_get_parameters
+        kind: looker-get-parameters
         source: looker-source
         description: |
           The get_parameters tool retrieves the list of parameters defined in
@@ -66,7 +66,7 @@ tools:
           explore_name looked up from get_explores.
 
     query:
-        kind: looker_query
+        kind: looker-query
         source: looker-source
         description: |
           Query Tool
@@ -103,7 +103,7 @@ tools:
           The result of the query tool is JSON
 
     query_sql:
-        kind: looker_query_sql
+        kind: looker-query-sql
         source: looker-source
         description: |
           Query SQL Tool
@@ -115,7 +115,7 @@ tools:
           The result of the query sql tool is SQL text.
 
     get_looks:
-        kind: looker_get_looks
+        kind: looker-get-looks
         source: looker-source
         description: |
           get_looks Tool
@@ -135,7 +135,7 @@ tools:
           The result of the get_looks tool is a list of json objects.
 
     run_look:
-        kind: looker_run_look
+        kind: looker-run-look
         source: looker-source
         description: |
           run_look Tool

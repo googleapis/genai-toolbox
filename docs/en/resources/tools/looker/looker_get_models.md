@@ -16,14 +16,14 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_get_models` accepts no parameters.
+`looker-get-models` accepts no parameters.
 
 ## Example
 
 ```yaml
 tools:
     get_models:
-        kind: looker_get_models
+        kind: looker-get-models
         source: looker-source
         description: |
           The get_models tool retrieves the list of LookML models in the Looker system.
@@ -35,6 +35,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_get_models".                                                                     |
+| kind        |                   string                   |     true     | Must be "looker-get-models".                                                                     |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

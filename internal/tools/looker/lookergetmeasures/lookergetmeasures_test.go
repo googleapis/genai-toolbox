@@ -40,14 +40,14 @@ func TestParseFromYamlLookerGetMeasures(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker_get_measures
+					kind: looker-get-measures
 					source: my-instance
 					description: some description
 				`,
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker_get_measures",
+					Kind:         "looker-get-measures",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerGetMeasures(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker_get_measures
+					kind: looker-get-measures
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker_get_measures\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker_get_measures\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as kind \"looker-get-measures\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-get-measures\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

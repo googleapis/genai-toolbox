@@ -27,7 +27,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker_get_models"
+const kind string = "looker-get-models"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

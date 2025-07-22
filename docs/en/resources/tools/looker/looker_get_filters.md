@@ -18,14 +18,14 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_get_filters` accepts two parameters, the `model` and the `explore`.
+`looker-get-filters` accepts two parameters, the `model` and the `explore`.
 
 ## Example
 
 ```yaml
 tools:
     get_dimensions:
-        kind: looker_get_filters
+        kind: looker-get-filters
         source: looker-source
         description: |
           The get_filters tool retrieves the list of filters defined in
@@ -39,6 +39,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_get_filters".                                                                    |
+| kind        |                   string                   |     true     | Must be "looker-get-filters".                                                                    |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

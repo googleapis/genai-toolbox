@@ -18,7 +18,7 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_query_sql` takes eight parameters:
+`looker-query-sql` takes eight parameters:
     1. the `model`
     2. the `explore`
     3. the `fields` list
@@ -33,7 +33,7 @@ It's compatible with the following sources:
 ```yaml
 tools:
     query_sql:
-        kind: looker_query_sql
+        kind: looker-query-sql
         source: looker-source
         description: |
           Query SQL Tool
@@ -74,6 +74,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_query_sql"                                                                       |
+| kind        |                   string                   |     true     | Must be "looker-query-sql"                                                                       |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

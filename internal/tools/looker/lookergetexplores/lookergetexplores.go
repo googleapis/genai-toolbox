@@ -27,7 +27,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker_get_explores"
+const kind string = "looker-get-explores"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

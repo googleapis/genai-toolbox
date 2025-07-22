@@ -17,14 +17,14 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_run_look` takes one parameter, the `look_id`.
+`looker-run-look` takes one parameter, the `look_id`.
 
 ## Example
 
 ```yaml
 tools:
     run_look:
-        kind: looker_run_look
+        kind: looker-run-look
         source: looker-source
         description: |
           run_look Tool
@@ -38,6 +38,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_run_look"                                                                        |
+| kind        |                   string                   |     true     | Must be "looker-run-look"                                                                        |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

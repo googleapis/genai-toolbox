@@ -18,7 +18,7 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_get_explores` accepts one parameter, the
+`looker-get-explores` accepts one parameter, the
 `model` id.
 
 ## Example
@@ -26,7 +26,7 @@ It's compatible with the following sources:
 ```yaml
 tools:
     get_explores:
-        kind: looker_get_explores
+        kind: looker-get-explores
         source: looker-source
         description: |
           The get_explores tool retrieves the list of explores defined in a LookML model
@@ -39,6 +39,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_get_explores".                                                                   |
+| kind        |                   string                   |     true     | Must be "looker-get-explores".                                                                   |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

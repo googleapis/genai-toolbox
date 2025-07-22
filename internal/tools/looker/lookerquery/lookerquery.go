@@ -30,7 +30,7 @@ import (
 	"github.com/thlib/go-timezone-local/tzlocal"
 )
 
-const kind string = "looker_query"
+const kind string = "looker-query"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

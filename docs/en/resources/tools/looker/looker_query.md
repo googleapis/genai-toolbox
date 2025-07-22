@@ -18,22 +18,22 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_query` takes eight parameters:
-    1. the `model`
-    2. the `explore`
-    3. the `fields` list
-    4. an optional set of `filters`
-    5. an optional set of `pivots`
-    6. an optional set of `sorts`
-    7. an optional `limit`
-    8. an optional `tz`
+`looker-query` takes eight parameters:
+1. the `model`
+2. the `explore`
+3. the `fields` list
+4. an optional set of `filters`
+5. an optional set of `pivots`
+6. an optional set of `sorts`
+7. an optional `limit`
+8. an optional `tz`
 
 ## Example
 
 ```yaml
 tools:
     query:
-        kind: looker_query
+        kind: looker-query
         source: looker-source
         description: |
           Query Tool
@@ -74,6 +74,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_query"                                                                           |
+| kind        |                   string                   |     true     | Must be "looker-query"                                                                           |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

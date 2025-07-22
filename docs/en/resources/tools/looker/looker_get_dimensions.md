@@ -18,14 +18,14 @@ It's compatible with the following sources:
 
 - [looker](../sources/looker.md)
 
-`looker_get_dimensions` accepts two parameters, the `model` and the `explore`.
+`looker-get-dimensions` accepts two parameters, the `model` and the `explore`.
 
 ## Example
 
 ```yaml
 tools:
     get_dimensions:
-        kind: looker_get_dimensions
+        kind: looker-get-dimensions
         source: looker-source
         description: |
           The get_dimensions tool retrieves the list of dimensions defined in
@@ -39,6 +39,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker_get_dimensions".                                                                 |
+| kind        |                   string                   |     true     | Must be "looker-get-dimensions".                                                                 |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

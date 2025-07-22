@@ -40,14 +40,14 @@ func TestParseFromYamlLookerQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker_query
+					kind: looker-query
 					source: my-instance
 					description: some description
 				`,
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker_query",
+					Kind:         "looker-query",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker_query
+					kind: looker-query
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker_query\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker_query\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as kind \"looker-query\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-query\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {
