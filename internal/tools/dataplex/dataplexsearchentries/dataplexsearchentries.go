@@ -84,7 +84,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	pageSize := tools.NewIntParameterWithDefault("pageSize", 100, "Number of results in the search page.")
 	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
 	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	parameters := tools.Parameters{query, name, pageSize, pageToken, orderBy}
+	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
+	parameters := tools.Parameters{query, name, pageSize, pageToken, orderBy, semanticSearch}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -131,13 +132,15 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	pageSize, _ := paramsMap["pageSize"].(int32)
 	pageToken, _ := paramsMap["pageToken"].(string)
 	orderBy, _ := paramsMap["orderBy"].(string)
+	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
 
 	req := &dataplexpb.SearchEntriesRequest{
-		Query:     query,
-		Name:      name,
-		PageSize:  pageSize,
-		PageToken: pageToken,
-		OrderBy:   orderBy,
+		Query:          query,
+		Name:           name,
+		PageSize:       pageSize,
+		PageToken:      pageToken,
+		OrderBy:        orderBy,
+		SemanticSearch: semanticSearch,
 	}
 
 	it := t.CatalogClient.SearchEntries(ctx, req)

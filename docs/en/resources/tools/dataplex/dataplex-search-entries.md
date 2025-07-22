@@ -20,6 +20,7 @@ filtered and returned to the user and a required `name` parameter which is const
   - `pageSize` - Number of results in the search page.
   - `pageToken` - Page token received from a previous locations.searchEntries call.
   - `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc
+  - `semanticSearch` - Specifies whether the search should understand the meaning and intent behind the query, rather than just matching keywords.
 
 ## Requirements
 
