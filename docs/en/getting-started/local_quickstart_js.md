@@ -285,7 +285,7 @@ from Toolbox.
 1. In a new terminal, install the [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
 
     ```bash
-    npm install langchain @toolbox-sdk/core
+    npm install @toolbox-sdk/core
     ```
 
 1. Install other required dependencies
