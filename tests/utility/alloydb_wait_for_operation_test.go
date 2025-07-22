@@ -22,19 +22,19 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"regexp"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
 	httpSourceKind = "http"
-	waitToolKind   = "wait-for-operation"
+	waitToolKind   = "alloydb-wait-for-operation"
 )
 
 type operation struct {
@@ -56,7 +56,11 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	opName := r.URL.Path[len("/operations/"):]
+	// The format is projects/{project}/locations/{location}/operations/{operation_id}
+	// We only care about the operation_id for the test
+	parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
+	opName := parts[len(parts)-1]
+
 	op, ok := h.operations[opName]
 	if !ok {
 		http.NotFound(w, r)
@@ -120,13 +124,13 @@ func TestWaitToolEndpoints(t *testing.T) {
 		{
 			name:     "successful operation",
 			toolName: "wait-for-op1",
-			body:     `{"opId": "op1"}`,
+			body:     `{"project": "p1", "location": "l1", "operation_id": "op1"}`,
 			want:     `{"name":"op1","done":true,"result":"success"}`,
 		},
 		{
 			name:        "failed operation",
 			toolName:    "wait-for-op2",
-			body:        `{"opId": "op2"}`,
+			body:        `{"project": "p1", "location": "l1", "operation_id": "op2"}`,
 			expectError: true,
 		},
 	}
@@ -164,26 +168,22 @@ func TestWaitToolEndpoints(t *testing.T) {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
-			var innerResult []string
-			if err := json.Unmarshal([]byte(result.Result), &innerResult); err != nil {
-				t.Fatalf("failed to decode inner result: %v", err)
-			}
-			var finalResult struct {
-				Result string `json:"result"`
-			}
-			if err := json.Unmarshal([]byte(innerResult[0]), &finalResult); err != nil {
-				t.Fatalf("failed to decode final result: %v", err)
+			// The result is a JSON-encoded string, so we need to unmarshal it twice.
+			var unmarshaledResult string
+			if err := json.Unmarshal([]byte(result.Result), &unmarshaledResult); err != nil {
+				t.Fatalf("failed to unmarshal result string: %v", err)
 			}
 
-			var wantResult struct {
-				Result string `json:"result"`
+			var got, want map[string]any
+			if err := json.Unmarshal([]byte(unmarshaledResult), &got); err != nil {
+				t.Fatalf("failed to unmarshal result: %v", err)
 			}
-			if err := json.Unmarshal([]byte(tc.want), &wantResult); err != nil {
-				t.Fatalf("failed to decode want: %v", err)
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatalf("failed to unmarshal want: %v", err)
 			}
 
-			if finalResult.Result != wantResult.Result {
-				t.Fatalf("unexpected result: got %q, want %q", finalResult.Result, wantResult.Result)
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
 	}
@@ -198,26 +198,14 @@ func getWaitToolsConfig(sourceConfig map[string]any) map[string]any {
 			"wait-for-op1": map[string]any{
 				"kind":        waitToolKind,
 				"description": "wait for op1",
-				"source":      "my-instance",
 				"method":      "GET",
-				"path":        "/operations/{{.opId}}",
-				"pathParams": []tools.Parameter{
-					&tools.StringParameter{
-						CommonParameter: tools.CommonParameter{Name: "opId", Type: "string", Desc: "The operation ID"},
-					},
-				},
+				"source":      "my-instance",
 			},
 			"wait-for-op2": map[string]any{
 				"kind":        waitToolKind,
 				"description": "wait for op2",
-				"source":      "my-instance",
 				"method":      "GET",
-				"path":        "/operations/{{.opId}}",
-				"pathParams": []tools.Parameter{
-					&tools.StringParameter{
-						CommonParameter: tools.CommonParameter{Name: "opId", Type: "string", Desc: "The operation ID"},
-					},
-				},
+				"source":      "my-instance",
 			},
 		},
 	}

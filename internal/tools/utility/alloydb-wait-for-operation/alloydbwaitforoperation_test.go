@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package waitforoperation_test
+package alloydbwaitforoperation_test
 
 import (
 	"testing"
@@ -21,8 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	wait "github.com/googleapis/genai-toolbox/internal/tools/utility/wait-for-operation"
+	alloydbwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydb-wait-for-operation"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -40,30 +39,27 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				wait-for-thing:
-					kind: wait-for-operation
-					source: source-A
+					kind: alloydb-wait-for-operation
+					source: my-source
 					method: GET
 					description: some description
-					path: /operations/{{.opId}}
-					pathParams:
-					- name: opId
-					  type: string
-					  description: The operation ID
+					delay: 1s
+					maxDelay: 5s
+					multiplier: 1.5
+					maxRetries: 5
 			`,
 			want: server.ToolConfigs{
-				"wait-for-thing": wait.Config{
+				"wait-for-thing": alloydbwaitforoperation.Config{
 					Name:         "wait-for-thing",
-					Kind:         "wait-for-operation",
-					Source:       "source-A",
+					Kind:         "alloydb-wait-for-operation",
+					Source:       "my-source",
 					Method:       "GET",
 					Description:  "some description",
 					AuthRequired: []string{},
-					Path:         "/operations/{{.opId}}",
-					PathParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{Name: "opId", Type: "string", Desc: "The operation ID"},
-						},
-					},
+					Delay:        "1s",
+					MaxDelay:     "5s",
+					Multiplier:   1.5,
+					MaxRetries:   5,
 				},
 			},
 		},
