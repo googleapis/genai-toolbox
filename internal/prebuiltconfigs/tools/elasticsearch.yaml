@@ -1,0 +1,85 @@
+sources:
+  elasticsearch-source:
+    kind: elasticsearch
+    addresses: 
+      - ${ELASTICSEARCH_URL:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
+    apiKey: ${ELASTICSEARCH_API_KEY}
+    cloudId: ${ELASTICSEARCH_CLOUD_ID}
+    skipTLS: ${ELASTICSEARCH_SKIP_TLS:false}
+
+tools:
+  elasticsearch-search:
+    kind: elasticsearch
+    source: elasticsearch-source
+    operation: search
+    description: Search documents in Elasticsearch using queries
+    parameters:
+      - name: index
+        type: string
+        description: The Elasticsearch index to search in
+        required: true
+      - name: query
+        type: map
+        description: The search query in Elasticsearch Query DSL format
+        required: true
+        
+  elasticsearch-index:
+    kind: elasticsearch
+    source: elasticsearch-source
+    operation: index
+    description: Index a document into Elasticsearch
+    parameters:
+      - name: index
+        type: string
+        description: The Elasticsearch index to store the document
+        required: true
+      - name: document
+        type: map
+        description: The document to index
+        required: true
+      - name: id
+        type: string
+        description: Optional document ID. If not provided, Elasticsearch will generate one
+        required: false
+        
+  elasticsearch-delete:
+    kind: elasticsearch
+    source: elasticsearch-source
+    operation: delete
+    description: Delete a document from Elasticsearch by ID
+    parameters:
+      - name: index
+        type: string
+        description: The Elasticsearch index containing the document
+        required: true
+      - name: id
+        type: string
+        description: The document ID to delete
+        required: true
+        
+  elasticsearch-bulk:
+    kind: elasticsearch
+    source: elasticsearch-source
+    operation: bulk
+    description: Perform bulk operations (index, update, delete) in Elasticsearch
+    parameters:
+      - name: operations
+        type: array
+        description: Array of bulk operation objects or NDJSON string
+        required: true
+        
+  elasticsearch-info:
+    kind: elasticsearch
+    source: elasticsearch-source
+    operation: info
+    description: Get basic information about the Elasticsearch cluster
+    
+toolsets:
+  elasticsearch-tools:
+    - elasticsearch-search
+    - elasticsearch-index
+    - elasticsearch-delete
+    - elasticsearch-bulk
+    - elasticsearch-info
