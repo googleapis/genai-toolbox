@@ -29,10 +29,10 @@ import (
 
 // Constants for tool configuration
 const (
-	kind              = "firestore-query-collection"
-	defaultLimit      = 100
-	defaultAnalyze    = false
-	maxFilterLength   = 100 // Maximum filters to prevent abuse
+	kind            = "firestore-query-collection"
+	defaultLimit    = 100
+	defaultAnalyze  = false
+	maxFilterLength = 100 // Maximum filters to prevent abuse
 )
 
 // Parameter keys
@@ -46,16 +46,16 @@ const (
 
 // Firestore operators
 var validOperators = map[string]bool{
-	"<":                 true,
-	"<=":                true,
-	">":                 true,
-	">=":                true,
-	"==":                true,
-	"!=":                true,
+	"<":                  true,
+	"<=":                 true,
+	">":                  true,
+	">=":                 true,
+	"==":                 true,
+	"!=":                 true,
 	"array-contains":     true,
 	"array-contains-any": true,
-	"in":                true,
-	"not-in":            true,
+	"in":                 true,
+	"not-in":             true,
 }
 
 // Error messages
@@ -128,7 +128,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Create parameters
 	parameters := createParameters()
-	
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
@@ -151,44 +151,44 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // createParameters creates the parameter definitions for the tool
 func createParameters() tools.Parameters {
 	collectionPathParameter := tools.NewStringParameter(
-		collectionPathKey, 
+		collectionPathKey,
 		"The path to the Firestore collection to query",
 	)
-	
+
 	filtersDescription := `Array of filter objects to apply to the query. Each filter is a JSON string with:
 - field: The field name to filter on
 - op: The operator to use ("<", "<=", ">", ">=", "==", "!=", "array-contains", "array-contains-any", "in", "not-in")
 - value: The value to compare against (can be string, number, boolean, or array)
 Example: {"field": "age", "op": ">", "value": 18}`
-	
+
 	filtersParameter := tools.NewArrayParameter(
-		filtersKey, 
+		filtersKey,
 		filtersDescription,
 		tools.NewStringParameter("item", "JSON string representation of a filter object"),
 	)
-	
+
 	orderByParameter := tools.NewStringParameter(
-		orderByKey, 
+		orderByKey,
 		"JSON string specifying the field and direction to order by (e.g., {\"field\": \"name\", \"direction\": \"ASCENDING\"}). Leave empty if not specified",
 	)
-	
+
 	limitParameter := tools.NewIntParameterWithDefault(
-		limitKey, 
-		defaultLimit, 
+		limitKey,
+		defaultLimit,
 		"The maximum number of documents to return",
 	)
 
 	analyzeQueryParameter := tools.NewBooleanParameterWithDefault(
-		analyzeQueryKey, 
-		defaultAnalyze, 
+		analyzeQueryKey,
+		defaultAnalyze,
 		"If true, returns query explain metrics including execution statistics",
 	)
 
 	return tools.Parameters{
-		collectionPathParameter, 
-		filtersParameter, 
-		orderByParameter, 
-		limitParameter, 
+		collectionPathParameter,
+		filtersParameter,
+		orderByParameter,
+		limitParameter,
 		analyzeQueryParameter,
 	}
 }
@@ -220,7 +220,7 @@ func (f *FilterConfig) Validate() error {
 	if f.Field == "" {
 		return fmt.Errorf("filter field cannot be empty")
 	}
-	
+
 	if !validOperators[f.Op] {
 		ops := make([]string, 0, len(validOperators))
 		for op := range validOperators {
@@ -228,11 +228,11 @@ func (f *FilterConfig) Validate() error {
 		}
 		return fmt.Errorf(errInvalidOperator, f.Op, ops)
 	}
-	
+
 	if f.Value == nil {
 		return fmt.Errorf(errMissingFilterValue, f.Field)
 	}
-	
+
 	return nil
 }
 
@@ -296,7 +296,7 @@ type queryParameters struct {
 // parseQueryParameters extracts and validates parameters from the input
 func (t Tool) parseQueryParameters(params tools.ParamValues) (*queryParameters, error) {
 	mapParams := params.AsMap()
-	
+
 	// Get collection path
 	collectionPath, ok := mapParams[collectionPathKey].(string)
 	if !ok || collectionPath == "" {
@@ -480,31 +480,31 @@ func (t Tool) getExplainMetrics(docIterator *firestoreapi.DocumentIterator) (map
 	}
 
 	metricsData := make(map[string]any)
-	
+
 	// Add plan summary if available
 	if explainMetrics.PlanSummary != nil {
 		planSummary := make(map[string]any)
 		planSummary["indexesUsed"] = explainMetrics.PlanSummary.IndexesUsed
 		metricsData["planSummary"] = planSummary
 	}
-	
+
 	// Add execution stats if available
 	if explainMetrics.ExecutionStats != nil {
 		executionStats := make(map[string]any)
 		executionStats["resultsReturned"] = explainMetrics.ExecutionStats.ResultsReturned
 		executionStats["readOperations"] = explainMetrics.ExecutionStats.ReadOperations
-		
+
 		if explainMetrics.ExecutionStats.ExecutionDuration != nil {
 			executionStats["executionDuration"] = explainMetrics.ExecutionStats.ExecutionDuration.String()
 		}
-		
+
 		if explainMetrics.ExecutionStats.DebugStats != nil {
 			executionStats["debugStats"] = *explainMetrics.ExecutionStats.DebugStats
 		}
-		
+
 		metricsData["executionStats"] = executionStats
 	}
-	
+
 	return metricsData, nil
 }
 
