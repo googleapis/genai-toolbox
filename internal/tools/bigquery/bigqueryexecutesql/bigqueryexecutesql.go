@@ -125,10 +125,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
-	if location == "" {
-		location = "US"
-	}
-
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
