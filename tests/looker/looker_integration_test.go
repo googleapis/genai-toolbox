@@ -95,8 +95,23 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_filters": map[string]any{
+				"kind":        "looker-get-filters",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_parameters": map[string]any{
+				"kind":        "looker-get-parameters",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"query": map[string]any{
 				"kind":        "looker-query",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"query_sql": map[string]any{
+				"kind":        "looker-query-sql",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -292,6 +307,15 @@ func TestLooker(t *testing.T) {
 	wantResult = "{\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
+	wantResult = "null"
+	tests.RunToolInvokeParametersTest(t, "get_filters", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
+
+	wantResult = "null"
+	tests.RunToolInvokeParametersTest(t, "get_parameters", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
+
 	wantResult = "{\"look.count\":"
 	tests.RunToolInvokeParametersTest(t, "query", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+
+	wantResult = "SELECT"
+	tests.RunToolInvokeParametersTest(t, "query_sql", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
 }
