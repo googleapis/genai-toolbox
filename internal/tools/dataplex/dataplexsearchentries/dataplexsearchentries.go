@@ -84,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	pageSize := tools.NewIntParameterWithDefault("pageSize", 100, "Number of results in the search page.")
 	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
 	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
+	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", false, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
 	parameters := tools.Parameters{query, name, pageSize, pageToken, orderBy, semanticSearch}
 
 	mcpManifest := tools.McpManifest{
