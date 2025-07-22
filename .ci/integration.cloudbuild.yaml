@@ -445,6 +445,27 @@ steps:
           "Firestore" \
           firestore \
           firestore
+
+  - id: "looker"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "FIRESTORE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "LOOKER_VERIFY_SSL=$_LOOKER_VERIFY_SSL"
+    secretEnv: ["CLIENT_ID", "LOOKER_BASE_URL", "LOOKER_CLIENT_ID", "LOOKER_CLIENT_SECRET"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Looker" \
+          looker \
+          looker
     
 
 availableSecrets:
@@ -499,6 +520,12 @@ availableSecrets:
       env: REDIS_PASS
     - versionName: projects/$PROJECT_ID/secrets/memorystore_valkey_address/versions/latest
       env: VALKEY_ADDRESS
+    - versionName: projects/107716898620/secrets/looker_base_url/versions/latest
+      env: LOOKER_BASE_URL
+    - versionName: projects/107716898620/secrets/looker_client_id/versions/latest
+      env: LOOKER_CLIENT_ID
+    - versionName: projects/107716898620/secrets/looker_client_secret/versions/latest
+      env: LOOKER_CLIENT_SECRET
 
 
 options:
@@ -531,3 +558,4 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
+  _LOOKER_VERIFY_SSL: "true"
