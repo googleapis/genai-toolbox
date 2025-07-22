@@ -62,7 +62,7 @@ func getFirestoreVars(t *testing.T) map[string]any {
 // initFirestoreConnection creates a Firestore client for testing
 func initFirestoreConnection(project, database string) (*firestoreapi.Client, error) {
 	ctx := context.Background()
-	
+
 	if database == "" {
 		database = "(default)"
 	}
@@ -93,20 +93,20 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	testDocID1 := fmt.Sprintf("doc_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	testDocID2 := fmt.Sprintf("doc_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	testDocID3 := fmt.Sprintf("doc_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
-	
+
 	// Document paths for testing
 	docPath1 := fmt.Sprintf("%s/%s", testCollectionName, testDocID1)
 	docPath2 := fmt.Sprintf("%s/%s", testCollectionName, testDocID2)
 	docPath3 := fmt.Sprintf("%s/%s", testCollectionName, testDocID3)
 
 	// Set up test data
-	teardown := setupFirestoreTestData(t, ctx, client, testCollectionName, testSubCollectionName, 
+	teardown := setupFirestoreTestData(t, ctx, client, testCollectionName, testSubCollectionName,
 		testDocID1, testDocID2, testDocID3)
 	defer teardown(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := getFirestoreToolsConfig(sourceConfig)
-	
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -123,7 +123,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 
 	// Run Firestore-specific tool get test
 	runFirestoreToolGetTest(t)
-	
+
 	// Run Firestore-specific MCP test
 	runFirestoreMCPToolCallMethod(t, docPath1, docPath2)
 
@@ -170,7 +170,7 @@ func runFirestoreToolGetTest(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := http.Get(tc.api)
@@ -192,7 +192,7 @@ func runFirestoreToolGetTest(t *testing.T) {
 			if !ok {
 				t.Fatalf("unable to find tools in response body")
 			}
-			
+
 			// Compare as JSON strings to handle any ordering differences
 			gotJSON, _ := json.Marshal(got)
 			wantJSON, _ := json.Marshal(tc.want)
@@ -212,31 +212,31 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 		isErr       bool
 	}{
 		{
-			name:        "validate valid rules",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			name: "validate valid rules",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
 			}`)),
-			wantRegex:   `"valid":true.*"issueCount":0`,
-			isErr:       false,
+			wantRegex: `"valid":true.*"issueCount":0`,
+			isErr:     false,
 		},
 		{
-			name:        "validate rules with syntax error",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			name: "validate rules with syntax error",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;;\n    }\n  }\n}"
 			}`)),
-			wantRegex:   `"valid":false.*"issueCount":[1-9]`,
-			isErr:       false,
+			wantRegex: `"valid":false.*"issueCount":[1-9]`,
+			isErr:     false,
 		},
 		{
-			name:        "validate rules with missing version",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			name: "validate rules with missing version",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "service cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
 			}`)),
-			wantRegex:   `"valid":false.*"issueCount":[1-9]`,
-			isErr:       false,
+			wantRegex: `"valid":false.*"issueCount":[1-9]`,
+			isErr:     false,
 		},
 		{
 			name:        "validate empty rules",
@@ -259,7 +259,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -322,7 +322,7 @@ func runFirestoreGetRulesTest(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -400,7 +400,7 @@ func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
 				},
 			},
 			wantContains: `\"name\":\"Alice\"`,
-			wantError: false,
+			wantError:    false,
 		},
 		{
 			name:          "MCP Invoke invalid tool",
@@ -418,7 +418,7 @@ func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
 				},
 			},
 			wantContains: `tool with name \"foo\" does not exist`,
-			wantError: true,
+			wantError:    true,
 		},
 		{
 			name:          "MCP Invoke my-param-tool without parameters",
@@ -436,7 +436,7 @@ func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
 				},
 			},
 			wantContains: `parameter \"documentPaths\" is required`,
-			wantError: true,
+			wantError:    true,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool",
@@ -454,7 +454,7 @@ func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
 				},
 			},
 			wantContains: `tool with name \"my-auth-required-tool\" does not exist`,
-			wantError: true,
+			wantError:    true,
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
@@ -467,17 +467,17 @@ func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
 					Method: "tools/call",
 				},
 				Params: map[string]any{
-					"name":      "my-fail-tool",
+					"name": "my-fail-tool",
 					"arguments": map[string]any{
 						"documentPaths": []string{"non-existent/path"},
 					},
 				},
 			},
 			wantContains: `\"exists\":false`,
-			wantError: false,
+			wantError:    false,
 		},
 	}
-	
+
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			reqMarshal, err := json.Marshal(tc.requestBody)
@@ -598,12 +598,12 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 	if err != nil {
 		t.Fatalf("Failed to create test document 1: %v", err)
 	}
-	
+
 	_, err = client.Collection(collectionName).Doc(docID2).Set(ctx, testData2)
 	if err != nil {
 		t.Fatalf("Failed to create test document 2: %v", err)
 	}
-	
+
 	_, err = client.Collection(collectionName).Doc(docID3).Set(ctx, testData3)
 	if err != nil {
 		t.Fatalf("Failed to create test document 3: %v", err)
@@ -611,7 +611,7 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 
 	// Create a subcollection document
 	subDocData := map[string]interface{}{
-		"type": "subcollection_doc",
+		"type":  "subcollection_doc",
 		"value": "test",
 	}
 	_, err = client.Collection(collectionName).Doc(docID1).Collection(subCollectionName).Doc("subdoc1").Set(ctx, subDocData)
@@ -696,7 +696,7 @@ func runFirestoreGetDocumentsTest(t *testing.T, docPath1, docPath2 string) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -773,7 +773,7 @@ func runFirestoreListCollectionsTest(t *testing.T, collectionName, subCollection
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -849,7 +849,7 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -891,32 +891,32 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		isErr       bool
 	}{
 		{
-			name:        "query collection with filter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "query collection with filter",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": ["{\"field\": \"age\", \"op\": \">\", \"value\": 25}"],
 				"orderBy": "",
 				"limit": 10
 			}`, collectionName))),
-			wantRegex:   `"name":"Alice"`,
-			isErr:       false,
+			wantRegex: `"name":"Alice"`,
+			isErr:     false,
 		},
 		{
-			name:        "query collection with orderBy",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "query collection with orderBy",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
 				"orderBy": "{\"field\": \"age\", \"direction\": \"DESCENDING\"}",
 				"limit": 2
 			}`, collectionName))),
-			wantRegex:   `"age":30.*"age":25`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
-			isErr:       false,
+			wantRegex: `"age":30.*"age":25`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
+			isErr:     false,
 		},
 		{
-			name:        "query collection with multiple filters",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "query collection with multiple filters",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [
@@ -926,32 +926,32 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				"orderBy": "",
 				"limit": 10
 			}`, collectionName))),
-			wantRegex:   `"name":"Bob".*"name":"Alice"`, // Results may be ordered by document ID
-			isErr:       false,
+			wantRegex: `"name":"Bob".*"name":"Alice"`, // Results may be ordered by document ID
+			isErr:     false,
 		},
 		{
-			name:        "query with limit",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "query with limit",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
 				"orderBy": "",
 				"limit": 1
 			}`, collectionName))),
-			wantRegex:   `^\[{.*}\]$`, // Should return exactly one document
-			isErr:       false,
+			wantRegex: `^\[{.*}\]$`, // Should return exactly one document
+			isErr:     false,
 		},
 		{
-			name:        "query non-existent collection",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "query non-existent collection",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collectionPath": "non-existent-collection",
 				"filters": [],
 				"orderBy": "",
 				"limit": 10
 			}`)),
-			wantRegex:   `^\[\]$`, // Empty array
-			isErr:       false,
+			wantRegex: `^\[\]$`, // Empty array
+			isErr:     false,
 		},
 		{
 			name:        "missing collectionPath parameter",
@@ -960,18 +960,18 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 			isErr:       true,
 		},
 		{
-			name:        "invalid filter operator",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "invalid filter operator",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": ["{\"field\": \"age\", \"op\": \"INVALID\", \"value\": 25}"],
 				"orderBy": ""
 			}`, collectionName))),
-			isErr:       true,
+			isErr: true,
 		},
 		{
-			name:        "query with analyzeQuery",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			name: "query with analyzeQuery",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -979,8 +979,8 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				"analyzeQuery": true,
 				"limit": 1
 			}`, collectionName))),
-			wantRegex:   `"documents":\[.*\]`,
-			isErr:       false,
+			wantRegex: `"documents":\[.*\]`,
+			isErr:     false,
 		},
 	}
 
@@ -991,7 +991,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)

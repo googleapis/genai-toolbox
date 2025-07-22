@@ -151,10 +151,10 @@ type SourcePosition struct {
 
 // ValidationResult represents the result of rules validation
 type ValidationResult struct {
-	Valid          bool   `json:"valid"`
-	IssueCount     int    `json:"issueCount"`
-	FormattedIssues string `json:"formattedIssues,omitempty"`
-	RawIssues      []Issue `json:"rawIssues,omitempty"`
+	Valid           bool    `json:"valid"`
+	IssueCount      int     `json:"issueCount"`
+	FormattedIssues string  `json:"formattedIssues,omitempty"`
+	RawIssues       []Issue `json:"rawIssues,omitempty"`
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
@@ -162,7 +162,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	// Get source parameter
 	source, ok := mapParams[sourceKey].(string)
-	if !ok || source == ""{
+	if !ok || source == "" {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", sourceKey)
 	}
 
@@ -191,15 +191,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	// Process the response
 	result := t.processValidationResponse(response, source)
-	
+
 	return result, nil
 }
 
 func (t Tool) processValidationResponse(response *firebaserules.TestRulesetResponse, source string) ValidationResult {
 	if len(response.Issues) == 0 {
 		return ValidationResult{
-			Valid:      true,
-			IssueCount: 0,
+			Valid:           true,
+			IssueCount:      0,
 			FormattedIssues: "✓ No errors detected. Rules are valid.",
 		}
 	}
