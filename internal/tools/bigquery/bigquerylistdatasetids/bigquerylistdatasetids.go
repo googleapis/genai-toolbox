@@ -27,6 +27,7 @@ import (
 )
 
 const kind string = "bigquery-list-dataset-ids"
+const projectKey string = "project"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -79,7 +80,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	parameters := tools.Parameters{}
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project to list dataset ids.")
+
+	parameters := tools.Parameters{projectParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -115,8 +118,14 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+	mapParams := params.AsMap()
+	projectId, ok := mapParams[projectKey].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
+	}
 	datasetIterator := t.Client.Datasets(ctx)
+	datasetIterator.ProjectID = projectId
 
 	var datasetIds []any
 	for {

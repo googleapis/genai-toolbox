@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/redis/go-redis/v9"
 )
@@ -90,7 +91,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -98,17 +99,19 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, invokeParamWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 }
 
 func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(*testing.T) {
-	keys := []string{"row1", "row2", "row3"}
+	keys := []string{"row1", "row2", "row3", "row4", "null"}
 	commands := [][]any{
 		{"HSET", keys[0], "id", 1, "name", "Alice"},
 		{"HSET", keys[1], "id", 2, "name", "Jane"},
 		{"HSET", keys[2], "id", 3, "name", "Sid"},
+		{"HSET", keys[3], "id", 4, "name", nil},
+		{"SET", keys[4], "null"},
 		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
 	}
 	for _, c := range commands {

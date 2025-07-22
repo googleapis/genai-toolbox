@@ -15,13 +15,10 @@
 package tests
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
-	"regexp"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 
@@ -70,7 +67,7 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to write tools file: %s", err)
 	}
-	args = append(args, "--tools_file", path)
+	args = append(args, "--tools-file", path)
 
 	ctx, cancel := context.WithCancel(ctx)
 	// Open a pipe for tracking the output from the cmd
@@ -131,65 +128,5 @@ func (c *CmdExec) Close() {
 	c.cancel()
 	for _, c := range c.closers {
 		c.Close()
-	}
-}
-
-// WaitForString waits until the server logs a single line that matches the provided regex.
-// returns the output of whatever the server sent so far.
-func (c *CmdExec) WaitForString(ctx context.Context, re *regexp.Regexp) (string, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	in := bufio.NewReader(c.Out)
-
-	// read lines in background, sending result of each read over a channel
-	// this allows us to use in.ReadString without blocking
-	type result struct {
-		s   string
-		err error
-	}
-	output := make(chan result)
-	go func() {
-		defer close(output)
-		for {
-			select {
-			case <-ctx.Done():
-				// if the context is canceled, the orig thread will send back the error
-				// so we can just exit the goroutine here
-				return
-			default:
-				// otherwise read a line from the output
-				s, err := in.ReadString('\n')
-				if err != nil {
-					output <- result{err: err}
-					return
-				}
-				output <- result{s: s}
-				// if that last string matched, exit the goroutine
-				if re.MatchString(s) {
-					return
-				}
-			}
-		}
-	}()
-
-	// collect the output until the ctx is canceled, an error was hit,
-	// or match was found (which is indicated the channel is closed)
-	var sb strings.Builder
-	for {
-		select {
-		case <-ctx.Done():
-			// if ctx is done, return that error
-			return sb.String(), ctx.Err()
-		case o, ok := <-output:
-			if !ok {
-				// match was found!
-				return sb.String(), nil
-			}
-			if o.err != nil {
-				// error was found!
-				return sb.String(), o.err
-			}
-			sb.WriteString(o.s)
-		}
 	}
 }

@@ -19,20 +19,26 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
@@ -46,12 +52,18 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
@@ -60,6 +72,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 
 	"github.com/spf13/cobra"
@@ -72,6 +85,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
@@ -181,6 +195,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
+	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -359,6 +374,178 @@ func loadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile,
 	return loadAndMergeToolsFiles(ctx, allFiles)
 }
 
+func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Server) error {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return err
+	}
+
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+
+	return nil
+}
+
+// validateReloadEdits checks that the reloaded tools file configs can initialized without failing
+func validateReloadEdits(
+	ctx context.Context, toolsFile ToolsFile,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error,
+) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	instrumentation, err := util.InstrumentationFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	logger.DebugContext(ctx, "Attempting to parse and validate reloaded tools file.")
+
+	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/reload")
+	defer span.End()
+
+	reloadedConfig := server.ServerConfig{
+		Version:            versionString,
+		SourceConfigs:      toolsFile.Sources,
+		AuthServiceConfigs: toolsFile.AuthServices,
+		ToolConfigs:        toolsFile.Tools,
+		ToolsetConfigs:     toolsFile.Toolsets,
+	}
+
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return nil, nil, nil, nil, err
+	}
+
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
+}
+
+// watchChanges checks for changes in the provided yaml tools file(s) or folder.
+func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.WarnContext(ctx, "error setting up new watcher %s", err)
+		return
+	}
+
+	defer w.Close()
+
+	watchingFolder := false
+	var folderToWatch string
+
+	// if watchedFiles is empty, indicates that user passed entire folder instead
+	if len(watchedFiles) == 0 {
+		watchingFolder = true
+
+		// validate that watchDirs only has single element
+		if len(watchDirs) > 1 {
+			logger.WarnContext(ctx, "error setting watcher, expected single tools folder if no file(s) are defined.")
+			return
+		}
+
+		for onlyKey := range watchDirs {
+			folderToWatch = onlyKey
+			break
+		}
+	}
+
+	for dir := range watchDirs {
+		err := w.Add(dir)
+		if err != nil {
+			logger.WarnContext(ctx, fmt.Sprintf("Error adding path %s to watcher: %s", dir, err))
+			break
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("Added directory %s to watcher.", dir))
+	}
+
+	// debounce timer is used to prevent multiple writes triggering multiple reloads
+	debounceDelay := 100 * time.Millisecond
+	debounce := time.NewTimer(1 * time.Minute)
+	debounce.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			logger.DebugContext(ctx, "file watcher context cancelled")
+			return
+		case err, ok := <-w.Errors:
+			if !ok {
+				logger.WarnContext(ctx, "file watcher was closed unexpectedly")
+				return
+			}
+			if err != nil {
+				logger.WarnContext(ctx, "file watcher error %s", err)
+				return
+			}
+
+		case e, ok := <-w.Events:
+			if !ok {
+				logger.WarnContext(ctx, "file watcher already closed")
+				return
+			}
+
+			// only check for events which indicate user saved a new tools file
+			// multiple operations checked due to various file update methods across editors
+			if !e.Has(fsnotify.Write | fsnotify.Create | fsnotify.Rename) {
+				continue
+			}
+
+			cleanedFilename := filepath.Clean(e.Name)
+			logger.DebugContext(ctx, fmt.Sprintf("%s event detected in %s", e.Op, cleanedFilename))
+
+			folderChanged := watchingFolder &&
+				(strings.HasSuffix(cleanedFilename, ".yaml") || strings.HasSuffix(cleanedFilename, ".yml"))
+
+			if folderChanged || watchedFiles[cleanedFilename] {
+				// indicates the write event is on a relevant file
+				debounce.Reset(debounceDelay)
+			}
+
+		case <-debounce.C:
+			debounce.Stop()
+			var reloadedToolsFile ToolsFile
+
+			if watchingFolder {
+				logger.DebugContext(ctx, "Reloading tools folder.")
+				reloadedToolsFile, err = loadAndMergeToolsFolder(ctx, folderToWatch)
+				if err != nil {
+					logger.WarnContext(ctx, "error loading tools folder %s", err)
+					continue
+				}
+			} else {
+				logger.DebugContext(ctx, "Reloading tools file(s).")
+				reloadedToolsFile, err = loadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
+				if err != nil {
+					logger.WarnContext(ctx, "error loading tools files %s", err)
+					continue
+				}
+			}
+
+			err = handleDynamicReload(ctx, reloadedToolsFile, s)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", reloadedToolsFile, err)
+				logger.WarnContext(ctx, errMsg.Error())
+				continue
+			}
+		}
+	}
+}
+
 // updateLogLevel checks if Toolbox have to update the existing log level set by users.
 // stdio doesn't support "debug" and "info" logs.
 func updateLogLevel(stdio bool, logLevel string) bool {
@@ -371,6 +558,33 @@ func updateLogLevel(stdio bool, logLevel string) bool {
 		}
 	}
 	return false
+}
+
+func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder string) (map[string]bool, map[string]bool) {
+	var relevantFiles []string
+
+	// map for efficiently checking if a file is relevant
+	watchedFiles := make(map[string]bool)
+
+	// dirs that will be added to watcher (fsnotify prefers watching directory then filtering for file)
+	watchDirs := make(map[string]bool)
+
+	if len(toolsFiles) > 0 {
+		relevantFiles = toolsFiles
+	} else if toolsFolder != "" {
+		watchDirs[filepath.Clean(toolsFolder)] = true
+	} else {
+		relevantFiles = []string{toolsFile}
+	}
+
+	// extract parent dir for relevant files and dedup
+	for _, f := range relevantFiles {
+		cleanFile := filepath.Clean(f)
+		watchedFiles[cleanFile] = true
+		watchDirs[filepath.Dir(cleanFile)] = true
+	}
+
+	return watchDirs, watchedFiles
 }
 
 func run(cmd *Command) error {
@@ -469,6 +683,7 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+
 		// Use multiple tools files
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
 		var err error
@@ -484,6 +699,7 @@ func run(cmd *Command) error {
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
+
 		// Use tools folder
 		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
 		var err error
@@ -497,6 +713,7 @@ func run(cmd *Command) error {
 		if cmd.tools_file == "" {
 			cmd.tools_file = "tools.yaml"
 		}
+
 		// Read single tool file contents
 		buf, err := os.ReadFile(cmd.tools_file)
 		if err != nil {
@@ -520,8 +737,17 @@ func run(cmd *Command) error {
 		cmd.cfg.AuthServiceConfigs = authSourceConfigs
 	}
 
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to create telemetry instrumentation: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
 	// start server
-	s, err := server.NewServer(ctx, cmd.cfg, cmd.logger)
+	s, err := server.NewServer(ctx, cmd.cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
@@ -554,6 +780,13 @@ func run(cmd *Command) error {
 				srvErr <- err
 			}
 		}()
+	}
+
+	watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)
+
+	if !cmd.cfg.DisableReload {
+		// start watching the file(s) or folder for changes to trigger dynamic reloading
+		go watchChanges(ctx, watchDirs, watchedFiles, s)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled

@@ -54,6 +54,32 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with query timeout",
+			in: `
+			sources:
+				my-mysql-instance:
+					kind: mysql
+					host: 0.0.0.0
+					port: my-port
+					database: my_db
+					user: my_user
+					password: my_pass
+					queryTimeout: 45s
+			`,
+			want: server.SourceConfigs{
+				"my-mysql-instance": mysql.Config{
+					Name:         "my-mysql-instance",
+					Kind:         mysql.SourceKind,
+					Host:         "0.0.0.0",
+					Port:         "my-port",
+					Database:     "my_db",
+					User:         "my_user",
+					Password:     "my_pass",
+					QueryTimeout: "45s",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

@@ -4,7 +4,6 @@ type: docs
 weight: 1
 description: >
   MySQL is a relational database management system that stores and manages data.
-
 ---
 
 ## About
@@ -35,6 +34,7 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -44,11 +44,12 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mysql".                                                                            |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                |
-| port      |  string  |     true     | Port to connect to (e.g. "3306").                                                           |
-| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                    |
-| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                |
-| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be "mysql".                                                                                |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
+| database     |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                        |
+| user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
+| password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |

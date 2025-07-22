@@ -75,7 +75,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}()
 
-	toolset, ok := s.toolsets[toolsetName]
+	toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
 	if !ok {
 		err = fmt.Errorf("toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -111,7 +111,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
 		)
 	}()
-	tool, ok := s.tools[toolName]
+	tool, ok := s.ResourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -133,6 +133,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/tool/invoke")
 	r = r.WithContext(ctx)
+	ctx = util.WithLogger(r.Context(), s.logger)
 
 	toolName := chi.URLParam(r, "toolName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
@@ -156,7 +157,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}()
 
-	tool, ok := s.tools[toolName]
+	tool, ok := s.ResourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -167,7 +168,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Tool authentication
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
-	for _, aS := range s.authServices {
+	for _, aS := range s.ResourceMgr.GetAuthServiceMap() {
 		claims, err := aS.GetClaimsFromHeader(ctx, r.Header)
 		if err != nil {
 			s.logger.DebugContext(ctx, err.Error())

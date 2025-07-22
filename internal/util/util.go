@@ -19,10 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
 )
 
 // DecodeJSON decodes a given reader into an interface using the json decoder.
@@ -33,6 +35,46 @@ func DecodeJSON(r io.Reader, v interface{}) error {
 	// This prevents loss between floats/ints.
 	d.UseNumber()
 	return d.Decode(v)
+}
+
+// ConvertNumbers traverses an interface and converts all json.Number
+// instances to int64 or float64.
+func ConvertNumbers(data any) (any, error) {
+	switch v := data.(type) {
+	// If it's a map, recursively convert the values.
+	case map[string]any:
+		for key, val := range v {
+			convertedVal, err := ConvertNumbers(val)
+			if err != nil {
+				return nil, err
+			}
+			v[key] = convertedVal
+		}
+		return v, nil
+
+	// If it's a slice, recursively convert the elements.
+	case []any:
+		for i, val := range v {
+			convertedVal, err := ConvertNumbers(val)
+			if err != nil {
+				return nil, err
+			}
+			v[i] = convertedVal
+		}
+		return v, nil
+
+	// If it's a json.Number, convert it to float or int
+	case json.Number:
+		// Check for a decimal point to decide the type.
+		if strings.Contains(v.String(), ".") {
+			return v.Float64()
+		}
+		return v.Int64()
+
+	// For all other types, return them as is.
+	default:
+		return data, nil
+	}
 }
 
 var _ yaml.InterfaceUnmarshalerContext = &DelayedUnmarshaler{}
@@ -98,10 +140,25 @@ func WithLogger(ctx context.Context, logger log.Logger) context.Context {
 	return context.WithValue(ctx, loggerKey, logger)
 }
 
-// LoggerFromContext retreives the logger or return an error
+// LoggerFromContext retrieves the logger or return an error
 func LoggerFromContext(ctx context.Context) (log.Logger, error) {
 	if logger, ok := ctx.Value(loggerKey).(log.Logger); ok {
 		return logger, nil
 	}
 	return nil, fmt.Errorf("unable to retrieve logger")
+}
+
+const instrumentationKey contextKey = "instrumentation"
+
+// WithInstrumentation adds an instrumentation into the context as a value
+func WithInstrumentation(ctx context.Context, instrumentation *telemetry.Instrumentation) context.Context {
+	return context.WithValue(ctx, instrumentationKey, instrumentation)
+}
+
+// InstrumentationFromContext retrieves the instrumentation or return an error
+func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation, error) {
+	if instrumentation, ok := ctx.Value(instrumentationKey).(*telemetry.Instrumentation); ok {
+		return instrumentation, nil
+	}
+	return nil, fmt.Errorf("unable to retrieve instrumentation")
 }

@@ -48,7 +48,11 @@ enableRobotsTXT = true
   pre = "<i class='fa-brands fa-github'></i>"
 
 [markup.goldmark.renderer]
-  unsafe= true 
+  unsafe= true
+
+[markup.highlight]
+  noClasses = false
+  style = "tango"
 
 [outputFormats]
   [outputFormats.LLMS]

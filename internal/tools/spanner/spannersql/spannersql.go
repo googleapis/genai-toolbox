@@ -164,7 +164,7 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 	return out, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -175,6 +175,30 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
+
+	for i, p := range t.Parameters {
+		name := p.GetName()
+		value := newParams[i].Value
+
+		// Spanner only accepts typed slices as input
+		// This checks if the param is an array.
+		// If yes, convert []any to typed slice (e.g []string, []int)
+		switch arrayParam := p.(type) {
+		case *tools.ArrayParameter:
+			arrayParamValue, ok := value.([]any)
+			if !ok {
+				return nil, fmt.Errorf("unable to convert parameter `%s` to []any %w", name, err)
+			}
+			itemType := arrayParam.GetItems().GetType()
+			var err error
+			value, err = tools.ConvertAnySliceToTyped(arrayParamValue, itemType)
+			if err != nil {
+				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
+			}
+		}
+		newParams[i] = tools.ParamValue{Name: name, Value: value}
+	}
+
 	mapParams, err := getMapParams(newParams, t.dialect)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get map params: %w", err)

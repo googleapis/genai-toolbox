@@ -32,6 +32,7 @@ const (
 	typeFloat  = "float"
 	typeBool   = "boolean"
 	typeArray  = "array"
+	typeMap    = "map"
 )
 
 // ParamValues is an ordered list of ParamValue
@@ -109,11 +110,17 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 	return nil, fmt.Errorf("missing or invalid authentication header")
 }
 
+// CheckParamRequired checks if a parameter is required based on the required and default field.
+func CheckParamRequired(required bool, defaultV any) bool {
+	return required && defaultV == nil
+}
+
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
 func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
 	params := make([]ParamValue, 0, len(ps))
 	for _, p := range ps {
-		var v any
+		var v, newV any
+		var err error
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
 		if len(paramAuthServices) == 0 {
@@ -122,21 +129,23 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 			v, ok = data[name]
 			if !ok {
 				v = p.GetDefault()
-				if v == nil {
+				// if the parameter is required and no value given, throw an error
+				if CheckParamRequired(p.GetRequired(), v) {
 					return nil, fmt.Errorf("parameter %q is required", name)
 				}
 			}
 		} else {
 			// parse authenticated parameter
-			var err error
 			v, err = parseFromAuthService(paramAuthServices, claimsMap)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
 			}
 		}
-		newV, err := p.Parse(v)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+		if v != nil {
+			newV, err = p.Parse(v)
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+			}
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
 	}
@@ -248,6 +257,7 @@ type Parameter interface {
 	GetName() string
 	GetType() string
 	GetDefault() any
+	GetRequired() bool
 	GetAuthServices() []ParamAuthService
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
@@ -358,6 +368,17 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
+	case typeMap:
+		a := &MapParameter{}
+		if err := dec.DecodeContext(ctx, a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+		}
+		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
+			a.AuthServices = append(a.AuthServices, a.AuthSources...)
+			a.AuthSources = nil
+		}
+		return a, nil
 	}
 	return nil, fmt.Errorf("%q is not valid type for a parameter", t)
 }
@@ -378,7 +399,7 @@ func (ps Parameters) McpManifest() McpToolsSchema {
 		name := p.GetName()
 		properties[name] = p.McpManifest()
 		// parameters that doesn't have a default value are added to the required field
-		if p.GetDefault() == nil {
+		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
 			required = append(required, name)
 		}
 	}
@@ -392,19 +413,21 @@ func (ps Parameters) McpManifest() McpToolsSchema {
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
-	Name         string             `json:"name"`
-	Type         string             `json:"type"`
-	Required     bool               `json:"required"`
-	Description  string             `json:"description"`
-	AuthServices []string           `json:"authSources"`
-	Items        *ParameterManifest `json:"items,omitempty"`
+	Name                 string             `json:"name"`
+	Type                 string             `json:"type"`
+	Required             bool               `json:"required"`
+	Description          string             `json:"description"`
+	AuthServices         []string           `json:"authSources"`
+	Items                *ParameterManifest `json:"items,omitempty"`
+	AdditionalProperties any                `json:"AdditionalProperties,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
 type ParameterMcpManifest struct {
-	Type        string                `json:"type"`
-	Description string                `json:"description"`
-	Items       *ParameterMcpManifest `json:"items,omitempty"`
+	Type                 string                `json:"type"`
+	Description          string                `json:"description"`
+	Items                *ParameterMcpManifest `json:"items,omitempty"`
+	AdditionalProperties any                   `json:"AdditionalProperties,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
@@ -412,6 +435,7 @@ type CommonParameter struct {
 	Name         string             `yaml:"name" validate:"required"`
 	Type         string             `yaml:"type" validate:"required"`
 	Desc         string             `yaml:"description" validate:"required"`
+	Required     *bool              `yaml:"required"`
 	AuthServices []ParamAuthService `yaml:"authServices"`
 	AuthSources  []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 }
@@ -424,6 +448,15 @@ func (p *CommonParameter) GetName() string {
 // GetType returns the type specified for the Parameter.
 func (p *CommonParameter) GetType() string {
 	return p.Type
+}
+
+// GetRequired returns the type specified for the Parameter.
+func (p *CommonParameter) GetRequired() bool {
+	// parameters are defaulted to required
+	if p.Required == nil {
+		return true
+	}
+	return *p.Required
 }
 
 // McpManifest returns the MCP manifest for the Parameter.
@@ -475,6 +508,19 @@ func NewStringParameterWithDefault(name string, defaultV, desc string) *StringPa
 	}
 }
 
+// NewStringParameterWithRequired is a convenience function for initializing a StringParameter.
+func NewStringParameterWithRequired(name string, desc string, required bool) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeString,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
+	}
+}
+
 // NewStringParameterWithAuth is a convenience function for initializing a StringParameter with a list of ParamAuthService.
 func NewStringParameterWithAuth(name string, desc string, authServices []ParamAuthService) *StringParameter {
 	return &StringParameter{
@@ -522,11 +568,11 @@ func (p *StringParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -554,6 +600,19 @@ func NewIntParameterWithDefault(name string, defaultV int, desc string) *IntPara
 			AuthServices: nil,
 		},
 		Default: &defaultV,
+	}
+}
+
+// NewIntParameterWithRequired is a convenience function for initializing a IntParameter.
+func NewIntParameterWithRequired(name string, desc string, required bool) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeInt,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
 	}
 }
 
@@ -616,11 +675,11 @@ func (p *IntParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -648,6 +707,19 @@ func NewFloatParameterWithDefault(name string, defaultV float64, desc string) *F
 			AuthServices: nil,
 		},
 		Default: &defaultV,
+	}
+}
+
+// NewFloatParameterWithRequired is a convenience function for initializing a FloatParameter.
+func NewFloatParameterWithRequired(name string, desc string, required bool) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeFloat,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
 	}
 }
 
@@ -708,11 +780,11 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -740,6 +812,19 @@ func NewBooleanParameterWithDefault(name string, defaultV bool, desc string) *Bo
 			AuthServices: nil,
 		},
 		Default: &defaultV,
+	}
+}
+
+// NewBooleanParameterWithRequired is a convenience function for initializing a BooleanParameter.
+func NewBooleanParameterWithRequired(name string, desc string, required bool) *BooleanParameter {
+	return &BooleanParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeBool,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
 	}
 }
 
@@ -789,11 +874,11 @@ func (p *BooleanParameter) Manifest() ParameterManifest {
 	for i, a := range p.AuthServices {
 		authNames[i] = a.Name
 	}
-	required := p.Default == nil
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 	}
@@ -823,6 +908,20 @@ func NewArrayParameterWithDefault(name string, defaultV []any, desc string, item
 		},
 		Items:   items,
 		Default: &defaultV,
+	}
+}
+
+// NewArrayParameterWithRequired is a convenience function for initializing a ArrayParameter with default value.
+func NewArrayParameterWithRequired(name string, desc string, required bool, items Parameter) *ArrayParameter {
+	return &ArrayParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeArray,
+			Desc:         desc,
+			Required:     &required,
+			AuthServices: nil,
+		},
+		Items: items,
 	}
 }
 
@@ -898,6 +997,10 @@ func (p *ArrayParameter) GetDefault() any {
 	return *p.Default
 }
 
+func (p *ArrayParameter) GetItems() Parameter {
+	return p.Items
+}
+
 // Manifest returns the manifest for the ArrayParameter.
 func (p *ArrayParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
@@ -906,12 +1009,13 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		authNames[i] = a.Name
 	}
 	items := p.Items.Manifest()
-	required := p.Default == nil
-	items.Required = required
+	// if required value is true, or there's no default value
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
+	items.Required = r
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
-		Required:     required,
+		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authNames,
 		Items:        &items,
@@ -930,5 +1034,213 @@ func (p *ArrayParameter) McpManifest() ParameterMcpManifest {
 		Type:        p.Type,
 		Description: p.Desc,
 		Items:       &items,
+	}
+}
+
+// MapParameter is a parameter representing a map with string keys. If ValueType is
+// specified (e.g., "string"), values are validated against that type. If ValueType
+// is empty, it is treated as a generic map[string]any.
+type MapParameter struct {
+	CommonParameter `yaml:",inline"`
+	Default         *map[string]any `yaml:"default,omitempty"`
+	ValueType       string          `yaml:"valueType,omitempty"`
+}
+
+// Ensure MapParameter implements the Parameter interface.
+var _ Parameter = &MapParameter{}
+
+// NewMapParameter is a convenience function for initializing a MapParameter.
+func NewMapParameter(name string, desc string, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name: name,
+			Type: "map",
+			Desc: desc,
+		},
+		ValueType: valueType,
+	}
+}
+
+// NewMapParameterWithDefault is a convenience function for initializing a MapParameter with a default value.
+func NewMapParameterWithDefault(name string, defaultV map[string]any, desc string, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name: name,
+			Type: "map",
+			Desc: desc,
+		},
+		ValueType: valueType,
+		Default:   &defaultV,
+	}
+}
+
+// NewMapParameterWithRequired is a convenience function for initializing a MapParameter as required.
+func NewMapParameterWithRequired(name string, desc string, required bool, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name:     name,
+			Type:     "map",
+			Desc:     desc,
+			Required: &required,
+		},
+		ValueType: valueType,
+	}
+}
+
+// NewMapParameterWithAuth is a convenience function for initializing a MapParameter with auth services.
+func NewMapParameterWithAuth(name string, desc string, valueType string, authServices []ParamAuthService) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         "map",
+			Desc:         desc,
+			AuthServices: authServices,
+		},
+		ValueType: valueType,
+	}
+}
+
+// UnmarshalYAML handles parsing the MapParameter from YAML input.
+func (p *MapParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	var rawItem struct {
+		CommonParameter `yaml:",inline"`
+		Default         *map[string]any `yaml:"default"`
+		ValueType       string          `yaml:"valueType"`
+	}
+	if err := unmarshal(&rawItem); err != nil {
+		return err
+	}
+
+	// Validate `ValueType` to be one of the supported basic types
+	if rawItem.ValueType != "" {
+		if _, err := getPrototypeParameter(rawItem.ValueType); err != nil {
+			return err
+		}
+	}
+
+	p.CommonParameter = rawItem.CommonParameter
+	p.Default = rawItem.Default
+	p.ValueType = rawItem.ValueType
+	return nil
+}
+
+// getPrototypeParameter is a helper factory to create a temporary parameter
+// based on a type string for parsing and manifest generation.
+func getPrototypeParameter(typeName string) (Parameter, error) {
+	switch typeName {
+	case "string":
+		return NewStringParameter("", ""), nil
+	case "integer":
+		return NewIntParameter("", ""), nil
+	case "boolean":
+		return NewBooleanParameter("", ""), nil
+	case "float":
+		return NewFloatParameter("", ""), nil
+	default:
+		return nil, fmt.Errorf("unsupported valueType %q for map parameter", typeName)
+	}
+}
+
+// Parse validates and parses an incoming value for the map parameter.
+func (p *MapParameter) Parse(v any) (any, error) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil, &ParseTypeError{p.Name, p.Type, m}
+	}
+	// for generic maps, convert json.Numbers to their corresponding types
+	if p.ValueType == "" {
+		convertedData, err := util.ConvertNumbers(m)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse integer or float values in map: %s", err)
+		}
+		convertedMap, ok := convertedData.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("internal error: ConvertNumbers should return a map, but got type %T", convertedData)
+		}
+		return convertedMap, nil
+	}
+
+	// Otherwise, get a prototype and parse each value in the map.
+	prototype, err := getPrototypeParameter(p.ValueType)
+	if err != nil {
+		return nil, err
+	}
+
+	rtn := make(map[string]any, len(m))
+	for key, val := range m {
+		parsedVal, err := prototype.Parse(val)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse value for key %q: %w", key, err)
+		}
+		rtn[key] = parsedVal
+	}
+	return rtn, nil
+}
+
+func (p *MapParameter) GetAuthServices() []ParamAuthService {
+	return p.AuthServices
+}
+
+func (p *MapParameter) GetDefault() any {
+	if p.Default == nil {
+		return nil
+	}
+	return *p.Default
+}
+
+func (p *MapParameter) GetValueType() string {
+	return p.ValueType
+}
+
+// Manifest returns the manifest for the MapParameter.
+func (p *MapParameter) Manifest() ParameterManifest {
+	authNames := make([]string, len(p.AuthServices))
+	for i, a := range p.AuthServices {
+		authNames[i] = a.Name
+	}
+	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
+
+	var additionalProperties any
+	if p.ValueType != "" {
+		prototype, err := getPrototypeParameter(p.ValueType)
+		if err != nil {
+			panic(err)
+		}
+		valueSchema := prototype.Manifest()
+		additionalProperties = &valueSchema
+	} else {
+		// If no valueType is given, allow any properties.
+		additionalProperties = true
+	}
+
+	return ParameterManifest{
+		Name:                 p.Name,
+		Type:                 "object",
+		Required:             r,
+		Description:          p.Desc,
+		AuthServices:         authNames,
+		AdditionalProperties: additionalProperties,
+	}
+}
+
+// McpManifest returns the MCP manifest for the MapParameter.
+func (p *MapParameter) McpManifest() ParameterMcpManifest {
+	var additionalProperties any
+	if p.ValueType != "" {
+		prototype, err := getPrototypeParameter(p.ValueType)
+		if err != nil {
+			panic(err)
+		}
+		valueSchema := prototype.McpManifest()
+		additionalProperties = &valueSchema
+	} else {
+		// If no valueType is given, allow any properties.
+		additionalProperties = true
+	}
+
+	return ParameterMcpManifest{
+		Type:                 "object",
+		Description:          p.Desc,
+		AdditionalProperties: additionalProperties,
 	}
 }

@@ -122,32 +122,46 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func getMapParamsType(tparams tools.Parameters, params tools.ParamValues) (map[string]bigtable.SQLType, error) {
-	paramTypeMap := make(map[string]string)
-	for _, p := range tparams {
-		paramTypeMap[p.GetName()] = p.GetType()
+func getBigtableType(paramType string) (bigtable.SQLType, error) {
+	switch paramType {
+	case "boolean":
+		return bigtable.BoolSQLType{}, nil
+	case "string":
+		return bigtable.StringSQLType{}, nil
+	case "integer":
+		return bigtable.Int64SQLType{}, nil
+	case "float":
+		return bigtable.Float64SQLType{}, nil
+	case "array":
+		return bigtable.ArraySQLType{}, nil
+	default:
+		return nil, fmt.Errorf("unknow param type %s", paramType)
 	}
-
-	btParams := make(map[string]bigtable.SQLType)
-	for _, p := range params {
-		switch paramTypeMap[p.Name] {
-		case "boolean":
-			btParams[p.Name] = bigtable.BoolSQLType{}
-		case "string":
-			btParams[p.Name] = bigtable.StringSQLType{}
-		case "integer":
-			btParams[p.Name] = bigtable.Int64SQLType{}
-		case "float":
-			btParams[p.Name] = bigtable.Float64SQLType{}
-		case "array":
-			btParams[p.Name] = bigtable.ArraySQLType{}
-		}
-	}
-
-	return btParams, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func getMapParamsType(tparams tools.Parameters, params tools.ParamValues) (map[string]bigtable.SQLType, error) {
+	btParamTypes := make(map[string]bigtable.SQLType)
+	for _, p := range tparams {
+		if p.GetType() == "array" {
+			itemType, err := getBigtableType(p.Manifest().Items.Type)
+			if err != nil {
+				return nil, err
+			}
+			btParamTypes[p.GetName()] = bigtable.ArraySQLType{
+				ElemType: itemType,
+			}
+			continue
+		}
+		paramType, err := getBigtableType(p.GetType())
+		if err != nil {
+			return nil, err
+		}
+		btParamTypes[p.GetName()] = paramType
+	}
+	return btParamTypes, nil
+}
+
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {

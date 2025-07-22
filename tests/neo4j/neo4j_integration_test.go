@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -87,7 +88,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -100,7 +101,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		want map[string]any
 	}{
 		{
-			name: "get my-simple-tool",
+			name: "get my-simple-cypher-tool",
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/",
 			want: map[string]any{
 				"my-simple-cypher-tool": map[string]any{

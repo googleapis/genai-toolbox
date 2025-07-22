@@ -26,6 +26,8 @@ import (
 )
 
 const kind string = "bigquery-get-dataset-info"
+const projectKey string = "project"
+const datasetKey string = "dataset"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -78,8 +80,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	datasetParameter := tools.NewStringParameter("dataset", "The dataset to get metadata information.")
-	parameters := tools.Parameters{datasetParameter}
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
+	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to get metadata information.")
+	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -115,22 +118,26 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-
-	sliceParams := params.AsSlice()
-	datasetId, ok := sliceParams[0].(string)
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+	mapParams := params.AsMap()
+	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
 
-	dsHandle := t.Client.Dataset(datasetId)
+	datasetId, ok := mapParams[datasetKey].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
+	}
+
+	dsHandle := t.Client.DatasetInProject(projectId, datasetId)
 
 	metadata, err := dsHandle.Metadata(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, t.Client.Project(), err)
 	}
 
-	return []any{metadata}, nil
+	return metadata, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

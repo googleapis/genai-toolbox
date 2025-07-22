@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -78,7 +79,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -140,7 +141,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 			name:        "invoke my-simple-dql-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-dql-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"result\":[{\"constant\":1}]}]",
+			want:        "{\"result\":[{\"constant\":1}]}",
 		},
 	}
 	for _, tc := range invokeTcs {
