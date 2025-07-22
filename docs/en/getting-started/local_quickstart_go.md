@@ -904,6 +904,12 @@ func main() {
 {{< /tab >}}
 {{< /tabpane >}}
 
+1. Ensure all dependencies are installed:
+
+    ```sh
+    go mod tidy
+    ```
+
 1. Run your agent, and observe the results:
 
     ```sh
