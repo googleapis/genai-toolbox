@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4j
+package neo4jcypher
 
 import (
 	"context"
 	"fmt"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"
 	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
@@ -119,7 +119,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)

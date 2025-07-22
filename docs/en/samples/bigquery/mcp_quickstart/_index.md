@@ -208,17 +208,25 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Type `y` when it asks to install the inspector package.
 
-1. It should show the following when the MCP Inspector is up and running:
+1. It should show the following when the MCP Inspector is up and running (please take note of `<YOUR_SESSION_TOKEN>`):
 
     ```bash
-    🔍 MCP Inspector is up and running at http://127.0.0.1:5173 🚀
+    Starting MCP inspector...
+    ⚙️ Proxy server listening on localhost:6277
+    🔑 Session token: <YOUR_SESSION_TOKEN>
+       Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
+
+    🚀 MCP Inspector is up and running at:
+       http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=<YOUR_SESSION_TOKEN>
     ```
 
 1. Open the above link in your browser.
 
-1. For `Transport Type`, select `SSE`.
+1. For `Transport Type`, select `Streamable HTTP`.
 
-1. For `URL`, type in `http://127.0.0.1:5000/mcp/sse`.
+1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
+
+1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
 
 1. Click Connect.
 
