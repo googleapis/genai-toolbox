@@ -198,13 +198,11 @@ func getWaitToolsConfig(sourceConfig map[string]any) map[string]any {
 			"wait-for-op1": map[string]any{
 				"kind":        waitToolKind,
 				"description": "wait for op1",
-				"method":      "GET",
 				"source":      "my-instance",
 			},
 			"wait-for-op2": map[string]any{
 				"kind":        waitToolKind,
 				"description": "wait for op2",
-				"method":      "GET",
 				"source":      "my-instance",
 			},
 		},

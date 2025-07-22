@@ -98,7 +98,6 @@ type Config struct {
 	Source       string            `yaml:"source" validate:"required"`
 	Description  string            `yaml:"description" validate:"required"`
 	AuthRequired []string          `yaml:"authRequired"`
-	Method       tools.HTTPMethod  `yaml:"method" validate:"required"`
 	Headers      map[string]string `yaml:"headers"`
 
 	// Polling configuration
@@ -172,7 +171,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:         cfg.Name,
 		Kind:         kind,
 		BaseURL:      baseURL,
-		Method:       cfg.Method,
 		Headers:      combinedHeaders,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.Client,
@@ -194,7 +192,6 @@ type Tool struct {
 	AuthRequired []string `yaml:"authRequired"`
 
 	BaseURL   string            `yaml:"baseURL"`
-	Method    tools.HTTPMethod  `yaml:"method"`
 	Headers   map[string]string `yaml:"headers"`
 	AllParams tools.Parameters  `yaml:"allParams"`
 
@@ -245,7 +242,7 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 		default:
 		}
 
-		req, _ := http.NewRequest(string(t.Method), urlString, nil)
+		req, _ := http.NewRequest(http.MethodGet, urlString, nil)
 
 		for k, v := range t.Headers {
 			req.Header.Set(k, v)
