@@ -15,7 +15,12 @@ It's compatible with the following sources:
 
 - [dataplex](../sources/dataplex.md)
 
-dataplex-search-entries requires a `query` parameter as input based on which entries are filtered and returned to the user.
+`dataplex-search-entries` takes a required `query` parameter based on which entries are 
+filtered and returned to the user. It also optionally accepts following parameters:
+  - `name` - The project to which the request should be attributed. Format: projects/{project}/locations/global
+  - `pageSize` - Number of results in the search page.
+  - `pageToken` - Page token received from a previous locations.searchEntries call.
+  - `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc
 
 ## Requirements
 
