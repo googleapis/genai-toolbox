@@ -124,13 +124,13 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	cypherQuery, ok := params.AsMap()["cypher"]
+	sliceParams := params.AsSlice()
+	cypherStr, ok := sliceParams[0].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing required parameter 'cypher'")
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
-	var cypherStr string
-	if cypherStr, ok = cypherQuery.(string); !ok || cypherStr == "" {
+	if cypherStr == "" {
 		return nil, fmt.Errorf("parameter 'cypher' must be a non-empty string")
 	}
 
