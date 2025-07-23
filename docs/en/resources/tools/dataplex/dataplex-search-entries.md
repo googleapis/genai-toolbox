@@ -21,6 +21,7 @@ filtered and returned to the user and a required `name` parameter which is const
   - `pageToken` - Page token received from a previous locations.searchEntries call.
   - `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc
   - `semanticSearch` - Specifies whether the search should understand the meaning and intent behind the query, rather than just matching keywords.
+  - `scope` - The scope under which the search should be operating. Since this parameter is not exposed to the toolbox user, it defaults to the organization where the project provided in name is located.
 
 ## Requirements
 
