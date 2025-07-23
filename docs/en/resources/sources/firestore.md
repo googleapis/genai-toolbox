@@ -58,7 +58,7 @@ sources:
   my-firestore-source:
     kind: "firestore"
     project: "my-project-id"
-    database: "my-database"
+    # database: "my-database"  # Optional, defaults to "(default)"
 ```
 
 ## Reference
@@ -67,4 +67,4 @@ sources:
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "firestore".                                                                                     |
 | project   |  string  |     true     | Id of the GCP project that contains the Firestore database (e.g. "my-project-id").                       |
-| database  |  string  |     true     | Name of the Firestore database to connect to.               |
+| database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |
