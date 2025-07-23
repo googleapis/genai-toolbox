@@ -16,7 +16,7 @@ The tool returns a JSON array of the documents found.
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ## Example
 

@@ -16,7 +16,7 @@ The tool returns a single JSON object representing the document, wrapped in a JS
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ---
 
