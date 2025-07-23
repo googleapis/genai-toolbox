@@ -69,6 +69,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfindone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
