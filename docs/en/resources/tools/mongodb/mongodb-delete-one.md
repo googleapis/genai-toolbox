@@ -18,7 +18,7 @@ The tool returns the number of documents deleted, which will be either `1` if a 
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ---
 
