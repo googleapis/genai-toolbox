@@ -76,6 +76,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		logger.WarnContext(ctx, "Insecure HTTP is enabled for Looker source %s. TLS certificate verification is skipped.\n", r.Name)
 	}
 	cfg := rtl.ApiSettings{
+		AgentTag:     "MCP_Toolbox",
 		BaseUrl:      r.BaseURL,
 		ApiVersion:   "4.0",
 		VerifySsl:    (r.SslVerification == "true"),
