@@ -16,7 +16,7 @@ This tool takes one required parameter named `data`, which must be a string cont
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ## Example
 
