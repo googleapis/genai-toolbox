@@ -19,14 +19,14 @@ It's compatible with the following sources:
 - [looker](../sources/looker.md)
 
 `looker-query-sql` takes eight parameters:
-    1. the `model`
-    2. the `explore`
-    3. the `fields` list
-    4. an optional set of `filters`
-    5. an optional set of `pivots`
-    6. an optional set of `sorts`
-    7. an optional `limit`
-    8. an optional `tz`
+1. the `model`
+2. the `explore`
+3. the `fields` list
+4. an optional set of `filters`
+5. an optional set of `pivots`
+6. an optional set of `sorts`
+7. an optional `limit`
+8. an optional `tz`
 
 ## Example
 
