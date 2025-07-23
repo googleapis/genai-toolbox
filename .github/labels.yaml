@@ -79,13 +79,12 @@
 
 - name: 'status: help wanted'
   color: 8befd7
-  description: Status: Unplanned work open to contributions from the community. 
+  description: 'Status: Unplanned work open to contributions from the community.'
 - name: 'status: feedback wanted'
   color: 8befd7
-  description: Status: waiting for feedback from community or issue author. 
+  description: 'Status: waiting for feedback from community or issue author.'
 
 # Product Labels
 - name: 'product: bigquery'
   color: 5065c7
-  description: Product: Assigned to the BigQuery team. 
-
+  description: 'Product: Assigned to the BigQuery team.'
