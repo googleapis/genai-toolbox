@@ -39,7 +39,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, SslVerification: "true", Timeout: "120s"} // Default Ssl,timeout
+	actual := Config{Name: name, SslVerification: "true", Timeout: "600s"} // Default Ssl,timeout
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -92,15 +92,11 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	logger.DebugContext(ctx, fmt.Sprintf("logged in as user %v %v.\n", *me.FirstName, *me.LastName))
 
 	s := &Source{
-		Name:            r.Name,
-		Kind:            SourceKind,
-		BaseURL:         r.BaseURL,
-		ClientId:        r.ClientId,
-		ClientSecret:    r.ClientSecret,
-		SslVerification: (r.SslVerification == "true"),
-		Timeout:         r.Timeout,
-		Client:          sdk,
-		ApiSettings:     &cfg,
+		Name:        r.Name,
+		Kind:        SourceKind,
+		Timeout:     r.Timeout,
+		Client:      sdk,
+		ApiSettings: &cfg,
 	}
 	return s, nil
 
@@ -109,15 +105,11 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name            string `yaml:"name"`
-	Kind            string `yaml:"kind"`
-	BaseURL         string `yaml:"baseUrl"`
-	ClientId        string `yaml:"client_id"`
-	ClientSecret    string `yaml:"client_secret"`
-	SslVerification bool   `yaml:"verify_ssl"`
-	Timeout         string `yaml:"timeout"`
-	Client          *v4.LookerSDK
-	ApiSettings     *rtl.ApiSettings
+	Name        string `yaml:"name"`
+	Kind        string `yaml:"kind"`
+	Timeout     string `yaml:"timeout"`
+	Client      *v4.LookerSDK
+	ApiSettings *rtl.ApiSettings
 }
 
 func (s *Source) SourceKind() string {

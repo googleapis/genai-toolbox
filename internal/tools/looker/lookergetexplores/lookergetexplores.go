@@ -119,7 +119,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	mapParams := params.AsMap()
 	model, ok := mapParams["model"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", mapParams["model"])
+		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
 	}
 
 	resp, err := t.Client.LookmlModel(model, "explores(name,label,group_label)", t.ApiSettings)

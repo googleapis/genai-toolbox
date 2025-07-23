@@ -154,7 +154,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	logger.DebugContext(ctx, "params = ", params)
 	paramsMap := params.AsMap()
 
-	logger.DebugContext(ctx, fmt.Sprintf("fields = %v %T", paramsMap["fields"], paramsMap["fields"]))
 	f, err := tools.ConvertAnySliceToTyped(paramsMap["fields"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert fields to array of strings: %s", err)

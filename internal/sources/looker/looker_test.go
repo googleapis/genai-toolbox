@@ -48,7 +48,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 					BaseURL:         "http://example.looker.com/",
 					ClientId:        "jasdl;k;tjl",
 					ClientSecret:    "sdakl;jgflkasdfkfg",
-					Timeout:         "120s",
+					Timeout:         "600s",
 					SslVerification: "true",
 				},
 			},
