@@ -14,3 +14,4 @@ node_modules
 
 # coverage
 .coverage
+genai-toolbox
