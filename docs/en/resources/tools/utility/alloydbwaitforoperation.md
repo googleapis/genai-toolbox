@@ -8,9 +8,9 @@ description: >
 
 The `alloydb-wait-for-operation` tool is a utility tool that waits for a long-running AlloyDB operation to complete. It does this by polling the AlloyDB Admin API operation status endpoint until the operation is finished, using exponential backoff.
 
-{{% notice info %}}
+{{< notice info >}}
 This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents.
-{{% /notice %}}
+{{< /notice >}}
 
 ## Example
 
