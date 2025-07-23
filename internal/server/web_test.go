@@ -59,6 +59,20 @@ func TestWebEndpoint(t *testing.T) {
 			wantContentType: "text/html",
 			wantPageTitle:   "Tools View",
 		},
+		{
+			name:            "web toolsets page",
+			path:            "/ui/toolsets",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "Toolsets View",
+		},
+		{
+			name:            "web toolsets page with trailing slash",
+			path:            "/ui/toolsets/",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "Toolsets View",
+		},
 	}
 
 	for _, tc := range testCases {
