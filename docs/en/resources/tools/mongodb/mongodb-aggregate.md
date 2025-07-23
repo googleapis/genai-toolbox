@@ -18,7 +18,7 @@ A `readOnly` flag can be set to `true` as a safety measure to ensure the pipelin
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ## Example
 
