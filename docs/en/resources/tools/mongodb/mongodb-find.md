@@ -18,8 +18,6 @@ This tool is compatible with the following source kind:
 
 * [`mongodb`](../sources/mongodb.md)
 
----
-
 ## Example
 
 Here's an example that finds up to 10 users from the `customers` collection who live in a specific city. The results are sorted by their last name, and only their first name, last name, and email are returned.
