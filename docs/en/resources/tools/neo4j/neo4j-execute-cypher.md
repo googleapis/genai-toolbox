@@ -15,7 +15,7 @@ A `neo4j-execute-cypher` tool executes an arbitrary Cypher query provided as a s
 
 - [neo4j](../sources/neo4j.md)
 
-For security, the tool can be configured to be read-only. If the `isReadonly` flag is set to `true`, the tool will analyze the incoming Cypher query and reject any write operations (like `CREATE`, `MERGE`, `DELETE`, etc.) before execution.
+For security, the tool can be configured to be read-only. If the `readOnly` flag is set to `true`, the tool will analyze the incoming Cypher query and reject any write operations (like `CREATE`, `MERGE`, `DELETE`, etc.) before execution.
 
 The Cypher query uses standard [Neo4j Cypher](https://neo4j.com/docs/cypher-manual/current/queries/) syntax and supports all Cypher features, including pattern matching, filtering, and aggregation.
 
