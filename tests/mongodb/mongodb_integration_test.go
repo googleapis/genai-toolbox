@@ -79,7 +79,6 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	}
 
 	// set up data for param tool
-	//setupMongoDB(t, ctx, database)
 	teardownDB := setupMongoDB(t, ctx, database)
 	defer teardownDB(t)
 
