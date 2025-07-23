@@ -18,14 +18,22 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
+	bigqueryapi "cloud.google.com/go/bigquery"
+	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
 var (
@@ -45,12 +53,39 @@ func getDataplexVars(t *testing.T) map[string]any {
 	}
 }
 
+// Copied over from bigquery.go
+func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
+	ctx := context.Background()
+	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+	}
+
+	client, err := bigqueryapi.NewClient(ctx, project, option.WithCredentials(cred))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
+	}
+	return client, nil
+}
+
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
+
+	bigqueryClient, err := initBigQueryConnection(DataplexProject)
+	if err != nil {
+		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
+	}
+
+	// create table name with UUID
+	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	tableName := fmt.Sprintf("param_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+
+	teardownTable1 := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
+	defer teardownTable1(t)
 
 	toolsFile := getDataplexToolsConfig(sourceConfig)
 
@@ -69,7 +104,62 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	}
 
 	runDataplexSearchEntriesToolGetTest(t)
-	runDataplexSearchEntriesToolInvokeTest(t)
+	runDataplexSearchEntriesToolInvokeTest(t, tableName, datasetName)
+}
+
+func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
+	// Create dataset
+	dataset := client.Dataset(datasetName)
+	_, err := dataset.Metadata(ctx)
+
+	if err != nil {
+		apiErr, ok := err.(*googleapi.Error)
+		if !ok || apiErr.Code != 404 {
+			t.Fatalf("Failed to check dataset %q existence: %v", datasetName, err)
+		}
+		metadataToCreate := &bigqueryapi.DatasetMetadata{Name: datasetName}
+		if err := dataset.Create(ctx, metadataToCreate); err != nil {
+			t.Fatalf("Failed to create dataset %q: %v", datasetName, err)
+		}
+	}
+
+	// Create table
+	tab := client.Dataset(datasetName).Table(tableName)
+	meta := &bigqueryapi.TableMetadata{}
+	if err := tab.Create(ctx, meta); err != nil {
+		t.Fatalf("Create table job for %s failed: %v", tableName, err)
+	}
+
+	return func(t *testing.T) {
+		// tear down table
+		dropSQL := fmt.Sprintf("drop table %s.%s", datasetName, tableName)
+		dropJob, err := client.Query(dropSQL).Run(ctx)
+		if err != nil {
+			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
+			return
+		}
+		dropStatus, err := dropJob.Wait(ctx)
+		if err != nil {
+			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
+			return
+		}
+		if err := dropStatus.Err(); err != nil {
+			t.Errorf("Error dropping table %s: %v", tableName, err)
+		}
+
+		// tear down dataset
+		datasetToTeardown := client.Dataset(datasetName)
+		tablesIterator := datasetToTeardown.Tables(ctx)
+		_, err = tablesIterator.Next()
+
+		if err == iterator.Done {
+			if err := datasetToTeardown.Delete(ctx); err != nil {
+				t.Errorf("Failed to delete dataset %s: %v", datasetName, err)
+			}
+		} else if err != nil {
+			t.Errorf("Failed to list tables in dataset %s to check emptiness: %v.", datasetName, err)
+		}
+	}
 }
 
 func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
@@ -142,8 +232,8 @@ func runDataplexSearchEntriesToolGetTest(t *testing.T) {
 	}
 }
 
-func runDataplexSearchEntriesToolInvokeTest(t *testing.T) {
-	body := []byte(`{"query":"displayname=users parent:test_dataset"}`)
+func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, datasetName string) {
+	body := []byte(fmt.Sprintf(`{"query":"displayname=%s SYSTEM=bigquery parent:%s"}`, tableName, datasetName))
 	resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-search-entries-tool/invoke", "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatalf("error making POST request: %s", err)
