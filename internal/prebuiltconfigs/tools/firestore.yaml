@@ -2,7 +2,7 @@ sources:
   firestore-source:
     kind: firestore
     project: ${FIRESTORE_PROJECT}
-    database: ${FIRESTORE_DATABASE}  # Optional, defaults to "(default)" if not specified
+    database: ${FIRESTORE_DATABASE}
 
 tools:
   firestore-get-documents:
