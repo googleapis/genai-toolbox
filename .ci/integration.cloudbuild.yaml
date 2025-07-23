@@ -452,6 +452,7 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
+      - "API_KEY=$(gcloud auth print-access-token)"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
