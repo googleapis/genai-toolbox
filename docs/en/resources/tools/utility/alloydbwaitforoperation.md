@@ -40,7 +40,7 @@ tools:
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
 | kind        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
 | source      |  string  |     true     | Name of the source the HTTP request should be sent to.                                                           |
-| description |  string  |    false     | A description of the tool.                                                                                       |
+| description |  string  |    true     | A description of the tool.                                                                                       |
 | delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |
 | maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                  |
 | multiplier  |  float   |    false     | The multiplier for the polling delay. The delay is multiplied by this value after each request. Defaults to 2.0. |

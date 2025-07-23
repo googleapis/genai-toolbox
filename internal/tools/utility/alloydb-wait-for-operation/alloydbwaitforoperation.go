@@ -30,6 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -52,8 +53,8 @@ Update the MCP server configuration with the following environment variables:
           "ALLOYDB_POSTGRES_CLUSTER": "{{.Cluster}}",
 {{if .Instance}}          "ALLOYDB_POSTGRES_INSTANCE": "{{.Instance}}",
 {{end}}          "ALLOYDB_POSTGRES_DATABASE": "postgres",
-          "ALLOYDB_POSTGRES_USER": "<your-user>",
-          "ALLOYDB_POSTGRES_PASSWORD": "<your-password>"
+          "ALLOYDB_POSTGRES_USER": ""{{.User}}",",
+          "ALLOYDB_POSTGRES_PASSWORD": ""{{.Password}}",
       }
     }
   }
@@ -61,7 +62,7 @@ Update the MCP server configuration with the following environment variables:
 ` + "```" + `
 
 **If running remotely:**
-For remote deployments, you will need to set the following environment variables in your deployment configuration. It is recommended to manage these as secrets:
+For remote deployments, you will need to set the following environment variables in your deployment configuration:
 ` + "```" + `
 ALLOYDB_POSTGRES_PROJECT={{.Project}}
 ALLOYDB_POSTGRES_REGION={{.Region}}
@@ -72,7 +73,7 @@ ALLOYDB_POSTGRES_USER=<your-user>
 ALLOYDB_POSTGRES_PASSWORD=<your-password>
 ` + "```" + `
 
-Please refer to the official documentation for guidance on deploying the toolbox and managing secrets:
+Please refer to the official documentation for guidance on deploying the toolbox:
 - Deploying the Toolbox: https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/
 - Deploying on GKE: https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/
 `
@@ -127,9 +128,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	allParameters := tools.Parameters{
-		&tools.StringParameter{CommonParameter: tools.CommonParameter{Name: "project", Desc: "The project ID"}},
-		&tools.StringParameter{CommonParameter: tools.CommonParameter{Name: "location", Desc: "The location ID"}},
-		&tools.StringParameter{CommonParameter: tools.CommonParameter{Name: "operation_id", Desc: "The operation ID"}},
+		tools.NewStringParameter("project", "The project ID"),
+		tools.NewStringParameter("location", "The location ID"),
+		tools.NewStringParameter("operation_id", "The operation ID"),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -142,14 +143,26 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: inputSchema,
 	}
 
-	delay, err := time.ParseDuration(cfg.Delay)
-	if err != nil {
+	var delay time.Duration
+	if cfg.Delay == "" {
 		delay = 3 * time.Second
+	} else {
+		var err error
+		delay, err = time.ParseDuration(cfg.Delay)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for delay: %w", err)
+		}
 	}
 
-	maxDelay, err := time.ParseDuration(cfg.MaxDelay)
-	if err != nil {
+	var maxDelay time.Duration
+	if cfg.MaxDelay == "" {
 		maxDelay = 4 * time.Minute
+	} else {
+		var err error
+		maxDelay, err = time.ParseDuration(cfg.MaxDelay)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for maxDelay: %w", err)
+		}
 	}
 
 	multiplier := cfg.Multiplier
@@ -162,15 +175,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		maxRetries = 10
 	}
 
-	baseURL := s.BaseURL
-	if baseURL == "" {
-		baseURL = "https://alloydb.googleapis.com"
-	}
-
 	return &Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		BaseURL:      baseURL,
+		BaseURL:      s.BaseURL,
 		Headers:      combinedHeaders,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.Client,
@@ -246,6 +254,12 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 
 		for k, v := range t.Headers {
 			req.Header.Set(k, v)
+		}
+
+		if ua, err := util.UserAgentFromContext(ctx); err == nil {
+			req.Header.Set("User-Agent", ua)
+		} else if req.Header.Get("User-Agent") == "" {
+			req.Header.Set("User-Agent", "alloydb-wait-for-operation")
 		}
 
 		resp, err := t.Client.Do(req)
