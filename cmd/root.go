@@ -70,7 +70,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydb-wait-for-operation"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 

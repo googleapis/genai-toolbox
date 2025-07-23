@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydb-wait-for-operation"
+	alloydbwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 )
 
 func TestParseFromYaml(t *testing.T) {
