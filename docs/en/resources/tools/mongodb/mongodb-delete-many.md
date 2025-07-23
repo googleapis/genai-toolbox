@@ -16,7 +16,7 @@ The tool returns the total count of documents that were deleted. If the filter d
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ---
 
