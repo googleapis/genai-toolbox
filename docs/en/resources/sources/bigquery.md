@@ -54,7 +54,7 @@ avoiding full table scans or complex filters.
 - [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
   List tables in a given dataset.
 
-### Pre-built Tools
+### Pre-built Configurations
 
 - [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)  
 Connect your IDE to BigQuery using Toolbox.

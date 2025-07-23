@@ -23,7 +23,7 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
 
-### Pre-built Tools
+### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
 Connect your IDE to PostgreSQL using Toolbox.
