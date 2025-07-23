@@ -58,7 +58,7 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/amd64/toolb
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox>
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox.exe>
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
