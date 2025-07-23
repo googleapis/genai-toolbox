@@ -69,6 +69,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeleteone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
