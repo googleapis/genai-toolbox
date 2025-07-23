@@ -15,6 +15,14 @@ amount of data through a structured format.
 
 [mssql-docs]: https://www.microsoft.com/en-us/sql-server
 
+## Available Tools
+
+- [`mssql-sql`](../tools/mssql/mssql-sql.md)  
+  Execute pre-defined SQL Server queries with placeholder parameters.
+
+- [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
+  Run parameterized SQL Server queries in SQL Server.
+
 ## Requirements
 
 ### Database User
