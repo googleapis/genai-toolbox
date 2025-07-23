@@ -333,8 +333,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	if ua, err := util.UserAgentFromContext(ctx); err == nil {
 		req.Header.Set("User-Agent", ua)
-	} else if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "http-tool")
 	}
 
 	// Make request and fetch response
