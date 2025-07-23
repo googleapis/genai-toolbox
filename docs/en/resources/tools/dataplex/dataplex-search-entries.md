@@ -17,10 +17,10 @@ It's compatible with the following sources:
 
 `dataplex-search-entries` takes a required `query` parameter based on which entries are 
 filtered and returned to the user and a required `name` parameter which is constructed using source's project if user does not provide it explicitly and has the following format: projects/{project}/locations/global. It also optionally accepts following parameters:
-  - `pageSize` - Number of results in the search page.
+  - `pageSize` - Number of results in the search page. Defaults to `100`.
   - `pageToken` - Page token received from a previous locations.searchEntries call.
   - `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc
-  - `semanticSearch` - Specifies whether the search should understand the meaning and intent behind the query, rather than just matching keywords.
+  - `semanticSearch` - Specifies whether the search should understand the meaning and intent behind the query, rather than just matching keywords. Defaults to `true`.
   - `scope` - The scope under which the search should be operating. Since this parameter is not exposed to the toolbox user, it defaults to the organization where the project provided in name is located.
 
 ## Requirements
