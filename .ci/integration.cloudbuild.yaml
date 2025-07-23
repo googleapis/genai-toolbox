@@ -425,7 +425,7 @@ steps:
           "Valkey" \
           valkey \
           valkey
-          
+
   - id: "firestore"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -466,26 +466,8 @@ steps:
           "Looker" \
           looker \
           looker
+    
 
-  - id: "mongodb"
-    name : golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-      - "MONGODB_DATABASE=$_MONGODB_DATABASE"
-    secretEnv: ["CLIENT_ID", "MONGODB_URI"]
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "MongoDB" \
-          mongodb \
-          mongodb
 
   - id: "alloydbwaitforoperation"
     name: golang:1
@@ -564,8 +546,6 @@ availableSecrets:
       env: LOOKER_CLIENT_ID
     - versionName: projects/107716898620/secrets/looker_client_secret/versions/latest
       env: LOOKER_CLIENT_SECRET
-    - versionName: projects/$PROJECT_ID/secrets/mongodb_uri/versions/latest
-      env: MONGODB_URI
 
 
 options:
@@ -599,4 +579,3 @@ substitutions:
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
   _LOOKER_VERIFY_SSL: "true"
-  _MONGODB_DATABASE: "test"
