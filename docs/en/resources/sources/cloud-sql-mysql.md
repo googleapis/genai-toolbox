@@ -28,7 +28,7 @@ to a database by following these instructions][csql-mysql-quickstart].
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in Cloud SQL for MySQL.
 
-### Pre-built Tools
+### Pre-built Configurations
 
 - [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)  
 Connect your IDE to Cloud SQL for MySQL using Toolbox.

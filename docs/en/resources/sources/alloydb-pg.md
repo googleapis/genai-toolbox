@@ -33,7 +33,7 @@ cluster][alloydb-free-trial].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in AlloyDB Postgres.
 
-### Pre-built Tools
+### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
 Connect your IDE to AlloyDB using Toolbox.
