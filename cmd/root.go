@@ -71,6 +71,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfindone"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
