@@ -101,7 +101,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		want map[string]any
 	}{
 		{
-			name: "get my-simple-tool",
+			name: "get my-simple-cypher-tool",
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/",
 			want: map[string]any{
 				"my-simple-cypher-tool": map[string]any{

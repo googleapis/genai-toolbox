@@ -436,6 +436,7 @@ import (
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/googleapis/mcp-toolbox-sdk-go/core"
+	"github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
 	"github.com/invopop/jsonschema"
 )
 
@@ -457,33 +458,12 @@ func main() {
 		log.Fatalf("Failed to load tools: %v", err)
 	}
 
-	// Fetch the tool's input schema
-	inputschema, err := tool.InputSchema()
+	// Convert the tool using the tbgenkit package
+ 	// Use this tool with Genkit Go
+	genkitTool, err := tbgenkit.ToGenkitTool(tool, g)
 	if err != nil {
-		log.Fatalf("Failed to fetch inputSchema: %v", err)
+		log.Fatalf("Failed to convert tool: %v\n", err)
 	}
-
-	var schema *jsonschema.Schema
-	_ = json.Unmarshal(inputschema, &schema)
-
-	executeFn := func(ctx *ai.ToolContext, input any) (string, error) {
-		result, err := tool.Invoke(ctx, input.(map[string]any))
-		if err != nil {
-			// Propagate errors from the tool invocation.
-			return "", err
-		}
-
-		return result.(string), nil
-	}
-
-	// Use this tool with Genkit Go
-	genkitTool := genkit.DefineToolWithInputSchema(
-		g,
-		tool.Name(),
-		tool.Description(),
-		schema,
-		executeFn,
-	)
 }
 {{< /highlight >}}
 

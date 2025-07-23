@@ -509,6 +509,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       "github.com/firebase/genkit/go/ai"
       "github.com/firebase/genkit/go/genkit"
       "github.com/googleapis/mcp-toolbox-sdk-go/core"
+      "github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
       "github.com/invopop/jsonschema"
     )
 
@@ -524,30 +525,12 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       // Framework agnostic tool
       tool, err := client.LoadTool("toolName", ctx)
 
-      // Fetch the tool's input schema
-      inputschema, err := tool.InputSchema()
-
-      var schema *jsonschema.Schema
-      _ = json.Unmarshal(inputschema, &schema)
-
-      executeFn := func(ctx *ai.ToolContext, input any) (string, error) {
-        result, err := tool.Invoke(ctx, input.(map[string]any))
-        if err != nil {
-          // Propagate errors from the tool invocation.
-          return "", err
-        }
-
-        return result.(string), nil
-      }
-
+      // Convert the tool using the tbgenkit package
       // Use this tool with Genkit Go
-      genkitTool := genkit.DefineToolWithInputSchema(
-        g,
-        tool.Name(),
-        tool.Description(),
-        schema,
-        executeFn,
-      )
+      genkitTool, err := tbgenkit.ToGenkitTool(tool, g)
+  		if err != nil {
+  			log.Fatalf("Failed to convert tool: %v\n", err)
+  		}
     }
     ```
 
