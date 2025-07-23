@@ -16,7 +16,7 @@ The tool returns an array of three integers: `[ModifiedCount, UpsertedCount, Mat
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ---
 
