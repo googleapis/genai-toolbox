@@ -14,7 +14,7 @@ A `mongodb-update-one` tool updates a single document within a specified MongoDB
 
 This tool is compatible with the following source kind:
 
-* [`mongodb`](../sources/mongodb.md)
+* [`mongodb`](../../sources/mongodb.md)
 
 ---
 
