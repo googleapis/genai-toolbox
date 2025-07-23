@@ -462,8 +462,8 @@ steps:
       - |
         .ci/test_with_coverage.sh \
           "Alloydb Wait for Operation" \
-          alloydbwaitforoperation \
-          utility
+          utility \
+          alloydbwaitforoperation
           
 availableSecrets:
   secretManager:
