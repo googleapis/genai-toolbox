@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -83,38 +82,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.FilterParams, cfg.FilterParams, cfg.UpdateParams)
 
-	// Create parameter manifest
-	paramManifest := slices.Concat(
-		cfg.FilterParams.Manifest(),
-	)
+	// Verify no duplicate parameter names
+	err := tools.CheckDuplicateParameters(allParameters)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create Toolbox manifest
+	paramManifest := allParameters.Manifest()
+
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across filterParams, projectParams, and sortParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
-	}
-
-	// Create MCP Manifest
-	propertiesManifest := allParameters.McpManifest().Properties
-	requiredManifest := allParameters.McpManifest().Required
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: propertiesManifest,
-		Required:   requiredManifest,
-	}
-
+	// Create MCP manifest
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: allParameters.McpManifest(),
 	}
 
 	// finish tool setup
@@ -161,7 +146,7 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := common.ParsePayloadTemplate(t.FilterParams, t.FilterPayload, paramsMap)
+	filterString, err := tools.PopulateTemplateWithJSON("MongoDBUpdateManyFilter", t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
@@ -172,7 +157,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
 	}
 
-	updateString, err := common.GetUpdate(t.UpdateParams, t.UpdatePayload, paramsMap)
+	updateString, err := tools.PopulateTemplateWithJSON("MongoDBUpdateMany", t.UpdatePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get update: %w", err)
 	}
