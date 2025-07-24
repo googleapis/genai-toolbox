@@ -790,6 +790,13 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 	}
 }
 
+func (p *FloatParameter) McpManifest() ParameterMcpManifest {
+	return ParameterMcpManifest{
+		Type:        "number",
+		Description: p.Desc,
+	}
+}
+
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
 func NewBooleanParameter(name string, desc string) *BooleanParameter {
 	return &BooleanParameter{
