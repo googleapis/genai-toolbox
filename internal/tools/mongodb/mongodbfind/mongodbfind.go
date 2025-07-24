@@ -95,6 +95,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
+	// Verify there are no duplicate parameter names
+	seenNames := make(map[string]bool)
+	for _, param := range paramManifest {
+		if _, exists := seenNames[param.Name]; exists {
+			return nil, fmt.Errorf("parameter name must be unique across filterParams, projectParams, and sortParams. Duplicate parameter: %s", param.Name)
+		}
+		seenNames[param.Name] = true
+	}
+
 	filterMcpManifest := cfg.FilterParams.McpManifest()
 	projectMcpManifest := cfg.ProjectParams.McpManifest()
 	sortMcpManifest := cfg.SortParams.McpManifest()
@@ -126,15 +135,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Type:       "object",
 		Properties: concatPropertiesManifest,
 		Required:   concatRequiredManifest,
-	}
-
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across filterParams, projectParams, and sortParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
 	}
 
 	mcpManifest := tools.McpManifest{

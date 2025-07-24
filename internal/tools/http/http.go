@@ -105,6 +105,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
+
+	// Verify there are no duplicate parameter names
+	seenNames := make(map[string]bool)
+	for _, param := range paramManifest {
+		if _, exists := seenNames[param.Name]; exists {
+			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
+		}
+		seenNames[param.Name] = true
+	}
+
 	pathMcpManifest := cfg.PathParams.McpManifest()
 	queryMcpManifest := cfg.QueryParams.McpManifest()
 	bodyMcpManifest := cfg.BodyParams.McpManifest()
@@ -141,15 +151,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Type:       "object",
 		Properties: concatPropertiesManifest,
 		Required:   concatRequiredManifest,
-	}
-
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
 	}
 
 	mcpManifest := tools.McpManifest{
