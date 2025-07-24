@@ -136,7 +136,7 @@ type Tool struct {
 	Driver       neo4j.DriverWithContext
 	Database     string
 	cache        *cache.Cache
-	conf         *Config
+	cacheExpireMinutes         *int
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
 }
