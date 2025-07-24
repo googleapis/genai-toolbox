@@ -33,13 +33,9 @@ to expose your developer assistant tools to a Firestore instance:
     * [Create a new project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
     * [Select an existing project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects)
 
-1. Enable the Firestore API for your project.
+1. [Enable the Firestore API](https://console.cloud.google.com/apis/library/firestore.googleapis.com) for your project.
 
-    * [Enable Firestore API](https://console.cloud.google.com/apis/library/firestore.googleapis.com)
-
-1. Create a Firestore database if you haven't already.
-
-    * [Create a Firestore database](https://cloud.google.com/firestore/docs/create-database-web-mobile-client-library)
+1. [Create a Firestore database](https://cloud.google.com/firestore/docs/create-database-web-mobile-client-library) if you haven't already.
 
 1. Set up authentication for your local environment.
 
@@ -56,19 +52,19 @@ to expose your developer assistant tools to a Firestore instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/linux/amd64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/darwin/arm64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/darwin/amd64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/windows/amd64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/windows/amd64/toolbox
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
