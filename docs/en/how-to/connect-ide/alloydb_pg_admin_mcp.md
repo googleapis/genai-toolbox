@@ -3,7 +3,7 @@ title: "AlloyDB Admin API using MCP"
 type: docs
 weight: 2
 description: >
-  Create your AlloyDB Database with MCP Toolbox.
+  Create your AlloyDB database with MCP Toolbox.
 ---
 
 This guide covers how to use [MCP Toolbox for Databases][toolbox] to create AlloyDB clusters and instances from IDE enabling their E2E journey.
