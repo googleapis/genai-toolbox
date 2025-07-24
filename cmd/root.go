@@ -74,8 +74,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeleteone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfindone"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertmany"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbinsertone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
