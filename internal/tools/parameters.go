@@ -790,6 +790,8 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 	}
 }
 
+// McpManifest returns the MCP manifest for the FloatParameter.
+// json schema only allow numeric types of 'integer' and 'number'.
 func (p *FloatParameter) McpManifest() ParameterMcpManifest {
 	return ParameterMcpManifest{
 		Type:        "number",
