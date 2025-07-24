@@ -147,13 +147,16 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	if it == nil {
 		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
 	}
+
 	var results []*dataplexpb.SearchEntriesResult
+	var resultIndex = 0
 	for {
 		entry, err := it.Next()
-		if err != nil {
+		if err != nil || resultIndex >= 5 {
 			break
 		}
 		results = append(results, entry)
+		resultIndex++
 	}
 	return results, nil
 }

@@ -4,7 +4,7 @@ sources:
     project: ${DATAPLEX_PROJECT}
 
 tools:
-  search_entries:
+  dataplex_search_entries:
     kind: dataplex-search-entries
     source: dataplex-source
     description: |
@@ -71,4 +71,4 @@ tools:
 
 toolsets:
   dataplex-tools:
-    - search_entries
+    - dataplex_search_entries
