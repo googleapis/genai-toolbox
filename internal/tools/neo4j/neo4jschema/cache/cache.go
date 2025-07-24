@@ -86,6 +86,9 @@ func NewCache() *Cache {
 //	c := cache.NewCache().WithJanitor(10 * time.Minute)
 //	defer c.Stop() // It's important to stop the janitor when the cache is no longer needed.
 func (c *Cache) WithJanitor(interval time.Duration) *Cache {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if c.stop != nil {
 		// If a janitor is already running, stop it before starting a new one.
 		close(c.stop)
@@ -98,7 +101,7 @@ func (c *Cache) WithJanitor(interval time.Duration) *Cache {
 	}
 
 	// Start the janitor in a new goroutine.
-	go c.janitor(interval)
+	go c.janitor(interval, c.stop)
 	return c
 }
 
@@ -160,6 +163,9 @@ func (c *Cache) Set(key string, value any, ttl time.Duration) {
 // It is safe to call Stop even if the janitor was never started or has already
 // been stopped. This is useful for cleaning up resources.
 func (c *Cache) Stop() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if c.stop != nil {
 		close(c.stop)
 		c.stop = nil
@@ -168,7 +174,7 @@ func (c *Cache) Stop() {
 
 // janitor is the background cleanup worker. It runs in a separate goroutine.
 // It uses a time.Ticker to periodically trigger the deletion of expired items.
-func (c *Cache) janitor(interval time.Duration) {
+func (c *Cache) janitor(interval time.Duration, stopCh chan struct{}) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -177,7 +183,7 @@ func (c *Cache) janitor(interval time.Duration) {
 		case <-ticker.C:
 			// Time to clean up expired items.
 			c.deleteExpired()
-		case <-c.stop:
+		case <-stopCh:
 			// Stop signal received, exit the goroutine.
 			return
 		}
