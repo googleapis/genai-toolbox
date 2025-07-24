@@ -28,6 +28,7 @@ func IsValidName(s string) bool {
 	return validName.MatchString(s)
 }
 
+// ConvertAnySliceToTyped a []any to typed slice ([]string, []int, []float etc.)
 func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {
 	var typedSlice any
 	switch itemType {
@@ -75,7 +76,7 @@ func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {
 	return typedSlice, nil
 }
 
-// helper function to convert a parameter to JSON formatted string.
+// convertParamToJSON  is a Go template helper function to convert a parameter to JSON formatted string.
 func convertParamToJSON(param any) (string, error) {
 	jsonData, err := json.Marshal(param)
 	if err != nil {
@@ -84,6 +85,7 @@ func convertParamToJSON(param any) (string, error) {
 	return string(jsonData), nil
 }
 
+// PopulateTemplateWithJSON populate a Go template with a custom `json` array formatter
 func PopulateTemplateWithJSON(templateName, templateString string, data map[string]any) (string, error) {
 	funcMap := template.FuncMap{
 		"json": convertParamToJSON,
