@@ -93,7 +93,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
-
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
