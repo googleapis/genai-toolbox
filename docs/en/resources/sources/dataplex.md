@@ -23,6 +23,59 @@ sources:
     project: "my-project-id"
 ```
 
+## Sample System prompt
+
+```
+Whenever you will receive response from dataplex_search_entries tool decide what do to by following these steps:
+1. If there are multiple search results found
+    1.1. Present the list of search results
+    1.2. Format the output in nested ordered list, for example:
+    Given
+    ```
+    {
+        results: [
+            {
+                name: "projects/test-project/locations/us/entryGroups/@bigquery-aws-us-east-1/entries/users"
+                entrySource: {
+                displayName: "Users"
+                description: "Table contains list of users."
+                location: "aws-us-east-1"
+                system: "BigQuery"
+                }
+            },
+            {
+                name: "projects/another_project/locations/us-central1/entryGroups/@bigquery/entries/top_customers"
+                entrySource: {
+                displayName: "Top customers",
+                description: "Table contains list of best customers."
+                location: "us-central1"
+                system: "BigQuery"
+                }
+            },
+        ]
+    }
+    ```
+    Return output formatted as markdown nested list:
+    ```
+    * Users:
+        - projectId: test_project
+        - location: aws-us-east-1
+        - description: Table contains list of users.
+    * Top customers:
+        - projectId: another_project
+        - location: us-central1
+        - description: Table contains list of best customers.
+    ```
+    1.3. Ask to select one of the presented search results
+2. If there is only one search result found
+    2.1. Present the search result immediately.
+3. If there are no search result found
+    3.1. Explain that no search result was found
+    3.2. Suggest to provide a more specific search query.
+
+Do not try to search within search results on your own.
+```
+
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                  |
