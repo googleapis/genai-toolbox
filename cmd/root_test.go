@@ -1169,6 +1169,8 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
+	mysql_config, _ := prebuiltconfigs.Get("mysql")
+	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
@@ -1259,6 +1261,26 @@ func TestPrebuiltTools(t *testing.T) {
 				"firestore-database-tools": tools.ToolsetConfig{
 					Name:      "firestore-database-tools",
 					ToolNames: []string{"firestore-get-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
+				},
+			},
+		},
+		{
+			name: "mysql prebuilt tools",
+			in:   mysql_config,
+			wantToolset: server.ToolsetConfigs{
+				"mysql-database-tools": tools.ToolsetConfig{
+					Name:      "mysql-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "mssql prebuilt tools",
+			in:   mssql_config,
+			wantToolset: server.ToolsetConfigs{
+				"mssql-database-tools": tools.ToolsetConfig{
+					Name:      "mssql-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
