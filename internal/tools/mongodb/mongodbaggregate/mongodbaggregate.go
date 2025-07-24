@@ -21,7 +21,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -82,50 +81,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.PipelineParams)
 
-	// Create parameter MCP manifest
-	paramManifest := slices.Concat(
-		cfg.PipelineParams.Manifest(),
-	)
+	// Create Toolbox manifest
+	paramManifest := allParameters.Manifest()
+
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	pipelineMcpManifest := cfg.PipelineParams.McpManifest()
-
-	// Concatenate parameters for MCP `required` field
-	concatRequiredManifest := slices.Concat(
-		pipelineMcpManifest.Required,
-	)
-	if concatRequiredManifest == nil {
-		concatRequiredManifest = []string{}
-	}
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
-	for name, p := range pipelineMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   concatRequiredManifest,
-	}
-
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across pipelineParams, and sortParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
-	}
-
+	// Create MCP manifest
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: allParameters.McpManifest(),
 	}
 
 	// finish tool setup
@@ -168,7 +135,7 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 
-	pipelineString, err := common.ParsePayloadTemplate(t.PipelineParams, t.PipelinePayload, paramsMap)
+	pipelineString, err := tools.PopulateTemplateWithJSON("MongoDBAggregatePipeline", t.PipelinePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating pipeline: %s", err)
 	}

@@ -61,14 +61,14 @@ tools:
 
 ## Reference
 
-| **field**         | **type** | **required** | **description**                                                                                                |
-|:------------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------------------|
-| `kind`            | `string` | **true**     | Must be `mongodb-aggregate`.                                                                                   |
-| `source`          | `string` | **true**     | The name of the `mongodb` source to use.                                                                       |
-| `description`     | `string` | **true**     | A description of the tool that is passed to the LLM.                                                           |
-| `database`        | `string` | **true**     | The name of the MongoDB database containing the collection.                                                    |
-| `collection`      | `string` | **true**     | The name of the MongoDB collection to run the aggregation on.                                                  |
-| `pipelinePayload` | `string` | **true**     | A JSON array of aggregation stage documents, provided as a string. Uses `{{json .param_name}}` for templating. |
-| `pipelineParams`  | `list`   | **true**     | A list of parameter objects that define the variables used in the `pipelinePayload`.                           |
-| `canonical`       | `bool`   | `false`      | Determines if the pipeline string is parsed using MongoDB's Canonical or Relaxed Extended JSON format.         |
-| `readOnly`        | `bool`   | `false`      | If `true`, the tool will fail if the pipeline contains write stages (`$out` or `$merge`). Defaults to `false`. |
+| **field**       | **type** | **required** | **description**                                                                                                |
+|:----------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------------------|
+| kind            | string   | true         | Must be `mongodb-aggregate`.                                                                                   |
+| source          | string   | true         | The name of the `mongodb` source to use.                                                                       |
+| description     | string   | true         | A description of the tool that is passed to the LLM.                                                           |
+| database        | string   | true         | The name of the MongoDB database containing the collection.                                                    |
+| collection      | string   | true         | The name of the MongoDB collection to run the aggregation on.                                                  |
+| pipelinePayload | string   | true         | A JSON array of aggregation stage documents, provided as a string. Uses `{{json .param_name}}` for templating. |
+| pipelineParams  | list     | true         | A list of parameter objects that define the variables used in the `pipelinePayload`.                           |
+| canonical       | bool     | false        | Determines if the pipeline string is parsed using MongoDB's Canonical or Relaxed Extended JSON format.         |
+| readOnly        | bool     | false        | If `true`, the tool will fail if the pipeline contains write stages (`$out` or `$merge`). Defaults to `false`. |
