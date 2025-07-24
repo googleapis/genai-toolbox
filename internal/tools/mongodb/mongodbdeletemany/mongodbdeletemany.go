@@ -81,36 +81,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.FilterParams)
 
-	// Create parameter MCP manifest
+	// Create parameter manifest
 	paramManifest := slices.Concat(
 		cfg.FilterParams.Manifest(),
 	)
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
-	}
-
-	filterMcpManifest := cfg.FilterParams.McpManifest()
-
-	// Concatenate parameters for MCP `required` field
-	concatRequiredManifest := slices.Concat(
-		filterMcpManifest.Required,
-	)
-
-	if concatRequiredManifest == nil {
-		concatRequiredManifest = []string{}
-	}
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
-	for name, p := range filterMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   concatRequiredManifest,
 	}
 
 	// Verify there are no duplicate parameter names
@@ -120,6 +96,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			return nil, fmt.Errorf("parameter name must be unique across filterParams, projectParams, and sortParams. Duplicate parameter: %s", param.Name)
 		}
 		seenNames[param.Name] = true
+	}
+
+	propertiesManifest := allParameters.McpManifest().Properties
+	requiredManifest := allParameters.McpManifest().Required
+	// Create a new McpToolsSchema with all parameters
+	paramMcpManifest := tools.McpToolsSchema{
+		Type:       "object",
+		Properties: propertiesManifest,
+		Required:   requiredManifest,
 	}
 
 	mcpManifest := tools.McpManifest{
