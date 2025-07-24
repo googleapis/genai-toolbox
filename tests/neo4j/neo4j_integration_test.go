@@ -23,6 +23,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -78,6 +79,17 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
+			"my-simple-execute-cypher-tool": map[string]any{
+				"kind":        "neo4j-execute-cypher",
+				"source":      "my-neo4j-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"my-readonly-execute-cypher-tool": map[string]any{
+				"kind":        "neo4j-execute-cypher",
+				"source":      "my-neo4j-instance",
+				"description": "A readonly cypher execution tool.",
+				"readOnly":    true,
+			},
 		},
 	}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -107,6 +119,25 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"my-simple-cypher-tool": map[string]any{
 					"description":  "Simple tool to test end to end functionality.",
 					"parameters":   []any{},
+					"authRequired": []any{},
+				},
+			},
+		},
+		{
+			name: "get my-simple-execute-cypher-tool",
+			api:  "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/",
+			want: map[string]any{
+				"my-simple-execute-cypher-tool": map[string]any{
+					"description": "Simple tool to test end to end functionality.",
+					"parameters": []any{
+						map[string]any{
+							"name":        "cypher",
+							"type":        "string",
+							"required":    true,
+							"description": "The cypher to execute.",
+							"authSources": []any{},
+						},
+					},
 					"authRequired": []any{},
 				},
 			},
@@ -141,16 +172,33 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
+		name               string
+		api                string
+		requestBody        io.Reader
+		want               string
+		wantStatus         int
+		wantErrorSubstring string
 	}{
 		{
 			name:        "invoke my-simple-cypher-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "[{\"a\":1}]",
+			wantStatus:  http.StatusOK,
+		},
+		{
+			name:        "invoke my-simple-execute-cypher-tool",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RETURN 1 as a;"}`)),
+			want:        "[{\"a\":1}]",
+			wantStatus:  http.StatusOK,
+		},
+		{
+			name:               "invoke readonly tool with write query",
+			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
+			wantStatus:         http.StatusBadRequest,
+			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -160,23 +208,34 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				t.Fatalf("error when sending a request: %s", err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode != tc.wantStatus {
 				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+				t.Fatalf("response status code: got %d, want %d: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))
 			}
 
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
+			if tc.wantStatus == http.StatusOK {
+				var body map[string]interface{}
+				err = json.NewDecoder(resp.Body).Decode(&body)
+				if err != nil {
+					t.Fatalf("error parsing response body")
+				}
+				got, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
 
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				if got != tc.want {
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				}
+			} else {
+				bodyBytes, err := io.ReadAll(resp.Body)
+				if err != nil {
+					t.Fatalf("failed to read error response body: %s", err)
+				}
+				bodyString := string(bodyBytes)
+				if !strings.Contains(bodyString, tc.wantErrorSubstring) {
+					t.Fatalf("response body %q does not contain expected error %q", bodyString, tc.wantErrorSubstring)
+				}
 			}
 		})
 	}
