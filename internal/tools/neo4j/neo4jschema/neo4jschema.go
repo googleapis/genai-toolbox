@@ -117,7 +117,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Driver:       s.Neo4jDriver(),
 		Database:     s.Neo4jDatabase(),
 		cache:        cache.NewCache(),
-		conf:         &cfg,
+		cacheExpireMinutes: cfg.CacheExpireMinutes,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
