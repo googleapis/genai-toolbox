@@ -54,8 +54,7 @@ func getDataplexVars(t *testing.T) map[string]any {
 }
 
 // Copied over from bigquery.go
-func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
-	ctx := context.Background()
+func initBigQueryConnection(ctx context.Context, project string) (*bigqueryapi.Client, error) {
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
@@ -75,7 +74,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	bigqueryClient, err := initBigQueryConnection(DataplexProject)
+	bigqueryClient, err := initBigQueryConnection(ctx, DataplexProject)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
