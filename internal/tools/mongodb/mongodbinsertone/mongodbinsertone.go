@@ -78,30 +78,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	payloadParams := tools.NewStringParameterWithRequired(dataParamsKey, "the JSON payload to insert, should be a JSON object", true)
-	parameters := tools.Parameters{payloadParams}
+	allParameters := tools.Parameters{payloadParams}
 
 	// Create parameter manifest
 	paramManifest := slices.Concat(
-		parameters.Manifest(),
+		allParameters.Manifest(),
 	)
 
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	payloadMcpManifest := payloadParams.McpManifest()
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := map[string]tools.ParameterMcpManifest{
-		dataParamsKey: payloadMcpManifest,
-	}
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   []string{dataParamsKey},
-	}
+	// Create MCP manifest
+	paramMcpManifest := allParameters.McpManifest()
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -116,7 +105,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:  cfg.AuthRequired,
 		Collection:    cfg.Collection,
 		Canonical:     cfg.Canonical,
-		PayloadParams: parameters,
+		PayloadParams: allParameters,
 		database:      s.Client.Database(cfg.Database),
 		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:   mcpManifest,
