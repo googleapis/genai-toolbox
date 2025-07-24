@@ -11,7 +11,7 @@ description: >
 
 [MongoDB][mongodb-docs] is a popular NoSQL database that stores data in flexible, JSON-like documents, making it easy to develop and scale applications.
 
-[mongodb-docs]: https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/
+[mongodb-docs]: https://www.mongodb.com/docs/atlas/getting-started/
 
 ## Example
 
@@ -24,11 +24,10 @@ sources:
         
 ```
 
-
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                   |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "mongodb".                                                |
-| uri       |  string  |     true     | connection string to connect to MongoDB                           |                      |
+| uri       |  string  |     true     | connection string to connect to MongoDB                           |
 | database  |  string  |     true     | Name of the mongodb database to connect to (e.g. "sample_mflix"). |
