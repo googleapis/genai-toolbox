@@ -9,7 +9,7 @@ description: >
 
 ## About
 
-[MongoDB][mongodb-docs] is a leading nosql database that can not only cater your operational data needs but also perform vector search.
+[MongoDB][mongodb-docs] is a popular NoSQL database that stores data in flexible, JSON-like documents, making it easy to develop and scale applications.
 
 [mongodb-docs]: https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/
 
