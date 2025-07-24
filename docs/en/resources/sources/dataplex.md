@@ -23,7 +23,7 @@ sources:
     project: "my-project-id"
 ```
 
-## Sample System prompt
+## Sample System Prompt
 
 You can use the following system prompt as "Custom Instructions" in your client application.
 
