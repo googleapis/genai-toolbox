@@ -1,0 +1,197 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default values for toolbox.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  # -- Global override for container image registry
+  imageRegistry: ""
+  # -- Global override for container image registry pull secrets
+  imagePullSecrets: []
+  # -- Global namespace
+  namespace: ""
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+name: toolbox
+
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+
+image:
+  # -- toolbox image repository
+  repository: database-toolbox/toolbox/toolbox
+  # -- toolbox image pull policy
+  pullPolicy: IfNotPresent
+  # -- toolbox image tag
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+  # -- toolbox image registry
+  registry: us-central1-docker.pkg.dev
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # iam.gke.io/gcp-service-account: "toolbox@toolbox.iam.gserviceaccount.com"
+  # eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/toolbox"
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 5000
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: ""
+      # paths:
+      #   - path: /
+      #     pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: toolbox-tls
+  #    hosts:
+  #      - toolbox-cluster.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: 5000
+readinessProbe:
+  httpGet:
+    path: /
+    port: 5000
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes:
+  - name: toolbox-config
+    secret:
+      secretName: toolbox-config
+      items:
+      - key: tools.yaml
+        path: tools.yaml
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: 
+  - name: toolbox-config
+    mountPath: "/app/tools.yaml"
+    subPath: tools.yaml
+    readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+options:
+  address: "0.0.0.0"
+  port: 5000
+  log_level: "INFO"
+  logging_format: "standard"
+  telemetry_gcp: false
+  telemetry_otlp: ""
+  telemetry_service_name: "toolbox"
+
+config: |
+# config: |
+#   authServices:
+#   #   my_auth_app_1:
+#   #     kind: google
+#   #     clientId: ${YOUR_CLIENT_ID_1}
+#   #   my_auth_app_2:
+#   #     kind: microsoft
+#   #     clientId: ${YOUR_CLIENT_ID_2}
+#   #   tenantId: ${YOUR_TENANT_ID_2}
+  
+#   sources:
+#   #   my-sqlite-db:
+#   #     kind: sqlite
+#   #     database: ":memory:"
+
+#   tools:
+#   #   get-user:
+#   #     kind: sqlite-sql
+#   #     source: my-sqlite-db
+#   #     description: Get a user by id.
+#   #     parameters:
+#   #       - name: id
+#   #         type: integer
+#   #         description: User ID
+#   #     statement: SELECT * FROM users WHERE id = ?
+
+#   toolsets:
+#   #   my_toolset:
+#   #     - get-user
