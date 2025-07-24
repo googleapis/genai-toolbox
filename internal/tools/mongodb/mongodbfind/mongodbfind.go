@@ -86,7 +86,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
 
 	// Verify no duplicate parameter names
-	tools.CheckDuplicateParameters(allParameters)
+	err := tools.CheckDuplicateParameters(allParameters)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
