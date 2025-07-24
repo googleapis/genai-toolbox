@@ -94,17 +94,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	// Create MCP Manifest
-	propertiesManifest := allParameters.McpManifest().Properties
-	requiredManifest := allParameters.McpManifest().Required
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: propertiesManifest,
-		Required:   requiredManifest,
-	}
-
 	// Verify there are no duplicate parameter names
 	seenNames := make(map[string]bool)
 	for _, param := range paramManifest {
@@ -114,10 +103,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		seenNames[param.Name] = true
 	}
 
+	// Create MCP manifest
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: allParameters.McpManifest(),
 	}
 
 	// finish tool setup

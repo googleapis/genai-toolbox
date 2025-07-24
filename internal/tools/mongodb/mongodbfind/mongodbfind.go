@@ -105,20 +105,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP Manifest
-	propertiesManifest := allParameters.McpManifest().Properties
-	requiredManifest := allParameters.McpManifest().Required
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: propertiesManifest,
-		Required:   requiredManifest,
-	}
-
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: allParameters.McpManifest(),
 	}
 
 	// finish tool setup
