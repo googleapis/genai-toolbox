@@ -55,7 +55,7 @@ type Config struct {
 	FilterParams  tools.Parameters `yaml:"filterParams" validate:"required"`
 	UpdatePayload string           `yaml:"updatePayload" validate:"required"`
 	UpdateParams  tools.Parameters `yaml:"updateParams" validate:"required"`
-	Canonical     bool             `yaml:"canonical" validate:"required"` //i want to force the user to choose
+	Canonical     bool             `yaml:"canonical" validate:"required"`
 	Upsert        bool             `yaml:"upsert"`
 }
 
@@ -135,7 +135,7 @@ type Tool struct {
 	UpdatePayload string           `yaml:"updatePayload" validate:"required"`
 	UpdateParams  tools.Parameters `yaml:"updateParams" validate:"required"`
 	AllParams     tools.Parameters `yaml:"allParams"`
-	Canonical     bool             `yaml:"canonical" validation:"required"` //i want to force the user to choose
+	Canonical     bool             `yaml:"canonical" validation:"required"`
 	Upsert        bool             `yaml:"upsert"`
 
 	database    *mongo.Database
