@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package mongodbupdateone
+package mongodbinsertmany
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -27,7 +27,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const kind string = "mongodb-update-one"
+const kind string = "mongodb-insert-many"
+
+const paramDataKey = "data"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -44,20 +46,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name          string           `yaml:"name" validate:"required"`
-	Kind          string           `yaml:"kind" validate:"required"`
-	Source        string           `yaml:"source" validate:"required"`
-	AuthRequired  []string         `yaml:"authRequired" validate:"required"`
-	Description   string           `yaml:"description" validate:"required"`
-	Database      string           `yaml:"database" validate:"required"`
-	Collection    string           `yaml:"collection" validate:"required"`
-	FilterPayload string           `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters `yaml:"filterParams" validate:"required"`
-	UpdatePayload string           `yaml:"updatePayload" validate:"required"`
-	UpdateParams  tools.Parameters `yaml:"updateParams" validate:"required"`
-
-	Canonical bool `yaml:"canonical" validate:"required"`
-	Upsert    bool `yaml:"upsert"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	AuthRequired []string `yaml:"authRequired" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	Database     string   `yaml:"database" validate:"required"`
+	Collection   string   `yaml:"collection" validate:"required"`
+	Canonical    bool     `yaml:"canonical" validate:"required"` //i want to force the user to choose
 }
 
 // validate interface
@@ -80,14 +76,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
 	}
 
-	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.FilterParams, cfg.FilterParams, cfg.UpdateParams)
+	dataParam := tools.NewStringParameterWithRequired(paramDataKey, "the JSON payload to insert, should be a JSON array of documents", true)
 
-	// Verify no duplicate parameter names
-	err := tools.CheckDuplicateParameters(allParameters)
-	if err != nil {
-		return nil, err
-	}
+	allParameters := tools.Parameters{dataParam}
 
 	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
@@ -102,20 +93,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Description: cfg.Description,
 		InputSchema: allParameters.McpManifest(),
 	}
-
 	// finish tool setup
 	return Tool{
 		Name:          cfg.Name,
 		Kind:          kind,
 		AuthRequired:  cfg.AuthRequired,
 		Collection:    cfg.Collection,
-		FilterPayload: cfg.FilterPayload,
-		FilterParams:  cfg.FilterParams,
-		UpdatePayload: cfg.UpdatePayload,
-		UpdateParams:  cfg.UpdateParams,
 		Canonical:     cfg.Canonical,
-		Upsert:        cfg.Upsert,
-		AllParams:     allParameters,
+		PayloadParams: allParameters,
 		database:      s.Client.Database(cfg.Database),
 		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:   mcpManifest,
@@ -131,13 +116,8 @@ type Tool struct {
 	AuthRequired  []string `yaml:"authRequired"`
 	Description   string   `yaml:"description"`
 	Collection    string   `yaml:"collection"`
-	FilterPayload string   `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters
-	UpdatePayload string `yaml:"updatePayload" validate:"required"`
-	UpdateParams  tools.Parameters
-	AllParams     tools.Parameters
-	Canonical     bool `yaml:"canonical" validation:"required"`
-	Upsert        bool `yaml:"upsert"`
+	Canonical     bool     `yaml:"canonical" validation:"required"` //i want to force the user to choose
+	PayloadParams tools.Parameters
 
 	database    *mongo.Database
 	manifest    tools.Manifest
@@ -145,40 +125,33 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+	if len(params) == 0 {
+		return nil, errors.New("no input found")
+	}
+
 	paramsMap := params.AsMap()
 
-	filterString, err := tools.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.FilterPayload, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("error populating filter: %s", err)
+	var jsonData, ok = paramsMap[paramDataKey].(string)
+	if !ok {
+		return nil, errors.New("no input found")
 	}
 
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	var data = []any{}
+	err := bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
 	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
+		return nil, err
 	}
 
-	updateString, err := tools.PopulateTemplateWithJSON("MongoDBUpdateOne", t.UpdatePayload, paramsMap)
+	res, err := t.database.Collection(t.Collection).InsertMany(ctx, data, options.InsertMany())
 	if err != nil {
-		return nil, fmt.Errorf("unable to get update: %w", err)
+		return nil, err
 	}
 
-	var update = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(updateString), t.Canonical, &update)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
-	}
-
-	res, err := t.database.Collection(t.Collection).UpdateOne(ctx, filter, update, options.Update().SetUpsert(t.Upsert))
-	if err != nil {
-		return nil, fmt.Errorf("error updating collection: %w", err)
-	}
-
-	return res.ModifiedCount, nil
+	return res.InsertedIDs, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+	return tools.ParseParams(t.PayloadParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
