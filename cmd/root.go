@@ -16,8 +16,18 @@ package cmd
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
+	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/spf13/cobra"
 	"io"
 	"maps"
 	"os"
@@ -30,17 +40,28 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
-	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-
+	_ "embed"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
@@ -87,30 +108,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
-
-	"github.com/spf13/cobra"
-
-	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
 var (
@@ -208,7 +205,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'firestore', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 
