@@ -37,12 +37,11 @@ This guide covers how to use [MCP Toolbox for Databases][toolbox] to create Allo
 
 1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
 
-      <!-- {x-release-please-start-version} -->
-
+   <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
-   {{< tab header="linux/amd64" lang="bash" >}}
-   curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/linux/amd64/toolbox
-   {{< /tab >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/linux/amd64/toolbox
+{{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
 curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/arm64/toolbox
@@ -53,11 +52,10 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/amd64/toolbo
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
-
-<!-- {x-release-please-end} -->
+    <!-- {x-release-please-end} -->
 
 1. Make the binary executable:
 
