@@ -111,15 +111,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Finish tool setup by creating the Tool instance.
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
-		Driver:       s.Neo4jDriver(),
-		Database:     s.Neo4jDatabase(),
-		cache:        cache.NewCache(),
+		Name:               cfg.Name,
+		Kind:               kind,
+		AuthRequired:       cfg.AuthRequired,
+		Driver:             s.Neo4jDriver(),
+		Database:           s.Neo4jDatabase(),
+		cache:              cache.NewCache(),
 		cacheExpireMinutes: cfg.CacheExpireMinutes,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:        mcpManifest,
 	}
 	return t, nil
 }
@@ -130,15 +130,15 @@ var _ tools.Tool = Tool{}
 // Tool represents the Neo4j schema extraction tool.
 // It holds the Neo4j driver, database information, and a cache for the schema.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	AuthRequired []string `yaml:"authRequired"`
-	Driver       neo4j.DriverWithContext
-	Database     string
-	cache        *cache.Cache
-	cacheExpireMinutes         *int
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name               string   `yaml:"name"`
+	Kind               string   `yaml:"kind"`
+	AuthRequired       []string `yaml:"authRequired"`
+	Driver             neo4j.DriverWithContext
+	Database           string
+	cache              *cache.Cache
+	cacheExpireMinutes *int
+	manifest           tools.Manifest
+	mcpManifest        tools.McpManifest
 }
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
@@ -158,7 +158,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 
 	// Cache the newly extracted schema for future use.
-	expiration := time.Duration(*t.conf.CacheExpireMinutes) * time.Minute
+	expiration := time.Duration(*t.cacheExpireMinutes) * time.Minute
 	t.cache.Set("schema", schema, expiration)
 
 	return schema, nil
