@@ -46,19 +46,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/linux/amd64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/arm64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/amd64/toolbox>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox.exe>
+curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -90,12 +90,8 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     {
       "mcpServers": {
         "looker-toolbox": {
-          "command": "/PATH/TO/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -121,12 +117,8 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     {
       "mcpServers": {
         "looker-toolbox": {
-          "command": "/PATH/TO/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -155,12 +147,8 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     {
       "mcpServers": {
         "looker-toolbox": {
-          "command": "/PATH/TO/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -187,12 +175,8 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     {
       "mcpServers": {
         "looker-toolbox": {
-          "command": "/PATH/TO/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -221,12 +205,8 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     {
       "mcpServers": {
         "looker-toolbox": {
-          "command": "/PATH/TO/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -252,12 +232,8 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     {
       "mcpServers": {
         "looker-toolbox": {
-          "command": "/PATH/TO/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
