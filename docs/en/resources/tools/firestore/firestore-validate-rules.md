@@ -38,13 +38,9 @@ The tool returns a `ValidationResult` object containing:
 
 ```json
 {
-  // Whether the rules are valid
-  "valid": boolean,
-  // Number of issues found       
+  "valid": boolean,      
   "issueCount": number,
-  // Human-readable formatted issues 
   "formattedIssues": string,
-  // Array of raw issue objects
   "rawIssues": [
     {
       "sourcePosition": {
@@ -55,7 +51,6 @@ The tool returns a `ValidationResult` object containing:
         "endOffset": number
       },
       "description": string,
-      // e.g., "ERROR", "WARNING"
       "severity": string
     }
   ]
