@@ -15,8 +15,11 @@
 package tools
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"regexp"
+	"text/template"
 )
 
 var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)
@@ -25,6 +28,7 @@ func IsValidName(s string) bool {
 	return validName.MatchString(s)
 }
 
+// ConvertAnySliceToTyped a []any to typed slice ([]string, []int, []float etc.)
 func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {
 	var typedSlice any
 	switch itemType {
@@ -70,4 +74,45 @@ func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {
 		typedSlice = tempSlice
 	}
 	return typedSlice, nil
+}
+
+// convertParamToJSON  is a Go template helper function to convert a parameter to JSON formatted string.
+func convertParamToJSON(param any) (string, error) {
+	jsonData, err := json.Marshal(param)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal param to JSON: %w", err)
+	}
+	return string(jsonData), nil
+}
+
+// PopulateTemplateWithJSON populate a Go template with a custom `json` array formatter
+func PopulateTemplateWithJSON(templateName, templateString string, data map[string]any) (string, error) {
+	funcMap := template.FuncMap{
+		"json": convertParamToJSON,
+	}
+
+	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateString)
+	if err != nil {
+		return "", fmt.Errorf("error parsing template '%s': %w", templateName, err)
+	}
+
+	var result bytes.Buffer
+	err = tmpl.Execute(&result, data)
+	if err != nil {
+		return "", fmt.Errorf("error executing template '%s': %w", templateName, err)
+	}
+	return result.String(), nil
+}
+
+// Verify there are no duplicate parameter names
+func CheckDuplicateParameters(ps Parameters) error {
+	seenNames := make(map[string]bool)
+	for _, p := range ps {
+		pName := p.GetName()
+		if _, exists := seenNames[pName]; exists {
+			return fmt.Errorf("parameter name must be unique across all parameter fields. Duplicate parameter: %s", pName)
+		}
+		seenNames[pName] = true
+	}
+	return nil
 }
