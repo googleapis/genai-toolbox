@@ -38,20 +38,20 @@ The tool returns a `ValidationResult` object containing:
 
 ```json
 {
-  "valid": boolean,      
-  "issueCount": number,
-  "formattedIssues": string,
+  "valid": "boolean",      
+  "issueCount": "number",
+  "formattedIssues": "string",
   "rawIssues": [
     {
       "sourcePosition": {
-        "fileName": string,
-        "line": number,
-        "column": number,
-        "currentOffset": number,
-        "endOffset": number
+        "fileName": "string",
+        "line": "number",
+        "column": "number",
+        "currentOffset": "number",
+        "endOffset": "number"
       },
-      "description": string,
-      "severity": string
+      "description": "string",
+      "severity": "string"
     }
   ]
 }
