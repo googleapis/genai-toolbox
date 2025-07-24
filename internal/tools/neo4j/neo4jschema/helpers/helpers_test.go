@@ -172,7 +172,7 @@ func TestProcessAPOCSchema(t *testing.T) {
 				Value: map[string]types.APOCEntity{},
 			},
 			wantNodes:     nil,
-			wantRels:      []types.Relationship{},
+			wantRels:      nil,
 			statsAreEmpty: true,
 		},
 		{
@@ -199,7 +199,7 @@ func TestProcessAPOCSchema(t *testing.T) {
 					},
 				},
 			},
-			wantRels: []types.Relationship{},
+			wantRels: nil,
 			wantStats: &types.Statistics{
 				NodesByLabel:      map[string]int64{"Person": 100},
 				PropertiesByLabel: map[string]int64{"Person": 2},
