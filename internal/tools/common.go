@@ -103,3 +103,16 @@ func PopulateTemplateWithJSON(templateName, templateString string, data map[stri
 	}
 	return result.String(), nil
 }
+
+// Verify there are no duplicate parameter names
+func CheckDuplicateParameters(ps Parameters) error {
+	seenNames := make(map[string]bool)
+	for _, p := range ps {
+		pName := p.GetName()
+		if _, exists := seenNames[pName]; exists {
+			return fmt.Errorf("parameter name must be unique across all parameter fields. Duplicate parameter: %s", pName)
+		}
+		seenNames[pName] = true
+	}
+	return nil
+}

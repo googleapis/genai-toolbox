@@ -85,26 +85,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
 
-	// Create parameter manifest
-	paramManifest := slices.Concat(
-		cfg.FilterParams.Manifest(),
-		cfg.ProjectParams.Manifest(),
-		cfg.SortParams.Manifest(),
-	)
+	// Verify no duplicate parameter names
+	tools.CheckDuplicateParameters(allParameters)
+
+	// Create Toolbox manifest
+	paramManifest := allParameters.Manifest()
+
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across filterParams, projectParams, and sortParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
-	}
-
-	// Create MCP Manifest
+	// Create MCP manifest
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
