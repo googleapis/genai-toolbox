@@ -97,9 +97,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		seenNames[param.Name] = true
 	}
 
+	// Create a new McpToolsSchema with all parameters
 	propertiesManifest := allParameters.McpManifest().Properties
 	requiredManifest := allParameters.McpManifest().Required
-	// Create a new McpToolsSchema with all parameters
+
 	paramMcpManifest := tools.McpToolsSchema{
 		Type:       "object",
 		Properties: propertiesManifest,
