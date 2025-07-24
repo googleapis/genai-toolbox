@@ -14,16 +14,13 @@
 package mongodbfindone
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
-	"text/template"
 
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -186,7 +183,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters, projectPayload string, paramsMap map[string]any) (*options.FindOneOptions, error) {
+func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMap map[string]any) (*options.FindOneOptions, error) {
 	opts := options.FindOne()
 
 	sort := bson.M{}
@@ -199,28 +196,14 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 		return opts, nil
 	}
 
-	project := bson.M{}
-	for _, p := range projectParams {
-		project[p.GetName()] = paramsMap[p.GetName()]
-	}
+	result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
 
-	// Create a FuncMap to format array parameters
-	funcMap := template.FuncMap{
-		"json": common.ConvertParamToJSON,
-	}
-	templ, err := template.New("project").Funcs(funcMap).Parse(projectPayload)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing project: %s", err)
-	}
-
-	var result bytes.Buffer
-	err = templ.Execute(&result, project)
-	if err != nil {
-		return nil, fmt.Errorf("error replacing project payload: %s", err)
+		return nil, fmt.Errorf("error populating project payload: %s", err)
 	}
 
 	var projection any
-	err = bson.Unmarshal(result.Bytes(), &projection)
+	err = bson.Unmarshal([]byte(result), &projection)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
 	}
@@ -232,12 +215,13 @@ func getOptions(sortParameters tools.Parameters, projectParams tools.Parameters,
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := common.ParsePayloadTemplate(t.FilterParams, t.FilterPayload, paramsMap)
+	filterString, err := tools.PopulateTemplateWithJSON("MongoDBFindOneFilterString", t.FilterPayload, paramsMap)
+
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
 
-	opts, err := getOptions(t.SortParams, t.ProjectParams, t.ProjectPayload, paramsMap)
+	opts, err := getOptions(t.SortParams, t.ProjectPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating options: %s", err)
 	}

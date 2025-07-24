@@ -207,15 +207,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-// helper function to convert a parameter to JSON formatted string.
-func convertParamToJSON(param any) (string, error) {
-	jsonData, err := json.Marshal(param)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal param to JSON: %w", err)
-	}
-	return string(jsonData), nil
-}
-
 // Helper function to generate the HTTP request body upon Tool invocation.
 func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
 	bodyParamValues, err := tools.GetParams(bodyParams, paramsMap)
@@ -224,20 +215,11 @@ func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, para
 	}
 	bodyParamsMap := bodyParamValues.AsMap()
 
-	// Create a FuncMap to format array parameters
-	funcMap := template.FuncMap{
-		"json": convertParamToJSON,
-	}
-	templ, err := template.New("body").Funcs(funcMap).Parse(requestBodyPayload)
+	requestBodyStr, err := tools.PopulateTemplateWithJSON("HTTPToolRequestBody", requestBodyPayload, bodyParamsMap)
 	if err != nil {
-		return "", fmt.Errorf("error parsing request body: %s", err)
+		return "", err
 	}
-	var result bytes.Buffer
-	err = templ.Execute(&result, bodyParamsMap)
-	if err != nil {
-		return "", fmt.Errorf("error replacing body payload: %s", err)
-	}
-	return result.String(), nil
+	return requestBodyStr, nil
 }
 
 // Helper function to generate the HTTP request URL upon Tool invocation.
