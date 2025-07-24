@@ -14,9 +14,9 @@ A `wait` tool pauses execution for a specified duration. This can be useful in w
 
 `wait` takes one input parameter `duration` which is a string representing the time to wait (e.g., "10s", "2m", "1h").
 
-{{% notice info %}} 
+{{< notice info >}}
 This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents.
-{{% /notice %}}
+{{< /notice >}}
 
 ## Example
 
