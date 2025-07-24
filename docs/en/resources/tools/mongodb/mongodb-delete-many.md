@@ -40,12 +40,14 @@ tools:
         description: The name of the discontinued brand whose products should be deleted.
 ```
 
-| **field**       | **type** | **required** | **description**                                                                                                     |
-|:----------------|:---------|:-------------|:--------------------------------------------------------------------------------------------------------------------|
-| `kind`          | `string` | **true**     | Must be `mongodb-delete-many`.                                                                                      |
-| `source`        | `string` | **true**     | The name of the `mongodb` source to use.                                                                            |
-| `description`   | `string` | **true**     | A description of the tool that is passed to the LLM.                                                                |
-| `database`      | `string` | **true**     | The name of the MongoDB database containing the collection.                                                         |
-| `collection`    | `string` | **true**     | The name of the MongoDB collection from which to delete documents.                                                  |
-| `filterPayload` | `string` | **true**     | The MongoDB query filter document to select the documents for deletion. Uses `{{json .param_name}}` for templating. |
-| `filterParams`  | `list`   | **true**     | A list of parameter objects that define the variables used in the `filterPayload`.                                  |
+## Reference
+
+| **field**     | **type** | **required** | **description**                                                                                                     |
+|:--------------|:---------|:-------------|:--------------------------------------------------------------------------------------------------------------------|
+| kind          | string   | true         | Must be `mongodb-delete-many`.                                                                                      |
+| source        | string   | true         | The name of the `mongodb` source to use.                                                                            |
+| description   | string   | true         | A description of the tool that is passed to the LLM.                                                                |
+| database      | string   | true         | The name of the MongoDB database containing the collection.                                                         |
+| collection    | string   | true         | The name of the MongoDB collection from which to delete documents.                                                  |
+| filterPayload | string   | true         | The MongoDB query filter document to select the documents for deletion. Uses `{{json .param_name}}` for templating. |
+| filterParams  | list     | true         | A list of parameter objects that define the variables used in the `filterPayload`.                                  |

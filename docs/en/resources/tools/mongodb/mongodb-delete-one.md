@@ -42,12 +42,14 @@ tools:
         description: The email of the user account to delete.
 ```
 
-| **field**       | **type** | **required** | **description**                                                                                                    |
-|:----------------|:---------|:-------------|:-------------------------------------------------------------------------------------------------------------------|
-| `kind`          | `string` | **true**     | Must be `mongodb-delete-one`.                                                                                      |
-| `source`        | `string` | **true**     | The name of the `mongodb` source to use.                                                                           |
-| `description`   | `string` | **true**     | A description of the tool that is passed to the LLM.                                                               |
-| `database`      | `string` | **true**     | The name of the MongoDB database containing the collection.                                                        |
-| `collection`    | `string` | **true**     | The name of the MongoDB collection from which to delete a document.                                                |
-| `filterPayload` | `string` | **true**     | The MongoDB query filter document to select the document for deletion. Uses `{{json .param_name}}` for templating. |
-| `filterParams`  | `list`   | **true**     | A list of parameter objects that define the variables used in the `filterPayload`.                                 |
+## Reference
+
+| **field**     | **type** | **required** | **description**                                                                                                    |
+|:--------------|:---------|:-------------|:-------------------------------------------------------------------------------------------------------------------|
+| kind          | string   | true         | Must be `mongodb-delete-one`.                                                                                      |
+| source        | string   | true         | The name of the `mongodb` source to use.                                                                           |
+| description   | string   | true         | A description of the tool that is passed to the LLM.                                                               |
+| database      | string   | true         | The name of the MongoDB database containing the collection.                                                        |
+| collection    | string   | true         | The name of the MongoDB collection from which to delete a document.                                                |
+| filterPayload | string   | true         | The MongoDB query filter document to select the document for deletion. Uses `{{json .param_name}}` for templating. |
+| filterParams  | list     | true         | A list of parameter objects that define the variables used in the `filterPayload`.                                 |
