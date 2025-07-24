@@ -17,7 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -78,24 +77,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	payloadParams := tools.NewStringParameterWithRequired(dataParamsKey, "the JSON payload to insert, should be a JSON object", true)
+
 	allParameters := tools.Parameters{payloadParams}
 
-	// Create parameter manifest
-	paramManifest := slices.Concat(
-		allParameters.Manifest(),
-	)
+	// Create Toolbox manifest
+	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
 	// Create MCP manifest
-	paramMcpManifest := allParameters.McpManifest()
-
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: allParameters.McpManifest(),
 	}
 
 	// finish tool setup

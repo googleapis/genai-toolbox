@@ -17,7 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -78,37 +77,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	dataParam := tools.NewStringParameterWithRequired(paramDataKey, "the JSON payload to insert, should be a JSON array of documents", true)
-	parameters := tools.Parameters{dataParam}
 
-	// Create parameter manifest
-	paramManifest := slices.Concat(
-		parameters.Manifest(),
-	)
+	allParameters := tools.Parameters{dataParam}
+
+	// Create Toolbox manifest
+	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	payloadMcpManifest := dataParam.McpManifest()
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := map[string]tools.ParameterMcpManifest{
-		paramDataKey: payloadMcpManifest,
-	}
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := tools.McpToolsSchema{
-		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   []string{paramDataKey},
-	}
-
+	// Create MCP manifest
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+		InputSchema: allParameters.McpManifest(),
 	}
-
 	// finish tool setup
 	return Tool{
 		Name:          cfg.Name,
@@ -116,7 +100,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:  cfg.AuthRequired,
 		Collection:    cfg.Collection,
 		Canonical:     cfg.Canonical,
-		PayloadParams: parameters,
+		PayloadParams: allParameters,
 		database:      s.Client.Database(cfg.Database),
 		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:   mcpManifest,
