@@ -25,7 +25,7 @@ sources:
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                               |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "dataplex".                                                           |
-| project   |  string  |     true     | Id of the GCP quota and billing project (e.g. "my-project-id").               |
+| **field** | **type** | **required** | **description**                                                                  |
+|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "dataplex".                                                              |
+| project   |  string  |     true     | Id of the GCP project used for quota and billing purposes (e.g. "my-project-id").|

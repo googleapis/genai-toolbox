@@ -8,67 +8,7 @@ tools:
     kind: dataplex-search-entries
     source: dataplex-source
     description: |
-      Find all entries in Dataplex Catalog (e.g. tables, views, models) that match the provided search query.
-
-      The output will look like this:
-
-      {
-        "results": [
-          {
-            object (SearchEntriesResult)
-          }
-        ],
-        "totalSize": integer,
-        "nextPageToken": string,
-        "unreachable": [
-          string
-        ]
-      }
-
-      WHERE you have to keep note of results, totalSize and nextPageToken AND
-      
-      WHERE
-
-      SearchEntriesResult has the following format:
-      {
-        "dataplexEntry": {
-          object (Entry)
-        }
-      }
-
-      WHERE
-
-      you have to refer to description of dataplex-lookup-entry for details about the fields in the Entry object.
-
-      Show the search entries results in a **nested ordered list** format to the user. Remember all the fields but respond with only the following fields:
-      - Name: display_name of the entry
-      - Project: project_id of the entry
-      - Location: location of the entry
-
-      Format the output in nested ordered list in the following way:
-      
-      1. customer_data
-            project: my_project1
-            location: us
-      2. user_data
-            project: test_project7
-            location: us-central1
-
-      These are invalid format of outputs for the user:
-      Output:
-      1. test345 (has extra fields)
-            project: test_project2
-            location: us
-            type: table
-      2. test123 (not nested)
-      project: test_project3
-      location: us-central1
-      3. test (not nested)  project: test_project4 location: us-central1
-
-      If there are multiple entries found, you should present the list of entries to the user and ask them to choose one.
-      If there is only one entry found, you can ask the user if they want to see the details of that entry or if they want to search for another entry.
-      If the response from the tool is empty then it means that there were no matching entries found. Notify the user about this and ask them to provide a more specific query.
-
+      Finds entries in Dataplex Catalog that represent data assets (e.g. tables, views, models) based on the provided search query.
 toolsets:
   dataplex-tools:
     - dataplex_search_entries

@@ -3,7 +3,7 @@ title: "dataplex-search-entries"
 type: docs
 weight: 1
 description: > 
-  A "dataplex-search-entries" tool returns all entries in Dataplex Catalog.
+  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
 aliases:
 - /resources/tools/dataplex-search-entries
 ---
@@ -17,7 +17,7 @@ It's compatible with the following sources:
 
 `dataplex-search-entries` takes a required `query` parameter based on which entries are 
 filtered and returned to the user and a required `name` parameter which is constructed using source's project if user does not provide it explicitly and has the following format: projects/{project}/locations/global. It also optionally accepts following parameters:
-  - `pageSize` - Number of results in the search page. Defaults to `100`.
+  - `pageSize` - Number of results in the search page. Defaults to `5`.
   - `pageToken` - Page token received from a previous locations.searchEntries call.
   - `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc
   - `semanticSearch` - Specifies whether the search should understand the meaning and intent behind the query, rather than just matching keywords. Defaults to `true`.
@@ -51,7 +51,7 @@ tools:
   dataplex-search-entries:
     kind: dataplex-search-entries
     source: my-dataplex-source
-    description: Use this tool to get all the entries based on user query.
+    description: Use this tool to get all the entries based on the provided query.
 ```
 
 ## Reference

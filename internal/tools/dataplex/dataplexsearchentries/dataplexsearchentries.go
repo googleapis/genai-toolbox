@@ -81,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
 	name := tools.NewStringParameterWithDefault("name", fmt.Sprintf("projects/%s/locations/global", s.ProjectID()), "The project to which the request should be attributed in the following form: projects/{project}/locations/global")
-	pageSize := tools.NewIntParameterWithDefault("pageSize", 100, "Number of results in the search page.")
+	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
 	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
 	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
 	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
@@ -149,14 +149,12 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	}
 
 	var results []*dataplexpb.SearchEntriesResult
-	var resultIndex = 0
 	for {
 		entry, err := it.Next()
-		if err != nil || resultIndex >= 5 {
+		if err != nil {
 			break
 		}
 		results = append(results, entry)
-		resultIndex++
 	}
 	return results, nil
 }
