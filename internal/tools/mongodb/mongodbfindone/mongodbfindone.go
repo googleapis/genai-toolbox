@@ -84,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
 
-	// Create parameter MCP manifest
+	// Create parameter manifest
 	paramManifest := slices.Concat(
 		cfg.FilterParams.Manifest(),
 		cfg.ProjectParams.Manifest(),
@@ -94,37 +94,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	filterMcpManifest := cfg.FilterParams.McpManifest()
-	projectMcpManifest := cfg.ProjectParams.McpManifest()
-	sortMcpManifest := cfg.SortParams.McpManifest()
-
-	// Concatenate parameters for MCP `required` field
-	concatRequiredManifest := slices.Concat(
-		filterMcpManifest.Required,
-		projectMcpManifest.Required,
-		sortMcpManifest.Required,
-	)
-	if concatRequiredManifest == nil {
-		concatRequiredManifest = []string{}
-	}
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
-	for name, p := range filterMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-	for name, p := range projectMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-	for name, p := range sortMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
+	// Create MCP Manifest
+	propertiesManifest := allParameters.McpManifest().Properties
+	requiredManifest := allParameters.McpManifest().Required
 
 	// Create a new McpToolsSchema with all parameters
 	paramMcpManifest := tools.McpToolsSchema{
 		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   concatRequiredManifest,
+		Properties: propertiesManifest,
+		Required:   requiredManifest,
 	}
 
 	// Verify there are no duplicate parameter names
