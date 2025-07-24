@@ -70,7 +70,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -95,7 +95,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	waitCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
@@ -129,6 +129,8 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	if err := tab.Create(ctx, meta); err != nil {
 		t.Fatalf("Create table job for %s failed: %v", tableName, err)
 	}
+
+	time.Sleep(2 * time.Minute) // wait for table to be ingested
 
 	return func(t *testing.T) {
 		// tear down table
@@ -233,35 +235,84 @@ func runDataplexSearchEntriesToolGetTest(t *testing.T) {
 }
 
 func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, datasetName string) {
-	body := []byte(fmt.Sprintf(`{"query":"displayname=%s SYSTEM=bigquery parent:%s"}`, tableName, datasetName))
-	resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-search-entries-tool/invoke", "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		t.Fatalf("error making POST request: %s", err)
+
+	testCases := []struct {
+		name           string
+		tableName      string
+		datasetName    string
+		wantStatusCode int
+		expectResult   bool
+		wantContentKey string
+	}{
+		{
+			name:           "Success - Entry Found",
+			tableName:      tableName,
+			datasetName:    datasetName,
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "dataplex_entry",
+		},
+		{
+			name:           "Failure - Entry Not Found",
+			tableName:      "",
+			datasetName:    "",
+			wantStatusCode: 200,
+			expectResult:   false,
+			wantContentKey: "",
+		},
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("response status code is not 200")
-	}
-	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("error parsing response body")
-	}
-	resultStr, ok := result["result"].(string)
-	if !ok {
-		t.Fatalf("expected 'result' to be a string, got %T", result["result"])
-	}
-	var entries []interface{}
-	if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
-		t.Fatalf("error unmarshalling result string: %v", err)
-	}
-	if len(entries) == 0 {
-		t.Fatalf("expected at least one entry in the result, got 0, entries: %v", entries)
-	}
-	entry, ok := entries[0].(map[string]interface{})
-	if !ok {
-		t.Fatalf("expected first entry to be a map, got %T", entries[0])
-	}
-	if _, ok := entry["dataplex_entry"]; !ok {
-		t.Fatalf("expected entry to have 'dataplex_entry' field, got %v", entry)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			query := fmt.Sprintf("displayname=\"%s\" system=bigquery parent:\"%s\"", tc.tableName, tc.datasetName)
+			reqBodyMap := map[string]string{"query": query}
+			reqBodyBytes, err := json.Marshal(reqBodyMap)
+			if err != nil {
+				t.Fatalf("error marshalling request body: %s", err)
+			}
+			resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-search-entries-tool/invoke", "application/json", bytes.NewBuffer(reqBodyBytes))
+			if err != nil {
+				t.Fatalf("error making POST request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not %d.", tc.wantStatusCode)
+			}
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				if result["result"] == nil && !tc.expectResult {
+					return
+				}
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			if !tc.expectResult && (resultStr == "" || resultStr == "[]") {
+				return
+			}
+			var entries []interface{}
+			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			if tc.expectResult {
+				if len(entries) == 0 {
+					t.Fatal("expected at least one entry, but got 0")
+				}
+				entry, ok := entries[0].(map[string]interface{})
+				if !ok {
+					t.Fatalf("expected first entry to be a map, got %T", entries[0])
+				}
+				if _, ok := entry[tc.wantContentKey]; !ok {
+					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
+				}
+			} else {
+				if len(entries) != 0 {
+					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
+			}
+		})
 	}
 }
