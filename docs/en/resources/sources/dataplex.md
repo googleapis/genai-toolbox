@@ -25,6 +25,8 @@ sources:
 
 ## Sample System prompt
 
+You can use the following system prompt as "Custom Instructions" in your client application.
+
 ```
 Whenever you will receive response from dataplex_search_entries tool decide what do to by following these steps:
 1. If there are multiple search results found
