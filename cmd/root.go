@@ -75,6 +75,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"

@@ -2,6 +2,7 @@
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
+// You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -39,6 +40,8 @@ var (
 	Neo4jPass       = os.Getenv("NEO4J_PASS")
 )
 
+// getNeo4jVars retrieves necessary Neo4j connection details from environment variables.
+// It fails the test if any required variable is not set.
 func getNeo4jVars(t *testing.T) map[string]any {
 	switch "" {
 	case Neo4jDatabase:
@@ -60,6 +63,8 @@ func getNeo4jVars(t *testing.T) map[string]any {
 	}
 }
 
+// TestNeo4jToolEndpoints sets up an integration test server and tests the API endpoints
+// for various Neo4j tools, including cypher execution and schema retrieval.
 func TestNeo4jToolEndpoints(t *testing.T) {
 	sourceConfig := getNeo4jVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -67,7 +72,8 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	// Write config into a file and pass it to command
+	// Write config into a file and pass it to the command.
+	// This configuration defines the data source and the tools to be tested.
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-neo4j-instance": sourceConfig,
@@ -90,6 +96,17 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				"description": "A readonly cypher execution tool.",
 				"readOnly":    true,
 			},
+			"my-schema-tool": map[string]any{
+				"kind":        "neo4j-schema",
+				"source":      "my-neo4j-instance",
+				"description": "A tool to get the Neo4j schema.",
+			},
+			"my-schema-tool-with-cache": map[string]any{
+				"kind":               "neo4j-schema",
+				"source":             "my-neo4j-instance",
+				"description":        "A schema tool with a custom cache expiration.",
+				"cacheExpireMinutes": 10,
+			},
 		},
 	}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -106,7 +123,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool get endpoint
+	// Test tool `GET` endpoints to verify their manifests are correct.
 	tcs := []struct {
 		name string
 		api  string
@@ -142,6 +159,28 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "get my-schema-tool",
+			api:  "http://127.0.0.1:5000/api/tool/my-schema-tool/",
+			want: map[string]any{
+				"my-schema-tool": map[string]any{
+					"description":  "A tool to get the Neo4j schema.",
+					"parameters":   []any{},
+					"authRequired": []any{},
+				},
+			},
+		},
+		{
+			name: "get my-schema-tool-with-cache",
+			api:  "http://127.0.0.1:5000/api/tool/my-schema-tool-with-cache/",
+			want: map[string]any{
+				"my-schema-tool-with-cache": map[string]any{
+					"description":  "A schema tool with a custom cache expiration.",
+					"parameters":   []any{},
+					"authRequired": []any{},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -170,7 +209,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		})
 	}
 
-	// Test tool invoke endpoint
+	// Test tool `invoke` endpoints to verify their functionality.
 	invokeTcs := []struct {
 		name               string
 		api                string
@@ -178,6 +217,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		want               string
 		wantStatus         int
 		wantErrorSubstring string
+		validateFunc       func(t *testing.T, body string)
 	}{
 		{
 			name:        "invoke my-simple-cypher-tool",
@@ -199,6 +239,44 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
 			wantStatus:         http.StatusBadRequest,
 			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+		},
+		{
+			name:        "invoke my-schema-tool",
+			api:         "http://127.0.0.1:5000/api/tool/my-schema-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				var result map[string]any
+				if err := json.Unmarshal([]byte(body), &result); err != nil {
+					t.Fatalf("failed to unmarshal schema result: %v", err)
+				}
+				// Check for the presence of top-level keys in the schema response.
+				expectedKeys := []string{"nodeLabels", "relationships", "constraints", "indexes", "databaseInfo", "statistics"}
+				for _, key := range expectedKeys {
+					if _, ok := result[key]; !ok {
+						t.Errorf("expected key %q not found in schema response", key)
+					}
+				}
+			},
+		},
+		{
+			name:        "invoke my-schema-tool-with-cache",
+			api:         "http://127.0.0.1:5000/api/tool/my-schema-tool-with-cache/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				var result map[string]any
+				if err := json.Unmarshal([]byte(body), &result); err != nil {
+					t.Fatalf("failed to unmarshal schema result: %v", err)
+				}
+				// Also check the structure of the schema response for the cached tool.
+				expectedKeys := []string{"nodeLabels", "relationships", "constraints", "indexes", "databaseInfo", "statistics"}
+				for _, key := range expectedKeys {
+					if _, ok := result[key]; !ok {
+						t.Errorf("expected key %q not found in schema response", key)
+					}
+				}
+			},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -224,7 +302,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 					t.Fatalf("unable to find result in response body")
 				}
 
-				if got != tc.want {
+				if tc.validateFunc != nil {
+					// Use the custom validation function if provided.
+					tc.validateFunc(t, got)
+				} else if got != tc.want {
+					// Otherwise, perform a direct string comparison.
 					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 				}
 			} else {
