@@ -80,7 +80,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	payloadParams := tools.NewStringParameterWithRequired(dataParamsKey, "the JSON payload to insert, should be a JSON object", true)
 	parameters := tools.Parameters{payloadParams}
 
-	// Create parameter MCP manifest
+	// Create parameter manifest
 	paramManifest := slices.Concat(
 		parameters.Manifest(),
 	)
