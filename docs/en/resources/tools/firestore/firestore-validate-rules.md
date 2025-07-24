@@ -1,7 +1,11 @@
 ---
-title: firestore-validate-rules
-weight: 6
-date: 2025-01-07
+title: "firestore-validate-rules"
+type: docs
+weight: 1
+description: > 
+  A "firestore-validate-rules" tool validates Firestore security rules syntax and semantic correctness without deploying them. It provides detailed error reporting with source positions and code snippets.
+aliases:
+- /resources/tools/firestore-validate-rules
 ---
 
 ## Overview
@@ -34,20 +38,20 @@ The tool returns a `ValidationResult` object containing:
 
 ```json
 {
-  "valid": boolean,           // Whether the rules are valid
-  "issueCount": number,       // Number of issues found
-  "formattedIssues": string,  // Human-readable formatted issues
-  "rawIssues": [              // Array of raw issue objects
+  "valid": "boolean",      
+  "issueCount": "number",
+  "formattedIssues": "string",
+  "rawIssues": [
     {
       "sourcePosition": {
-        "fileName": string,
-        "line": number,
-        "column": number,
-        "currentOffset": number,
-        "endOffset": number
+        "fileName": "string",
+        "line": "number",
+        "column": "number",
+        "currentOffset": "number",
+        "endOffset": "number"
       },
-      "description": string,
-      "severity": string      // e.g., "ERROR", "WARNING"
+      "description": "string",
+      "severity": "string"
     }
   ]
 }

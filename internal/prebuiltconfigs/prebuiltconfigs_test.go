@@ -23,12 +23,14 @@ import (
 func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
 	expectedKeys := []string{
+		"alloydb-postgres-admin",
 		"alloydb-postgres",
 		"bigquery",
 		"cloud-sql-mssql",
 		"cloud-sql-mysql",
 		"cloud-sql-postgres",
 		"firestore",
+		"looker",
 		"postgres",
 		"spanner-postgres",
 		"spanner",
@@ -64,6 +66,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 }
 
 func TestGetPrebuiltTool(t *testing.T) {
+	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
 	alloydb_config, _ := Get("alloydb-postgres")
 	bigquery_config, _ := Get("bigquery")
 	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
@@ -73,6 +76,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	if len(alloydb_admin_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+	}
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}

@@ -13,6 +13,11 @@ The HTTP Source allows Toolbox to retrieve data from arbitrary HTTP
 endpoints. This enables Generative AI applications to access data from web APIs
 and other HTTP-accessible resources.
 
+## Available Tools
+
+- [`http`](../tools/http/http.md)  
+  Make HTTP requests to REST APIs or other web services.
+
 ## Example
 
 ```yaml
