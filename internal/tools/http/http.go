@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const kind string = "http"
@@ -104,6 +105,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
+
+	// Verify there are no duplicate parameter names
+	seenNames := make(map[string]bool)
+	for _, param := range paramManifest {
+		if _, exists := seenNames[param.Name]; exists {
+			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
+		}
+		seenNames[param.Name] = true
+	}
+
 	pathMcpManifest := cfg.PathParams.McpManifest()
 	queryMcpManifest := cfg.QueryParams.McpManifest()
 	bodyMcpManifest := cfg.BodyParams.McpManifest()
@@ -140,15 +151,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Type:       "object",
 		Properties: concatPropertiesManifest,
 		Required:   concatRequiredManifest,
-	}
-
-	// Verify there are no duplicate parameter names
-	seenNames := make(map[string]bool)
-	for _, param := range paramManifest {
-		if _, exists := seenNames[param.Name]; exists {
-			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
-		}
-		seenNames[param.Name] = true
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -206,15 +208,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-// helper function to convert a parameter to JSON formatted string.
-func convertParamToJSON(param any) (string, error) {
-	jsonData, err := json.Marshal(param)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal param to JSON: %w", err)
-	}
-	return string(jsonData), nil
-}
-
 // Helper function to generate the HTTP request body upon Tool invocation.
 func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
 	bodyParamValues, err := tools.GetParams(bodyParams, paramsMap)
@@ -223,20 +216,11 @@ func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, para
 	}
 	bodyParamsMap := bodyParamValues.AsMap()
 
-	// Create a FuncMap to format array parameters
-	funcMap := template.FuncMap{
-		"json": convertParamToJSON,
-	}
-	templ, err := template.New("body").Funcs(funcMap).Parse(requestBodyPayload)
+	requestBodyStr, err := tools.PopulateTemplateWithJSON("HTTPToolRequestBody", requestBodyPayload, bodyParamsMap)
 	if err != nil {
-		return "", fmt.Errorf("error parsing request body: %s", err)
+		return "", err
 	}
-	var result bytes.Buffer
-	err = templ.Execute(&result, bodyParamsMap)
-	if err != nil {
-		return "", fmt.Errorf("error replacing body payload: %s", err)
-	}
-	return result.String(), nil
+	return requestBodyStr, nil
 }
 
 // Helper function to generate the HTTP request URL upon Tool invocation.
@@ -328,6 +312,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	// Set request headers
 	for k, v := range allHeaders {
 		req.Header.Set(k, v)
+	}
+
+	if ua, err := util.UserAgentFromContext(ctx); err == nil {
+		req.Header.Set("User-Agent", ua)
 	}
 
 	// Make request and fetch response

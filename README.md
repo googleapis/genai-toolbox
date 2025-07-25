@@ -114,7 +114,7 @@ To install Toolbox as a binary:
 <!-- {x-release-please-start-version} -->
 ```sh
 # see releases page for other versions
-export VERSION=0.9.0
+export VERSION=0.10.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -127,8 +127,19 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.9.0
+export VERSION=0.10.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
+```
+
+</details>
+
+<details>
+<summary>Homebrew</summary>
+
+To install Toolbox using Homebrew on macOS or Linux:
+
+```sh
+brew install mcp-toolbox
 ```
 
 </details>
@@ -140,7 +151,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.9.0
+go install github.com/googleapis/genai-toolbox@v0.10.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -156,6 +167,14 @@ execute `toolbox` to start the server:
 ```
 > [!NOTE]
 > Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+
+#### Homebrew Users
+
+If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
+
+```sh
+toolbox --tools-file "tools.yaml"
+```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
