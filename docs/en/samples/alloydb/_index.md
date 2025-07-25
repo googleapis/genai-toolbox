@@ -24,6 +24,8 @@ This guide assumes you have already done the following:
     ```sql
     CREATE EXTENSION IF NOT EXISTS "vector";
     CREATE EXTENSION IF NOT EXISTS "google_ml_integration";
+    CREATE EXTENSION IF NOT EXISTS alloydb_ai_nl cascade;
+    CREATE EXTENSION IF NOT EXISTS parameterized_views;
     ```
 
 ## Step 1: Set up your AlloyDB database
