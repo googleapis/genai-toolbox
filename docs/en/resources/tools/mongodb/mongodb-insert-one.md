@@ -10,9 +10,12 @@ aliases:
 
 ## About
 
-The `mongodb-insert-one` tool inserts a **single new document** into a specified MongoDB collection.
+The `mongodb-insert-one` tool inserts a **single new document** into a specified
+MongoDB collection.
 
-This tool takes one required parameter named `data`, which must be a string containing the JSON object you want to insert. Upon successful insertion, the tool returns the unique `_id` of the newly created document.
+This tool takes one required parameter named `data`, which must be a string
+containing the JSON object you want to insert. Upon successful insertion, the
+tool returns the unique `_id` of the newly created document.
 
 This tool is compatible with the following source kind:
 
@@ -20,7 +23,8 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here is an example configuration for a tool that adds a new user to a `users` collection.
+Here is an example configuration for a tool that adds a new user to a `users`
+collection.
 
 ```yaml
 tools:
@@ -33,7 +37,8 @@ tools:
     canonical: false
 ```
 
-An LLM would call this tool by providing the document as a JSON string in the `data` parameter, like this:
+An LLM would call this tool by providing the document as a JSON string in the
+`data` parameter, like this:
 `tool_code: create_new_user(data='{"email": "new.user@example.com", "name": "Jane Doe", "status": "active"}')`
 
 ## Reference

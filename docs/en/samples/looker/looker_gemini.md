@@ -100,6 +100,7 @@ In this section, we will download Toolbox and run the Toolbox server.
         - looker-toolbox__get_dimensions
         - looker-toolbox__run_look
     ```
+
 1. Start exploring your Looker instance with commands like
    `Find an explore to see orders` or `show me my current
    inventory broken down by item category`.

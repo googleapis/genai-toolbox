@@ -1,6 +1,17 @@
-# firestore-query-collection
+---
+title: "firestore-query-collection"
+type: docs
+weight: 1
+description: > 
+  A "firestore-query-collection" tool allow to query collections in Firestore.
+aliases:
+- /resources/tools/firestore-query-collection
+---
 
-The `firestore-query-collection` tool allows you to query Firestore collections with filters, ordering, and limit capabilities.
+# About
+
+The `firestore-query-collection` tool allows you to query Firestore collections
+with filters, ordering, and limit capabilities.
 
 ## Configuration
 
@@ -23,17 +34,18 @@ tools:
 
 ## Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `collectionPath` | string | Yes | - | The path to the Firestore collection to query |
-| `filters` | array | No | - | Array of filter objects (as JSON strings) to apply to the query |
-| `orderBy` | string | No | - | JSON string specifying field and direction to order results |
-| `limit` | integer | No | 100 | Maximum number of documents to return |
-| `analyzeQuery` | boolean | No | false | If true, returns query explain metrics including execution statistics |
+| **parameters**   |   **type**   | **required** | **default** | **description**                                                       |
+|------------------|:------------:|:------------:|:-----------:|-----------------------------------------------------------------------|
+| `collectionPath` |    string    |     true     |      -      | The Firestore Rules source code to validate                           |
+| `filters`        |    array     |     false    |      -      | Array of filter objects (as JSON strings) to apply to the query       |
+| `orderBy`        |    string    |     false    |      -      | JSON string specifying field and direction to order results           |
+| `limit`          |    integer   |     false    |     100     | Maximum number of documents to return                                 |
+| `analyzeQuery`   |    boolean   |     false    |    false    | If true, returns query explain metrics including execution statistics |
 
 ### Filter Format
 
-Each filter in the `filters` array should be a JSON string with the following structure:
+Each filter in the `filters` array should be a JSON string with the following
+structure:
 
 ```json
 {
@@ -44,6 +56,7 @@ Each filter in the `filters` array should be a JSON string with the following st
 ```
 
 Supported operators:
+
 - `<` - Less than
 - `<=` - Less than or equal to
 - `>` - Greater than
@@ -56,10 +69,12 @@ Supported operators:
 - `not-in` - Field value is not in the specified array
 
 Value types supported:
+
 - String: `"value": "text"`
 - Number: `"value": 123` or `"value": 45.67`
 - Boolean: `"value": true` or `"value": false`
-- Array: `"value": ["item1", "item2"]` (for `in`, `not-in`, `array-contains-any` operators)
+- Array: `"value": ["item1", "item2"]` (for `in`, `not-in`, `array-contains-any`
+  operators)
 
 ### OrderBy Format
 
@@ -73,6 +88,7 @@ The `orderBy` parameter should be a JSON string with the following structure:
 ```
 
 Direction values:
+
 - `ASCENDING`
 - `DESCENDING`
 
@@ -154,7 +170,8 @@ The tool returns an array of documents, where each document includes:
 
 ### Response with Query Analysis (analyzeQuery = true)
 
-When `analyzeQuery` is set to true, the tool returns a single object containing documents and explain metrics:
+When `analyzeQuery` is set to true, the tool returns a single object containing
+documents and explain metrics:
 
 ```json
 {
@@ -191,6 +208,7 @@ When `analyzeQuery` is set to true, the tool returns a single object containing 
 ## Error Handling
 
 The tool will return errors for:
+
 - Invalid collection path
 - Malformed filter JSON
 - Unsupported operators

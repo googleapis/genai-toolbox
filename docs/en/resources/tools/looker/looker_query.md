@@ -19,6 +19,7 @@ It's compatible with the following sources:
 - [looker](../sources/looker.md)
 
 `looker-query` takes eight parameters:
+
 1. the `model`
 2. the `explore`
 3. the `fields` list
