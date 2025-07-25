@@ -143,6 +143,97 @@ function createParamInput(param, toolId) {
 }
 
 /**
+ * Function to create the header editor popup modal.
+ * @param {string} toolId The unique identifier for the tool.
+ * @param {!Object<string, string>} currentHeaders The current headers.
+ * @param {function(!Object<string, string>): void} saveCallback A function to be
+ *     called when the "Save" button is clicked and the headers are successfully
+ *     parsed. The function receives the updated headers object as its argument.
+ * @return {!HTMLDivElement} The outermost div element of the created modal.
+ */
+function createHeaderEditorModal(toolId, currentHeaders, saveCallback) {
+    const MODAL_ID = `header-modal-${toolId}`;
+    let modal = document.getElementById(MODAL_ID);
+
+    if (modal) {
+        modal.remove(); 
+    }
+
+    modal = document.createElement('div');
+    modal.id = MODAL_ID;
+    modal.className = 'header-modal';
+
+    const modalContent = document.createElement('div');
+    const modalHeader = document.createElement('h5');
+    const headersTextarea = document.createElement('textarea');
+
+    modalContent.className = 'header-modal-content';
+    modalHeader.textContent = 'Edit Request Headers';
+    headersTextarea.id = `headers-textarea-${toolId}`;
+    headersTextarea.className = 'headers-textarea';
+    headersTextarea.rows = 10;
+    headersTextarea.value = JSON.stringify(currentHeaders, null, 2);
+
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(headersTextarea);
+
+    const modalActions = document.createElement('div');
+    const closeButton = document.createElement('button');
+    const saveButton = document.createElement('button');
+
+    modalActions.className = 'header-modal-actions';
+    closeButton.textContent = 'Close';
+    closeButton.className = 'btn btn--closeHeaders';
+    closeButton.addEventListener('click', () => closeHeaderEditor(toolId));
+    saveButton.textContent = 'Save';
+    saveButton.className = 'btn btn--saveHeaders';
+    saveButton.addEventListener('click', () => {
+        try {
+            const updatedHeaders = JSON.parse(headersTextarea.value);
+            saveCallback(updatedHeaders);
+            closeHeaderEditor(toolId);
+        } catch (e) {
+            alert('Invalid JSON format for headers.');
+            console.error("Header JSON parse error:", e);
+        }
+    });
+
+    modalActions.appendChild(closeButton);
+    modalActions.appendChild(saveButton);
+    modalContent.appendChild(modalActions);
+    modal.appendChild(modalContent);
+
+    // Close modal if clicked outside
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeHeaderEditor(toolId);
+        }
+    });
+
+    return modal;
+}
+
+/**
+ * Function to open the header popup.
+ */
+function openHeaderEditor(toolId) {
+    const modal = document.getElementById(`header-modal-${toolId}`);
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+/**
+ * Function to close the header popup.
+ */
+function closeHeaderEditor(toolId) {
+    const modal = document.getElementById(`header-modal-${toolId}`);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
  * Renders the tool display area.
  */
 export function renderToolInterface(tool, containerElement) {
@@ -150,10 +241,19 @@ export function renderToolInterface(tool, containerElement) {
     containerElement.innerHTML = '';
 
     let lastResults = null;
+    let currentHeaders = {
+        "Content-Type": "application/json"
+    };
 
     // function to update lastResults so we can toggle json
     const updateLastResults = (newResults) => {
         lastResults = newResults;
+    };
+
+    const updateCurrentHeaders = (newHeaders) => {
+        currentHeaders = newHeaders;
+        const newModal = createHeaderEditorModal(TOOL_ID, currentHeaders, updateCurrentHeaders);
+        containerElement.appendChild(newModal);
     };
 
     const gridContainer = document.createElement('div');
@@ -199,11 +299,17 @@ export function renderToolInterface(tool, containerElement) {
 
     const RESPONSE_AREA_ID = `tool-response-area-${TOOL_ID}`;
     const runButtonContainer = document.createElement('div');
+    const editHeadersButton = document.createElement('button');
     const runButton = document.createElement('button');
 
-    runButton.className = 'run-tool-btn';
-    runButton.textContent = 'Run Tool';
+    editHeadersButton.className = 'btn btn--editHeaders';
+    editHeadersButton.textContent = 'Edit Headers';
+    editHeadersButton.addEventListener('click', () => openHeaderEditor(TOOL_ID));
     runButtonContainer.className = 'run-button-container';
+    runButtonContainer.appendChild(editHeadersButton);
+
+    runButton.className = 'btn btn--run';
+    runButton.textContent = 'Run Tool';
     runButtonContainer.appendChild(runButton);
     containerElement.appendChild(runButtonContainer);
 
@@ -249,6 +355,10 @@ export function renderToolInterface(tool, containerElement) {
 
     containerElement.appendChild(responseContainer);
 
+    // create and append the header editor modal
+    const headerModal = createHeaderEditorModal(TOOL_ID, currentHeaders, updateCurrentHeaders);
+    containerElement.appendChild(headerModal);
+
     prettifyCheckbox.addEventListener('change', () => {
         if (lastResults) {
             displayResults(lastResults, responseArea, prettifyCheckbox.checked);
@@ -257,7 +367,7 @@ export function renderToolInterface(tool, containerElement) {
 
     runButton.addEventListener('click', (event) => {
         event.preventDefault();
-        handleRunTool(TOOL_ID, form, responseArea, tool.parameters, prettifyCheckbox, updateLastResults);
+        handleRunTool(TOOL_ID, form, responseArea, tool.parameters, prettifyCheckbox, updateLastResults, currentHeaders);
     });
 }
 
