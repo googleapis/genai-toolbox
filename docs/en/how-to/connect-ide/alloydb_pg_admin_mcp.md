@@ -78,7 +78,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1. Create a `.mcp.json` file in your project root if it doesn't exist.
 1. Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1. Add the following configuration, replace the environment variables with your values, and save:
 
@@ -105,7 +105,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1. Under the Developer tab, tap Edit Config to open the configuration file.
 1. Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1. Add the following configuration, replace the environment variables with your values, and save:
 
@@ -133,7 +133,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1. Tap Configure MCP Servers to open the configuration file.
 1. Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1. Add the following configuration, replace the environment variables with your values, and save:
 
@@ -160,7 +160,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
 1. Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1. Add the following configuration, replace the environment variables with your values, and save:
 
@@ -187,7 +187,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
 1.  Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1.  Add the following configuration, replace the environment variables with your values, and save:
 
@@ -213,7 +213,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
 1.  Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1.  Add the following configuration, replace the environment variables with your values, and save:
 
@@ -238,7 +238,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
 1.  Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1.  Add the following configuration, replace the environment variables with your values, and save:
 
@@ -264,7 +264,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
 1.  Generate Access token to be used as API_KEY using `gcloud auth print-access-token`.
 
-> **Note:** The lifetime of token is 1 hour.
+    > **Note:** The lifetime of token is 1 hour.
 
 1.  Add the following configuration, replace the environment variables with your values, and save:
 
