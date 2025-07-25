@@ -21,9 +21,8 @@ To use this tool, you need to configure it in your YAML configuration file:
 sources:
   my-firestore:
     kind: firestore
-    config:
-      project: my-gcp-project
-      database: "(default)"
+    project: my-gcp-project
+    database: "(default)"
 
 tools:
   query_collection:
