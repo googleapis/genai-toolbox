@@ -162,6 +162,11 @@ go install github.com/googleapis/genai-toolbox@v0.11.0
 [Configure](#configuration) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:
 
+<details open>
+<summary>Binary</summary>
+
+To run Toolbox from binary:
+
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
