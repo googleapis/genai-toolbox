@@ -10,7 +10,10 @@ aliases:
 
 ## About
 
-A `mongodb-update-one` tool updates a single document within a specified MongoDB collection. It locates the document to be updated using a `filterPayload` and applies modifications defined in an `updatePayload`. If the filter matches multiple documents, only the first one found will be updated.
+A `mongodb-update-one` tool updates a single document within a specified MongoDB
+collection. It locates the document to be updated using a `filterPayload` and
+applies modifications defined in an `updatePayload`. If the filter matches
+multiple documents, only the first one found will be updated.
 
 This tool is compatible with the following source kind:
 
@@ -20,7 +23,10 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here's an example of a `mongodb-update-one` tool configuration. This tool updates the `stock` and `status` fields of a document in the `inventory` collection where the `item` field matches a provided value. If no matching document is found, the `upsert: true` option will create a new one.
+Here's an example of a `mongodb-update-one` tool configuration. This tool
+updates the `stock` and `status` fields of a document in the `inventory`
+collection where the `item` field matches a provided value. If no matching
+document is found, the `upsert: true` option will create a new one.
 
 ```yaml
 tools:

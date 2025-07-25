@@ -28,7 +28,8 @@ inserted according to their name: e.g. `@name`.
 > Parameters cannot be used as substitutes for identifiers, column names, table
 > names, or other parts of the query.
 
-[gsql-dml]: https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
+[gsql-dml]:
+    https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax
 
 ### PostgreSQL
 

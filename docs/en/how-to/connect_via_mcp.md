@@ -28,8 +28,9 @@ Toolbox currently supports the following versions of MCP specification:
 
 The auth implementation in Toolbox is not supported in MCP's auth specification.
 This includes:
-  * [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
-  * [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
+
+* [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
+* [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
 
 ## Connecting to Toolbox with an MCP client
 
@@ -62,7 +63,8 @@ remote HTTP server. Logs will be set to the `warn` level by default. `debug` and
 `info` logs are not supported with stdio.
 
 {{< notice note >}}
-Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
 {{< /notice >}}
 
 ### Connecting via HTTP

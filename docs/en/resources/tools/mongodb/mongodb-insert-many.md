@@ -10,9 +10,14 @@ aliases:
 
 ## About
 
-The `mongodb-insert-many` tool inserts **multiple new documents** into a specified MongoDB collection in a single bulk operation. This is highly efficient for adding large amounts of data at once.
+The `mongodb-insert-many` tool inserts **multiple new documents** into a
+specified MongoDB collection in a single bulk operation. This is highly
+efficient for adding large amounts of data at once.
 
-This tool takes one required parameter named `data`. This `data` parameter must be a string containing a **JSON array of document objects**. Upon successful insertion, the tool returns a JSON array containing the unique `_id` of **each** new document that was created.
+This tool takes one required parameter named `data`. This `data` parameter must
+be a string containing a **JSON array of document objects**. Upon successful
+insertion, the tool returns a JSON array containing the unique `_id` of **each**
+new document that was created.
 
 This tool is compatible with the following source kind:
 
@@ -35,7 +40,8 @@ tools:
     canonical: true
 ```
 
-An LLM would call this tool by providing an array of documents as a JSON string in the `data` parameter, like this:
+An LLM would call this tool by providing an array of documents as a JSON string
+in the `data` parameter, like this:
 `tool_code: log_batch_events(data='[{"event": "login", "user": "user1"}, {"event": "click", "user": "user2"}, {"event": "logout", "user": "user1"}]')`
 
 ---

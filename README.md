@@ -165,8 +165,10 @@ execute `toolbox` to start the server:
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
+
 > [!NOTE]
-> Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+> Toolbox enables dynamic reloading by default. To disable, use the
+> `--disable-reload` flag.
 
 #### Homebrew Users
 
@@ -528,9 +530,9 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       // Convert the tool using the tbgenkit package
       // Use this tool with Genkit Go
       genkitTool, err := tbgenkit.ToGenkitTool(tool, g)
-  		if err != nil {
-  			log.Fatalf("Failed to convert tool: %v\n", err)
-  		}
+      if err != nil {
+        log.Fatalf("Failed to convert tool: %v\n", err)
+      }
     }
     ```
 

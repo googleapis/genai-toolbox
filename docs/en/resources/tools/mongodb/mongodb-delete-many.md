@@ -10,9 +10,12 @@ aliases:
 
 ## About
 
-The `mongodb-delete-many` tool performs a **bulk destructive operation**, deleting **ALL** documents from a collection that match a specified filter.
+The `mongodb-delete-many` tool performs a **bulk destructive operation**,
+deleting **ALL** documents from a collection that match a specified filter.
 
-The tool returns the total count of documents that were deleted. If the filter does not match any documents (i.e., the deleted count is 0), the tool will return an error.
+The tool returns the total count of documents that were deleted. If the filter
+does not match any documents (i.e., the deleted count is 0), the tool will
+return an error.
 
 This tool is compatible with the following source kind:
 
@@ -22,7 +25,8 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here is an example that performs a cleanup task by deleting all products from the `inventory` collection that belong to a discontinued brand.
+Here is an example that performs a cleanup task by deleting all products from
+the `inventory` collection that belong to a discontinued brand.
 
 ```yaml
 tools:

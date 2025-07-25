@@ -292,8 +292,10 @@ to use BigQuery, and then run the Toolbox server.
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+
     {{< notice note >}}
-    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    Toolbox enables dynamic reloading by default. To disable, use the
+    `--disable-reload` flag.
     {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox

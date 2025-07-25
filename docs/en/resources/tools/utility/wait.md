@@ -10,12 +10,15 @@ aliases:
 
 ## About
 
-A `wait` tool pauses execution for a specified duration. This can be useful in workflows where a delay is needed between steps.
+A `wait` tool pauses execution for a specified duration. This can be useful in
+workflows where a delay is needed between steps.
 
-`wait` takes one input parameter `duration` which is a string representing the time to wait (e.g., "10s", "2m", "1h").
+`wait` takes one input parameter `duration` which is a string representing the
+time to wait (e.g., "10s", "2m", "1h").
 
 {{< notice info >}}
-This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents.
+This tool is intended for developer assistant workflows with human-in-the-loop
+and shouldn't be used for production agents.
 {{< /notice >}}
 
 ## Example
@@ -30,8 +33,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "wait".                                                                     |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
-| timeout     |                   string                   |     true     | The default duration the tool can wait for.                                                      |
+| **field**   |    **type**    | **required** | **description**                                       |
+|-------------|:--------------:|:------------:|-------------------------------------------------------|
+| kind        |     string     |     true     | Must be "wait".                                       |
+| description |     string     |     true     | Description of the tool that is passed to the LLM.    |
+| timeout     |     string     |     true     | The default duration the tool can wait for.           |
