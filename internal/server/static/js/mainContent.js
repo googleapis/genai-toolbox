@@ -15,7 +15,7 @@
 /**
  * Renders the main content area into the HTML.
  * @param {string} containerId The ID of the DOM element to inject the content into.
- * @param {string | null} idString The id of the item inside the main content area.
+ * @param {string} idString The id of the item inside the main content area.
  */
 function renderMainContent(containerId, idString) {
     const mainContentContainer = document.getElementById(containerId);
@@ -24,11 +24,12 @@ function renderMainContent(containerId, idString) {
         return;
     }
 
+    const idAttribute = idString ? `id="${idString}"` : '';
     const contentHTML = `
         <div class="main-content-area">
         <div class="top-bar">
         </div>
-        <main class="content" id="${idString}">
+        <main class="content" ${idAttribute}">
             <h1>Welcome to MCP Toolbox UI</h1>
             <p>This is the main content area. Click a tab on the left to navigate.</p>
         </main>
