@@ -39,7 +39,7 @@ In this section, we will create the necessary tables and functions in your Alloy
       description TEXT,
       price DECIMAL(10, 2) NOT NULL,
       category_id INT,
-      embedding vector(768) -- Vector size for model(gemini-embedding-001)
+      embedding vector(3072) -- Vector size for model(gemini-embedding-001)
     );
 
     CREATE TABLE customers (
@@ -79,10 +79,10 @@ In this section, we will create the necessary tables and functions in your Alloy
     (2, 'Vases');
 
     INSERT INTO products (product_id, name, description, price, category_id, embedding) VALUES
-    (1, 'Rose', 'A beautiful red rose', 2.50, 1, embedding('text-embedding-005', 'A beautiful red rose')),
-    (2, 'Tulip', 'A colorful tulip', 1.50, 1, embedding('text-embedding-005', 'A colorful tulip')),
-    (3, 'Glass Vase', 'A transparent glass vase', 10.00, 2, embedding('text-embedding-005', 'A transparent glass vase')),
-    (4, 'Ceramic Vase', 'A handmade ceramic vase', 15.00, 2, embedding('text-embedding-005', 'A handmade ceramic vase'));
+    (1, 'Rose', 'A beautiful red rose', 2.50, 1, embedding('gemini-embedding-001', 'A beautiful red rose')),
+    (2, 'Tulip', 'A colorful tulip', 1.50, 1, embedding('gemini-embedding-001', 'A colorful tulip')),
+    (3, 'Glass Vase', 'A transparent glass vase', 10.00, 2, embedding('gemini-embedding-001', 'A transparent glass vase')),
+    (4, 'Ceramic Vase', 'A handmade ceramic vase', 15.00, 2, embedding('gemini-embedding-001', 'A handmade ceramic vase'));
 
     INSERT INTO customers (customer_id, name, email) VALUES
     (1, 'John Doe', 'john.doe@example.com'),
@@ -226,16 +226,16 @@ tools:
 These tools use vector embeddings to find the most relevant results based on the meaning of a user's query, rather than just keywords. Append the following tools to the `tools` section in your `tools.yaml`:
 
 ```yaml
-  search-flowers-recommendation:
+  search-product-recommendations:
     kind: postgres-sql
     source: alloydb-pg-source
     description: >-
-      Search for flowers based on user needs.
-      Use this tool to search for flowers. This tool requires the user's needs.
+      Search for products based on user needs.
+      Use this tool to search for products. This tool requires the user's needs.
     parameters:
       - name: query
         type: string
-        description: The flower characteristics
+        description: The product characteristics
     statement: |
       SELECT
         product_id,
@@ -244,10 +244,8 @@ These tools use vector embeddings to find the most relevant results based on the
         ROUND(CAST(price AS numeric), 2) as price
       FROM
         products
-      WHERE
-        category_id = 1
       ORDER BY
-        embedding('text-embedding-005', $1)::vector <=> embedding
+        embedding('gemini-embedding-001', $1)::vector <=> embedding
       LIMIT 5;
 ```
 
@@ -279,7 +277,7 @@ Finally, group the tools into a `toolset` to make them available to the model. A
 toolsets:
   flower_shop:
     - access-cart-information
-    - search-flowers-recommendation
+    - search-product-recommendations
     - ask-questions-about-products
     - add-to-cart
     - delete-from-cart
