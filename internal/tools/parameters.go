@@ -790,6 +790,15 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 	}
 }
 
+// McpManifest returns the MCP manifest for the FloatParameter.
+// json schema only allow numeric types of 'integer' and 'number'.
+func (p *FloatParameter) McpManifest() ParameterMcpManifest {
+	return ParameterMcpManifest{
+		Type:        "number",
+		Description: p.Desc,
+	}
+}
+
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
 func NewBooleanParameter(name string, desc string) *BooleanParameter {
 	return &BooleanParameter{
