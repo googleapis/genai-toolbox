@@ -21,6 +21,10 @@ DuckDB has the following notable characteristics:
 
 For more details, refer to the [DuckDB Documentation](https://duckdb.org/).
 
+## Available Tools
+- [`duckdb-sql`](../tools/duckdb/duckdb-sql.md)  
+  Execute pre-defined prepared SQL queries in DuckDB.
+  
 ## Requirements
 
 ### Database File

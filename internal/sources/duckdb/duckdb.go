@@ -43,23 +43,23 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	return actual, nil
 }
 
-type DuckDbSource struct {
+type Source struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
 	Db   *sql.DB
 }
 
 // SourceKind implements sources.Source.
-func (s *DuckDbSource) SourceKind() string {
+func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *DuckDbSource) DuckDb() *sql.DB {
+func (s *Source) DuckDb() *sql.DB {
 	return s.Db
 }
 
 // validate Source
-var _ sources.Source = &DuckDbSource{}
+var _ sources.Source = &Source{}
 
 type Config struct {
 	Name           string            `yaml:"name" validate:"required"`
@@ -83,7 +83,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to connect sucessfully: %w", err)
 	}
 
-	s := &DuckDbSource{
+	s := &Source{
 		Name: r.Name,
 		Kind: r.Kind,
 		Db:   db,
@@ -110,23 +110,19 @@ func initDuckDbConnection(ctx context.Context, tracer trace.Tracer, name string,
 }
 
 func getDuckDbConfiguration(dbFilePath string, duckdbConfiguration map[string]string) string {
-	if dbFilePath == "" && len(duckdbConfiguration) == 0 {
-		return ""
+	if len(duckdbConfiguration) == 0 {
+		return dbFilePath
 	}
-	var configStr strings.Builder
-	if dbFilePath != "" {
-		configStr.WriteString(dbFilePath)
-	}
-	configStr.WriteString("?")
-	first := true
+
+	params := url.Values{}
 	for key, value := range duckdbConfiguration {
-		if !first {
-			configStr.WriteString("&")
-		}
-		configStr.WriteString(url.QueryEscape(key))
-		configStr.WriteString("=")
-		configStr.WriteString(url.QueryEscape(value))
-		first = false
+		params.Set(key, value)
 	}
+
+	var configStr strings.Builder
+	configStr.WriteString(dbFilePath)
+	configStr.WriteString("?")
+	configStr.WriteString(params.Encode())
+
 	return configStr.String()
 }

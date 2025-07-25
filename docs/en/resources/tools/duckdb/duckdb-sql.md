@@ -1,5 +1,5 @@
 ---
-title: DuckDB SQL Tools
+title: "dgraph-dql"
 type: docs
 weight: 1
 description: >

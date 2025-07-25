@@ -46,7 +46,7 @@ type compatibleSource interface {
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &duckdb.DuckDbSource{}
+var _ compatibleSource = &duckdb.Source{}
 var compatibleSources = [...]string{duckdb.SourceKind}
 
 type Config struct {
