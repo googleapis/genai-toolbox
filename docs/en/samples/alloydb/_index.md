@@ -337,3 +337,4 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 - Learn more about [MCP Inspector](../../how-to/mcp_inspector.md).
 - Learn more about [Toolbox Resources](../../resources/_index.md).
 - Learn more about [Toolbox How-to guides](../../how-to/_index.md).
+
