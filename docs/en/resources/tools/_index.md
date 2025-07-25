@@ -114,20 +114,24 @@ in the list using the items field:
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
 
 {{< notice note >}}
-Items in array should not have a `default` or `required` value. If provided, it will be ignored.
+Items in array should not have a `default` or `required` value. If provided, it
+will be ignored.
 {{< /notice >}}
 
 ### Map Parameters
 
-The map type is a collection of key-value pairs. It can be configured in two ways:
+The map type is a collection of key-value pairs. It can be configured in two
+ways:
 
-- Generic Map: By default, it accepts values of any primitive type (string, integer, float, boolean), allowing for mixed data.
+- Generic Map: By default, it accepts values of any primitive type (string,
+  integer, float, boolean), allowing for mixed data.
 - Typed Map: By setting the valueType field, you can enforce that all values
   within the map must be of the same specified type.
 
 #### Generic Map (Mixed Value Types)
 
-This is the default behavior when valueType is omitted. It's useful for passing a flexible group of settings.
+This is the default behavior when valueType is omitted. It's useful for passing
+a flexible group of settings.
 
 ```yaml
     parameters:
@@ -179,7 +183,7 @@ user's ID token.
 
 | **field** | **type** | **required** | **description**                                                                         |
 |-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token. |
+| name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token.         |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
 ### Template Parameters

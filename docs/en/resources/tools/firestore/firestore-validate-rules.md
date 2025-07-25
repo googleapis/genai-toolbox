@@ -10,7 +10,9 @@ aliases:
 
 ## Overview
 
-The `firestore-validate-rules` tool validates Firestore security rules syntax and semantic correctness without deploying them. It provides detailed error reporting with source positions and code snippets.
+The `firestore-validate-rules` tool validates Firestore security rules syntax
+and semantic correctness without deploying them. It provides detailed error
+reporting with source positions and code snippets.
 
 ## Configuration
 
@@ -28,9 +30,9 @@ This tool requires authentication if the source requires authentication.
 
 ## Parameters
 
-| Parameter | Type   | Required | Description |
-|-----------|--------|----------|-------------|
-| source    | string | Yes      | The Firestore Rules source code to validate |
+| **parameters**  |   **type**   | **required** | **description**                              |
+|-----------------|:------------:|:------------:|----------------------------------------------|
+| source          |    string    |     true     | The Firestore Rules source code to validate  |
 
 ## Response
 
@@ -102,6 +104,7 @@ The tool returns a `ValidationResult` object containing:
 ## Error Handling
 
 The tool will return errors for:
+
 - Missing or empty `source` parameter
 - API errors when calling the Firebase Rules service
 - Network connectivity issues
@@ -115,5 +118,7 @@ The tool will return errors for:
 
 ## Related Tools
 
-- [firestore-get-rules]({{< ref "firestore-get-rules" >}}): Retrieve current active rules
-- [firestore-query-collection]({{< ref "firestore-query-collection" >}}): Test rules by querying collections
+- [firestore-get-rules]({{< ref "firestore-get-rules" >}}): Retrieve current
+  active rules
+- [firestore-query-collection]({{< ref "firestore-query-collection" >}}): Test
+  rules by querying collections

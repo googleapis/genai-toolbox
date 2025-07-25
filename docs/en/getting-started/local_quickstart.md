@@ -19,7 +19,9 @@ This guide assumes you have already done the following:
 
 ### Cloud Setup (Optional)
 
-If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using `vertexai=True` or a Google GenAI model), follow these one-time setup steps for local development:
+If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
+`vertexai=True` or a Google GenAI model), follow these one-time setup steps for
+local development:
 
 1. [Install the Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
 1. [Set up Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
@@ -154,7 +156,6 @@ postgres` and a password next time.
     \q
     ```
 
-
 ## Step 2: Install and configure Toolbox
 
 In this section, we will download Toolbox, configure our tools in a
@@ -271,8 +272,10 @@ In this section, we will download Toolbox, configure our tools in a
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+
     {{< notice note >}}
-    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    Toolbox enables dynamic reloading by default. To disable, use the
+    `--disable-reload` flag.
     {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox

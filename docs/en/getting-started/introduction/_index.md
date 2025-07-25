@@ -102,6 +102,13 @@ docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
 {{% /tab %}}
+{{% tab header="Homebrew" lang="en" %}}
+To install Toolbox using Homebrew on macOS or Linux:
+
+```sh
+brew install mcp-toolbox
+```
+{{% /tab %}}
 {{% tab header="Compile from source" lang="en" %}}
 
 To install from source, ensure you have the latest version of
@@ -123,9 +130,19 @@ execute `toolbox` to start the server:
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
+
 {{< notice note >}}
-Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
 {{< /notice >}}
+
+#### Homebrew Users
+
+If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
+
+```sh
+toolbox --tools-file "tools.yaml"
+```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -139,6 +156,7 @@ Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
 #### Python
+
 {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
 
@@ -151,7 +169,7 @@ from toolbox_core import ToolboxClient
 
 # update the url to point to your server
 
-async with ToolboxClient("<http://127.0.0.1:5000>") as client:
+async with ToolboxClient("http://127.0.0.1:5000") as client:
 
     # these tools can be passed to your application!
     tools = await client.load_toolset("toolset_name")
@@ -172,7 +190,7 @@ from toolbox_langchain import ToolboxClient
 
 # update the url to point to your server
 
-async with ToolboxClient("<http://127.0.0.1:5000>") as client:
+async with ToolboxClient("http://127.0.0.1:5000") as client:
 
     # these tools can be passed to your application!
     tools = client.load_toolset()
@@ -193,7 +211,7 @@ from toolbox_llamaindex import ToolboxClient
 
 # update the url to point to your server
 
-async with ToolboxClient("<http://127.0.0.1:5000>") as client:
+async with ToolboxClient("http://127.0.0.1:5000") as client:
 
 # these tools can be passed to your application
 
@@ -565,4 +583,6 @@ func main() {
 For more detailed instructions on using the Toolbox Go SDK, see the
 [project's README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
-For end-to-end samples on using the Toolbox Go SDK with orchestration frameworks, see the [project's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+For end-to-end samples on using the Toolbox Go SDK with orchestration
+frameworks, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)

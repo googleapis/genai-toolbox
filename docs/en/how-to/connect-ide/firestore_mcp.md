@@ -28,18 +28,24 @@ to expose your developer assistant tools to a Firestore instance:
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
 [geminicli]: #configure-your-mcp-client
-[geminicodeassist]: #configure-your-mcp-client]
+[geminicodeassist]: #configure-your-mcp-client
 
 ## Set up Firestore
 
 1. Create or select a Google Cloud project.
 
-    * [Create a new project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
-    * [Select an existing project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects)
+    * [Create a new
+      project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+    * [Select an existing
+      project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects)
 
-1. [Enable the Firestore API](https://console.cloud.google.com/apis/library/firestore.googleapis.com) for your project.
+1. [Enable the Firestore
+   API](https://console.cloud.google.com/apis/library/firestore.googleapis.com)
+   for your project.
 
-1. [Create a Firestore database](https://cloud.google.com/firestore/docs/create-database-web-mobile-client-library) if you haven't already.
+1. [Create a Firestore
+   database](https://cloud.google.com/firestore/docs/create-database-web-mobile-client-library)
+   if you haven't already.
 
 1. Set up authentication for your local environment.
 
@@ -247,9 +253,13 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Gemini CLI" lang="en" %}}
 
-1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1. Install the [Gemini
+   CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1. In your working directory, create a folder named `.gemini`. Within it, create
+   a `settings.json` file.
+1. Add the following configuration, replace the environment variables with your
+   values, and then save:
+
     ```json
     {
       "mcpServers": {
@@ -269,10 +279,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
-1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
-1.  Enable Agent Mode in Gemini Code Assist chat.
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1. Install the [Gemini Code
+   Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+   extension in Visual Studio Code.
+1. Enable Agent Mode in Gemini Code Assist chat.
+1. In your working directory, create a folder named `.gemini`. Within it, create
+   a `settings.json` file.
+1. Add the following configuration, replace the environment variables with your
+   values, and then save:
+
     ```json
     {
       "mcpServers": {
@@ -300,12 +315,17 @@ security rules.
 
 The following tools are available to the LLM:
 
-1. **firestore-get-documents**: Gets multiple documents from Firestore by their paths
-1. **firestore-list-collections**: List Firestore collections for a given parent path
+1. **firestore-get-documents**: Gets multiple documents from Firestore by their
+   paths
+1. **firestore-list-collections**: List Firestore collections for a given parent
+   path
 1. **firestore-delete-documents**: Delete multiple documents from Firestore
-1. **firestore-query-collection**: Query documents from a collection with filtering, ordering, and limit options
-1. **firestore-get-rules**: Retrieves the active Firestore security rules for the current project
-1. **firestore-validate-rules**: Validates Firestore security rules syntax and errors
+1. **firestore-query-collection**: Query documents from a collection with
+   filtering, ordering, and limit options
+1. **firestore-get-rules**: Retrieves the active Firestore security rules for
+   the current project
+1. **firestore-validate-rules**: Validates Firestore security rules syntax and
+   errors
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

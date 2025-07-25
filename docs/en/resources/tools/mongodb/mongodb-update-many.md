@@ -10,9 +10,12 @@ aliases:
 
 ## About
 
-A `mongodb-update-many` tool updates **all** documents within a specified MongoDB collection that match a given filter. It locates the documents using a `filterPayload` and applies the modifications defined in an `updatePayload`.
+A `mongodb-update-many` tool updates **all** documents within a specified
+MongoDB collection that match a given filter. It locates the documents using a
+`filterPayload` and applies the modifications defined in an `updatePayload`.
 
-The tool returns an array of three integers: `[ModifiedCount, UpsertedCount, MatchedCount]`.
+The tool returns an array of three integers: `[ModifiedCount, UpsertedCount,
+MatchedCount]`.
 
 This tool is compatible with the following source kind:
 
@@ -22,7 +25,8 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here's an example configuration. This tool applies a discount to all items within a specific category and also marks them as being on sale.
+Here's an example configuration. This tool applies a discount to all items
+within a specific category and also marks them as being on sale.
 
 ```yaml
 tools:

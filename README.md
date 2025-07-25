@@ -134,6 +134,17 @@ docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 </details>
 
 <details>
+<summary>Homebrew</summary>
+
+To install Toolbox using Homebrew on macOS or Linux:
+
+```sh
+brew install mcp-toolbox
+```
+
+</details>
+
+<details>
 <summary>Compile from source</summary>
 
 To install from source, ensure you have the latest version of
@@ -154,8 +165,18 @@ execute `toolbox` to start the server:
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
+
 > [!NOTE]
-> Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+> Toolbox enables dynamic reloading by default. To disable, use the
+> `--disable-reload` flag.
+
+#### Homebrew Users
+
+If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
+
+```sh
+toolbox --tools-file "tools.yaml"
+```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -509,9 +530,9 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       // Convert the tool using the tbgenkit package
       // Use this tool with Genkit Go
       genkitTool, err := tbgenkit.ToGenkitTool(tool, g)
-  		if err != nil {
-  			log.Fatalf("Failed to convert tool: %v\n", err)
-  		}
+      if err != nil {
+        log.Fatalf("Failed to convert tool: %v\n", err)
+      }
     }
     ```
 
