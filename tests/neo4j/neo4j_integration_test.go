@@ -18,8 +18,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"io"
 	"net/http"
 	"os"
@@ -28,6 +26,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -506,24 +506,4 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			}
 		})
 	}
-}
-
-// contains checks if a string is present in a slice of interfaces.
-func contains(slice []any, item string) bool {
-	for _, v := range slice {
-		if s, ok := v.(string); ok && s == item {
-			return true
-		}
-	}
-	return false
-}
-
-// containsSubstr checks if any string representation within a slice of interfaces contains a substring.
-func containsSubstr(slice []any, substr string) bool {
-	for _, v := range slice {
-		if strings.Contains(fmt.Sprintf("%v", v), substr) {
-			return true
-		}
-	}
-	return false
 }
