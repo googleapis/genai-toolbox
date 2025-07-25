@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let valueType = 'string'; 
                     let label = param.description || param.name;
 
-                    if (apiType === 'integer' || apiType === 'number') {
+                    if (apiType === 'integer' || apiType === 'float') {
                         inputType = 'number';
                         valueType = 'number';
                     } else if (apiType === 'boolean') {
