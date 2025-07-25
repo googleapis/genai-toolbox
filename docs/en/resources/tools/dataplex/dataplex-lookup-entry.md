@@ -48,7 +48,7 @@ tools:
   lookup_entry:
     kind: dataplex-lookup-entry
     source: my-dataplex-source
-    description: Get details about a specific entry in Catalog.
+    description: Use this tool to retrieve a specific entry in Dataplex Catalog.
 ```
 
 ## Reference

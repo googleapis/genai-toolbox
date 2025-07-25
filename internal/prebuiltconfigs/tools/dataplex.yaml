@@ -11,7 +11,7 @@ tools:
   dataplex_lookup_entry:
     kind: dataplex-lookup-entry
     source: dataplex-source
-    description: Use this tool to look up a specific entry in Dataplex Catalog.
+    description: Use this tool to retrieve a specific entry in Dataplex Catalog.
 
 toolsets:
   dataplex-tools:
