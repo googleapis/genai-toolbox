@@ -102,6 +102,13 @@ docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
 {{% /tab %}}
+{{% tab header="Homebrew" lang="en" %}}
+To install Toolbox using Homebrew on macOS or Linux:
+
+```sh
+brew install mcp-toolbox
+```
+{{% /tab %}}
 {{% tab header="Compile from source" lang="en" %}}
 
 To install from source, ensure you have the latest version of
@@ -126,6 +133,14 @@ execute `toolbox` to start the server:
 {{< notice note >}}
 Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
 {{< /notice >}}
+
+#### Homebrew Users
+
+If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
+
+```sh
+toolbox --tools-file "tools.yaml"
+```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
