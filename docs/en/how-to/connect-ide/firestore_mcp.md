@@ -28,7 +28,7 @@ to expose your developer assistant tools to a Firestore instance:
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
 [geminicli]: #configure-your-mcp-client
-[geminicodeassist]: #configure-your-mcp-client]
+[geminicodeassist]: #configure-your-mcp-client
 
 ## Set up Firestore
 
