@@ -162,9 +162,39 @@ go install github.com/googleapis/genai-toolbox@v0.10.0
 [Configure](#configuration) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:
 
+<details open>
+<summary>Binary</summary>
+
+To run Toolbox from binary:
+
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
+
+</details>
+
+<details open>
+<summary>Container image</summary>
+
+To run Toolbox container image using Docker::
+
+```sh
+docker run -d toolbox:dev
+```
+
+</details>
+
+<details open>
+<summary>Source</summary>
+
+To run Toolbox from Local Source:
+
+```sh
+go run .
+```
+
+</details>  
+
 > [!NOTE]
 > Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
 
