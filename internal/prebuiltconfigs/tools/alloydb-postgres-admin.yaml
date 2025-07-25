@@ -1,0 +1,123 @@
+sources:
+  alloydb-api-source:
+    kind: http
+    baseUrl: https://alloydb.googleapis.com
+    headers:
+      Authorization: Bearer ${API_KEY}
+      Content-Type: application/json
+tools:
+  alloydb-create-cluster:
+    kind: http
+    source: alloydb-api-source
+    method: POST
+    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters
+    description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
+    pathParams:
+      - name: projectId
+        type: string
+        description: "The dynamic path parameter for project id provided by user."
+      - name: locationId
+        type: string
+        description: "The dynamic path parameter for location. The default value is us-central1. If quota is exhausted then use other regions."
+        default: us-central1
+    queryParams:
+      - name: clusterId
+        type: string
+        description: "A unique ID for the AlloyDB cluster."
+    requestBody: |
+      {
+        "networkConfig": {
+          "network": "projects/{{.project}}/global/networks/{{.network}}"
+        },
+        "initialUser": {
+          "password": "{{.password}}",
+          "user": "{{.user}}"
+        }
+      }
+    bodyParams:
+      - name: project
+        type: string
+        description: "The dynamic path parameter for project id."
+      - name: network
+        type: string
+        description: "The name of the VPC network to connect the cluster to (e.g., 'default')."
+        default: default
+      - name: password
+        type: string
+        description: "A secure password for the initial 'postgres' user or the custom user provided."
+      - name: user
+        type: string
+        description: "The name for the initial superuser. If not provided, it defaults to 'postgres'. The initial database will always be named 'postgres'."
+  alloydb-operations-get:
+    kind: alloydb-wait-for-operation
+    source: alloydb-api-source
+    description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+    delay: 1s
+    maxDelay: 4m
+    multiplier: 2
+    maxRetries: 10
+  alloydb-create-instance:
+    kind: http
+    source: alloydb-api-source
+    method: POST
+    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/instances
+    description: "Creates a new AlloyDB instance (PRIMARY, READ_POOL, or SECONDARY) within a cluster. This is a long-running operation. Take all parameters from user in one go. This will return operation id to be used by get operations tool."
+    pathParams:
+      - name: projectId
+        type: string
+        description: "The GCP project ID."
+      - name: locationId
+        type: string
+        description: "The location of the cluster (e.g., 'us-central1')."
+        default: us-central1
+      - name: clusterId
+        type: string
+        description: "The ID of the cluster to create the instance in."
+    queryParams:
+      - name: instanceId
+        type: string
+        description: "A unique ID for the new AlloyDB instance."
+    requestBody: |
+      {
+        "instanceType": "{{.instanceType}}",
+        {{- if .displayName }}
+        "displayName": "{{.displayName}}",
+        {{- end }}
+        {{- if eq .instanceType "READ_POOL" }}
+        "readPoolConfig": {
+          "nodeCount": {{.nodeCount}}
+        },
+        {{- end }}
+        {{- if eq .instanceType "SECONDARY" }}
+        "secondaryConfig": {
+          "primaryClusterName": "{{.primaryClusterName}}"
+        },
+        {{- end }}
+        "networkConfig": {
+          "enablePublicIp": true
+        },
+        "databaseFlags": {
+          "password.enforce_complexity": "on"
+        }
+      }
+    bodyParams:
+      - name: instanceType
+        type: string
+        description: "The type of instance to create. Required. Valid values are: PRIMARY, READ_POOL, SECONDARY."
+      - name: displayName
+        type: string
+        description: "An optional, user-friendly name for the instance."
+      - name: nodeCount
+        type: integer
+        description: "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1."
+        default: 1
+      - name: primaryClusterName
+        type: string
+        description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
+        default: ""
+
+toolsets:
+  alloydb-postgres-admin-tools:
+    - alloydb-create-cluster
+    - alloydb-operations-get
+    - alloydb-create-instance

@@ -35,6 +35,7 @@ the IAM identity has been given the correct IAM permissions for accessing
 Firestore. Common roles include:
 - `roles/datastore.user` - Read and write access to Firestore
 - `roles/datastore.viewer` - Read-only access to Firestore
+- `roles/firebaserules.admin` - Full management of Firebase Security Rules for Firestore. This role is required for operations that involve creating, updating, or managing Firestore security rules (see [Firebase Security Rules roles][firebaserules-roles])
 
 See [Firestore access control][firestore-iam] for more information on
 applying IAM permissions and roles to an identity.
@@ -43,6 +44,7 @@ applying IAM permissions and roles to an identity.
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [firestore-iam]: https://cloud.google.com/firestore/docs/security/iam
+[firebaserules-roles]: https://cloud.google.com/iam/docs/roles-permissions/firebaserules
 
 ### Database Selection
 

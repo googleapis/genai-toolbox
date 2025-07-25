@@ -1327,7 +1327,7 @@ func TestParamMcpManifest(t *testing.T) {
 		{
 			name: "float",
 			in:   tools.NewFloatParameter("foo-float", "bar"),
-			want: tools.ParameterMcpManifest{Type: "float", Description: "bar"},
+			want: tools.ParameterMcpManifest{Type: "number", Description: "bar"},
 		},
 		{
 			name: "boolean",
@@ -1385,6 +1385,7 @@ func TestMcpManifest(t *testing.T) {
 				tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
 				tools.NewStringParameter("foo-string2", "bar"),
 				tools.NewIntParameter("foo-int2", "bar"),
+				tools.NewFloatParameter("foo-float", "bar"),
 				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
 				tools.NewMapParameter("foo-map-int", "a map of ints", "integer"),
 				tools.NewMapParameter("foo-map-any", "a map of any", ""),
@@ -1395,6 +1396,7 @@ func TestMcpManifest(t *testing.T) {
 					"foo-string":  {Type: "string", Description: "bar"},
 					"foo-string2": {Type: "string", Description: "bar"},
 					"foo-int2":    {Type: "integer", Description: "bar"},
+					"foo-float":   {Type: "number", Description: "bar"},
 					"foo-array2": {
 						Type:        "array",
 						Description: "bar",
@@ -1411,7 +1413,7 @@ func TestMcpManifest(t *testing.T) {
 						AdditionalProperties: true,
 					},
 				},
-				Required: []string{"foo-string2", "foo-int2", "foo-array2", "foo-map-int", "foo-map-any"},
+				Required: []string{"foo-string2", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any"},
 			},
 		},
 	}
