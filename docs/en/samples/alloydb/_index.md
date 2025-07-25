@@ -12,26 +12,25 @@ description: >
 that standardizes how applications provide context to LLMs. Check out this page
 on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
 
-## Prerequisites
+## Before you begin
 
-Before you begin, you need to enable the `pgvector` and `google_ml_integration` extensions in your AlloyDB instance.
+This guide assumes you have already done the following:
 
-1.  **Connect to your AlloyDB instance.**
-    You can use the AlloyDB Studio, `psql` command-line tool or any other PostgreSQL client.
+1.  [Create a AlloyDB cluster and instance](https://cloud.google.com/alloydb/docs/cluster-create) with a database and user.
+1. Connect to the instance using [AlloyDB Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio), [`psql` command-line tool](https://www.postgresql.org/download/), or any other PostgreSQL client.
 
-2.  **Enable the extensions:**
-    Run the following SQL commands:
+2.  Enable the `pgvector` and `google_ml_integration` [extensions](https://cloud.google.com/alloydb/docs/ai). These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:
 
     ```sql
     CREATE EXTENSION IF NOT EXISTS "vector";
     CREATE EXTENSION IF NOT EXISTS "google_ml_integration";
     ```
 
-## Step 1: Set up your AlloyDB instance and tables
+## Step 1: Set up your AlloyDB database
 
 In this section, we will create the necessary tables and functions in your AlloyDB instance.
 
-1.  **Create the tables:**
+1.  Create tables using the following commands:
 
     ```sql
     CREATE TABLE products (
@@ -40,7 +39,7 @@ In this section, we will create the necessary tables and functions in your Alloy
       description TEXT,
       price DECIMAL(10, 2) NOT NULL,
       category_id INT,
-      embedding vector(768)
+      embedding vector(768) -- Vector size for model(gemini-embedding-001)
     );
 
     CREATE TABLE customers (
@@ -72,7 +71,7 @@ In this section, we will create the necessary tables and functions in your Alloy
     );
     ```
 
-2.  **Insert sample data into the tables.**
+2.  Insert sample data into the tables:
 
     ```sql
     INSERT INTO categories (category_id, name) VALUES
@@ -143,9 +142,9 @@ sources:
     password: YOUR_PASSWORD
 ```
 
-Next, define the tools the AI model can use. We will categorize them into three types:
+Next, define the tools the agent can use. We will categorize them into three types:
 
-### 1. Standard SQL Tools
+### 1. Structured Queries Tools
 
 These tools execute predefined SQL statements. They are ideal for common, structured queries like managing a shopping cart. Add the following to your `tools.yaml` file:
 
@@ -234,7 +233,7 @@ These tools use vector embeddings to find the most relevant results based on the
       Search for flowers based on user needs.
       Use this tool to search for flowers. This tool requires the user's needs.
     parameters:
-      - name: needs
+      - name: query
         type: string
         description: The flower characteristics
     statement: |
@@ -254,16 +253,14 @@ These tools use vector embeddings to find the most relevant results based on the
 
 ### 3. Natural Language to SQL (NL2SQL) Tools
 
-1. Create a natural language configuration on your AlloyDB cluster
+1. Create a [natural language configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config) for your AlloyDB cluster.
 
     {{< notice tip >}}Before using NL2SQL tools, 
     you must first install the `alloydb_ai_nl` extension and 
     create the [semantic layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview) under a configuration named `flower_shop`.
     {{< /notice >}}
 
-2. Configure your NL2SQL tool to use your configuration
-
-These tools translate natural language questions into SQL queries, allowing users to interact with the database conversationally. Append the following tool to the `tools` section:
+2. Configure your NL2SQL tool to use your configuration. These tools translate natural language questions into SQL queries, allowing users to interact with the database conversationally. Append the following tool to the `tools` section:
 
 ```yaml
   ask-questions-about-products:
