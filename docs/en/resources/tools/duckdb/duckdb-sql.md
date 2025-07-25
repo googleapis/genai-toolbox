@@ -10,11 +10,11 @@ aliases:
 
 ## About
 
-A `duckdb-sql` tool executes SQL statements against a [DuckDB](https://duckdb.org/) database. It is compatible with any DuckDB source configuration as defined in the [DuckDB source documentation](../sources/duckdb.md).
+A `duckdb-sql` tool executes a pre-defined SQL statement against a [DuckDB](https://duckdb.org/) database. It is compatible with any DuckDB source configuration as defined in the [DuckDB source documentation](../sources/duckdb.md).
 
-DuckDB uses the `?` placeholder for parameters in SQL statements. Parameters are bound in the order they are provided. The `statement` field supports any valid DuckDB SQL statement, including `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other DDL statements.
+The specified SQL statement is executed as a prepared statement, and parameters are inserted according to their position: e.g., `$1` is the first parameter, `$2` is the second, and so on. If template parameters are included, they are resolved before execution of the prepared statement. 
 
-DuckDB's SQL dialect closely follows the conventions of the PostgreSQL dialect, with a few exceptions listed in the [DuckDB PostgreSQL Compatibility documentation](https://duckdb.org/docs/stable/sql/postgresql_compatibility). For an introduction to DuckDB's SQL dialect, refer to the [DuckDB SQL Introduction](https://duckdb.org/docs/stable/sql/introduction).
+DuckDB's SQL dialect closely follows the conventions of the PostgreSQL dialect, with a few exceptions listed in the [DuckDB PostgreSQL Compatibility documentation](https://duckdb.org/docs/stable/sql/dialect/postgresql_compatibility.html). For an introduction to DuckDB's SQL dialect, refer to the [DuckDB SQL Introduction](https://duckdb.org/docs/stable/sql/introduction).
 
 ### Concepts
 
@@ -32,7 +32,7 @@ tools:
     kind: duckdb-sql
     source: my-duckdb
     description: Search users by name and age
-    statement: SELECT * FROM users WHERE name LIKE ? AND age >= ?
+    statement: SELECT * FROM users WHERE name LIKE $1 AND age >= $2
     parameters:
       - name: name
         type: string

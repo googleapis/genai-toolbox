@@ -82,11 +82,11 @@ func TestDuckDb(t *testing.T) {
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := GetDuckDbParamToolInfo(tableNameParam)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := GetDuckDbParamToolInfo(tableNameParam)
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := GetDuckDbAuthToolInfo(tableNameAuth)
 	setupDuckDb(t, createParamTableStmt, insertParamTableStmt, createAuthTableStmt, insertAuthTableStmt, paramTestParams, authTestParams)
 
-	toolsFile := tests.GetToolsConfig(sourceConfig, DuckDbKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, DuckDbKind, paramToolStmt, idParamToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, DuckDbKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 	defer os.Remove(dbPath)
@@ -108,20 +108,21 @@ func TestDuckDb(t *testing.T) {
 
 	select1Want, failInvocationWant, _ := GetDuckDbWants()
 
-	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := GetDuckDbInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, false)
+	invokeParamWant, invokeParamWantNull, nullWant, mcpInvokeParamWant := GetDuckDbInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, nullWant, true, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DuckDBTemplateParameterTestConfig())
 }
 
-func GetDuckDbParamToolInfo(tableName string) (string, string, string, string, string, []any) {
+func GetDuckDbParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, $1), (2, $2), (3, $3), (4, $4);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * EXCLUDE (id) FROM %s WHERE id = $1 OR name = $2 order by id;", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, idParamStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetDuckDbAuthToolInfo returns statements and param of my-auth-tool for duckdb-sql kind
@@ -140,9 +141,10 @@ func GetDuckDbWants() (string, string, string) {
 	return select1Want, failInvocationWant, createTableStatement
 }
 
-func GetDuckDbInvokeParamWant() (string, string, string) {
+func GetDuckDbInvokeParamWant() (string, string, string, string) {
 	invokeParamWant := "[{\"name\":\"Alice\"},{\"name\":\"Sid\"}]"
 	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"name\":\"Alice\"}"},{"type":"text","text":"{\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"name\":\"Alice\"}"},{"type":"text","text":"{\"name\":\"Sid\"}"}]}}`
+	nullWant := "null"
+	return invokeParamWant, invokeParamWantNull, nullWant, mcpInvokeParamWant
 }

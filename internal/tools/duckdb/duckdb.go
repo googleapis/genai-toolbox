@@ -83,7 +83,7 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	}
 
 	// finish tool setup
-	t := DuckDbTool{
+	t := Tool{
 		Name:               c.Name,
 		Kind:               kind,
 		Parameters:         c.Parameters,
@@ -105,7 +105,7 @@ func (c Config) ToolConfigKind() string {
 
 var _ tools.ToolConfig = Config{}
 
-type DuckDbTool struct {
+type Tool struct {
 	Name               string           `yaml:"name"`
 	Kind               string           `yaml:"kind"`
 	AuthRequired       []string         `yaml:"authRequired"`
@@ -120,12 +120,12 @@ type DuckDbTool struct {
 }
 
 // Authorized implements tools.Tool.
-func (d DuckDbTool) Authorized(verifiedAuthSources []string) bool {
+func (d Tool) Authorized(verifiedAuthSources []string) bool {
 	return tools.IsAuthorized(d.AuthRequired, verifiedAuthSources)
 }
 
 // Invoke implements tools.Tool.
-func (d DuckDbTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (d Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(d.TemplateParameters, d.Statement, paramsMap)
 	if err != nil {
@@ -137,8 +137,9 @@ func (d DuckDbTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 
+	sliceParams := newParams.AsSlice()
 	// Execute the SQL query with parameters
-	rows, err := d.Db.QueryContext(ctx, newStatement, newParams.AsSlice()...)
+	rows, err := d.Db.QueryContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -192,18 +193,18 @@ func (d DuckDbTool) Invoke(ctx context.Context, params tools.ParamValues) ([]any
 }
 
 // Manifest implements tools.Tool.
-func (d DuckDbTool) Manifest() tools.Manifest {
+func (d Tool) Manifest() tools.Manifest {
 	return d.manifest
 }
 
 // McpManifest implements tools.Tool.
-func (d DuckDbTool) McpManifest() tools.McpManifest {
+func (d Tool) McpManifest() tools.McpManifest {
 	return d.mcpManifest
 }
 
 // ParseParams implements tools.Tool.
-func (d DuckDbTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
+func (d Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(d.AllParams, data, claimsMap)
 }
 
-var _ tools.Tool = DuckDbTool{}
+var _ tools.Tool = Tool{}
