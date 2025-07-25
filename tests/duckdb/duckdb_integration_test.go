@@ -120,7 +120,7 @@ func GetDuckDbParamToolInfo(tableName string) (string, string, string, string, s
 	toolStatement := fmt.Sprintf("SELECT * EXCLUDE (id) FROM %s WHERE id = $1 OR name = $2 order by id;", tableName)
 	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
 	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
-	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2);", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT name FROM %s WHERE id = ANY($1) AND name = ANY($2) order by name;", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
 	return createStatement, insertStatement, toolStatement, idParamStatement, toolStatement2, arrayToolStatement, params
 }
