@@ -7,9 +7,13 @@ tools:
   dataplex_search_entries:
     kind: dataplex-search-entries
     source: dataplex-source
-    description: |
-      Use this tool to search for entries in Dataplex Catalog that represent data assets (e.g. tables, views, models) based on the provided search query.
+    description: Use this tool to search for entries in Dataplex Catalog based on the provided search query.
+  dataplex_lookup_entry:
+    kind: dataplex-lookup-entry
+    source: dataplex-source
+    description: Use this tool to look up a specific entry in Dataplex Catalog.
 
 toolsets:
   dataplex-tools:
     - dataplex_search_entries
+    - dataplex_lookup_entry
