@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package duckdb_test
+package duckdbsql_test
 
 import (
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools/duckdb"
+	"github.com/googleapis/genai-toolbox/internal/tools/duckdbsql"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -48,7 +48,7 @@ func TestParseFromYamlDuckDb(t *testing.T) {
 						  description: hotel parameter description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": duckdb.Config{
+				"example_tool": duckdbsql.Config{
 					Name:         "example_tool",
 					Kind:         "duckdb-sql",
 					Source:       "my-duckdb-instance",

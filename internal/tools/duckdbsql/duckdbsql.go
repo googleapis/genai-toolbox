@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package duckdb
+package duckdbsql
 
 import (
 	"context"
@@ -120,26 +120,26 @@ type Tool struct {
 }
 
 // Authorized implements tools.Tool.
-func (d Tool) Authorized(verifiedAuthSources []string) bool {
-	return tools.IsAuthorized(d.AuthRequired, verifiedAuthSources)
+func (t Tool) Authorized(verifiedAuthSources []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthSources)
 }
 
 // Invoke implements tools.Tool.
-func (d Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
-	newStatement, err := tools.ResolveTemplateParams(d.TemplateParameters, d.Statement, paramsMap)
+	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
-	newParams, err := tools.GetParams(d.Parameters, paramsMap)
+	newParams, err := tools.GetParams(t.Parameters, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 
 	sliceParams := newParams.AsSlice()
 	// Execute the SQL query with parameters
-	rows, err := d.Db.QueryContext(ctx, newStatement, sliceParams...)
+	rows, err := t.Db.QueryContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -193,18 +193,18 @@ func (d Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 }
 
 // Manifest implements tools.Tool.
-func (d Tool) Manifest() tools.Manifest {
-	return d.manifest
+func (t Tool) Manifest() tools.Manifest {
+	return t.manifest
 }
 
 // McpManifest implements tools.Tool.
-func (d Tool) McpManifest() tools.McpManifest {
-	return d.mcpManifest
+func (t Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
 }
 
 // ParseParams implements tools.Tool.
-func (d Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(d.AllParams, data, claimsMap)
+func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.AllParams, data, claimsMap)
 }
 
 var _ tools.Tool = Tool{}
