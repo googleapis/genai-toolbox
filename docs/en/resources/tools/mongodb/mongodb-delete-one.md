@@ -10,11 +10,16 @@ aliases:
 
 ## About
 
-The `mongodb-delete-one` tool performs a destructive operation, deleting the **first single document** that matches a specified filter from a MongoDB collection.
+The `mongodb-delete-one` tool performs a destructive operation, deleting the
+**first single document** that matches a specified filter from a MongoDB
+collection.
 
-If the filter matches multiple documents, only the first one found by the database will be deleted. This tool is useful for removing specific entries, such as a user account or a single item from an inventory based on a unique ID.
+If the filter matches multiple documents, only the first one found by the
+database will be deleted. This tool is useful for removing specific entries,
+such as a user account or a single item from an inventory based on a unique ID.
 
-The tool returns the number of documents deleted, which will be either `1` if a document was found and deleted, or `0` if no matching document was found.
+The tool returns the number of documents deleted, which will be either `1` if a
+document was found and deleted, or `0` if no matching document was found.
 
 This tool is compatible with the following source kind:
 
@@ -24,7 +29,8 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here is an example that deletes a specific user account from the `users` collection by matching their unique email address. This is a permanent action.
+Here is an example that deletes a specific user account from the `users`
+collection by matching their unique email address. This is a permanent action.
 
 ```yaml
 tools:

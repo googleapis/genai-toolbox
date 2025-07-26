@@ -21,7 +21,8 @@ in the cloud, on GCP, or on premises.
 This source only uses API authentication. You will need to
 [create an API user][looker-user] to login to Looker.
 
-[looker-user]: https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk
+[looker-user]:
+    https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk
 
 ## Example
 
@@ -36,9 +37,10 @@ sources:
         timeout: 600s
 ```
 
-The Looker base url will look like "https://looker.example.com", don't include a
-trailing "/". In some cases, especially if your Looker is deployed on-premises,
-you may need to add the API port numner like "https://looker.example.com:19999".
+The Looker base url will look like "https://looker.example.com", don't include
+a trailing "/". In some cases, especially if your Looker is deployed
+on-premises, you may need to add the API port numner like
+"https://looker.example.com:19999".
 
 Verify ssl should almost always be "true" (all lower case) unless you are using
 a self-signed ssl certificate for the Looker server. Anything other than "true"

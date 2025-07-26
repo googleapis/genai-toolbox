@@ -10,11 +10,17 @@ aliases:
 
 ## About
 
-The `mongodb-aggregate` tool is the most powerful query tool for MongoDB, allowing you to process data through a multi-stage pipeline. Each stage transforms the documents as they pass through, enabling complex operations like grouping, filtering, reshaping documents, and performing calculations.
+The `mongodb-aggregate` tool is the most powerful query tool for MongoDB,
+allowing you to process data through a multi-stage pipeline. Each stage
+transforms the documents as they pass through, enabling complex operations like
+grouping, filtering, reshaping documents, and performing calculations.
 
-The core of this tool is the `pipelinePayload`, which must be a string containing a **JSON array of pipeline stage documents**. The tool returns a JSON array of documents produced by the final stage of the pipeline.
+The core of this tool is the `pipelinePayload`, which must be a string
+containing a **JSON array of pipeline stage documents**. The tool returns a JSON
+array of documents produced by the final stage of the pipeline.
 
-A `readOnly` flag can be set to `true` as a safety measure to ensure the pipeline does not contain any write stages (like `$out` or `$merge`).
+A `readOnly` flag can be set to `true` as a safety measure to ensure the
+pipeline does not contain any write stages (like `$out` or `$merge`).
 
 This tool is compatible with the following source kind:
 
@@ -22,7 +28,8 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here is an example that calculates the average price and total count of products for each category, but only for products with an "active" status.
+Here is an example that calculates the average price and total count of products
+for each category, but only for products with an "active" status.
 
 ```yaml
 tools:

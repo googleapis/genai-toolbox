@@ -10,9 +10,13 @@ aliases:
 
 ## About
 
-A `mongodb-find-one` tool is used to retrieve the **first single document** that matches a specified filter from a MongoDB collection. If multiple documents match the filter, you can use `sort` options to control which document is returned. Otherwise, the selection is not guaranteed.
+A `mongodb-find-one` tool is used to retrieve the **first single document** that
+matches a specified filter from a MongoDB collection. If multiple documents
+match the filter, you can use `sort` options to control which document is
+returned. Otherwise, the selection is not guaranteed.
 
-The tool returns a single JSON object representing the document, wrapped in a JSON array.
+The tool returns a single JSON object representing the document, wrapped in a
+JSON array.
 
 This tool is compatible with the following source kind:
 
@@ -22,7 +26,9 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here's a common use case: finding a specific user by their unique email address and returning their profile information, while excluding sensitive fields like the password hash.
+Here's a common use case: finding a specific user by their unique email address
+and returning their profile information, while excluding sensitive fields like
+the password hash.
 
 ```yaml
 tools:

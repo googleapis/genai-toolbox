@@ -10,7 +10,11 @@ aliases:
 
 ## About
 
-A `mongodb-find` tool is used to query a MongoDB collection and retrieve documents that match a specified filter. It's a flexible tool that allows you to shape the output by selecting specific fields (**projection**), ordering the results (**sorting**), and restricting the number of documents returned (**limiting**).
+A `mongodb-find` tool is used to query a MongoDB collection and retrieve
+documents that match a specified filter. It's a flexible tool that allows you to
+shape the output by selecting specific fields (**projection**), ordering the
+results (**sorting**), and restricting the number of documents returned
+(**limiting**).
 
 The tool returns a JSON array of the documents found.
 
@@ -20,7 +24,9 @@ This tool is compatible with the following source kind:
 
 ## Example
 
-Here's an example that finds up to 10 users from the `customers` collection who live in a specific city. The results are sorted by their last name, and only their first name, last name, and email are returned.
+Here's an example that finds up to 10 users from the `customers` collection who
+live in a specific city. The results are sorted by their last name, and only
+their first name, last name, and email are returned.
 
 ```yaml
 tools:
