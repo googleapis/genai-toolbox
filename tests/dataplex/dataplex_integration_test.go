@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -39,6 +40,7 @@ import (
 var (
 	DataplexSourceKind            = "dataplex"
 	DataplexSearchEntriesToolKind = "dataplex-search-entries"
+	DataplexLookupEntryToolKind   = "dataplex-lookup-entry"
 	DataplexProject               = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -102,8 +104,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runDataplexSearchEntriesToolGetTest(t)
+	runDataplexToolGetTest(t)
 	runDataplexSearchEntriesToolInvokeTest(t, tableName, datasetName)
+	runDataplexLookupEntryToolInvokeTest(t, datasetName)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -170,10 +173,15 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 			"my-dataplex-instance": sourceConfig,
 		},
 		"tools": map[string]any{
-			"my-search-entries-tool": map[string]any{
+			"my-dataplex-search-entries-tool": map[string]any{
 				"kind":        DataplexSearchEntriesToolKind,
 				"source":      "my-dataplex-instance",
 				"description": "Simple tool to test end to end functionality.",
+			},
+			"my-dataplex-lookup-entry-tool": map[string]any{
+				"kind":        DataplexLookupEntryToolKind,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex lookup entry tool to test end to end functionality.",
 			},
 		},
 	}
@@ -181,55 +189,75 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 	return toolsFile
 }
 
-func runDataplexSearchEntriesToolGetTest(t *testing.T) {
-	resp, err := http.Get("http://127.0.0.1:5000/api/tool/my-search-entries-tool/")
-	if err != nil {
-		t.Fatalf("error making GET request: %s", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("expected status code 200, got %d", resp.StatusCode)
-	}
-	var body map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		t.Fatalf("error decoding response body: %s", err)
-	}
-	got, ok := body["tools"]
-	if !ok {
-		t.Fatalf("unable to find 'tools' key in response body")
+func runDataplexToolGetTest(t *testing.T) {
+	testCases := []struct {
+		name           string
+		toolName       string
+		expectedParams []string
+	}{
+		{
+			name:           "get my-dataplex-search-entries-tool",
+			toolName:       "my-dataplex-search-entries-tool",
+			expectedParams: []string{"name", "pageSize", "pageToken", "query", "orderBy", "semanticSearch"},
+		},
+		{
+			name:           "get my-dataplex-lookup-entry-tool",
+			toolName:       "my-dataplex-lookup-entry-tool",
+			expectedParams: []string{"name", "view", "aspectTypes", "entry"},
+		},
 	}
 
-	toolsMap, ok := got.(map[string]interface{})
-	if !ok {
-		t.Fatalf("tools is not a map")
-	}
-	tool, ok := toolsMap["my-search-entries-tool"].(map[string]interface{})
-	if !ok {
-		t.Fatalf("tool not found in manifest")
-	}
-	params, ok := tool["parameters"].([]interface{})
-	if !ok {
-		t.Fatalf("parameters not found")
-	}
-	paramNames := []string{}
-	for _, param := range params {
-		paramMap, ok := param.(map[string]interface{})
-		if ok {
-			paramNames = append(paramNames, paramMap["name"].(string))
-		}
-	}
-	expected := []string{"name", "pageSize", "pageToken", "orderBy", "query"}
-	for _, want := range expected {
-		found := false
-		for _, got := range paramNames {
-			if got == want {
-				found = true
-				break
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/", tc.toolName))
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
 			}
-		}
-		if !found {
-			t.Fatalf("expected parameter %q not found in tool parameters", want)
-		}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Fatalf("response status code is not 200")
+			}
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+			got, ok := body["tools"]
+			if !ok {
+				t.Fatalf("unable to find tools in response body")
+			}
+
+			toolsMap, ok := got.(map[string]interface{})
+			if !ok {
+				t.Fatalf("expected 'tools' to be a map, got %T", got)
+			}
+			tool, ok := toolsMap[tc.toolName].(map[string]interface{})
+			if !ok {
+				t.Fatalf("expected tool %q to be a map, got %T", tc.toolName, toolsMap[tc.toolName])
+			}
+			params, ok := tool["parameters"].([]interface{})
+			if !ok {
+				t.Fatalf("expected 'parameters' to be a slice, got %T", tool["parameters"])
+			}
+			paramSet := make(map[string]struct{})
+			for _, param := range params {
+				paramMap, ok := param.(map[string]interface{})
+				if ok {
+					if name, ok := paramMap["name"].(string); ok {
+						paramSet[name] = struct{}{}
+					}
+				}
+			}
+			var missing []string
+			for _, want := range tc.expectedParams {
+				if _, found := paramSet[want]; !found {
+					missing = append(missing, want)
+				}
+			}
+			if len(missing) > 0 {
+				t.Fatalf("missing parameters for tool %q: %v", tc.toolName, missing)
+			}
+		})
 	}
 }
 
@@ -269,7 +297,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			if err != nil {
 				t.Fatalf("error marshalling request body: %s", err)
 			}
-			resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-search-entries-tool/invoke", "application/json", bytes.NewBuffer(reqBodyBytes))
+			resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke", "application/json", bytes.NewBuffer(reqBodyBytes))
 			if err != nil {
 				t.Fatalf("error making POST request: %s", err)
 			}
@@ -310,6 +338,84 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			} else {
 				if len(entries) != 0 {
 					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
+			}
+		})
+	}
+}
+
+func runDataplexLookupEntryToolInvokeTest(t *testing.T, datasetName string) {
+	testCases := []struct {
+		name           string
+		datasetName    string
+		wantStatusCode int
+		expectResult   bool
+		wantContentKey string
+	}{
+		{
+			name:           "Success - Entry Found",
+			datasetName:    datasetName,
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "name",
+		},
+		{
+			name:           "Failure - Entry Not Found or Permission Denied",
+			datasetName:    "non-existent-dataset",
+			wantStatusCode: 400,
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBodyMap := map[string]string{
+				"name":  fmt.Sprintf("projects/%s/locations/us", DataplexProject),
+				"entry": fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s", DataplexProject, DataplexProject, tc.datasetName)}
+
+			reqBodyBytes, err := json.Marshal(reqBodyMap)
+			if err != nil {
+				t.Fatalf("Error marshalling request body: %v", err)
+			}
+
+			url := "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke"
+			resp, err := http.Post(url, "application/json", bytes.NewBuffer(reqBodyBytes))
+			if err != nil {
+				t.Fatalf("Error making POST request to %s: %v", url, err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("Error parsing response body: %v", err)
+			}
+
+			if tc.expectResult {
+				resultStr, ok := result["result"].(string)
+				if !ok {
+					t.Fatalf("Expected 'result' field to be a string on success, got %T", result["result"])
+				}
+				if resultStr == "" || resultStr == "{}" || resultStr == "null" {
+					t.Fatal("Expected an entry, but got empty result")
+				}
+
+				var entry map[string]interface{}
+				if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
+					t.Fatalf("Error unmarshalling result string into entry map: %v", err)
+				}
+
+				if _, ok := entry[tc.wantContentKey]; !ok {
+					t.Fatalf("Expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
+				}
+			} else { // Handle expected error response
+				_, ok := result["error"]
+				if !ok {
+					t.Fatalf("Expected 'error' field in response, got %v", result)
 				}
 			}
 		})
