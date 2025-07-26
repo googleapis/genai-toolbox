@@ -5,6 +5,8 @@ weight: 2
 description: Frequently asked questions about Toolbox. 
 ---
 
+[This is a broken link](https://example.com/this-is-a-broken-link)
+
 ## How can I deploy or run Toolbox?
 
 MCP Toolbox for Databases is open-source and can be ran or deployed to a

@@ -80,6 +80,11 @@ jobs:
           HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ github.event.number }}/
           HUGO_ENVIRONMENT: preview
           HUGO_RELATIVEURLS: false
+      
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@2b974101332433102b4222d83a83599798846a69 # v2
+        with:
+          args: --verbose --fail './.hugo/public/**/*.html'
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
