@@ -649,3 +649,75 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 	}
 	return toolsFile
 }
+
+// GetFirebirdToolsConfig obtém a configuração genérica e a adapta para o Firebird.
+func GetFirebirdToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+	// Começa com a configuração genérica.
+	toolsFile := GetToolsConfig(sourceConfig, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+
+	toolsMap, ok := toolsFile["tools"].(map[string]any)
+	if !ok {
+		// Se não puder converter, retorna o original para evitar pânico.
+		return toolsFile
+	}
+
+	// Sobrescreve a sintaxe 'SELECT 1' que não é válida no Firebird sem 'FROM'.
+	if simpleTool, ok := toolsMap["my-simple-tool"].(map[string]any); ok {
+		simpleTool["statement"] = "SELECT 1 AS CONSTANT FROM RDB$DATABASE;"
+		toolsMap["my-simple-tool"] = simpleTool
+	}
+	if authRequiredTool, ok := toolsMap["my-auth-required-tool"].(map[string]any); ok {
+		authRequiredTool["statement"] = "SELECT 1 AS CONSTANT FROM RDB$DATABASE;"
+		toolsMap["my-auth-required-tool"] = authRequiredTool
+	}
+
+	// Adapta a ferramenta 'my-array-tool' para o Firebird, que só usa um parâmetro de array na sua statement.
+	if arrayTool, ok := toolsMap["my-array-tool"].(map[string]any); ok {
+		arrayTool["parameters"] = []any{
+			map[string]any{
+				"name":        "idArray",
+				"type":        "array",
+				"description": "ID array",
+				"items": map[string]any{
+					"name":        "id",
+					"type":        "integer",
+					"description": "ID",
+				},
+			},
+		}
+		toolsMap["my-array-tool"] = arrayTool
+	}
+
+	toolsFile["tools"] = toolsMap
+	return toolsFile
+}
+
+// AddFirebirdExecuteSqlConfig gets the tools config for `firebird-execute-sql`.
+func AddFirebirdExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "firebird-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "firebird-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+// GetFirebirdTmplToolStatement retorna statements para os testes de template do Firebird.
+func GetFirebirdTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE ID = ?"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}

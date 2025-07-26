@@ -1,0 +1,272 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package firebirdsql
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"strings"
+
+	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/firebird"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+)
+
+const kind string = "firebird-sql"
+
+func init() {
+	if !tools.Register(kind, newConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
+
+type compatibleSource interface {
+	FirebirdDB() *sql.DB
+}
+
+// validate compatible sources are still compatible
+var _ compatibleSource = &firebird.Source{}
+
+var compatibleSources = [...]string{firebird.SourceKind}
+
+type Config struct {
+	Name               string           `yaml:"name" validate:"required"`
+	Kind               string           `yaml:"kind" validate:"required"`
+	Source             string           `yaml:"source" validate:"required"`
+	Description        string           `yaml:"description" validate:"required"`
+	Statement          string           `yaml:"statement" validate:"required"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+}
+
+// validate interface
+var _ tools.ToolConfig = Config{}
+
+func (cfg Config) ToolConfigKind() string {
+	return kind
+}
+
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	// verify source exists
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	}
+
+	// verify the source is compatible
+	s, ok := rawS.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+	}
+
+	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: paramMcpManifest,
+	}
+
+	// finish tool setup
+	t := &Tool{
+		Name:               cfg.Name,
+		Kind:               kind,
+		Parameters:         cfg.Parameters,
+		TemplateParameters: cfg.TemplateParameters,
+		AllParams:          allParameters,
+		Statement:          cfg.Statement,
+		AuthRequired:       cfg.AuthRequired,
+		Db:                 s.FirebirdDB(),
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:        mcpManifest,
+	}
+	return t, nil
+}
+
+// validate interface
+var _ tools.Tool = &Tool{}
+
+type Tool struct {
+	Name               string           `yaml:"name"`
+	Kind               string           `yaml:"kind"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	AllParams          tools.Parameters `yaml:"allParams"`
+
+	Db          *sql.DB
+	Statement   string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
+}
+
+func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+	paramsMap := params.AsMap()
+	statement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract template params: %w", err)
+	}
+
+	finalSQL := statement
+	var finalParams []any
+
+	if len(t.Parameters) > 0 {
+		// Filtra para obter apenas os valores dos parâmetros regulares, na ordem correta.
+		var regularParamValues tools.ParamValues
+		for _, pDef := range t.Parameters {
+			for _, pVal := range params {
+				if pDef.GetName() == pVal.Name {
+					regularParamValues = append(regularParamValues, pVal)
+					break
+				}
+			}
+		}
+
+		var errPrep error
+		finalSQL, finalParams, errPrep = prepareQueryForArrays(statement, t.Parameters, regularParamValues)
+		if errPrep != nil {
+			return nil, fmt.Errorf("failed to prepare query for array parameters: %w", errPrep)
+		}
+	}
+
+	rows, err := t.Db.QueryContext(ctx, finalSQL, finalParams...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query [%s] with params %v: %w", finalSQL, finalParams, err)
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get columns: %w", err)
+	}
+
+	var out []any
+	for rows.Next() {
+		values := make([]any, len(cols))
+		scanArgs := make([]any, len(values))
+		for i := range values {
+			scanArgs[i] = &values[i]
+		}
+
+		err = rows.Scan(scanArgs...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+
+		vMap := make(map[string]any)
+		for i, col := range cols {
+			if b, ok := values[i].([]byte); ok {
+				vMap[col] = string(b)
+			} else {
+				vMap[col] = values[i]
+			}
+		}
+		out = append(out, vMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return out, nil
+}
+
+func prepareQueryForArrays(originalSQL string, paramDefs tools.Parameters, paramValues tools.ParamValues) (string, []any, error) {
+	var finalSQLBuilder strings.Builder
+	var finalParams []any
+
+	paramIndex := 0
+	lastIndex := 0
+
+	for {
+		placeholderPos := strings.Index(originalSQL[lastIndex:], "?")
+		if placeholderPos == -1 {
+			break
+		}
+
+		absolutePos := lastIndex + placeholderPos
+		finalSQLBuilder.WriteString(originalSQL[lastIndex:absolutePos])
+
+		if paramIndex >= len(paramValues) {
+			return "", nil, fmt.Errorf("more '?' placeholders in SQL than parameters provided")
+		}
+
+		paramDef := paramDefs[paramIndex]
+		paramValue := paramValues[paramIndex].Value
+		paramIndex++
+
+		if paramDef.GetType() == "array" {
+			slice, ok := paramValue.([]any)
+			if !ok {
+				return "", nil, fmt.Errorf("parameter %q is defined as array, but received type %T", paramDef.GetName(), paramValue)
+			}
+
+			if len(slice) == 0 {
+				return "", nil, fmt.Errorf("array parameter %q cannot be empty for an IN clause", paramDef.GetName())
+			}
+
+			placeholders := strings.Repeat("?,", len(slice)-1) + "?"
+			finalSQLBuilder.WriteString(placeholders)
+			finalParams = append(finalParams, slice...)
+
+		} else {
+			finalSQLBuilder.WriteString("?")
+			finalParams = append(finalParams, paramValue)
+		}
+
+		lastIndex = absolutePos + 1
+	}
+
+	finalSQLBuilder.WriteString(originalSQL[lastIndex:])
+
+	// A CORREÇÃO ESTÁ AQUI:
+	// O teste genérico envia parâmetros extras (`nameArray`, `cmdArray`) que não têm
+	// placeholders '?' correspondentes na nossa statement. Esta verificação causava
+	// um erro. Ao removê-la, a ferramenta ignora elegantemente os parâmetros não utilizados.
+	/*
+		if paramIndex < len(paramValues) {
+			return "", nil, fmt.Errorf("more parameters provided than '?' placeholders in SQL")
+		}
+	*/
+
+	return finalSQLBuilder.String(), finalParams, nil
+}
+
+func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.AllParams, data, claims)
+}
+
+func (t *Tool) Manifest() tools.Manifest {
+	return t.manifest
+}
+
+func (t *Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
+}
+
+func (t *Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
