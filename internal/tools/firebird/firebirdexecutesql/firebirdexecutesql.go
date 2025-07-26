@@ -33,7 +33,6 @@ func init() {
 	}
 }
 
-// newConfig cria uma nova instância de Config a partir do decoder YAML.
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
 	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
@@ -42,17 +41,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// compatibleSource define o que a ferramenta espera de uma fonte de dados.
 type compatibleSource interface {
 	FirebirdDB() *sql.DB
 }
 
-// Garante que a fonte de dados do Firebird implementa a interface.
 var _ compatibleSource = &firebird.Source{}
 
 var compatibleSources = [...]string{firebird.SourceKind}
 
-// Config define a estrutura da ferramenta no arquivo YAML.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"` // Adicione esta linha
@@ -61,32 +57,26 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// Garante que Config implementa a interface ToolConfig.
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigKind() string {
 	return kind
 }
 
-// Initialize cria e configura a instância da ferramenta executável.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Verifica se a fonte existe.
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	// Verifica se a fonte é compatível.
 	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	// O teste genérico envia o parâmetro com o nome "sql".
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
 	parameters := tools.Parameters{sqlParameter}
 
-	// Usa a função helper para gerar os manifestos.
 	_, paramManifest, paramMcpManifest := tools.ProcessParameters(nil, parameters)
 
 	mcpManifest := tools.McpManifest{
@@ -95,7 +85,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: paramMcpManifest,
 	}
 
-	// Conclui a configuração da ferramenta.
 	t := &Tool{
 		Name:         cfg.Name,
 		Parameters:   parameters,
@@ -107,10 +96,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-// Garante que Tool implementa a interface Tool.
 var _ tools.Tool = &Tool{}
 
-// Tool é a implementação da ferramenta executável.
 type Tool struct {
 	Name         string
 	Parameters   tools.Parameters
@@ -120,10 +107,7 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-// Invoke executa a lógica da ferramenta.
 func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	// O ParseParams genérico cria um slice de valores.
-	// Pegamos o primeiro (e único) valor.
 	sliceParams := params.AsSlice()
 	if len(sliceParams) == 0 {
 		return nil, fmt.Errorf("missing required 'sql' parameter")
@@ -144,8 +128,6 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 		return nil, fmt.Errorf("unable to retrieve column information: %w", err)
 	}
 
-	// Adaptação para Firebird: comandos DDL não retornam colunas.
-	// O teste espera 'null' nesses casos.
 	if len(cols) == 0 {
 		if err := rows.Err(); err != nil {
 			return nil, fmt.Errorf("query execution failed: %w", err)
@@ -155,7 +137,6 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 
 	var out []any
 	for rows.Next() {
-		// Adaptação para database/sql: usa Scan em vez de Values.
 		values := make([]any, len(cols))
 		scanArgs := make([]any, len(values))
 		for i := range values {
@@ -169,7 +150,6 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 
 		vMap := make(map[string]any)
 		for i, colName := range cols {
-			// O driver do Firebird pode retornar bytes, então convertemos para string.
 			if b, ok := values[i].([]byte); ok {
 				vMap[colName] = string(b)
 			} else {
@@ -186,7 +166,6 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 	return out, nil
 }
 
-// ParseParams delega a análise para a função helper genérica.
 func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }

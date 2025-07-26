@@ -242,16 +242,6 @@ func prepareQueryForArrays(originalSQL string, paramDefs tools.Parameters, param
 
 	finalSQLBuilder.WriteString(originalSQL[lastIndex:])
 
-	// A CORREÇÃO ESTÁ AQUI:
-	// O teste genérico envia parâmetros extras (`nameArray`, `cmdArray`) que não têm
-	// placeholders '?' correspondentes na nossa statement. Esta verificação causava
-	// um erro. Ao removê-la, a ferramenta ignora elegantemente os parâmetros não utilizados.
-	/*
-		if paramIndex < len(paramValues) {
-			return "", nil, fmt.Errorf("more parameters provided than '?' placeholders in SQL")
-		}
-	*/
-
 	return finalSQLBuilder.String(), finalParams, nil
 }
 
