@@ -466,6 +466,12 @@ func WithCreateColArray(s string) Option {
 	}
 }
 
+func WithInsert1Want(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.insert1Want = s
+	}
+}
+
 // NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
 func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
 	templateParamTestOption := &TemplateParameterTestConfig{
