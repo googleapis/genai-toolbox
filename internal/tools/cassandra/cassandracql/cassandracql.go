@@ -1,4 +1,4 @@
-package cassandra
+package cassandracql
 
 import (
 	"context"

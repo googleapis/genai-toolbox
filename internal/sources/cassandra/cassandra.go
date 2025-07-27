@@ -3,7 +3,6 @@ package cassandra
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/goccy/go-yaml"
 	"github.com/gocql/gocql"
@@ -27,21 +26,25 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	return actual, nil
 }
 
-// TODO: add additonal configurations
 type Config struct {
-	Name  string   `yaml:"name" validate:"required"`
-	Kind  string   `yaml:"kind" validate:"required"`
-	Hosts []string `yaml:"host" validate:"required"`
+	Name                   string   `yaml:"name" validate:"required"`
+	Kind                   string   `yaml:"kind" validate:"required"`
+	Hosts                  []string `yaml:"host" validate:"required"`
+	Keyspace               string   `yaml:"keyspace"`
+	ProtoVersion           int      `yaml:"protoVersion"`
+	Username               string   `yaml:"username"`
+	Password               string   `yaml:"password"`
+	CAPath                 string   `yaml:"caPath"`
+	CertPath               string   `yaml:"certPath"`
+	KeyPath                string   `yaml:"keyPath"`
+	EnableHostVerification bool     `yaml:"enableHostVerification"`
 }
 
 // Initialize implements sources.SourceConfig.
 func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	cluster := gocql.NewCluster("localhost")
-
-	// Create session
-	session, err := cluster.CreateSession()
+	session, err := initCassandraSession(ctx, tracer, c)
 	if err != nil {
-		log.Fatalf("Failed to create session: %v", err)
+		return nil, fmt.Errorf("unable to create session: %v", err)
 	}
 	s := &Source{
 		Name:    c.Name,
@@ -75,3 +78,33 @@ func (s Source) SourceKind() string {
 }
 
 var _ sources.Source = &Source{}
+
+func initCassandraSession(ctx context.Context, tracer trace.Tracer, c Config) (*gocql.Session, error) {
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, c.Name)
+	defer span.End()
+
+	cluster := gocql.NewCluster(c.Hosts...)
+	cluster.ProtoVersion = c.ProtoVersion
+	cluster.Keyspace = c.Keyspace
+	if c.Username != "" && c.Password != "" {
+		cluster.Authenticator = gocql.PasswordAuthenticator{
+			Username: c.Username,
+			Password: c.Password,
+		}
+	}
+	if c.CAPath != "" || c.CertPath != "" || c.KeyPath != "" || c.EnableHostVerification {
+		cluster.SslOpts = &gocql.SslOptions{
+			CaPath:                 c.CAPath,
+			CertPath:               c.CertPath,
+			KeyPath:                c.KeyPath,
+			EnableHostVerification: c.EnableHostVerification,
+		}
+	}
+	// Create session
+	session, err := cluster.CreateSession()
+	if err != nil {
+		return nil, err
+	}
+	return session, nil
+}
