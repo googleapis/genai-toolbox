@@ -16,7 +16,7 @@ in a given mode in the source.
 
 It's compatible with the following sources:
 
-- [looker](../sources/looker.md)
+- [looker](../../sources/looker/)
 
 `looker-get-parameters` accepts two parameters, the `model` and the `explore`.
 

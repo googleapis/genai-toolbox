@@ -14,7 +14,7 @@ A `looker-get-models` tool returns all the models the source.
 
 It's compatible with the following sources:
 
-- [looker](../sources/looker.md)
+- [looker](../../sources/looker/)
 
 `looker-get-models` accepts no parameters.
 
