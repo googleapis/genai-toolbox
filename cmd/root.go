@@ -50,7 +50,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylisttableids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/cassandra"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cassandra/cassandracql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
