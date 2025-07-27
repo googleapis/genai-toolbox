@@ -22,7 +22,9 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			sources:
 				my-cassandra-instance:
 					kind: cassandra
-					host: ["my-host"]
+					host: 
+						- "my-host1"
+						- "my-host2"
 					username: "user"
 					password: "pass"
 					protoVersion: 4
@@ -34,7 +36,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 				"my-cassandra-instance": cassandra.Config{
 					Name:                   "my-cassandra-instance",
 					Kind:                   cassandra.SourceKind,
-					Hosts:                  []string{"my-host"},
+					Hosts:                  []string{"my-host1", "my-host2"},
 					Username:               "user",
 					Password:               "pass",
 					ProtoVersion:           4,
@@ -77,7 +79,8 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				my-cassandra-instance:
 					kind: cassandra
-					host: ["my-host"]
+					host: 
+						- "my-host"
 					foo: bar
 			`,
 			err: "unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | host:\n   3 | - my-host\n   4 | kind: cassandra",
