@@ -7,5 +7,7 @@
     "https://looker.example.com",
     "https://xxx.cloud.dgraph.io/",
     "https://claude.ai/download",
+    "5000",
+    "8080"
   ]
 }
