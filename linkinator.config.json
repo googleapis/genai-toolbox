@@ -3,11 +3,11 @@
   "skip": [
     "https://console.cloud.google.com",
     "https://storage.googleapis.com",
-    "http://127.0.0.1",
     "https://looker.example.com",
     "https://xxx.cloud.dgraph.io/",
     "https://claude.ai/download",
-    "5000",
-    "8080"
+    "http://127.0.0.1",
+    "http://localhost:",
+    "https://localhost:"
   ]
 }
