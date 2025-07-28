@@ -1,5 +1,5 @@
 {
-  "config": "string",
+  "concurrency": 10,
   "skip": [
     "https://console.cloud.google.com",
     "https://storage.googleapis.com",
