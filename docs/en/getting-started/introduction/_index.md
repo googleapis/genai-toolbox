@@ -56,7 +56,7 @@ Here’s how it will save you time:
 
 Learn [how to connect your AI tools (IDEs) to Toolbox using MCP][connect-ide].
 
-[connect-ide]: ../../how-to/connect-ide/
+[connect-ide]: ../../how-to/connect-ide/_index.md
 
 ## General Architecture
 

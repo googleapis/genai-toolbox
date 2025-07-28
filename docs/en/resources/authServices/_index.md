@@ -3,11 +3,11 @@ title: "AuthServices"
 type: docs
 weight: 1
 description: >
-  AuthServices represent services that handle authentication and authorization. 
+  AuthServices represent services that handle authentication and authorization.
 ---
 
 AuthServices represent services that handle authentication and authorization. It
-can primarily be used by [Tools](../tools) in two different ways:
+can primarily be used by [Tools](../tools/_index.md) in two different ways:
 
 - [**Authorized Invocation**][auth-invoke] is when a tool
   is validated by the auth service before the call can be invoked. Toolbox
@@ -18,8 +18,8 @@ can primarily be used by [Tools](../tools) in two different ways:
   tool call.
 
 [openid-claims]: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
-[auth-invoke]: ../tools/#authorized-invocations
-[auth-params]: ../tools/#authenticated-parameters
+[auth-invoke]: ../tools/_index.md#authorized-invocations
+[auth-params]: ../tools/_index.md#authenticated-parameters
 
 ## Example
 

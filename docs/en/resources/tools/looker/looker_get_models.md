@@ -2,7 +2,7 @@
 title: "looker-get-models"
 type: docs
 weight: 1
-description: > 
+description: >
   A "looker-get-models" tool returns all the models in the source.
 aliases:
 - /resources/tools/looker-get-models
@@ -14,7 +14,7 @@ A `looker-get-models` tool returns all the models the source.
 
 It's compatible with the following sources:
 
-- [looker](../sources/looker.md)
+- [looker](../../sources/looker.md)
 
 `looker-get-models` accepts no parameters.
 

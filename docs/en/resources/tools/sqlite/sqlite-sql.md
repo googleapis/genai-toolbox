@@ -13,7 +13,7 @@ aliases:
 A `sqlite-sql` tool executes SQL statements against a SQLite database.
 It's compatible with any of the following sources:
 
-- [sqlite](../sources/sqlite.md)
+- [sqlite](../../sources/sqlite.md)
 
 SQLite uses the `?` placeholder for parameters in SQL statements. Parameters are
 bound in the order they are provided.
@@ -51,7 +51,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](_index.md#template-parameters).
 
 ```yaml
 tools:
@@ -80,5 +80,5 @@ tools:
 | source             |                   string                         |     true     | Name of the source the SQLite source configuration.                                                                                        |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | The SQL statement to execute.                                                                                                              |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters         | [parameters](../_index.md#specifying-parameters)       |    false     | List of [parameters](../_index.md#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](_index.md#template-parameters) |    false     | List of [templateParameters](_index.md#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

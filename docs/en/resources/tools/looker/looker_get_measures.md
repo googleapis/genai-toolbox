@@ -2,7 +2,7 @@
 title: "looker-get-measures"
 type: docs
 weight: 1
-description: > 
+description: >
   A "looker-get-measures" tool returns all the measures from a given explore
   in a given model in the source.
 aliases:
@@ -16,7 +16,7 @@ in a given mode in the source.
 
 It's compatible with the following sources:
 
-- [looker](../sources/looker.md)
+- [looker](../../sources/looker.md)
 
 `looker-get-measures` accepts two parameters, the `model` and the `explore`.
 

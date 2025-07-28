@@ -10,7 +10,7 @@ description: >
 
 [Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
-on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
+on how to [connect to Toolbox via MCP](../../../how-to/connect_via_mcp.md).
 
 ## Step 1: Set up your BigQuery Dataset and Table
 

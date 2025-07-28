@@ -1,0 +1,21 @@
+{
+  "config": "string",
+  "skip": [
+    "https://console.cloud.google.com",
+    "https://storage.googleapis.com",
+    "http://127.0.0.1",
+    "https://looker.example.com",
+    "https://xxx.cloud.dgraph.io/",
+    "mysql",
+    "https://claude.ai/download",
+    "5000",
+    "8080"
+  ],
+  "silent": false,
+  "verbosity": "error",
+  "retry": true,
+  "retryErrors": true,
+  "retryErrorsCount": 3,
+  "retryErrorsJitter": 2,
+  "serverRoot": "./docs/en"
+}

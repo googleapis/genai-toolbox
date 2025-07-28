@@ -3,7 +3,7 @@ title: "Google Sign-In"
 type: docs
 weight: 1
 description: >
-  Use Google Sign-In for Oauth 2.0 flow and token lifecycle. 
+  Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
 ---
 
 ## Getting Started
@@ -26,14 +26,14 @@ When using [Authorized Invocations][auth-invoke], a tool will be
 considered authorized if it has a valid Oauth 2.0 token that matches the Client
 ID.
 
-[auth-invoke]: ../tools/#authorized-invocations
+[auth-invoke]: ../tools/_index.md#authorized-invocations
 
 ### Authenticated Parameters
 
 When using [Authenticated Parameters][auth-params], any [claim provided by the
 id-token][provided-claims] can be used for the parameter.
 
-[auth-params]: ../tools/#authenticated-phugarameters
+[auth-params]: ../tools/_index.md#authenticated-phugarameters
 [provided-claims]:
     https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
 

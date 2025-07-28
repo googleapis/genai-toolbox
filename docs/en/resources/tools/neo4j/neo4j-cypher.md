@@ -2,7 +2,7 @@
 title: "neo4j-cypher"
 type: docs
 weight: 1
-description: > 
+description: >
   A "neo4j-cypher" tool executes a pre-defined cypher statement against a Neo4j
   database.
 aliases:
@@ -14,7 +14,7 @@ aliases:
 A `neo4j-cypher` tool executes a pre-defined Cypher statement against a Neo4j
 database. It's compatible with any of the following sources:
 
-- [neo4j](../sources/neo4j.md)
+- [neo4j](../../sources/neo4j.md)
 
 The specified Cypher statement is executed as a [parameterized
 statement][neo4j-parameters], and specified parameters will be used according to
@@ -63,7 +63,7 @@ tools:
         description: Full actor name, "firstname lastname"
       - name: year
         type: integer
-        description: 4 digit number starting in 1900 up to the current year 
+        description: 4 digit number starting in 1900 up to the current year
 ```
 
 ## Reference
@@ -74,4 +74,4 @@ tools:
 | source      |                   string                   |     true     | Name of the source the Cypher query should execute on.                                          |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
 | statement   |                   string                   |     true     | Cypher statement to execute                                                                     |
-| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be used with the Cypher statement. |
+| parameters  | [parameters](../_index.md#specifying-parameters) |    false     | List of [parameters](../_index.md#specifying-parameters) that will be used with the Cypher statement. |
