@@ -4,6 +4,7 @@
     --text-secondary-gray: #6e6e6e;
     --button-primary: var(--toolbox-blue);
     --button-secondary: #616161;
+    --section-border: #e0e0e0;
 }
 
 body {
@@ -159,6 +160,12 @@ body {
 
 .btn--closeHeaders {
     background-color: var(--button-secondary)
+}
+
+.btn--setup-gis {
+    background-color: white;
+    color: var(--text-primary-gray);
+    border: 2px solid var(--text-primary-gray);
 }
 
 .tool-button {
@@ -379,7 +386,7 @@ body {
 }
 
 .auth-param-input {
-    background-color: #e0e0e0;
+    background-color: var(--section-border);
     cursor: not-allowed;
 }
 
@@ -513,6 +520,101 @@ body {
     }
 }
 
+.auth-method-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8f9fa; 
+  border: 1px solid var(--section-border); 
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.auth-method-label {
+  font-weight: 500;
+  color: var(--text-primary-gray);
+  word-break: break-word;
+}
+
+.auth-helper-section {
+    border: 1px solid var(--section-border); 
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 20px;
+    background-color: #f8f9fa;
+    width: 80%;
+}
+
+.auth-helper-title {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--text-primary-gray);
+    font-size: 1.15em;
+    font-weight: 500;
+}
+
+.auth-method-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-method-details {
+  padding: 16px;
+  border: 1px solid var(--section-border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  background-color: #fff;
+  overflow-x: auto;
+}
+
+.auth-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.auth-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & label {
+    font-size: 14px;
+    color: var(--text-primary-gray);
+    margin-bottom: 4px;
+  }
+}
+
+.auth-input {
+  padding: 8px 10px;
+  border: 1px solid #bdc1c6;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--toolbox-blue);
+    box-shadow: 0 0 0 1px #1a73e8;
+  }
+}
+
+.auth-method-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-instructions {
+    font-size: 0.8em; 
+    margin-top: 5px; 
+    color: var(--text-secondary-gray);
+}
+
 .tool-response {
     margin: 20px 0 0 0;
 
@@ -577,4 +679,17 @@ body {
     }
 }
 
+.toggle-details-tab {
+  background-color: transparent;
+  color: var(--toolbox-blue);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
 
+  &:hover {
+        opacity: 0.8;
+  }
+}
