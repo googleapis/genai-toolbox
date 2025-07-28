@@ -21,3 +21,6 @@ node_modules
 # executable
 genai-toolbox
 toolbox
+
+# agent instructions
+.github/instructions/
