@@ -6,9 +6,6 @@
     "http://127.0.0.1",
     "https://looker.example.com",
     "https://xxx.cloud.dgraph.io/",
-    "mysql",
     "https://claude.ai/download",
-    "5000",
-    "8080"
   ]
 }
