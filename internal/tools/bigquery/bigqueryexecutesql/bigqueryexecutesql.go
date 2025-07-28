@@ -17,6 +17,8 @@ package bigqueryexecutesql
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -44,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
+	ValidateDatasetAccess(dataset string) error
 }
 
 // validate compatible sources are still compatible
@@ -95,6 +98,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.BigQueryClient(),
+		Source:       s,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -105,13 +109,84 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string              `yaml:"name"`
+	Kind         string              `yaml:"kind"`
+	AuthRequired []string            `yaml:"authRequired"`
+	Parameters   tools.Parameters    `yaml:"parameters"`
 	Client       *bigqueryapi.Client
+	Source       compatibleSource    // Source for dataset validation
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
+}
+
+func (t Tool) validateSQLDatasetAccess(sql string) error {
+	// Simple approach: find all backtick-quoted table references
+	// Pattern: `something.something` or `something.something.something`
+	backtickPattern := regexp.MustCompile(`\x60([^\x60]+)\x60`)
+	backtickMatches := backtickPattern.FindAllStringSubmatch(sql, -1)
+	
+	var datasets []string
+	
+	// Extract datasets from backtick matches
+	for _, match := range backtickMatches {
+		if len(match) > 1 {
+			tableRef := match[1] // Content inside backticks
+			parts := strings.Split(tableRef, ".")
+			
+			var dataset string
+			if len(parts) == 2 { // dataset.table
+				dataset = parts[0]
+			} else if len(parts) == 3 { // project.dataset.table
+				dataset = parts[1]
+			}
+			
+			if dataset != "" {
+				datasets = append(datasets, dataset)
+			}
+		}
+	}
+	
+	// Also check for non-backtick table references
+	noBacktickPattern := regexp.MustCompile(`(?i)\bFROM\s+([a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?)\b`)
+	noBacktickMatches := noBacktickPattern.FindAllStringSubmatch(sql, -1)
+	
+	for _, match := range noBacktickMatches {
+		if len(match) > 1 {
+			tableRef := match[1]
+			parts := strings.Split(tableRef, ".")
+			
+			var dataset string
+			if len(parts) == 2 { // dataset.table
+				dataset = parts[0]
+			} else if len(parts) == 3 { // project.dataset.table
+				dataset = parts[1]
+			}
+			
+			if dataset != "" {
+				datasets = append(datasets, dataset)
+			}
+		}
+	}
+	
+	if len(datasets) == 0 {
+		return fmt.Errorf("no valid table references found in SQL query")
+	}
+
+	// Use source-level validation for each dataset found
+	for _, dataset := range datasets {
+		if err := t.Source.ValidateDatasetAccess(dataset); err != nil {
+			return err
+		}
+	}
+
+	// Ensure query has LIMIT clause (add if missing)
+	if !strings.Contains(strings.ToUpper(sql), "LIMIT") {
+		// This is just a warning - the actual LIMIT enforcement should be done by modifying the query
+		// For now, we'll just validate that queries should have LIMIT
+		return fmt.Errorf("query must include LIMIT clause (max 1000 rows)")
+	}
+
+	return nil
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
@@ -119,6 +194,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	sql, ok := sliceParams[0].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+	}
+
+	// Extract datasets from SQL and validate access using source-level validation
+	if err := t.validateSQLDatasetAccess(sql); err != nil {
+		return nil, fmt.Errorf("SQL query violates dataset restrictions: %w", err)
 	}
 
 	query := t.Client.Query(sql)
