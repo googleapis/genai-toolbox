@@ -27,22 +27,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listener for search button click
     searchButton.addEventListener('click', () => {
+        toolDisplayArea.innerHTML = '';
         const toolsetName = searchInput.value.trim();
         if (toolsetName) {
             loadTools(secondNavContent, toolDisplayArea, toolsetName)
         } else {
-            secondNavContent.innerHTML = '<p>Please enter a toolset name to search.</p>';
+            secondNavContent.innerHTML = '<p>Please enter a toolset name to see available tools. <br><br>To view the default toolset that consists of all tools, please select the "Tools" tab.</p>';
         }
     });
 
     // Event listener for Enter key in search input
     searchInput.addEventListener('keypress', (event) => {
+        toolDisplayArea.innerHTML = '';
         if (event.key === 'Enter') {
             const toolsetName = searchInput.value.trim();
             if (toolsetName) {
                 loadTools(secondNavContent, toolDisplayArea, toolsetName);
             } else {
-                secondNavContent.innerHTML = '<p>Please enter a toolset name to search.</p>';
+                secondNavContent.innerHTML = '<p>Please enter a toolset name to see available tools. <br><br>To view the default toolset that consists of all tools, please select the "Tools" tab.</p>';
             }
         }
     });
