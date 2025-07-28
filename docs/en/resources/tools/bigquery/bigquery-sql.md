@@ -13,7 +13,7 @@ aliases:
 A `bigquery-sql` tool executes a pre-defined SQL statement. It's compatible with
 the following sources:
 
-- [bigquery](../sources/bigquery.md)
+- [bigquery](../../sources/bigquery.md)
 
 ### GoogleSQL
 
@@ -72,7 +72,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](#template-parameters).
 
 ```yaml
 tools:
@@ -101,5 +101,5 @@ tools:
 | source             |                   string                         |     true     | Name of the source the GoogleSQL should execute on.                                                                                        |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | The GoogleSQL statement to execute.                                                                                                        |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

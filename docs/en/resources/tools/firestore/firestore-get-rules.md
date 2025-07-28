@@ -2,7 +2,7 @@
 title: "firestore-get-rules"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-get-rules" tool retrieves the active Firestore security rules for the current project.
 aliases:
 - /resources/tools/firestore-get-rules
@@ -15,7 +15,7 @@ rules](https://firebase.google.com/docs/firestore/security/get-started) for the
 current project.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
 `firestore-get-rules` takes no input parameters and returns the security rules
 content along with metadata such as the ruleset name, and timestamps.

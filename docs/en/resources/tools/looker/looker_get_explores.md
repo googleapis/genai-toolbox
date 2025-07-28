@@ -16,7 +16,7 @@ for a given model from the source.
 
 It's compatible with the following sources:
 
-- [looker](../sources/looker.md)
+- [looker](../../sources/looker.md)
 
 `looker-get-explores` accepts one parameter, the
 `model` id.
