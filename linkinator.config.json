@@ -16,6 +16,5 @@
   "retry": true,
   "retryErrors": true,
   "retryErrorsCount": 3,
-  "retryErrorsJitter": 2,
-  "serverRoot": "./docs/en"
+  "retryErrorsJitter": 2
 }
