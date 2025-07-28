@@ -7,7 +7,7 @@
     "https://xxx.cloud.dgraph.io/",
     "https://claude.ai/download",
     "http://127.0.0.1",
-    "http://localhost:",
-    "https://localhost:"
+    "5000",
+    "8080"
   ]
 }
