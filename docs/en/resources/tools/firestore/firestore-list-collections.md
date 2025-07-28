@@ -2,7 +2,7 @@
 title: "firestore-list-collections"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-list-collections" tool lists collections in Firestore, either at the root level or as subcollections of a document.
 aliases:
 - /resources/tools/firestore-list-collections
@@ -17,7 +17,7 @@ in Firestore, either at the root level or as
 of a specific document.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
 `firestore-list-collections` takes an optional `parentPath` parameter to specify a document
 path. If provided, it lists all subcollections of that document. If not provided, it lists

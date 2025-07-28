@@ -10,7 +10,7 @@ description: >
 
 [Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
-on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
+on how to [connect to Toolbox via MCP](../../../how-to/connect_via_mcp.md).
 
 ## Step 1: Set up your BigQuery Dataset and Table
 
@@ -190,7 +190,7 @@ In this section, we will download Toolbox, configure our tools in a
     ```
 
     For more info on tools, check out the
-    [Tools](../../resources/tools/_index.md) section.
+    [Tools](../../../resources/tools/) section.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 

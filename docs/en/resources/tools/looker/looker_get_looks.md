@@ -16,7 +16,7 @@ name or description.
 
 It's compatible with the following sources:
 
-- [looker](../../sources/looker/)
+- [looker](../../sources/looker.md)
 
 `looker-get-looks` takes four parameters, the `title`, `desc`, `limit`
 and `offset`.

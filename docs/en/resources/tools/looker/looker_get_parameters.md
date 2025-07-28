@@ -2,7 +2,7 @@
 title: "looker-get-parameters"
 type: docs
 weight: 1
-description: > 
+description: >
   A "looker-get-parameters" tool returns all the parameters from a given explore
   in a given model in the source.
 aliases:
@@ -16,7 +16,7 @@ in a given mode in the source.
 
 It's compatible with the following sources:
 
-- [looker](../../sources/looker/)
+- [looker](../../sources/looker.md)
 
 `looker-get-parameters` accepts two parameters, the `model` and the `explore`.
 

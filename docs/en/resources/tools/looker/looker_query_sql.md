@@ -16,7 +16,7 @@ semantic model.
 
 It's compatible with the following sources:
 
-- [looker](../../sources/looker/)
+- [looker](../../sources/looker.md)
 
 `looker-query-sql` takes eight parameters:
 

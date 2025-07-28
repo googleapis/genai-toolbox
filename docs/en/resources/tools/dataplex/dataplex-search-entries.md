@@ -2,7 +2,7 @@
 title: "dataplex-search-entries"
 type: docs
 weight: 1
-description: > 
+description: >
   A "dataplex-search-entries" tool allows to search for entries based on the provided query.
 aliases:
 - /resources/tools/dataplex-search-entries
@@ -14,7 +14,7 @@ A `dataplex-search-entries` tool returns all entries in Dataplex Catalog (e.g.
 tables, views, models) that matches given user query.
 It's compatible with the following sources:
 
-- [dataplex](../sources/dataplex.md)
+- [dataplex](../../sources/dataplex.md)
 
 `dataplex-search-entries` takes a required `query` parameter based on which
 entries are filtered and returned to the user and a required `name` parameter

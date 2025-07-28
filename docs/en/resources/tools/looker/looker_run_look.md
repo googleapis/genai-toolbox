@@ -15,7 +15,7 @@ saved Look.
 
 It's compatible with the following sources:
 
-- [looker](../../sources/looker/)
+- [looker](../../sources/looker.md)
 
 `looker-run-look` takes one parameter, the `look_id`.
 

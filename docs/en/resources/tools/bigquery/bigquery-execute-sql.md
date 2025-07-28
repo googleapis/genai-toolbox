@@ -2,7 +2,7 @@
 title: "bigquery-execute-sql"
 type: docs
 weight: 1
-description: > 
+description: >
   A "bigquery-execute-sql" tool executes a SQL statement against BigQuery.
 aliases:
 - /resources/tools/bigquery-execute-sql
@@ -13,7 +13,7 @@ aliases:
 A `bigquery-execute-sql` tool executes a SQL statement against BigQuery.
 It's compatible with the following sources:
 
-- [bigquery](../sources/bigquery.md)
+- [bigquery](../../sources/bigquery.md)
 
 `bigquery-execute-sql` takes one input parameter `sql` and runs the sql
 statement against the `source`.

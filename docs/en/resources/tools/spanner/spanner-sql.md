@@ -2,8 +2,8 @@
 title: "spanner-sql"
 type: docs
 weight: 1
-description: > 
-  A "spanner-sql" tool executes a pre-defined SQL statement against a Google 
+description: >
+  A "spanner-sql" tool executes a pre-defined SQL statement against a Google
   Cloud Spanner database.
 aliases:
 - /resources/tools/spanner-sql
@@ -15,7 +15,7 @@ A `spanner-sql` tool executes a pre-defined SQL statement (either `googlesql` or
 `postgresql`) against a Cloud Spanner database. It's compatible with any of the
 following sources:
 
-- [spanner](../sources/spanner.md)
+- [spanner](../../sources/spanner.md)
 
 ### GoogleSQL
 
@@ -134,7 +134,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](#template-parameters).
 
 ```yaml
 tools:
@@ -163,6 +163,6 @@ tools:
 | source             |                   string                         |     true     | Name of the source the SQL should execute on.                                                                                              |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute on.                                                                                                               |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
 | readOnly           |                   bool                           |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`.                                                   |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

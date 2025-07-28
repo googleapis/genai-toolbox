@@ -2,7 +2,7 @@
 title: "bigquery-get-table-info"
 type: docs
 weight: 1
-description: > 
+description: >
   A "bigquery-get-table-info" tool retrieves metadata for a BigQuery table.
 aliases:
 - /resources/tools/bigquery-get-table-info
@@ -13,7 +13,7 @@ aliases:
 A `bigquery-get-table-info` tool retrieves metadata for a BigQuery table.
 It's compatible with the following sources:
 
-- [bigquery](../sources/bigquery.md)
+- [bigquery](../../sources/bigquery.md)
 
 `bigquery-get-table-info` takes `dataset` and `table` parameters to specify
 the target table. It also optionally accepts a `project` parameter to define
