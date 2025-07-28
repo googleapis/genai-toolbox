@@ -16,5 +16,5 @@
   "retry": true,
   "retryErrors": true,
   "retryErrorsCount": 3,
-  "retryErrorsJitter": 2
+  "retryErrorsJitter": 5
 }
