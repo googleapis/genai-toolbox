@@ -1,5 +1,5 @@
 ---
-title: "dgraph-dql"
+title: "duckdb-sql"
 type: docs
 weight: 1
 description: >
