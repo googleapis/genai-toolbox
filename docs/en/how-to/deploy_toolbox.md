@@ -79,7 +79,7 @@ database are in the same VPC network.
 
 Create a `tools.yaml` file that contains your configuration for Toolbox. For
 details, see the
-[configuration](../resources/sources/_index.md)
+[configuration](../resources/sources/)
 section.
 
 ## Deploy to Cloud Run

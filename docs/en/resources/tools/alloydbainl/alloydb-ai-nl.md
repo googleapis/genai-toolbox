@@ -69,7 +69,7 @@ database queries.
 You can use the `nlConfigParameters` to list the parameters required for your
 `nl_config`. You **must** supply all parameters required for all PSVs in the
 context. It's strongly recommended to use features like [Authenticated
-Parameters](../_index.md#array-parameters) or Bound Parameters to provide secure
+Parameters](../#array-parameters) or Bound Parameters to provide secure
 access to queries generated using natural language, as these parameters are not
 visible to the LLM.
 
@@ -104,4 +104,4 @@ tools:
 | source             |                   string                   |     true     | Name of the AlloyDB source the natural language query should execute on. |
 | description        |                   string                   |     true     | Description of the tool that is passed to the LLM.                       |
 | nlConfig           |                   string                   |     true     | The name of the  `nl_config` in AlloyDB                                  |
-| nlConfigParameters | [parameters](../_index.md#specifying-parameters) |     true     | List of PSV parameters defined in the `nl_config`                        |
+| nlConfigParameters | [parameters](../#specifying-parameters) |     true     | List of PSV parameters defined in the `nl_config`                        |

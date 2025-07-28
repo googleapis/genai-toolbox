@@ -11,7 +11,7 @@ have multiple files, you can tell toolbox which to load with the `--tools-file
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
-[Resources](../resources/_index.md).
+[Resources](../resources/).
 
 ### Using Environment Variables
 
@@ -41,7 +41,7 @@ sources:
 ```
 
 For more details on configuring different types of sources, see the
-[Sources](../resources/sources/_index.md).
+[Sources](../resources/sources/).
 
 ### Tools
 
@@ -63,7 +63,7 @@ tools:
 ```
 
 For more details on configuring different types of tools, see the
-[Tools](../resources/tools/_index.md).
+[Tools](../resources/tools/).
 
 ### Toolsets
 

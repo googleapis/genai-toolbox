@@ -157,10 +157,10 @@ will be thrown in case of value type mismatch.
 
 Authenticated parameters are automatically populated with user
 information decoded from [ID
-tokens](../authServices/_index.md#specifying-id-tokens-from-clients) that are passed in
+tokens](../authServices/#specifying-id-tokens-from-clients) that are passed in
 request headers. They do not take input values in request bodies like other
 parameters. To use authenticated parameters, you must configure the tool to map
-the required [authServices](../authServices/_index.md) to specific claims within the
+the required [authServices](../authServices/) to specific claims within the
 user's ID token.
 
 ```yaml
@@ -183,7 +183,7 @@ user's ID token.
 
 | **field** | **type** | **required** | **description**                                                                         |
 |-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authServices/_index.md) used to verify the OIDC auth token.         |
+| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token.         |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
 ### Template Parameters
@@ -244,7 +244,7 @@ tools:
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
-[authServices](../authServices/_index.md) defined in the previous section.
+[authServices](../authServices/) defined in the previous section.
 
 ```yaml
 tools:

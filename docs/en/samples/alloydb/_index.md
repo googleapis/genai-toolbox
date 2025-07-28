@@ -286,7 +286,7 @@ toolsets:
 ```
 
 For more info on tools, check out the
-[Tools](../../resources/tools/_index.md) section.
+[Tools](../../resources/tools/) section.
 
 ## Step 4: Run the Toolbox server
 
@@ -335,6 +335,6 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 ## What's next
 
 - Learn more about [MCP Inspector](../../how-to/connect_via_mcp.md).
-- Learn more about [Toolbox Resources](../../resources/_index.md).
-- Learn more about [Toolbox How-to guides](../../how-to/_index.md).
+- Learn more about [Toolbox Resources](../../resources/).
+- Learn more about [Toolbox How-to guides](../../how-to/).
 

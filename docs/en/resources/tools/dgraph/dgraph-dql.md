@@ -121,4 +121,4 @@ tools:
 | statement   |                   string                   |     true     | dql statement to execute                                                                     |
 | isQuery     |                  boolean                   |    false     | To run statement as query set true otherwise false                                           |
 | timeout     |                   string                   |    false     | To set timeout for query                                                                     |
-| parameters  | [parameters](../_index.md#specifying-parameters) |    false     | List of [parameters](../_index.md#specifying-parameters) that will be used with the dql statement. |
+| parameters  | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the dql statement. |

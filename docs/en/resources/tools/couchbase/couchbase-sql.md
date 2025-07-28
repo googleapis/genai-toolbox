@@ -66,7 +66,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index.md#template-parameters).
+> [templateParameters](#template-parameters).
 
 ```yaml
 tools:
@@ -95,6 +95,6 @@ tools:
 | source             |                   string                         |     true     | Name of the source the SQL query should execute on.                                                                                        |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute                                                                                                                   |
-| parameters         | [parameters](../_index.md#specifying-parameters)       |    false     | List of [parameters](../_index.md#specifying-parameters) that will be used with the SQL statement.                                               |
-| templateParameters | [templateParameters](_index.md#template-parameters) |    false     | List of [templateParameters](_index.md#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be used with the SQL statement.                                               |
+| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 | authRequired       |                array[string]                     |    false     | List of auth services that are required to use this tool.                                                                                  |
