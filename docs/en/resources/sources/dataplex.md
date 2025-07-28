@@ -287,8 +287,8 @@ Logical operators aren't case-sensitive. For example, both or and OR are accepta
 
 ## Tool: dataplex_lookup_entry
 ### Request
-1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter. If you do not know the name of the aspect type, use the `search_aspect_types` tool.
-2. If you do not know the name of the entry, use either `dataplex_search_entries` or `find_entry_identifier` tool
+1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter.
+2. If you do not know the name of the entry, use `dataplex_search_entries` tool
 ### Response
 1. Unless asked for a specific aspect, respond with all aspects attached to the entry.
 ```
