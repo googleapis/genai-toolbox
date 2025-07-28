@@ -11,7 +11,6 @@
     "5000",
     "8080"
   ],
-  "silent": false,
   "verbosity": "error",
   "retry": true,
   "retryErrors": true,

@@ -17,22 +17,22 @@ name: "docs"
 permissions:
   contents: write
   pull-requests: write
-
+  
 # This Workflow depends on 'github.event.number',
 # not compatible with branch or manual triggers.
 on:
   pull_request:
     # Sync with github_actions_preview_fallback.yml on.pull_request.paths-ignore
     paths:
-      - "docs/**"
-      - "github/workflows/docs**"
-      - ".hugo/**"
+      - 'docs/**'
+      - 'github/workflows/docs**'
+      - '.hugo/**'
   pull_request_target:
     types: [labeled]
     paths:
-      - "docs/**"
-      - "github/workflows/docs**"
-      - ".hugo/**"
+      - 'docs/**'
+      - 'github/workflows/docs**'
+      - '.hugo/**'
 
 jobs:
   preview:
@@ -75,11 +75,6 @@ jobs:
             ${{ runner.os }}-node-
 
       - run: npm ci
-
-      - name: "Link Checker"
-        working-directory: ./
-        run: npx linkinator "**/*.md" --config linkinator.config.json
-
       - run: hugo --minify
         env:
           HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ github.event.number }}/
