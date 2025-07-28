@@ -32,7 +32,7 @@ jobs:
     permissions:
       contents: "read"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - uses: JustinBeckwith/linkinator-action@v1
         with:
           paths: "**/*.md"
