@@ -89,13 +89,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 				*   "1" (BASIC): Returns entry without aspects.
 				*   "2" (FULL): Return all required aspects and the keys of non-required aspects. (Default)
-				*   "3" (CUSTOM): Return the entry and aspects requested in aspect_types field (at most 100 aspects). Use this view always when aspect_types is not empty.
+				*   "3" (CUSTOM): Return the entry and aspects requested in aspect_types field (at most 100 aspects). Always use this view when aspect_types is not empty.
 				*   "4" (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
 				`
 
 	name := tools.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
 	view := tools.NewStringParameterWithDefault("view", string(dataplexpb.EntryView_FULL), viewDesc)
-	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works for CUSTOM view.", tools.NewStringParameter("aspect_type", "The aspect type to be included in the response."))
+	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", tools.NewStringParameter("aspect_type", "The aspect type to be included in the response."))
 	entry := tools.NewStringParameter("entry", "The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
 	parameters := tools.Parameters{name, view, aspectTypes, entry}
 
