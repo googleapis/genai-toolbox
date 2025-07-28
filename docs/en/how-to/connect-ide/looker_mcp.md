@@ -44,7 +44,7 @@ to expose your developer assistant tools to a Looker instance:
    v0.10.0+:
 
    <!-- {x-release-please-start-version} -->
-   {{< tabpane persist=header >}}
+{{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/linux/amd64/toolbox
 {{< /tab >}}
