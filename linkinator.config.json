@@ -10,10 +10,5 @@
     "https://claude.ai/download",
     "5000",
     "8080"
-  ],
-  "verbosity": "error",
-  "retry": true,
-  "retryErrors": true,
-  "retryErrorsCount": 3,
-  "retryErrorsJitter": 5
+  ]
 }
