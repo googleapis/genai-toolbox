@@ -48,10 +48,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Name           string `yaml:"name" validate:"required"`
+	Kind           string `yaml:"kind" validate:"required"`
+	Project        string `yaml:"project" validate:"required"`
+	Location       string `yaml:"location"`
+	AllowedDataset string `yaml:"allowedDataset"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -66,10 +67,11 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, err
 	}
 	s := &Source{
-		Name:     r.Name,
-		Kind:     SourceKind,
-		Client:   client,
-		Location: r.Location,
+		Name:           r.Name,
+		Kind:           SourceKind,
+		Client:         client,
+		Location:       r.Location,
+		AllowedDataset: r.AllowedDataset,
 	}
 	return s, nil
 
@@ -79,10 +81,11 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	// BigQuery Google SQL struct with client
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Client   *bigqueryapi.Client
-	Location string `yaml:"location"`
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	Client         *bigqueryapi.Client
+	Location       string `yaml:"location"`
+	AllowedDataset string `yaml:"allowedDataset"` // Dataset access restriction from source config
 }
 
 func (s *Source) SourceKind() string {
@@ -92,6 +95,27 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
 	return s.Client
+}
+
+// ValidateDatasetAccess validates if access to the specified dataset is allowed
+// based on the source's allowedDataset configuration
+func (s *Source) ValidateDatasetAccess(dataset string) error {
+	// If no dataset access is configured, deny all queries
+	if s.AllowedDataset == "" {
+		return fmt.Errorf("no dataset access configured - all queries are denied")
+	}
+
+	// If wildcard "*" is specified, allow access to all datasets
+	if s.AllowedDataset == "*" {
+		return nil
+	}
+
+	// Check if the dataset matches the specifically allowed dataset
+	if dataset != s.AllowedDataset {
+		return fmt.Errorf("access denied to dataset '%s', only '%s' is allowed", dataset, s.AllowedDataset)
+	}
+
+	return nil
 }
 
 func initBigQueryConnection(
