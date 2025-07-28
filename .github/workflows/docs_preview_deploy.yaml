@@ -77,7 +77,8 @@ jobs:
       - run: npm ci
 
       - name: "Link Checker"
-        run: npx linkinator "../docs/**/*.md" --config ../linkinator.config.json
+        working-directory: ./
+        run: npx linkinator "**/*.md" --config linkinator.config.json
 
       - run: hugo --minify
         env:
