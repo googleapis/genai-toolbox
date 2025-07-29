@@ -21,6 +21,9 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	pgxuuid "github.com/jackc/pgx-gofrs-uuid"
+	pgxdecimal "github.com/jackc/pgx-shopspring-decimal"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -98,14 +101,29 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
+	// urlExample := "postgres://username:password@localhost:5432/database_name"
 	url := &url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(user, pass),
 		Host:   fmt.Sprintf("%s:%s", host, port),
 		Path:   dbname,
 	}
-	pool, err := pgxpool.New(ctx, url.String())
+
+	// Parse the connection configuration
+	dbconfig, err := pgxpool.ParseConfig(url.String())
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection config: %w", err)
+	}
+
+	// Add UUID and decimal support via AfterConnect hook
+	dbconfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		pgxuuid.Register(conn.TypeMap())
+		pgxdecimal.Register(conn.TypeMap())
+		return nil
+	}
+
+	// Create the connection pool with the configured settings
+	pool, err := pgxpool.NewWithConfig(ctx, dbconfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
