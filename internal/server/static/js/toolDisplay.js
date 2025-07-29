@@ -180,6 +180,7 @@ function createHeaderEditorModal(toolId, currentHeaders, saveCallback) {
     const modalActions = document.createElement('div');
     const closeButton = document.createElement('button');
     const saveButton = document.createElement('button');
+    const authTokenDropdown = createAuthTokenInfoDropdown();
 
     modalActions.className = 'header-modal-actions';
     closeButton.textContent = 'Close';
@@ -201,6 +202,7 @@ function createHeaderEditorModal(toolId, currentHeaders, saveCallback) {
     modalActions.appendChild(closeButton);
     modalActions.appendChild(saveButton);
     modalContent.appendChild(modalActions);
+    modalContent.appendChild(authTokenDropdown);
     modal.appendChild(modalContent);
 
     // Close modal if clicked outside
@@ -231,6 +233,66 @@ function closeHeaderEditor(toolId) {
     if (modal) {
         modal.style.display = 'none';
     }
+}
+
+/**
+ * Creates a dropdown element showing information on how to extract Google auth tokens.
+ * @return {HTMLDetailsElement} The details element representing the dropdown.
+ */
+function createAuthTokenInfoDropdown() {
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    const content = document.createElement('div');
+
+    details.className = 'auth-token-details';
+    details.appendChild(summary);
+    summary.textContent = 'How to extract Google OAuth ID Token';
+    content.className = 'auth-token-content';
+
+    // auth instruction dropdown
+    const tabButtons = document.createElement('div');
+    const leftTab = document.createElement('button');
+    const rightTab = document.createElement('button');
+    
+    tabButtons.className = 'auth-tab-group';
+    leftTab.className = 'auth-tab-picker active';
+    leftTab.textContent = 'With Standard Account';
+    leftTab.setAttribute('data-tab', 'standard');
+    rightTab.className = 'auth-tab-picker';
+    rightTab.textContent = 'With Service Account';
+    rightTab.setAttribute('data-tab', 'service');
+
+    tabButtons.appendChild(leftTab);
+    tabButtons.appendChild(rightTab);
+    content.appendChild(tabButtons);
+
+    const tabContentContainer = document.createElement('div');
+    const standardTemplate = document.getElementById('auth-token-standard-template');
+    const standardAccount = document.importNode(standardTemplate.content, true).firstElementChild;
+    const serviceTemplate = document.getElementById('auth-token-service-template');
+    const serviceAccount = document.importNode(serviceTemplate.content, true).firstElementChild;
+
+    tabContentContainer.appendChild(standardAccount);
+    tabContentContainer.appendChild(serviceAccount);
+    content.appendChild(tabContentContainer);
+
+    // switching tabs logic
+    const tabBtns = [leftTab, rightTab];
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // deactivate all buttons and contents
+            tabBtns.forEach(b => b.classList.remove('active'));
+            content.querySelectorAll('.auth-tab-content').forEach(c => c.classList.remove('active'));
+
+            // activate clicked button and corresponding content
+            btn.classList.add('active');
+            const tabId = btn.getAttribute('data-tab');
+            content.querySelector(`#auth-tab-${tabId}`).classList.add('active');
+        });
+    });
+
+    details.appendChild(content);
+    return details;
 }
 
 /**
