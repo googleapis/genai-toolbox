@@ -394,13 +394,17 @@ body {
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
 
+    li {
+        margin-bottom: 10px;
+    }
+
     .header-modal-content {
         background-color: #fefefe;
         margin: 10% auto;
         padding: 20px;
         border: 1px solid #888;
         width: 80%;
-        max-width: 600px;
+        max-width: 50%;
         border-radius: 8px;
         display: flex;
         flex-direction: column;
@@ -426,6 +430,79 @@ body {
             justify-content: center;
             gap: 30px;
             width: 100%;
+        }
+
+        .auth-token-details {
+            width: 100%;
+            max-width: calc(100% - 16px);
+            margin-left: 8px;
+            margin-right: 8px;
+
+            summary {
+              cursor: pointer;
+              text-align: left;
+              padding: 5px 0;
+            }
+
+            .auth-token-content {
+              padding: 10px;
+              border: 1px solid #eee;
+              margin-top: 5px;
+              background-color: #f9f9f9;
+              text-align: left;
+              max-width: 100%;
+              overflow-wrap: break-word;
+
+              .auth-tab-group {
+                  display: flex;
+                  border-bottom: 1px solid #ccc;
+                  margin-bottom: 10px;
+              }
+
+              .auth-tab-picker {
+                  padding: 8px 12px;
+                  cursor: pointer;
+                  border: 1px solid transparent;
+                  border-bottom: 1px solid transparent;
+                  margin-bottom: -1px;
+                  background-color: #f0f0f0;
+
+                  &.active {
+                      background-color: #fff;
+                      border-color: #ccc;
+                      border-bottom-color: #fff;
+                      font-weight: bold;
+                  }
+              }
+
+              .auth-tab-content {
+                  display: none;
+                  overflow-wrap: break-word;
+                  word-wrap: break-word;
+                  max-width: 100%;
+
+                  &.active {
+                    display: block;
+                  }
+                  
+                  pre {
+                    white-space: pre-wrap;  
+                    word-wrap: break-word;   
+                    overflow-x: auto;      
+                    background-color: #f5f5f5;
+                    padding: 10px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                    max-width: 100%;      
+
+                    code {
+                        display: block;
+                        word-wrap: break-word; 
+                        color: inherit; 
+                    }
+                  }
+              }
+            }
         }
     }
 }
