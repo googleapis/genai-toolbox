@@ -72,7 +72,7 @@ tools:
 | **field**          | **type**                        | **required** | **description**                                                                                                                            |
 |--------------------|:-------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
 | kind               | string                         |     true     | Must be "duckdb-sql".                                                                                                                      |
-| source             | string                         |     true     | Name of the DuckDB source configuration (see [DuckDB source documentation](../sources/duckdb.md)).                                         |
+| source             | string                         |     true     | Name of the DuckDB source configuration (see [DuckDB source documentation](../../sources/duckdb.md)).                                         |
 | description        | string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          | string                         |     true     | The SQL statement to execute.                                                                                                              |
 | authRequired       | []string                       |    false     | List of authentication requirements for the tool (if any).                                                                                 |
