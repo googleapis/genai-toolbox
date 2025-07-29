@@ -77,4 +77,4 @@ tools:
 | statement          | string                         |     true     | The SQL statement to execute.                                                                                                              |
 | authRequired       | []string                       |    false     | List of authentication requirements for the tool (if any).                                                                                 |
 | parameters         | [parameters](../#specifying-parameters)       |    false     | List of parameters that will be inserted into the SQL statement                      |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of template parameters that will be inserted into the SQL statement before executing the prepared statement.                           |
+| templateParameters | [templateParameters](../#template-parameters) |    false     | List of template parameters that will be inserted into the SQL statement before executing the prepared statement.                           |
