@@ -487,8 +487,6 @@ steps:
           looker \
           looker
     
-
-
   - id: "alloydbwaitforoperation"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -507,6 +505,28 @@ steps:
           "Alloydb Wait for Operation" \
           utility \
           utility/alloydbwaitforoperation
+
+  - id: "tidb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "TIDB_DATABASE=$_DATABASE_NAME"
+      - "TIDB_HOST=$_TIDB_HOST"
+      - "TIDB_PORT=$_TIDB_PORT"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "TIDB_USER", "TIDB_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "TiDB" \
+          tidb \
+          tidbsql tidbexecutesql 
           
 availableSecrets:
   secretManager:
@@ -566,7 +586,10 @@ availableSecrets:
       env: LOOKER_CLIENT_ID
     - versionName: projects/107716898620/secrets/looker_client_secret/versions/latest
       env: LOOKER_CLIENT_SECRET
-
+    - versionName: projects/107716898620/secrets/tidb_user/versions/latest
+      env: TIDB_USER
+    - versionName: projects/107716898620/secrets/tidb_pass/versions/latest
+      env: TIDB_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -599,3 +622,5 @@ substitutions:
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
   _LOOKER_VERIFY_SSL: "true"
+  _TIDB_HOST: 127.0.0.1
+  _TIDB_PORT: "4000"
