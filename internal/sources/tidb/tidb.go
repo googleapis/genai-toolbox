@@ -45,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	}
 
 	// If the host is a TiDB Cloud instance, force to use SSL
-	if isTiDBCloudHost(actual.Host) {
+	if IsTiDBCloudHost(actual.Host) {
 		actual.UseSSL = true
 	}
 
@@ -102,7 +102,7 @@ func (s *Source) TiDBPool() *sql.DB {
 	return s.Pool
 }
 
-func isTiDBCloudHost(host string) bool {
+func IsTiDBCloudHost(host string) bool {
 	pattern := `gateway\d{2}\.(.+)\.(prod|dev|staging)\.(.+)\.tidbcloud\.com`
 	match, err := regexp.MatchString(pattern, host)
 	if err != nil {
@@ -117,7 +117,7 @@ func initTiDBConnectionPool(ctx context.Context, tracer trace.Tracer, name, host
 	defer span.End()
 
 	// If the host is a TiDB Cloud instance, force to use SSL
-	if isTiDBCloudHost(host) {
+	if IsTiDBCloudHost(host) {
 		useSSL = true
 	}
 

@@ -52,7 +52,6 @@ func TestParseFromYamlTiDB(t *testing.T) {
 					Database: "my_db",
 					User:     "my_user",
 					Password: "my_pass",
-					UseSSL:   false,
 				},
 			},
 		},
@@ -176,6 +175,83 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestIsTiDBCloudHost(t *testing.T) {
+	tcs := []struct {
+		desc string
+		host string
+		want bool
+	}{
+		{
+			desc: "valid TiDB Cloud host - ap-southeast-1",
+			host: "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+			want: true,
+		},
+		{
+			desc: "invalid TiDB Cloud host - wrong domain",
+			host: "gateway01.ap-southeast-1.prod.aws.tdbcloud.com",
+			want: false,
+		},
+		{
+			desc: "local IP address",
+			host: "127.0.0.1",
+			want: false,
+		},
+		{
+			desc: "valid TiDB Cloud host - us-west-2",
+			host: "gateway01.us-west-2.prod.aws.tidbcloud.com",
+			want: true,
+		},
+		{
+			desc: "valid TiDB Cloud host - dev environment",
+			host: "gateway02.eu-west-1.dev.aws.tidbcloud.com",
+			want: true,
+		},
+		{
+			desc: "valid TiDB Cloud host - staging environment",
+			host: "gateway03.us-east-1.staging.aws.tidbcloud.com",
+			want: true,
+		},
+		{
+			desc: "invalid - wrong gateway format",
+			host: "gateway1.us-west-2.prod.aws.tidbcloud.com",
+			want: false,
+		},
+		{
+			desc: "invalid - missing environment",
+			host: "gateway01.us-west-2.aws.tidbcloud.com",
+			want: false,
+		},
+		{
+			desc: "invalid - wrong subdomain",
+			host: "gateway01.us-west-2.prod.aws.tidbcloud.org",
+			want: false,
+		},
+		{
+			desc: "invalid - localhost",
+			host: "localhost",
+			want: false,
+		},
+		{
+			desc: "invalid - private IP",
+			host: "192.168.1.1",
+			want: false,
+		},
+		{
+			desc: "invalid - empty string",
+			host: "",
+			want: false,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := tidb.IsTiDBCloudHost(tc.host)
+			if got != tc.want {
+				t.Fatalf("isTiDBCloudHost(%q) = %v, want %v", tc.host, got, tc.want)
 			}
 		})
 	}
