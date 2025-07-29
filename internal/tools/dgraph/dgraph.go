@@ -120,7 +120,7 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMapWithDollarPrefix()
 
 	resp, err := t.DgraphClient.ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)
@@ -132,7 +132,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 		return nil, err
 	}
 
-	var out []any
 	var result struct {
 		Data map[string]interface{} `json:"data"`
 	}
@@ -140,9 +139,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	if err := json.Unmarshal(resp, &result); err != nil {
 		return nil, fmt.Errorf("error parsing JSON: %v", err)
 	}
-	out = append(out, result.Data)
 
-	return out, nil
+	return result.Data, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {

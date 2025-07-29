@@ -1,0 +1,15 @@
+sources:
+  dataplex-source:
+    kind: "dataplex"
+    project: ${DATAPLEX_PROJECT}
+
+tools:
+  dataplex_search_entries:
+    kind: dataplex-search-entries
+    source: dataplex-source
+    description: |
+      Use this tool to search for entries in Dataplex Catalog that represent data assets (e.g. tables, views, models) based on the provided search query.
+
+toolsets:
+  dataplex-tools:
+    - dataplex_search_entries

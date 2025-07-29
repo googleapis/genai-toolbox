@@ -1,7 +1,7 @@
 ---
 title: "Configuration"
 type: docs
-weight: 4
+weight: 6
 description: >
   How to configure Toolbox's tools.yaml file.
 ---

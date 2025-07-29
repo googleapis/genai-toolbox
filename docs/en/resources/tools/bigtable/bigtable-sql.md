@@ -2,8 +2,8 @@
 title: "bigtable-sql"
 type: docs
 weight: 1
-description: > 
-  A "bigtable-sql" tool executes a pre-defined SQL statement against a Google 
+description: >
+  A "bigtable-sql" tool executes a pre-defined SQL statement against a Google
   Cloud Bigtable instance.
 aliases:
 - /resources/tools/bigtable-sql
@@ -14,16 +14,20 @@ aliases:
 A `bigtable-sql` tool executes a pre-defined SQL statement against a Bigtable
 instance. It's compatible with any of the following sources:
 
-- [bigtable](../sources/bigtable.md)
+- [bigtable](../../sources/bigtable.md)
 
 ### GoogleSQL
 
 Bigtable supports SQL queries. The integration with Toolbox supports `googlesql`
 dialect, the specified SQL statement is executed as a [data manipulation
-language (DML)][bigtable-googlesql] statements, and specified parameters will inserted according to their name: e.g. `@name`.
+language (DML)][bigtable-googlesql] statements, and specified parameters will
+inserted according to their name: e.g. `@name`.
 
 {{<notice note>}}
-  Bigtable's GoogleSQL support for DML statements might be limited to certain query types. For detailed information on supported DML statements and use cases, refer to the [Bigtable GoogleSQL use cases](https://cloud.google.com/bigtable/docs/googlesql-overview#use-cases).
+  Bigtable's GoogleSQL support for DML statements might be limited to certain
+  query types. For detailed information on supported DML statements and use
+  cases, refer to the [Bigtable GoogleSQL use
+  cases](https://cloud.google.com/bigtable/docs/googlesql-overview#use-cases).
 {{</notice>}}
 
 [bigtable-googlesql]: https://cloud.google.com/bigtable/docs/googlesql-overview
@@ -41,13 +45,13 @@ tools:
     kind: bigtable-sql
     source: my-bigtable-instance
     statement: |
-      SELECT 
-        TO_INT64(cf[ 'id' ]) as id, 
-        CAST(cf[ 'name' ] AS string) as name, 
-      FROM 
-        mytable 
-      WHERE 
-        TO_INT64(cf[ 'id' ]) = @id 
+      SELECT
+        TO_INT64(cf[ 'id' ]) as id,
+        CAST(cf[ 'name' ] AS string) as name,
+      FROM
+        mytable
+      WHERE
+        TO_INT64(cf[ 'id' ]) = @id
         OR CAST(cf[ 'name' ] AS string) = @name;
     description: |
       Use this tool to get information for a specific user.
@@ -73,7 +77,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](#template-parameters).
 
 ```yaml
 tools:
@@ -102,8 +106,8 @@ tools:
 | source             |                   string                         |     true     | Name of the source the SQL should execute on.                                                                                              |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute on.                                                                                                               |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
 ## Tips
 

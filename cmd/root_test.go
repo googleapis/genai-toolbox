@@ -1161,11 +1161,17 @@ func TestSingleEdit(t *testing.T) {
 }
 
 func TestPrebuiltTools(t *testing.T) {
+	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
+	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
+	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
+	mysql_config, _ := prebuiltconfigs.Get("mysql")
+	mssql_config, _ := prebuiltconfigs.Get("mssql")
+	looker_config, _ := prebuiltconfigs.Get("looker")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -1178,6 +1184,16 @@ func TestPrebuiltTools(t *testing.T) {
 		in          []byte
 		wantToolset server.ToolsetConfigs
 	}{
+		{
+			name: "alloydb postgres admin prebuilt tools",
+			in:   alloydb_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb-postgres-admin-tools": tools.ToolsetConfig{
+					Name:      "alloydb-postgres-admin-tools",
+					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance"},
+				},
+			},
+		},
 		{
 			name: "alloydb prebuilt tools",
 			in:   alloydb_config,
@@ -1225,6 +1241,56 @@ func TestPrebuiltTools(t *testing.T) {
 				"cloud-sql-mssql-database-tools": tools.ToolsetConfig{
 					Name:      "cloud-sql-mssql-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "dataplex prebuilt tools",
+			in:   dataplex_config,
+			wantToolset: server.ToolsetConfigs{
+				"dataplex-tools": tools.ToolsetConfig{
+					Name:      "dataplex-tools",
+					ToolNames: []string{"dataplex_search_entries"},
+				},
+			},
+		},
+		{
+			name: "firestore prebuilt tools",
+			in:   firestoreconfig,
+			wantToolset: server.ToolsetConfigs{
+				"firestore-database-tools": tools.ToolsetConfig{
+					Name:      "firestore-database-tools",
+					ToolNames: []string{"firestore-get-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
+				},
+			},
+		},
+		{
+			name: "mysql prebuilt tools",
+			in:   mysql_config,
+			wantToolset: server.ToolsetConfigs{
+				"mysql-database-tools": tools.ToolsetConfig{
+					Name:      "mysql-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "mssql prebuilt tools",
+			in:   mssql_config,
+			wantToolset: server.ToolsetConfigs{
+				"mssql-database-tools": tools.ToolsetConfig{
+					Name:      "mssql-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "looker prebuilt tools",
+			in:   looker_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker-tools": tools.ToolsetConfig{
+					Name:      "looker-tools",
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "get_looks", "run_look"},
 				},
 			},
 		},
