@@ -70,9 +70,9 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "tidb".                                                                             |
+| **field** | **type** | **required** | **description**                                                                            |
+|-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "tidb".                                                                            |
 | host      |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "gateway01.*.tidbcloud.com").    |
 | port      |  string  |     true     | Port to connect to (typically "4000" for TiDB).                                            |
 | database  |  string  |     true     | Name of the TiDB database to connect to (e.g. "my_db").                                    |
