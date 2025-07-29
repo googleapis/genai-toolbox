@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
 )
 
@@ -50,6 +51,49 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "advanced example",
+			in: `
+			tools:
+				example_tool:
+					kind: dataplex-lookup-entry
+					source: my-instance
+					description: some description
+					parameters:
+						- name: name
+							type: string
+							description: some name description
+						- name: view
+							type: string
+							description: some view description
+						- name: aspectTypes
+							type: array
+							description: some aspect types description
+							default: []
+							items: 
+								name: aspectType
+								type: string
+								description: some aspect type description
+						- name: entry
+							type: string
+							description: some entry description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": dataplexlookupentry.Config{
+					Name:         "example_tool",
+					Kind:         "dataplex-lookup-entry",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{},
+					Parameters: []tools.Parameter{
+						tools.NewStringParameter("name", "some name description"),
+						tools.NewStringParameter("view", "some view description"),
+						tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "some aspect types description", tools.NewStringParameter("aspectType", "some aspect type description")),
+						tools.NewStringParameter("entry", "some entry description"),
+					},
 				},
 			},
 		},

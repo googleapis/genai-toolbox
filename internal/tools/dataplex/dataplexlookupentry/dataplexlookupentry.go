@@ -52,11 +52,12 @@ var _ compatibleSource = &dataplexds.Source{}
 var compatibleSources = [...]string{dataplexds.SourceKind}
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -95,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	name := tools.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
 	view := tools.NewStringParameterWithDefault("view", string(dataplexpb.EntryView_FULL), viewDesc)
-	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", tools.NewStringParameter("aspect_type", "The aspect type to be included in the response."))
+	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", tools.NewStringParameter("aspectType", "The aspect type to be included in the response."))
 	entry := tools.NewStringParameter("entry", "The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
 	parameters := tools.Parameters{name, view, aspectTypes, entry}
 
@@ -140,12 +141,12 @@ func (t *LookupTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	name, _ := paramsMap["name"].(string)
 	entry, _ := paramsMap["entry"].(string)
 	view, _ := paramsMap["view"].(dataplexpb.EntryView)
-	aspect_types, _ := paramsMap["aspect_types"].([]string)
+	aspectTypes, _ := paramsMap["aspectTypes"].([]string)
 
 	req := &dataplexpb.LookupEntryRequest{
 		Name:        name,
 		View:        view,
-		AspectTypes: aspect_types,
+		AspectTypes: aspectTypes,
 		Entry:       entry,
 	}
 
