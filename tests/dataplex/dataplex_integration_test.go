@@ -71,7 +71,7 @@ func initBigQueryConnection(ctx context.Context, project string) (*bigqueryapi.C
 
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -96,7 +96,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	waitCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
@@ -106,7 +106,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 
 	runDataplexToolGetTest(t)
 	runDataplexSearchEntriesToolInvokeTest(t, tableName, datasetName)
-	runDataplexLookupEntryToolInvokeTest(t, datasetName)
+	runDataplexLookupEntryToolInvokeTest(t, tableName, datasetName)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -198,7 +198,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-search-entries-tool",
 			toolName:       "my-dataplex-search-entries-tool",
-			expectedParams: []string{"name", "pageSize", "pageToken", "query", "orderBy", "semanticSearch"},
+			expectedParams: []string{"pageSize", "pageToken", "query", "orderBy", "semanticSearch"},
 		},
 		{
 			name:           "get my-dataplex-lookup-entry-tool",
@@ -344,35 +344,78 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 	}
 }
 
-func runDataplexLookupEntryToolInvokeTest(t *testing.T, datasetName string) {
+func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datasetName string) {
 	testCases := []struct {
-		name           string
-		datasetName    string
-		wantStatusCode int
-		expectResult   bool
-		wantContentKey string
+		name               string
+		wantStatusCode     int
+		expectResult       bool
+		wantContentKey     string
+		dontWantContentKey string
+		aspectCheck        bool
+		reqBodyMap         map[string]any
 	}{
 		{
 			name:           "Success - Entry Found",
-			datasetName:    datasetName,
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "name",
+			reqBodyMap: map[string]any{
+				"name":  fmt.Sprintf("projects/%s/locations/us", DataplexProject),
+				"entry": fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s", DataplexProject, DataplexProject, datasetName),
+			},
 		},
 		{
 			name:           "Failure - Entry Not Found or Permission Denied",
-			datasetName:    "non-existent-dataset",
 			wantStatusCode: 400,
 			expectResult:   false,
+			reqBodyMap: map[string]any{
+				"name":  fmt.Sprintf("projects/%s/locations/us", DataplexProject),
+				"entry": fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s", DataplexProject, DataplexProject, "non-existent-dataset"),
+			},
+		},
+		{
+			name:               "Success - Entry Found with Basic View",
+			wantStatusCode:     200,
+			expectResult:       true,
+			wantContentKey:     "name",
+			dontWantContentKey: "aspects",
+			reqBodyMap: map[string]any{
+				"name":  fmt.Sprintf("projects/%s/locations/us", DataplexProject),
+				"entry": fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, DataplexProject, datasetName, tableName),
+				"view":  1,
+			},
+		},
+		{
+			name:           "Failure - Entry with Custom View without Aspect Types",
+			wantStatusCode: 400,
+			expectResult:   false,
+			reqBodyMap: map[string]any{
+				"name":  fmt.Sprintf("projects/%s/locations/us", DataplexProject),
+				"entry": fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, DataplexProject, datasetName, tableName),
+				"view":  3,
+			},
+		},
+		{
+			name:           "Success - Entry Found with only Schema Aspect",
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "aspects",
+			aspectCheck:    true,
+			reqBodyMap: map[string]any{
+				"name":        fmt.Sprintf("projects/%s/locations/us", DataplexProject),
+				"entry":       fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, DataplexProject, datasetName, tableName),
+				"aspectTypes": []string{"projects/dataplex-types/locations/global/aspectTypes/schema"},
+				"view":        3,
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reqBodyMap := map[string]string{
-				"name":  fmt.Sprintf("projects/%s/locations/us", DataplexProject),
-				"entry": fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s", DataplexProject, DataplexProject, tc.datasetName)}
-
+			reqBodyMap := tc.reqBodyMap
+			if reqBodyMap == nil {
+				t.Fatalf("reqBodyMap cannot be nil for test case %s", tc.name)
+			}
 			reqBodyBytes, err := json.Marshal(reqBodyMap)
 			if err != nil {
 				t.Fatalf("Error marshalling request body: %v", err)
@@ -411,6 +454,21 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, datasetName string) {
 
 				if _, ok := entry[tc.wantContentKey]; !ok {
 					t.Fatalf("Expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
+				}
+
+				if _, ok := entry[tc.dontWantContentKey]; ok {
+					t.Fatalf("Expected entry to not have key '%s', but it was found in %v", tc.dontWantContentKey, entry)
+				}
+
+				if tc.aspectCheck {
+					// Check length of aspects
+					aspects, ok := entry["aspects"].(map[string]interface{})
+					if !ok {
+						t.Fatalf("Expected 'aspects' to be a map, got %T", aspects)
+					}
+					if len(aspects) != 1 {
+						t.Fatalf("Expected exactly one aspect, but got %d", len(aspects))
+					}
 				}
 			} else { // Handle expected error response
 				_, ok := result["error"]

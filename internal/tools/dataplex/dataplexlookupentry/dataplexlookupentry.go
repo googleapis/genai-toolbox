@@ -82,21 +82,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	viewDesc := `
 				## Argument: view
 
-				**Type:** string (Enum integer value as a string)
+				**Type:** Integer
 
 				**Description:** Specifies the parts of the entry and its aspects to return.
 
 				**Possible Values:**
 
-				*   "1" (BASIC): Returns entry without aspects.
-				*   "2" (FULL): Return all required aspects and the keys of non-required aspects. (Default)
-				*   "3" (CUSTOM): Return the entry and aspects requested in aspect_types field (at most 100 aspects). Always use this view when aspect_types is not empty.
-				*   "4" (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
+				*   1 (BASIC): Returns entry without aspects.
+				*   2 (FULL): Return all required aspects and the keys of non-required aspects. (Default)
+				*   3 (CUSTOM): Return the entry and aspects requested in aspect_types field (at most 100 aspects). Always use this view when aspect_types is not empty.
+				*   4 (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
 				`
 
 	name := tools.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
-	view := tools.NewStringParameterWithDefault("view", string(dataplexpb.EntryView_FULL), viewDesc)
-	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", tools.NewStringParameter("aspectType", "The aspect type to be included in the response."))
+	view := tools.NewIntParameterWithDefault("view", 2, viewDesc)
+	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", tools.NewStringParameter("aspectType", "The aspect type to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
 	entry := tools.NewStringParameter("entry", "The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
 	parameters := tools.Parameters{name, view, aspectTypes, entry}
 
@@ -138,14 +138,24 @@ func (t *LookupTool) Authorized(verifiedAuthServices []string) bool {
 
 func (t *LookupTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
+	viewMap := map[int]dataplexpb.EntryView{
+		1: dataplexpb.EntryView_BASIC,
+		2: dataplexpb.EntryView_FULL,
+		3: dataplexpb.EntryView_CUSTOM,
+		4: dataplexpb.EntryView_ALL,
+	}
 	name, _ := paramsMap["name"].(string)
 	entry, _ := paramsMap["entry"].(string)
-	view, _ := paramsMap["view"].(dataplexpb.EntryView)
-	aspectTypes, _ := paramsMap["aspectTypes"].([]string)
+	view, _ := paramsMap["view"].(int)
+	aspectTypeSlice, err := tools.ConvertAnySliceToTyped(paramsMap["aspectTypes"].([]any), "string")
+	if err != nil {
+		return nil, fmt.Errorf("can't convert aspectTypes to array of strings: %s", err)
+	}
+	aspectTypes := aspectTypeSlice.([]string)
 
 	req := &dataplexpb.LookupEntryRequest{
 		Name:        name,
-		View:        view,
+		View:        viewMap[view],
 		AspectTypes: aspectTypes,
 		Entry:       entry,
 	}
