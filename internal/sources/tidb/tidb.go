@@ -60,7 +60,7 @@ type Config struct {
 	User     string `yaml:"user" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 	Database string `yaml:"database" validate:"required"`
-	UseSSL   bool   `yaml:"use_ssl"`
+	UseSSL   bool   `yaml:"ssl"`
 }
 
 func (r Config) SourceConfigKind() string {

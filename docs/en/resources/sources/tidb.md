@@ -27,11 +27,11 @@ For TiDB Cloud users, you can create database users through the TiDB Cloud conso
 
 - TiDB Cloud
 
-    For TiDB Cloud instances, SSL is automatically enabled when the hostname matches the TiDB Cloud pattern (`gateway*.*.*.tidbcloud.com`). You don't need to explicitly set `use_ssl: true` for TiDB Cloud connections.
+    For TiDB Cloud instances, SSL is automatically enabled when the hostname matches the TiDB Cloud pattern (`gateway*.*.*.tidbcloud.com`). You don't need to explicitly set `ssl: true` for TiDB Cloud connections.
 
 - Self-Hosted TiDB
 
-    For self-hosted TiDB instances, you can optionally enable SSL by setting `use_ssl: true` in your configuration.
+    For self-hosted TiDB instances, you can optionally enable SSL by setting `ssl: true` in your configuration.
 
 ## Example
 
@@ -60,7 +60,7 @@ For TiDB Cloud users, you can create database users through the TiDB Cloud conso
             database: my_db
             user: ${TIDB_USERNAME}
             password: ${TIDB_PASSWORD}
-            use_ssl: false  # Optional: enable SSL for secure connections
+            # ssl: true  # Optional: enable SSL for secure connections
     ```
 
 {{< notice tip >}}
@@ -78,4 +78,4 @@ instead of hardcoding your secrets into the configuration file.
 | database  |  string  |     true     | Name of the TiDB database to connect to (e.g. "my_db").                                    |
 | user      |  string  |     true     | Name of the TiDB user to connect as (e.g. "my-tidb-user").                                 |
 | password  |  string  |     true     | Password of the TiDB user (e.g. "my-password").                                            |
-| use_ssl   |  boolean |    false     | Whether to use SSL/TLS encryption. Automatically enabled for TiDB Cloud instances.         | 
+| ssl       |  boolean |    false     | Whether to use SSL/TLS encryption. Automatically enabled for TiDB Cloud instances.         |

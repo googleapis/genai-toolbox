@@ -122,23 +122,18 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	paramsMap := params.AsMap()
-	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract template params %w", err)
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+	sliceParams := params.AsSlice()
+	sql, ok := sliceParams[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
-	newParams, err := tools.GetParams(t.Parameters, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
-	}
-
-	sliceParams := newParams.AsSlice()
-	results, err := t.Pool.QueryContext(ctx, newStatement, sliceParams...)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	cols, err := results.Columns()
 	if err != nil {
@@ -151,7 +146,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 	for i := range rawValues {
 		values[i] = &rawValues[i]
 	}
-	defer results.Close()
 
 	colTypes, err := results.ColumnTypes()
 	if err != nil {
@@ -172,7 +166,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, erro
 				continue
 			}
 
-			// TiDB driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
+			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
 			// we'll need to cast it back to string
 			switch colTypes[i].DatabaseTypeName() {
 			case "TEXT", "VARCHAR", "NVARCHAR":

@@ -41,7 +41,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 					database: my_db
 					user: my_user
 					password: my_pass
-					use_ssl: false
+					ssl: false
 			`,
 			want: server.SourceConfigs{
 				"my-tidb-instance": tidb.Config{
@@ -67,7 +67,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 					database: test_db
 					user: cloud_user
 					password: cloud_pass
-					use_ssl: true
+					ssl: true
 			`,
 			want: server.SourceConfigs{
 				"my-tidb-cloud": tidb.Config{
@@ -143,7 +143,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					database: my_db
 					user: my_user
 					password: my_pass
-					use_ssl: false
+					ssl: false
 					foo: bar
 			`,
 			err: "unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: tidb\n   5 | password: my_pass\n   6 | ",
@@ -158,7 +158,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					database: my_db
 					user: my_user
 					password: my_pass
-					use_ssl: false
+					ssl: false
 			`,
 			err: "unable to parse source \"my-tidb-instance\" as \"tidb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
