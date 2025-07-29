@@ -38,7 +38,7 @@ func getDuckDbVars() map[string]any {
 	return map[string]any{
 		"kind":       "duckdb",
 		"dbFilePath": dbPath,
-		"configurations": map[string]any{
+		"configuration": map[string]any{
 			"access_mode": "READ_WRITE",
 		},
 	}
@@ -108,9 +108,9 @@ func TestDuckDb(t *testing.T) {
 
 	select1Want, failInvocationWant, _ := GetDuckDbWants()
 
-	_, invokeParamWantNull, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	_, invokeParamWantNull, nullWant, _ := tests.GetNonSpannerInvokeParamWant()
 	invokeParamWant := "[{\"name\":\"Alice\"},{\"name\":\"Sid\"}]"
-
+	mcpInvokeParamWant := "{\"jsonrpc\":\"2.0\",\"id\":\"my-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"name\\\":\\\"Alice\\\"}\"},{\"type\":\"text\",\"text\":\"{\\\"name\\\":\\\"Sid\\\"}\"}]}}"
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, nullWant, true, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(

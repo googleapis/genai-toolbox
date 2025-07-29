@@ -53,15 +53,15 @@ func TestParserFromYamlDuckDb(t *testing.T) {
 			sources:
 				my-duckdb:
 					kind: duckdb
-					configurations: 
+					configuration: 
 						access_mode: READ_ONLY
 						threads: 4
 			`,
 			want: server.SourceConfigs{
 				"my-duckdb": duckdb.Config{
-					Name:           "my-duckdb",
-					Kind:           duckdb.SourceKind,
-					Configurations: config,
+					Name:          "my-duckdb",
+					Kind:          duckdb.SourceKind,
+					Configuration: config,
 				},
 			},
 		},

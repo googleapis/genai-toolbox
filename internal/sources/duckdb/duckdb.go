@@ -62,10 +62,10 @@ func (s *Source) DuckDb() *sql.DB {
 var _ sources.Source = &Source{}
 
 type Config struct {
-	Name           string            `yaml:"name" validate:"required"`
-	Kind           string            `yaml:"kind" validate:"required"`
-	DatabaseFile   string            `yaml:"dbFilePath,omitempty"`
-	Configurations map[string]string `yaml:"configurations,omitempty"`
+	Name          string            `yaml:"name" validate:"required"`
+	Kind          string            `yaml:"kind" validate:"required"`
+	DatabaseFile  string            `yaml:"dbFilePath,omitempty"`
+	Configuration map[string]string `yaml:"configuration,omitempty"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -73,7 +73,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	db, err := initDuckDbConnection(ctx, tracer, r.Name, r.DatabaseFile, r.Configurations)
+	db, err := initDuckDbConnection(ctx, tracer, r.Name, r.DatabaseFile, r.Configuration)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
 	}

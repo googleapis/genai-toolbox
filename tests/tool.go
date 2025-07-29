@@ -959,24 +959,3 @@ func runRequest(t *testing.T, method, url string, body io.Reader, header map[str
 	defer resp.Body.Close()
 	return resp, respBody
 }
-
-// DuckDBTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options for DuckDB tests.
-func DuckDBTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
-	templateParamTestOption := &TemplateParameterTestConfig{
-		ignoreDdl:      false,
-		ignoreInsert:   false,
-		selectAllWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
-		select1Want:    "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
-		nameFieldArray: `["name"]`,
-		nameColFilter:  "name",
-		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
-		insert1Want:    "[{\"Count\":1}]",
-	}
-
-	// Apply provided options
-	for _, option := range options {
-		option(templateParamTestOption)
-	}
-
-	return templateParamTestOption
-}

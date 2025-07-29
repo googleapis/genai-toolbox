@@ -43,7 +43,7 @@ sources:
     my-duckdb:
         kind: "duckdb"
         dbFilePath: "/path/to/database.db"
-        configurations:
+        configuration:
             memory_limit: "2GB"
             threads: "4"
 ```
@@ -65,7 +65,7 @@ sources:
 |-------------------|:-----------------:|:------------:|---------------------------------------------------------------------------------|
 | kind              | string            |     true     | Must be "duckdb".                                                               |
 | dbFilePath        | string            |    false     | Path to the DuckDB database file. Omit for an in-memory database.                |
-| configurations    | map[string]string |    false     | Additional DuckDB configuration options (e.g., `memory_limit`, `threads`).       |
+| configuration     | map[string]string |    false     | Additional DuckDB configuration options (e.g., `memory_limit`, `threads`).       |
 
 For a complete list of available configuration options, refer to the [DuckDB Configuration Documentation](https://duckdb.org/docs/stable/configuration/overview.html#local-configuration-options).
 

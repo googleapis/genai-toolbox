@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-A `duckdb-sql` tool executes a pre-defined SQL statement against a [DuckDB](https://duckdb.org/) database. It is compatible with any DuckDB source configuration as defined in the [DuckDB source documentation](../sources/duckdb.md).
+A `duckdb-sql` tool executes a pre-defined SQL statement against a [DuckDB](https://duckdb.org/) database. It is compatible with any DuckDB source configuration as defined in the [DuckDB source documentation](../../sources/duckdb.md).
 
 The specified SQL statement is executed as a prepared statement, and parameters are inserted according to their position: e.g., `$1` is the first parameter, `$2` is the second, and so on. If template parameters are included, they are resolved before execution of the prepared statement. 
 
@@ -44,7 +44,7 @@ tools:
 
 ## Example with Template Parameters
 
-> **Note:** Template parameters allow direct modifications to the SQL statement, including identifiers, column names, and table names, which makes them more vulnerable to SQL injections. Using basic parameters (see above) is recommended for performance and safety. For more details, see the [templateParameters](_index#template-parameters) section.
+> **Note:** Template parameters allow direct modifications to the SQL statement, including identifiers, column names, and table names, which makes them more vulnerable to SQL injections. Using basic parameters (see above) is recommended for performance and safety. For more details, see the [templateParameters](../_index#template-parameters) section.
 
 ```yaml
 tools:
@@ -76,5 +76,5 @@ tools:
 | description        | string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          | string                         |     true     | The SQL statement to execute.                                                                                                              |
 | authRequired       | []string                       |    false     | List of authentication requirements for the tool (if any).                                                                                 |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of parameters that will be inserted into the SQL statement                      |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of template parameters that will be inserted into the SQL statement before executing the prepared statement.                           |
+| parameters         | [parameters](../_index#specifying-parameters)       |    false     | List of parameters that will be inserted into the SQL statement                      |
+| templateParameters | [templateParameters](../_index#template-parameters) |    false     | List of template parameters that will be inserted into the SQL statement before executing the prepared statement.                           |
