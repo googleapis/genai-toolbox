@@ -44,7 +44,7 @@ tools:
 
 ## Example with Template Parameters
 
-> **Note:** Template parameters allow direct modifications to the SQL statement, including identifiers, column names, and table names, which makes them more vulnerable to SQL injections. Using basic parameters (see above) is recommended for performance and safety. For more details, see the [templateParameters](#template-parameters) section.
+> **Note:** Template parameters allow direct modifications to the SQL statement, including identifiers, column names, and table names, which makes them more vulnerable to SQL injections. Using basic parameters (see above) is recommended for performance and safety. For more details, see the [templateParameters](../#template-parameters) section.
 
 ```yaml
 tools:
