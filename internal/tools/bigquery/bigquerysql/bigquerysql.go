@@ -216,6 +216,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 	statementType := dryRunJob.Statistics.Query.StatementType
 
+	// This block handles Data Manipulation Language (DML) and Data Definition Language (DDL) statements.
+	// These statements (e.g., INSERT, UPDATE, CREATE TABLE) do not return a row set.
+	// Instead, we execute them as a job, wait for completion, and return a success
+	// message, including the number of affected rows for DML operations.
 	if statementType != "SELECT" {
 		job, err := query.Run(ctx)
 		if err != nil {
