@@ -2,7 +2,7 @@
 title: "firestore-get-documents"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-get-documents" tool retrieves multiple documents from Firestore by their paths.
 aliases:
 - /resources/tools/firestore-get-documents
@@ -14,7 +14,7 @@ A `firestore-get-documents` tool retrieves multiple documents from Firestore by
 their paths.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
 `firestore-get-documents` takes one input parameter `documentPaths` which is an
 array of document paths, and returns the documents' data along with metadata

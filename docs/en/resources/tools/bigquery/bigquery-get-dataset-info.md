@@ -2,7 +2,7 @@
 title: "bigquery-get-dataset-info"
 type: docs
 weight: 1
-description: > 
+description: >
   A "bigquery-get-dataset-info" tool retrieves metadata for a BigQuery dataset.
 aliases:
 - /resources/tools/bigquery-get-dataset-info
@@ -13,7 +13,7 @@ aliases:
 A `bigquery-get-dataset-info` tool retrieves metadata for a BigQuery dataset.
 It's compatible with the following sources:
 
-- [bigquery](../sources/bigquery.md)
+- [bigquery](../../sources/bigquery.md)
 
 `bigquery-get-dataset-info` takes a `dataset` parameter to specify the dataset
 on the given source. It also optionally accepts a `project` parameter to

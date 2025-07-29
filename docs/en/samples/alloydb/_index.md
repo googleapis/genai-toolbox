@@ -182,7 +182,7 @@ tools:
     source: alloydb-pg-source
     description: >-
       Add items to customer cart using the product ID and product prices from the product list.
-      Use this tool to add items to a customer cart. 
+      Use this tool to add items to a customer cart.
       This tool requires the cart ID, product ID, quantity, and price.
     parameters:
       - name: cart_id
@@ -207,7 +207,7 @@ tools:
     source: alloydb-pg-source
     description: >-
       Remove products from customer cart.
-      Use this tool to remove products from a customer cart. 
+      Use this tool to remove products from a customer cart.
       This tool requires the cart ID and product ID.
     parameters:
       - name: cart_id
@@ -255,8 +255,8 @@ These tools use vector embeddings to find the most relevant results based on the
 
 1. Create a [natural language configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config) for your AlloyDB cluster.
 
-    {{< notice tip >}}Before using NL2SQL tools, 
-    you must first install the `alloydb_ai_nl` extension and 
+    {{< notice tip >}}Before using NL2SQL tools,
+    you must first install the `alloydb_ai_nl` extension and
     create the [semantic layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview) under a configuration named `flower_shop`.
     {{< /notice >}}
 
@@ -269,7 +269,7 @@ These tools use vector embeddings to find the most relevant results based on the
     nlConfig: flower_shop
     description: >-
       Ask questions related to products or brands.
-      Use this tool to ask questions about products or brands. 
+      Use this tool to ask questions about products or brands.
       Always SELECT the IDs of objects when generating queries.
 ```
 
@@ -286,7 +286,7 @@ toolsets:
 ```
 
 For more info on tools, check out the
-[Tools](../../resources/tools/_index.md) section.
+[Tools](../../resources/tools/) section.
 
 ## Step 4: Run the Toolbox server
 
@@ -334,7 +334,7 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ## What's next
 
-- Learn more about [MCP Inspector](../../how-to/mcp_inspector.md).
-- Learn more about [Toolbox Resources](../../resources/_index.md).
-- Learn more about [Toolbox How-to guides](../../how-to/_index.md).
+- Learn more about [MCP Inspector](../../how-to/connect_via_mcp.md).
+- Learn more about [Toolbox Resources](../../resources/).
+- Learn more about [Toolbox How-to guides](../../how-to/).
 
