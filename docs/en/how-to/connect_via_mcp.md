@@ -29,8 +29,8 @@ Toolbox currently supports the following versions of MCP specification:
 The auth implementation in Toolbox is not supported in MCP's auth specification.
 This includes:
 
-* [Authenticated Parameters](../resources/tools/_index.md#authenticated-parameters)
-* [Authorized Invocations](../resources/tools/_index.md#authorized-invocations)
+* [Authenticated Parameters](../resources/tools/#authenticated-parameters)
+* [Authorized Invocations](../resources/tools/#authorized-invocations)
 
 ## Connecting to Toolbox with an MCP client
 
@@ -40,7 +40,7 @@ This includes:
 MCP is only compatible with Toolbox version 0.3.0 and above.
 {{< /notice >}}
 
-1. [Install](../getting-started/introduction/_index.md#installing-the-server)
+1. [Install](../getting-started/introduction/#installing-the-server)
    Toolbox version 0.3.0+.
 
 1. Make sure you've set up and initialized your database.
@@ -133,7 +133,7 @@ testing and debugging Toolbox server.
    You should be able to inspect your toolbox tools!
 {{% /tab %}}
 {{% tab header="HTTP with SSE (deprecated)" lang="en" %}}
-1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
+1. [Run Toolbox](../getting-started/introduction/#running-the-server).
 
 1. In a separate terminal, run Inspector directly through `npx`:
 
@@ -150,7 +150,7 @@ testing and debugging Toolbox server.
    tools!
 {{% /tab %}}
 {{% tab header="Streamable HTTP" lang="en" %}}
-1. [Run Toolbox](../getting-started/introduction/_index.md#running-the-server).
+1. [Run Toolbox](../getting-started/introduction/#running-the-server).
 
 1. In a separate terminal, run Inspector directly through `npx`:
 

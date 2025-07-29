@@ -2,7 +2,7 @@
 title: "http"
 type: docs
 weight: 1
-description: > 
+description: >
   A "http" tool sends out an HTTP request to an HTTP endpoint.
 aliases:
 - /resources/tools/http
@@ -50,7 +50,7 @@ tools:
         method: GET
         path: /search
         description: Tool to search information from the example API
-    
+
     my-dynamic-path-tool:
         kind: http
         source: my-http-source
@@ -256,8 +256,8 @@ my-http-tool:
 | method       |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).                                                                                                                                                                     |
 | headers      |             map[string]string              |    false     | A map of headers to include in the HTTP request (overrides source headers).                                                                                                                                                |
 | requestBody  |                   string                   |    false     | The request body payload. Use [go template][go-template-doc] with the parameter name as the placeholder (e.g., `{{.id}}` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). |
-| queryParams  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the query string.                                                                                                                            |
-| bodyParams   | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the request body payload.                                                                                                                    |
-| headerParams | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be inserted as the request headers.                                                                                                                           |
+| queryParams  | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the query string.                                                                                                                            |
+| bodyParams   | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the request body payload.                                                                                                                    |
+| headerParams | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be inserted as the request headers.                                                                                                                           |
 
 [go-template-doc]: <https://pkg.go.dev/text/template#pkg-overview>
