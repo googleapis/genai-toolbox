@@ -507,6 +507,25 @@ steps:
           "Alloydb Wait for Operation" \
           utility \
           utility/alloydbwaitforoperation
+  
+  - id: "cassandra"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "HOSTS=$HOSTS"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cassandra" \
+          cassandra \
+          cassandra
           
 availableSecrets:
   secretManager:
