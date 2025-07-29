@@ -80,12 +80,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
-	name := tools.NewStringParameterWithDefault("name", fmt.Sprintf("projects/%s/locations/global", s.ProjectID()), "The project to which the request should be attributed in the following form: projects/{project}/locations/global")
 	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
 	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
 	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
 	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
-	parameters := tools.Parameters{query, name, pageSize, pageToken, orderBy, semanticSearch}
+	parameters := tools.Parameters{query, pageSize, pageToken, orderBy, semanticSearch}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -128,7 +127,6 @@ func (t *SearchTool) Authorized(verifiedAuthServices []string) bool {
 func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
-	name, _ := paramsMap["name"].(string)
 	pageSize, _ := paramsMap["pageSize"].(int32)
 	pageToken, _ := paramsMap["pageToken"].(string)
 	orderBy, _ := paramsMap["orderBy"].(string)
@@ -136,7 +134,7 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query,
-		Name:           name,
+		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
 		PageSize:       pageSize,
 		PageToken:      pageToken,
 		OrderBy:        orderBy,
