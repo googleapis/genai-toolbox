@@ -18,11 +18,6 @@ geospatial indexes with radius queries.
 If you are new to Redis, you can find installation and getting started guides on
 the [official Redis website](https://redis.io/docs/getting-started/).
 
-## Available Tools
-
-- [`redis`](../tools/redis/redis.md)  
-  Run Redis commands and interact with key-value pairs.
-
 ## Requirements
 
 ### Redis
@@ -38,7 +33,7 @@ sources:
     my-redis-instance:
      kind: redis
      address:
-       - 127.0.0.1:6379
+       - 127.0.0.1
      username: ${MY_USER_NAME}
      password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
      # database: 0
@@ -63,7 +58,7 @@ sources:
     my-redis-cluster-instance:
      kind: memorystore-redis
      address:
-       - 127.0.0.1:6379
+       - 127.0.0.1
      password: ${MY_AUTH_STRING}
      # useGCPIAM: false
      # clusterEnabled: false
@@ -79,8 +74,7 @@ using IAM authentication:
 sources:
     my-redis-cluster-instance:
      kind: memorystore-redis
-     address:
-       - 127.0.0.1:6379
+     address: 127.0.0.1
      useGCPIAM: true
      clusterEnabled: true
 ```

@@ -145,6 +145,7 @@ func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP s
 			return nil, err
 		}
 		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(otlpExporter)))
+
 	}
 	if telemetryGCP {
 		gcpExporter, err := mexporter.New()

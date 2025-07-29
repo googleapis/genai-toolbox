@@ -2,7 +2,7 @@
 title: "dgraph-dql"
 type: docs
 weight: 1
-description: >
+description: > 
   A "dgraph-dql" tool executes a pre-defined DQL statement against a Dgraph
   database.
 aliases:
@@ -14,7 +14,7 @@ aliases:
 A `dgraph-dql` tool executes a pre-defined DQL statement against a Dgraph
 database. It's compatible with any of the following sources:
 
-- [dgraph](../../sources/dgraph.md)
+- [dgraph](../sources/dgraph.md)
 
 To run a statement as a query, you need to set the config `isQuery=true`. For
 upserts or mutations, set `isQuery=false`. You can also configure timeout for a
@@ -121,4 +121,4 @@ tools:
 | statement   |                   string                   |     true     | dql statement to execute                                                                     |
 | isQuery     |                  boolean                   |    false     | To run statement as query set true otherwise false                                           |
 | timeout     |                   string                   |    false     | To set timeout for query                                                                     |
-| parameters  | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the dql statement. |
+| parameters  | [parameters](_index#specifying-parameters) |    false     | List of [parameters](_index#specifying-parameters) that will be used with the dql statement. |

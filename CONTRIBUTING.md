@@ -81,7 +81,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 #### 2. Implement the New Tool
 
 We recommend looking at an [example tool
-implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
+implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgressql).
 
 * **Create a new directory** under `internal/tools` for your tool type (e.g.,
   `internal/tools/newdb` or `internal/tools/newdb<tool_name>`).
@@ -134,7 +134,7 @@ tools.
      5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
             parameters][temp-param-doc]. Only run this test if template
             parameters apply to your tool.
-
+  
 * **Add the new database to the test config** in
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 

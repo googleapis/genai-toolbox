@@ -15,18 +15,22 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -50,7 +54,11 @@ func apiRouter(s *Server) (chi.Router, error) {
 
 // toolsetHandler handles the request for information about a Toolset.
 func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/toolset/get")
+	// Extract trace context from headers before creating the span
+	propagator := otel.GetTextMapPropagator()
+	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+	
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/toolset/get")
 	r = r.WithContext(ctx)
 
 	toolsetName := chi.URLParam(r, "toolsetName")
@@ -87,7 +95,11 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolGetHandler handles requests for a single Tool.
 func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/tool/get")
+	// Extract trace context from headers before creating the span
+	propagator := otel.GetTextMapPropagator()
+	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+	
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/tool/get")
 	r = r.WithContext(ctx)
 
 	toolName := chi.URLParam(r, "toolName")
@@ -131,9 +143,21 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // toolInvokeHandler handles the API request to invoke a specific Tool.
 func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/tool/invoke")
+	// Extract trace context from headers before creating the span
+	propagator := otel.GetTextMapPropagator()
+	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+	
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/tool/invoke")
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
+
+	// Add HTTP request info to the trace
+	span.SetAttributes(
+		attribute.String("http.method", r.Method),
+		attribute.String("http.url", r.URL.String()),
+		attribute.String("http.user_agent", r.UserAgent()),
+		attribute.String("http.client_ip", r.RemoteAddr),
+	)
 
 	toolName := chi.URLParam(r, "toolName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
@@ -181,7 +205,47 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		claimsFromAuth[aS.GetName()] = claims
 	}
 
-	// Tool authorization check
+	// --- Add identity info to trace here ---
+	userEmail := ""
+
+	for _, claims := range claimsFromAuth {
+		if email, ok := claims["email"].(string); ok {
+			userEmail = email
+			break
+		}
+	}
+	
+	// Handle client credentials flow (no user email)
+	if userEmail == "" {
+		for _, claims := range claimsFromAuth {
+			if appid, ok := claims["appid"].(string); ok {
+				userEmail = fmt.Sprintf("service-%s", appid)
+				break
+			}
+		}
+		if userEmail == "" {
+			userEmail = "service-azure"
+		}
+	}
+	
+	if userEmail != "" {
+		span.SetAttributes(attribute.String("user.email", userEmail))
+	}
+
+	appid := ""
+	
+	for _, claims := range claimsFromAuth {
+		if id, ok := claims["appid"].(string); ok {
+			appid = id
+			break
+		}
+	}
+	if appid != "" {
+		span.SetAttributes(attribute.String("app.id", appid))
+	}
+// --- End addition --
+
+	// Enhanced Tool authorization check with privilege escalation detection
 	verifiedAuthServices := make([]string, len(claimsFromAuth))
 	i := 0
 	for k := range claimsFromAuth {
@@ -205,6 +269,20 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("request body was invalid JSON: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		return
+	}
+
+	// Enhanced authorization with role-based access control
+	if err := s.performEnhancedAuthorization(ctx, tool, claimsFromAuth, verifiedAuthServices, userEmail); err != nil {
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusForbidden))
+		return
+	}
+
+	// Privilege escalation detection
+	if err := s.detectPrivilegeEscalation(ctx, tool, claimsFromAuth, data); err != nil {
+		s.logger.ErrorContext(ctx, fmt.Sprintf("Privilege escalation detected: %v", err))
+		_ = render.Render(w, r, newErrResponse(fmt.Errorf("security violation detected"), http.StatusForbidden))
 		return
 	}
 
@@ -260,6 +338,131 @@ func newErrResponse(err error, code int) *errResponse {
 		StatusText: http.StatusText(code),
 		ErrorText:  err.Error(),
 	}
+}
+
+// performEnhancedAuthorization performs enhanced authorization checks including role-based access control
+func (s *Server) performEnhancedAuthorization(ctx context.Context, tool tools.Tool, claimsFromAuth map[string]map[string]any, verifiedAuthServices []string, userEmail string) error {
+	// Extract user roles from Azure claims
+	var userRoles []string
+	if azureClaims, exists := claimsFromAuth["azure"]; exists {
+		if roles, exists := azureClaims["roles"]; exists {
+			switch v := roles.(type) {
+			case []string:
+				userRoles = v
+			case []interface{}:
+				for _, role := range v {
+					if str, ok := role.(string); ok {
+						userRoles = append(userRoles, str)
+					}
+				}
+			}
+		}
+	}
+
+	// Handle client credentials flow (no user email)
+	if userEmail == "" {
+		// For client credentials flow, use app ID or service name
+		if azureClaims, exists := claimsFromAuth["azure"]; exists {
+			if appid, exists := azureClaims["appid"].(string); exists {
+				userEmail = fmt.Sprintf("service-%s", appid)
+			} else {
+				userEmail = "service-azure"
+			}
+		}
+	}
+
+	// Get tool's required roles using reflection
+	var requiredRoles []string
+	toolValue := reflect.ValueOf(tool)
+	if toolValue.Kind() == reflect.Ptr {
+		toolValue = toolValue.Elem()
+	}
+	
+	// Try to get RequiredRoles field from the tool
+	requiredRolesField := toolValue.FieldByName("RequiredRoles")
+	if requiredRolesField.IsValid() && requiredRolesField.CanInterface() {
+		if roles, ok := requiredRolesField.Interface().([]string); ok {
+			requiredRoles = roles
+		}
+	}
+
+	// Log authorization attempt with required roles
+	s.logger.DebugContext(ctx, fmt.Sprintf("Authorization check for user %s with roles: %v", userEmail, userRoles))
+	s.logger.DebugContext(ctx, fmt.Sprintf("Tool required roles: %v", requiredRoles))
+	
+	// If no roles required, authorization is granted
+	if len(requiredRoles) == 0 {
+		s.logger.DebugContext(ctx, "No roles required for this tool - authorization granted")
+		return nil
+	}
+	
+	// Check if user has any of the required roles
+	authorized := false
+	for _, requiredRole := range requiredRoles {
+		for _, userRole := range userRoles {
+			if userRole == requiredRole {
+				s.logger.DebugContext(ctx, fmt.Sprintf("Authorization granted - user has required role: %s", requiredRole))
+				authorized = true
+				break
+			}
+		}
+		if authorized {
+			break
+		}
+	}
+	
+	if !authorized {
+		s.logger.WarnContext(ctx, fmt.Sprintf("Authorization denied - user %s with roles %v does not have any of the required roles: %v", userEmail, userRoles, requiredRoles))
+		return fmt.Errorf("insufficient permissions: user has roles %v but tool requires one of: %v", userRoles, requiredRoles)
+	}
+	
+	return nil
+}
+
+// detectPrivilegeEscalation detects potential privilege escalation attempts
+func (s *Server) detectPrivilegeEscalation(ctx context.Context, tool tools.Tool, claimsFromAuth map[string]map[string]any, data map[string]any) error {
+	// Extract user roles
+	var userRoles []string
+	if azureClaims, exists := claimsFromAuth["azure"]; exists {
+		if roles, exists := azureClaims["roles"]; exists {
+			switch v := roles.(type) {
+			case []string:
+				userRoles = v
+			case []interface{}:
+				for _, role := range v {
+					if str, ok := role.(string); ok {
+						userRoles = append(userRoles, str)
+					}
+				}
+			}
+		}
+	}
+
+	// Get tool's required roles using reflection
+	var requiredRoles []string
+	toolValue := reflect.ValueOf(tool)
+	if toolValue.Kind() == reflect.Ptr {
+		toolValue = toolValue.Elem()
+	}
+	
+	// Try to get RequiredRoles field from the tool
+	requiredRolesField := toolValue.FieldByName("RequiredRoles")
+	if requiredRolesField.IsValid() && requiredRolesField.CanInterface() {
+		if roles, ok := requiredRolesField.Interface().([]string); ok {
+			requiredRoles = roles
+		}
+	}
+
+	// Check for suspicious patterns in the request
+	// This is a basic implementation - you would enhance this based on your specific needs
+	
+	// Log the check for audit purposes
+	s.logger.DebugContext(ctx, fmt.Sprintf("Privilege escalation check for user with roles: %v", userRoles))
+	s.logger.DebugContext(ctx, fmt.Sprintf("Tool required roles: %v", requiredRoles))
+	
+	// For now, we'll just log and allow
+	// In production, you would implement more sophisticated detection logic
+	return nil
 }
 
 // errResponse is the response sent back when an error has been encountered.

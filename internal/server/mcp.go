@@ -35,9 +35,11 @@ import (
 	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 type sseSession struct {
@@ -235,7 +237,11 @@ func mcpRouter(s *Server) (chi.Router, error) {
 
 // sseHandler handles sse initialization and message.
 func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp/sse")
+	// Extract trace context from headers before creating the span
+	propagator := otel.GetTextMapPropagator()
+	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+	
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/sse")
 	r = r.WithContext(ctx)
 
 	sessionId := uuid.New().String()
@@ -311,10 +317,11 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, event)
 			s.logger.DebugContext(ctx, fmt.Sprintf("sending event: %s", event))
 			flusher.Flush()
-			// channel for client disconnection
 		case <-clientClose:
-			close(session.done)
 			s.logger.DebugContext(ctx, "client disconnected")
+			return
+		case <-session.done:
+			s.logger.DebugContext(ctx, "session closed")
 			return
 		}
 	}
@@ -329,7 +336,11 @@ func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // httpHandler handles all mcp messages.
 func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
+	// Extract trace context from headers before creating the span
+	propagator := otel.GetTextMapPropagator()
+	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+	
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp")
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
 

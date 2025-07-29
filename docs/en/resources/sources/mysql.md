@@ -14,14 +14,6 @@ reliability, performance, and ease of use.
 
 [mysql-docs]: https://www.mysql.com/
 
-## Available Tools
-
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
-  Execute pre-defined prepared SQL queries in MySQL.
-
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
-  Run parameterized SQL queries in MySQL.
-
 ## Requirements
 
 ### Database User

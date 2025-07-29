@@ -165,3 +165,80 @@ func TestParseFromYamlWithTemplateParamsPostgres(t *testing.T) {
 	}
 
 }
+
+func TestParseFromYamlWithAuthFields(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "with authorization fields",
+			in: `
+			tools:
+				example_tool:
+					kind: postgres-sql
+					source: my-pg-instance
+					description: some description
+					statement: |
+						SELECT * FROM SQL_STATEMENT;
+					authRequired:
+						- my-azure-auth-service
+					requiredRoles:
+						- mcp.admin
+						- mcp.support
+					requiredPermissions:
+						- read
+						- write
+					allowedOperations:
+						- SELECT
+						- UPDATE
+					restrictedTables:
+						- pg_user
+						- system_config
+					maxAffectedRows: 100
+					parameters:
+						- name: country
+						  type: string
+						  description: some description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": postgressql.Config{
+					Name:               "example_tool",
+					Kind:               "postgres-sql",
+					Source:             "my-pg-instance",
+					Description:        "some description",
+					Statement:          "SELECT * FROM SQL_STATEMENT;\n",
+					AuthRequired:       []string{"my-azure-auth-service"},
+					RequiredRoles:      []string{"mcp.admin", "mcp.support"},
+					RequiredPermissions: []string{"read", "write"},
+					AllowedOperations:  []string{"SELECT", "UPDATE"},
+					RestrictedTables:   []string{"pg_user", "system_config"},
+					MaxAffectedRows:    100,
+					Parameters: []tools.Parameter{
+						tools.NewStringParameter("country", "some description"),
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
+	}
+}

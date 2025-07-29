@@ -143,8 +143,9 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
-	for name, sc := range cfg.SourceConfigs {
+	for name, sc := range cfg.SourceConfigs {		
 		s, err := func() (sources.Source, error) {
+			
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/init",
@@ -167,7 +168,9 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the auth services from configs
 	authServicesMap := make(map[string]auth.AuthService)
+	
 	for name, sc := range cfg.AuthServiceConfigs {
+
 		a, err := func() (auth.AuthService, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
@@ -298,6 +301,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	httpLogger := httplog.NewLogger("httplog", httpOpts)
 	r.Use(httplog.RequestLogger(httpLogger))
 
+	
 	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
@@ -332,7 +336,8 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Mount("/mcp", mcpR)
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"toolbox":true,"name":"genai-toolbox","status":"ok","version":"0.9.0","mcp":true}`))
 	})
 
 	return s, nil

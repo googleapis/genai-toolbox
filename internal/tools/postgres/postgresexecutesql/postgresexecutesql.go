@@ -55,11 +55,16 @@ var _ compatibleSource = &postgres.Source{}
 var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name               string   `yaml:"name" validate:"required"`
+	Kind               string   `yaml:"kind" validate:"required"`
+	Source             string   `yaml:"source" validate:"required"`
+	Description        string   `yaml:"description" validate:"required"`
+	AuthRequired       []string `yaml:"authRequired"`
+	RequiredRoles      []string `yaml:"requiredRoles"`
+	RequiredPermissions []string `yaml:"requiredPermissions"`
+	AllowedOperations  []string `yaml:"allowedOperations"`
+	RestrictedTables   []string `yaml:"restrictedTables"`
+	MaxAffectedRows    int      `yaml:"maxAffectedRows"`
 }
 
 // validate interface
@@ -93,13 +98,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Pool:         s.PostgresPool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:               cfg.Name,
+		Kind:               kind,
+		Parameters:         parameters,
+		AuthRequired:       cfg.AuthRequired,
+		RequiredRoles:      cfg.RequiredRoles,
+		RequiredPermissions: cfg.RequiredPermissions,
+		AllowedOperations:  cfg.AllowedOperations,
+		RestrictedTables:   cfg.RestrictedTables,
+		MaxAffectedRows:    cfg.MaxAffectedRows,
+		Pool:               s.PostgresPool(),
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:        mcpManifest,
 	}
 	return t, nil
 }
@@ -108,17 +118,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name               string           `yaml:"name"`
+	Kind               string           `yaml:"kind"`
+	AuthRequired       []string         `yaml:"authRequired"`
+	RequiredRoles      []string         `yaml:"requiredRoles"`
+	RequiredPermissions []string         `yaml:"requiredPermissions"`
+	AllowedOperations  []string         `yaml:"allowedOperations"`
+	RestrictedTables   []string         `yaml:"restrictedTables"`
+	MaxAffectedRows    int              `yaml:"maxAffectedRows"`
+	Parameters         tools.Parameters `yaml:"parameters"`
 
 	Pool        *pgxpool.Pool
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	sql, ok := sliceParams[0].(string)
 	if !ok {

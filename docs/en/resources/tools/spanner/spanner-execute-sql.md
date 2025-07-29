@@ -2,7 +2,7 @@
 title: "spanner-execute-sql"
 type: docs
 weight: 1
-description: >
+description: > 
   A "spanner-execute-sql" tool executes a SQL statement against a Spanner
   database.
 aliases:
@@ -14,7 +14,7 @@ aliases:
 A `spanner-execute-sql` tool executes a SQL statement against a Spanner
 database. It's compatible with any of the following sources:
 
-- [spanner](../../sources/spanner.md)
+- [spanner](../sources/spanner.md)
 
 `spanner-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.

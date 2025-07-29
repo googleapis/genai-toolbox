@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rds-debug-pod
+  namespace: tenant-g0evr4xtu
+spec:
+  containers:
+  - name: postgres-client
+    image: postgres:15
+    command: ["sleep", "3600"]  # Keep the pod running for 1 hour
+    env:
+    - name: PGPASSWORD
+      value: "my-password"
+  restartPolicy: Never 

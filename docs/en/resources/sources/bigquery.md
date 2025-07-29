@@ -34,26 +34,6 @@ avoiding full table scans or complex filters.
 [bigquery-quickstart-cli]: https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
 [bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
-## Available Tools
-
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-- [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
-  Execute structured queries using parameters.
-
-- [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
-  Retrieve metadata for a specific dataset.
-
-- [`bigquery-get-table-info`](../tools/bigquery/bigquery-get-table-info.md)  
-  Retrieve metadata for a specific table.
-
-- [`bigquery-list-dataset-ids`](../tools/bigquery/bigquery-list-dataset-ids.md)  
-  List available dataset IDs.
-
-- [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
-  List tables in a given dataset.
-
 ## Requirements
 
 ### IAM Permissions

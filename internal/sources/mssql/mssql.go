@@ -54,7 +54,6 @@ type Config struct {
 	User     string `yaml:"user" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 	Database string `yaml:"database" validate:"required"`
-	Encrypt  string `yaml:"encrypt"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -64,7 +63,7 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a MSSQL source
-	db, err := initMssqlConnection(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.Encrypt)
+	db, err := initMssqlConnection(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
 	}
@@ -102,14 +101,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 	return s.Db
 }
 
-func initMssqlConnection(
-	ctx context.Context,
-	tracer trace.Tracer,
-	name, host, port, user, pass, dbname, encrypt string,
-) (
-	*sql.DB,
-	error,
-) {
+func initMssqlConnection(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -117,10 +109,6 @@ func initMssqlConnection(
 	// Create dsn
 	query := url.Values{}
 	query.Add("database", dbname)
-	if encrypt != "" {
-		query.Add("encrypt", encrypt)
-	}
-
 	url := &url.URL{
 		Scheme:   "sqlserver",
 		User:     url.UserPassword(user, pass),

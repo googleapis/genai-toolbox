@@ -2,8 +2,8 @@
 title: "Tools"
 type: docs
 weight: 2
-description: >
-  Tools define actions an agent can take -- such as reading and writing to a
+description: > 
+  Tools define actions an agent can take -- such as reading and writing to a 
   source.
 ---
 
@@ -81,9 +81,8 @@ the parameter.
 |-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
 | name        |  string         |     true     | Name of the parameter.                                                      |
 | type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
+| default     |  parameter type |     false    | Default value of the parameter. If provided, the parameter is not required. |
 | description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.    |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                   |
 
 ### Array Parameters
 
@@ -108,59 +107,22 @@ in the list using the items field:
 |-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
 | name        |      string      |     true     | Name of the parameter.                                                      |
 | type        |      string      |     true     | Must be "array"                                                             |
+| default     |  parameter type  |     false    | Default value of the parameter. If provided, the parameter is not required. |
 | description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.     |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                    |
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
 
 {{< notice note >}}
-Items in array should not have a `default` or `required` value. If provided, it
-will be ignored.
+Items in array should not have a default value. If provided, it will be ignored.
 {{< /notice >}}
-
-### Map Parameters
-
-The map type is a collection of key-value pairs. It can be configured in two
-ways:
-
-- Generic Map: By default, it accepts values of any primitive type (string,
-  integer, float, boolean), allowing for mixed data.
-- Typed Map: By setting the valueType field, you can enforce that all values
-  within the map must be of the same specified type.
-
-#### Generic Map (Mixed Value Types)
-
-This is the default behavior when valueType is omitted. It's useful for passing
-a flexible group of settings.
-
-```yaml
-    parameters:
-          - name: execution_context
-            type: map
-            description: A flexible set of key-value pairs for the execution environment.
-```
-
-#### Typed Map
-
-Specify valueType to ensure all values in the map are of the same type. An error
-will be thrown in case of value type mismatch.
-
-```yaml
- parameters:
-      - name: user_scores
-        type: map
-        description: A map of user IDs to their scores. All scores must be integers.
-        valueType: integer # This enforces the value type for all entries.
-```
 
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
 information decoded from [ID
-tokens](../authServices/#specifying-id-tokens-from-clients) that are passed in
+tokens](../authsources/#specifying-id-tokens-from-clients) that are passed in
 request headers. They do not take input values in request bodies like other
 parameters. To use authenticated parameters, you must configure the tool to map
-the required [authServices](../authServices/) to specific claims within the
+the required [authServices](../authservices) to specific claims within the
 user's ID token.
 
 ```yaml
@@ -183,7 +145,7 @@ user's ID token.
 
 | **field** | **type** | **required** | **description**                                                                         |
 |-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token.         |
+| name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token. |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
 ### Template Parameters
@@ -244,7 +206,7 @@ tools:
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
-[authServices](../authServices/) defined in the previous section.
+[authServices](../authservices) defined in the previous section.
 
 ```yaml
 tools:

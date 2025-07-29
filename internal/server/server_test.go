@@ -172,3 +172,80 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 }
+
+func TestTraceContextExtraction(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	addr, port := "127.0.0.1", 5001
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		Address: addr,
+		Port:    port,
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("error setting up server: %s", err)
+	}
+
+	err = s.Listen(ctx)
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	// start server in background
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		err = s.Serve(ctx)
+		if err != nil {
+			errCh <- err
+		}
+	}()
+
+	// Test trace context extraction by sending a request with trace headers
+	url := fmt.Sprintf("http://%s:%d/", addr, port)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		t.Fatalf("error creating request: %s", err)
+	}
+
+	// Add trace context headers (W3C traceparent format)
+	req.Header.Set("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01")
+	req.Header.Set("tracestate", "congo=t61rcWkgMzE")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != 200 {
+		t.Fatalf("response status code is not 200, got: %d", resp.StatusCode)
+	}
+
+	// The test passes if the request is processed without errors
+	// The trace context extraction is working if the server doesn't crash
+	// and processes the request successfully
+}

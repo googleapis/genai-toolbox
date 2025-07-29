@@ -19,14 +19,6 @@ to a database by following these instructions][csql-mssql-connect].
 [csql-mssql-docs]: https://cloud.google.com/sql/docs/sqlserver
 [csql-mssql-connect]: https://cloud.google.com/sql/docs/sqlserver/connect-overview
 
-## Available Tools
-
-- [`mssql-sql`](../tools/mssql/mssql-sql.md)  
-  Execute pre-defined SQL Server queries with placeholder parameters.
-
-- [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
-  Run parameterized SQL Server queries in Cloud SQL for SQL Server.
-
 ## Requirements
 
 ### IAM Permissions

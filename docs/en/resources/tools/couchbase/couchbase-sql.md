@@ -2,7 +2,7 @@
 title: "couchbase-sql"
 type: docs
 weight: 1
-description: >
+description: > 
   A "couchbase-sql" tool executes a pre-defined SQL statement against a Couchbase
   database.
 aliases:
@@ -14,7 +14,7 @@ aliases:
 A `couchbase-sql` tool executes a pre-defined SQL statement against a Couchbase
 database. It's compatible with any of the following sources:
 
-- [couchbase](../../sources/couchbase.md)
+- [couchbase](../sources/couchbase.md)
 
 The specified SQL statement is executed as a parameterized statement, and specified
 parameters will be used according to their name: e.g. `$id`.
@@ -66,7 +66,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](#template-parameters).
+> [templateParameters](_index#template-parameters).
 
 ```yaml
 tools:
@@ -95,6 +95,6 @@ tools:
 | source             |                   string                         |     true     | Name of the source the SQL query should execute on.                                                                                        |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute                                                                                                                   |
-| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be used with the SQL statement.                                               |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be used with the SQL statement.                                               |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 | authRequired       |                array[string]                     |    false     | List of auth services that are required to use this tool.                                                                                  |

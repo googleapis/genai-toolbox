@@ -11,11 +11,6 @@ description: >
 A `couchbase` source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.
 
-## Available Tools
-
-- [`couchbase-sql`](../tools/couchbase/couchbase-sql.md)  
-  Run SQL++ statements on Couchbase with parameterized input.
-
 ## Example
 
 ```yaml

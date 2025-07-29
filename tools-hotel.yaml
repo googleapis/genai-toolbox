@@ -1,0 +1,183 @@
+sources:
+  booking-db:
+    kind: postgres
+    host: localhost
+    port: 5432
+    database: toolbox_db
+    user: toolbox_user
+    password: my-password
+  # Admin database connection (restricted access)
+  admin-db:
+    kind: postgres
+    host: localhost
+    port: 5432
+    database: toolbox_db
+    user: admin_user
+    password: admin_password
+  # Support database connection (limited access)
+  support-db:
+    kind: postgres
+    host: localhost
+    port: 5432
+    database: toolbox_db
+    user: support_user
+    password: support_password
+
+authServices:
+  azure:
+    kind: azure
+    clientId: api://4305b4d6-7f89-4904-9f20-00ffeb4d91ef
+  google:
+    kind: google
+    clientId: 407408718192.apps.googleusercontent.com
+
+# Role definitions for authorization
+roleDefinitions:
+  mcp.admin:
+    description: "Full system administrator access"
+    permissions: ["read", "write", "delete", "manage_users", "manage_system"]
+    databaseRole: "admin_user"
+  mcp.support:
+    description: "Customer support agent access"
+    permissions: ["read", "write_limited"]
+    databaseRole: "support_user"
+    restrictedTables: ["pg_user", "pg_roles", "system_config"]
+  mcp.user:
+    description: "Standard user access"
+    permissions: ["read", "write_own"]
+    databaseRole: "toolbox_user"
+    restrictedTables: ["pg_user", "pg_roles", "system_config", "admin_logs"]
+
+tools:
+  # Admin-only tools
+  manage-users:
+    kind: postgres-sql
+    source: admin-db
+    authRequired: [azure]
+    requiredRoles: [mcp.admin]
+    requiredPermissions: [manage_users]
+    allowedOperations: [SELECT, INSERT, UPDATE, DELETE]
+    maxAffectedRows: 100
+    description: "Manage user accounts (Admin only)"
+    parameters:
+      - name: action
+        type: string
+        description: "Action to perform (create, update, delete)"
+      - name: user_id
+        type: string
+        description: "User ID to manage"
+    statement: |
+      -- This tool can access pg_user table
+      SELECT * FROM pg_user WHERE usename = $1;
+
+  # Support tools (limited access)
+  view-booking-details:
+    kind: postgres-sql
+    source: support-db
+    authRequired: [azure]
+    requiredRoles: [mcp.support, mcp.admin]
+    requiredPermissions: [read]
+    allowedOperations: [SELECT]
+    restrictedTables: [pg_user, pg_roles, system_config]
+    maxAffectedRows: 1000
+    description: "View booking details (Support and Admin)"
+    parameters:
+      - name: booking_id
+        type: string
+        description: "Booking ID to view"
+    statement: |
+      SELECT * FROM bookings WHERE id = $1;
+
+  # User tools (standard access)
+  search-hotels-by-name:
+    kind: postgres-sql
+    source: booking-db
+    authRequired: [azure]
+    requiredRoles: [mcp.user, mcp.support, mcp.admin]
+    requiredPermissions: [read]
+    allowedOperations: [SELECT]
+    restrictedTables: [pg_user, pg_roles, system_config, admin_logs]
+    maxAffectedRows: 100
+    description: "Search for hotels based on name"
+    parameters:
+      - name: name
+        type: string
+        description: "The name of the hotel"
+    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+
+  search-hotels-by-location:
+    kind: postgres-sql
+    source: booking-db
+    authRequired: [azure]
+    requiredRoles: [mcp.user, mcp.support, mcp.admin]
+    requiredPermissions: [read]
+    allowedOperations: [SELECT]
+    restrictedTables: [pg_user, pg_roles, system_config, admin_logs]
+    maxAffectedRows: 100
+    description: "Search for hotels based on location"
+    parameters:
+      - name: location
+        type: string
+        description: "The location of the hotel"
+    statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
+
+  book-hotel:
+    kind: postgres-sql
+    source: booking-db
+    authRequired: [azure]
+    requiredRoles: [mcp.user, mcp.support, mcp.admin]
+    requiredPermissions: [write_own]
+    allowedOperations: [SELECT, UPDATE]
+    restrictedTables: [pg_user, pg_roles, system_config, admin_logs]
+    maxAffectedRows: 1
+    description: "Book a hotel by its ID"
+    parameters:
+      - name: hotel_id
+        type: string
+        description: "The ID of the hotel to book"
+    statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
+
+  update-hotel:
+    kind: postgres-sql
+    source: booking-db
+    authRequired: [azure]
+    requiredRoles: [mcp.support, mcp.admin]
+    requiredPermissions: [write_limited]
+    allowedOperations: [SELECT, UPDATE]
+    restrictedTables: [pg_user, pg_roles, system_config, admin_logs]
+    maxAffectedRows: 10
+    description: "Update hotel information (Support and Admin only)"
+    parameters:
+      - name: hotel_id
+        type: string
+        description: "The ID of the hotel to update"
+      - name: checkin_date
+        type: string
+        description: "New check-in date"
+      - name: checkout_date
+        type: string
+        description: "New check-out date"
+    statement: |
+      UPDATE hotels 
+      SET checkin_date = $2, checkout_date = $3 
+      WHERE id = $1;
+
+  # Dangerous operations (Admin only)
+  system-maintenance:
+    kind: postgres-sql
+    source: admin-db
+    authRequired: [azure]
+    requiredRoles: [mcp.admin]
+    requiredPermissions: [manage_system]
+    allowedOperations: [SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER]
+    maxAffectedRows: 1000
+    description: "System maintenance operations (Admin only)"
+    parameters:
+      - name: operation
+        type: string
+        description: "Maintenance operation to perform"
+    statement: |
+      -- This tool can perform system-level operations
+      -- Only accessible by admin users
+      SELECT current_user, current_database();
+

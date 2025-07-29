@@ -7,18 +7,11 @@ description: >
 
 ---
 
-## About
-
 [Neo4j][neo4j-docs] is a powerful, open source graph database system with over
 15 years of active development that has earned it a strong reputation for
 reliability, feature robustness, and performance.
 
 [neo4j-docs]: https://neo4j.com/docs
-
-## Available Tools
-
-- [`neo4j-cypher`](../tools/neo4j/neo4j-cypher.md)  
-  Run Cypher queries against your Neo4j graph database.
 
 ## Requirements
 

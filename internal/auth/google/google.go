@@ -71,6 +71,7 @@ func (a AuthService) GetName() string {
 
 // Verifies Google ID token and return claims
 func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (map[string]any, error) {
+	//a.Name = "Google"
 	if token := h.Get(a.Name + "_token"); token != "" {
 		payload, err := idtoken.Validate(ctx, token, a.ClientID)
 		if err != nil {

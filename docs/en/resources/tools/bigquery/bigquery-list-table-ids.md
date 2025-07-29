@@ -2,7 +2,7 @@
 title: "bigquery-list-table-ids"
 type: docs
 weight: 1
-description: >
+description: > 
   A "bigquery-list-table-ids" tool returns table IDs in a given BigQuery dataset.
 aliases:
 - /resources/tools/bigquery-list-table-ids
@@ -13,11 +13,11 @@ aliases:
 A `bigquery-list-table-ids` tool returns table IDs in a given BigQuery dataset.
 It's compatible with the following sources:
 
-- [bigquery](../../sources/bigquery.md)
+- [bigquery](../sources/bigquery.md)
 
 `bigquery-get-dataset-info` takes a required `dataset` parameter to specify the dataset
-from which to list table IDs. It also optionally accepts a `project` parameter to
-define the Google Cloud project ID. If the `project` parameter is not provided, the
+from which to list table IDs. It also optionally accepts a `project` parameter to 
+define the Google Cloud project ID. If the `project` parameter is not provided, the 
 tool defaults to using the project defined in the source configuration.
 
 ## Example

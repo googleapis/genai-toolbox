@@ -20,14 +20,6 @@ to a database by following these instructions][csql-pg-quickstart].
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
 [csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
-## Available Tools
-
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
-  Execute SQL queries as prepared statements in PostgreSQL.
-
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
-  Run parameterized SQL statements in PostgreSQL.
-
 ## Requirements
 
 ### IAM Permissions

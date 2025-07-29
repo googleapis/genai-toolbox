@@ -13,25 +13,42 @@
 # limitations under the License.
 
 # Use the latest stable golang 1.x to compile to a binary
-FROM --platform=$BUILDPLATFORM golang:1 AS build
+FROM debian:bullseye AS builder
+WORKDIR /app
 
-WORKDIR /go/src/genai-toolbox
+# Install dependencies
+RUN apt-get update && apt-get install -y wget tar
+
+# Download and install Go 1.23.8
+RUN wget https://go.dev/dl/go1.23.8.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.23.8.linux-amd64.tar.gz
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the source code
 COPY . .
 
-ARG TARGETOS
-ARG TARGETARCH
-ARG BUILD_TYPE="container.dev"
-ARG COMMIT_SHA=""
-
-RUN go get ./...
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=container.${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}"
+# Build the binary for linux/amd64
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o genai-toolbox main.go
 
 # Final Stage
-FROM gcr.io/distroless/static:nonroot
-
+FROM gcr.io/distroless/base-debian11
 WORKDIR /app
-COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
-USER nonroot
 
-ENTRYPOINT ["/toolbox"] 
+# Copy the binary from the builder
+COPY --from=builder /app/genai-toolbox /app/genai-toolbox
+
+# Copy any required config or static files (uncomment if needed)
+# COPY tools.yaml /app/tools.yaml
+
+# Expose the default port
+EXPOSE 8080
+
+# Use non-root user for security
+USER nonroot:nonroot
+
+ENTRYPOINT ["/app/genai-toolbox"] 

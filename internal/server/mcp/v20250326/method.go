@@ -122,13 +122,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	}
 
 	content := make([]TextContent, 0)
-
-	sliceRes, ok := results.([]any)
-	if !ok {
-		sliceRes = []any{results}
-	}
-
-	for _, d := range sliceRes {
+	for _, d := range results {
 		text := TextContent{Type: "text"}
 		dM, err := json.Marshal(d)
 		if err != nil {

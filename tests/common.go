@@ -28,7 +28,7 @@ import (
 )
 
 // GetToolsConfig returns a mock tools config file
-func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, paramToolStatement2, arrayToolStatement, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -47,7 +47,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
 			},
-			"my-tool": map[string]any{
+			"my-param-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -65,30 +65,16 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 					},
 				},
 			},
-			"my-tool-by-id": map[string]any{
+			"my-param-tool2": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
-				"statement":   idParamToolStmt,
+				"statement":   paramToolStatement2,
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
 						"type":        "integer",
 						"description": "user ID",
-					},
-				},
-			},
-			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"description": "Tool to test invocation with params.",
-				"statement":   nameParamToolStmt,
-				"parameters": []any{
-					map[string]any{
-						"name":        "name",
-						"type":        "string",
-						"description": "user name",
-						"required":    false,
 					},
 				},
 			},
@@ -315,16 +301,15 @@ func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// GetPostgresSQLParamToolInfo returns statements and param for my-tool postgres-sql kind
-func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
+func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3), ($4);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = $1;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetPostgresSQLAuthToolInfo returns statements and param of my-auth-tool for postgres-sql kind
@@ -343,16 +328,15 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMSSQLParamToolInfo returns statements and param for my-tool mssql-sql kind
-func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// GetMSSQLParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid), (@nil);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id;", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = @name;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(@idArray) OR name = ANY(@p2);", tableName)
 	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid"), sql.Named("nil", nil)}
-	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetMSSQLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
@@ -371,16 +355,15 @@ func GetMSSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMySQLParamToolInfo returns statements and param for my-tool mysql-sql kind
-func GetMySQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// GetMySQLParamToolInfo returns statements and param for my-param-tool mysql-sql kind
+func GetMySQLParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetMySQLAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
@@ -399,12 +382,11 @@ func GetMySQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string, string, string) {
+func GetNonSpannerInvokeParamWant() (string, string, string) {
 	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-	invokeIdNullWant := "[{\"id\":4,\"name\":null}]"
-	nullWant := "null"
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
+	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
+	return invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 // GetPostgresWants return the expected wants for postgres
@@ -519,14 +501,13 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 }
 
 // GetRedisWants return the expected wants for redis
-func GetRedisValkeyWants() (string, string, string, string, string, string) {
+func GetRedisValkeyWants() (string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
 	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	invokeIdNullWant := `[{"id":"4","name":""}]`
-	nullWant := `["null"]`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
+	invokeParamWantNull := `[{"id":"4","name":""}]`
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
@@ -547,7 +528,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				"description": "Simple tool to test end to end functionality.",
 				"commands":    [][]string{{"PING"}},
 			},
-			"my-tool": map[string]any{
+			"my-param-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -565,7 +546,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 					},
 				},
 			},
-			"my-tool-by-id": map[string]any{
+			"my-param-tool2": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -575,20 +556,6 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 						"name":        "id",
 						"type":        "integer",
 						"description": "user ID",
-					},
-				},
-			},
-			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"description": "Tool to test invocation with params.",
-				"commands":    [][]string{{"GET", "null"}},
-				"parameters": []any{
-					map[string]any{
-						"name":        "name",
-						"type":        "string",
-						"description": "user name",
-						"required":    false,
 					},
 				},
 			},

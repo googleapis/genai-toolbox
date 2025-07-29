@@ -23,7 +23,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
 
@@ -45,7 +44,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryRestService() *bigqueryrestapi.Service
 }
 
 // validate compatible sources are still compatible
@@ -97,7 +95,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.BigQueryClient(),
-		RestService:  s.BigQueryRestService(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -113,58 +110,29 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	Client       *bigqueryapi.Client
-	RestService  *bigqueryrestapi.Service
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
 	sliceParams := params.AsSlice()
 	sql, ok := sliceParams[0].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
-	if err != nil {
-		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
-	}
-
-	statementType := dryRunJob.Statistics.Query.StatementType
-	// JobStatistics.QueryStatistics.StatementType
 	query := t.Client.Query(sql)
 	query.Location = t.Client.Location
 
-	// This block handles Data Manipulation Language (DML) and Data Definition Language (DDL) statements.
-	// These statements (e.g., INSERT, UPDATE, CREATE TABLE) do not return a row set.
-	// Instead, we execute them as a job, wait for completion, and return a success
-	// message, including the number of affected rows for DML operations.
-	if statementType != "SELECT" {
-		job, err := query.Run(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to start DML/DDL job: %w", err)
-		}
-		status, err := job.Wait(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to wait for DML/DDL job to complete: %w", err)
-		}
-		if err := status.Err(); err != nil {
-			return nil, fmt.Errorf("DML/DDL job failed with error: %w", err)
-		}
-		return "Operation completed successfully.", nil
-	}
-
-	// This block handles SELECT statements, which return a row set.
-	// We iterate through the results, convert each row into a map of
-	// column names to values, and return the collection of rows.
-	var out []any
 	it, err := query.Read(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+
+	var out []any
 	for {
 		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
+		err := it.Next(&row)
 		if err == iterator.Done {
 			break
 		}
@@ -177,9 +145,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		}
 		out = append(out, vMap)
 	}
-	if out == nil {
-		return "The query returned 0 rows.", nil
-	}
+
 	return out, nil
 }
 
@@ -197,28 +163,4 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-// dryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string) (*bigqueryrestapi.Job, error) {
-	useLegacySql := false
-	jobToInsert := &bigqueryrestapi.Job{
-		JobReference: &bigqueryrestapi.JobReference{
-			ProjectId: projectID,
-			Location:  location,
-		},
-		Configuration: &bigqueryrestapi.JobConfiguration{
-			DryRun: true,
-			Query: &bigqueryrestapi.JobConfigurationQuery{
-				Query:        sql,
-				UseLegacySql: &useLegacySql,
-			},
-		},
-	}
-
-	insertResponse, err := restService.Jobs.Insert(projectID, jobToInsert).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
-	}
-	return insertResponse, nil
 }

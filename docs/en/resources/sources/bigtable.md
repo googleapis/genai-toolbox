@@ -32,11 +32,6 @@ such as avoiding full table scans or complex filters.
 [bigtable-googlesql]:
     https://cloud.google.com/bigtable/docs/googlesql-overview
 
-## Available Tools
-
-- [`bigtable-sql`](../tools/bigtable/bigtable-sql.md)
-  Run SQL-like queries over Bigtable rows.
-
 ## Requirements
 
 ### IAM Permissions

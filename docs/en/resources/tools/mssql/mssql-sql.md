@@ -2,7 +2,7 @@
 title: "mssql-sql"
 type: docs
 weight: 1
-description: >
+description: > 
   A "mssql-sql" tool executes a pre-defined SQL statement against a SQL Server
   database.
 aliases:
@@ -14,8 +14,8 @@ aliases:
 A `mssql-sql` tool executes a pre-defined SQL statement against a SQL Server
 database. It's compatible with any of the following sources:
 
-- [cloud-sql-mssql](../../sources/cloud-sql-mssql.md)
-- [mssql](../../sources/mssql.md)
+- [cloud-sql-mssql](../sources/cloud-sql-mssql.md)
+- [mssql](../sources/mssql.md)
 
 Toolbox supports the [prepare statement syntax][prepare-statement] of MS SQL
 Server and expects parameters in the SQL query to be in the form of either
@@ -78,7 +78,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](#template-parameters).
+> [templateParameters](_index#template-parameters).
 
 ```yaml
 tools:
@@ -107,5 +107,5 @@ tools:
 | source             |                   string                         |     true     | Name of the source the T-SQL statement should execute on.                                                                                  |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute.                                                                                                                  |
-| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

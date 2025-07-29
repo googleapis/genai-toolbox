@@ -3,7 +3,7 @@ title: "Telemetry"
 type: docs
 weight: 2
 description: >
-  An overview of telemetry and observability in Toolbox.
+  An overview of telemetry and observability in Toolbox. 
 ---
 
 ## About
@@ -158,7 +158,7 @@ enabled:
 
 - [Cloud Logging API](https://cloud.google.com/logging/docs/api/enable-api)
 - [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api)
-- [Cloud Trace API](https://console.cloud.google.com/apis/enableflow?apiid=cloudtrace.googleapis.com)
+- [Cloud Trace API](https://cloud.google.com/apis/enableflow?apiid=cloudtrace.googleapis.com)
 {{< /notice >}}
 
 #### OTLP Exporter
@@ -177,7 +177,7 @@ It receives telemetry data, transforms it, and then exports data to backends
 that can store it permanently. Toolbox provide an option to export telemetry
 data to user's choice of backend(s) that are compatible with the Open Telemetry
 Protocol (OTLP). If you would like to use a collector, please refer to this
-[Export Telemetry using the Otel Collector](../../how-to/export_telemetry.md).
+[Export Telemetry using the Otel Collector](../how-to/export_telemetry.md).
 
 ### Flags
 

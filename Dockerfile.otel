@@ -1,0 +1,13 @@
+FROM otel/opentelemetry-collector-contrib:latest
+
+# Set the working directory
+WORKDIR /etc/otelcol
+
+# Copy your collector configuration (if you have one)
+# COPY config.yaml /etc/otelcol/config.yaml
+
+# Expose the default OTLP ports
+EXPOSE 4317 4318 55679
+
+# Use the default entrypoint and command from the base image
+# The base image already has the correct CMD set up 

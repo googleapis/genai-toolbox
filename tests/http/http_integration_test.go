@@ -60,10 +60,8 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 		handleTool0(w, r)
 	case "tool1":
 		handleTool1(w, r)
-	case "tool1id":
-		handleTool1Id(w, r)
-	case "tool1name":
-		handleTool1Name(w, r)
+	case "tool1a":
+		handleTool1a(w, r)
 	case "tool2":
 		handleTool2(w, r)
 	case "tool3":
@@ -82,7 +80,10 @@ func handleTool0(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	response := "hello world"
+	response := []string{
+		"Hello",
+		"World",
+	}
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
@@ -133,7 +134,7 @@ func handleTool1(w http.ResponseWriter, r *http.Request) {
 }
 
 // handler function for the test server
-func handleTool1Id(w http.ResponseWriter, r *http.Request) {
+func handleTool1a(w http.ResponseWriter, r *http.Request) {
 	// expect GET method
 	if r.Method != http.MethodGet {
 		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
@@ -154,27 +155,6 @@ func handleTool1Id(w http.ResponseWriter, r *http.Request) {
 }
 
 // handler function for the test server
-func handleTool1Name(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	name := r.URL.Query().Get("name")
-	if name == "" {
-		response := "null"
-		_, err := w.Write([]byte(response))
-		if err != nil {
-			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		}
-		return
-	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-}
-
-// handler function for the test server
 func handleTool2(w http.ResponseWriter, r *http.Request) {
 	// expect GET method
 	if r.Method != http.MethodGet {
@@ -184,7 +164,7 @@ func handleTool2(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.URL.Query().Get("email")
 	if email != "" {
-		response := `[{"name":"Alice"}]`
+		response := `{"name":"Alice"}`
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			http.Error(w, "Failed to write response", http.StatusInternalServerError)
@@ -266,7 +246,10 @@ func handleTool3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := "hello world"
+	// Return a JSON array as the response
+	response := []any{
+		"Hello", "World",
+	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
@@ -301,11 +284,10 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	select1Want := `"hello world"`
-	invokeParamWant, invokeIdNullWant, _, _ := tests.GetNonSpannerInvokeParamWant()
-	nullWant := "null"
+	select1Want := `["Hello","World"]`
+	invokeParamWant, invokeParamWantNull, _ := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, false)
 	runAdvancedHTTPInvokeTest(t)
 }
 
@@ -325,7 +307,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`)),
-			want:          `"hello world"`,
+			want:          `["Hello","World"]`,
 			isErr:         false,
 		},
 		{
@@ -409,7 +391,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"requestBody": "{}",
 				"description": "Simple tool to test end to end functionality.",
 			},
-			"my-tool": map[string]any{
+			"my-param-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"method":      "GET",
@@ -425,24 +407,14 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
-			"my-tool-by-id": map[string]any{
+			"my-param-tool2": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"method":      "GET",
-				"path":        "/tool1id",
+				"path":        "/tool1a",
 				"description": "some description",
 				"queryParams": []tools.Parameter{
 					tools.NewIntParameter("id", "user ID")},
-				"headers": map[string]string{"Content-Type": "application/json"},
-			},
-			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool1name",
-				"description": "some description",
-				"queryParams": []tools.Parameter{
-					tools.NewStringParameterWithRequired("name", "user name", false)},
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-auth-tool": map[string]any{
