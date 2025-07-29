@@ -9,7 +9,6 @@ tools:
     kind: bigquery-execute-sql
     source: bigquery-source
     description: Use this tool to execute sql statement.
-    #allowedDataset: "BillingReport_wfhxhd0rrqwoo8tizt5yvw"
 
   get_dataset_info:
     kind: bigquery-get-dataset-info
