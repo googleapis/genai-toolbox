@@ -41,7 +41,6 @@ func TestParseFromYamlTiDB(t *testing.T) {
 					database: my_db
 					user: my_user
 					password: my_pass
-					ssl: false
 			`,
 			want: server.SourceConfigs{
 				"my-tidb-instance": tidb.Config{
@@ -52,6 +51,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 					Database: "my_db",
 					User:     "my_user",
 					Password: "my_pass",
+					UseSSL:   false,
 				},
 			},
 		},
