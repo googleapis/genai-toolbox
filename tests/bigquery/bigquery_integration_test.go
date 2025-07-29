@@ -72,7 +72,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -100,6 +100,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		datasetName,
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
+	tableNameDataType := fmt.Sprintf("`%s.%s.datatype_table_%s`",
+		BigqueryProject,
+		datasetName,
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
+	)
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
@@ -111,8 +116,14 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	teardownTable2 := setupBigQueryTable(t, ctx, client, createAuthTableStmt, insertAuthTableStmt, datasetName, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	// set up data for data type test tool
+	createDataTypeTableStmt, insertDataTypeTableStmt, dataTypeToolStmt, arrayDataTypeToolStmt, dataTypeTestParams := getBigQueryDataTypeTestInfo(tableNameDataType)
+	teardownTable3 := setupBigQueryTable(t, ctx, client, createDataTypeTableStmt, insertDataTypeTableStmt, datasetName, tableNameDataType, dataTypeTestParams)
+	defer teardownTable3(t)
+
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = addBigQuerySqlToolConfig(t, toolsFile, dataTypeToolStmt, arrayDataTypeToolStmt)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
@@ -135,7 +146,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	select1Want := "[{\"f0_\":1}]"
 	// Partial message; the full error message is too long.
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
@@ -143,10 +154,13 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
 		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),
+		tests.WithDdlWant(`"Operation completed successfully."`),
+		tests.WithSelectEmptyWant(`"The query returned 0 rows."`),
 	)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
+	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
@@ -185,6 +199,22 @@ func getBigQueryAuthToolInfo(tableName string) (string, string, string, []bigque
 		{Value: int64(2)}, {Value: "Jane"}, {Value: "janedoe@gmail.com"},
 	}
 	return createStatement, insertStatement, toolStatement, params
+}
+
+// getBigQueryDataTypeTestInfo returns statements and params for data type tests.
+func getBigQueryDataTypeTestInfo(tableName string) (string, string, string, string, []bigqueryapi.QueryParameter) {
+	createStatement := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (id INT64, int_val INT64, string_val STRING, float_val FLOAT64, bool_val BOOL);`, tableName)
+	insertStatement := fmt.Sprintf(`
+		INSERT INTO %s (id, int_val, string_val, float_val, bool_val) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?);`, tableName)
+	toolStatement := fmt.Sprintf(`SELECT * FROM %s WHERE int_val = ? AND string_val = ? AND float_val = ? AND bool_val = ?;`, tableName)
+	arrayToolStatement := fmt.Sprintf(`SELECT * FROM %s WHERE int_val IN UNNEST(@int_array) AND string_val IN UNNEST(@string_array) AND float_val IN UNNEST(@float_array) AND bool_val IN UNNEST(@bool_array) ORDER BY id;`, tableName)
+	params := []bigqueryapi.QueryParameter{
+		{Value: int64(1)}, {Value: int64(123)}, {Value: "hello"}, {Value: 3.14}, {Value: true},
+		{Value: int64(2)}, {Value: int64(-456)}, {Value: "world"}, {Value: -0.55}, {Value: false},
+		{Value: int64(3)}, {Value: int64(789)}, {Value: "test"}, {Value: 100.1}, {Value: true},
+	}
+	return createStatement, insertStatement, toolStatement, arrayToolStatement, params
 }
 
 // getBigQueryTmplToolStatement returns statements for template parameter test cases for bigquery kind
@@ -345,6 +375,40 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
+func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement, arrayToolStatement string) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-scalar-datatype-tool"] = map[string]any{
+		"kind":        "bigquery-sql",
+		"source":      "my-instance",
+		"description": "Tool to test various scalar data types.",
+		"statement":   toolStatement,
+		"parameters": []any{
+			map[string]any{"name": "int_val", "type": "integer", "description": "an integer value"},
+			map[string]any{"name": "string_val", "type": "string", "description": "a string value"},
+			map[string]any{"name": "float_val", "type": "float", "description": "a float value"},
+			map[string]any{"name": "bool_val", "type": "boolean", "description": "a boolean value"},
+		},
+	}
+	tools["my-array-datatype-tool"] = map[string]any{
+		"kind":        "bigquery-sql",
+		"source":      "my-instance",
+		"description": "Tool to test various array data types.",
+		"statement":   arrayToolStatement,
+		"parameters": []any{
+			map[string]any{"name": "int_array", "type": "array", "description": "an array of integer values", "items": map[string]any{"name": "item", "type": "integer", "description": "desc"}},
+			map[string]any{"name": "string_array", "type": "array", "description": "an array of string values", "items": map[string]any{"name": "item", "type": "string", "description": "desc"}},
+			map[string]any{"name": "float_array", "type": "array", "description": "an array of float values", "items": map[string]any{"name": "item", "type": "float", "description": "desc"}},
+			map[string]any{"name": "bool_array", "type": "array", "description": "an array of boolean values", "items": map[string]any{"name": "item", "type": "boolean", "description": "desc"}},
+		},
+	}
+
+	config["tools"] = tools
+	return config
+}
+
 func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
@@ -444,6 +508,84 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryDataTypeTests(t *testing.T) {
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-scalar-datatype-tool with values",
+			api:           "http://127.0.0.1:5000/api/tool/my-scalar-datatype-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"int_val": 123, "string_val": "hello", "float_val": 3.14, "bool_val": true}`)),
+			want:          `[{"bool_val":true,"float_val":3.14,"id":1,"int_val":123,"string_val":"hello"}]`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-scalar-datatype-tool with missing params",
+			api:           "http://127.0.0.1:5000/api/tool/my-scalar-datatype-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"int_val": 123}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-array-datatype-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-array-datatype-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"int_array": [123, 789], "string_array": ["hello", "test"], "float_array": [3.14, 100.1], "bool_array": [true]}`)),
+			want:          `[{"bool_val":true,"float_val":3.14,"id":1,"int_val":123,"string_val":"hello"},{"bool_val":true,"float_val":100.1,"id":3,"int_val":789,"string_val":"test"}]`,
+			isErr:         false,
 		},
 	}
 	for _, tc := range invokeTcs {
