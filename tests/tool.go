@@ -414,6 +414,7 @@ type TemplateParameterTestConfig struct {
 	nameFieldArray  string
 	nameColFilter   string
 	createColArray  string
+	insert1Want     string
 }
 
 type Option func(*TemplateParameterTestConfig)
@@ -481,6 +482,12 @@ func WithCreateColArray(s string) Option {
 	}
 }
 
+func WithInsert1Want(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.insert1Want = s
+	}
+}
+
 // NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
 func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
 	templateParamTestOption := &TemplateParameterTestConfig{
@@ -493,6 +500,7 @@ func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestCon
 		nameFieldArray:  `["name"]`,
 		nameColFilter:   "name",
 		createColArray:  `["id INT","name VARCHAR(20)","age INT"]`,
+		insert1Want:     "null",
 	}
 
 	// Apply provided options
@@ -533,7 +541,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
-			want:          config.ddlWant,
+			want:          config.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -542,7 +550,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
-			want:          config.ddlWant,
+			want:          config.insert1Want,
 			isErr:         false,
 		},
 		{
