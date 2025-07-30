@@ -35,8 +35,8 @@ var (
 	TiDBDatabase   = os.Getenv("TIDB_DATABASE")
 	TiDBHost       = os.Getenv("TIDB_HOST")
 	TiDBPort       = os.Getenv("TIDB_PORT")
-	TiDBUser       = os.Getenv("TIDB_USERNAME")
-	TiDBPass       = os.Getenv("TIDB_PASSWORD")
+	TiDBUser       = os.Getenv("TIDB_USER")
+	TiDBPass       = os.Getenv("TIDB_PASS")
 )
 
 func getTiDBVars(t *testing.T) map[string]any {
