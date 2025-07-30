@@ -138,7 +138,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
-	chatWant := `(?s)Schema Resolved.*Retrieval Query.*SQL Generated.*Answer`
+	dataInsightsWant := `(?s)Schema Resolved.*Retrieval Query.*SQL Generated.*Answer`
 	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, false, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
@@ -152,7 +152,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
-	runBigQueryChatInvokeTest(t, datasetName, tableName, chatWant)
+	runBigQueryAskDataInsightsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
@@ -343,15 +343,15 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
-	tools["my-chat-tool"] = map[string]any{
-		"kind":        "bigquery-chat",
+	tools["my-ask-data-insights-tool"] = map[string]any{
+		"kind":        "bigquery-ask-data-insights",
 		"source":      "my-instance",
-		"description": "Tool to chat with BigQuery",
+		"description": "Tool to ask BigQuery data insights",
 	}
-	tools["my-auth-chat-tool"] = map[string]any{
-		"kind":        "bigquery-chat",
+	tools["my-auth-ask-data-insights-tool"] = map[string]any{
+		"kind":        "bigquery-ask-data-insights",
 		"source":      "my-instance",
-		"description": "Tool to chat with BigQuery",
+		"description": "Tool to ask BigQuery data insights",
 		"authRequired": []string{
 			"my-google-auth",
 		},
@@ -957,7 +957,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 	}
 }
 
-func runBigQueryChatInvokeTest(t *testing.T, datasetName, tableName, chatWant string) {
+func runBigQueryAskDataInsightsInvokeTest(t *testing.T, datasetName, tableName, dataInsightsWant string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -975,30 +975,30 @@ func runBigQueryChatInvokeTest(t *testing.T, datasetName, tableName, chatWant st
 		isErr         bool
 	}{
 		{
-			name:          "invoke my-chat-tool successfully",
-			api:           "http://127.0.0.1:5000/api/tool/my-chat-tool/invoke",
+			name:          "invoke my-ask-data-insights-tool successfully",
+			api:           "http://127.0.0.1:5000/api/tool/my-ask-data-insights-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
 				tableRefsJSON,
 			))),
-			want:  chatWant,
+			want:  dataInsightsWant,
 			isErr: false,
 		},
 		{
-			name:          "invoke my-auth-chat-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-chat-tool/invoke",
+			name:          "invoke my-auth-ask-data-insights-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-ask-data-insights-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
 				tableRefsJSON,
 			))),
-			want:  chatWant,
+			want:  dataInsightsWant,
 			isErr: false,
 		},
 		{
-			name:          "invoke my-auth-chat-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-chat-tool/invoke",
+			name:          "invoke my-auth-ask-data-insights-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-ask-data-insights-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"user_query_with_context": "What are the names in the table?"}`)),
 			isErr:         true,

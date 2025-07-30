@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquerychat
+package bigqueryaskdatainsights
 
 import (
 	"testing"
@@ -23,7 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlBigQueryChat(t *testing.T) {
+func TestParseFromYamlBigQueryAskDataInsights(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -38,14 +38,14 @@ func TestParseFromYamlBigQueryChat(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-chat
+					kind: bigquery-ask-data-insights
 					source: my-instance
 					description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-chat",
+					Kind:         "bigquery-ask-data-insights",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -226,9 +226,9 @@ func TestAppendMessage(t *testing.T) {
 		},
 		{
 			desc:            "replace when last message is data",
-			initialMessages: []map[string]any{map[string]any{"Thinking": nil}, map[string]any{"Data Retrieved": map[string]any{"rows": []any{}}}},
+			initialMessages: []map[string]any{{"Thinking": nil}, {"Data Retrieved": map[string]any{"rows": []any{}}}},
 			newMessage:      map[string]any{"Data Retrieved": map[string]any{"rows": []any{1}}},
-			want:            []map[string]any{map[string]any{"Thinking": nil}, map[string]any{"Data Retrieved": map[string]any{"rows": []any{1}}}},
+			want:            []map[string]any{{"Thinking": nil}, {"Data Retrieved": map[string]any{"rows": []any{1}}}},
 		},
 		{
 			desc:            "append to an empty list",

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquerychat
+package bigqueryaskdatainsights
 
 import (
 	"bufio"
@@ -32,7 +32,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const kind string = "bigquery-chat"
+const kind string = "bigquery-ask-data-insights"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -87,7 +87,7 @@ type InlineContext struct {
 	Options              Options              `json:"options"`
 }
 
-type ChatPayload struct {
+type CAPayload struct {
 	Project       string        `json:"project"`
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
@@ -195,14 +195,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if location == "" {
 		location = "us"
 	}
-	chatURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
+	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
 
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", token.AccessToken),
 		"Content-Type":  "application/json",
 	}
 
-	payload := ChatPayload{
+	payload := CAPayload{
 		Project:  fmt.Sprintf("projects/%s", projectID),
 		Messages: []Message{{UserMessage: UserMessage{Text: userQuery}}},
 		InlineContext: InlineContext{
@@ -214,9 +214,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 
 	// Call the streaming API
-	response, err := getStream(chatURL, payload, headers, t.MaxQueryResultRows)
+	response, err := getStream(caURL, payload, headers, t.MaxQueryResultRows)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response from chat API: %w", err)
+		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
 	}
 
 	return response, nil
@@ -238,7 +238,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func getStream(url string, payload ChatPayload, headers map[string]string, maxRows int) ([]map[string]any, error) {
+func getStream(url string, payload CAPayload, headers map[string]string, maxRows int) ([]map[string]any, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
