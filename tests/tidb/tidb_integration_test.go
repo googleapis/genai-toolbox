@@ -48,9 +48,9 @@ func getTiDBVars(t *testing.T) map[string]any {
 	case TiDBPort:
 		t.Fatal("'TIDB_PORT' not set")
 	case TiDBUser:
-		t.Fatal("'TIDB_USERNAME' not set")
+		t.Fatal("'TIDB_USER' not set")
 	case TiDBPass:
-		t.Fatal("'TIDB_PASSWORD' not set")
+		t.Fatal("'TIDB_PASS' not set")
 	}
 
 	return map[string]any{
@@ -113,7 +113,7 @@ func TestTiDBToolEndpoints(t *testing.T) {
 
 	var args []string
 
-	pool, err := initTiDBConnectionPool(TiDBHost, TiDBPort, TiDBUser, TiDBPass, TiDBDatabase, true)
+	pool, err := initTiDBConnectionPool(TiDBHost, TiDBPort, TiDBUser, TiDBPass, TiDBDatabase, false)
 	if err != nil {
 		t.Fatalf("unable to create TiDB connection pool: %s", err)
 	}
