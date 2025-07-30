@@ -2,7 +2,7 @@
 title: "firestore-get-documents"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-get-documents" tool retrieves multiple documents from Firestore by their paths.
 aliases:
 - /resources/tools/firestore-get-documents
@@ -10,14 +10,15 @@ aliases:
 
 ## About
 
-A `firestore-get-documents` tool retrieves multiple documents from Firestore by their paths.
+A `firestore-get-documents` tool retrieves multiple documents from Firestore by
+their paths.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
-`firestore-get-documents` takes one input parameter `documentPaths` which is an array of 
-document paths, and returns the documents' data along with metadata such as existence status,
-creation time, update time, and read time.
+`firestore-get-documents` takes one input parameter `documentPaths` which is an
+array of document paths, and returns the documents' data along with metadata
+such as existence status, creation time, update time, and read time.
 
 ## Example
 
@@ -31,8 +32,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "firestore-get-documents".                                                               |
-| source      |                   string                   |     true     | Name of the Firestore source to retrieve documents from.                                         |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   |    **type**    | **required** | **description**                                            |
+|-------------|:--------------:|:------------:|------------------------------------------------------------|
+| kind        |     string     |     true     | Must be "firestore-get-documents".                         |
+| source      |     string     |     true     | Name of the Firestore source to retrieve documents from.   |
+| description |     string     |     true     | Description of the tool that is passed to the LLM.         |

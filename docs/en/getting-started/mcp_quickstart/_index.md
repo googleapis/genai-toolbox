@@ -71,7 +71,7 @@ access by our agent, and create a database user for Toolbox to connect with.
 
     ```sql
     INSERT INTO hotels(id, name, location, price_tier, checkin_date, checkout_date, booked)
-    VALUES 
+    VALUES
       (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', B'0'),
       (2, 'Marriott Zurich', 'Zurich', 'Upscale', '2024-04-14', '2024-04-21', B'0'),
       (3, 'Hyatt Regency Basel', 'Basel', 'Upper Upscale', '2024-04-02', '2024-04-20', B'0'),
@@ -105,7 +105,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -200,7 +200,7 @@ In this section, we will download Toolbox, configure our tools in a
     ```
 
     For more info on tools, check out the
-    [Tools](../../resources/tools/_index.md) section.
+    [Tools](../../resources/tools/) section.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
@@ -218,7 +218,8 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. Type `y` when it asks to install the inspector package.
 
-1. It should show the following when the MCP Inspector is up and running (please take note of `<YOUR_SESSION_TOKEN>`):
+1. It should show the following when the MCP Inspector is up and running (please
+   take note of `<YOUR_SESSION_TOKEN>`):
 
     ```bash
     Starting MCP inspector...
@@ -236,7 +237,8 @@ In this section, we will download Toolbox, configure our tools in a
 
 1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
 
-1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
+1. For `Configuration` -> `Proxy Session Token`, make sure
+   `<YOUR_SESSION_TOKEN>` is present.
 
 1. Click Connect.
 

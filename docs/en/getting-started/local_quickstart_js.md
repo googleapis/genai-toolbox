@@ -15,7 +15,8 @@ This guide assumes you have already done the following:
 
 ### Cloud Setup (Optional)
 
-If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using Gemini or PaLM models), follow these one-time setup steps:
+If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
+Gemini or PaLM models), follow these one-time setup steps:
 
 1. [Install the Google Cloud CLI]
 1. [Set up Application Default Credentials (ADC)]
@@ -29,8 +30,8 @@ If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using G
 [Node.js (v18 or higher)]: https://nodejs.org/
 [install-postgres]: https://www.postgresql.org/download/
 [Install the Google Cloud CLI]: https://cloud.google.com/sdk/docs/install
-[Set up Application Default Credentials (ADC)]: https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment
-
+[Set up Application Default Credentials (ADC)]:
+    https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment
 
 ## Step 1: Set up your database
 
@@ -166,7 +167,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -267,6 +268,7 @@ In this section, we will download Toolbox, configure our tools in a
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+
   {{< notice note >}}
     Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
   {{< /notice >}}
@@ -338,7 +340,6 @@ async function runApplication() {
     model: "gemini-2.0-flash",
   });
 
-
   const client = new ToolboxClient("http://127.0.0.1:5000");
   const toolboxTools = await client.loadToolset("my-toolset");
 
@@ -362,7 +363,6 @@ async function runApplication() {
         thread_id: "test-thread",
     },
   };
-
 
   for (const query of queries) {
     const agentOutput = await agent.invoke(

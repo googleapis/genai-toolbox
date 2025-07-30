@@ -2,8 +2,8 @@
 title: "Tools"
 type: docs
 weight: 2
-description: > 
-  Tools define actions an agent can take -- such as reading and writing to a 
+description: >
+  Tools define actions an agent can take -- such as reading and writing to a
   source.
 ---
 
@@ -114,20 +114,24 @@ in the list using the items field:
 | items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
 
 {{< notice note >}}
-Items in array should not have a `default` or `required` value. If provided, it will be ignored.
+Items in array should not have a `default` or `required` value. If provided, it
+will be ignored.
 {{< /notice >}}
 
 ### Map Parameters
 
-The map type is a collection of key-value pairs. It can be configured in two ways:
+The map type is a collection of key-value pairs. It can be configured in two
+ways:
 
-- Generic Map: By default, it accepts values of any primitive type (string, integer, float, boolean), allowing for mixed data.
+- Generic Map: By default, it accepts values of any primitive type (string,
+  integer, float, boolean), allowing for mixed data.
 - Typed Map: By setting the valueType field, you can enforce that all values
   within the map must be of the same specified type.
 
 #### Generic Map (Mixed Value Types)
 
-This is the default behavior when valueType is omitted. It's useful for passing a flexible group of settings.
+This is the default behavior when valueType is omitted. It's useful for passing
+a flexible group of settings.
 
 ```yaml
     parameters:
@@ -153,10 +157,10 @@ will be thrown in case of value type mismatch.
 
 Authenticated parameters are automatically populated with user
 information decoded from [ID
-tokens](../authsources/#specifying-id-tokens-from-clients) that are passed in
+tokens](../authServices/#specifying-id-tokens-from-clients) that are passed in
 request headers. They do not take input values in request bodies like other
 parameters. To use authenticated parameters, you must configure the tool to map
-the required [authServices](../authservices) to specific claims within the
+the required [authServices](../authServices/) to specific claims within the
 user's ID token.
 
 ```yaml
@@ -179,7 +183,7 @@ user's ID token.
 
 | **field** | **type** | **required** | **description**                                                                         |
 |-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authservices) used to verify the OIDC auth token. |
+| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token.         |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
 
 ### Template Parameters
@@ -240,7 +244,7 @@ tools:
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
-[authServices](../authservices) defined in the previous section.
+[authServices](../authServices/) defined in the previous section.
 
 ```yaml
 tools:

@@ -1,7 +1,7 @@
 assign_issues:
   - Yuan325
   - duwenxin99
-  - akitsch
+  - averikitsch
 assign_issues_by:
   - labels:
     - 'product: bigquery'
@@ -12,4 +12,4 @@ assign_issues_by:
 assign_prs:
   - Yuan325
   - duwenxin99
-  - akitsch
+  - averikitsch

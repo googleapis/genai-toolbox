@@ -1,12 +1,18 @@
 ---
-title: firestore-validate-rules
-weight: 6
-date: 2025-01-07
+title: "firestore-validate-rules"
+type: docs
+weight: 1
+description: > 
+  A "firestore-validate-rules" tool validates Firestore security rules syntax and semantic correctness without deploying them. It provides detailed error reporting with source positions and code snippets.
+aliases:
+- /resources/tools/firestore-validate-rules
 ---
 
 ## Overview
 
-The `firestore-validate-rules` tool validates Firestore security rules syntax and semantic correctness without deploying them. It provides detailed error reporting with source positions and code snippets.
+The `firestore-validate-rules` tool validates Firestore security rules syntax
+and semantic correctness without deploying them. It provides detailed error
+reporting with source positions and code snippets.
 
 ## Configuration
 
@@ -24,9 +30,9 @@ This tool requires authentication if the source requires authentication.
 
 ## Parameters
 
-| Parameter | Type   | Required | Description |
-|-----------|--------|----------|-------------|
-| source    | string | Yes      | The Firestore Rules source code to validate |
+| **parameters**  |   **type**   | **required** | **description**                              |
+|-----------------|:------------:|:------------:|----------------------------------------------|
+| source          |    string    |     true     | The Firestore Rules source code to validate  |
 
 ## Response
 
@@ -34,20 +40,20 @@ The tool returns a `ValidationResult` object containing:
 
 ```json
 {
-  "valid": boolean,           // Whether the rules are valid
-  "issueCount": number,       // Number of issues found
-  "formattedIssues": string,  // Human-readable formatted issues
-  "rawIssues": [              // Array of raw issue objects
+  "valid": "boolean",      
+  "issueCount": "number",
+  "formattedIssues": "string",
+  "rawIssues": [
     {
       "sourcePosition": {
-        "fileName": string,
-        "line": number,
-        "column": number,
-        "currentOffset": number,
-        "endOffset": number
+        "fileName": "string",
+        "line": "number",
+        "column": "number",
+        "currentOffset": "number",
+        "endOffset": "number"
       },
-      "description": string,
-      "severity": string      // e.g., "ERROR", "WARNING"
+      "description": "string",
+      "severity": "string"
     }
   ]
 }
@@ -98,6 +104,7 @@ The tool returns a `ValidationResult` object containing:
 ## Error Handling
 
 The tool will return errors for:
+
 - Missing or empty `source` parameter
 - API errors when calling the Firebase Rules service
 - Network connectivity issues
@@ -111,5 +118,7 @@ The tool will return errors for:
 
 ## Related Tools
 
-- [firestore-get-rules]({{< ref "firestore-get-rules" >}}): Retrieve current active rules
-- [firestore-query-collection]({{< ref "firestore-query-collection" >}}): Test rules by querying collections
+- [firestore-get-rules]({{< ref "firestore-get-rules" >}}): Retrieve current
+  active rules
+- [firestore-query-collection]({{< ref "firestore-query-collection" >}}): Test
+  rules by querying collections

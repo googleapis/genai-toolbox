@@ -2,7 +2,7 @@
 title: "firestore-list-collections"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-list-collections" tool lists collections in Firestore, either at the root level or as subcollections of a document.
 aliases:
 - /resources/tools/firestore-list-collections
@@ -10,10 +10,14 @@ aliases:
 
 ## About
 
-A `firestore-list-collections` tool lists [collections](https://firebase.google.com/docs/firestore/data-model#collections) in Firestore, either at the root level or as [subcollections](https://firebase.google.com/docs/firestore/data-model#subcollections) of a specific document.
+A `firestore-list-collections` tool lists
+[collections](https://firebase.google.com/docs/firestore/data-model#collections)
+in Firestore, either at the root level or as
+[subcollections](https://firebase.google.com/docs/firestore/data-model#subcollections)
+of a specific document.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
 `firestore-list-collections` takes an optional `parentPath` parameter to specify a document
 path. If provided, it lists all subcollections of that document. If not provided, it lists
@@ -31,8 +35,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "firestore-list-collections".                                                            |
-| source      |                   string                   |     true     | Name of the Firestore source to list collections from.                                           |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   |      **type**    | **required** | **description**                                        |
+|-------------|:----------------:|:------------:|--------------------------------------------------------|
+| kind        |      string      |     true     | Must be "firestore-list-collections".                  |
+| source      |      string      |     true     | Name of the Firestore source to list collections from. |
+| description |      string      |     true     | Description of the tool that is passed to the LLM.     |

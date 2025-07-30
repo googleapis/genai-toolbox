@@ -15,7 +15,8 @@ This guide assumes you have already done the following:
 
 ### Cloud Setup (Optional)
 
-If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using Gemini or PaLM models), follow these one-time setup steps:
+If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
+Gemini or PaLM models), follow these one-time setup steps:
 
 1. [Install the Google Cloud CLI]
 1. [Set up Application Default Credentials (ADC)]
@@ -29,8 +30,8 @@ If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using G
 [Go (v1.24.2 or higher)]: https://go.dev/doc/install
 [install-postgres]: https://www.postgresql.org/download/
 [Install the Google Cloud CLI]: https://cloud.google.com/sdk/docs/install
-[Set up Application Default Credentials (ADC)]: https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment
-
+[Set up Application Default Credentials (ADC)]:
+    https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment
 
 ## Step 1: Set up your database
 
@@ -166,7 +167,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -267,8 +268,10 @@ In this section, we will download Toolbox, configure our tools in a
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+
   {{< notice note >}}
-    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    Toolbox enables dynamic reloading by default. To disable, use the
+    `--disable-reload` flag.
   {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox
@@ -282,13 +285,15 @@ from Toolbox.
     go mod init main
     ```
 
-1. In a new terminal, install the [SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go).
+1. In a new terminal, install the
+   [SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go).
 
     ```bash
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-1. Create a new file named `hotelagent.go` and copy the following code to create an agent:
+1. Create a new file named `hotelagent.go` and copy the following code to create
+   an agent:
 
     {{< tabpane persist=header >}}
 {{< tab header="LangChain Go" lang="go" >}}
@@ -917,5 +922,6 @@ func main() {
     ```
 
 {{< notice info >}}
-For more information, visit the [Go SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-go).
+For more information, visit the [Go SDK
+repo](https://github.com/googleapis/mcp-toolbox-sdk-go).
 {{</ notice >}}

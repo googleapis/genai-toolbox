@@ -29,8 +29,11 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		"cloud-sql-mssql",
 		"cloud-sql-mysql",
 		"cloud-sql-postgres",
+		"dataplex",
 		"firestore",
 		"looker",
+		"mssql",
+		"mysql",
 		"postgres",
 		"spanner-postgres",
 		"spanner",
@@ -72,7 +75,10 @@ func TestGetPrebuiltTool(t *testing.T) {
 	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
 	cloudsqlmysql_config, _ := Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := Get("cloud-sql-mssql")
+	dataplex_config, _ := Get("dataplex")
 	firestoreconfig, _ := Get("firestore")
+	mysql_config, _ := Get("mysql")
+	mssql_config, _ := Get("mssql")
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
@@ -94,8 +100,17 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(cloudsqlmssql_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql mssql prebuilt tools yaml")
 	}
+	if len(dataplex_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch dataplex prebuilt tools yaml")
+	}
 	if len(firestoreconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch firestore prebuilt tools yaml")
+	}
+	if len(mysql_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch mysql prebuilt tools yaml")
+	}
+	if len(mssql_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch mssql prebuilt tools yaml")
 	}
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
