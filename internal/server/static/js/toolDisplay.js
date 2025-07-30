@@ -267,27 +267,37 @@ function createAuthTokenInfoDropdown() {
     content.appendChild(tabButtons);
 
     const tabContentContainer = document.createElement('div');
-    const standardTemplate = document.getElementById('auth-token-standard-template');
-    const standardAccount = document.importNode(standardTemplate.content, true).firstElementChild;
-    const serviceTemplate = document.getElementById('auth-token-service-template');
-    const serviceAccount = document.importNode(serviceTemplate.content, true).firstElementChild;
+    const standardAccInstructions = document.createElement('div');
+    const serviceAccInstructions = document.createElement('div');
 
-    tabContentContainer.appendChild(standardAccount);
-    tabContentContainer.appendChild(serviceAccount);
+    standardAccInstructions.id = 'auth-tab-standard';
+    standardAccInstructions.className = 'auth-tab-content active'; 
+    standardAccInstructions.innerHTML = AUTH_TOKEN_INSTRUCTIONS_STANDARD;
+    serviceAccInstructions.id = 'auth-tab-service';
+    serviceAccInstructions.className = 'auth-tab-content';
+    serviceAccInstructions.innerHTML = AUTH_TOKEN_INSTRUCTIONS_SERVICE_ACCOUNT;
+
+    tabContentContainer.appendChild(standardAccInstructions);
+    tabContentContainer.appendChild(serviceAccInstructions);
     content.appendChild(tabContentContainer);
 
     // switching tabs logic
     const tabBtns = [leftTab, rightTab];
+    const tabContents = [standardAccInstructions, serviceAccInstructions];
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             // deactivate all buttons and contents
             tabBtns.forEach(b => b.classList.remove('active'));
-            content.querySelectorAll('.auth-tab-content').forEach(c => c.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
 
-            // activate clicked button and corresponding content
             btn.classList.add('active');
+
             const tabId = btn.getAttribute('data-tab');
-            content.querySelector(`#auth-tab-${tabId}`).classList.add('active');
+            const activeContent = content.querySelector(`#auth-tab-${tabId}`);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
         });
     });
 
@@ -452,3 +462,49 @@ export function isParamIncluded(toolId, paramName) {
     console.warn(`Include checkbox not found for ID: ${includeCheckboxId}`);
     return null;
 }
+
+// Templates for inserting token retrieval instructions into edit header modal
+const AUTH_TOKEN_INSTRUCTIONS_SERVICE_ACCOUNT = `
+        <p>To obtain a Google OAuth ID token using a service account:</p>
+        <ol>
+            <li>Make sure you are on the intended SERVICE account (typically contain iam.gserviceaccount.com). Verify by running the command below.
+                <pre><code>gcloud auth list</code></pre>
+            </li>
+            <li>Print an id token with the audience set to your clientID defined in tools file:
+                <pre><code>gcloud auth print-identity-token --audiences=YOUR_CLIENT_ID_HERE</code></pre>
+            </li>
+            <li>Copy the output token.</li>
+            <li>Paste this token into the header in JSON editor. The key should be the name of your auth service followed by <code>_token</code>
+                <pre><code>{
+  "Content-Type": "application/json",
+  "my-google-auth_token": "YOUR_ID_TOKEN_HERE"
+}               </code></pre>
+            </li>
+        </ol>
+        <p>This token is typically short-lived.</p>`;
+
+const AUTH_TOKEN_INSTRUCTIONS_STANDARD = `
+        <p>To obtain a Google OAuth ID token using a standard account:</p>
+        <ol>
+            <li>Make sure you are on your intended standard account. Verify by running the command below.
+                <pre><code>gcloud auth list</code></pre>
+            </li>
+            <li>Within your Cloud Console, add the following link to the "Authorized Redirect URIs".</li>
+            <pre><code>https://developers.google.com/oauthplayground</code></pre>
+            <li>Go to the Google OAuth Playground site: <a href="https://developers.google.com/oauthplayground/" target="_blank">https://developers.google.com/oauthplayground/</a></li>
+            <li>In the top right settings menu, select "Use your own OAuth Credentials".</li>
+            <li>Input your clientID (from tools file), along with the client secret from Cloud Console.</li>
+            <li>Inside the Google OAuth Playground, select "Google OAuth2 API v2.</li>
+            <ul>
+                <li>Select "Authorize APIs".</li>
+                <li>Select "Exchange Authorization codes for tokens"</li>
+                <li>Copy the id_token field provided in the response.</li>
+            </ul>
+            <li>Paste this token into the header in JSON editor. The key should be the name of your auth service followed by <code>_token</code>
+                <pre><code>{
+  "Content-Type": "application/json",
+  "my-google-auth_token": "YOUR_ID_TOKEN_HERE"
+}               </code></pre>
+            </li>
+        </ol>
+        <p>This token is typically short-lived.</p>`;
