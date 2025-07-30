@@ -302,6 +302,9 @@ npm install genkit @genkit-ai/vertexai
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
+{{< tab header="JsGenai" lang="bash" >}}
+npm install @google/genai 
+{{< /tab >}}
 {{< /tabpane >}}
 
 1. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
@@ -563,6 +566,152 @@ async function main() {
 
 main();
 
+{{< /tab >}}
+
+
+{{< tab header="JsGenai" lang="js" >}}
+import { GoogleGenAI } from "@google/genai";
+import { ToolboxClient } from "@toolbox-sdk/core";
+import { z } from 'zod';
+
+const GOOGLE_API_KEY = 'your-api-key'; // <-- IMPORTANT: Update your API key here
+
+const prompt = `
+You're a helpful hotel assistant. You handle hotel searching, booking, and
+cancellations. When the user searches for a hotel, you MUST use the available tools to find information. Mention its name, id,
+location and price tier. Always mention hotel id while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
+`;
+
+const queries = [
+  "Find hotels in Basel with Basel in its name.",
+  "Can you book the Hilton Basel for me?",
+  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+  "My check in dates would be from April 10, 2024 to April 19, 2024.",
+];
+
+const toGeminiFunctionName = (name) => name.replace(/-/g, '_');
+const fromSnakeCaseToKebabCase = (name) => name.replace(/_/g, '-');
+
+function mapZodTypeToOpenAPIType(zodTypeName) {
+    const typeMap = {
+        'ZodString': 'string',
+        'ZodNumber': 'number',
+        'ZodBoolean': 'boolean',
+        'ZodArray': 'array',
+        'ZodObject': 'object',
+    };
+    return typeMap[zodTypeName] || 'string';
+}
+
+async function runApplication() {
+    const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
+    let toolboxTools = [];
+    try {
+        console.log("Loading toolset 'my-toolset'...");
+        toolboxTools = await toolboxClient.loadToolset("my-toolset");
+        console.log("Toolset loaded successfully.");
+    } catch (error) {
+        console.error("Failed to load toolset. Make sure your Toolbox server is running at http://127.0.0.1:5000:", error);
+        return;
+    }
+
+    // --- START: CORRECTED TOOL DEFINITION ---
+    const geminiTools = [{
+        // The key MUST be camelCase: functionDeclarations
+        functionDeclarations: toolboxTools.map(tool => {
+            const schema = tool.getParamSchema();
+            const properties = {};
+            const required = [];
+
+            if (schema instanceof z.ZodObject) {
+                for (const [key, param] of Object.entries(schema.shape)) {
+                    properties[key] = {
+                        type: mapZodTypeToOpenAPIType(param.constructor.name),
+                        description: param.description || '',
+                    };
+                    if (!param.isOptional()) {
+                        required.push(key);
+                    }
+                }
+            }
+            return {
+                name: toGeminiFunctionName(tool.getName()),
+                description: tool.getDescription(),
+                parameters: { type: 'object', properties, required },
+            };
+        })
+    }];
+   
+
+
+    const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
+    
+    const chat = genAI.chats.create({
+        model: "gemini-2.5-flash",
+        config: {
+            systemInstruction: prompt,
+            tools: geminiTools,
+        }
+    });
+
+    for (const query of queries) {
+        console.log(`\n\n-----------------------\n👤 User: ${query}\n-----------------------`);
+        
+        let currentResult = await chat.sendMessage({ message: query });
+        
+        // console.log(currentResult)
+        let loopCount = 0;
+        const MAX_LOOPS = 10;
+        let finalResponseGiven = false;
+
+        while (loopCount < MAX_LOOPS && !finalResponseGiven) {
+            const response = currentResult;
+            const functionCalls = response.functionCalls || [];
+
+            if (functionCalls.length === 0) {
+                console.log(`🤖 Assistant:\n${response.text}`);
+                finalResponseGiven = true;
+            } else {
+                console.log(`[🔎 Model requested tool call(s): ${functionCalls.map(fc => fromSnakeCaseToKebabCase(fc.name)).join(', ')}]`);
+                
+                const toolResponses = [];
+                for (const call of functionCalls) {
+                    const toolName = fromSnakeCaseToKebabCase(call.name);
+                    const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
+                    
+                    if (toolToExecute) {
+                        try {
+                            const functionResult = await toolToExecute(call.args);
+                            console.log(`[✅ Tool '${toolName}' executed successfully.]`);
+                            toolResponses.push({
+                                functionResponse: { name: call.name, response: { result: functionResult } }
+                            });
+                        } catch (e) {
+                            console.error(`[❌ Error executing tool '${toolName}':]`, e);
+                            toolResponses.push({
+                                functionResponse: { name: call.name, response: { error: e.message } }
+                            });
+                        }
+                    }
+                }
+                
+                currentResult = await chat.sendMessage({ message: toolResponses });
+            }
+            loopCount++;
+        }
+        if (loopCount >= MAX_LOOPS) {
+            console.warn(`[⚠️ Warning: Maximum interaction loops (${MAX_LOOPS}) reached.]`);
+        }
+    }
+}
+
+runApplication()
+  .catch(console.error)
+  .finally(() => console.log("\nApplication finished."));
 {{< /tab >}}
 
 {{< /tabpane >}}
