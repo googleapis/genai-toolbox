@@ -30,8 +30,8 @@ function renderNavbar(containerId, activePath) {
                 <img src="/ui/assets/mcptoolboxlogo.png" alt="App Logo">
             </div>
             <ul>
-                <li><a href="/ui/sources">Sources</a></li>
-                <li><a href="/ui/authservices">Auth Services</a></li>
+                <!--<li><a href="/ui/sources">Sources</a></li>-->
+                <!--<li><a href="/ui/authservices">Auth Services</a></li>-->
                 <li><a href="/ui/tools">Tools</a></li>
                 <li><a href="/ui/toolsets">Toolsets</a></li>
             </ul>
