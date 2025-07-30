@@ -135,25 +135,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	query := t.Client.Query(sql)
 	query.Location = t.Client.Location
 
-	// This block handles Data Manipulation Language (DML) and Data Definition Language (DDL) statements.
-	// These statements (e.g., INSERT, UPDATE, CREATE TABLE) do not return a row set.
-	// Instead, we execute them as a job, wait for completion, and return a success
-	// message, including the number of affected rows for DML operations.
-	if statementType != "SELECT" {
-		job, err := query.Run(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to start DML/DDL job: %w", err)
-		}
-		status, err := job.Wait(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to wait for DML/DDL job to complete: %w", err)
-		}
-		if err := status.Err(); err != nil {
-			return nil, fmt.Errorf("DML/DDL job failed with error: %w", err)
-		}
-		return "Operation completed successfully.", nil
-	}
-
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
 	// column names to values, and return the collection of rows.
@@ -177,10 +158,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		}
 		out = append(out, vMap)
 	}
-	if out == nil {
+	// If the query returned any rows, return them directly.
+	if len(out) > 0 {
+		return out, nil
+	}
+
+	// This handles the standard case for a SELECT query that successfully
+	// executes but returns zero rows.
+	if statementType == "SELECT" {
 		return "The query returned 0 rows.", nil
 	}
-	return out, nil
+	// This is the fallback for a successful query that doesn't return content.
+	// In most cases, this will be for DML/DDL statements like INSERT, UPDATE, CREATE, etc.
+	// However, it is also possible that this was a query that was expected to return rows
+	// but returned none, a case that we cannot distinguish here.
+	return "Query executed successfully and returned no content.", nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
