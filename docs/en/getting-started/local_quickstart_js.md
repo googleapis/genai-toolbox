@@ -567,14 +567,14 @@ async function main() {
 main();
 
 {{< /tab >}}
-
-
 {{< tab header="JsGenai" lang="js" >}}
+
+
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { z } from 'zod';
 
-const GOOGLE_API_KEY = 'your-api-key'; // <-- IMPORTANT: Update your API key here
+const GOOGLE_API_KEY = 'enter-your-api-here'; // <-- IMPORTANT: Update your API key here
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -619,9 +619,7 @@ async function runApplication() {
         return;
     }
 
-    // --- START: CORRECTED TOOL DEFINITION ---
     const geminiTools = [{
-        // The key MUST be camelCase: functionDeclarations
         functionDeclarations: toolboxTools.map(tool => {
             const schema = tool.getParamSchema();
             const properties = {};
@@ -659,11 +657,9 @@ async function runApplication() {
     });
 
     for (const query of queries) {
-        console.log(`\n\n-----------------------\n👤 User: ${query}\n-----------------------`);
-        
+
+        console.log(query)
         let currentResult = await chat.sendMessage({ message: query });
-        
-        // console.log(currentResult)
         let loopCount = 0;
         const MAX_LOOPS = 10;
         let finalResponseGiven = false;
@@ -673,11 +669,9 @@ async function runApplication() {
             const functionCalls = response.functionCalls || [];
 
             if (functionCalls.length === 0) {
-                console.log(`🤖 Assistant:\n${response.text}`);
+                console.log(response.text);
                 finalResponseGiven = true;
             } else {
-                console.log(`[🔎 Model requested tool call(s): ${functionCalls.map(fc => fromSnakeCaseToKebabCase(fc.name)).join(', ')}]`);
-                
                 const toolResponses = [];
                 for (const call of functionCalls) {
                     const toolName = fromSnakeCaseToKebabCase(call.name);
@@ -686,12 +680,11 @@ async function runApplication() {
                     if (toolToExecute) {
                         try {
                             const functionResult = await toolToExecute(call.args);
-                            console.log(`[✅ Tool '${toolName}' executed successfully.]`);
                             toolResponses.push({
                                 functionResponse: { name: call.name, response: { result: functionResult } }
                             });
                         } catch (e) {
-                            console.error(`[❌ Error executing tool '${toolName}':]`, e);
+                            console.error(`[ Error executing tool '${toolName}':]`, e);
                             toolResponses.push({
                                 functionResponse: { name: call.name, response: { error: e.message } }
                             });
@@ -704,7 +697,7 @@ async function runApplication() {
             loopCount++;
         }
         if (loopCount >= MAX_LOOPS) {
-            console.warn(`[⚠️ Warning: Maximum interaction loops (${MAX_LOOPS}) reached.]`);
+            console.warn(`[Warning: Maximum interaction loops (${MAX_LOOPS}) reached.]`);
         }
     }
 }
