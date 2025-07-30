@@ -1,7 +1,7 @@
 ---
 title: "TiDB"
 type: docs
-weight: 2
+weight: 1
 description: >
   TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
 
