@@ -34,7 +34,7 @@ export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) 
         renderToolList(apiResponse, secondNavContent, toolDisplayArea);
     } catch (error) {
         console.error('Failed to load tools:', error);
-        secondNavContent.innerHTML = '<p class="error">Failed to load tools. Please try again later.</p>';
+        secondNavContent.innerHTML = `<p class="error">Failed to load tools: <pre><code>${error}</code></pre></p>`;
     }
 }
 
