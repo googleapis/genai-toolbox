@@ -75,6 +75,37 @@ func initTiDBConnectionPool(host, port, user, pass, dbname string, useSSL bool) 
 	return pool, nil
 }
 
+// getTiDBWants return the expected wants for tidb
+func getTiDBWants() (string, string, string) {
+	select1Want := "[{\"1\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 5 near \"SELEC 1;\" "}],"isError":true}}`
+	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
+	return select1Want, failInvocationWant, createTableStatement
+}
+
+// addTiDBExecuteSqlConfig gets the tools config for `tidb-execute-sql`
+func addTiDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "tidb-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "tidb-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
 func TestTiDBToolEndpoints(t *testing.T) {
 	sourceConfig := getTiDBVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -104,7 +135,7 @@ func TestTiDBToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, TiDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddTiDBExecuteSqlConfig(t, toolsFile)
+	toolsFile = addTiDBExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TiDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -124,7 +155,7 @@ func TestTiDBToolEndpoints(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetTiDBWants()
+	select1Want, failInvocationWant, createTableStatement := getTiDBWants()
 	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)

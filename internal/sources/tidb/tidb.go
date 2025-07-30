@@ -116,11 +116,6 @@ func initTiDBConnectionPool(ctx context.Context, tracer trace.Tracer, name, host
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// If the host is a TiDB Cloud instance, force to use SSL
-	if IsTiDBCloudHost(host) {
-		useSSL = true
-	}
-
 	// Configure the driver to connect to the database
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&tls=%t", user, pass, host, port, dbname, useSSL)
 

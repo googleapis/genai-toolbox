@@ -315,29 +315,6 @@ func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// AddTiDBExecuteSqlConfig gets the tools config for `tidb-execute-sql`
-func AddTiDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
-	tools, ok := config["tools"].(map[string]any)
-	if !ok {
-		t.Fatalf("unable to get tools from config")
-	}
-	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "tidb-execute-sql",
-		"source":      "my-instance",
-		"description": "Tool to execute sql",
-	}
-	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "tidb-execute-sql",
-		"source":      "my-instance",
-		"description": "Tool to execute sql",
-		"authRequired": []string{
-			"my-google-auth",
-		},
-	}
-	config["tools"] = tools
-	return config
-}
-
 // GetPostgresSQLParamToolInfo returns statements and param for my-tool postgres-sql kind
 func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
@@ -450,14 +427,6 @@ func GetMSSQLWants() (string, string, string) {
 func GetMySQLWants() (string, string, string) {
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
-	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
-	return select1Want, failInvocationWant, createTableStatement
-}
-
-// GetTiDBWants return the expected wants for tidb
-func GetTiDBWants() (string, string, string) {
-	select1Want := "[{\"1\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 5 near \"SELEC 1;\" "}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
 	return select1Want, failInvocationWant, createTableStatement
 }
