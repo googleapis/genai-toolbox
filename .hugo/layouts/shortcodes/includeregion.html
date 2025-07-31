@@ -1,0 +1,49 @@
+{{/* includeregion.html
+Usage:
+  {{< includeregion "filename.md" "region_name" "lang" >}}
+  {{< includeregion "filename.md" "region_name" >}}
+*/}}
+
+{{ $file := .Get 0 }}
+{{ $region := .Get 1 }}
+{{ $lang := .Get 2 }}
+{{ $path := printf "%s%s" .Page.File.Dir $file }}
+
+{{ if not $file }}
+  {{ errorf "The file parameter (first argument) is required for includeregion in %s" .Page.File.Path }}
+{{ end }}
+
+{{ if not $region }}
+  {{ errorf "The region parameter (second argument) is required for includeregion in %s" .Page.File.Path }}
+{{ end }}
+
+{{ if not (fileExists $path) }}
+  {{ errorf "File %q not found (resolved from includeregion) in %s" $path .Page.File.Path }}
+{{ end }}
+
+{{ $content := readFile $path }}
+{{ $cleanContent := replaceRE "^---[\\s\\S]+?---" "" $content }}
+
+{{ $start := printf "<!-- [START %s] -->" $region }}
+{{ $end := printf "<!-- [END %s] -->" $region }}
+
+{{ $parts := split $cleanContent $start }}
+{{ if lt (len $parts) 2 }}
+  {{ errorf "Region start tag %q not found in file %s" $start $file }}
+{{ end }}
+
+{{ $rest := index $parts 1 }}
+{{ $parts = split $rest $end }}
+{{ if lt (len $parts) 2 }}
+  {{ errorf "Region end tag %q not found after start tag in file %s" $end $file }}
+{{ end }}
+
+{{ $regionContent := index $parts 0 }}
+
+{{ if $lang }}
+```{{ $lang }}
+{{ $regionContent }}
+```
+{{ else }}
+{{ $regionContent | markdownify }}
+{{ end }}
