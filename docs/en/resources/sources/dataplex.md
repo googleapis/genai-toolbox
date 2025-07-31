@@ -59,7 +59,7 @@ Entry represents a specific data asset. Entry acts as a metadata record for some
 
 - A BigQuery table or dataset
 - A Cloud Storage bucket or folder
-- An on-premises sql table
+- An on-premises SQL table
 
 ## Aspects
 While the Entry itself is a container, the rich descriptive information about the asset (e.g., schema, data types, business descriptions, classifications) is stored in associated components called Aspects. Aspects are created based on pre-defined blueprints known as Aspect Types.
@@ -298,4 +298,4 @@ Logical operators aren't case-sensitive. For example, both or and OR are accepta
 | **field** | **type** | **required** | **description**                                                                  |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "dataplex".                                                              |
-| project   |  string  |     true     | Id of the GCP project used for quota and billing purposes (e.g. "my-project-id").|
+| project   |  string  |     true     | ID of the GCP project used for quota and billing purposes (e.g. "my-project-id").|
