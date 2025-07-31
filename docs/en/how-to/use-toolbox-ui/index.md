@@ -1,17 +1,14 @@
 ---
-title: "Use Toolbox UI"
+title: "Toolbox UI"
 type: docs
 weight: 1
 description: >
   How to effectively use Toolbox UI.
 ---
 
-## Toolbox UI
+Toolbox UI is a built-in web interface that allows users to visually inspect and test out configured resources such as tools and toolsets.
 
-Toolbox includes a built-in web interface that allows users to test out tools
-and toolsets, which can help to speed up development. 
-
-### Launching Toolbox UI
+## Launching Toolbox UI
 
 To launch Toolbox's interactive UI, use the `--ui` flag.
 
@@ -19,10 +16,14 @@ To launch Toolbox's interactive UI, use the `--ui` flag.
 ./toolbox --ui
 ```
 
-Toolbox UI will be served from the same port as the Toolbox server, with the `/ui` suffix. On the default
-port 5000, Toolbox UI will be accessible via navigating to [localhost:5000/ui](https://localhost:5000/ui) on a browser.
+Toolbox UI will be served from the same host and port as the Toolbox Server, with the `/ui` suffix. Once Toolbox
+is launched, the following INFO log with Toolbox UI's url will be shown:
 
-### Navigating the Tools Page
+```bash
+INFO "Toolbox UI is up and running at: http://localhost:5000/ui"
+```
+
+## Navigating the Tools Page
 
 The tools page shows all tools loaded from your configuration file. This corresponds to the default toolset (represented by an empty string). Each tool's name on this page will exactly match its name in the configuration 
 file.
@@ -32,37 +33,28 @@ with the tool name, description, and available parameters.
 
 ![Tools Page](./tools.png)
 
-#### Excluding Parameters
+### Invoking a Tool
 
-Toolbox UI also supports explicitly testing tool invocations without certain parameters. To exclude a
-parameter, uncheck the box to the right of an associated parameter, and that parameter will not be
-included in the request body.
+1. Click on a Tool
+2. Enter appropriate parameters in each parameter field
+3. Click "Run Tool"
+4. Done! Your results will appear in the response field
+5. (Optional) Uncheck "Prettify JSON" to format the response as plain text
 
-If the box is checked, this indicates the parameter will be sent exactly as entered in the response field.
-For strings, an empty field gets sent as an empty string. For other required parameter types, an empty field 
-will display an error message.
+![Run Tool Demo GIF](./run-tool.gif)
 
-Optional parameter included (default):
+### Optional Parameters
+
+Toolbox allows users to add [optional parameters](../../resources/tools/#basic-parameters) with or without a default value. 
+
+To exclude a parameter, uncheck the box to the right of an associated parameter, and that parameter will not be
+included in the request body. If the parameter is not sent, Toolbox will either use it as `nil` value or the `default` value, if configured. If the parameter is required, Toolbox will throw an error.
+
+When the box is checked, parameter will be sent exactly as entered in the response field (e.g. empty string).
 
 ![Optional Parameter checked example](./optional-param-checked.png)
 
-Optional parameter excluded (will not be sent in request body):
-
 ![Optional Parameter unchecked example](./optional-param-unchecked.png)
-
-#### Running Tools
-
-To run a tool, press the "Run Tool" button. The UI will send the configured request to the Toolbox API's invoke endpoint. The API response or any error message will be displayed in the "Response" section at the bottom of the page.
-
-### Navigating the Toolsets Page
-
-Through the toolsets page, users can search for a specific toolset to retrieve tools from. Simply
-enter the toolset name in the search bar, and press "Enter" to retrieve the associated tools.
-
-If the toolset name is not defined within the tools configuration file, an error message will be 
-displayed.
-
-![Toolsets Page](./toolsets.png)
 
 ### Editing Headers
 
@@ -85,9 +77,30 @@ To provide the token, add your Google OAuth ID Token to the request header using
 button and modal described above. The key should be the name of your AuthService as defined in 
 your tool configuration file, suffixed with `_token`. The value should be your ID token as a string.
 
+1. Select a tool that requires [authenticated parameters]()
+2. The auth parameter's text field is greyed out. This is because it cannot be entered manually and will
+be parsed from the resolved auth token
+3. To update request headers with the token, select "Edit Headers"
+4. Checkout the dropdown "How to extract Google OAuth ID Token manually" for guidance on retrieving ID token
+5. Paste the request header
+6. Click "Save"
+7. Click "Run Tool"
+
 ```json
 {
   "Content-Type": "application/json",
   "my-google-auth_token": "YOUR_ID_TOKEN_HERE"
 }
 ```
+
+![Using Authenticated Parameter GIF](./edit-headers.gif)
+
+## Navigating the Toolsets Page
+
+Through the toolsets page, users can search for a specific toolset to retrieve tools from. Simply
+enter the toolset name in the search bar, and press "Enter" to retrieve the associated tools.
+
+If the toolset name is not defined within the tools configuration file, an error message will be 
+displayed.
+
+![Toolsets Page](./toolsets.png)
