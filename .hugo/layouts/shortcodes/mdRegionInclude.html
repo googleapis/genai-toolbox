@@ -1,12 +1,10 @@
-{{/* includeregion.html
+{{/* mdRegionInclude.html
 Usage:
-  {{< includeregion "filename.md" "region_name" "lang" >}}
-  {{< includeregion "filename.md" "region_name" >}}
+  {{< mdRegionInclude "filename.md" "region_name" >}}
 */}}
 
 {{ $file := .Get 0 }}
 {{ $region := .Get 1 }}
-{{ $lang := .Get 2 }}
 {{ $path := printf "%s%s" .Page.File.Dir $file }}
 
 {{ if not $file }}
@@ -40,10 +38,4 @@ Usage:
 
 {{ $regionContent := index $parts 0 }}
 
-{{ if $lang }}
-```{{ $lang }}
-{{ $regionContent }}
-```
-{{ else }}
 {{ $regionContent | markdownify }}
-{{ end }}
