@@ -60,3 +60,4 @@ instead of hardcoding your secrets into the configuration file.
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
 | user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
 | password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
+| rawQuery  |  string  |     false    | Raw query to be added to the db connection string.                     |

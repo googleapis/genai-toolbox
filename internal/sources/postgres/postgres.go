@@ -52,6 +52,7 @@ type Config struct {
 	User     string `yaml:"user" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 	Database string `yaml:"database" validate:"required"`
+	RawQuery string `yaml:"rawQuery"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -59,7 +60,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.RawQuery)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -93,17 +94,18 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, rawQuery string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	url := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(user, pass),
-		Host:   fmt.Sprintf("%s:%s", host, port),
-		Path:   dbname,
+		Scheme:   "postgres",
+		User:     url.UserPassword(user, pass),
+		Host:     fmt.Sprintf("%s:%s", host, port),
+		Path:     dbname,
+		RawQuery: rawQuery,
 	}
 	pool, err := pgxpool.New(ctx, url.String())
 	if err != nil {
