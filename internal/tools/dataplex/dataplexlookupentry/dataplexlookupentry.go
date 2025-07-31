@@ -106,7 +106,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: parameters.McpManifest(),
 	}
 
-	t := &LookupTool{
+	t := &Tool{
 		Name:          cfg.Name,
 		Kind:          kind,
 		Parameters:    parameters,
@@ -122,7 +122,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-type LookupTool struct {
+type Tool struct {
 	Name          string
 	Kind          string
 	Parameters    tools.Parameters
@@ -132,11 +132,11 @@ type LookupTool struct {
 	mcpManifest   tools.McpManifest
 }
 
-func (t *LookupTool) Authorized(verifiedAuthServices []string) bool {
+func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t *LookupTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	viewMap := map[int]dataplexpb.EntryView{
 		1: dataplexpb.EntryView_BASIC,
@@ -167,17 +167,17 @@ func (t *LookupTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	return result, nil
 }
 
-func (t *LookupTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	// Parse parameters from the provided data
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t *LookupTool) Manifest() tools.Manifest {
+func (t *Tool) Manifest() tools.Manifest {
 	// Returns the tool manifest
 	return t.manifest
 }
 
-func (t *LookupTool) McpManifest() tools.McpManifest {
+func (t *Tool) McpManifest() tools.McpManifest {
 	// Returns the tool MCP manifest
 	return t.mcpManifest
 }

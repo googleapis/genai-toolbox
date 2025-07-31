@@ -92,7 +92,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: parameters.McpManifest(),
 	}
 
-	t := &SearchTool{
+	t := &Tool{
 		Name:          cfg.Name,
 		Kind:          kind,
 		Parameters:    parameters,
@@ -109,7 +109,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-type SearchTool struct {
+type Tool struct {
 	Name          string
 	Kind          string
 	Parameters    tools.Parameters
@@ -120,11 +120,11 @@ type SearchTool struct {
 	mcpManifest   tools.McpManifest
 }
 
-func (t *SearchTool) Authorized(verifiedAuthServices []string) bool {
+func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
 	pageSize, _ := paramsMap["pageSize"].(int32)
@@ -157,17 +157,17 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	return results, nil
 }
 
-func (t *SearchTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	// Parse parameters from the provided data
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t *SearchTool) Manifest() tools.Manifest {
+func (t *Tool) Manifest() tools.Manifest {
 	// Returns the tool manifest
 	return t.manifest
 }
 
-func (t *SearchTool) McpManifest() tools.McpManifest {
+func (t *Tool) McpManifest() tools.McpManifest {
 	// Returns the tool MCP manifest
 	return t.mcpManifest
 }
