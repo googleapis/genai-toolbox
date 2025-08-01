@@ -75,9 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
-	exploreParameter := tools.NewStringParameter("explore", "The explore containing the measures.")
-	parameters := tools.Parameters{modelParameter, exploreParameter}
+	parameters := lookercommon.GetFieldParameters()
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -121,20 +119,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
-	mapParams := params.AsMap()
-	model, ok := mapParams["model"].(string)
-	if !ok {
-		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
-	}
-	explore, ok := mapParams["explore"].(string)
-	if !ok {
-		return nil, fmt.Errorf("'explore' must be a string, got %T", mapParams["explore"])
+	model, explore, err := lookercommon.ProcessFieldArgs(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("error processing model or explore: %w", err)
 	}
 
 	fields := lookercommon.MeasuresFields
 	req := v4.RequestLookmlModelExplore{
-		LookmlModelName: model,
-		ExploreName:     explore,
+		LookmlModelName: *model,
+		ExploreName:     *explore,
 		Fields:          &fields,
 	}
 	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
