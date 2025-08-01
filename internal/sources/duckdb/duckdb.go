@@ -99,7 +99,7 @@ func initDuckDbConnection(ctx context.Context, tracer trace.Tracer, name string,
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	var configStr string = getDuckDbConfiguration(dbFilePath, duckdbConfiguration)
+	var configStr = getDuckDbConfiguration(dbFilePath, duckdbConfiguration)
 
 	//Open database connection
 	db, err := sql.Open("duckdb", configStr)
