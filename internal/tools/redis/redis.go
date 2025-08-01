@@ -193,19 +193,24 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 			replaced := part
 			isArray := false
 			var arrayItems []any
-			for _, p := range params {
-				placeholder := "$" + p.GetName()
-				v, ok := paramMap[placeholder]
-				if ok {
+
+			if v, ok := paramMap[part]; ok {
+				if typeMap[part] == "array" {
+					isArray = true
+					arrayItems = v.([]any)
+				} else {
+					replaced = fmt.Sprintf("%v", v)
+				}
+			} else {
+				for placeholder, v := range paramMap {
 					replaced = strings.ReplaceAll(replaced, placeholder, fmt.Sprintf("%v", v))
-					if part == placeholder && typeMap[placeholder] == "array" {
-						isArray = true
-						arrayItems = v.([]any)
-					}
 				}
 			}
+
 			if isArray {
 				for _, item := range arrayItems {
+					// Nested arrays will only be expanded once
+					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
 					newCmd = append(newCmd, fmt.Sprintf("%s", item))
 				}
 				continue
