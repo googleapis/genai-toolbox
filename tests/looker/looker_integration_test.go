@@ -178,7 +178,7 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"authSources": []any{},
-						"description": "The explore containing the dimensions.",
+						"description": "The explore containing the fields.",
 						"name":        "explore",
 						"required":    true,
 						"type":        "string",
@@ -202,7 +202,7 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"authSources": []any{},
-						"description": "The explore containing the measures.",
+						"description": "The explore containing the fields.",
 						"name":        "explore",
 						"required":    true,
 						"type":        "string",
