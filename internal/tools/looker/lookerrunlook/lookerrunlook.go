@@ -45,10 +45,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string `yaml:"name" validate:"required"`
-	Kind         string `yaml:"kind" validate:"required"`
-	Source       string `yaml:"source" validate:"required"`
-	Description  string `yaml:"description" validate:"required"`
+	Name        string `yaml:"name" validate:"required"`
+	Kind        string `yaml:"kind" validate:"required"`
+	Source      string `yaml:"source" validate:"required"`
+	Description string `yaml:"description" validate:"required"`
 	// AuthRequired specifies the authentication services required for this tool.
 	// Currently, this field is not actively used for authorization checks within the tool itself,
 	// as the Authorized method always returns true. It is included for potential future extensibility.

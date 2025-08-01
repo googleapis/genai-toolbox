@@ -36,7 +36,7 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 	if err != nil {
 		// This should ideally not happen if the context is properly set up.
 		// Log and return an empty map or handle as appropriate for your error strategy.
-		return data, fmt.Errorf("Error getting logger from context in ExtractLookerFieldProperties: %v\n", err)
+		return data, fmt.Errorf("error getting logger from context in ExtractLookerFieldProperties: %v", err)
 	}
 
 	for _, v := range *fields {
@@ -64,7 +64,7 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 // CheckLookerExploreFields checks if the Fields object in LookmlModelExplore is nil before accessing its sub-fields.
 func CheckLookerExploreFields(resp *v4.LookmlModelExplore) error {
 	if resp == nil || resp.Fields == nil {
-		return fmt.Errorf("Looker API response or its Fields object is nil")
+		return fmt.Errorf("looker API response or its fields object is nil")
 	}
 	return nil
 }
