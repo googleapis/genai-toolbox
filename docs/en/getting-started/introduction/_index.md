@@ -321,7 +321,7 @@ const toolboxTools = await client.loadToolset('toolsetName');
 const getTool = (toolboxTool) => tool({
     name: toolboxTool.getName(),
     description: toolboxTool.getDescription(),
-    parameters: toolboxTool.getParams(),
+    parameters: toolboxTool.getParamSchema(),
     execute: toolboxTool
 });;
 

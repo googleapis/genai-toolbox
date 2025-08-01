@@ -51,8 +51,10 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/duckdbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
@@ -69,6 +71,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetparameters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
@@ -107,6 +110,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/duckdb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
@@ -216,7 +220,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 

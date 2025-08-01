@@ -114,6 +114,20 @@ tools:
 
           The result of the query sql tool is SQL text.
 
+    query_url:
+        kind: looker-query-url
+        source: looker-source
+        description: |
+          Query URL Tool
+
+          This tool is used to generate the URL of a query in Looker.
+          The user can then explore the query further inside Looker.
+          The tool also returns the query_id and slug. The parameters
+          are the same as the query tool.
+
+          The result is a JSON object with the id, slug, the url, and
+          the long_url.
+
     get_looks:
         kind: looker-get-looks
         source: looker-source
@@ -154,5 +168,6 @@ toolsets:
         - get_parameters
         - query
         - query_sql
+        - query_url
         - get_looks
         - run_look
