@@ -71,6 +71,12 @@ func CheckLookerExploreFields(resp *v4.LookmlModelExplore) error {
 	return nil
 }
 
+func GetFieldParameters() tools.Parameters {
+	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
+	exploreParameter := tools.NewStringParameter("explore", "The explore containing the fields.")
+	return tools.Parameters{modelParameter, exploreParameter}
+}
+
 func GetQueryParameters() tools.Parameters {
 	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
 	exploreParameter := tools.NewStringParameter("explore", "The explore to be queried.")
@@ -106,6 +112,19 @@ func GetQueryParameters() tools.Parameters {
 		limitParameter,
 		tzParameter,
 	}
+}
+
+func ProcessFieldArgs(ctx context.Context, params tools.ParamValues) (*string, *string, error) {
+	mapParams := params.AsMap()
+	model, ok := mapParams["model"].(string)
+	if !ok {
+		return nil, nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
+	}
+	explore, ok := mapParams["explore"].(string)
+	if !ok {
+		return nil, nil, fmt.Errorf("'explore' must be a string, got %T", mapParams["explore"])
+	}
+	return &model, &explore, nil
 }
 
 func ProcessQueryArgs(ctx context.Context, params tools.ParamValues) (*v4.WriteQuery, error) {
