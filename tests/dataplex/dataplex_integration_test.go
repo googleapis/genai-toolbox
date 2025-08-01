@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -39,6 +40,7 @@ import (
 var (
 	DataplexSourceKind            = "dataplex"
 	DataplexSearchEntriesToolKind = "dataplex-search-entries"
+	DataplexLookupEntryToolKind   = "dataplex-lookup-entry"
 	DataplexProject               = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -69,7 +71,7 @@ func initBigQueryConnection(ctx context.Context, project string) (*bigqueryapi.C
 
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -94,7 +96,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	waitCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
@@ -102,8 +104,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runDataplexSearchEntriesToolGetTest(t)
+	runDataplexToolGetTest(t)
 	runDataplexSearchEntriesToolInvokeTest(t, tableName, datasetName)
+	runDataplexLookupEntryToolInvokeTest(t, tableName, datasetName)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -169,11 +172,34 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 		"sources": map[string]any{
 			"my-dataplex-instance": sourceConfig,
 		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": tests.ClientId,
+			},
+		},
 		"tools": map[string]any{
-			"my-search-entries-tool": map[string]any{
+			"my-dataplex-search-entries-tool": map[string]any{
 				"kind":        DataplexSearchEntriesToolKind,
 				"source":      "my-dataplex-instance",
 				"description": "Simple tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-search-entries-tool": map[string]any{
+				"kind":         DataplexSearchEntriesToolKind,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-dataplex-lookup-entry-tool": map[string]any{
+				"kind":        DataplexLookupEntryToolKind,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex lookup entry tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-lookup-entry-tool": map[string]any{
+				"kind":         DataplexLookupEntryToolKind,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex lookup entry tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
 			},
 		},
 	}
@@ -181,80 +207,134 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 	return toolsFile
 }
 
-func runDataplexSearchEntriesToolGetTest(t *testing.T) {
-	resp, err := http.Get("http://127.0.0.1:5000/api/tool/my-search-entries-tool/")
-	if err != nil {
-		t.Fatalf("error making GET request: %s", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("expected status code 200, got %d", resp.StatusCode)
-	}
-	var body map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		t.Fatalf("error decoding response body: %s", err)
-	}
-	got, ok := body["tools"]
-	if !ok {
-		t.Fatalf("unable to find 'tools' key in response body")
+func runDataplexToolGetTest(t *testing.T) {
+	testCases := []struct {
+		name           string
+		toolName       string
+		expectedParams []string
+	}{
+		{
+			name:           "get my-dataplex-search-entries-tool",
+			toolName:       "my-dataplex-search-entries-tool",
+			expectedParams: []string{"pageSize", "pageToken", "query", "orderBy", "semanticSearch"},
+		},
+		{
+			name:           "get my-dataplex-lookup-entry-tool",
+			toolName:       "my-dataplex-lookup-entry-tool",
+			expectedParams: []string{"name", "view", "aspectTypes", "entry"},
+		},
 	}
 
-	toolsMap, ok := got.(map[string]interface{})
-	if !ok {
-		t.Fatalf("tools is not a map")
-	}
-	tool, ok := toolsMap["my-search-entries-tool"].(map[string]interface{})
-	if !ok {
-		t.Fatalf("tool not found in manifest")
-	}
-	params, ok := tool["parameters"].([]interface{})
-	if !ok {
-		t.Fatalf("parameters not found")
-	}
-	paramNames := []string{}
-	for _, param := range params {
-		paramMap, ok := param.(map[string]interface{})
-		if ok {
-			paramNames = append(paramNames, paramMap["name"].(string))
-		}
-	}
-	expected := []string{"name", "pageSize", "pageToken", "orderBy", "query"}
-	for _, want := range expected {
-		found := false
-		for _, got := range paramNames {
-			if got == want {
-				found = true
-				break
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/", tc.toolName))
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
 			}
-		}
-		if !found {
-			t.Fatalf("expected parameter %q not found in tool parameters", want)
-		}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Fatalf("response status code is not 200")
+			}
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+			got, ok := body["tools"]
+			if !ok {
+				t.Fatalf("unable to find tools in response body")
+			}
+
+			toolsMap, ok := got.(map[string]interface{})
+			if !ok {
+				t.Fatalf("expected 'tools' to be a map, got %T", got)
+			}
+			tool, ok := toolsMap[tc.toolName].(map[string]interface{})
+			if !ok {
+				t.Fatalf("expected tool %q to be a map, got %T", tc.toolName, toolsMap[tc.toolName])
+			}
+			params, ok := tool["parameters"].([]interface{})
+			if !ok {
+				t.Fatalf("expected 'parameters' to be a slice, got %T", tool["parameters"])
+			}
+			paramSet := make(map[string]struct{})
+			for _, param := range params {
+				paramMap, ok := param.(map[string]interface{})
+				if ok {
+					if name, ok := paramMap["name"].(string); ok {
+						paramSet[name] = struct{}{}
+					}
+				}
+			}
+			var missing []string
+			for _, want := range tc.expectedParams {
+				if _, found := paramSet[want]; !found {
+					missing = append(missing, want)
+				}
+			}
+			if len(missing) > 0 {
+				t.Fatalf("missing parameters for tool %q: %v", tc.toolName, missing)
+			}
+		})
 	}
 }
 
 func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, datasetName string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
 
 	testCases := []struct {
 		name           string
-		tableName      string
-		datasetName    string
+		api            string
+		requestHeader  map[string]string
+		requestBody    io.Reader
 		wantStatusCode int
 		expectResult   bool
 		wantContentKey string
 	}{
 		{
 			name:           "Success - Entry Found",
-			tableName:      tableName,
-			datasetName:    datasetName,
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "dataplex_entry",
 		},
 		{
+			name:           "Success with Authorization - Entry Found",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "dataplex_entry",
+		},
+		{
+			name:           "Failure - Invalid Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			wantStatusCode: 401,
+			expectResult:   false,
+			wantContentKey: "dataplex_entry",
+		},
+		{
+			name:           "Failure - Without Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			wantStatusCode: 401,
+			expectResult:   false,
+			wantContentKey: "dataplex_entry",
+		},
+		{
 			name:           "Failure - Entry Not Found",
-			tableName:      "",
-			datasetName:    "",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"query":"displayname=\"\" system=bigquery parent=\"\""}`)),
 			wantStatusCode: 200,
 			expectResult:   false,
 			wantContentKey: "",
@@ -263,19 +343,23 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			query := fmt.Sprintf("displayname=\"%s\" system=bigquery parent:\"%s\"", tc.tableName, tc.datasetName)
-			reqBodyMap := map[string]string{"query": query}
-			reqBodyBytes, err := json.Marshal(reqBodyMap)
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
 			if err != nil {
-				t.Fatalf("error marshalling request body: %s", err)
+				t.Fatalf("unable to create request: %s", err)
 			}
-			resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-search-entries-tool/invoke", "application/json", bytes.NewBuffer(reqBodyBytes))
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
-				t.Fatalf("error making POST request: %s", err)
+				t.Fatalf("unable to send request: %s", err)
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d.", tc.wantStatusCode)
+				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("Response body: %s", string(bodyBytes))
 			}
 			var result map[string]interface{}
 			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -297,8 +381,8 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			}
 
 			if tc.expectResult {
-				if len(entries) == 0 {
-					t.Fatal("expected at least one entry, but got 0")
+				if len(entries) != 1 {
+					t.Fatalf("expected exactly one entry, but got %d", len(entries))
 				}
 				entry, ok := entries[0].(map[string]interface{})
 				if !ok {
@@ -310,6 +394,166 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			} else {
 				if len(entries) != 0 {
 					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
+			}
+		})
+	}
+}
+
+func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datasetName string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	testCases := []struct {
+		name               string
+		wantStatusCode     int
+		api                string
+		requestHeader      map[string]string
+		requestBody        io.Reader
+		expectResult       bool
+		wantContentKey     string
+		dontWantContentKey string
+		aspectCheck        bool
+		reqBodyMap         map[string]any
+	}{
+		{
+			name:           "Success - Entry Found",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "name",
+		},
+		{
+			name:           "Success - Entry Found with Authorization",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "name",
+		},
+		{
+			name:           "Failure - Invalid Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			wantStatusCode: 401,
+			expectResult:   false,
+			wantContentKey: "name",
+		},
+		{
+			name:           "Failure - Without Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			wantStatusCode: 401,
+			expectResult:   false,
+			wantContentKey: "name",
+		},
+		{
+			name:           "Failure - Entry Not Found or Permission Denied",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, "non-existent-dataset"))),
+			wantStatusCode: 400,
+			expectResult:   false,
+		},
+		{
+			name:               "Success - Entry Found with Basic View",
+			api:                "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
+			requestHeader:      map[string]string{},
+			requestBody:        bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 1))),
+			wantStatusCode:     200,
+			expectResult:       true,
+			wantContentKey:     "name",
+			dontWantContentKey: "aspects",
+		},
+		{
+			name:           "Failure - Entry with Custom View without Aspect Types",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
+			wantStatusCode: 400,
+			expectResult:   false,
+		},
+		{
+			name:           "Success - Entry Found with only Schema Aspect",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"aspectTypes\":[\"projects/dataplex-types/locations/global/aspectTypes/schema\"], \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "aspects",
+			aspectCheck:    true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("Error parsing response body: %v", err)
+			}
+
+			if tc.expectResult {
+				resultStr, ok := result["result"].(string)
+				if !ok {
+					t.Fatalf("Expected 'result' field to be a string on success, got %T", result["result"])
+				}
+				if resultStr == "" || resultStr == "{}" || resultStr == "null" {
+					t.Fatal("Expected an entry, but got empty result")
+				}
+
+				var entry map[string]interface{}
+				if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
+					t.Fatalf("Error unmarshalling result string into entry map: %v", err)
+				}
+
+				if _, ok := entry[tc.wantContentKey]; !ok {
+					t.Fatalf("Expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
+				}
+
+				if _, ok := entry[tc.dontWantContentKey]; ok {
+					t.Fatalf("Expected entry to not have key '%s', but it was found in %v", tc.dontWantContentKey, entry)
+				}
+
+				if tc.aspectCheck {
+					// Check length of aspects
+					aspects, ok := entry["aspects"].(map[string]interface{})
+					if !ok {
+						t.Fatalf("Expected 'aspects' to be a map, got %T", aspects)
+					}
+					if len(aspects) != 1 {
+						t.Fatalf("Expected exactly one aspect, but got %d", len(aspects))
+					}
+				}
+			} else { // Handle expected error response
+				_, ok := result["error"]
+				if !ok {
+					t.Fatalf("Expected 'error' field in response, got %v", result)
 				}
 			}
 		})
