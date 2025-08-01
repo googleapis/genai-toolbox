@@ -4,6 +4,14 @@ sources:
     project: ${BIGQUERY_PROJECT}
 
 tools:
+  chat:
+    kind: bigquery-chat
+    source: bigquery-source
+    description: |
+      Use this tool to perform data analysis, get insights, 
+      or answer complex questions about the contents of specific 
+      BigQuery tables.
+
   execute_sql:
     kind: bigquery-execute-sql
     source: bigquery-source
