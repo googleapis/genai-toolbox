@@ -162,7 +162,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
-	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName, tableNameParam)
+	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -557,7 +557,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 	}
 }
 
-func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName, tableNameParam string) {
+func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
