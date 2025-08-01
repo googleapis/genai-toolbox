@@ -50,6 +50,7 @@ require (
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.1.17 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.12 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-arm64 v0.1.12 // indirect
