@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -44,10 +45,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Name        string `yaml:"name" validate:"required"`
+	Kind        string `yaml:"kind" validate:"required"`
+	Source      string `yaml:"source" validate:"required"`
+	Description string `yaml:"description" validate:"required"`
+	// AuthRequired specifies the authentication services required for this tool.
+	// Currently, this field is not actively used for authorization checks within the tool itself,
+	// as the Authorized method always returns true. It is included for potential future extensibility.
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -127,7 +131,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("'explore' must be a string, got %T", mapParams["explore"])
 	}
 
-	fields := "fields(filters(name,type,label,label_short))"
+	fields := lookercommon.FiltersFields
 	req := v4.RequestLookmlModelExplore{
 		LookmlModelName: model,
 		ExploreName:     explore,
@@ -135,27 +139,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making get_filters request: %s", err)
+		return nil, fmt.Errorf("error making get_filters request: %w", err)
 	}
 
-	var data []any
-	for _, v := range *resp.Fields.Filters {
-		logger.DebugContext(ctx, "Got response element of %v\n", v)
-		vMap := make(map[string]any)
-		if v.Name != nil {
-			vMap["name"] = *v.Name
-		}
-		if v.Type != nil {
-			vMap["type"] = *v.Type
-		}
-		if v.Label != nil {
-			vMap["label"] = *v.Label
-		}
-		if v.LabelShort != nil {
-			vMap["label_short"] = *v.LabelShort
-		}
-		logger.DebugContext(ctx, "Converted to %v\n", vMap)
-		data = append(data, vMap)
+	if err := lookercommon.CheckLookerExploreFields(&resp); err != nil {
+		return nil, fmt.Errorf("error processing get_filters response: %w", err)
+	}
+
+	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Filters)
+	if err != nil {
+		return nil, fmt.Errorf("error extracting get_filters response: %w", err)
 	}
 	logger.DebugContext(ctx, "data = ", data)
 
@@ -175,5 +168,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	// Currently, all Looker tools are considered authorized if the source is correctly configured.
+	// The AuthRequired field in the Config struct is reserved for future, more granular authorization.
 	return true
 }
