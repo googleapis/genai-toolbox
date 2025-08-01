@@ -16,6 +16,7 @@ package bigqueryexecutesql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
@@ -82,7 +83,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
-	parameters := tools.Parameters{sqlParameter}
+	dryRunParameter := tools.NewBooleanParameterWithDefault(
+		"dryRun",
+		false,
+		"If set to true, the query will be validated and information about the execution "+
+			"will be returned without running the query. Defaults to false.",
+	)
+	parameters := tools.Parameters{sqlParameter, dryRunParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -119,15 +126,34 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	sql, ok := sliceParams[0].(string)
+	paramsMap := params.AsMap()
+	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("unable to cast sql parameter to string")
+	}
+	dryRun, ok := paramsMap["dryRun"].(bool)
+	if !ok {
+		return nil, fmt.Errorf("unable to cast dryRun parameter to bool")
 	}
 
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+	}
+
+	if dryRun {
+		if dryRunJob != nil {
+			jobJSON, err := json.MarshalIndent(dryRunJob, "", "  ")
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal dry run job to JSON: %w", err)
+			}
+
+			if dryRun {
+				return string(jobJSON), nil
+			}
+		}
+		// This case should not be reached, but as a fallback, we return a message.
+		return "Dry run was requested, but no job information was returned.", nil
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
