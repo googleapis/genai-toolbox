@@ -84,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
 	dryRunParameter := tools.NewBooleanParameterWithDefault(
-		"dryRun",
+		"dry_run",
 		false,
 		"If set to true, the query will be validated and information about the execution "+
 			"will be returned without running the query. Defaults to false.",
@@ -131,9 +131,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if !ok {
 		return nil, fmt.Errorf("unable to cast sql parameter to string")
 	}
-	dryRun, ok := paramsMap["dryRun"].(bool)
+	dryRun, ok := paramsMap["dry_run"].(bool)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast dryRun parameter to bool")
+		return nil, fmt.Errorf("unable to cast dry_run parameter to bool")
 	}
 
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
