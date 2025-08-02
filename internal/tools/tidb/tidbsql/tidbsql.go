@@ -17,6 +17,7 @@ package tidbsql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -123,17 +124,22 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	sql, ok := sliceParams[0].(string)
-	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+	paramsMap := params.AsMap()
+	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
-	results, err := t.Pool.QueryContext(ctx, sql)
+	newParams, err := tools.GetParams(t.Parameters, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+
+	sliceParams := newParams.AsSlice()
+	results, err := t.Pool.QueryContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
-	defer results.Close()
 
 	cols, err := results.Columns()
 	if err != nil {
@@ -146,6 +152,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	for i := range rawValues {
 		values[i] = &rawValues[i]
 	}
+	defer results.Close()
 
 	colTypes, err := results.ColumnTypes()
 	if err != nil {
@@ -169,6 +176,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
 			// we'll need to cast it back to string
 			switch colTypes[i].DatabaseTypeName() {
+			case "JSON":
+				// unmarshal JSON data before storing to prevent double marshaling
+				var unmarshaledData any
+				err := json.Unmarshal(val.([]byte), &unmarshaledData)
+				if err != nil {
+					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
+				}
+				vMap[name] = unmarshaledData
 			case "TEXT", "VARCHAR", "NVARCHAR":
 				vMap[name] = string(val.([]byte))
 			default:
