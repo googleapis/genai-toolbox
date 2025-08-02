@@ -18,6 +18,7 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
+<!-- [START cloud_setup] -->
 
 If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
 `vertexai=True` or a Google GenAI model), follow these one-time setup steps for
@@ -36,8 +37,10 @@ local development:
 [install-pip]: https://pip.pypa.io/en/stable/installation/
 [install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
+<!-- [END cloud_setup] -->
 
 ## Step 1: Set up your database
+<!-- [START database_setup] -->
 
 In this section, we will create a database, insert some data that needs to be
 accessed by our agent, and create a database user for Toolbox to connect with.
@@ -155,8 +158,11 @@ postgres` and a password next time.
     ```bash
     \q
     ```
+<!-- [END database_setup] -->
+
 
 ## Step 2: Install and configure Toolbox
+<!-- [START configure_toolbox] -->
 
 In this section, we will download Toolbox, configure our tools in a
 `tools.yaml`, and then run the Toolbox server.
@@ -277,6 +283,8 @@ In this section, we will download Toolbox, configure our tools in a
     Toolbox enables dynamic reloading by default. To disable, use the
     `--disable-reload` flag.
     {{< /notice >}}
+
+<!-- [END configure_toolbox] -->
 
 ## Step 3: Connect your agent to Toolbox
 
