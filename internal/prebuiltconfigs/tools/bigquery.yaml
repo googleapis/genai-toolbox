@@ -2,6 +2,7 @@ sources:
   bigquery-source:
     kind: "bigquery"
     project: ${BIGQUERY_PROJECT}
+    allowedDataset: ${BIGQUERY_ALLOWED_DATASET}
 
 tools:
   execute_sql:
