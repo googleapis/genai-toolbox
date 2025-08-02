@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -44,10 +45,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Name        string `yaml:"name" validate:"required"`
+	Kind        string `yaml:"kind" validate:"required"`
+	Source      string `yaml:"source" validate:"required"`
+	Description string `yaml:"description" validate:"required"`
+	// AuthRequired specifies the authentication services required for this tool.
+	// Currently, this field is not actively used for authorization checks within the tool itself,
+	// as the Authorized method always returns true. It is included for potential future extensibility.
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -71,9 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
-	exploreParameter := tools.NewStringParameter("explore", "The explore containing the parameters.")
-	parameters := tools.Parameters{modelParameter, exploreParameter}
+	parameters := lookercommon.GetFieldParameters()
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -117,45 +119,29 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
-	mapParams := params.AsMap()
-	model, ok := mapParams["model"].(string)
-	if !ok {
-		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
-	}
-	explore, ok := mapParams["explore"].(string)
-	if !ok {
-		return nil, fmt.Errorf("'explore' must be a string, got %T", mapParams["explore"])
+	model, explore, err := lookercommon.ProcessFieldArgs(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("error processing model or explore: %w", err)
 	}
 
-	fields := "fields(parameters(name,type,label,label_short))"
+	fields := lookercommon.ParametersFields
 	req := v4.RequestLookmlModelExplore{
-		LookmlModelName: model,
-		ExploreName:     explore,
+		LookmlModelName: *model,
+		ExploreName:     *explore,
 		Fields:          &fields,
 	}
 	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making get_parameters request: %s", err)
+		return nil, fmt.Errorf("error making get_parameters request: %w", err)
 	}
 
-	var data []any
-	for _, v := range *resp.Fields.Parameters {
-		logger.DebugContext(ctx, "Got response element of %v\n", v)
-		vMap := make(map[string]any)
-		if v.Name != nil {
-			vMap["name"] = *v.Name
-		}
-		if v.Type != nil {
-			vMap["type"] = *v.Type
-		}
-		if v.Label != nil {
-			vMap["label"] = *v.Label
-		}
-		if v.LabelShort != nil {
-			vMap["label_short"] = *v.LabelShort
-		}
-		logger.DebugContext(ctx, "Converted to %v\n", vMap)
-		data = append(data, vMap)
+	if err := lookercommon.CheckLookerExploreFields(&resp); err != nil {
+		return nil, fmt.Errorf("error processing get_parameters response: %w", err)
+	}
+
+	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Parameters)
+	if err != nil {
+		return nil, fmt.Errorf("error extracting get_parameters response: %w", err)
 	}
 	logger.DebugContext(ctx, "data = ", data)
 
@@ -175,5 +161,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	// Currently, all Looker tools are considered authorized if the source is correctly configured.
+	// The AuthRequired field in the Config struct is reserved for future, more granular authorization.
 	return true
 }
