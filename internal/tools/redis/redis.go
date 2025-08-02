@@ -16,6 +16,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -189,21 +190,32 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 	for i, cmd := range commands {
 		newCmd := make([]any, 0)
 		for _, part := range cmd {
-			v, ok := paramMap[part]
-			if !ok {
-				// Command part is not a Parameter placeholder
-				newCmd = append(newCmd, part)
-				continue
+			replaced := part
+			isArray := false
+			var arrayItems []any
+
+			if v, ok := paramMap[part]; ok {
+				if typeMap[part] == "array" {
+					isArray = true
+					arrayItems = v.([]any)
+				} else {
+					replaced = fmt.Sprintf("%v", v)
+				}
+			} else {
+				for placeholder, v := range paramMap {
+					replaced = strings.ReplaceAll(replaced, placeholder, fmt.Sprintf("%v", v))
+				}
 			}
-			if typeMap[part] == "array" {
-				for _, item := range v.([]any) {
+
+			if isArray {
+				for _, item := range arrayItems {
 					// Nested arrays will only be expanded once
 					// e.g., [A, [B, C]]  --> ["A", "[B C]"]
 					newCmd = append(newCmd, fmt.Sprintf("%s", item))
 				}
 				continue
 			}
-			newCmd = append(newCmd, fmt.Sprintf("%s", v))
+			newCmd = append(newCmd, replaced)
 		}
 		newCommands[i] = newCmd
 	}
