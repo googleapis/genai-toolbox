@@ -12,8 +12,13 @@ tools:
     kind: dataplex-lookup-entry
     source: dataplex-source
     description: Use this tool to retrieve a specific entry from Dataplex Catalog.
+  dataplex_search_aspect_types:
+    kind: dataplex-search-aspect-types
+    source: dataplex-source
+    description: Use this tool to fetch details about aspect types in Dataplex Catalog based on a search query.
 
 toolsets:
   dataplex-tools:
     - dataplex_search_entries
     - dataplex_lookup_entry
+    - dataplex_search_aspect_types
