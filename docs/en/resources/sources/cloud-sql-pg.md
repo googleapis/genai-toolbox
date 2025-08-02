@@ -28,6 +28,12 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
 
+### Pre-built Configurations
+
+- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)  
+Connect your IDE to Cloud SQL for Postgres using Toolbox.
+
+
 ## Requirements
 
 ### IAM Permissions
