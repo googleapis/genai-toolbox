@@ -62,8 +62,6 @@ description: "Connect your IDE to MySQL using Toolbox."
     ./toolbox --version
     ```
 
----
-
 ## Configure your MCP Client
 
 {{< tabpane text=true >}}
@@ -92,7 +90,7 @@ description: "Connect your IDE to MySQL using Toolbox."
     ```
 
 1.  Restart Claude code to apply the new configuration.
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Claude desktop" lang="en" %}}
 
@@ -120,7 +118,7 @@ description: "Connect your IDE to MySQL using Toolbox."
 
 1.  Restart Claude desktop.
 1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
 
@@ -147,7 +145,7 @@ description: "Connect your IDE to MySQL using Toolbox."
     ```
 
 1.  You should see a green active status after the server is successfully connected.
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Cursor" lang="en" %}}
 
@@ -174,7 +172,7 @@ description: "Connect your IDE to MySQL using Toolbox."
     ```
 
 1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
@@ -199,7 +197,7 @@ description: "Connect your IDE to MySQL using Toolbox."
       }
     }
     ```
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Windsurf" lang="en" %}}
 
@@ -224,7 +222,7 @@ description: "Connect your IDE to MySQL using Toolbox."
       }
     }
     ```
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Gemini CLI" lang="en" %}}
 
@@ -249,7 +247,7 @@ description: "Connect your IDE to MySQL using Toolbox."
       }
     }
     ```
-    {{% /tab %}}
+{{% /tab %}}
 
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
@@ -275,8 +273,8 @@ description: "Connect your IDE to MySQL using Toolbox."
       }
     }
     ```
-    {{% /tab %}}
-    {{< /tabpane >}}
+{{% /tab %}}
+{{< /tabpane >}}
 
 ## Use Tools
 
