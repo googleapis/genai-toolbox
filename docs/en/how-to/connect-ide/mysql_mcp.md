@@ -96,7 +96,6 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     ```
 1.  Restart Claude code to apply the new configuration.
 {{% /tab %}}
-
 {{% tab header="Claude desktop" lang="en" %}}
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1.  Under the Developer tab, tap Edit Config to open the configuration file.
@@ -122,7 +121,6 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
 1.  Restart Claude desktop.
 1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
 {{% /tab %}}
-
 {{% tab header="Cline" lang="en" %}}
 1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
 1.  Tap Configure MCP Servers to open the configuration file.
@@ -147,7 +145,6 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     ```
 1.  You should see a green active status after the server is successfully connected.
 {{% /tab %}}
-
 {{% tab header="Cursor" lang="en" %}}
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
 1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
@@ -172,7 +169,6 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     ```
 1.  [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
 {{% /tab %}}
-
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
 1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
@@ -198,7 +194,6 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
     }
     ```
 {{% /tab %}}
-
 {{% tab header="Windsurf" lang="en" %}}
 1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
 1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
