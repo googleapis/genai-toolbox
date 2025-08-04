@@ -73,12 +73,9 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
 
 {{< tabpane >}}
 {{% tab header="Claude code" lang="en" %}}
-
 1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-
-2.  Create a `.mcp.json` file in your project root if it doesn't exist.
-
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -97,17 +94,13 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
       }
     }
     ```
-
-4.  Restart Claude code to apply the new configuration.
-    {{% /tab %}}
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
 
 {{% tab header="Claude desktop" lang="en" %}}
-
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-
-2.  Under the Developer tab, tap Edit Config to open the configuration file.
-
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -126,19 +119,14 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
       }
     }
     ```
-
-4.  Restart Claude desktop.
-
-5.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
-    {{% /tab %}}
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
-
 1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
-
-2.  Tap Configure MCP Servers to open the configuration file.
-
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -157,17 +145,13 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
       }
     }
     ```
-
-4.  You should see a green active status after the server is successfully connected.
-    {{% /tab %}}
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
 
 {{% tab header="Cursor" lang="en" %}}
-
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
-
-2.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -186,123 +170,106 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
       }
     }
     ```
-
-4.  [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
-    {{% /tab %}}
+1.  [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
 
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
-
 1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
-2.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
-        ```json
-
-        {
-        "mcp" : {
-            "servers": {
-            "cloud-sql-sqlserver": {
-                "command": "./PATH/TO/toolbox",
-                "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
-                "env": {
-                  "MSSQL_HOST": "",
-                  "MSSQL_DATABASE": "",
-                  "MSSQL_PORT": "",
-                  "MSSQL_USER": "",
-                  "MSSQL_PASSWORD": ""
-                }
-             }
+    ```json
+    {
+    "mcp" : {
+        "servers": {
+        "cloud-sql-sqlserver": {
+            "command": "./PATH/TO/toolbox",
+            "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
+            "env": {
+              "MSSQL_HOST": "",
+              "MSSQL_DATABASE": "",
+              "MSSQL_PORT": "",
+              "MSSQL_USER": "",
+              "MSSQL_PASSWORD": ""
             }
-          }
-        }
-        ```
-
-    {{% /tab %}}
-
-{{% tab header="Windsurf" lang="en" %}}
-
-1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
-
-2.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-
-3.  Add the following configuration, replace the environment variables with your values, and save:
-
-        ```json
-        {
-          "mcpServers": {
-            "sqlserver": {
-              "command": "./PATH/TO/toolbox",
-              "args": ["--prebuilt","mssql","--stdio"],
-              "env": {
-                "MSSQL_HOST": "",
-                "MSSQL_DATABASE": "",
-                "MSSQL_PORT": "",
-                "MSSQL_USER": "",
-                "MSSQL_PASSWORD": ""
-              }
-            }
-          }
-        }
-        ```
-
-    {{% /tab %}}
-    {{% tab header="Gemini CLI" lang="en" %}}
-
-4.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-
-5.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-
-6.  Add the following configuration, replace the environment variables with your values, and then save:
-
-        ```json
-        {
-          "mcpServers": {
-            "sqlserver": {
-              "command": "./PATH/TO/toolbox",
-              "args": ["--prebuilt","mssql","--stdio"],
-              "env": {
-                "MSSQL_HOST": "",
-                "MSSQL_DATABASE": "",
-                "MSSQL_PORT": "",
-                "MSSQL_USER": "",
-                "MSSQL_PASSWORD": ""
-              }
-            }
-          }
-        }
-        ```
-
-    {{% /tab %}}
-    {{% tab header="Gemini Code Assist" lang="en" %}}
-
-7.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
-
-8.  Enable Agent Mode in Gemini Code Assist chat.
-
-9.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-
-10. Add the following configuration, replace the environment variables with your values, and then save:
-
-        ```json
-        {
-          "mcpServers": {
-            "sqlserver": {
-              "command": "./PATH/TO/toolbox",
-              "args": ["--prebuilt","mssql","--stdio"],
-              "env": {
-                "MSSQL_HOST": "",
-                "MSSQL_DATABASE": "",
-                "MSSQL_PORT": "",
-                "MSSQL_USER": "",
-                "MSSQL_PASSWORD": ""
-            }
-          }
          }
         }
-        ```
+      }
+    }
+    ```
+{{% /tab %}}
 
-    {{% /tab %}}
-    {{< /tabpane >}}
+{{% tab header="Windsurf" lang="en" %}}
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlserver": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_PORT": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+1. Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlserver": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_PORT": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1. Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlserver": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_PORT": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+        }
+      }
+     }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
 
 ## Use Tools
 
