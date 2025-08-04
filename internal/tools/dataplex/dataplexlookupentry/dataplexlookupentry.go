@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexsearchentries
+package dataplexlookupentry
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "dataplex-search-entries"
+const kind string = "dataplex-lookup-entry"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -44,7 +44,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	CatalogClient() *dataplexapi.CatalogClient
-	ProjectID() string
 }
 
 // validate compatible sources are still compatible
@@ -53,11 +52,12 @@ var _ compatibleSource = &dataplexds.Source{}
 var compatibleSources = [...]string{dataplexds.SourceKind}
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string           `yaml:"name" validate:"required"`
+	Kind         string           `yaml:"kind" validate:"required"`
+	Source       string           `yaml:"source" validate:"required"`
+	Description  string           `yaml:"description"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -79,12 +79,26 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
-	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
-	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
-	parameters := tools.Parameters{query, pageSize, pageToken, orderBy, semanticSearch}
+	viewDesc := `
+				## Argument: view
+
+				**Type:** Integer
+
+				**Description:** Specifies the parts of the entry and its aspects to return.
+
+				**Possible Values:**
+
+				*   1 (BASIC): Returns entry without aspects.
+				*   2 (FULL): Return all required aspects and the keys of non-required aspects. (Default)
+				*   3 (CUSTOM): Return the entry and aspects requested in aspect_types field (at most 100 aspects). Always use this view when aspect_types is not empty.
+				*   4 (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
+				`
+
+	name := tools.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
+	view := tools.NewIntParameterWithDefault("view", 2, viewDesc)
+	aspectTypes := tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", tools.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
+	entry := tools.NewStringParameter("entry", "The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
+	parameters := tools.Parameters{name, view, aspectTypes, entry}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -98,7 +112,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:    parameters,
 		AuthRequired:  cfg.AuthRequired,
 		CatalogClient: s.CatalogClient(),
-		ProjectID:     s.ProjectID(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -115,7 +128,6 @@ type Tool struct {
 	Parameters    tools.Parameters
 	AuthRequired  []string
 	CatalogClient *dataplexapi.CatalogClient
-	ProjectID     string
 	manifest      tools.Manifest
 	mcpManifest   tools.McpManifest
 }
@@ -126,35 +138,33 @@ func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
-	query, _ := paramsMap["query"].(string)
-	pageSize, _ := paramsMap["pageSize"].(int32)
-	pageToken, _ := paramsMap["pageToken"].(string)
-	orderBy, _ := paramsMap["orderBy"].(string)
-	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
+	viewMap := map[int]dataplexpb.EntryView{
+		1: dataplexpb.EntryView_BASIC,
+		2: dataplexpb.EntryView_FULL,
+		3: dataplexpb.EntryView_CUSTOM,
+		4: dataplexpb.EntryView_ALL,
+	}
+	name, _ := paramsMap["name"].(string)
+	entry, _ := paramsMap["entry"].(string)
+	view, _ := paramsMap["view"].(int)
+	aspectTypeSlice, err := tools.ConvertAnySliceToTyped(paramsMap["aspectTypes"].([]any), "string")
+	if err != nil {
+		return nil, fmt.Errorf("can't convert aspectTypes to array of strings: %s", err)
+	}
+	aspectTypes := aspectTypeSlice.([]string)
 
-	req := &dataplexpb.SearchEntriesRequest{
-		Query:          query,
-		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
-		PageSize:       pageSize,
-		PageToken:      pageToken,
-		OrderBy:        orderBy,
-		SemanticSearch: semanticSearch,
+	req := &dataplexpb.LookupEntryRequest{
+		Name:        name,
+		View:        viewMap[view],
+		AspectTypes: aspectTypes,
+		Entry:       entry,
 	}
 
-	it := t.CatalogClient.SearchEntries(ctx, req)
-	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
+	result, err := t.CatalogClient.LookupEntry(ctx, req)
+	if err != nil {
+		return nil, err
 	}
-
-	var results []*dataplexpb.SearchEntriesResult
-	for {
-		entry, err := it.Next()
-		if err != nil {
-			break
-		}
-		results = append(results, entry)
-	}
-	return results, nil
+	return result, nil
 }
 
 func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
