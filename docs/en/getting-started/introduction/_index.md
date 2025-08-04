@@ -136,6 +136,15 @@ Toolbox enables dynamic reloading by default. To disable, use the
 `--disable-reload` flag.
 {{< /notice >}}
 
+#### Launching Toolbox UI
+
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test tools and toolsets
+with features such as authorized parameters. To learn more, visit [Toolbox UI](../../how-to/use-toolbox-ui/index.md).
+
+```sh
+./toolbox --ui
+```
+
 #### Homebrew Users
 
 If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
