@@ -55,6 +55,8 @@ type ServerConfig struct {
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
 	DisableReload bool
+	// UI indicates if Toolbox UI endpoints (/ui) are available
+	UI bool
 }
 
 type logFormat string
