@@ -71,7 +71,7 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
 
 ## Configure your MCP Client
 
-{{< tabpane text="true" >}}
+{{< tabpane >}}
 {{% tab header="Claude code" lang="en" %}}
 
 1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
@@ -273,7 +273,7 @@ curl -O <https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/tool
         ```
 
     {{% /tab %}}
-    {{% tab header="Gemini Cod Assist" lang="en" %}}
+    {{% tab header="Gemini Code Assist" lang="en" %}}
 
 7.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
 
