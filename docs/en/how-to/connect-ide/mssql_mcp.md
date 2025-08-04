@@ -50,14 +50,14 @@ description: "Connect your IDE to SQL Server using Toolbox."
     curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox.exe
     {{< /tab >}}
     {{< /tabpane >}}
-    
-1.  Make the binary executable:
+
+2.  Make the binary executable:
 
     ```bash
     chmod +x toolbox
     ```
 
-1.  Verify the installation:
+3.  Verify the installation:
 
     ```bash
     ./toolbox --version
