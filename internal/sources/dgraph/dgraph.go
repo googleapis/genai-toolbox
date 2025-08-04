@@ -203,7 +203,7 @@ func (hc *DgraphClient) mutate(mutation string, paramsMap map[string]interface{}
 
 func (hc *DgraphClient) doReq(req *http.Request) ([]byte, error) {
 	if hc.HttpToken != nil {
-		req.Header.Add("X-Dgraph-AccessToken", hc.AccessJwt)
+		req.Header.Add("X-Dgraph-OAuthAccessToken", hc.AccessJwt)
 	}
 	if hc.apiKey != "" {
 		req.Header.Set("Dg-Auth", hc.apiKey)
@@ -218,7 +218,7 @@ func (hc *DgraphClient) doReq(req *http.Request) ([]byte, error) {
 			return nil, errLogin
 		}
 		if hc.HttpToken != nil {
-			req.Header.Add("X-Dgraph-AccessToken", hc.AccessJwt)
+			req.Header.Add("X-Dgraph-OAuthAccessToken", hc.AccessJwt)
 		}
 		resp, err = hc.httpClient.Do(req)
 		if err != nil {
