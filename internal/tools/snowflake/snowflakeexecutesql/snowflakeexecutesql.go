@@ -115,10 +115,10 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
-	sliceParams := params.AsSlice()
-	sql, ok := sliceParams[0].(string)
+	mapParams := params.AsMap()
+	sql, ok := mapParams["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("invalid parameters: sql parameter is not a string")
 	}
 
 	rows, err := t.DB.QueryxContext(ctx, sql)
