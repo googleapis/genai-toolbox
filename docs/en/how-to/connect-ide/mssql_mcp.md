@@ -171,7 +171,6 @@ description: "Connect your IDE to SQL Server using Toolbox."
 
 1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
 {{% /tab %}}
-
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
 1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
