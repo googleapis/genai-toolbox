@@ -161,7 +161,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 
-	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
+	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -411,7 +411,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 	return config
 }
 
-func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam string) {
+func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam, ddlWant string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -447,7 +447,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
-			want:          `"Operation completed successfully."`,
+			want:          ddlWant,
 			isErr:         true,
 		},
 		{
@@ -471,7 +471,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
-			want:          `"Operation completed successfully."`,
+			want:          ddlWant,
 			isErr:         true,
 		},
 		{
@@ -479,7 +479,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
-			want:          `"Operation completed successfully."`,
+			want:          ddlWant,
 			isErr:         false,
 		},
 		{
