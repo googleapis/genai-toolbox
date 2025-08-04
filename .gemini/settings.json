@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "alloydb": {
+      "command": "/usr/local/google/home/prernakakkar/senseai/genai-toolbox/toolbox",
+      "args": [
+        "--prebuilt",
+        "alloydb-postgres",
+        "--stdio"
+      ],
+      "env": {
+        "ALLOYDB_POSTGRES_PROJECT": "astana-evaluation",
+        "ALLOYDB_POSTGRES_REGION": "us-central1",
+        "ALLOYDB_POSTGRES_CLUSTER": "magic",
+        "ALLOYDB_POSTGRES_INSTANCE": "gryffindor",
+        "ALLOYDB_POSTGRES_DATABASE": "postgres",
+        "ALLOYDB_POSTGRES_USER": "postgres",
+        "ALLOYDB_POSTGRES_PASSWORD": "harrypotter"
+      }
+    }
+  }
+}
