@@ -43,6 +43,7 @@ var expectedToolSources = []string{
 	"neo4j",
 	"oceanbase",
 	"postgres",
+	"snowflake",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",
@@ -116,8 +117,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	spannerpg_config, _ := Get("spanner-postgres")
 	sqlite_config, _ := Get("sqlite")
 	neo4jconfig, _ := Get("neo4j")
+	snowflake_config, _ := Get("snowflake")
 	if len(alloydb_admin_config) <= 0 {
-		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+		t.Fatalf("unexpected error: could not fetch alloydb admin prebuilt tools yaml")
 	}
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
@@ -187,6 +189,10 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(neo4jconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
+	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
 	}
 }
 
