@@ -127,7 +127,7 @@ func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
-	pageSize, _ := paramsMap["pageSize"].(int32)
+	pageSize := int32(paramsMap["pageSize"].(int))
 	pageToken, _ := paramsMap["pageToken"].(string)
 	orderBy, _ := paramsMap["orderBy"].(string)
 	semanticSearch, _ := paramsMap["semanticSearch"].(bool)

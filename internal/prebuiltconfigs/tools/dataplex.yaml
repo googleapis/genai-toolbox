@@ -15,7 +15,7 @@ tools:
   dataplex_search_aspect_types:
     kind: dataplex-search-aspect-types
     source: dataplex-source
-    description: Use this tool to fetch details about aspect types in Dataplex Catalog based on a search query.
+    description: Use this tool to find aspect types relevant to the query.
 
 toolsets:
   dataplex-tools:

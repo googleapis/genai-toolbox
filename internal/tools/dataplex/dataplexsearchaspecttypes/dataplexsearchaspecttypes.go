@@ -80,8 +80,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	query := tools.NewStringParameter("query", "The query against which aspect type should be matched.")
+	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
+	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous search aspect types tool call. Provide this to retrieve the subsequent page.")
+	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
 	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
-	parameters := tools.Parameters{query, semanticSearch}
+	parameters := tools.Parameters{query, pageSize, pageToken, orderBy, semanticSearch}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -121,14 +124,22 @@ func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+var getAspectMap = map[string]*dataplexpb.AspectType{}
+
 func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
+	pageSize := int32(paramsMap["pageSize"].(int))
+	pageToken, _ := paramsMap["pageToken"].(string)
+	orderBy, _ := paramsMap["orderBy"].(string)
 	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
 
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype",
 		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
+		PageSize:       pageSize,
+		PageToken:      pageToken,
+		OrderBy:        orderBy,
 		SemanticSearch: semanticSearch,
 	}
 
@@ -144,14 +155,17 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 			break
 		}
 		resourceName := entry.DataplexEntry.GetEntrySource().Resource
-		getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
-			Name: resourceName,
+		if _, ok := getAspectMap[resourceName]; !ok {
+			getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
+				Name: resourceName,
+			}
+			aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
+			}
+			getAspectMap[resourceName] = aspectType
 		}
-		aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
-		}
-		results = append(results, aspectType)
+		results = append(results, getAspectMap[resourceName])
 	}
 	return results, nil
 }
