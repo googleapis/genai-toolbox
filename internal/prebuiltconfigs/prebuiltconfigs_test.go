@@ -29,6 +29,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		"cloud-sql-mysql",
 		"cloud-sql-postgres",
 		"postgres",
+		"snowflake",
 		"spanner-postgres",
 		"spanner",
 	}
@@ -71,6 +72,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	snowflake_config, _ := Get("snowflake")
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
@@ -94,6 +96,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(spannerpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
 	}
 }
 
