@@ -65,6 +65,7 @@ description: "Connect your IDE to MySQL using Toolbox."
 
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
+
 1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1.  Create a `.mcp.json` file in your project root if it doesn't exist.
 1.  Add the following configuration, replace the environment variables with your values, and save:
