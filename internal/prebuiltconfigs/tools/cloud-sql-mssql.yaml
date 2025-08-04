@@ -11,7 +11,7 @@ sources:
 tools:
     execute_sql:
         kind: mssql-execute-sql
-        source: cloud-sql-mssql-source
+        source: cloudsql-mssql-source
         description: Use this tool to execute SQL.
 
     list_tables:

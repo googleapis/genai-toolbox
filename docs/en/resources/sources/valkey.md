@@ -17,7 +17,12 @@ sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial
 indexes with radius queries.
 
 If you're new to Valkey, you can find installation and getting started guides on
-the [official Valkey website](https://valkey.io/docs/getting-started/).
+the [official Valkey website](https://valkey.io/topics/quickstart/).
+
+## Available Tools
+
+- [`valkey`](../tools/valkey/valkey.md)  
+  Issue Valkey (Redis-compatible) commands.
 
 ## Example
 
@@ -26,7 +31,7 @@ sources:
     my-valkey-instance:
      kind: valkey
      address:
-       - 127.0.0.1
+       - 127.0.0.1:6379
      username: ${YOUR_USERNAME}
      password: ${YOUR_PASSWORD}
      # database: 0
@@ -50,7 +55,7 @@ sources:
     my-valkey-instance:
      kind: valkey
      address:
-       - 127.0.0.1
+       - 127.0.0.1:6379
      useGCPIAM: true
 ```
 

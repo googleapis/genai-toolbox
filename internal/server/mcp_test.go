@@ -36,6 +36,7 @@ import (
 const jsonrpcVersion = "2.0"
 const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
+const protocolVersion20250618 = "2025-06-18"
 const serverName = "Toolbox"
 
 var tool1InputSchema = map[string]any{
@@ -254,7 +255,7 @@ func TestMcpEndpoint(t *testing.T) {
 		initWant map[string]any
 	}{
 		{
-			name:     "verson 2024-11-05",
+			name:     "version 2024-11-05",
 			protocol: protocolVersion20241105,
 			idHeader: false,
 			initWant: map[string]any{
@@ -270,7 +271,7 @@ func TestMcpEndpoint(t *testing.T) {
 			},
 		},
 		{
-			name:     "verson 2025-03-26",
+			name:     "version 2025-03-26",
 			protocol: protocolVersion20250326,
 			idHeader: true,
 			initWant: map[string]any{
@@ -278,6 +279,22 @@ func TestMcpEndpoint(t *testing.T) {
 				"id":      "mcp-initialize",
 				"result": map[string]any{
 					"protocolVersion": "2025-03-26",
+					"capabilities": map[string]any{
+						"tools": map[string]any{"listChanged": false},
+					},
+					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+				},
+			},
+		},
+		{
+			name:     "version 2025-06-18",
+			protocol: protocolVersion20250618,
+			idHeader: false,
+			initWant: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "mcp-initialize",
+				"result": map[string]any{
+					"protocolVersion": "2025-06-18",
 					"capabilities": map[string]any{
 						"tools": map[string]any{"listChanged": false},
 					},
@@ -293,6 +310,10 @@ func TestMcpEndpoint(t *testing.T) {
 			header := map[string]string{}
 			if sessionId != "" {
 				header["Mcp-Session-Id"] = sessionId
+			}
+
+			if vtc.protocol == protocolVersion20250618 {
+				header["MCP-Protocol-Version"] = vtc.protocol
 			}
 
 			testCases := []struct {
@@ -481,7 +502,7 @@ func TestMcpEndpoint(t *testing.T) {
 						t.Fatalf("unexpected error during marshaling of body")
 					}
 
-					if vtc.protocol == protocolVersion20250326 && len(header) == 0 {
+					if vtc.protocol != protocolVersion20241105 && len(header) == 0 {
 						t.Fatalf("header is missing")
 					}
 
@@ -511,6 +532,33 @@ func TestMcpEndpoint(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+func TestInvalidProtocolVersionHeader(t *testing.T) {
+	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	header := map[string]string{}
+	header["MCP-Protocol-Version"] = "foo"
+
+	resp, body, err := runRequest(ts, http.MethodPost, "/", nil, header)
+	if resp.Status != "400 Bad Request" {
+		t.Fatalf("unexpected status: %s", resp.Status)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	want := "invalid protocol version: foo"
+	if got["error"] != want {
+		t.Fatalf("unexpected error message: got %s, want %s", got["error"], want)
+	}
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
 	}
 }
 

@@ -42,7 +42,7 @@ type MockTool struct {
 	manifest    tools.Manifest
 }
 
-func (t MockTool) Invoke(context.Context, tools.ParamValues) ([]any, error) {
+func (t MockTool) Invoke(context.Context, tools.ParamValues) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
 }

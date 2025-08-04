@@ -2,7 +2,7 @@
 title: "mysql-execute-sql"
 type: docs
 weight: 1
-description: > 
+description: >
   A "mysql-execute-sql" tool executes a SQL statement against a MySQL
   database.
 aliases:
@@ -14,8 +14,8 @@ aliases:
 A `mysql-execute-sql` tool executes a SQL statement against a MySQL
 database. It's compatible with any of the following sources:
 
-- [cloud-sql-mysql](../sources/cloud-sql-mysql.md)
-- [mysql](../sources/mysql.md)
+- [cloud-sql-mysql](../../sources/cloud-sql-mysql.md)
+- [mysql](../../sources/mysql.md)
 
 `mysql-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.

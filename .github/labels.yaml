@@ -50,7 +50,7 @@
   color: ffffc7
   description: Desirable enhancement or fix. May not be included in next release.
 
-- name: do not merge
+- name: 'do not merge'
   color: d93f0b
   description: Indicates a pull request not ready for merge, due to either quality
     or timing.
@@ -65,28 +65,26 @@
   color: ededed
   description: Release please has completed a release for this.
 
+- name: 'blunderbuss: assign'
+  color: 3DED97
+  description: Have blunderbuss assign this to someone new.
+
 - name: 'tests: run'
   color: 3DED97
   description: Label to trigger Github Action tests.
-
+  
 - name: 'docs: deploy-preview'
   color: BFDADC
   description: Label to trigger Github Action docs preview.
 
-- name: 'status: contribution welcome'
+- name: 'status: help wanted'
   color: 8befd7
-  description: Status - Contributions welcome.
-
-- name: 'status: awaiting response'
+  description: 'Status: Unplanned work open to contributions from the community.'
+- name: 'status: feedback wanted'
   color: 8befd7
-  description: Status - Awaiting response from author.
-
-- name: 'status: awaiting codeowners'
-  color: 8befd7
-  description: Status - Awaiting response from code owners.
+  description: 'Status: waiting for feedback from community or issue author.'
 
 # Product Labels
 - name: 'product: bigquery'
   color: 5065c7
-  description: Product - Assigned to the BigQuery team. 
-
+  description: 'Product: Assigned to the BigQuery team.'

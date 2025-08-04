@@ -2,7 +2,7 @@
 title: "postgres-execute-sql"
 type: docs
 weight: 1
-description: > 
+description: >
   A "postgres-execute-sql" tool executes a SQL statement against a Postgres
   database.
 aliases:
@@ -14,9 +14,9 @@ aliases:
 A `postgres-execute-sql` tool executes a SQL statement against a Postgres
 database. It's compatible with any of the following sources:
 
-- [alloydb-postgres](../sources/alloydb-pg.md)
-- [cloud-sql-postgres](../sources/cloud-sql-pg.md)
-- [postgres](../sources/postgres.md)
+- [alloydb-postgres](../../sources/alloydb-pg.md)
+- [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
+- [postgres](../../sources/postgres.md)
 
 `postgres-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.

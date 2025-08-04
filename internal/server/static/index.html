@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbox UI</title>
+    <link rel="stylesheet" href="/ui/css/style.css">
+</head>
+<body>
+    <div id="navbar-container" data-active-nav=""></div>
+    <div id="main-content-container"></div>
+
+    <script src="/ui/js/navbar.js"></script>
+    <script src="/ui/js/mainContent.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            const activeNav = navbarContainer.getAttribute('data-active-nav');
+            renderNavbar('navbar-container', activeNav);
+            renderMainContent('main-content-container', '')
+        });
+    </script>
+</body>
+</html>

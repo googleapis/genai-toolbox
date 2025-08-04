@@ -144,7 +144,7 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 	return out, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) ([]any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	sliceParams := params.AsSlice()
 	sql, ok := sliceParams[0].(string)
 	if !ok {

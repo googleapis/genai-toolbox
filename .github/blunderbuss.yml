@@ -1,8 +1,7 @@
 assign_issues:
-  - kurtisvg
   - Yuan325
   - duwenxin99
-  - akitsch
+  - averikitsch
 assign_issues_by:
   - labels:
     - 'product: bigquery'
@@ -11,7 +10,6 @@ assign_issues_by:
     - shobsi
     - jiaxunwu
 assign_prs:
-  - kurtisvg
   - Yuan325
   - duwenxin99
-  - akitsch
+  - averikitsch

@@ -64,7 +64,7 @@ type ToolConfig interface {
 }
 
 type Tool interface {
-	Invoke(context.Context, ParamValues) ([]any, error)
+	Invoke(context.Context, ParamValues) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
