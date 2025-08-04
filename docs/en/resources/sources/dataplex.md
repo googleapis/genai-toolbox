@@ -250,8 +250,8 @@ Only top-level fields of the aspect are searchable. For example, all of the foll
 
 Example:-
 You can use following filters
-- test-projects.global.data-governance.has-pii={true,false}
-- test-projects.global.data-governance.encrypted-data-asset={true,false}
+- dataplex-types.global.bigquery-table.type={BIGLAKE_TABLE, BIGLAKE_OBJECT_TABLE, EXTERNAL_TABLE, TABLE}
+- dataplex-types.global.storage.type={STRUCTURED, UNSTRUCTURED}
 
 ### Logical operators
 A query can consist of several predicates with logical operators. If you don't specify an operator, logical AND is implied. For example, foo bar returns resources that match both predicate foo and predicate bar.
