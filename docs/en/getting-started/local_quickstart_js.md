@@ -133,7 +133,7 @@ postgres` and a password next time.
 
     ```sql
     INSERT INTO hotels(id, name, location, price_tier, checkin_date, checkout_date, booked)
-    VALUES 
+    VALUES
       (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', B'0'),
       (2, 'Marriott Zurich', 'Zurich', 'Upscale', '2024-04-14', '2024-04-21', B'0'),
       (3, 'Hyatt Regency Basel', 'Basel', 'Upper Upscale', '2024-04-02', '2024-04-20', B'0'),
@@ -167,7 +167,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -466,14 +466,14 @@ async function run() {
           }
         })
       );
-      
+
       conversationHistory.push(...toolResponses);
-      
+
       // Call the AI again with the tool results.
       response = await ai.generate({ messages: conversationHistory, tools });
       conversationHistory.push(response.message);
     }
-    
+
     console.log(response.text);
   }
 }
