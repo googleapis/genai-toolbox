@@ -194,8 +194,8 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	userAgent string,
-) func(tools.OAuthAccessToken) (*bigquery.Client, *bigqueryrestapi.Service, error) {
-	return func(tokenString tools.OAuthAccessToken) (*bigquery.Client, *bigqueryrestapi.Service, error) {
+) func(tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	return func(tokenString tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 		return initBigQueryConnectionWithOAuthToken(ctx, project, location, userAgent, tokenString)
 	}
 }

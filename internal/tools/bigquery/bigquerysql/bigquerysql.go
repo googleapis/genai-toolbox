@@ -23,7 +23,7 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
-	BigQueryClientCreator() bigquery.BigqueryClientCreator
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 }
 
 // validate compatible sources are still compatible
@@ -135,7 +135,7 @@ type Tool struct {
 	Statement     string
 	Client        *bigqueryapi.Client
 	RestService   *bigqueryrestapi.Service
-	ClientCreator bigquery.BigqueryClientCreator
+	ClientCreator bigqueryds.BigqueryClientCreator
 	manifest      tools.Manifest
 	mcpManifest   tools.McpManifest
 }
@@ -224,6 +224,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// Initialize new client if using user OAuth token
 	if t.UseClientOAuth {
 		bqClient, restService, err = t.ClientCreator(accessToken)
+		if err != nil {
+			return nil, fmt.Errorf("error creading client from OAuth access token: %w", err)
+		}
 	}
 
 	query = bqClient.Query(newStatement)
