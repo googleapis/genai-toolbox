@@ -195,10 +195,6 @@ function createHeaderEditorModal(toolId, currentHeaders, toolParameters, authReq
     if (authProfileNames.size > 0 || authRequired.length > 0) {
         const authHelperSection = document.createElement('div');
         authHelperSection.className = 'auth-helper-section';
-        const title = document.createElement('h6');
-        title.className = 'auth-helper-title';
-        title.textContent = 'Format Header with Auth Tokens';
-        authHelperSection.appendChild(title);
         const authList = document.createElement('div');
         authList.className = 'auth-method-list';
 

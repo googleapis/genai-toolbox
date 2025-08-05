@@ -524,11 +524,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background-color: #f8f9fa; 
-  border: 1px solid var(--section-border); 
-  border-radius: 4px;
-  margin-bottom: 8px;
+  padding: 8px 12px;
 }
 
 .auth-method-label {
@@ -539,19 +535,11 @@ body {
 
 .auth-helper-section {
     border: 1px solid var(--section-border); 
+    background-color: transparent;
     padding: 16px;
     border-radius: 8px;
     margin-top: 20px;
-    background-color: #f8f9fa;
     width: 80%;
-}
-
-.auth-helper-title {
-    margin-top: 0;
-    margin-bottom: 16px;
-    color: var(--text-primary-gray);
-    font-size: 1.15em;
-    font-weight: 500;
 }
 
 .auth-method-list {
@@ -589,7 +577,7 @@ body {
 }
 
 .auth-input {
-  padding: 8px 10px;
+  padding: 8px 8px;
   border: 1px solid #bdc1c6;
   border-radius: 4px;
   font-size: 14px;
