@@ -30,26 +30,26 @@ description: "Connect your IDE to SQL Server using Toolbox."
 
 1.  [Create or select a SQL Server instance.](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
 
----
-
 ## Install MCP Toolbox
 
 1.  Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
 
+  <!-- {x-release-please-start-version} -->
     {{< tabpane persist="header" >}}
     {{< tab header="linux/amd64" lang="bash" >}}
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/linux/amd64/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/linux/amd64/toolbox
     {{< /tab >}}
     {{< tab header="darwin/arm64" lang="bash" >}}
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/arm64/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/arm64/toolbox
     {{< /tab >}}
     {{< tab header="darwin/amd64" lang="bash" >}}
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/darwin/amd64/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/amd64/toolbox
     {{< /tab >}}
     {{< tab header="windows/amd64" lang="bash" >}}
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/windows/amd64/toolbox.exe
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolbox.exe
     {{< /tab >}}
     {{< /tabpane >}}
+  <!-- {x-release-please-end} -->
 
 2.  Make the binary executable:
 
@@ -80,8 +80,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
@@ -106,8 +106,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
@@ -133,8 +133,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
@@ -159,8 +159,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
@@ -186,8 +186,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
             "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
             "env": {
               "MSSQL_HOST": "",
-              "MSSQL_DATABASE": "",
               "MSSQL_PORT": "",
+              "MSSQL_DATABASE": "",
               "MSSQL_USER": "",
               "MSSQL_PASSWORD": ""
             }
@@ -211,8 +211,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
@@ -235,8 +235,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
@@ -260,8 +260,8 @@ description: "Connect your IDE to SQL Server using Toolbox."
           "args": ["--prebuilt","mssql","--stdio"],
           "env": {
             "MSSQL_HOST": "",
-            "MSSQL_DATABASE": "",
             "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
             "MSSQL_USER": "",
             "MSSQL_PASSWORD": ""
           }
