@@ -16,6 +16,10 @@
 * **tools/looker-query-url:** Add support for `looker-query-url` tool ([#1015](https://github.com/googleapis/genai-toolbox/issues/1015)) ([327ddf0](https://github.com/googleapis/genai-toolbox/commit/327ddf0439058aa5ecd2c7ae8251fcde6aeff18c))
 * **tools/dataplex-lookup-entry:** Add support for `dataplex-lookup-entry` tool ([#1009](https://github.com/googleapis/genai-toolbox/issues/1009)) ([5fa1660](https://github.com/googleapis/genai-toolbox/commit/5fa1660fc8631989b4d13abea205b6426bb506a5))
 
+### Bug Fixes
+
+* **tools/bigquery,mssql,mysql,postgres,spanner,tidb:** Add query logging to execute-sql tools ([#1069](https://github.com/googleapis/genai-toolbox/issues/1069)) ([0527532]([https://github.com/googleapis/genai-toolbox/commit/0527532bd7085ef9eb8f9c30f430a2f2f35cef32))
+
 ## [0.10.0](https://github.com/googleapis/genai-toolbox/compare/v0.9.0...v0.10.0) (2025-07-25)
 
 
