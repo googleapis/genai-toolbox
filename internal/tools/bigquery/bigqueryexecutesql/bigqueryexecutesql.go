@@ -147,10 +147,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal dry run job to JSON: %w", err)
 			}
-
-			if dryRun {
-				return string(jobJSON), nil
-			}
+			return string(jobJSON), nil
 		}
 		// This case should not be reached, but as a fallback, we return a message.
 		return "Dry run was requested, but no job information was returned.", nil
