@@ -592,6 +592,14 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 			isErr:         false,
 		},
 		{
+			name:          "invoke my-exec-sql-tool with dryRun execute immediate",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql":"EXECUTE IMMEDIATE \"CREATE TABLE %s (id INT64, name STRING)\"", "dry_run": true}`, newTableName))),
+			want:          `\"statementType\": \"SCRIPT\"`,
+			isErr:         false,
+		},
+		{
 			name:          "Invoke my-auth-exec-sql-tool with dryRun and auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
