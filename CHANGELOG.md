@@ -10,7 +10,6 @@
 
 ### Features
 
-* Add DuckDB source and tool ([#879](https://github.com/googleapis/genai-toolbox/pull/879)) ([fd14933](https://github.com/googleapis/genai-toolbox/commit/fd149337e9fa8e912e8699962a7104d51cdffc5d))
 * Add TiDB source and tool ([#829](https://github.com/googleapis/genai-toolbox/issues/829)) ([6eaf36a](https://github.com/googleapis/genai-toolbox/commit/6eaf36ac8505d523fa4f5a4ac3c97209fd688cef))
 * Interactive web UI for Toolbox  ([#1065](https://github.com/googleapis/genai-toolbox/issues/1065)) ([8749b03](https://github.com/googleapis/genai-toolbox/commit/8749b030035e65361047c4ead13dfacb8e9a9b59))
 * **prebuiltconfigs/cloud-sql-postgres:** Introduce additional parameter to limit context in list tables ([#1062](https://github.com/googleapis/genai-toolbox/issues/1062)) ([c3a58e1](https://github.com/googleapis/genai-toolbox/commit/c3a58e1d1678dc14d8de5006511df597fd75faa3))
