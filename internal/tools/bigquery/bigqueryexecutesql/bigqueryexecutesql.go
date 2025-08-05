@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -157,6 +158,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	// JobStatistics.QueryStatistics.StatementType
 	query := t.Client.Query(sql)
 	query.Location = t.Client.Location
+
+	// Log the query executed for debugging.
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting logger: %s", err)
+	}
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of

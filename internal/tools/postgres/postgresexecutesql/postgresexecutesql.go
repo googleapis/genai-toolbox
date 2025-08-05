@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -124,6 +125,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
+	// Log the query executed for debugging.
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting logger: %s", err)
+	}
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
 	results, err := t.Pool.Query(ctx, sql)
 	if err != nil {
