@@ -100,7 +100,7 @@ tools:
               description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
             - name: output_format
               type: string
-              description: "Use 'simple' for just names, or 'detailed' for the full schema."
+              description: "Optional: Use 'simple' to return table names only or  use 'detailed' to return the full information schema."
               default: "detailed"
 
 toolsets:
