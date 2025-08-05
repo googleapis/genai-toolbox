@@ -129,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast sql parameter to string")
+		return nil, fmt.Errorf("unable to cast sql parameter %s", paramsMap["sql"])
 	}
 	dryRun, ok := paramsMap["dry_run"].(bool)
 	if !ok {
