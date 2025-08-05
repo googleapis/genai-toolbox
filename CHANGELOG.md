@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.11.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.11.0) (2025-08-05)
+
+
+### Features
+
+* **prebuiltconfigs/cloud-sql-postgres:** Introduce additional parameter to limit context in list tables ([#1062](https://github.com/googleapis/genai-toolbox/issues/1062)) ([c3a58e1](https://github.com/googleapis/genai-toolbox/commit/c3a58e1d1678dc14d8de5006511df597fd75faa3))
+* **tools/bigquery,mssql,mysql,postgres,spanner,tidb:** Add query logging to execute-sql tools ([#1069](https://github.com/googleapis/genai-toolbox/issues/1069)) ([0527532](https://github.com/googleapis/genai-toolbox/commit/0527532bd7085ef9eb8f9c30f430a2f2f35cef32))
+
+
+### Bug Fixes
+
+* Https://github.com/googleapis/genai-toolbox/issues/1052 ([0527532](https://github.com/googleapis/genai-toolbox/commit/0527532bd7085ef9eb8f9c30f430a2f2f35cef32))
+
+
+### Reverts
+
+* 'feat: add support for DuckDB' ([#1079](https://github.com/googleapis/genai-toolbox/issues/1079)) ([f79cdd6](https://github.com/googleapis/genai-toolbox/commit/f79cdd61442880283df6bf7cd845f54933cebab8))
+
+
+### Miscellaneous Chores
+
+* Release 0.11.0 ([#1082](https://github.com/googleapis/genai-toolbox/issues/1082)) ([80a8ebf](https://github.com/googleapis/genai-toolbox/commit/80a8ebfa0b713c951b7ce8a381f2d6c474e278a2))
+
 ## [0.11.0](https://github.com/googleapis/genai-toolbox/compare/v0.10.0...v0.11.0) (2025-08-04)
 
 
