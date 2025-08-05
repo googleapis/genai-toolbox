@@ -3,14 +3,14 @@ title: "dataplex-search-aspect-types"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-aspect-types" tool allows to fetch the metadata template of 3P aspect types based on search query.
+  A "dataplex-search-aspect-types" tool allows to to find aspect types relevant to the query.
 aliases:
 - /resources/tools/dataplex-search-aspect-types
 ---
 
 ## About
 
-A `dataplex-search-aspect-types` tool allows to fetch the metadata template of 3P aspect types based on search query.
+A `dataplex-search-aspect-types` tool allows to fetch the metadata template of aspect types based on search query.
 It's compatible with the following sources:
 
 - [dataplex](../../sources/dataplex.md)
