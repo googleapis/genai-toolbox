@@ -133,7 +133,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 	dryRun, ok := paramsMap["dry_run"].(bool)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast dry_run parameter to bool")
+		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
 
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
