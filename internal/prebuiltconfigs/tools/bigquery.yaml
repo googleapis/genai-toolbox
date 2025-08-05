@@ -4,12 +4,12 @@ sources:
     project: ${BIGQUERY_PROJECT}
 
 tools:
-  chat:
-    kind: bigquery-chat
+  ask_data_insights:
+    kind: bigquery-ask-data-insights
     source: bigquery-source
     description: |
-      Use this tool to perform data analysis, get insights, 
-      or answer complex questions about the contents of specific 
+      Use this tool to perform data analysis, get insights,
+      or answer complex questions about the contents of specific
       BigQuery tables.
 
   execute_sql:
@@ -39,6 +39,7 @@ tools:
 
 toolsets:
   bigquery-database-tools:
+    - ask_data_insights
     - execute_sql
     - get_dataset_info
     - get_table_info
