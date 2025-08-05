@@ -124,9 +124,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-var getAspectMap = map[string]*dataplexpb.AspectType{}
-
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+	// Invoke the tool with the provided parameters
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
 	pageSize := int32(paramsMap["pageSize"].(int))
@@ -134,6 +133,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	orderBy, _ := paramsMap["orderBy"].(string)
 	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
 
+	// Create SearchEntriesRequest with the provided parameters
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype",
 		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
@@ -143,11 +143,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		SemanticSearch: semanticSearch,
 	}
 
+	// Perform the search using the CatalogClient - this will return an iterator
 	it := t.CatalogClient.SearchEntries(ctx, req)
 	if it == nil {
 		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
 	}
 
+	// Iterate through the search results and call GetAspectType for each result using the resource name
 	var results []*dataplexpb.AspectType
 	for {
 		entry, err := it.Next()
@@ -155,17 +157,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 			break
 		}
 		resourceName := entry.DataplexEntry.GetEntrySource().Resource
-		if _, ok := getAspectMap[resourceName]; !ok {
-			getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
-				Name: resourceName,
-			}
-			aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
-			}
-			getAspectMap[resourceName] = aspectType
+		getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
+			Name: resourceName,
 		}
-		results = append(results, getAspectMap[resourceName])
+		aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
+		}
+		results = append(results, aspectType)
 	}
 	return results, nil
 }
