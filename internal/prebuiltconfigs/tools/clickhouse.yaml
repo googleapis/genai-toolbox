@@ -1,0 +1,37 @@
+sources:
+  clickhouse-source:
+    kind: clickhouse
+    host: ${CLICKHOUSE_HOST}
+    port: ${CLICKHOUSE_PORT}
+    user: ${CLICKHOUSE_USER}
+    password: ${CLICKHOUSE_PASSWORD}
+    database: ${CLICKHOUSE_DATABASE}
+    protocol: ${CLICKHOUSE_PROTOCOL}
+
+tools:
+  execute_sql:
+    kind: clickhouse-execute-sql
+    source: clickhouse-source
+    description: Use this tool to execute SQL.
+
+  describe_table:
+    kind: clickhouse-describe-table
+    source: clickhouse-source
+    description: Use this tool to get table information.
+
+  list_tables:
+    kind: clickhouse-list-tables
+    source: clickhouse-source
+    description: Lists detailed schema information on tables
+
+  list_databases:
+    kind: clickhouse-list-databases
+    source: clickhouse-source
+    description: Lists all databases in the ClickHouse server
+
+toolsets:
+  clickhouse-database-tools:
+    - execute_sql
+    - describe_table
+    - list_tables
+    - list_databases
