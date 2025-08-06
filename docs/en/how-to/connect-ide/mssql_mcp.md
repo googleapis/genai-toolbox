@@ -32,7 +32,7 @@ description: "Connect your IDE to SQL Server using Toolbox."
 
 ## Install MCP Toolbox
 
-1.  Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
 
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
@@ -54,13 +54,13 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolb
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
-1.  Make the binary executable:
+1. Make the binary executable:
 
     ```bash
     chmod +x toolbox
     ```
 
-1.  Verify the installation:
+1. Verify the installation:
 
     ```bash
     ./toolbox --version
