@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"cloud.google.com/go/bigquery"
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -36,7 +35,7 @@ const SourceKind string = "bigquery"
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString tools.OAuthAccessToken) (*bigquery.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 func init() {
 	if !sources.Register(SourceKind, newConfig) {
