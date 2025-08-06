@@ -34,7 +34,7 @@ require (
 	github.com/redis/go-redis/v9 v9.12.0
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
-	github.com/valkey-io/valkey-go v1.0.63
+	github.com/valkey-io/valkey-go v1.0.64
 	go.mongodb.org/mongo-driver v1.17.4
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
 	go.opentelemetry.io/otel v1.37.0
