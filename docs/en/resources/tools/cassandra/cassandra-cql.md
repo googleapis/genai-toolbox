@@ -58,7 +58,7 @@ tools:
 > including keyspaces, table names, and column names. **This makes it more
 > vulnerable to CQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](../#template-parameters).
 
 ```yaml
 tools:
@@ -92,5 +92,5 @@ tools:
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | CQL statement to execute.                                                                                                                  |
 | authRequired       |                []string                         |    false     | List of authentication requirements for the source.                                                                                        |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the CQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the CQL statement before executing prepared statement. |
+| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the CQL statement.                                           |
+| templateParameters | [templateParameters](../#template-parameters) |    false     | List of [templateParameters](../#template-parameters) that will be inserted into the CQL statement before executing prepared statement. |

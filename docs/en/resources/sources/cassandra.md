@@ -14,7 +14,7 @@ description: >
 
 ## Available Tools
 
-- [`cassandra-execute-cql`](../tools/cassandra/cassandra-execute-cql.md)  
+- [`cassandra-cql`](../tools/cassandra/cassandra-cql.md)  
   Run parameterized CQL queries in Cassandra.
 
 
