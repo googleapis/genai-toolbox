@@ -146,10 +146,10 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	paramsMap := params.AsMap()
-	sql, ok := paramsMap["sql"].(string)
+	sliceParams := params.AsSlice()
+	sql, ok := sliceParams[0].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
 	// Log the query executed for debugging.
