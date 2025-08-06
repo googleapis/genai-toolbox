@@ -32,7 +32,7 @@ require (
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
 	github.com/microsoft/go-mssqldb v1.9.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
-	github.com/redis/go-redis/v9 v9.11.0
+	github.com/redis/go-redis/v9 v9.12.0
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/valkey-io/valkey-go v1.0.63
@@ -46,7 +46,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/oauth2 v0.30.0
-	google.golang.org/api v0.244.0
+	google.golang.org/api v0.245.0
 	modernc.org/sqlite v1.38.2
 )
 
@@ -69,11 +69,12 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gonum.org/v1/gonum v0.16.0 // indirect
 )
 
 require (
 	cel.dev/expr v0.24.0 // indirect
-	cloud.google.com/go v0.121.2 // indirect
+	cloud.google.com/go v0.121.4 // indirect
 	cloud.google.com/go/alloydb v1.18.0 // indirect
 	cloud.google.com/go/auth v0.16.3 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
@@ -88,7 +89,6 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
 	github.com/ajg/form v1.5.1 // indirect
-	github.com/apache/arrow-go/v18 v18.4.0 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -109,7 +109,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
@@ -129,7 +128,6 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/marcboeker/go-duckdb/v2 v2.3.4
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -169,7 +167,7 @@ require (
 	golang.org/x/tools v0.34.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250728155136-f173205681a0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
 	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect

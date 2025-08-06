@@ -162,6 +162,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
+	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -551,6 +552,115 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	newTableName := fmt.Sprintf("%s.new_dry_run_table_%s", datasetName, strings.ReplaceAll(uuid.New().String(), "-", ""))
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-exec-sql-tool with dryRun",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
+			want:          `\"statementType\": \"SELECT\"`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with dryRun create table",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql":"CREATE TABLE %s (id INT64, name STRING)", "dry_run": true}`, newTableName))),
+			want:          `\"statementType\": \"CREATE_TABLE\"`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with dryRun execute immediate",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql":"EXECUTE IMMEDIATE \"CREATE TABLE %s (id INT64, name STRING)\"", "dry_run": true}`, newTableName))),
+			want:          `\"statementType\": \"SCRIPT\"`,
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with dryRun and auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
+			isErr:         false,
+			want:          `\"statementType\": \"SELECT\"`,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with dryRun and invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1","dry_run": true}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with dryRun and without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
 			}
 		})
 	}
