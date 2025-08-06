@@ -17,6 +17,7 @@ package dataplexsearchaspecttypes
 import (
 	"context"
 	"fmt"
+	"time"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
@@ -81,10 +82,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	query := tools.NewStringParameter("query", "The query against which aspect type should be matched.")
 	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous search aspect types tool call. Provide this to retrieve the subsequent page.")
 	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
-	parameters := tools.Parameters{query, pageSize, pageToken, orderBy, semanticSearch}
+	parameters := tools.Parameters{query, pageSize, orderBy}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -129,18 +128,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
 	pageSize := int32(paramsMap["pageSize"].(int))
-	pageToken, _ := paramsMap["pageToken"].(string)
 	orderBy, _ := paramsMap["orderBy"].(string)
-	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
 
 	// Create SearchEntriesRequest with the provided parameters
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype",
 		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
 		PageSize:       pageSize,
-		PageToken:      pageToken,
 		OrderBy:        orderBy,
-		SemanticSearch: semanticSearch,
+		SemanticSearch: true,
 	}
 
 	// Perform the search using the CatalogClient - this will return an iterator
@@ -151,6 +147,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	// Iterate through the search results and call GetAspectType for each result using the resource name
 	var results []*dataplexpb.AspectType
+	var requestCount int
 	for {
 		entry, err := it.Next()
 		if err != nil {
@@ -164,7 +161,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
 		}
+		requestCount++
 		results = append(results, aspectType)
+		if pageSize > 5 {
+			if requestCount%5 == 0 {
+				time.Sleep(3 * time.Second)
+			}
+		}
 	}
 	return results, nil
 }

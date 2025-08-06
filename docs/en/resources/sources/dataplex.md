@@ -218,15 +218,13 @@ Search syntax supports the following qualifiers:
 - "label.foo" - Matches BigQuery resources that have a label whose key equals foo as a string.
 - "type=TYPE" - Matches resources of a specific entry type or its type alias.
 - "projectid:bar" - Matches resources within Google Cloud projects that match bar as a substring in the ID.
-- "parent:x" - Matches x as a substring of the hierarchical path of a resource. The parent path is a fully_qualified_name of the parent resource when semantic search is disabled. With semantic search enabled, it supports same syntax as `name` predicate.
+- "parent:x" - Matches x as a substring of the hierarchical path of a resource. It supports same syntax as `name` predicate.
 - "orgid=number" - Matches resources within a Google Cloud organization with the exact ID value of the number.
 - "system=SYSTEM" - Matches resources from a specified system. For example, system=bigquery matches BigQuery resources.
 - "location=LOCATION" - Matches resources in a specified location with an exact name. For example, location=us-central1 matches assets hosted in Iowa. BigQuery Omni assets support this qualifier by using the BigQuery Omni location name. For example, location=aws-us-east-1 matches BigQuery Omni assets in Northern Virginia.
 - "createtime" -
 Finds resources that were created within, before, or after a given date or time. For example "createtime:2019-01-01" matches resources created on 2019-01-01. 
 - "updatetime" - Finds resources that were updated within, before, or after a given date or time. For example "updatetime>2019-01-01" matches resources updated after 2019-01-01.
-- "fully_qualified_name:x" - Matches x as a substring of fully_qualified_name. (Not supported with Semantic Search)
-- "fully_qualified_name=x" - Matches x as fully_qualified_name. (Not supported with Semantic Search)
 
 ### Aspect Search
 To search for entries based on their attached aspects, use the following query syntax.

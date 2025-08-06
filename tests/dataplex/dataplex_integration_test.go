@@ -280,7 +280,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-search-entries-tool",
 			toolName:       "my-dataplex-search-entries-tool",
-			expectedParams: []string{"pageSize", "pageToken", "query", "orderBy", "semanticSearch"},
+			expectedParams: []string{"pageSize", "query", "orderBy"},
 		},
 		{
 			name:           "get my-dataplex-lookup-entry-tool",
@@ -290,7 +290,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-search-aspect-types-tool",
 			toolName:       "my-dataplex-search-aspect-types-tool",
-			expectedParams: []string{"query", "semanticSearch"},
+			expectedParams: []string{"pageSize", "query", "orderBy"},
 		},
 	}
 
