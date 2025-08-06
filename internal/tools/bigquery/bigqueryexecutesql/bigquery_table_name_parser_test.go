@@ -39,14 +39,14 @@ func TestTableParser(t *testing.T) {
 		},
 		{
 			name:             "multiple fully qualified tables",
-			sql:              "SELECT * FROM `proj1.data1.tbl1` JOIN `proj2.data2.tbl2` ON id",
+			sql:              "SELECT * FROM `proj1.data1`.`tbl1` JOIN proj2.`data2.tbl2` ON id",
 			defaultProjectID: "default-proj",
 			want:             []string{"proj1.data1.tbl1", "proj2.data2.tbl2"},
 			wantErr:          false,
 		},
 		{
 			name:             "duplicate tables",
-			sql:              "SELECT * FROM `proj1.data1.tbl1` JOIN `proj1.data1.tbl1` ON id",
+			sql:              "SELECT * FROM `proj1.data1.tbl1` JOIN proj1.data1.tbl1 ON id",
 			defaultProjectID: "default-proj",
 			want:             []string{"proj1.data1.tbl1"},
 			wantErr:          false,

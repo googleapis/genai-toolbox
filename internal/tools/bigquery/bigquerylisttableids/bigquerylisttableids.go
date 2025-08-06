@@ -47,6 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	IsDatasetAllowed(projectID, datasetID string) bool
+	AreDatasetsRestricted() bool
 }
 
 // validate compatible sources are still compatible
@@ -94,14 +95,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
-		Parameters:       parameters,
-		AuthRequired:     cfg.AuthRequired,
-		Client:           s.BigQueryClient(),
-		IsDatasetAllowed: s.IsDatasetAllowed,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:      mcpManifest,
+		Name:                  cfg.Name,
+		Kind:                  kind,
+		Parameters:            parameters,
+		AuthRequired:          cfg.AuthRequired,
+		Client:                s.BigQueryClient(),
+		IsDatasetAllowed:      s.IsDatasetAllowed,
+		AreDatasetsRestricted: s.AreDatasetsRestricted,
+		manifest:              tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:           mcpManifest,
 	}
 	return t, nil
 }
@@ -115,10 +117,11 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client           *bigqueryapi.Client
-	IsDatasetAllowed func(projectID, datasetID string) bool
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	Client                *bigqueryapi.Client
+	IsDatasetAllowed      func(projectID, datasetID string) bool
+	AreDatasetsRestricted func() bool
+	manifest              tools.Manifest
+	mcpManifest           tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {

@@ -269,15 +269,17 @@ func parseIdentifierSequence(s string) ([]string, int, error) {
 			break
 		}
 
-		// If the parsed part was quoted and contains dots, it's a full identifier.
-		// We split it and terminate the sequence parsing.
 		if current[0] == '`' && strings.Contains(part, ".") {
-			parts = append(parts, strings.Split(part, ".")...)
-			totalConsumed += consumed
-			break
+			// This handles cases like `project.dataset.table` but not `project.dataset`.table.
+			// If the character after the quoted identifier is not a dot, we treat it as a full name.
+			if len(current) <= consumed || current[consumed] != '.' {
+				parts = append(parts, strings.Split(part, ".")...)
+				totalConsumed += consumed
+				break
+			}
 		}
 
-		parts = append(parts, part)
+		parts = append(parts, strings.Split(part, ".")...)
 		totalConsumed += consumed
 
 		if len(s) <= totalConsumed || s[totalConsumed] != '.' {

@@ -204,6 +204,11 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Configure tool
 	toolsConfig := map[string]any{
+		"list-dataset-ids-restricted": map[string]any{
+			"kind":        "bigquery-list-dataset-ids",
+			"source":      "my-instance",
+			"description": "Tool to list dataset ids",
+		},
 		"list-table-ids-restricted": map[string]any{
 			"kind":        "bigquery-list-table-ids",
 			"source":      "my-instance",
@@ -250,6 +255,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Run tests
+	runListDatasetIdsWithRestriction(t, allowedDatasetName, disallowedDatasetName)
 	runListTableIdsWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName)
 	runGetDatasetInfoWithRestriction(t, allowedDatasetName, disallowedDatasetName)
 	runGetTableInfoWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName)
@@ -1349,11 +1355,64 @@ func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowed
 	}
 }
 
+func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName string) {
+	testCases := []struct {
+		name           string
+		wantStatusCode int
+		wantInResult   string
+		notInResult    string
+	}{
+		{
+			name:           "invoke list-dataset-ids with restriction",
+			wantStatusCode: http.StatusOK,
+			wantInResult:   allowedDatasetName,
+			notInResult:    disallowedDatasetName,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.NewBuffer([]byte(`{}`))
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/list-dataset-ids-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			var respBody map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+			got, ok := respBody["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+			if !strings.Contains(got, tc.wantInResult) {
+				t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
+			}
+			if tc.notInResult != "" && strings.Contains(got, tc.notInResult) {
+				t.Errorf("unexpected result: got %q, did not want to contain %q", got, tc.notInResult)
+			}
+		})
+	}
+}
+
 func runGetDatasetInfoWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName string) {
 	testCases := []struct {
 		name           string
 		dataset        string
 		wantStatusCode int
+		wantInError    string
 	}{
 		{
 			name:           "invoke on allowed dataset",
@@ -1364,6 +1423,7 @@ func runGetDatasetInfoWithRestriction(t *testing.T, allowedDatasetName, disallow
 			name:           "invoke on disallowed dataset",
 			dataset:        disallowedDatasetName,
 			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access denied to dataset '%s'", disallowedDatasetName),
 		},
 	}
 
@@ -1385,6 +1445,13 @@ func runGetDatasetInfoWithRestriction(t *testing.T, allowedDatasetName, disallow
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
 		})
 	}
 }
@@ -1395,6 +1462,7 @@ func runGetTableInfoWithRestriction(t *testing.T, allowedDatasetName, disallowed
 		dataset        string
 		table          string
 		wantStatusCode int
+		wantInError    string
 	}{
 		{
 			name:           "invoke on allowed table",
@@ -1407,6 +1475,7 @@ func runGetTableInfoWithRestriction(t *testing.T, allowedDatasetName, disallowed
 			dataset:        disallowedDatasetName,
 			table:          disallowedTableName,
 			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access denied to dataset '%s'", disallowedDatasetName),
 		},
 	}
 
@@ -1427,6 +1496,13 @@ func runGetTableInfoWithRestriction(t *testing.T, allowedDatasetName, disallowed
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
 			}
 		})
 	}

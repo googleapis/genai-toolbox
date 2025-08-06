@@ -121,10 +121,15 @@ func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
 }
 
+// AreDatasetsRestricted returns true if the source is configured with a list of allowed datasets.
+func (s *Source) AreDatasetsRestricted() bool {
+	return len(s.allowedDatasets) > 0
+}
+
 // IsDatasetAllowed checks if a given dataset is accessible based on the source's configuration.
 func (s *Source) IsDatasetAllowed(projectID, datasetID string) bool {
 	// If the normalized map is empty, it means no restrictions were configured.
-	if len(s.allowedDatasets) == 0 {
+	if !s.AreDatasetsRestricted() {
 		return true
 	}
 

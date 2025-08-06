@@ -57,6 +57,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
 	IsDatasetAllowed(projectID, datasetID string) bool
+	AreDatasetsRestricted() bool
 }
 
 // validate compatible sources are still compatible
@@ -109,15 +110,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
-		Parameters:       parameters,
-		AuthRequired:     cfg.AuthRequired,
-		Client:           s.BigQueryClient(),
-		RestService:      s.BigQueryRestService(),
-		IsDatasetAllowed: s.IsDatasetAllowed,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:      mcpManifest,
+		Name:                  cfg.Name,
+		Kind:                  kind,
+		Parameters:            parameters,
+		AuthRequired:          cfg.AuthRequired,
+		Client:                s.BigQueryClient(),
+		RestService:           s.BigQueryRestService(),
+		IsDatasetAllowed:      s.IsDatasetAllowed,
+		AreDatasetsRestricted: s.AreDatasetsRestricted,
+		manifest:              tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:           mcpManifest,
 	}
 	return t, nil
 }
@@ -126,15 +128,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name             string           `yaml:"name"`
-	Kind             string           `yaml:"kind"`
-	AuthRequired     []string         `yaml:"authRequired"`
-	Parameters       tools.Parameters `yaml:"parameters"`
-	Client           *bigqueryapi.Client
-	RestService      *bigqueryrestapi.Service
-	IsDatasetAllowed func(projectID, datasetID string) bool
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	Name                  string           `yaml:"name"`
+	Kind                  string           `yaml:"kind"`
+	AuthRequired          []string         `yaml:"authRequired"`
+	Parameters            tools.Parameters `yaml:"parameters"`
+	Client                *bigqueryapi.Client
+	RestService           *bigqueryrestapi.Service
+	IsDatasetAllowed      func(projectID, datasetID string) bool
+	AreDatasetsRestricted func() bool
+	manifest              tools.Manifest
+	mcpManifest           tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
@@ -154,7 +157,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 	statementType := dryRunJob.Statistics.Query.StatementType
 
-	if t.IsDatasetAllowed != nil {
+	if t.AreDatasetsRestricted() {
 		// Two-stage table name parsing logic.
 		var tableNames []string
 		// Stage 1: Attempt to get table names from the dry run result for reliable statement types.
@@ -175,7 +178,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 		for _, tableID := range tableNames {
 			parts := strings.Split(tableID, ".")
-			if len(parts) == 3 { // project.dataset.table
+			if len(parts) == 3 {
 				projectID, datasetID := parts[0], parts[1]
 				if !t.IsDatasetAllowed(projectID, datasetID) {
 					return nil, fmt.Errorf("query accesses dataset '%s', which is not in the allowed list", datasetID)
@@ -198,25 +201,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	query := t.Client.Query(sql)
 	query.Location = t.Client.Location
-
-	// This block handles Data Manipulation Language (DML) and Data Definition Language (DDL) statements.
-	// These statements (e.g., INSERT, UPDATE, CREATE TABLE) do not return a row set.
-	// Instead, we execute them as a job, wait for completion, and return a success
-	// message, including the number of affected rows for DML operations.
-	if statementType != "SELECT" {
-		job, err := query.Run(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to start DML/DDL job: %w", err)
-		}
-		status, err := job.Wait(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to wait for DML/DDL job to complete: %w", err)
-		}
-		if err := status.Err(); err != nil {
-			return nil, fmt.Errorf("DML/DDL job failed with error: %w", err)
-		}
-		return "Operation completed successfully.", nil
-	}
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
