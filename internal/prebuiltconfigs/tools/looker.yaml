@@ -464,6 +464,25 @@ tools:
           the data in a JSON structure. It accepts the look_id as the
           parameter.
 
+    make_look:
+        kind: looker-make-look
+        source: looker-source
+        description: |
+          make_look Tool
+
+          This tool creates a new look in Looker, using the query
+          parameters and the vis_config specified.
+
+          Most of the parameters are the same as the query_url
+          tool. In addition, there is a title and a description
+          that must be provided.
+
+          The newly created look will be created in the user's
+          personal folder in looker. The look name must be unique.
+
+          The result is a json document with a link to the newly
+          created look.
+
 toolsets:
     looker-tools:
         - get_models
@@ -477,3 +496,4 @@ toolsets:
         - query_url
         - get_looks
         - run_look
+        - make_look
