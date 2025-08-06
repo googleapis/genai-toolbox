@@ -2,7 +2,7 @@
 title: "firestore-delete-documents"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-delete-documents" tool deletes multiple documents from Firestore by their paths.
 aliases:
 - /resources/tools/firestore-delete-documents
@@ -14,7 +14,7 @@ A `firestore-delete-documents` tool deletes multiple documents from Firestore by
 their paths.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
 `firestore-delete-documents` takes one input parameter `documentPaths` which is
 an array of document paths to delete. The tool uses Firestore's BulkWriter for

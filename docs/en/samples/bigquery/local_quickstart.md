@@ -3,7 +3,7 @@ title: "Quickstart (Local with BigQuery)"
 type: docs
 weight: 1
 description: >
-  How to get started running Toolbox locally with Python, BigQuery, and 
+  How to get started running Toolbox locally with Python, BigQuery, and
   LangGraph, LlamaIndex, or ADK.
 ---
 
@@ -179,7 +179,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -693,7 +693,7 @@ with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
     {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
 To learn more about the Core SDK, check out the [Toolbox Core SDK
-documentation.](https://github.com/googleapis/genai-toolbox/tree/main/sdks/toolbox-core)
+documentation.](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md)
 {{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent

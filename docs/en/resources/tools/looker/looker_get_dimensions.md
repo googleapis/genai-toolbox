@@ -16,7 +16,7 @@ in a given mode in the source.
 
 It's compatible with the following sources:
 
-- [looker](../sources/looker.md)
+- [looker](../../sources/looker.md)
 
 `looker-get-dimensions` accepts two parameters, the `model` and the `explore`.
 

@@ -2,7 +2,7 @@
 title: "neo4j-execute-cypher"
 type: docs
 weight: 1
-description: > 
+description: >
   A "neo4j-execute-cypher" tool executes any arbitrary Cypher statement against a Neo4j
   database.
 aliases:
@@ -16,7 +16,7 @@ string parameter against a Neo4j database. It's designed to be a flexible tool
 for interacting with the database when a pre-defined query is not sufficient.
 This tool is compatible with any of the following sources:
 
-- [neo4j](../sources/neo4j.md)
+- [neo4j](../../sources/neo4j.md)
 
 For security, the tool can be configured to be read-only. If the `readOnly` flag
 is set to `true`, the tool will analyze the incoming Cypher query and reject any

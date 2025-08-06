@@ -79,7 +79,7 @@ database are in the same VPC network.
 
 Create a `tools.yaml` file that contains your configuration for Toolbox. For
 details, see the
-[configuration](https://googleapis.github.io/genai-toolbox/resources/sources/)
+[configuration](../resources/sources/)
 section.
 
 ## Deploy to Cloud Run
@@ -125,7 +125,7 @@ section.
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
-        # TODO(dev): update the following to match your VPC if necessary 
+        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud

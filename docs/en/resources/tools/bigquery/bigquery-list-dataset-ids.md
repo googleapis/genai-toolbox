@@ -2,7 +2,7 @@
 title: "bigquery-list-dataset-ids"
 type: docs
 weight: 1
-description: > 
+description: >
   A "bigquery-list-dataset-ids" tool returns all dataset IDs from the source.
 aliases:
 - /resources/tools/bigquery-list-dataset-ids
@@ -13,7 +13,7 @@ aliases:
 A `bigquery-list-dataset-ids` tool returns all dataset IDs from the source.
 It's compatible with the following sources:
 
-- [bigquery](../sources/bigquery.md)
+- [bigquery](../../sources/bigquery.md)
 
 `bigquery-list-dataset-ids` optionally accepts a `project` parameter to define
 the Google Cloud project ID. If the `project` parameter is not provided, the

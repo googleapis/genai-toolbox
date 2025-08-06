@@ -115,6 +115,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"query_url": map[string]any{
+				"kind":        "looker-query-url",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -173,7 +178,7 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"authSources": []any{},
-						"description": "The explore containing the dimensions.",
+						"description": "The explore containing the fields.",
 						"name":        "explore",
 						"required":    true,
 						"type":        "string",
@@ -197,7 +202,55 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"authSources": []any{},
-						"description": "The explore containing the measures.",
+						"description": "The explore containing the fields.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_parameters",
+		map[string]any{
+			"get_parameters": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore containing the fields.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_filters",
+		map[string]any{
+			"get_filters": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore containing the fields.",
 						"name":        "explore",
 						"required":    true,
 						"type":        "string",
@@ -318,4 +371,7 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "SELECT"
 	tests.RunToolInvokeParametersTest(t, "query_sql", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+
+	wantResult = "system__activity"
+	tests.RunToolInvokeParametersTest(t, "query_url", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
 }

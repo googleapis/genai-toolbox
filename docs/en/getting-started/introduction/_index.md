@@ -86,7 +86,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.10.0
+export VERSION=0.11.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -97,7 +97,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.10.0
+export VERSION=0.11.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -115,7 +115,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.10.0
+go install github.com/googleapis/genai-toolbox@v0.11.0
 ```
 
 {{% /tab %}}
@@ -136,6 +136,15 @@ Toolbox enables dynamic reloading by default. To disable, use the
 `--disable-reload` flag.
 {{< /notice >}}
 
+#### Launching Toolbox UI
+
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test tools and toolsets
+with features such as authorized parameters. To learn more, visit [Toolbox UI](../../how-to/use-toolbox-ui/index.md).
+
+```sh
+./toolbox --ui
+```
+
 #### Homebrew Users
 
 If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
@@ -148,7 +157,7 @@ You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
 
 For more detailed documentation on deploying to different environments, check
-out the resources in the [How-to section](../../how-to/_index.md)
+out the resources in the [How-to section](../../how-to/)
 
 ### Integrating your application
 
@@ -321,7 +330,7 @@ const toolboxTools = await client.loadToolset('toolsetName');
 const getTool = (toolboxTool) => tool({
     name: toolboxTool.getName(),
     description: toolboxTool.getDescription(),
-    parameters: toolboxTool.getParams(),
+    parameters: toolboxTool.getParamSchema(),
     execute: toolboxTool
 });;
 
