@@ -168,9 +168,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 			parts := strings.Split(tableID, ".")
 			if len(parts) == 3 { // project.dataset.table
 				projectID, datasetID := parts[0], parts[1]
-				if projectID != t.Client.Project() {
-					return nil, fmt.Errorf("query accesses project '%s', which is not the configured project '%s'", projectID, t.Client.Project())
-				}
 				if !t.IsDatasetAllowed(projectID, datasetID) {
 					return nil, fmt.Errorf("query accesses dataset '%s', which is not in the allowed list", datasetID)
 				}

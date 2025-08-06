@@ -46,7 +46,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	IsDatasetAllowed(projectID, datasetID string) bool
-	AllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -100,7 +99,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:     cfg.AuthRequired,
 		Client:           s.BigQueryClient(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
-		Datasets:         s.AllowedDatasets(),
 		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
 	}
@@ -118,7 +116,6 @@ type Tool struct {
 
 	Client           *bigqueryapi.Client
 	IsDatasetAllowed func(projectID, datasetID string) bool
-	Datasets         []string
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
 }
