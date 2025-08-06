@@ -82,6 +82,11 @@ sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # datasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+
 ```
 
 ## Reference
