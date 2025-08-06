@@ -75,6 +75,12 @@ visible to the LLM.
 
 [alloydb-psv]: https://cloud.google.com/alloydb/docs/parameterized-secure-views-overview
 
+{{< notice tip >}} Make sure to enable the `parameterized_views` extension before running this tool. You can do so by running this command in the AlloyDB studio:
+```sql
+CREATE EXTENSION IF NOT EXISTS parameterized_views;
+```
+{{< /notice >}}
+
 ## Example
 
 ```yaml
@@ -95,7 +101,6 @@ tools:
           - name: my_google_service
             field: email
 ```
-
 ## Reference
 
 | **field**          |                  **type**                  | **required** | **description**                                                          |
