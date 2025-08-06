@@ -74,6 +74,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	parameters := lookercommon.GetQueryParameters()
 
+	vizParameter := tools.NewMapParameterWithDefault("vis_config",
+		map[string]any{},
+		"The visualization config for the query",
+		"",
+	)
+	parameters = append(parameters, vizParameter)
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
@@ -121,6 +128,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("error building query request: %w", err)
 	}
+
+	paramsMap := params.AsMap()
+	visConfig := paramsMap["vis_config"].(map[string]any)
+	wq.VisConfig = &visConfig
+
 	respFields := "id,slug,share_url,expanded_share_url"
 	resp, err := t.Client.CreateQuery(*wq, respFields, t.ApiSettings)
 	if err != nil {
