@@ -161,7 +161,5 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	// Currently, all Looker tools are considered authorized if the source is correctly configured.
-	// The AuthRequired field in the Config struct is reserved for future, more granular authorization.
-	return true
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
