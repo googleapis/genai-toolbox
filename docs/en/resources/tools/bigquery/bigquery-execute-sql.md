@@ -16,7 +16,12 @@ It's compatible with the following sources:
 - [bigquery](../../sources/bigquery.md)
 
 `bigquery-execute-sql` takes one input parameter `sql` and runs the sql
-statement against the `source`.
+statement against the `source`. If the associated `bigquery` source has a
+`datasets` list configured, this tool will parse the SQL statement to identify
+accessed datasets and return an error if any of them are not in the allowed
+list. Note that the toolbox cannot determine which datasets are accessed within
+an `EXECUTE IMMEDIATE` statement. Therefore, when `datasets` restrictions are
+active, any SQL from this tool containing `EXECUTE IMMEDIATE` will be rejected.
 
 ## Example
 

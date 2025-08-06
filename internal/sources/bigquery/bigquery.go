@@ -49,10 +49,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Name     string   `yaml:"name" validate:"required"`
+	Kind     string   `yaml:"kind" validate:"required"`
+	Project  string   `yaml:"project" validate:"required"`
+	Location string   `yaml:"location"`
+	Datasets []string `yaml:"datasets"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -73,6 +74,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:      client,
 		RestService: restService,
 		Location:    r.Location,
+		Datasets:    r.Datasets,
 	}
 	return s, nil
 
@@ -87,6 +89,7 @@ type Source struct {
 	Client      *bigqueryapi.Client
 	RestService *bigqueryrestapi.Service
 	Location    string `yaml:"location"`
+	Datasets    []string
 }
 
 func (s *Source) SourceKind() string {
@@ -100,6 +103,31 @@ func (s *Source) BigQueryClient() *bigqueryapi.Client {
 
 func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
+}
+
+func (s *Source) AllowedDatasets() []string {
+	return s.Datasets
+}
+
+// IsDatasetAllowed checks if a given dataset is accessible based on the source's configuration.
+func (s *Source) IsDatasetAllowed(projectID, datasetID string) bool {
+	// If no datasets are specified in the source config, there are no restrictions.
+	if len(s.Datasets) == 0 {
+		return true
+	}
+
+	// If a project ID is provided, it must match the source's project ID.
+	if projectID != "" && projectID != s.Client.Project() {
+		return false
+	}
+
+	// The dataset must be in the allowed list.
+	for _, allowed := range s.Datasets {
+		if datasetID == allowed {
+			return true
+		}
+	}
+	return false
 }
 
 func initBigQueryConnection(

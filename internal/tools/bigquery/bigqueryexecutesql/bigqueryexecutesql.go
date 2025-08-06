@@ -17,6 +17,7 @@ package bigqueryexecutesql
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -28,6 +29,14 @@ import (
 )
 
 const kind string = "bigquery-execute-sql"
+
+var reliableStatementTypes = map[string]bool{
+	"SELECT": true,
+	"INSERT": true,
+	"UPDATE": true,
+	"DELETE": true,
+	"MERGE":  true,
+}
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -46,6 +55,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	IsDatasetAllowed(projectID, datasetID string) bool
 }
 
 // validate compatible sources are still compatible
@@ -92,14 +102,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.BigQueryClient(),
-		RestService:  s.BigQueryRestService(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		Client:           s.BigQueryClient(),
+		RestService:      s.BigQueryRestService(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -108,14 +119,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	Client       *bigqueryapi.Client
-	RestService  *bigqueryrestapi.Service
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name             string           `yaml:"name"`
+	Kind             string           `yaml:"kind"`
+	AuthRequired     []string         `yaml:"authRequired"`
+	Parameters       tools.Parameters `yaml:"parameters"`
+	Client           *bigqueryapi.Client
+	RestService      *bigqueryrestapi.Service
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
@@ -125,13 +137,47 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
 	}
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
-	if err != nil {
-		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+	if t.IsDatasetAllowed != nil {
+		// Two-stage table name parsing logic.
+		var tableNames []string
+
+		dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
+		if err != nil {
+			// If dry run fails (e.g., syntax error), we can't validate, so we must fail.
+			return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+		}
+
+		// Stage 1: Attempt to get table names from the dry run result for reliable statement types.
+		statementType := dryRunJob.Statistics.Query.StatementType
+		if reliableStatementTypes[statementType] && len(dryRunJob.Statistics.Query.ReferencedTables) > 0 {
+			for _, tableRef := range dryRunJob.Statistics.Query.ReferencedTables {
+				tableNames = append(tableNames, fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId))
+			}
+		}
+		// Stage 2: If the previous stage failed, use table parser as a fallback.
+		if len(tableNames) == 0 {
+			parsedTables, parseErr := TableParser(sql, t.Client.Project())
+			if parseErr != nil {
+				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.
+				return nil, fmt.Errorf("could not parse tables from query to validate against allowed datasets: %w", parseErr)
+			}
+			tableNames = parsedTables
+		}
+
+		for _, tableID := range tableNames {
+			parts := strings.Split(tableID, ".")
+			if len(parts) == 3 { // project.dataset.table
+				projectID, datasetID := parts[0], parts[1]
+				if projectID != t.Client.Project() {
+					return nil, fmt.Errorf("query accesses project '%s', which is not the configured project '%s'", projectID, t.Client.Project())
+				}
+				if !t.IsDatasetAllowed(projectID, datasetID) {
+					return nil, fmt.Errorf("query accesses dataset '%s', which is not in the allowed list", datasetID)
+				}
+			}
+		}
 	}
 
-	statementType := dryRunJob.Statistics.Query.StatementType
-	// JobStatistics.QueryStatistics.StatementType
 	query := t.Client.Query(sql)
 	query.Location = t.Client.Location
 
@@ -139,6 +185,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	// These statements (e.g., INSERT, UPDATE, CREATE TABLE) do not return a row set.
 	// Instead, we execute them as a job, wait for completion, and return a success
 	// message, including the number of affected rows for DML operations.
+	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
+	if err != nil {
+		return nil, fmt.Errorf("final query validation failed: %w", err)
+	}
+	statementType := dryRunJob.Statistics.Query.StatementType
 	if statementType != "SELECT" {
 		job, err := query.Run(ctx)
 		if err != nil {

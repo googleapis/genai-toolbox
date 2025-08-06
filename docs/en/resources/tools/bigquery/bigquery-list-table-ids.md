@@ -15,10 +15,13 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-get-dataset-info` takes a required `dataset` parameter to specify the dataset
-from which to list table IDs. It also optionally accepts a `project` parameter to
-define the Google Cloud project ID. If the `project` parameter is not provided, the
-tool defaults to using the project defined in the source configuration.
+`bigquery-list-table-ids` takes a required `dataset` parameter to specify the
+dataset from which to list table IDs. The tool also optionally accepts a
+`project` parameter to define the Google Cloud project ID. If the `project`
+parameter is not provided, the tool defaults to using the source
+configuration. If the associated `bigquery` source has a `datasets` list
+configured, this tool will return an error if the requested dataset is not in
+that list.
 
 ## Example
 
