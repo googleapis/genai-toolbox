@@ -124,10 +124,10 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	cypherStr, ok := sliceParams[0].(string)
+	paramsMap := params.AsMap()
+	cypherStr, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
 	}
 
 	if cypherStr == "" {
