@@ -45,13 +45,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name        string `yaml:"name" validate:"required"`
-	Kind        string `yaml:"kind" validate:"required"`
-	Source      string `yaml:"source" validate:"required"`
-	Description string `yaml:"description" validate:"required"`
-	// AuthRequired specifies the authentication services required for this tool.
-	// Currently, this field is not actively used for authorization checks within the tool itself,
-	// as the Authorized method always returns true. It is included for potential future extensibility.
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -162,7 +159,5 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	// Currently, all Looker tools are considered authorized if the source is correctly configured.
-	// The AuthRequired field in the Config struct is reserved for future, more granular authorization.
-	return true
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
