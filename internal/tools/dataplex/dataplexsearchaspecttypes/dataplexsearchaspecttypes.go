@@ -17,10 +17,10 @@ package dataplexsearchaspecttypes
 import (
 	"context"
 	"fmt"
-	"time"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	dataplexds "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
@@ -145,9 +145,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
 	}
 
+	// Create an instance of exponential backoff with default values for retrying GetAspectType calls
+	// InitialInterval, RandomizationFactor, Multiplier, MaxInterval = 500 ms, 0.5, 1.5, 60 s
+	getAspectBackOff := backoff.NewExponentialBackOff()
+
 	// Iterate through the search results and call GetAspectType for each result using the resource name
 	var results []*dataplexpb.AspectType
-	var requestCount int
 	for {
 		entry, err := it.Next()
 		if err != nil {
@@ -157,17 +160,22 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
 			Name: resourceName,
 		}
-		aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
-		}
-		requestCount++
-		results = append(results, aspectType)
-		if pageSize > 5 {
-			if requestCount%5 == 0 {
-				time.Sleep(3 * time.Second)
+
+		operation := func() (*dataplexpb.AspectType, error) {
+			aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
 			}
+			return aspectType, nil
 		}
+
+		// Retry the GetAspectType operation with exponential backoff
+		aspectType, err := backoff.Retry(ctx, operation, backoff.WithBackOff(getAspectBackOff))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get aspect type after retries for entry %q: %w", resourceName, err)
+		}
+
+		results = append(results, aspectType)
 	}
 	return results, nil
 }
