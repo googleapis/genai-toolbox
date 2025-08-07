@@ -69,7 +69,7 @@ var tableContextExitKeywords = map[string]bool{
 func TableParser(sql, defaultProjectID string) ([]string, error) {
 	tableIDSet := make(map[string]struct{})
 	visitedSQLs := make(map[string]struct{})
-	if err := parseSQL(sql, defaultProjectID, tableIDSet, visitedSQLs); err != nil {
+	if _, err := parseSQL(sql, defaultProjectID, tableIDSet, visitedSQLs, false); err != nil {
 		return nil, err
 	}
 
@@ -82,10 +82,10 @@ func TableParser(sql, defaultProjectID string) ([]string, error) {
 
 // parseSQL is the core recursive function that processes SQL strings.
 // It uses a state machine to find table names and recursively parse EXECUTE IMMEDIATE.
-func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visitedSQLs map[string]struct{}) error {
+func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visitedSQLs map[string]struct{}, inSubquery bool) (int, error) {
 	// Prevent infinite recursion.
 	if _, ok := visitedSQLs[sql]; ok {
-		return nil
+		return len(sql), nil
 	}
 	visitedSQLs[sql] = struct{}{}
 
@@ -114,6 +114,29 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				state = stateInMultiLineComment
 				i += 2
 				continue
+			}
+			if char == '(' {
+				if expectingTable {
+					// The subquery starts after '('.
+					consumed, err := parseSQL(remaining[1:], defaultProjectID, tableIDSet, visitedSQLs, true)
+					if err != nil {
+						return 0, err
+					}
+					// Advance i by the length of the subquery + the opening parenthesis.
+					// The recursive call returns what it consumed, including the closing parenthesis.
+					i += consumed + 1
+					// For most keywords, we expect only one table. `from` can have multiple "tables" (subqueries).
+					if lastTableKeyword != "from" {
+						expectingTable = false
+					}
+					continue
+				}
+			}
+			if char == ')' {
+				if inSubquery {
+					return i + 1, nil
+				}
+
 			}
 
 			// Raw strings must be checked before regular strings.
@@ -161,7 +184,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 			if unicode.IsLetter(char) || char == '`' {
 				parts, consumed, err := parseIdentifierSequence(remaining)
 				if err != nil {
-					return err
+					return 0, err
 				}
 				if consumed == 0 {
 					i++
@@ -171,15 +194,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				if len(parts) == 1 {
 					keyword := strings.ToLower(parts[0])
 					if keyword == "execute" {
-						// Check if the next token is "IMMEDIATE"
-						nextRemaining := sql[i+consumed:]
-						trimmedNext := strings.TrimLeftFunc(nextRemaining, unicode.IsSpace)
-						if len(trimmedNext) >= 9 && strings.EqualFold(trimmedNext[:9], "immediate") {
-							// Check for a word boundary to avoid matching prefixes like "IMMEDIATELY".
-							if len(trimmedNext) == 9 || (!unicode.IsLetter(rune(trimmedNext[9])) && !unicode.IsNumber(rune(trimmedNext[9])) && trimmedNext[9] != '_') {
-								return fmt.Errorf("parsing SQL with EXECUTE IMMEDIATE is not supported")
-							}
-						}
+						return 0, fmt.Errorf("parsing SQL with EXECUTE IMMEDIATE is not supported")
 					}
 
 					if _, ok := tableFollowsKeywords[keyword]; ok {
@@ -194,7 +209,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 					if expectingTable {
 						tableID, err := formatTableID(parts, defaultProjectID)
 						if err != nil {
-							return err
+							return 0, err
 						}
 						if tableID != "" {
 							tableIDSet[tableID] = struct{}{}
@@ -281,7 +296,11 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 			}
 		}
 	}
-	return nil
+
+	if inSubquery {
+		return 0, fmt.Errorf("unclosed subquery parenthesis")
+	}
+	return len(sql), nil
 }
 
 // parseIdentifierSequence parses a sequence of dot-separated identifiers.
@@ -341,7 +360,7 @@ func parseIdentifierSequence(s string) ([]string, int, error) {
 		if len(s) <= totalConsumed || s[totalConsumed] != '.' {
 			break
 		}
-		totalConsumed++ // consume the dot
+		totalConsumed++
 	}
 	return parts, totalConsumed, nil
 }

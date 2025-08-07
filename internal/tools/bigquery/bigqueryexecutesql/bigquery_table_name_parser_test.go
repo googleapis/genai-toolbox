@@ -87,6 +87,27 @@ func TestTableParser(t *testing.T) {
 			wantErr:          false,
 		},
 		{
+			name:             "complex CTE",
+			sql:              "WITH cte1 AS (SELECT * FROM `real.table.one`), cte2 AS (SELECT * FROM cte1) SELECT * FROM cte2 JOIN `real.table.two` ON true",
+			defaultProjectID: "default-proj",
+			want:             []string{"real.table.one", "real.table.two"},
+			wantErr:          false,
+		},
+		{
+			name:             "nested subquery should be parsed",
+			sql:              "SELECT * FROM (SELECT a FROM (SELECT A.b FROM `real.table.nested` AS A))",
+			defaultProjectID: "default-proj",
+			want:             []string{"real.table.nested"},
+			wantErr:          false,
+		},
+		{
+			name:             "from clause with unnest",
+			sql:              "SELECT event.name FROM `my-project.my_dataset.my_table` AS A, UNNEST(A.events) AS event",
+			defaultProjectID: "default-proj",
+			want:             []string{"my-project.my_dataset.my_table"},
+			wantErr:          false,
+		},
+		{
 			name:             "ignore more than 3 parts",
 			sql:              "SELECT * FROM `proj.data.tbl.col`",
 			defaultProjectID: "default-proj",
@@ -138,6 +159,13 @@ func TestTableParser(t *testing.T) {
 		{
 			name:             "execute immediate with newline",
 			sql:              "EXECUTE\nIMMEDIATE 'SELECT 1'",
+			defaultProjectID: "default-proj",
+			want:             nil,
+			wantErr:          true,
+		},
+		{
+			name:             "execute immediate with comment",
+			sql:              "EXECUTE -- some comment\n IMMEDIATE 'SELECT * FROM `exec.proj.tbl`'",
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
