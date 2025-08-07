@@ -30,6 +30,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		"cloud-sql-mysql",
 		"cloud-sql-postgres",
 		"dataplex",
+		"elasticsearch",
 		"firestore",
 		"looker",
 		"mssql",
