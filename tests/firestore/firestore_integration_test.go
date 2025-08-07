@@ -129,6 +129,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 
 	// Run specific Firestore tool tests
 	runFirestoreGetDocumentsTest(t, docPath1, docPath2)
+	runFirestoreAddDocumentsTest(t, testCollectionName)
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
 	runFirestoreDeleteDocumentsTest(t, docPath3)
 	runFirestoreQueryCollectionTest(t, testCollectionName)
@@ -569,11 +570,196 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"source":      "my-instance",
 			"description": "Validate Firestore security rules",
 		},
+		"firestore-add-docs": map[string]any{
+			"kind":        "firestore-add-documents",
+			"source":      "my-instance",
+			"description": "Add documents to Firestore",
+		},
 	}
 
 	return map[string]any{
 		"sources": sources,
 		"tools":   tools,
+	}
+}
+
+func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		wantRegex   string
+		isErr       bool
+	}{
+		{
+			name: "add document with simple types",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collectionPath": "%s",
+				"documentData": {
+					"name": {"stringValue": "Test User"},
+					"age": {"integerValue": "42"},
+					"score": {"doubleValue": 99.5},
+					"active": {"booleanValue": true},
+					"notes": {"nullValue": null}
+				}
+			}`, collectionName))),
+			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+"`,
+			isErr:     false,
+		},
+		{
+			name: "add document with complex types",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collectionPath": "%s",
+				"documentData": {
+					"location": {
+						"geoPointValue": {
+							"latitude": 37.7749,
+							"longitude": -122.4194
+						}
+					},
+					"timestamp": {
+						"timestampValue": "2025-01-07T10:00:00Z"
+					},
+					"tags": {
+						"arrayValue": {
+							"values": [
+								{"stringValue": "tag1"},
+								{"stringValue": "tag2"}
+							]
+						}
+					},
+					"metadata": {
+						"mapValue": {
+							"fields": {
+								"version": {"integerValue": "1"},
+								"type": {"stringValue": "test"}
+							}
+						}
+					}
+				}
+			}`, collectionName))),
+			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+"`,
+			isErr:     false,
+		},
+		{
+			name: "add document with returnDocumentData",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collectionPath": "%s",
+				"documentData": {
+					"name": {"stringValue": "Return Test"},
+					"value": {"integerValue": "123"}
+				},
+				"returnDocumentData": true
+			}`, collectionName))),
+			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+","documentData":{[^}]+}`,
+			isErr:     false,
+		},
+		{
+			name: "add document with nested maps and arrays",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collectionPath": "%s",
+				"documentData": {
+					"company": {
+						"mapValue": {
+							"fields": {
+								"name": {"stringValue": "Tech Corp"},
+								"employees": {
+									"arrayValue": {
+										"values": [
+											{
+												"mapValue": {
+													"fields": {
+														"name": {"stringValue": "John"},
+														"role": {"stringValue": "Developer"}
+													}
+												}
+											},
+											{
+												"mapValue": {
+													"fields": {
+														"name": {"stringValue": "Jane"},
+														"role": {"stringValue": "Manager"}
+													}
+												}
+											}
+										]
+									}
+								}
+							}
+						}
+					}
+				}
+			}`, collectionName))),
+			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+"`,
+			isErr:     false,
+		},
+		{
+			name:        "missing collectionPath parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"documentData": {"test": {"stringValue": "value"}}}`)),
+			isErr:       true,
+		},
+		{
+			name:        "missing documentData parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collectionPath": "%s"}`, collectionName))),
+			isErr:       true,
+		},
+		{
+			name:        "invalid documentData format",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collectionPath": "%s", "documentData": "not an object"}`, collectionName))),
+			isErr:       true,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if tc.wantRegex != "" {
+				matched, err := regexp.MatchString(tc.wantRegex, got)
+				if err != nil {
+					t.Fatalf("invalid regex pattern: %v", err)
+				}
+				if !matched {
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+				}
+			}
+		})
 	}
 }
 

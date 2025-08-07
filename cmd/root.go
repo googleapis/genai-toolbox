@@ -54,6 +54,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
