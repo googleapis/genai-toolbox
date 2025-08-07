@@ -48,6 +48,44 @@ function getHomepageInstructions() {
     `;
 }
 
+function getSourceInstructions() {
+    return `
+      <div class="resource-instructions">
+        <h1 class="resource-title">Sources</h1>
+        <p class="resource-intro">To inspect a specific source, please click on one of your sources to the left.</p>
+
+        <h2 class="resource-subtitle">What are Sources?</h2>
+        <p class="resource-description">
+          Sources represent your different data sources that a tool can interact with. You can define Sources as a map in the <code>sources</code> section of your <code>tools.yaml</code> file.
+          Typically, a source configuration will contain any information needed to connect with and interact with the database.
+        </p>
+
+        <a href="https://googleapis.github.io/genai-toolbox/resources/sources/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Sources Documentation</a>
+      </div>
+    `;
+}
+
+function getAuthServiceInstructions() {
+    return `
+      <div class="resource-instructions">
+        <h1 class="resource-title">Auth Services</h1>
+        <p class="resource-intro">To inspect Auth Services, please click on one of your services to the left.</p>
+
+        <h2 class="resource-subtitle">What are Auth Services?</h2>
+        <p class="resource-description">
+          AuthServices represent services that handle authentication and authorization. It can primarily be used by Tools in two different ways:
+                <ul>
+                    <li><strong>Authorized Invocation:</strong> A tool is validated by the auth service before the call can be invoked. Toolbox will reject any calls that fail to validate.</li>
+                    <li><strong>Authenticated Parameters:</strong> A parameter thats value must be replaced with a field from an OIDC claim.</li>
+                </ul> 
+        </p>
+        <p class="resource-description">You can define Auth Services as a map in the <code>authServices</code> section of your <code>tools.yaml</code> file. <br><br></p>
+
+        <a href="https://googleapis.github.io/genai-toolbox/resources/authservices/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">AuthServices Documentation</a>
+      </div>
+    `;
+}
+
 function getToolInstructions() {
     return `
       <div class="resource-instructions">
