@@ -36,10 +36,10 @@ with the tool name, description, and available parameters.
 ### Invoking a Tool
 
 1. Click on a Tool
-2. Enter appropriate parameters in each parameter field
-3. Click "Run Tool"
-4. Done! Your results will appear in the response field
-5. (Optional) Uncheck "Prettify JSON" to format the response as plain text
+1. Enter appropriate parameters in each parameter field
+1. Click "Run Tool"
+1. Done! Your results will appear in the response field
+1. (Optional) Uncheck "Prettify JSON" to format the response as plain text
 
 ![Run Tool Demo GIF](./run-tool.gif)
 
@@ -78,16 +78,16 @@ button and modal described above. The key should be the name of your AuthService
 your tool configuration file, suffixed with `_token`. The value should be your ID token as a string.
 
 1. Select a tool that requires [authenticated parameters]()
-2. The auth parameter's text field is greyed out. This is because it cannot be entered manually and will
+1. The auth parameter's text field is greyed out. This is because it cannot be entered manually and will
 be parsed from the resolved auth token
-3. To update request headers with the token, select "Edit Headers"
-4. (Optional) If you wish to manually edit the header, checkout the dropdown "How to extract Google OAuth ID Token manually" for guidance on retrieving ID token
-5. To edit the header automatically, click the "Auto Setup" button below the header window that is associated with your Auth Profile
-6. Enter the Client ID defined in your tools configuration file
-7. Click "Continue"
-8. Click "Sign in With Google" and login with your associated google account. This should automatically populate the header text area with your token
-9. Click "Save"
-10. Click "Run Tool"
+1. To update request headers with the token, select "Edit Headers"
+1. (Optional) If you wish to manually edit the header, checkout the dropdown "How to extract Google OAuth ID Token manually" for guidance on retrieving ID token
+1. To edit the header automatically, click the "Auto Setup" button that is associated with your Auth Profile
+1. Enter the Client ID defined in your tools configuration file
+1. Click "Continue"
+1. Click "Sign in With Google" and login with your associated google account. This should automatically populate the header text area with your token
+1. Click "Save"
+1. Click "Run Tool"
 
 ```json
 {
