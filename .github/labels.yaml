@@ -84,6 +84,10 @@
   color: 8befd7
   description: 'Status: waiting for feedback from community or issue author.'
 
+- name: 'waiting for response'
+  color: 8befd7
+  description: 'Status: reviewer is awaiting feedback or responses from the author before proceeding.'
+
 # Product Labels
 - name: 'product: bigquery'
   color: 5065c7
