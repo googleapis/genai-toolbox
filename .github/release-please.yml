@@ -38,6 +38,8 @@ extraFiles: [
     "docs/en/how-to/connect-ide/cloud_sql_mysql_mcp.md",
     "docs/en/how-to/connect-ide/firestore_mcp.md",
     "docs/en/how-to/connect-ide/looker_mcp.md",
+    "docs/en/how-to/connect-ide/mysql_mcp.md",
+    "docs/en/how-to/connect-ide/mssql_mcp.md",
     "docs/en/how-to/connect-ide/postgres_mcp.md",
     "docs/en/how-to/connect-ide/spanner_mcp.md",
 ]
