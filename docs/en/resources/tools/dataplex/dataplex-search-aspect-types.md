@@ -18,7 +18,7 @@ It's compatible with the following sources:
 `dataplex-search-aspect-types` accepts following parameters optionally:
 
 - `query` - Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all aspect types available to the user.
-- `pageSize` - Number of results in the search page. Defaults to `5`.
+- `pageSize` - Number of returned aspect types in the search page. Defaults to `5`.
 - `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc.
 
 ## Requirements
