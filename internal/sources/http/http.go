@@ -93,6 +93,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("failed to parse BaseUrl %v", err)
 	}
 
+	ua, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		fmt.Printf("Error in User AGent retrieval: %s", err)
+	}
+	if r.DefaultHeaders == nil {
+		r.DefaultHeaders = make(map[string]string)
+	}
+	r.DefaultHeaders["User-Agent"] = ua
+
 	s := &Source{
 		Name:           r.Name,
 		Kind:           SourceKind,
