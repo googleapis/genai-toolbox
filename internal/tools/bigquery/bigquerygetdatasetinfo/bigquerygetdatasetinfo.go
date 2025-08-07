@@ -83,19 +83,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
+	defaultProjectID := s.BigQueryClient().Project()
+	projectDescription := "The Google Cloud project ID containing the dataset."
 	datasetDescription := "The dataset to get metadata information."
 	var datasetParameter tools.Parameter
 	allowedDatasets := s.BigQueryAllowedDatasets()
 	if len(allowedDatasets) > 0 {
-		datasetIDs := []string{}
-		for _, ds := range allowedDatasets {
-			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-		}
 		if len(allowedDatasets) == 1 {
-			datasetDescription += fmt.Sprintf(" Must be `%s`.", allowedDatasets[0])
-			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, allowedDatasets[0], datasetDescription)
+			parts := strings.Split(allowedDatasets[0], ".")
+			defaultProjectID = parts[0]
+			datasetID := parts[1]
+			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
+			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
+			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
 		} else {
+			datasetIDs := []string{}
+			for _, ds := range allowedDatasets {
+				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+			}
 			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
 			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
 		}
@@ -103,6 +108,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
 	}
 
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.McpManifest{
@@ -150,6 +156,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	datasetId, ok := mapParams[datasetKey].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
+	}
+
+	// Handle fully-qualified dataset ID in the dataset parameter.
+	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
+		projectId = parts[0]
+		datasetId = parts[1]
 	}
 
 	if !t.IsDatasetAllowed(projectId, datasetId) {
