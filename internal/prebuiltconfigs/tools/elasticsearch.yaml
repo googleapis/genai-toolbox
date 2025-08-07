@@ -38,7 +38,7 @@ tools:
   execute_esql_query:
     kind: elasticsearch-esql
     source: elasticsearch-source
-    description: Use this tool to execute ESQL queries.
+    description: Use this tool to execute ES|QL queries.
     query: |
       FROM *
       | SORT ?sort_field desc
