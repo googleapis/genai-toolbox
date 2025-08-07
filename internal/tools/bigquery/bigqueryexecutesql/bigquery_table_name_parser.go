@@ -30,6 +30,10 @@ const (
 	stateInDoubleQuoteString
 	stateInTripleSingleQuoteString
 	stateInTripleDoubleQuoteString
+	stateInRawSingleQuoteString
+	stateInRawDoubleQuoteString
+	stateInRawTripleSingleQuoteString
+	stateInRawTripleDoubleQuoteString
 	// Comment states
 	stateInSingleLineCommentDash
 	stateInSingleLineCommentHash
@@ -111,6 +115,28 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				i += 2
 				continue
 			}
+
+			// Raw strings must be checked before regular strings.
+			if strings.HasPrefix(remaining, "r'''") || strings.HasPrefix(remaining, "R'''") {
+				state = stateInRawTripleSingleQuoteString
+				i += 4
+				continue
+			}
+			if strings.HasPrefix(remaining, `r"""`) || strings.HasPrefix(remaining, `R"""`) {
+				state = stateInRawTripleDoubleQuoteString
+				i += 4
+				continue
+			}
+			if strings.HasPrefix(remaining, "r'") || strings.HasPrefix(remaining, "R'") {
+				state = stateInRawSingleQuoteString
+				i += 2
+				continue
+			}
+			if strings.HasPrefix(remaining, `r"`) || strings.HasPrefix(remaining, `R"`) {
+				state = stateInRawDoubleQuoteString
+				i += 2
+				continue
+			}
 			if strings.HasPrefix(remaining, "'''") {
 				state = stateInTripleSingleQuoteString
 				i += 3
@@ -145,8 +171,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				if len(parts) == 1 {
 					keyword := strings.ToLower(parts[0])
 					if keyword == "execute" {
-						// Check if the next token is "IMMEDIATE", allowing for flexible whitespace.
-						// This is a best-effort check that does not handle comments between the keywords.
+						// Check if the next token is "IMMEDIATE"
 						nextRemaining := sql[i+consumed:]
 						trimmedNext := strings.TrimLeftFunc(nextRemaining, unicode.IsSpace)
 						if len(trimmedNext) >= 9 && strings.EqualFold(trimmedNext[:9], "immediate") {
@@ -166,7 +191,6 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 					}
 				} else if len(parts) >= 2 {
 					// This is a multi-part identifier. If we were expecting a table, this is it.
-					// This also handles cases like `UPDATE my.table SET...` where the keyword is not followed by a space.
 					if expectingTable {
 						tableID, err := formatTableID(parts, defaultProjectID)
 						if err != nil {
@@ -188,11 +212,19 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 			i++
 
 		case stateInSingleQuoteString:
+			if char == '\\' {
+				i += 2 // Skip backslash and the escaped character.
+				continue
+			}
 			if char == '\'' {
 				state = stateNormal
 			}
 			i++
 		case stateInDoubleQuoteString:
+			if char == '\\' {
+				i += 2 // Skip backslash and the escaped character.
+				continue
+			}
 			if char == '"' {
 				state = stateNormal
 			}
@@ -220,6 +252,30 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 			if strings.HasPrefix(remaining, "*/") {
 				state = stateNormal
 				i += 2
+			} else {
+				i++
+			}
+		case stateInRawSingleQuoteString:
+			if char == '\'' {
+				state = stateNormal
+			}
+			i++
+		case stateInRawDoubleQuoteString:
+			if char == '"' {
+				state = stateNormal
+			}
+			i++
+		case stateInRawTripleSingleQuoteString:
+			if strings.HasPrefix(remaining, "'''") {
+				state = stateNormal
+				i += 3
+			} else {
+				i++
+			}
+		case stateInRawTripleDoubleQuoteString:
+			if strings.HasPrefix(remaining, `"""`) {
+				state = stateNormal
+				i += 3
 			} else {
 				i++
 			}
