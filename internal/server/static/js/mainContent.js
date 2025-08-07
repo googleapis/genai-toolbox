@@ -57,7 +57,7 @@ function getToolInstructions() {
         <p class="resource-description">
           Tools define actions an agent can take, such as running a SQL statement or interacting with a source. 
           You can define Tools as a map in the <code>tools</code> section of your <code>tools.yaml</code> file. <br><br>
-          Typically, tools also use <strong>parameters</strong>. Parameters for each Tool will define what inputs the agent will need to provide to invoke them. 
+          Some tools also use <strong>parameters</strong>. Parameters for each Tool will define what inputs the agent will need to provide to invoke them. 
         </p>
         <a href="https://googleapis.github.io/genai-toolbox/resources/tools/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Tools Documentation</a>
       </div>
@@ -74,6 +74,7 @@ function getToolsetInstructions() {
           Toolsets define groups of tools an agent can access. You can define Toolsets as a map in the <code>toolsets</code> section of your <code>tools.yaml</code> file. Toolsets may
           only include valid tools that are also defined in your <code>tools.yaml</code> file.
         </p>
+        <a href="https://googleapis.github.io/genai-toolbox/getting-started/configure/#toolsets" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Toolsets Documentation</a>
       </div>
     `;
 }
