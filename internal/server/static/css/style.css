@@ -175,7 +175,7 @@ body {
     display: inline-flex;
 }
 
-.tool-button {
+.second-nav-choice {
     display: flex;
     align-items: center;
     padding: 12px;
@@ -736,4 +736,57 @@ body {
         font-size: 90%;
         vertical-align: baseline;
     }
+}
+
+.item-details-box {
+    margin-top: 20px;
+    overflow-x: auto;
+
+    h5 {
+        color: var(--toolbox-blue);
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+}
+
+.item-details-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.item-detail-entry {
+    display: grid;
+    grid-template-columns: minmax(120px, auto) 1fr; 
+    gap: 6px; 
+    padding: 4px 4px; 
+    border-bottom: 1px solid #f0f0f0; 
+    align-items: start;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.item-detail-key {
+    font-weight: bolder; 
+    color: var(--toolbox-blue);
+    padding: 4px 6px;
+    padding-right: 8px;
+}
+
+.item-detail-value {
+    color: var(--text-primary-gray);
+    padding: 4px 6px;
+}
+
+.item-details-box.error p {
+    color: #d93025; 
+    font-style: italic;
+}
+
+dl {
+    margin-block-start: 0;
+    margin-block-end: 0;
 }

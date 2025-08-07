@@ -67,7 +67,7 @@ function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
         const button = document.createElement('button');
         button.textContent = toolName;
         button.dataset.toolname = toolName;
-        button.classList.add('tool-button');
+        button.classList.add('second-nav-choice');
         button.addEventListener('click', (event) => handleToolClick(event, secondNavContent, toolDisplayArea));
         li.appendChild(button);
         ul.appendChild(li);
@@ -84,7 +84,7 @@ function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
 function handleToolClick(event, secondNavContent, toolDisplayArea) {
     const toolName = event.target.dataset.toolname;
     if (toolName) {
-        const currentActive = secondNavContent.querySelector('.tool-button.active');
+        const currentActive = secondNavContent.querySelector('.second-nav-choice.active');
         if (currentActive) {
             currentActive.classList.remove('active');
         }

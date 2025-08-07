@@ -73,6 +73,34 @@ func TestWebEndpoint(t *testing.T) {
 			wantContentType: "text/html",
 			wantPageTitle:   "Toolsets View",
 		},
+		{
+			name:            "web sources page",
+			path:            "/ui/sources",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "Sources View",
+		},
+		{
+			name:            "web sources page with trailing slash",
+			path:            "/ui/sources/",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "Sources View",
+		},
+		{
+			name:            "web auth services page",
+			path:            "/ui/authservices",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "AuthServices View",
+		},
+		{
+			name:            "web auth services page with trailing slash",
+			path:            "/ui/authservices/",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "AuthServices View",
+		},
 	}
 
 	for _, tc := range testCases {
