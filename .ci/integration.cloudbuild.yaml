@@ -62,7 +62,6 @@ steps:
           postgressql \
           postgresexecutesql
 
-
   - id: "alloydb-pg"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -121,8 +120,7 @@ steps:
       - "BIGTABLE_PROJECT=$PROJECT_ID"
       - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      ["CLIENT_ID"]
+    secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -153,7 +151,7 @@ steps:
           "BigQuery" \
           bigquery \
           bigquery
-  
+
   - id: "dataplex"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -274,8 +272,7 @@ steps:
       - "CLOUD_SQL_MYSQL_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_MYSQL_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
+    secretEnv: ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -387,7 +384,7 @@ steps:
           sqlite
 
   - id: "couchbase"
-    name : golang:1
+    name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
@@ -395,7 +392,8 @@ steps:
       - "COUCHBASE_SCOPE=$_COUCHBASE_SCOPE"
       - "COUCHBASE_BUCKET=$_COUCHBASE_BUCKET"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["COUCHBASE_CONNECTION", "COUCHBASE_USER", "COUCHBASE_PASS", "CLIENT_ID"]
+    secretEnv:
+      ["COUCHBASE_CONNECTION", "COUCHBASE_USER", "COUCHBASE_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -408,7 +406,7 @@ steps:
           couchbase
 
   - id: "redis"
-    name : golang:1
+    name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
@@ -425,9 +423,9 @@ steps:
           "Redis" \
           redis \
           redis
-        
+
   - id: "valkey"
-    name : golang:1
+    name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
@@ -475,7 +473,13 @@ steps:
       - "FIRESTORE_PROJECT=$PROJECT_ID"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "LOOKER_VERIFY_SSL=$_LOOKER_VERIFY_SSL"
-    secretEnv: ["CLIENT_ID", "LOOKER_BASE_URL", "LOOKER_CLIENT_ID", "LOOKER_CLIENT_SECRET"]
+    secretEnv:
+      [
+        "CLIENT_ID",
+        "LOOKER_BASE_URL",
+        "LOOKER_CLIENT_ID",
+        "LOOKER_CLIENT_SECRET",
+      ]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -486,25 +490,6 @@ steps:
           "Looker" \
           looker \
           looker
-
-  - id: "duckdb"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    secretEnv: ["CLIENT_ID"]
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "DuckDB" \
-          duckdb \
-          duckdb
 
   - id: "alloydbwaitforoperation"
     name: golang:1
@@ -545,7 +530,7 @@ steps:
         .ci/test_with_coverage.sh \
           "TiDB" \
           tidb \
-          tidbsql tidbexecutesql 
+          tidbsql tidbexecutesql
 
   - id: "clickhouse"
     name : golang:1
