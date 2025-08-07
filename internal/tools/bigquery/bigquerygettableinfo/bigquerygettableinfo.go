@@ -17,6 +17,7 @@ package bigquerygettableinfo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -47,6 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -83,7 +85,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset and table.")
-	datasetParameter := tools.NewStringParameter(datasetKey, "The table's parent dataset.")
+	datasetDescription := "The table's parent dataset."
+	var datasetParameter tools.Parameter
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		if len(allowedDatasets) == 1 {
+			datasetDescription += fmt.Sprintf(" Must be `%s`.", allowedDatasets[0])
+			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, allowedDatasets[0], datasetDescription)
+		} else {
+			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
+			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
+		}
+	} else {
+		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
+	}
 	tableParameter := tools.NewStringParameter(tableKey, "The table to get metadata information.")
 	parameters := tools.Parameters{projectParameter, datasetParameter, tableParameter}
 

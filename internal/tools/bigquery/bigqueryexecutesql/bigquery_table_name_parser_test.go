@@ -53,7 +53,7 @@ func TestTableParser(t *testing.T) {
 		},
 		{
 			name:             "partial table with default project",
-			sql:              "SELECT * FROM `my_dataset.my_table`",
+			sql:              "SELECT * FROM `my_dataset`.my_table",
 			defaultProjectID: "default-proj",
 			want:             []string{"default-proj.my_dataset.my_table"},
 			wantErr:          false,

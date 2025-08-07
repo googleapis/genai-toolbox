@@ -90,7 +90,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:          client,
 		RestService:     restService,
 		Location:        r.Location,
-		allowedDatasets: allowedDatasets,
+		AllowedDatasets: allowedDatasets,
 	}
 	return s, nil
 
@@ -105,7 +105,7 @@ type Source struct {
 	Client          *bigqueryapi.Client
 	RestService     *bigqueryrestapi.Service
 	Location        string `yaml:"location"`
-	allowedDatasets map[string]struct{}
+	AllowedDatasets map[string]struct{}
 }
 
 func (s *Source) SourceKind() string {
@@ -121,20 +121,26 @@ func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
 }
 
-// AreDatasetsRestricted returns true if the source is configured with a list of allowed datasets.
-func (s *Source) AreDatasetsRestricted() bool {
-	return len(s.allowedDatasets) > 0
+func (s *Source) BigQueryAllowedDatasets() []string {
+	if len(s.AllowedDatasets) == 0 {
+		return nil
+	}
+	datasets := make([]string, 0, len(s.AllowedDatasets))
+	for d := range s.AllowedDatasets {
+		datasets = append(datasets, d)
+	}
+	return datasets
 }
 
 // IsDatasetAllowed checks if a given dataset is accessible based on the source's configuration.
 func (s *Source) IsDatasetAllowed(projectID, datasetID string) bool {
 	// If the normalized map is empty, it means no restrictions were configured.
-	if !s.AreDatasetsRestricted() {
+	if len(s.AllowedDatasets) == 0 {
 		return true
 	}
 
 	targetDataset := fmt.Sprintf("%s.%s", projectID, datasetID)
-	_, ok := s.allowedDatasets[targetDataset]
+	_, ok := s.AllowedDatasets[targetDataset]
 	return ok
 }
 

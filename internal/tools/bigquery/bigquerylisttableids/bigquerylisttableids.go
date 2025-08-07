@@ -17,6 +17,7 @@ package bigquerylisttableids
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -47,7 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	IsDatasetAllowed(projectID, datasetID string) bool
-	AreDatasetsRestricted() bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -84,7 +85,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
-	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to list table ids.")
+	datasetDescription := "The dataset to list table ids."
+	var datasetParameter tools.Parameter
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		if len(allowedDatasets) == 1 {
+			datasetDescription += fmt.Sprintf(" Must be `%s`.", allowedDatasets[0])
+			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, allowedDatasets[0], datasetDescription)
+		} else {
+			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
+			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
+		}
+	} else {
+		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
+	}
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.McpManifest{
@@ -95,15 +113,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:                  cfg.Name,
-		Kind:                  kind,
-		Parameters:            parameters,
-		AuthRequired:          cfg.AuthRequired,
-		Client:                s.BigQueryClient(),
-		IsDatasetAllowed:      s.IsDatasetAllowed,
-		AreDatasetsRestricted: s.AreDatasetsRestricted,
-		manifest:              tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:           mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		Client:           s.BigQueryClient(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -117,11 +134,10 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client                *bigqueryapi.Client
-	IsDatasetAllowed      func(projectID, datasetID string) bool
-	AreDatasetsRestricted func() bool
-	manifest              tools.Manifest
-	mcpManifest           tools.McpManifest
+	Client           *bigqueryapi.Client
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {

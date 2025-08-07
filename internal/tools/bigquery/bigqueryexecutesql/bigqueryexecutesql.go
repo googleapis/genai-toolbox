@@ -57,7 +57,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
 	IsDatasetAllowed(projectID, datasetID string) bool
-	AreDatasetsRestricted() bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -93,7 +93,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	sqlDescription := "The sql to execute."
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+
+		if len(datasetIDs) == 1 {
+			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. Table names without a project or dataset qualifier (e.g., `my_table`) are considered to be within this dataset.", datasetIDs[0])
+		} else {
+			sqlDescription += fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+		}
+	}
+	sqlParameter := tools.NewStringParameter("sql", sqlDescription)
 	dryRunParameter := tools.NewBooleanParameterWithDefault(
 		"dry_run",
 		false,
@@ -110,16 +124,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:                  cfg.Name,
-		Kind:                  kind,
-		Parameters:            parameters,
-		AuthRequired:          cfg.AuthRequired,
-		Client:                s.BigQueryClient(),
-		RestService:           s.BigQueryRestService(),
-		IsDatasetAllowed:      s.IsDatasetAllowed,
-		AreDatasetsRestricted: s.AreDatasetsRestricted,
-		manifest:              tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:           mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		Client:           s.BigQueryClient(),
+		RestService:      s.BigQueryRestService(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		AllowedDatasets:  allowedDatasets,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -128,16 +142,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name                  string           `yaml:"name"`
-	Kind                  string           `yaml:"kind"`
-	AuthRequired          []string         `yaml:"authRequired"`
-	Parameters            tools.Parameters `yaml:"parameters"`
-	Client                *bigqueryapi.Client
-	RestService           *bigqueryrestapi.Service
-	IsDatasetAllowed      func(projectID, datasetID string) bool
-	AreDatasetsRestricted func() bool
-	manifest              tools.Manifest
-	mcpManifest           tools.McpManifest
+	Name             string           `yaml:"name"`
+	Kind             string           `yaml:"kind"`
+	AuthRequired     []string         `yaml:"authRequired"`
+	Parameters       tools.Parameters `yaml:"parameters"`
+	Client           *bigqueryapi.Client
+	RestService      *bigqueryrestapi.Service
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	AllowedDatasets  []string
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
@@ -150,14 +164,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if !ok {
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
-
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
 	statementType := dryRunJob.Statistics.Query.StatementType
 
-	if t.AreDatasetsRestricted() {
+	if len(t.AllowedDatasets) > 0 {
 		// Two-stage table name parsing logic.
 		var tableNames []string
 		// Stage 1: Attempt to get table names from the dry run result for reliable statement types.
