@@ -51,7 +51,7 @@ func TestDescribeTableBasic(t *testing.T) {
 		t.Errorf("Expected tool kind 'clickhouse-describe-table', got %s", toolConfig.ToolConfigKind())
 	}
 
-	expectedParams := []string{"table_name"}
+	expectedParams := []string{"table_name", "database_name"}
 	sourcesMap := map[string]sources.Source{
 		"test-clickhouse": &mockClickHouseSource{config: mockSourceConfig},
 	}
@@ -123,6 +123,7 @@ func TestDescribeTableWithRealConnection(t *testing.T) {
 
 	params := tools.ParamValues{
 		{Name: "table_name", Value: "tables"},
+		{Name: "database_name", Value: "system"},
 	}
 
 	result, err := tool.Invoke(ctx, params)
@@ -200,6 +201,7 @@ func TestDescribeTableNotFound(t *testing.T) {
 
 	params := tools.ParamValues{
 		{Name: "table_name", Value: "nonexistent_table_12345"},
+		{Name: "database_name", Value: ""},
 	}
 
 	_, err = tool.Invoke(ctx, params)
@@ -224,14 +226,13 @@ func (m *mockClickHouseSource) SourceKind() string {
 }
 
 func (m *mockClickHouseSource) ClickHousePool() *sql.DB {
-	// Return nil for mock - real connection not needed for basic tests
+	// nil for mock - real connection not needed these tests
 	return nil
 }
 
 // Ensure mockClickHouseSource implements the sources.Source interface
 var _ sources.Source = &mockClickHouseSource{}
 
-// Helper function to check if string contains substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && s[:len(substr)] == substr ||
 		(len(s) > len(substr) && contains(s[1:], substr))

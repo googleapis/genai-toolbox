@@ -20,55 +20,60 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
 var (
-	CLICKHOUSE_SOURCE_KIND = "clickhouse"
-	CLICKHOUSE_TOOL_KIND   = "clickhouse-sql"
-	CLICKHOUSE_DATABASE    = os.Getenv("CLICKHOUSE_DATABASE")
-	CLICKHOUSE_HOST        = os.Getenv("CLICKHOUSE_HOST")
-	CLICKHOUSE_PORT        = os.Getenv("CLICKHOUSE_PORT")
-	CLICKHOUSE_USER        = os.Getenv("CLICKHOUSE_USER")
-	CLICKHOUSE_PASS        = os.Getenv("CLICKHOUSE_PASS")
-	CLICKHOUSE_PROTOCOL    = os.Getenv("CLICKHOUSE_PROTOCOL")
+	ClickHouseSourceKind = "clickhouse"
+	ClickHouseToolKind   = "clickhouse-sql"
+	ClickHouseDatabase   = os.Getenv("CLICKHOUSE_DATABASE")
+	ClickHouseHost       = os.Getenv("CLICKHOUSE_HOST")
+	ClickHousePort       = os.Getenv("CLICKHOUSE_PORT")
+	ClickHouseUser       = os.Getenv("CLICKHOUSE_USER")
+	ClickHousePass       = os.Getenv("CLICKHOUSE_PASS")
+	ClickHouseProtocol   = os.Getenv("CLICKHOUSE_PROTOCOL")
 )
 
 func getClickHouseVars(t *testing.T) map[string]any {
 	switch "" {
-	case CLICKHOUSE_HOST:
+	case ClickHouseHost:
 		t.Skip("'CLICKHOUSE_HOST' not set")
-	case CLICKHOUSE_PORT:
+	case ClickHousePort:
 		t.Skip("'CLICKHOUSE_PORT' not set")
-	case CLICKHOUSE_USER:
+	case ClickHouseUser:
 		t.Skip("'CLICKHOUSE_USER' not set")
 	}
 
 	// Set defaults for optional parameters
-	if CLICKHOUSE_DATABASE == "" {
-		CLICKHOUSE_DATABASE = "default"
+	if ClickHouseDatabase == "" {
+		ClickHouseDatabase = "default"
 	}
-	if CLICKHOUSE_PROTOCOL == "" {
-		CLICKHOUSE_PROTOCOL = "http"
+	if ClickHouseProtocol == "" {
+		ClickHouseProtocol = "http"
 	}
 
 	return map[string]any{
-		"kind":     CLICKHOUSE_SOURCE_KIND,
-		"host":     CLICKHOUSE_HOST,
-		"port":     CLICKHOUSE_PORT,
-		"database": CLICKHOUSE_DATABASE,
-		"user":     CLICKHOUSE_USER,
-		"password": CLICKHOUSE_PASS,
-		"protocol": CLICKHOUSE_PROTOCOL,
+		"kind":     ClickHouseSourceKind,
+		"host":     ClickHouseHost,
+		"port":     ClickHousePort,
+		"database": ClickHouseDatabase,
+		"user":     ClickHouseUser,
+		"password": ClickHousePass,
+		"protocol": ClickHouseProtocol,
 		"secure":   false,
 	}
 }
 
+// initClickHouseConnectionPool creates a ClickHouse connection using HTTP protocol only.
+// Note: ClickHouse tools in this codebase only support HTTP/HTTPS protocols, not the native protocol.
+// Typical setup: localhost:8123 (HTTP) or localhost:8443 (HTTPS)
 func initClickHouseConnectionPool(host, port, user, pass, dbname, protocol string) (*sql.DB, error) {
 	if protocol == "" {
 		protocol = "https"
@@ -92,57 +97,35 @@ func initClickHouseConnectionPool(host, port, user, pass, dbname, protocol strin
 	return pool, nil
 }
 
-func TestClickHouseIntegration(t *testing.T) {
+func TestClickHouse(t *testing.T) {
 	sourceConfig := getClickHouseVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	pool, err := initClickHouseConnectionPool(CLICKHOUSE_HOST, CLICKHOUSE_PORT, CLICKHOUSE_USER, CLICKHOUSE_PASS, CLICKHOUSE_DATABASE, CLICKHOUSE_PROTOCOL)
+	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
 	if err != nil {
 		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
 	}
 	defer pool.Close()
 
-	err = pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to ping ClickHouse: %s", err)
-	}
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	rows, err := pool.QueryContext(ctx, "SELECT 1 as test_value")
-	if err != nil {
-		t.Fatalf("unable to execute basic query: %s", err)
-	}
-	defer rows.Close()
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetClickHouseSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupClickHouseSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	defer teardownTable1(t)
 
-	if !rows.Next() {
-		t.Fatalf("expected at least one row from basic query")
-	}
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetClickHouseSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	defer teardownTable2(t)
 
-	var testValue int
-	err = rows.Scan(&testValue)
-	if err != nil {
-		t.Fatalf("unable to scan result: %s", err)
-	}
-
-	if testValue != 1 {
-		t.Fatalf("expected test_value to be 1, got %d", testValue)
-	}
-
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        CLICKHOUSE_TOOL_KIND,
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
-			},
-		},
-	}
+	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = AddClickHouseExecuteSqlConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetClickHouseSQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -160,7 +143,34 @@ func TestClickHouseIntegration(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	t.Logf("✅ ClickHouse integration test completed successfully (auth tests skipped)")
+	select1Want, failInvocationWant, createTableStatement := GetClickHouseWants()
+	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+}
+
+func AddClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "clickhouse-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "clickhouse-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
 }
 
 func TestClickHouseBasicConnection(t *testing.T) {
@@ -170,7 +180,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 
 	var args []string
 
-	pool, err := initClickHouseConnectionPool(CLICKHOUSE_HOST, CLICKHOUSE_PORT, CLICKHOUSE_USER, CLICKHOUSE_PASS, CLICKHOUSE_DATABASE, CLICKHOUSE_PROTOCOL)
+	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
 	if err != nil {
 		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
 	}
@@ -210,7 +220,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        CLICKHOUSE_TOOL_KIND,
+				"kind":        ClickHouseToolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -233,6 +243,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 	}
 
 	tests.RunToolGetTest(t)
+	t.Logf("✅ ClickHouse basic connection test completed successfully")
 }
 
 func GetClickHouseWants() (string, string, string) {
