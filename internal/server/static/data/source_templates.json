@@ -1,0 +1,132 @@
+{
+  "bigquery": [
+    "kind",
+    "project",
+    "location"
+  ],
+  "bigtable": [
+    "kind",
+    "project",
+    "instance"
+  ],
+  "couchbase": [
+    "kind",
+    "connectionString",
+    "bucket",
+    "scope",
+    "username",
+    "password",
+    "clientCert",
+    "clientCertPassword",
+    "clientKey",
+    "clientKeyPassword",
+    "caCert",
+    "noSslVerify",
+    "profile",
+    "queryScanConsistency"
+  ],
+  "dataplex": [
+    "kind",
+    "project"
+  ],
+  "dgraph": [
+    "kind",
+    "dgraphUrl",
+    "user",
+    "password",
+    "namespace",
+    "apiKey"
+  ],
+  "duckdb": [
+    "kind",
+    "dbFilePath",
+    "configuration"
+  ],
+  "firestore": [
+    "kind",
+    "project",
+    "database"
+  ],
+  "http": [
+    "kind",
+    "baseUrl",
+    "timeout",
+    "headers",
+    "queryParams",
+    "disableSslVerification"
+  ],
+  "looker": [
+    "kind",
+    "base_url",
+    "client_id",
+    "client_secret",
+    "verify_ssl",
+    "timeout"
+  ],
+  "mongodb": [
+    "kind",
+    "uri"
+  ],
+  "mssql": [
+    "kind",
+    "host",
+    "port",
+    "user",
+    "password",
+    "database",
+    "encrypt"
+  ],
+  "mysql": [
+    "kind",
+    "host",
+    "port",
+    "user",
+    "password",
+    "database",
+    "queryTimeout"
+  ],
+  "neo4j": [
+    "kind",
+    "uri",
+    "user",
+    "password",
+    "database"
+  ],
+  "postgres": [
+    "kind",
+    "host",
+    "port",
+    "user",
+    "password",
+    "database"
+  ],
+  "redis": [
+    "kind",
+    "address",
+    "username",
+    "password",
+    "database",
+    "useGCPIAM",
+    "clusterEnabled"
+  ],
+  "spanner": [
+    "kind",
+    "project",
+    "instance",
+    "dialect",
+    "database"
+  ],
+  "sqlite": [
+    "kind",
+    "database"
+  ],
+  "valkey": [
+    "kind",
+    "address",
+    "username",
+    "password",
+    "database",
+    "useGCPIAM",
+    "disableCache"
+  ]
+}

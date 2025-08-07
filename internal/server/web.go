@@ -24,6 +24,7 @@ func webRouter() (chi.Router, error) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/index.html") })
 	r.Get("/tools", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/tools.html") })
 	r.Get("/toolsets", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/toolsets.html") })
+	r.Get("/upload", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/uploadYaml.html") })
 
 	// handler for all other static files/assets
 	staticFS, _ := fs.Sub(staticContent, "static")

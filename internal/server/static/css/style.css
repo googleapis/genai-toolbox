@@ -41,6 +41,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 15px;
+  padding-bottom: 30px;
   align-items: center;
   width: 100%;
   height: 100%;
@@ -166,6 +167,38 @@ body {
     background-color: white;
     color: var(--text-primary-gray);
     border: 2px solid var(--text-primary-gray);
+}
+
+.btn--clear-yaml {
+    background-color: transparent;
+    border: 2px solid var(--button-secondary);
+    border-radius: 5px;
+    color: var(--button-secondary)
+}
+
+.btn--download-yaml {
+    background-color: var(--button-secondary);
+    border-radius: 5px;
+}
+
+.btn--yaml-tab {
+    background-color: transparent;
+    color: var(--text-secondary-gray);
+    border: 2px solid var(--text-secondary-gray);
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 1.2em;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: bold;
+    width: 100%;
+
+    &.active {
+        background-color: #d0d0d0;
+
+        &:hover {
+            background-color: #d0d0d0;
+        }
+    }
 }
 
 .tool-button {
@@ -665,6 +698,166 @@ body {
             box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
         }
     }
+}
+    
+.editor-container {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1; 
+    min-height: 0; 
+    width: 100%;
+    gap: 20px; 
+}
+
+#yaml-editor-area {
+    flex: 3; 
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    overflow-x: auto;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+#source-adder {
+    flex: 1; 
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    overflow-y: auto;
+
+    h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: var(--text-primary-gray);
+    }
+}
+
+#yaml-uploader {
+    margin-bottom: 15px;
+    flex-shrink: 0; 
+}
+
+#yaml-uploader h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-primary-gray);
+}
+
+#yaml-uploader p {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    color: var(--text-secondary-gray);
+}
+
+#controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.yaml-output-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; 
+    min-height: 0; 
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    flex-shrink: 0;
+
+    h3 {
+        margin: 0;
+        color: var(--text-primary-gray);
+    }
+}
+
+.header-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--text-secondary-gray);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover {
+        background-color: #f0f0f0; 
+        color: var(--text-primary-gray);
+    }
+}
+
+.icon-button .material-icons {
+    font-size: 22px; 
+}
+
+#yamlOutput {
+    width: 100%;
+    flex-grow: 1; 
+    font-family: monospace;
+    display: block;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none; 
+    overflow-y: auto; 
+    box-sizing: border-box;
+    min-height: 200px; 
+}
+
+#sourceTypeSelect {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.hidden-file-input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+#loadedFileName {
+    margin-top: 8px;
+    font-style: italic;
+    color: #555;
+    font-size: 0.9em;
+    word-break: break-all;
+}
+
+#fileError {
+    color: red;
+    margin-top: 8px;
+    font-size: 0.9em;
+}
+
+.upload-yaml-tab {
+    padding-top: 15px;
+    margin-top: auto;
+    width: 100%;
 }
 
 .toggle-details-tab {

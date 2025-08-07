@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML Builder View</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/ui/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+</head>
+<body>
+    <div id="navbar-container" data-active-nav="/ui/upload"></div>
+    <div id="main-content-container">
+        <div class="editor-container">
+            <div id="yaml-editor-area">
+                <div id="yaml-uploader">
+                    <h3>Upload YAML File</h3>
+                    <p>Please select a file ending with .yaml or .yml</p>
+                    <div id="controls">
+                        <div> 
+                            <input type="file" id="yamlFileInput" accept=".yaml,.yml" class="hidden-file-input">
+                            <label for="yamlFileInput" class="btn btn--run">Choose File</label>
+                        </div>
+                    </div>
+                    <div id="fileError"></div>
+                    <div id="loadedFileName"></div>
+                </div>
+                <div class="yaml-output-container">
+                    <div class="editor-header">
+                        <h3>Formatted YAML Output:</h3>
+                        <div class="header-actions">
+                            <button id="clearSessionButton" class="icon-button" title="Clear YAML">
+                                <i class="material-icons">delete</i>
+                            </button>
+                            <button id="downloadYamlButton" class="icon-button" title="Download YAML">
+                                <i class="material-icons">file_download</i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="yamlOutput" placeholder="Upload a YAML file or paste content here..."></textarea>
+                </div>
+            </div>
+
+            <div id="source-adder">
+                <h3>Add Source Snippet</h3>
+                <select id="sourceTypeSelect">
+                    <option value="">Select DB Type...</option>
+                </select>
+                <p style="font-size: 0.8em; color: #666;">Select a database type to append a template to the YAML output.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/ui/js/navbar.js"></script>
+    <script src="/ui/js/uploadYaml.js"></script>
+    <script src="/ui/js/sourceSelector.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            const activeNav = navbarContainer.getAttribute('data-active-nav');
+            if (typeof renderNavbar === 'function') {
+                renderNavbar('navbar-container', activeNav);
+            } else {
+                console.error('renderNavbar function not found.');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -35,6 +35,9 @@ function renderNavbar(containerId, activePath) {
                 <li><a href="/ui/tools">Tools</a></li>
                 <li><a href="/ui/toolsets">Toolsets</a></li>
             </ul>
+            <div class="upload-yaml-tab">
+                <a href="/ui/upload" class="btn btn--yaml-tab">YAML Builder</a>
+            </div>
         </nav>
     `;
 
@@ -49,5 +52,15 @@ function renderNavbar(containerId, activePath) {
                 link.classList.remove('active');
             }
         });
+
+        const yamlButton = navbarContainer.querySelector('.btn--yaml-tab');
+        if (yamlButton) {
+            const buttonPath = new URL(yamlButton.href).pathname;
+            if (buttonPath === activePath) {
+                yamlButton.classList.add('active');
+            } else {
+                yamlButton.classList.remove('active');
+            }
+        }
     }
 }
