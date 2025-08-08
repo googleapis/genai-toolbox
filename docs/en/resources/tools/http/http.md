@@ -139,6 +139,27 @@ my-http-tool:
         type: integer
 ```
 
+### Google Cloud OAuth2 Token
+
+Toolbox can automatically generate and add a Google Cloud OAuth2 token to the
+`Authorization` header using Google Application Default Credentials.
+This is useful for authenticating with Google Cloud APIs.
+To enable this, set the `googleCloudOAuth2` field to `true`:
+
+```yaml
+my-http-tool:
+    kind: http
+    source: my-http-source
+    method: GET
+    path: /some/google/cloud/api
+    description: A tool that calls a Google Cloud API
+    googleCloudOAuth2: true
+```
+
+When `googleCloudOAuth2` is `true`, Toolbox will obtain an OAuth2 token and set the
+`Authorization` header to `Bearer <token>`. This will override any static
+`Authorization` header you may have set in the `headers` field.
+
 ### Request body
 
 The request body payload is a string that supports parameter replacement
@@ -247,17 +268,18 @@ my-http-tool:
 
 ## Reference
 
-| **field**    |                  **type**                  | **required** | **description**                                                                                                                                                                                                            |
-|--------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind         |                   string                   |     true     | Must be "http".                                                                                                                                                                                                            |
-| source       |                   string                   |     true     | Name of the source the HTTP request should be sent to.                                                                                                                                                                     |
-| description  |                   string                   |     true     | Description of the tool that is passed to the LLM.                                                                                                                                                                         |
-| path         |                   string                   |     true     | The path of the HTTP request. You can include static query parameters in the path string.                                                                                                                                  |
-| method       |                   string                   |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).                                                                                                                                                                     |
-| headers      |             map[string]string              |    false     | A map of headers to include in the HTTP request (overrides source headers).                                                                                                                                                |
-| requestBody  |                   string                   |    false     | The request body payload. Use [go template][go-template-doc] with the parameter name as the placeholder (e.g., `{{.id}}` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). |
-| queryParams  | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the query string.                                                                                                                            |
-| bodyParams   | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the request body payload.                                                                                                                    |
-| headerParams | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be inserted as the request headers.                                                                                                                           |
+| **field**         |                 **type**                | **required** | **description**                                                                                                                                                                                                            |
+| ----------------- | :-------------------------------------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| kind              |                  string                 |     true     | Must be "http".                                                                                                                                                                                                            |
+| source            |                  string                 |     true     | Name of the source the HTTP request should be sent to.                                                                                                                                                                     |
+| description       |                  string                 |     true     | Description of the tool that is passed to the LLM.                                                                                                                                                                         |
+| path              |                  string                 |     true     | The path of the HTTP request. You can include static query parameters in the path string.                                                                                                                                  |
+| method            |                  string                 |     true     | The HTTP method to use (e.g., GET, POST, PUT, DELETE).                                                                                                                                                                     |
+| headers           |            map[string]string            |     false    | A map of headers to include in the HTTP request (overrides source headers).                                                                                                                                                |
+| requestBody       |                  string                 |     false    | The request body payload. Use [go template][go-template-doc] with the parameter name as the placeholder (e.g., `{{.id}}` will be replaced with the value of the parameter that has name `id` in the `bodyParams` section). |
+| queryParams       | [parameters](../#specifying-parameters) |     false    | List of [parameters](../#specifying-parameters) that will be inserted into the query string.                                                                                                                               |
+| bodyParams        | [parameters](../#specifying-parameters) |     false    | List of [parameters](../#specifying-parameters) that will be inserted into the request body payload.                                                                                                                       |
+| headerParams      | [parameters](../#specifying-parameters) |     false    | List of [parameters](../#specifying-parameters) that will be inserted as the request headers.                                                                                                                              |
+| googleCloudOAuth2 |                 boolean                 |     false    | When `true`, automatically generates and adds a Google Cloud OAuth2 token to the `Authorization` header using Google Application Default Credentials.                                                                      |
 
 [go-template-doc]: <https://pkg.go.dev/text/template#pkg-overview>

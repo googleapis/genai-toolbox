@@ -32,6 +32,7 @@ import (
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"golang.org/x/oauth2/google"
 )
 
 const kind string = "http"
@@ -64,6 +65,10 @@ type Config struct {
 	QueryParams  tools.Parameters  `yaml:"queryParams"`
 	BodyParams   tools.Parameters  `yaml:"bodyParams"`
 	HeaderParams tools.Parameters  `yaml:"headerParams"`
+	// GoogleCloudOAuth2, when true, automatically generates and adds a Google Cloud
+	// OAuth2 token to the Authorization header using Google Application
+	// Default Credentials.
+	GoogleCloudOAuth2 bool `yaml:"googleCloudOAuth2"`
 }
 
 // validate interface
@@ -178,6 +183,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AllParams:          allParameters,
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
+		GoogleCloudOAuth2:  cfg.GoogleCloudOAuth2,
 	}, nil
 }
 
@@ -196,12 +202,13 @@ type Tool struct {
 	Headers            map[string]string `yaml:"headers"`
 	DefaultQueryParams map[string]string `yaml:"defaultQueryParams"`
 
-	RequestBody  string           `yaml:"requestBody"`
-	PathParams   tools.Parameters `yaml:"pathParams"`
-	QueryParams  tools.Parameters `yaml:"queryParams"`
-	BodyParams   tools.Parameters `yaml:"bodyParams"`
-	HeaderParams tools.Parameters `yaml:"headerParams"`
-	AllParams    tools.Parameters `yaml:"allParams"`
+	RequestBody       string           `yaml:"requestBody"`
+	PathParams        tools.Parameters `yaml:"pathParams"`
+	QueryParams       tools.Parameters `yaml:"queryParams"`
+	BodyParams        tools.Parameters `yaml:"bodyParams"`
+	HeaderParams      tools.Parameters `yaml:"headerParams"`
+	AllParams         tools.Parameters `yaml:"allParams"`
+	GoogleCloudOAuth2 bool
 
 	Client      *http.Client
 	manifest    tools.Manifest
@@ -309,6 +316,25 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("error populating request headers: %s", err)
 	}
+
+	// If GoogleCloudOAuth2 is true, generate an OAuth2 token and set the Authorization header.
+	// This will override any static Authorization header in the configuration.
+	if t.GoogleCloudOAuth2 {
+		// This uses Application Default Credentials to generate an OAuth2 token.
+		// It assumes the tool is being run in an environment with appropriate credentials
+		// (e.g., a GCE VM, or with `gcloud auth application-default login`).
+		// The default scope is for Google Cloud Platform services.
+		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("error creating token source: %w", err)
+		}
+		token, err := tokenSource.Token()
+		if err != nil {
+			return nil, fmt.Errorf("error retrieving token: %w", err)
+		}
+		allHeaders["Authorization"] = "Bearer " + token.AccessToken
+	}
+
 	// Set request headers
 	for k, v := range allHeaders {
 		req.Header.Set(k, v)

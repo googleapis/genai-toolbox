@@ -31,6 +31,7 @@ import (
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"golang.org/x/oauth2/google"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -255,6 +256,16 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 		for k, v := range t.Headers {
 			req.Header.Set(k, v)
 		}
+
+		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("error creating token source: %w", err)
+		}
+		token, err := tokenSource.Token()
+		if err != nil {
+			return nil, fmt.Errorf("error retrieving token: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
 
 		if ua, err := util.UserAgentFromContext(ctx); err == nil {
 			req.Header.Set("User-Agent", ua)
