@@ -86,7 +86,7 @@ func GetIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 	return email, nil
 }
 
-func GetIAMAccessToken(ctx context.Context) (string, error) {
+func GetIAMOAuthAccessToken(ctx context.Context) (string, error) {
 	creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
 		return "", fmt.Errorf("failed to find default credentials (run 'gcloud auth application-default login'?): %w", err)

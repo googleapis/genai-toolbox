@@ -77,7 +77,7 @@ func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	if r.UseGCPIAM {
 		// Pass in an access token getter fn for IAM auth
 		authFn = func(valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
-			token, err := sources.GetIAMAccessToken(ctx)
+			token, err := sources.GetIAMOAuthAccessToken(ctx)
 			creds := valkey.AuthCredentials{Username: "default", Password: token}
 			if err != nil {
 				return creds, err

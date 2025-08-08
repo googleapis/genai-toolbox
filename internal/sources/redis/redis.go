@@ -84,7 +84,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 	if r.UseGCPIAM {
 		// Pass in an access token getter fn for IAM auth
 		authFn = func(ctx context.Context) (username string, password string, err error) {
-			token, err := sources.GetIAMAccessToken(ctx)
+			token, err := sources.GetIAMOAuthAccessToken(ctx)
 			if err != nil {
 				return "", "", err
 			}
