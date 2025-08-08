@@ -225,7 +225,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if t.UseClientOAuth {
 		bqClient, restService, err = t.ClientCreator(accessToken)
 		if err != nil {
-			return nil, fmt.Errorf("error creading client from OAuth access token: %w", err)
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
 	}
 
