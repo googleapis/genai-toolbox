@@ -483,6 +483,59 @@ tools:
           The result is a json document with a link to the newly
           created look.
 
+    get_dashboards:
+        kind: looker-get-dashboards
+        source: looker-source
+        description: |
+          get_dashboards Tool
+
+          This tool is used to search for saved dashboards in a Looker instance.
+          String search params use case-insensitive matching. String search
+          params can contain % and '_' as SQL LIKE pattern match wildcard
+          expressions. example="dan%" will match "danger" and "Danzig" but
+          not "David" example="D_m%" will match "Damage" and "dump".
+          Most search params can accept "IS NULL" and "NOT NULL" as special
+          expressions to match or exclude (respectively) rows where the
+          column is null.
+
+          The limit and offset are used to paginate the results.
+
+          The result of the get_dashboards tool is a list of json objects.
+
+    make_dashboard:
+        kind: looker-make-dashboard
+        source: looker-source
+        description: |
+          make_dashboard Tool
+
+          This tool creates a new dashboard in Looker. The dashboard is
+          initially empty and the add_dashboard_element tool is used to
+          add content to the dashboard.
+
+          The newly created dashboard will be created in the user's
+          personal folder in looker. The dashboard name must be unique.
+
+          The result is a json document with a link to the newly
+          created dashboard and the id of the dashboard. Use the id
+          when calling add_dashboard_element.
+
+    add_dashboard_element:
+        kind: looker-add-dashboard-element
+        source: looker-source
+        description: |
+          add_dashboard_element Tool
+
+          This tool creates a new tile in a Looker dashboard using
+          the query parameters and the vis_config specified.
+
+          Most of the parameters are the same as the query_url
+          tool. In addition, there is a title that may be provided.
+          The dashboard_id must be specified. That is obtained
+          from calling make_dashboard.
+
+          This tool can be called many times for one dashboard_id
+          and the resulting tiles will be added in order.
+
 toolsets:
     looker-tools:
         - get_models
@@ -497,3 +550,6 @@ toolsets:
         - get_looks
         - run_look
         - make_look
+        - get_dashboards
+        - make_dashboard
+        - add_dashboard_element
