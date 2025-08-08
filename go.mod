@@ -36,6 +36,7 @@ require (
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/valkey-io/valkey-go v1.0.64
 	go.mongodb.org/mongo-driver v1.17.4
+	go.mongodb.org/mongo-driver/v2 v2.2.3
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.37.0
