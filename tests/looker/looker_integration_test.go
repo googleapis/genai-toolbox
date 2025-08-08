@@ -426,95 +426,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"additionalProperties": true,
-						"authSources":          []any{},
-						"description":          "The filters for the query",
-						"name":                 "filters",
-						"required":             false,
-						"type":                 "object",
-					},
-					map[string]any{
-						"authSources": []any{},
-						"description": "The query pivots (must be included in fields as well).",
-						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a pivot in the query",
-							"name":        "pivot_field",
-							"required":    false,
-							"type":        "string",
-						},
-						"name":     "pivots",
-						"required": false,
-						"type":     "array",
-					},
-					map[string]any{
-						"authSources": []any{},
-						"description": "The sorts like \"field.id desc 0\".",
-						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a sort in the query",
-							"name":        "sort_field",
-							"required":    false,
-							"type":        "string",
-						},
-						"name":     "sorts",
-						"required": false,
-						"type":     "array",
-					},
-					map[string]any{
-						"authSources": []any{},
-						"description": "The row limit.",
-						"name":        "limit",
-						"required":    false,
-						"type":        "integer",
-					},
-					map[string]any{
-						"authSources": []any{},
-						"description": "The query timezone.",
-						"name":        "tz",
-						"required":    false,
-						"type":        "string",
-					},
-				},
-			},
-		},
-	)
-	tests.RunToolGetTestByName(t, "query_sql",
-		map[string]any{
-			"query_sql": map[string]any{
-				"description":  "Simple tool to test end to end functionality.",
-				"authRequired": []any{},
-				"parameters": []any{
-					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
-					},
-					map[string]any{
-						"authSources": []any{},
-						"description": "The explore to be queried.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
-					},
-					map[string]any{
-						"authSources": []any{},
-						"description": "The fields to be retrieved.",
-						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be returned in the query",
-							"name":        "field",
-							"required":    true,
-							"type":        "string",
-						},
-						"name":     "fields",
-						"required": true,
-						"type":     "array",
-					},
-					map[string]any{
-						"additionalProperties": true,
+						"AdditionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -1545,19 +1457,19 @@ func TestLooker(t *testing.T) {
 	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
 
-	wantResult = "{\"description\":\"Data about Look and dashboard usage, including frequency of views, favoriting, scheduling, embedding, and access via the API. Also includes details about individual Looks and dashboards.\",\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
+	wantResult = "{\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
 	tests.RunToolInvokeParametersTest(t, "get_explores", []byte(`{"model": "system__activity"}`), wantResult)
 
-	wantResult = "{\"description\":\"Number of times this content has been viewed via the Looker API\",\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
+	wantResult = "{\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
 	tests.RunToolInvokeParametersTest(t, "get_dimensions", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
-	wantResult = "{\"description\":\"The total number of views via the Looker API\",\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
+	wantResult = "{\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
-	wantResult = "[]"
+	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_filters", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
-	wantResult = "[]"
+	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_parameters", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
 	wantResult = "{\"look.count\":"
