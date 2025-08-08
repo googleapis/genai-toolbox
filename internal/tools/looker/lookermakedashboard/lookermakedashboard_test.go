@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lookermakelook_test
+package lookermakedashboard_test
 
 import (
 	"strings"
@@ -22,10 +22,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
+	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
 )
 
-func TestParseFromYamlLookerMakeLook(t *testing.T) {
+func TestParseFromYamlLookerMakeDashboard(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -40,14 +40,14 @@ func TestParseFromYamlLookerMakeLook(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-make-look
+					kind: looker-make-dashboard
 					source: my-instance
 					description: some description
 				`,
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-make-look",
+					Kind:         "looker-make-dashboard",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -73,7 +73,7 @@ func TestParseFromYamlLookerMakeLook(t *testing.T) {
 
 }
 
-func TestFailParseFromYamlLookerMakeLook(t *testing.T) {
+func TestFailParseFromYamlMakeDashboard(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerMakeLook(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-make-look
+					kind: looker-make-dashboard
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-make-look\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-make-look\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as kind \"looker-make-dashboard\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-make-dashboard\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {
