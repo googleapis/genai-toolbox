@@ -127,8 +127,121 @@ tools:
           parameter.
 
           The vis_config is optional. If provided, it will be used to
-          control the default visualization for the query. These are
-          some sample vis_config settings.
+          control the default visualization for the query. Here are
+          some notes on making visualizations.
+
+          ### Cartesian Charts (Area, Bar, Column, Line, Scatter)
+
+          These chart types share a large number of configuration options.
+
+          **General**
+          *   `type`: The type of visualization (`looker_area`, `looker_bar`, `looker_column`, `looker_line`, `looker_scatter`).
+          *   `series_types`: Override the chart type for individual series.
+          *   `show_view_names`: Display view names in labels and tooltips (`true`/`false`).
+          *   `series_labels`: Provide custom names for series.
+
+          **Styling & Colors**
+          *   `colors`: An array of color values to be used for the chart series.
+          *   `series_colors`: A mapping of series names to specific color values.
+          *   `color_application`: Advanced controls for color palette application (collection, palette, reverse, etc.).
+          *   `font_size`: Font size for labels (e.g., '12px').
+
+          **Legend**
+          *   `hide_legend`: Show or hide the chart legend (`true`/`false`).
+          *   `legend_position`: Placement of the legend (`'center'`, `'left'`, `'right'`).
+
+          **Axes**
+          *   `swap_axes`: Swap the X and Y axes (`true`/`false`).
+          *   `x_axis_scale`: Scale of the x-axis (`'auto'`, `'ordinal'`, `'linear'`, `'time'`).
+          *   `x_axis_reversed`, `y_axis_reversed`: Reverse the direction of an axis (`true`/`false`).
+          *   `x_axis_gridlines`, `y_axis_gridlines`: Display gridlines for an axis (`true`/`false`).
+          *   `show_x_axis_label`, `show_y_axis_label`: Show or hide the axis title (`true`/`false`).
+          *   `show_x_axis_ticks`, `show_y_axis_ticks`: Show or hide axis tick marks (`true`/`false`).
+          *   `x_axis_label`, `y_axis_label`: Set a custom title for an axis.
+          *   `x_axis_datetime_label`: A format string for datetime labels on the x-axis (e.g., `'%Y-%m'`).
+          *   `x_padding_left`, `x_padding_right`: Adjust padding on the ends of the x-axis.
+          *   `x_axis_label_rotation`, `x_axis_label_rotation_bar`: Set rotation for x-axis labels.
+          *   `x_axis_zoom`, `y_axis_zoom`: Enable zooming on an axis (`true`/`false`).
+          *   `y_axes`: An array of configuration objects for multiple y-axes.
+
+          **Data & Series**
+          *   `stacking`: How to stack series (`''` for none, `'normal'`, `'percent'`).
+          *   `ordering`: Order of series in a stack (`'none'`, etc.).
+          *   `limit_displayed_rows`: Enable or disable limiting the number of rows displayed (`true`/`false`).
+          *   `limit_displayed_rows_values`: Configuration for the row limit (e.g., `{ "first_last": "first", "show_hide": "show", "num_rows": 10 }`).
+          *   `discontinuous_nulls`: How to render null values in line charts (`true`/`false`).
+          *   `point_style`: Style for points on line and area charts (`'none'`, `'circle'`, `'circle_outline'`).
+          *   `series_point_styles`: Override point styles for individual series.
+          *   `interpolation`: Line interpolation style (`'linear'`, `'monotone'`, `'step'`, etc.).
+          *   `show_value_labels`: Display values on data points (`true`/`false`).
+          *   `label_value_format`: A format string for value labels.
+          *   `show_totals_labels`: Display total labels on stacked charts (`true`/`false`).
+          *   `totals_color`: Color for total labels.
+          *   `show_silhouette`: Display a "silhouette" of hidden series in stacked charts (`true`/`false`).
+          *   `hidden_series`: An array of series names to hide from the visualization.
+
+          **Scatter/Bubble Specific**
+          *   `size_by_field`: The field used to determine the size of bubbles.
+          *   `color_by_field`: The field used to determine the color of bubbles.
+          *   `plot_size_by_field`: Whether to display the size-by field in the legend.
+          *   `cluster_points`: Group nearby points into clusters (`true`/`false`).
+          *   `quadrants_enabled`: Display quadrants on the chart (`true`/`false`).
+          *   `quadrant_properties`: Configuration for quadrant labels and colors.
+          *   `custom_quadrant_value_x`, `custom_quadrant_value_y`: Set quadrant boundaries as a percentage.
+          *   `custom_quadrant_point_x`, `custom_quadrant_point_y`: Set quadrant boundaries to a specific value.
+
+          **Miscellaneous**
+          *   `reference_lines`: Configuration for displaying reference lines.
+          *   `trend_lines`: Configuration for displaying trend lines.
+          *   `trellis`: Configuration for creating trellis (small multiple) charts.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering interactions.
+
+          ### Boxplot
+
+          *   Inherits most of the Cartesian chart options.
+          *   `type`: Must be `looker_boxplot`.
+
+          ### Funnel
+
+          *   `type`: Must be `looker_funnel`.
+          *   `orientation`: How data is read (`'automatic'`, `'dataInRows'`, `'dataInColumns'`).
+          *   `percentType`: How percentages are calculated (`'percentOfMaxValue'`, `'percentOfPriorRow'`).
+          *   `labelPosition`, `valuePosition`, `percentPosition`: Placement of labels (`'left'`, `'right'`, `'inline'`, `'hidden'`).
+          *   `labelColor`, `labelColorEnabled`: Set a custom color for labels.
+          *   `labelOverlap`: Allow labels to overlap (`true`/`false`).
+          *   `barColors`: An array of colors for the funnel steps.
+          *   `color_application`: Advanced color palette controls.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering.
+
+          ### Pie / Donut
+
+          *   `type`: Must be `looker_pie`.
+          *   `value_labels`: Where to display values (`'legend'`, `'labels'`).
+          *   `label_type`: The format of data labels (`'labPer'`, `'labVal'`, `'lab'`, `'val'`, `'per'`).
+          *   `start_angle`, `end_angle`: The start and end angles of the pie chart.
+          *   `inner_radius`: The inner radius, used to create a donut chart.
+          *   `series_colors`, `series_labels`: Override colors and labels for specific slices.
+          *   `color_application`: Advanced color palette controls.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering.
+          *   `advanced_vis_config`: A string containing JSON for advanced Highcharts configuration.
+
+          ### Waterfall
+
+          *   Inherits most of the Cartesian chart options.
+          *   `type`: Must be `looker_waterfall`.
+          *   `up_color`: Color for positive (increasing) values.
+          *   `down_color`: Color for negative (decreasing) values.
+          *   `total_color`: Color for the total bar.
+
+          ### Word Cloud
+
+          *   `type`: Must be `looker_wordcloud`.
+          *   `rotation`: Enable random word rotation (`true`/`false`).
+          *   `colors`: An array of colors for the words.
+          *   `color_application`: Advanced color palette controls.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering.
+
+          These are some sample vis_config settings.
 
           A bar chart -
           {{
@@ -388,11 +501,27 @@ tools:
             "y_axis_zoom": true
           }}
 
-          A single value visualization -
+          A single record visualization -
           {{
             "defaults_version": 1,
             "show_view_names": false,
             "type": "looker_single_record"
+          }}
+
+          A single value visualization -
+          {{
+            "comparison_reverse_colors": false,
+            "comparison_type": "value",                                                                                                                                            "conditional_formatting_include_nulls": false,                                                                                                                         "conditional_formatting_include_totals": false,
+            "custom_color": "#1A73E8",
+            "custom_color_enabled": true,
+            "defaults_version": 1,
+            "enable_conditional_formatting": false,
+            "series_types": {},
+            "show_comparison": false,
+            "show_comparison_label": true,
+            "show_single_value_title": true,
+            "single_value_title": "Total Clicks",
+            "type": "single_value"
           }}
 
           A Pie chart -
