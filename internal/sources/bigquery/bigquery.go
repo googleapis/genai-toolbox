@@ -17,6 +17,8 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
@@ -149,6 +151,11 @@ func initBigQueryConnection(
 	return client, restService, clientCreator, nil
 }
 
+var (
+	clientCache *ClientCache
+	once        sync.Once
+)
+
 func initBigQueryConnectionWithOAuthToken(
 	ctx context.Context,
 	project string,
@@ -178,13 +185,103 @@ func initBigQueryConnectionWithOAuthToken(
 	return client, restService, nil
 }
 
+// newBigQueryClientCreator returns a cache-aware client creater
 func newBigQueryClientCreator(
 	ctx context.Context,
 	project string,
 	location string,
 	userAgent string,
-) func(tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+) BigqueryClientCreator {
+
+	cache := GetClientCache()
 	return func(tokenString tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, project, location, userAgent, tokenString)
+		return cache.GetOrCreateClient(ctx, project, location, userAgent, tokenString)
 	}
+}
+
+// cachedClient holds the BigQuery clients and their expiration time.
+type cachedClient struct {
+	client      *bigqueryapi.Client
+	restService *bigqueryrestapi.Service
+	expiry      time.Time
+}
+
+// ClientCache manages a thread-safe cache of BigQuery clients.
+type ClientCache struct {
+	mu      sync.RWMutex
+	clients map[tools.OAuthAccessToken]*cachedClient
+}
+
+// GetClientCache initializes the clientCache and start a cleanup go routine
+func GetClientCache() *ClientCache {
+	once.Do(func() {
+		clientCache = &ClientCache{
+			clients: make(map[tools.OAuthAccessToken]*cachedClient),
+		}
+		// Clean up expired clients periodically.
+		go clientCache.cleanupLoop(5 * time.Minute)
+	})
+	return clientCache
+}
+
+// cleanupLoop periodically removes expired clients from the cache.
+func (c *ClientCache) cleanupLoop(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		c.mu.Lock()
+		for token, cached := range c.clients {
+			if time.Now().After(cached.expiry) {
+				_ = cached.client.Close()
+				delete(c.clients, token)
+			}
+		}
+		c.mu.Unlock()
+	}
+}
+
+// GetOrCreateClient retrieves a cached client or creates a new one if not found.
+func (c *ClientCache) GetOrCreateClient(
+	ctx context.Context,
+	project string,
+	location string,
+	userAgent string,
+	tokenString tools.OAuthAccessToken,
+) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+
+	// Check for an existing client using a read lock.
+	c.mu.RLock()
+	cached, found := c.clients[tokenString]
+	if found && time.Now().Before(cached.expiry) {
+		c.mu.RUnlock()
+		return cached.client, cached.restService, nil
+	}
+	c.mu.RUnlock()
+
+	// Use a write lock to create a new client.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Double-check in case another goroutine created it while waiting for the lock.
+	cached, found = c.clients[tokenString]
+	if found && time.Now().Before(cached.expiry) {
+		return cached.client, cached.restService, nil
+	}
+
+	// Create the new client
+	client, restService, err := initBigQueryConnectionWithOAuthToken(ctx, project, location, userAgent, tokenString)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Store the new client in the cache with a 55-minute expiry.
+	newCachedClient := &cachedClient{
+		client:      client,
+		restService: restService,
+		expiry:      time.Now().Add(55 * time.Minute),
+	}
+	c.clients[tokenString] = newCachedClient
+
+	return client, restService, nil
 }
