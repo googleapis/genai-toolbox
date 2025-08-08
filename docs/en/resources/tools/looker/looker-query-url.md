@@ -1,119 +1,38 @@
-sources:
-    looker-source:
-        kind: looker
-        base_url: ${LOOKER_BASE_URL}
-        client_id: ${LOOKER_CLIENT_ID}
-        client_secret: ${LOOKER_CLIENT_SECRET}
-        verify_ssl: ${LOOKER_VERIFY_SSL}
-        timeout: 600s
+---
+title: "looker-query-url"
+type: docs
+weight: 1
+description: >
+  "looker-query-url" generates a url link to a Looker explore.
+aliases:
+- /resources/tools/looker-query-url
+---
 
+## About
+
+The `looker-query-url` generates a url link to an explore in
+Looker so the query can be investigated further.
+
+It's compatible with the following sources:
+
+- [looker](../../sources/looker.md)
+
+`looker-query-url` takes eight parameters:
+
+1. the `model`
+2. the `explore`
+3. the `fields` list
+4. an optional set of `filters`
+5. an optional set of `pivots`
+6. an optional set of `sorts`
+7. an optional `limit`
+8. an optional `tz`
+9. an optional `vis_config`
+
+## Example
+
+```yaml
 tools:
-    get_models:
-        kind: looker-get-models
-        source: looker-source
-        description: |
-          The get_models tool retrieves the list of LookML models in the Looker system.
-
-          It takes no parameters.
-
-    get_explores:
-        kind: looker-get-explores
-        source: looker-source
-        description: |
-          The get_explores tool retrieves the list of explores defined in a LookML model
-          in the Looker system.
-
-          It takes one parameter, the model_name looked up from get_models.
-
-    get_dimensions:
-        kind: looker-get-dimensions
-        source: looker-source
-        description: |
-          The get_dimensions tool retrieves the list of dimensions defined in
-          an explore.
-
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
-
-    get_measures:
-        kind: looker-get-measures
-        source: looker-source
-        description: |
-          The get_measures tool retrieves the list of measures defined in
-          an explore.
-
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
-
-    get_filters:
-        kind: looker-get-filters
-        source: looker-source
-        description: |
-          The get_filters tool retrieves the list of filters defined in
-          an explore.
-
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
-
-    get_parameters:
-        kind: looker-get-parameters
-        source: looker-source
-        description: |
-          The get_parameters tool retrieves the list of parameters defined in
-          an explore.
-
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
-
-    query:
-        kind: looker-query
-        source: looker-source
-        description: |
-          Query Tool
-
-          This tool is used to run a query against the LookML model. The
-          model, explore, and fields list must be specified. Pivots,
-          filters and sorts are optional.
-
-          The model can be found from the get_models tool. The explore
-          can be found from the get_explores tool passing in the model.
-          The fields can be found from the get_dimensions, get_measures,
-          get_filters, and get_parameters tools, passing in the model
-          and the explore.
-
-          Provide a model_id and explore_name, then a list
-          of fields. Optionally a list of pivots can be provided.
-          The pivots must also be included in the fields list.
-
-          Filters are provided as a map of {"field.id": "condition",
-          "field.id2": "condition2", ...}. Do not put the field.id in
-          quotes. Filter expressions can be found at
-          https://cloud.google.com/looker/docs/filter-expressions.
-
-          Sorts can be specified like [ "field.id desc 0" ].
-
-          An optional row limit can be added. If not provided the limit
-          will default to 500. "-1" can be specified for unlimited.
-
-          An optional query timezone can be added. The query_timezone to
-          will default to that of the workstation where this MCP server
-          is running, or Etc/UTC if that can't be determined. Not all
-          models support custom timezones.
-
-          The result of the query tool is JSON
-
-    query_sql:
-        kind: looker-query-sql
-        source: looker-source
-        description: |
-          Query SQL Tool
-
-          This tool is used to generate the SQL that Looker would
-          run against the underlying database. The parameters are
-          the same as the query tool.
-
-          The result of the query sql tool is SQL text.
-
     query_url:
         kind: looker-query-url
         source: looker-source
@@ -433,67 +352,12 @@ tools:
 
           The result is a JSON object with the id, slug, the url, and
           the long_url.
+```
 
-    get_looks:
-        kind: looker-get-looks
-        source: looker-source
-        description: |
-          get_looks Tool
+## Reference
 
-          This tool is used to search for saved looks in a Looker instance.
-          String search params use case-insensitive matching. String search
-          params can contain % and '_' as SQL LIKE pattern match wildcard
-          expressions. example="dan%" will match "danger" and "Danzig" but
-          not "David" example="D_m%" will match "Damage" and "dump".
-
-          Most search params can accept "IS NULL" and "NOT NULL" as special
-          expressions to match or exclude (respectively) rows where the
-          column is null.
-
-          The limit and offset are used to paginate the results.
-
-          The result of the get_looks tool is a list of json objects.
-
-    run_look:
-        kind: looker-run-look
-        source: looker-source
-        description: |
-          run_look Tool
-
-          This tool runs the query associated with a look and returns
-          the data in a JSON structure. It accepts the look_id as the
-          parameter.
-
-    make_look:
-        kind: looker-make-look
-        source: looker-source
-        description: |
-          make_look Tool
-
-          This tool creates a new look in Looker, using the query
-          parameters and the vis_config specified.
-
-          Most of the parameters are the same as the query_url
-          tool. In addition, there is a title and a description
-          that must be provided.
-
-          The newly created look will be created in the user's
-          personal folder in looker. The look name must be unique.
-
-          The result is a json document with a link to the newly
-          created look.
-
-toolsets:
-    looker-tools:
-        - get_models
-        - get_explores
-        - get_dimensions
-        - get_measures
-        - get_filters
-        - get_parameters
-        - query
-        - query_sql
-        - query_url
-        - get_looks
-        - run_look
-        - make_look
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| kind        |                   string                   |     true     | Must be "looker-query-url"                                                                       |
+| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

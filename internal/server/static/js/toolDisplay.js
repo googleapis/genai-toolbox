@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { handleRunTool, displayResults } from './runTool.js';
+import { createGoogleAuthMethodItem } from './auth.js'
 
 /**
  * Helper function to create form inputs for parameters.
@@ -151,7 +152,7 @@ function createParamInput(param, toolId) {
  *     parsed. The function receives the updated headers object as its argument.
  * @return {!HTMLDivElement} The outermost div element of the created modal.
  */
-function createHeaderEditorModal(toolId, currentHeaders, saveCallback) {
+function createHeaderEditorModal(toolId, currentHeaders, toolParameters, authRequired, saveCallback) {
     const MODAL_ID = `header-modal-${toolId}`;
     let modal = document.getElementById(MODAL_ID);
 
@@ -174,8 +175,36 @@ function createHeaderEditorModal(toolId, currentHeaders, saveCallback) {
     headersTextarea.rows = 10;
     headersTextarea.value = JSON.stringify(currentHeaders, null, 2);
 
+    // handle authenticated params
+    const authProfileNames = new Set();
+    toolParameters.forEach(param => {
+        const isAuthParam = param.authServices && param.authServices.length > 0;
+        if (isAuthParam && param.authServices) {
+             param.authServices.forEach(name => authProfileNames.add(name));
+        }
+    });
+
+    // handle authorized invocations
+    if (authRequired && authRequired.length > 0) {
+        authRequired.forEach(name => authProfileNames.add(name));
+    }
+
     modalContent.appendChild(modalHeader);
     modalContent.appendChild(headersTextarea);
+
+    if (authProfileNames.size > 0 || authRequired.length > 0) {
+        const authHelperSection = document.createElement('div');
+        authHelperSection.className = 'auth-helper-section';
+        const authList = document.createElement('div');
+        authList.className = 'auth-method-list';
+
+        authProfileNames.forEach(profileName => {
+            const authItem = createGoogleAuthMethodItem(toolId, profileName);
+            authList.appendChild(authItem);
+        });
+        authHelperSection.appendChild(authList);
+        modalContent.appendChild(authHelperSection);
+    }
 
     const modalActions = document.createElement('div');
     const closeButton = document.createElement('button');
@@ -204,13 +233,6 @@ function createHeaderEditorModal(toolId, currentHeaders, saveCallback) {
     modalContent.appendChild(modalActions);
     modalContent.appendChild(authTokenDropdown);
     modal.appendChild(modalContent);
-
-    // Close modal if clicked outside
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            closeHeaderEditor(toolId);
-        }
-    });
 
     return modal;
 }
@@ -246,7 +268,7 @@ function createAuthTokenInfoDropdown() {
 
     details.className = 'auth-token-details';
     details.appendChild(summary);
-    summary.textContent = 'How to extract Google OAuth ID Token';
+    summary.textContent = 'How to extract Google OAuth ID Token manually';
     content.className = 'auth-token-content';
 
     // auth instruction dropdown
@@ -321,10 +343,9 @@ export function renderToolInterface(tool, containerElement) {
     const updateLastResults = (newResults) => {
         lastResults = newResults;
     };
-
     const updateCurrentHeaders = (newHeaders) => {
         currentHeaders = newHeaders;
-        const newModal = createHeaderEditorModal(TOOL_ID, currentHeaders, updateCurrentHeaders);
+        const newModal = createHeaderEditorModal(TOOL_ID, currentHeaders, tool.parameters, tool.authRequired, updateCurrentHeaders);
         containerElement.appendChild(newModal);
     };
 
@@ -428,7 +449,7 @@ export function renderToolInterface(tool, containerElement) {
     containerElement.appendChild(responseContainer);
 
     // create and append the header editor modal
-    const headerModal = createHeaderEditorModal(TOOL_ID, currentHeaders, updateCurrentHeaders);
+    const headerModal = createHeaderEditorModal(TOOL_ID, currentHeaders, tool.parameters, tool.authRequired, updateCurrentHeaders);
     containerElement.appendChild(headerModal);
 
     prettifyCheckbox.addEventListener('change', () => {

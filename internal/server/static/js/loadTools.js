@@ -128,6 +128,7 @@ async function fetchToolDetails(toolName, toolDisplayArea) {
             id: toolName,
             name: toolName,
             description: toolObject.description || "No description provided.",
+            authRequired: toolObject.authRequired || [],
             parameters: (toolObject.parameters || []).map(param => {
                 let inputType = 'text'; 
                 const apiType = param.type ? param.type.toLowerCase() : 'string';

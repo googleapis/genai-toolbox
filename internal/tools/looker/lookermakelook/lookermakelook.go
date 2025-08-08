@@ -11,11 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookergetmeasures
+package lookermakelook
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"slices"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -28,7 +30,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-get-measures"
+const kind string = "looker-make-look"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -72,7 +74,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	parameters := lookercommon.GetFieldParameters()
+	parameters := lookercommon.GetQueryParameters()
+
+	titleParameter := tools.NewStringParameter("title", "The title of the Look")
+	parameters = append(parameters, titleParameter)
+	descParameter := tools.NewStringParameterWithDefault("description", "", "The description of the Look")
+	parameters = append(parameters, descParameter)
+	vizParameter := tools.NewMapParameterWithDefault("vis_config",
+		map[string]any{},
+		"The visualization config for the query",
+		"",
+	)
+	parameters = append(parameters, vizParameter)
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -116,31 +129,75 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
-	model, explore, err := lookercommon.ProcessFieldArgs(ctx, params)
+	logger.DebugContext(ctx, "params = ", params)
+	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("error processing model or explore: %w", err)
+		return nil, fmt.Errorf("error building query request: %w", err)
 	}
 
-	fields := lookercommon.MeasuresFields
-	req := v4.RequestLookmlModelExplore{
-		LookmlModelName: *model,
-		ExploreName:     *explore,
-		Fields:          &fields,
-	}
-	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
+	mrespFields := "id,personal_folder_id"
+	mresp, err := t.Client.Me(mrespFields, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making get_measures request: %w", err)
+		return nil, fmt.Errorf("error making me request: %s", err)
 	}
 
-	if err := lookercommon.CheckLookerExploreFields(&resp); err != nil {
-		return nil, fmt.Errorf("error processing get_measures response: %w", err)
+	paramsMap := params.AsMap()
+	title := paramsMap["title"].(string)
+	description := paramsMap["description"].(string)
+
+	looks, err := t.Client.FolderLooks(*mresp.PersonalFolderId, "title", t.ApiSettings)
+	if err != nil {
+		return nil, fmt.Errorf("error getting existing looks in folder: %s", err)
 	}
 
-	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Measures)
-	if err != nil {
-		return nil, fmt.Errorf("error extracting get_measures response: %w", err)
+	lookTitles := []string{}
+	for _, look := range looks {
+		lookTitles = append(lookTitles, *look.Title)
 	}
-	logger.DebugContext(ctx, "data = ", data)
+	if slices.Contains(lookTitles, title) {
+		lt, _ := json.Marshal(lookTitles)
+		return nil, fmt.Errorf("title %s already used in user's folder. Currently used titles are %v. Make the call again with a unique title", title, string(lt))
+	}
+
+	visConfig := paramsMap["vis_config"].(map[string]any)
+	wq.VisConfig = &visConfig
+
+	qrespFields := "id"
+	qresp, err := t.Client.CreateQuery(*wq, qrespFields, t.ApiSettings)
+	if err != nil {
+		return nil, fmt.Errorf("error making create query request: %s", err)
+	}
+
+	wlwq := v4.WriteLookWithQuery{
+		Title:       &title,
+		UserId:      mresp.Id,
+		Description: &description,
+		QueryId:     qresp.Id,
+		FolderId:    mresp.PersonalFolderId,
+	}
+	resp, err := t.Client.CreateLook(wlwq, "", t.ApiSettings)
+	if err != nil {
+		return nil, fmt.Errorf("error making create look request: %s", err)
+	}
+	logger.DebugContext(ctx, "resp = %v", resp)
+
+	setting, err := t.Client.GetSetting("host_url", t.ApiSettings)
+	if err != nil {
+		logger.ErrorContext(ctx, "error getting settings: %s", err)
+	}
+
+	data := make(map[string]any)
+	if resp.Id != nil {
+		data["id"] = *resp.Id
+	}
+	if resp.ShortUrl != nil {
+		if setting.HostUrl != nil {
+			data["short_url"] = *setting.HostUrl + *resp.ShortUrl
+		} else {
+			data["short_url"] = *resp.ShortUrl
+		}
+	}
+	logger.DebugContext(ctx, "data = %v", data)
 
 	return data, nil
 }

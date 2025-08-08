@@ -39,6 +39,14 @@ function renderNavbar(containerId, activePath) {
     `;
 
     navbarContainer.innerHTML = navbarHTML;
+
+    const logoImage = navbarContainer.querySelector('.nav-logo img');
+    if (logoImage) {
+        logoImage.addEventListener('click', () => {
+            window.location.href = '/ui/';
+        });
+    }
+
     if (activePath) {
         const navLinks = navbarContainer.querySelectorAll('.left-nav ul li a');
         navLinks.forEach(link => {

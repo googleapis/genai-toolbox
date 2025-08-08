@@ -15,8 +15,9 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-execute-sql` takes one input parameter `sql` and runs the sql
-statement against the `source`.
+`bigquery-execute-sql` takes a required `sql` input parameter and runs the SQL
+statement against the configured `source`. It also supports an optional `dry_run`
+parameter to validate a query without executing it.
 
 ## Example
 

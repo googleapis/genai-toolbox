@@ -124,10 +124,10 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	cypherStr, ok := sliceParams[0].(string)
+	paramsMap := params.AsMap()
+	cypherStr, ok := paramsMap["cypher"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("unable to get cast %s", paramsMap["cypher"])
 	}
 
 	if cypherStr == "" {
@@ -145,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
-	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, cypherStr, nil,
+	results, err := neo4j.ExecuteQuery(ctx, t.Driver, cypherStr, nil,
 		neo4j.EagerResultTransformer, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

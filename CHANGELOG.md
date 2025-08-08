@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.11.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.11.0) (2025-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **tools/bigquery-sql:** Ensure invoke always returns a non-null value ([#1020](https://github.com/googleapis/genai-toolbox/issues/1020)) ([9af55b6](https://github.com/googleapis/genai-toolbox/commit/9af55b651d836f268eda342ea27380e7c9967c94))
+* **tools/bigquery-execute-sql:** Update the return messages ([#1034](https://github.com/googleapis/genai-toolbox/issues/1034)) ([051e686](https://github.com/googleapis/genai-toolbox/commit/051e686476a781ca49f7617764d507916a1188b8))
+
+### Features
+
+* Add TiDB source and tool ([#829](https://github.com/googleapis/genai-toolbox/issues/829)) ([6eaf36a](https://github.com/googleapis/genai-toolbox/commit/6eaf36ac8505d523fa4f5a4ac3c97209fd688cef))
+* Interactive web UI for Toolbox  ([#1065](https://github.com/googleapis/genai-toolbox/issues/1065)) ([8749b03](https://github.com/googleapis/genai-toolbox/commit/8749b030035e65361047c4ead13dfacb8e9a9b59))
+* **prebuiltconfigs/cloud-sql-postgres:** Introduce additional parameter to limit context in list tables ([#1062](https://github.com/googleapis/genai-toolbox/issues/1062)) ([c3a58e1](https://github.com/googleapis/genai-toolbox/commit/c3a58e1d1678dc14d8de5006511df597fd75faa3))
+* **tools/looker-query-url:** Add support for `looker-query-url` tool ([#1015](https://github.com/googleapis/genai-toolbox/issues/1015)) ([327ddf0](https://github.com/googleapis/genai-toolbox/commit/327ddf0439058aa5ecd2c7ae8251fcde6aeff18c))
+* **tools/dataplex-lookup-entry:** Add support for `dataplex-lookup-entry` tool ([#1009](https://github.com/googleapis/genai-toolbox/issues/1009)) ([5fa1660](https://github.com/googleapis/genai-toolbox/commit/5fa1660fc8631989b4d13abea205b6426bb506a5))
+
+### Bug Fixes
+
+* **tools/bigquery,mssql,mysql,postgres,spanner,tidb:** Add query logging to execute-sql tools ([#1069](https://github.com/googleapis/genai-toolbox/issues/1069)) ([0527532]([https://github.com/googleapis/genai-toolbox/commit/0527532bd7085ef9eb8f9c30f430a2f2f35cef32))
+
 ## [0.10.0](https://github.com/googleapis/genai-toolbox/compare/v0.9.0...v0.10.0) (2025-07-25)
 
 
