@@ -44,37 +44,6 @@ Before you begin, ensure you have the following:
     curl http://127.0.0.1:5000
     ```
 
-### Submitting a Pull Request
-
-1. **Title:** All pull request title should follow the formatting of [Conventional
-   Commit](https://www.conventionalcommits.org/) guidelines: `<type>[optional
-   scope]: description`. For example, if you are fixing a typo on postgres
-   source, the title should be `fix(source/postgres): fix typo for in source
-   initialization`.
-   
-   Here are some commonly used `type` in this GitHub repo.
-
-   |     **type**    |                                **description**                                                        |
-   |-----------------|-------------------------------------------------------------------------------------------------------|
-   | Breaking Change | Anything with this type of a `!` after the type/scope introduces a breaking change.                   |
-   | feat            | Adding a new feature to the codebase.                                                                 |
-   | fix             | Fixing a bug or typo in the codebase. This does not include fixing docs.                              |
-   | test            | Changes made to test files.                                                                           |
-   | ci              | Changes made to the cicd configuration files or scripts.                                              |
-   | docs            | Documentation-related PRs, including fixes on docs.                                                   |
-   | chore           | Other small tasks or updates that don't fall into any of the above types.                             |
-   | refactor        | Change src code but unlike feat, there are no tests broke and no line lost coverage.                  |
-   | revert          | Revert changes made in another commit.                                                                |
-   | style           | Update src code, with only formatting and whitespace updates (e.g. code formatter or linter changes). |
-
-   Pull requests should always add scope whenever possible. The scope is
-   formatted as `<type>/<kind>`. For example, `sources/postgres`, or `tools/mssql-sql`.
-
-1. **PR Description:** PR description should **always** be included. It should
-   include a concise description of the changes, it's impact, along with a
-   summary of the solution. If the PR is related to a specific issue, the issue
-   number should be mentioned in the PR description (e.g. `Fixes #1`).
-
 ## Testing
 
 ### Infrastructure
