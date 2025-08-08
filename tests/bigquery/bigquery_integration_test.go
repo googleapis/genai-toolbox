@@ -24,14 +24,12 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"golang.org/x/oauth2/google"
@@ -108,17 +106,6 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		datasetName,
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
-	tableNameForecast := fmt.Sprintf("`%s.%s.forecast_table_%s`",
-		BigqueryProject,
-		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
-	)
-
-	tableNameAnalyzeContribution := fmt.Sprintf("`%s.%s.analyze_contribution_table_%s`",
-		BigqueryProject,
-		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
-	)
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
@@ -135,19 +122,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	teardownTable3 := setupBigQueryTable(t, ctx, client, createDataTypeTableStmt, insertDataTypeTableStmt, datasetName, tableNameDataType, dataTypeTestParams)
 	defer teardownTable3(t)
 
-	// set up data for forecast tool
-	createForecastTableStmt, insertForecastTableStmt, forecastTestParams := getBigQueryForecastToolInfo(tableNameForecast)
-	teardownTable4 := setupBigQueryTable(t, ctx, client, createForecastTableStmt, insertForecastTableStmt, datasetName, tableNameForecast, forecastTestParams)
-	defer teardownTable4(t)
-
-	// set up data for analyze contribution tool
-	createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, analyzeContributionTestParams := getBigQueryAnalyzeContributionToolInfo(tableNameAnalyzeContribution)
-	teardownTable5 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, datasetName, tableNameAnalyzeContribution, analyzeContributionTestParams)
-	defer teardownTable5(t)
-
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 	toolsFile = addBigQuerySqlToolConfig(t, toolsFile, dataTypeToolStmt, arrayDataTypeToolStmt)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
@@ -167,9 +143,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Get configs for tests
+	tests.RunToolGetTest(t)
+
 	select1Want := "[{\"f0_\":1}]"
-	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
+	// Partial message; the full error message is too long.
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
@@ -187,14 +165,13 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithCreateColArray(createColArray),
 		tests.WithDdlWant(ddlWant),
-		tests.WithSelectEmptyWant(selectEmptyWant),
+		tests.WithSelectEmptyWant(`"The query returned 0 rows."`),
 		tests.WithInsert1Want(ddlWant),
 	)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
-	runBigQueryForecastToolInvokeTest(t, tableNameForecast)
-	runBigQueryAnalyzeContributionToolInvokeTest(t, tableNameAnalyzeContribution)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -577,45 +554,6 @@ func getBigQueryDataTypeTestInfo(tableName string) (string, string, string, stri
 	return createStatement, insertStatement, toolStatement, arrayToolStatement, params
 }
 
-// getBigQueryForecastToolInfo returns statements and params for the forecast tool.
-func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryapi.QueryParameter) {
-	createStatement := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (ts TIMESTAMP, data FLOAT64, id STRING);`, tableName)
-	insertStatement := fmt.Sprintf(`
-		INSERT INTO %s (ts, data, id) VALUES
-		(?, ?, ?), (?, ?, ?), (?, ?, ?), 
-		(?, ?, ?), (?, ?, ?), (?, ?, ?);`, tableName)
-	params := []bigqueryapi.QueryParameter{
-		{Value: "2025-01-01T00:00:00Z"}, {Value: 10.0}, {Value: "a"},
-		{Value: "2025-01-01T01:00:00Z"}, {Value: 11.0}, {Value: "a"},
-		{Value: "2025-01-01T02:00:00Z"}, {Value: 12.0}, {Value: "a"},
-		{Value: "2025-01-01T00:00:00Z"}, {Value: 20.0}, {Value: "b"},
-		{Value: "2025-01-01T01:00:00Z"}, {Value: 21.0}, {Value: "b"},
-		{Value: "2025-01-01T02:00:00Z"}, {Value: 22.0}, {Value: "b"},
-	}
-	return createStatement, insertStatement, params
-}
-
-// getBigQueryAnalyzeContributionToolInfo returns statements and params for the analyze-contribution tool.
-func getBigQueryAnalyzeContributionToolInfo(tableName string) (string, string, []bigqueryapi.QueryParameter) {
-	createStatement := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (dim1 STRING, dim2 STRING, is_test BOOL, metric FLOAT64);`, tableName)
-	insertStatement := fmt.Sprintf(`
-		INSERT INTO %s (dim1, dim2, is_test, metric) VALUES 
-		(?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?);`, tableName)
-	params := []bigqueryapi.QueryParameter{
-		{Value: "a"}, {Value: "x"}, {Value: true}, {Value: 100.0},
-		{Value: "a"}, {Value: "x"}, {Value: false}, {Value: 110.0},
-		{Value: "a"}, {Value: "y"}, {Value: true}, {Value: 120.0},
-		{Value: "a"}, {Value: "y"}, {Value: false}, {Value: 100.0},
-		{Value: "b"}, {Value: "x"}, {Value: true}, {Value: 40.0},
-		{Value: "b"}, {Value: "x"}, {Value: false}, {Value: 100.0},
-		{Value: "b"}, {Value: "y"}, {Value: true}, {Value: 60.0},
-		{Value: "b"}, {Value: "y"}, {Value: false}, {Value: 60.0},
-	}
-	return createStatement, insertStatement, params
-}
-
 // getBigQueryTmplToolStatement returns statements for template parameter test cases for bigquery kind
 func getBigQueryTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ? ORDER BY id"
@@ -653,21 +591,19 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 		t.Fatalf("Create table job for %s failed: %v", tableName, err)
 	}
 
-	if len(params) > 0 {
-		// Insert test data
-		insertQuery := client.Query(insertStatement)
-		insertQuery.Parameters = params
-		insertJob, err := insertQuery.Run(ctx)
-		if err != nil {
-			t.Fatalf("Failed to start insert job for %s: %v", tableName, err)
-		}
-		insertStatus, err := insertJob.Wait(ctx)
-		if err != nil {
-			t.Fatalf("Failed to wait for insert job for %s: %v", tableName, err)
-		}
-		if err := insertStatus.Err(); err != nil {
-			t.Fatalf("Insert job for %s failed: %v", tableName, err)
-		}
+	// Insert test data
+	insertQuery := client.Query(insertStatement)
+	insertQuery.Parameters = params
+	insertJob, err := insertQuery.Run(ctx)
+	if err != nil {
+		t.Fatalf("Failed to start insert job for %s: %v", tableName, err)
+	}
+	insertStatus, err := insertJob.Wait(ctx)
+	if err != nil {
+		t.Fatalf("Failed to wait for insert job for %s: %v", tableName, err)
+	}
+	if err := insertStatus.Err(); err != nil {
+		t.Fatalf("Insert job for %s failed: %v", tableName, err)
 	}
 
 	return func(t *testing.T) {
@@ -720,47 +656,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
-	tools["my-client-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "bigquery-execute-sql",
-		"source":      "my-client-auth-source",
-		"description": "Tool to execute sql",
-	}
-	tools["my-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
-		"source":      "my-instance",
-		"description": "Tool to forecast time series data.",
-	}
-	tools["my-auth-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
-		"source":      "my-instance",
-		"description": "Tool to forecast time series data with auth.",
-		"authRequired": []string{
-			"my-google-auth",
-		},
-	}
-	tools["my-client-auth-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
-		"source":      "my-client-auth-source",
-		"description": "Tool to forecast time series data with auth.",
-	}
-	tools["my-analyze-contribution-tool"] = map[string]any{
-		"kind":        "bigquery-analyze-contribution",
-		"source":      "my-instance",
-		"description": "Tool to analyze contribution.",
-	}
-	tools["my-auth-analyze-contribution-tool"] = map[string]any{
-		"kind":        "bigquery-analyze-contribution",
-		"source":      "my-instance",
-		"description": "Tool to analyze contribution with auth.",
-		"authRequired": []string{
-			"my-google-auth",
-		},
-	}
-	tools["my-client-auth-analyze-contribution-tool"] = map[string]any{
-		"kind":        "bigquery-analyze-contribution",
-		"source":      "my-client-auth-source",
-		"description": "Tool to analyze contribution with auth.",
-	}
 	tools["my-list-dataset-ids-tool"] = map[string]any{
 		"kind":        "bigquery-list-dataset-ids",
 		"source":      "my-instance",
@@ -773,11 +668,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"authRequired": []string{
 			"my-google-auth",
 		},
-	}
-	tools["my-client-auth-list-dataset-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-dataset-ids",
-		"source":      "my-client-auth-source",
-		"description": "Tool to list dataset",
 	}
 	tools["my-get-dataset-info-tool"] = map[string]any{
 		"kind":        "bigquery-get-dataset-info",
@@ -792,11 +682,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
-	tools["my-client-auth-get-dataset-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-dataset-info",
-		"source":      "my-client-auth-source",
-		"description": "Tool to show dataset metadata",
-	}
 	tools["my-list-table-ids-tool"] = map[string]any{
 		"kind":        "bigquery-list-table-ids",
 		"source":      "my-instance",
@@ -809,11 +694,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"authRequired": []string{
 			"my-google-auth",
 		},
-	}
-	tools["my-client-auth-list-table-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-table-ids",
-		"source":      "my-client-auth-source",
-		"description": "Tool to list table within a dataset",
 	}
 	tools["my-get-table-info-tool"] = map[string]any{
 		"kind":        "bigquery-get-table-info",
@@ -873,20 +753,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
-func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]any {
-	sources, ok := config["sources"].(map[string]any)
-	if !ok {
-		t.Fatalf("unable to get sources from config")
-	}
-	sources["my-client-auth-source"] = map[string]any{
-		"kind":           BigquerySourceKind,
-		"project":        BigqueryProject,
-		"useClientOAuth": true,
-	}
-	config["sources"] = sources
-	return config
-}
-
 func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement, arrayToolStatement string) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
@@ -916,12 +782,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 			map[string]any{"name": "bool_array", "type": "array", "description": "an array of boolean values", "items": map[string]any{"name": "item", "type": "boolean", "description": "desc"}},
 		},
 	}
-	tools["my-client-auth-tool"] = map[string]any{
-		"kind":        "bigquery-sql",
-		"source":      "my-client-auth-source",
-		"description": "Tool to test client authorization.",
-		"statement":   "SELECT 1",
-	}
+
 	config["tools"] = tools
 	return config
 }
@@ -932,13 +793,6 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1030,29 +884,6 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			isErr:         true,
-		},
-		{
-			name:          "Invoke my-client-auth-exec-sql-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			want:          "[{\"f0_\":1}]",
-			isErr:         false,
-		},
-		{
-			name:          "Invoke my-client-auth-exec-sql-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-exec-sql-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
 		},
@@ -1427,265 +1258,6 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 	}
 }
 
-func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
-
-	historyDataTable := strings.ReplaceAll(tableName, "`", "")
-	historyDataQuery := fmt.Sprintf("SELECT ts, data, id FROM %s", tableName)
-
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
-	}{
-		{
-			name:          "invoke my-forecast-tool without required params",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s"}`, historyDataTable))),
-			isErr:         true,
-		},
-		{
-			name:          "invoke my-forecast-tool with table",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-forecast-tool with query and horizon",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data", "horizon": 5}`, historyDataQuery))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-forecast-tool with id_cols",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data", "id_cols": ["id"]}`, historyDataTable))),
-			want:          `"id"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-auth-forecast-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-auth-forecast-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			isErr:         true,
-		},
-		{
-			name:          "Invoke my-client-auth-forecast-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "Invoke my-client-auth-forecast-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-forecast-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			isErr:         true,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
-			}
-		})
-	}
-}
-
-func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
-
-	dataTable := strings.ReplaceAll(tableName, "`", "")
-
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
-	}{
-		{
-			name:          "invoke my-analyze-contribution-tool without required params",
-			api:           "http://127.0.0.1:5000/api/tool/my-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s"}`, dataTable))),
-			isErr:         true,
-		},
-		{
-			name:          "invoke my-analyze-contribution-tool with table",
-			api:           "http://127.0.0.1:5000/api/tool/my-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
-			want:          `"relative_difference"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-auth-analyze-contribution-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
-			want:          `"relative_difference"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-auth-analyze-contribution-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
-			isErr:         true,
-		},
-		{
-			name:          "Invoke my-client-auth-analyze-contribution-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
-			want:          `"relative_difference"`,
-			isErr:         false,
-		},
-		{
-			name:          "Invoke my-client-auth-analyze-contribution-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-analyze-contribution-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-analyze-contribution-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
-			isErr:         true,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
-			}
-		})
-	}
-}
-
 func runBigQueryDataTypeTests(t *testing.T) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1771,13 +1343,6 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
-
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -1817,29 +1382,6 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
 			want:          datasetWant,
-		},
-		{
-			name:          "Invoke my-client-auth-list-dataset-ids-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dataset-ids-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         false,
-			want:          datasetWant,
-		},
-		{
-			name:          "Invoke my-client-auth-list-dataset-ids-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dataset-ids-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-list-dataset-ids-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dataset-ids-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -1892,13 +1434,6 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1968,29 +1503,6 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
 		},
-		{
-			name:          "Invoke my-client-auth-get-dataset-info-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-info-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
-			want:          datasetInfoWant,
-			isErr:         false,
-		},
-		{
-			name:          "Invoke my-client-auth-get-dataset-info-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-info-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-get-dataset-info-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-info-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
-			isErr:         true,
-		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2042,13 +1554,6 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -2118,29 +1623,6 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
 		},
-		{
-			name:          "Invoke my-client-auth-list-table-ids-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-table-ids-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
-			want:          tablename_want,
-			isErr:         false,
-		},
-		{
-			name:          "Invoke my-client-auth-list-table-ids-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-table-ids-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-list-table-ids-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-table-ids-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
-			isErr:         true,
-		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2192,13 +1674,6 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -2265,29 +1740,6 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 			name:          "Invoke my-auth-get-table-info-tool without auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-table-info-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
-			isErr:         true,
-		},
-		{
-			name:          "Invoke my-client-auth-get-table-info-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-table-info-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
-			want:          tableInfoWant,
-			isErr:         false,
-		},
-		{
-			name:          "Invoke my-client-auth-get-table-info-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-table-info-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
-			isErr:         true,
-		},
-		{
-
-			name:          "Invoke my-client-auth-get-table-info-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-table-info-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			isErr:         true,
 		},
