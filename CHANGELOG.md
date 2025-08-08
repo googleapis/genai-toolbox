@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.12.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.12.0) (2025-08-08)
+
+
+### Features
+
+* Add instructions and links to docs in UI ([#1100](https://github.com/googleapis/genai-toolbox/issues/1100)) ([37ae556](https://github.com/googleapis/genai-toolbox/commit/37ae55648d551f5af4f3f30cf6cd8a6eacb09e1b))
+* Add login with google button for automatic id token retrieval ([#1044](https://github.com/googleapis/genai-toolbox/issues/1044)) ([d91bdfc](https://github.com/googleapis/genai-toolbox/commit/d91bdfcbdcbf5fcae6e17770c88c5ffba4115d67))
+* Add visualizations to query-url tool ([#1090](https://github.com/googleapis/genai-toolbox/issues/1090)) ([5bf2758](https://github.com/googleapis/genai-toolbox/commit/5bf275846a268a8d305d6392fa4e8e79e365f00d))
+* **bigquery-execute-sql:** Add dry run support ([#1057](https://github.com/googleapis/genai-toolbox/issues/1057)) ([1cac9b5](https://github.com/googleapis/genai-toolbox/commit/1cac9b5b378153c7dc65ff3dfb4ebd852b715a10))
+* **tools/looker:** Add looker-make-look tool to create Looks ([#1099](https://github.com/googleapis/genai-toolbox/issues/1099)) ([61d9489](https://github.com/googleapis/genai-toolbox/commit/61d94893448f633a5f2b9d7f0744ab40704af824))
+
+
+### Bug Fixes
+
+* **tools/looker:** Add isAuthorized call to all Looker tools ([#1091](https://github.com/googleapis/genai-toolbox/issues/1091)) ([3b1cce7](https://github.com/googleapis/genai-toolbox/commit/3b1cce72e7ff4f6b3a0a31db0564dc45b8302caa))
+
 ## [0.11.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.11.0) (2025-08-05)
 
 
