@@ -101,10 +101,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.DefaultHeaders = make(map[string]string)
 	}
 	if existingUA, ok := r.DefaultHeaders["User-Agent"]; ok && existingUA != "" {
-		r.DefaultHeaders["User-Agent"] += "." + ua
-	} else {
-		r.DefaultHeaders["User-Agent"] = ua
+		ua += existingUA + " " + ua
 	}
+	r.DefaultHeaders["User-Agent"] = ua
 
 	s := &Source{
 		Name:           r.Name,
