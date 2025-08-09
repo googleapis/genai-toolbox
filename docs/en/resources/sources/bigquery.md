@@ -87,6 +87,11 @@ sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # datasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+
 ```
 
 ## Reference
@@ -96,3 +101,4 @@ sources:
 | kind      |  string  |     true     | Must be "bigquery".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | location  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| datasets  | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any prebuilt tool operation attempting to access a dataset not in this list will be rejected. Note that the toolbox cannot determine which datasets are accessed within an EXECUTE IMMEDIATE statement. Therefore, when datasets restrictions are active, any SQL from the bigquery-execute-sql tool containing EXECUTE IMMEDIATE will be rejected. This restriction does not apply to the bigquery-sql tool. |

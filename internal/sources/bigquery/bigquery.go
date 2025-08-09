@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"strings"
+
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -49,10 +51,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Name     string   `yaml:"name" validate:"required"`
+	Kind     string   `yaml:"kind" validate:"required"`
+	Project  string   `yaml:"project" validate:"required"`
+	Location string   `yaml:"location"`
+	Datasets []string `yaml:"datasets"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -67,12 +70,27 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, err
 	}
 
+	allowedDatasets := make(map[string]struct{})
+	// Get full id of allowed datasets
+	if len(r.Datasets) > 0 {
+		for _, allowed := range r.Datasets {
+			var allowedFullID string
+			if strings.Contains(allowed, ".") {
+				allowedFullID = allowed
+			} else {
+				allowedFullID = fmt.Sprintf("%s.%s", client.Project(), allowed)
+			}
+			allowedDatasets[allowedFullID] = struct{}{}
+		}
+	}
+
 	s := &Source{
-		Name:        r.Name,
-		Kind:        SourceKind,
-		Client:      client,
-		RestService: restService,
-		Location:    r.Location,
+		Name:            r.Name,
+		Kind:            SourceKind,
+		Client:          client,
+		RestService:     restService,
+		Location:        r.Location,
+		AllowedDatasets: allowedDatasets,
 	}
 	return s, nil
 
@@ -82,11 +100,12 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	// BigQuery Google SQL struct with client
-	Name        string `yaml:"name"`
-	Kind        string `yaml:"kind"`
-	Client      *bigqueryapi.Client
-	RestService *bigqueryrestapi.Service
-	Location    string `yaml:"location"`
+	Name            string `yaml:"name"`
+	Kind            string `yaml:"kind"`
+	Client          *bigqueryapi.Client
+	RestService     *bigqueryrestapi.Service
+	Location        string `yaml:"location"`
+	AllowedDatasets map[string]struct{}
 }
 
 func (s *Source) SourceKind() string {
@@ -100,6 +119,29 @@ func (s *Source) BigQueryClient() *bigqueryapi.Client {
 
 func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
+}
+
+func (s *Source) BigQueryAllowedDatasets() []string {
+	if len(s.AllowedDatasets) == 0 {
+		return nil
+	}
+	datasets := make([]string, 0, len(s.AllowedDatasets))
+	for d := range s.AllowedDatasets {
+		datasets = append(datasets, d)
+	}
+	return datasets
+}
+
+// IsDatasetAllowed checks if a given dataset is accessible based on the source's configuration.
+func (s *Source) IsDatasetAllowed(projectID, datasetID string) bool {
+	// If the normalized map is empty, it means no restrictions were configured.
+	if len(s.AllowedDatasets) == 0 {
+		return true
+	}
+
+	targetDataset := fmt.Sprintf("%s.%s", projectID, datasetID)
+	_, ok := s.AllowedDatasets[targetDataset]
+	return ok
 }
 
 func initBigQueryConnection(
