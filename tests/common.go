@@ -645,6 +645,19 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				"description": "Tool to test statement with incorrect syntax.",
 				"commands":    [][]string{{"SELEC 1;"}},
 			},
+			"my-exec-cmd-tool": map[string]any{
+				"kind":        "redis-execute-cmd",
+				"source":      "my-instance",
+				"description": "Tool to execute redis command",
+			},
+			"my-auth-exec-cmd-tool": map[string]any{
+				"kind":        "redis-execute-cmd",
+				"source":      "my-instance",
+				"description": "Tool to execute redis command",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
 		},
 	}
 	return toolsFile
