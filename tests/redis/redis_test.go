@@ -15,8 +15,13 @@
 package redis
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"testing"
@@ -101,11 +106,27 @@ func TestRedisToolEndpoints(t *testing.T) {
 
 	select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
+	runExecuteSqlToolInvokeTest(t)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+}
+
+type User struct {
+	Name string `json:"name"`
+	Id   int32  `json:"id"`
 }
 
 func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(*testing.T) {
 	keys := []string{"row1", "row2", "row3", "row4", "null"}
+	user := User{
+		Name: "Alice",
+		Id:   1,
+	}
+
+	// Marshal the struct to JSON
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		log.Fatalf("Failed to marshal JSON: %v", err)
+	}
 	commands := [][]any{
 		{"HSET", keys[0], "id", 1, "name", "Alice"},
 		{"HSET", keys[1], "id", 2, "name", "Jane"},
@@ -113,6 +134,7 @@ func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(
 		{"HSET", keys[3], "id", 4, "name", nil},
 		{"SET", keys[4], "null"},
 		{"HSET", tests.ServiceAccountEmail, "name", "Alice"},
+		{"JSON.SET", "user", "$", string(userJSON)},
 	}
 	for _, c := range commands {
 		resp := client.Do(ctx, c...)
@@ -129,4 +151,135 @@ func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(
 		}
 	}
 
+}
+
+func runExecuteSqlToolInvokeTest(t *testing.T) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-exec-cmd-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd":"HGETALL row1"}`)),
+			want:          "{\"id\":\"1\",\"name\":\"Alice\"}",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-cmd-tool null response",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd": "GET null"}`)),
+			want:          "\"null\"",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-cmd-tool ping",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd":"PING"}`)),
+			want:          "\"PONG\"",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-cmd-tool push to list",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd": "RPUSH tasks task1 task2 task3"}`)),
+			want:          "3",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-cmd-tool read a range in a list",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd":"LRANGE tasks 0 -1"}`)),
+			want:          "[\"task1\",\"task2\",\"task3\"]",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-cmd-tool json get",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd":"JSON.GET user $"}`)),
+			want:          "\"[{\\\"name\\\":\\\"Alice\\\",\\\"id\\\":1}]\"",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-exec-cmd-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"cmd":"HGETALL %s"}`, tests.ServiceAccountEmail))),
+			isErr:         false,
+			want:          "[{\"name\":\"Alice\"}]",
+		},
+		{
+			name:          "Invoke my-auth-exec-cmd-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd":"HGETALL row1"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-cmd-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-cmd-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"cmd":"PING"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
 }
