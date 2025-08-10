@@ -71,6 +71,7 @@ func initCassandraSession() (*gocql.Session, error) {
 		CREATE TABLE IF NOT EXISTS example_keyspace.users (
 			id text PRIMARY KEY,
 			name text,
+			email text,
 			age int,
 			is_active boolean,
 			created_at timestamp
@@ -87,33 +88,33 @@ func initCassandraSession() (*gocql.Session, error) {
 
 	// Insert minimal diverse data with fixed time.Time for timestamps
 	err = session.Query(`
-		INSERT INTO example_keyspace.users (id, name, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
-		"1", "Alice", 25, true, dayAgo,
+		INSERT INTO example_keyspace.users (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"1", "Alice", tests.ServiceAccountEmail, 25, true, dayAgo,
 	).Exec()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to insert user: %v", err)
 	}
 	err = session.Query(`
-		INSERT INTO example_keyspace.users (id, name, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
-		"2", "Jane", 30, false, twelveHoursAgo,
+		INSERT INTO example_keyspace.users (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"2", "Jane", "janedoe@gmail.com", 30, false, twelveHoursAgo,
 	).Exec()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to insert user: %v", err)
 	}
 	err = session.Query(`
-		INSERT INTO example_keyspace.users (id, name, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
-		"3", "Sid", 0, true, fixedTime,
+		INSERT INTO example_keyspace.users (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"3", "Sid", "sid@gmail.com", 0, true, fixedTime,
 	).Exec()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to insert user: %v", err)
 	}
 	err = session.Query(`
-		INSERT INTO example_keyspace.users (id, name, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
-		"4", nil, 40, false, fixedTime,
+		INSERT INTO example_keyspace.users (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"4", nil, "a@gmail.com", 40, false, fixedTime,
 	).Exec()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to insert user: %v", err)
@@ -142,7 +143,8 @@ func TestCassandra(t *testing.T) {
 
 	var args []string
 	byIdStmt, selectAllStmt, selectAllTemplateStmt, selectByIdTemplateStmt := createParamToolInfo()
-	toolsFile := getToolsConfig(sourceConfig, CassandraToolKind, byIdStmt, selectAllStmt, selectAllTemplateStmt, selectByIdTemplateStmt)
+	createAuthToolStmt, insertAuthToolStmt, selectAuthToolStmt := getCassandraAuthToolInfo("example_keyspace.auth_tool_table")
+	toolsFile := getToolsConfig(sourceConfig, CassandraToolKind, byIdStmt, selectAllStmt, selectAllTemplateStmt, selectByIdTemplateStmt, createAuthToolStmt, insertAuthToolStmt, selectAuthToolStmt)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -171,6 +173,13 @@ func createParamToolInfo() (string, string, string, string) {
 	return byIdStmt, selectAllStmt, selectAllTemplateStmt, selectByIdTemplateStmt
 }
 
+func getCassandraAuthToolInfo(tableName string) (string, string, string) {
+	createStatement := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (name TEXT, email TEXT PRIMARY KEY);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
+	return createStatement, insertStatement, toolStatement
+}
+
 func getCassandraWants() (string, string, string, string) {
 	fixedTime, _ := time.Parse(time.RFC3339, "2025-07-25T12:00:00Z")
 	dayAgo := fixedTime.Add(-24 * time.Hour).Format(time.RFC3339)
@@ -189,12 +198,18 @@ func getToolsConfig(sourceConfig map[string]any, toolKind string, statements ...
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
+		"authServices": map[string]any{
+			"my-google-auth": map[string]any{
+				"kind":     "google",
+				"clientId": tests.ClientId,
+			},
+		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
+				"statement":   "select id from example_keyspace.users where id='1';",
 			},
 			"select-by-id": map[string]any{
 				"kind":        toolKind,
@@ -252,11 +267,61 @@ func getToolsConfig(sourceConfig map[string]any, toolKind string, statements ...
 					},
 				},
 			},
+			"create-table": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"statement": statements[4],
+			},
+			"insert-into-table": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"statement": statements[5],
+				"parameters": []map[string]any{
+					{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+					},
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+					},
+				},
+			},
+			"my-auth-select-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"description": "Tool to test authenticated parameters.",
+				// statement to auto-fill authenticated parameter
+				"statement": statements[6],
+				"parameters": []map[string]any{
+					{
+						"name":        "email",
+						"type":        "string",
+						"description": "user email",
+						"authServices": []map[string]string{
+							{
+								"name":  "my-google-auth",
+								"field": "email",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 func runToolInvokeTest(t *testing.T, selectByIdWant, selectAllWant string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
 	invokeTcs := []struct {
 		name          string
 		api           string
@@ -287,6 +352,28 @@ func runToolInvokeTest(t *testing.T, selectByIdWant, selectAllWant string) {
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
+		},
+		{
+			name:          "invoke auth-create-tool",
+			api:           "http://127.0.0.1:5000/api/tool/create-table/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          "null",
+			isErr:         false,
+		}, {
+			name:          "invoke auth-insert",
+			api:           "http://127.0.0.1:5000/api/tool/insert-into-table/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alice", "email": "%s"}`, tests.ServiceAccountEmail))),
+			want:          "null",
+			isErr:         false,
+		}, {
+			name:          "invoke auth-select-by-email",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-select-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          "[{\"name\":\"Alice\"}]",
+			isErr:         false,
 		},
 	}
 
