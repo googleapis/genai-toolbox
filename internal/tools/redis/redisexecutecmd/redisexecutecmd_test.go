@@ -23,7 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/redis/redisexecutecmd"
 )
 
-func TestParseFromYamlExecuteQueryl(t *testing.T) {
+func TestParseFromYamlExecuteCmd(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
