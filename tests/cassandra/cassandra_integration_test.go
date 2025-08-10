@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,14 +35,18 @@ import (
 var (
 	CassandraSourceKind = "cassandra"
 	CassandraToolKind   = "cassandra-cql"
-	Hosts               = []string{"localhost"}
-	PORT                = 9042
+	Hosts               = os.Getenv("CASSANDRA_HOSTS") //Comma separated string with host IPs (default: []string{"localhost"})
+	PORT                = os.Getenv("CASSANDRA_PORT")  // 9042
 	tableName           = "example_keyspace.users"
+	Keyspace            = "example_keyspace"
+	Username            = os.Getenv("CASSANDRA_USERNAME")
+	Password            = os.Getenv("CASSANDRA_PASSWORD")
 )
 
 func initCassandraSession() (*gocql.Session, error) {
+	hosts := strings.Split(Hosts, ",")
 	// Configure cluster connection
-	cluster := gocql.NewCluster("localhost")
+	cluster := gocql.NewCluster(hosts...)
 	cluster.Consistency = gocql.Quorum
 	cluster.ProtoVersion = 4
 	cluster.ConnectTimeout = 10 * time.Second
@@ -125,8 +131,11 @@ func initCassandraSession() (*gocql.Session, error) {
 
 func getCassandraVars() map[string]any {
 	return map[string]any{
-		"kind": CassandraSourceKind,
-		"host": Hosts,
+		"kind":     CassandraSourceKind,
+		"hosts":    strings.Split(Hosts, ","),
+		"keyspace": Keyspace,
+		"username": Username,
+		"password": Password,
 	}
 }
 

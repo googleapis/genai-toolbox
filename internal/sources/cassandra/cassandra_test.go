@@ -36,7 +36,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			sources:
 				my-cassandra-instance:
 					kind: cassandra
-					host: 
+					hosts: 
 						- "my-host1"
 						- "my-host2"
 					username: "user"

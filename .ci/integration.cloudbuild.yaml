@@ -540,7 +540,10 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "HOSTS=$HOSTS"
-    secretEnv: ["CLIENT_ID"]
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "CASSANDRA_HOSTS=$_CASSANDRA_HOSTS"
+      - "CASSANDRA_PORT=$_CASSANDRA_PORT"
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USERNAME", "CASSANDRA_PASSWORD"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -648,3 +651,5 @@ substitutions:
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
+  _CASSANDRA_HOSTS: "127.0.0.1"
+  _CASSANDRA_PORT: "9042"

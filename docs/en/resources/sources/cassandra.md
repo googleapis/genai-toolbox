@@ -24,7 +24,7 @@ description: >
 sources:
     my-cassandra-source:
         kind: cassandra
-        host:
+        hosts:
             - 127.0.0.1
         keyspace: my_keyspace
         protoVersion: 4
@@ -46,7 +46,7 @@ instead of hardcoding your secrets into the configuration file.
 | **field**              | **type**  | **required** | **description**                                                                                       |
 |------------------------|:---------:|:------------:|-------------------------------------------------------------------------------------------------------|
 | kind                   |  string   |     true     | Must be "cassandra".                                                                                  |
-| host                   |  string[] |     true     | List of IP addresses to connect to (e.g., ["127.0.0.1"]).                                             |
+| hosts                  |  string[] |     true     | List of IP addresses to connect to (e.g., ["127.0.0.1"]).                                             |
 | keyspace               |  string   |     true     | Name of the Cassandra keyspace to connect to (e.g., "my_keyspace").                                   |
 | protoVersion           |  integer  |    false     | Protocol version for the Cassandra connection (e.g., 4).                                              |
 | username               |  string   |    false     | Name of the Cassandra user to connect as (e.g., "my-cassandra-user").                                 |
