@@ -102,7 +102,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		}
 
 		if len(datasetIDs) == 1 {
-			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. Table names without a project or dataset qualifier (e.g., `my_table`) are considered to be within this dataset.", datasetIDs[0])
+			datasetFQN := allowedDatasets[0]
+			parts := strings.Split(datasetFQN, ".")
+			datasetID := datasetFQN
+			if len(parts) == 2 {
+				datasetID = parts[1]
+			}
+			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. To query a table within this dataset (e.g., `my_table`), qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
 		} else {
 			sqlDescription += fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
 		}
@@ -171,6 +177,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	statementType := dryRunJob.Statistics.Query.StatementType
 
 	if len(t.AllowedDatasets) > 0 {
+		switch statementType {
+		case "CREATE_SCHEMA", "DROP_SCHEMA", "ALTER_SCHEMA":
+			return nil, fmt.Errorf("dataset/schema operations (%s) are not allowed", statementType)
+		}
 		// Two-stage table name parsing logic.
 		var tableNames []string
 		// Stage 1: Attempt to get table names from the dry run result for reliable statement types.
@@ -194,7 +204,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 			if len(parts) == 3 {
 				projectID, datasetID := parts[0], parts[1]
 				if !t.IsDatasetAllowed(projectID, datasetID) {
-					return nil, fmt.Errorf("query accesses dataset '%s', which is not in the allowed list", datasetID)
+					return nil, fmt.Errorf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID)
 				}
 			}
 		}

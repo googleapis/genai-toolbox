@@ -40,6 +40,19 @@ const (
 	stateInMultiLineComment
 )
 
+// SQL statement verbs
+const (
+	verbCreate = "create"
+	verbAlter  = "alter"
+	verbDrop   = "drop"
+	verbSelect = "select"
+	verbInsert = "insert"
+	verbUpdate = "update"
+	verbDelete = "delete"
+	verbMerge  = "merge"
+	verbCall   = "call"
+)
+
 var tableFollowsKeywords = map[string]bool{
 	"from":   true,
 	"join":   true,
@@ -92,6 +105,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 	state := stateNormal
 	expectingTable := false
 	var lastTableKeyword string
+	var statementVerb string
 	runes := []rune(sql)
 
 	for i := 0; i < len(runes); {
@@ -136,6 +150,12 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				if inSubquery {
 					return i + 1, nil
 				}
+			}
+
+			if char == ';' {
+				statementVerb = ""
+				i++
+				continue
 
 			}
 
@@ -195,6 +215,20 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 					keyword := strings.ToLower(parts[0])
 					if keyword == "execute" {
 						return 0, fmt.Errorf("parsing SQL with EXECUTE IMMEDIATE is not supported")
+					}
+
+					switch keyword {
+					case verbCreate, verbAlter, verbDrop, verbSelect, verbInsert, verbUpdate, verbDelete, verbMerge, verbCall:
+						if statementVerb == "" {
+							statementVerb = keyword
+						}
+					}
+
+					if statementVerb == verbCreate || statementVerb == verbAlter || statementVerb == verbDrop {
+						if keyword == "schema" || keyword == "dataset" {
+							// Use a more specific error message.
+							return 0, fmt.Errorf("dataset/schema operations (%s %s) are not allowed by the parser", strings.ToUpper(statementVerb), strings.ToUpper(keyword))
+						}
 					}
 
 					if _, ok := tableFollowsKeywords[keyword]; ok {
