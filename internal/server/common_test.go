@@ -118,11 +118,18 @@ func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, 
 	}
 
 	toolsets := make(map[string]tools.Toolset)
-	for name, l := range map[string][]string{
-		"":           allTools,
-		"tool1_only": {allTools[0]},
-		"tool2_only": {allTools[1]},
-	} {
+	toolsetConfigs := map[string][]string{
+		"": allTools,
+	}
+
+	if len(allTools) > 0 {
+		toolsetConfigs["tool1_only"] = []string{allTools[0]}
+	}
+	if len(allTools) > 1 {
+		toolsetConfigs["tool2_only"] = []string{allTools[1]}
+	}
+
+	for name, l := range toolsetConfigs {
 		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
 		m, err := tc.Initialize(fakeVersionString, toolsMap)
 		if err != nil {

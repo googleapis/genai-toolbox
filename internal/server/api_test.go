@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
@@ -117,6 +118,77 @@ func TestToolsetEndpoint(t *testing.T) {
 				_, ok := m.ToolsManifest[name]
 				if !ok {
 					t.Errorf("%q tool not found in manifest", name)
+				}
+			}
+		})
+	}
+}
+
+func TestToolsetNamesEndpoint(t *testing.T) {
+	type wantResponse struct {
+		statusCode int
+		names      []string
+	}
+
+	testCases := []struct {
+		name      string
+		mockTools []MockTool
+		want      wantResponse
+	}{
+		{
+			name:      "get all toolset names",
+			mockTools: []MockTool{tool1, tool2},
+			want: wantResponse{
+				statusCode: http.StatusOK,
+				names:      []string{"", "tool1_only", "tool2_only"},
+			},
+		},
+		{
+			name:      "when toolset is zero",
+			mockTools: []MockTool{},
+			want: wantResponse{
+				statusCode: http.StatusOK,
+				names:      []string{""},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			toolsMap, toolsets := setUpResources(t, tc.mockTools)
+			r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+			defer shutdown()
+			ts := runServer(r, false)
+			defer ts.Close()
+
+			resp, body, err := runRequest(ts, http.MethodGet, "/toolset-names", nil, nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+
+			if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+				t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+			}
+
+			if resp.StatusCode != tc.want.statusCode {
+				t.Logf("response body: %s", body)
+				t.Fatalf("unexpected status code: want %d, got %d", tc.want.statusCode, resp.StatusCode)
+			}
+
+			var names []string
+			err = json.Unmarshal(body, &names)
+			if err != nil {
+				t.Fatalf("unable to parse toolset names: %s", err)
+			}
+
+			if len(names) != len(tc.want.names) {
+				t.Fatalf("unexpected number of toolset names: want %d, got %d", len(tc.want.names), len(names))
+			}
+
+			for _, name := range tc.want.names {
+				found := slices.Contains(names, name)
+				if !found {
+					t.Errorf("expected toolset name %q not found in response", name)
 				}
 			}
 		})

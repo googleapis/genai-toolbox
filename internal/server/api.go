@@ -38,6 +38,7 @@ func apiRouter(s *Server) (chi.Router, error) {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/toolset", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
+	r.Get("/toolset-names", func(w http.ResponseWriter, r *http.Request) { toolsetNamesHandler(s, w, r) })
 	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 
 	r.Route("/tool/{toolName}", func(r chi.Router) {
@@ -83,6 +84,29 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.JSON(w, r, toolset.Manifest)
+}
+
+// toolsetNamesHandler handles the request for a list of all toolset names.
+func toolsetNamesHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/toolset/get-names")
+	r = r.WithContext(ctx)
+	var err error
+	defer func() {
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		s.instrumentation.ToolsetGet.Add(
+			r.Context(),
+			1,
+			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
+		)
+	}()
+	render.JSON(w, r, s.ResourceMgr.GetToolsetNames())
 }
 
 // toolGetHandler handles requests for a single Tool.
