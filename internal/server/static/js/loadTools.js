@@ -17,60 +17,47 @@ import { renderToolInterface } from "./toolDisplay.js";
 let toolDetailsAbortController = null;
 
 /**
- * Fetches a toolset from the /api/toolset endpoint and initiates creating the tool list.
- * @param {!HTMLElement} secondNavContent The HTML element where the tool list will be rendered.
- * @param {!HTMLElement} toolDisplayArea The HTML element where the details of a selected tool will be displayed.
- * @param {string} toolsetName The name of the toolset to load (empty string loads all tools).
- * @returns {!Promise<void>} A promise that resolves when the tools are loaded and rendered, or rejects on error.
- */
-export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) {
-    secondNavContent.innerHTML = '<p>Fetching tools...</p>';
-    try {
-        const response = await fetch(`/api/toolset/${toolsetName}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const apiResponse = await response.json();
-        renderToolList(apiResponse, secondNavContent, toolDisplayArea);
-    } catch (error) {
-        console.error('Failed to load tools:', error);
-        secondNavContent.innerHTML = `<p class="error">Failed to load tools: <pre><code>${error}</code></pre></p>`;
-    }
-}
-
-/**
  * Renders the list of tools as buttons within the provided HTML element.
- * @param {?{tools: ?Object<string,*>} } apiResponse The API response object containing the tools.
+ * @param {!Array<{name: string, tools: Object<string,*>}>} toolsets The array of toolset objects.
  * @param {!HTMLElement} secondNavContent The HTML element to render the tool list into.
  * @param {!HTMLElement} toolDisplayArea The HTML element for displaying tool details (passed to event handlers).
  */
-function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
+export function renderToolList(toolsets, secondNavContent, toolDisplayArea) {
     secondNavContent.innerHTML = '';
 
-    if (!apiResponse || typeof apiResponse.tools !== 'object' || apiResponse.tools === null) {
-        console.error('Error: Expected an object with a "tools" property, but received:', apiResponse);
-        secondNavContent.textContent = 'Error: Invalid response format from toolset API.';
-        return;
-    }
-
-    const toolsObject = apiResponse.tools;
-    const toolNames = Object.keys(toolsObject);
-
-    if (toolNames.length === 0) {
+    if (!toolsets || (Array.isArray(toolsets) && toolsets.length === 0)) {
         secondNavContent.textContent = 'No tools found.';
         return;
     }
 
+    const toolsetsArray = Array.isArray(toolsets) ? toolsets : [toolsets];
+
     const ul = document.createElement('ul');
-    toolNames.forEach(toolName => {
-        const li = document.createElement('li');
-        const button = document.createElement('button');
-        button.textContent = toolName;
-        button.dataset.toolname = toolName;
-        button.classList.add('tool-button');
-        button.addEventListener('click', (event) => handleToolClick(event, secondNavContent, toolDisplayArea));
-        li.appendChild(button);
-        ul.appendChild(li);
+    toolsetsArray.forEach((toolset, index) => {
+        if (toolset && toolset.tools) {
+            const toolNames = Object.keys(toolset.tools);
+            toolNames.forEach(toolName => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.dataset.toolname = toolName;
+                button.classList.add('tool-button');
+
+                const numberIndicator = document.createElement('span');
+                numberIndicator.classList.add('number-indicator');
+                if (toolset.name !== "") {
+                    numberIndicator.textContent = index + 1;
+                }
+                button.appendChild(numberIndicator);
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = toolName;
+                button.appendChild(nameSpan);
+
+                button.addEventListener('click', (event) => handleToolClick(event, secondNavContent, toolDisplayArea));
+                li.appendChild(button);
+                ul.appendChild(li);
+            });
+        }
     });
     secondNavContent.appendChild(ul);
 }
@@ -82,13 +69,14 @@ function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
  * @param {!HTMLElement} toolDisplayArea The HTML element where tool details will be shown.
  */
 function handleToolClick(event, secondNavContent, toolDisplayArea) {
-    const toolName = event.target.dataset.toolname;
+    const toolButton = event.currentTarget;
+    const toolName = toolButton.dataset.toolname;
     if (toolName) {
         const currentActive = secondNavContent.querySelector('.tool-button.active');
         if (currentActive) {
             currentActive.classList.remove('active');
         }
-        event.target.classList.add('active');
+        toolButton.classList.add('active');
         fetchToolDetails(toolName, toolDisplayArea);
     }
 }

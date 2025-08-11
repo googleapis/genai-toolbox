@@ -54,12 +54,12 @@ body {
     width: 100%;
 
     li {
-      margin-bottom: 5px;
+      margin-bottom: 10px;
 
       a {
         display: flex;
         align-items: center;
-        padding: 12px;
+        padding: 8px 12px;
         text-decoration: none;
         color: #333;
         border-radius: 0;
@@ -84,11 +84,25 @@ body {
     background-color: #fff;
     box-shadow: 4px 0px 12px rgba(0, 0, 0, 0.15);
     z-index: 2;
+    border-right: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
     padding: 15px;
-    align-items: center;
     position: relative;
+    height: 100vh;
+}
+
+.toolset-management-panel {
+    flex: 0 0 auto;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--section-border);
+}
+
+.tool-list-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-logo {
@@ -178,7 +192,7 @@ body {
 .tool-button {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 8px 12px;
     text-decoration: none;
     color: #333;
     background-color: transparent;
@@ -624,9 +638,33 @@ body {
 }
 
 .search-container {
+    position: relative;
     display: flex;
     width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
+
+    #suggestions-panel {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .suggestion-item {
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .suggestion-item:hover {
+        background-color: #f0f0f0;
+    }
 
     #toolset-search-input {
         flex-grow: 1;
@@ -672,6 +710,62 @@ body {
             box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
         }
     }
+}
+
+#selected-toolsets-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.toolset-pill {
+    display: flex;
+    align-items: center;
+    background-color: var(--toolbox-blue);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 0.9em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toolset-pill .remove-btn {
+    margin-left: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.7);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.toolset-pill .remove-btn:hover {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.number-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--button-secondary);
+    color: white;
+    text-align: center;
+    line-height: 20px;
+    font-weight: bold;
+    margin-right: 8px;
+    font-size: 0.8em;
+}
+
+.tool-button.active .number-indicator {
+    background-color: var(--toolbox-blue);
 }
 
 .toggle-details-tab {
