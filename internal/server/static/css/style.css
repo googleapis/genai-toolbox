@@ -100,6 +100,7 @@ body {
         max-width: 100%;
         height: auto;
         display: block;
+        cursor: pointer;
     }
 }
 
@@ -166,6 +167,12 @@ body {
     background-color: white;
     color: var(--text-primary-gray);
     border: 2px solid var(--text-primary-gray);
+}
+
+.btn--externalDocs {
+    background-color: var(--button-secondary);
+    text-decoration: none;
+    display: inline-flex;
 }
 
 .tool-button {
@@ -680,4 +687,53 @@ body {
   &:hover {
         opacity: 0.8;
   }
+}
+
+.resource-instructions {
+    font-family: inherit; 
+    color: var(--text-primary-gray);
+    padding: 24px;
+    background-color: #ffffff; 
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    margin: 16px 0; 
+
+    li {
+        margin-bottom: 10px;
+        color: var(--text-secondary-gray);
+    }
+}
+
+.resource-title {
+    color: var(--toolbox-blue); 
+    font-size: 24px; 
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.resource-subtitle {
+    color: var(--text-primary-gray);
+    font-size: 20px;
+    font-weight: normal;
+    margin-top: 24px;
+    margin-bottom: 12px;
+}
+
+.resource-intro,
+.resource-description {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary-gray);
+    margin-bottom: 16px;
+
+    code {
+        background-color: #e9e9e9; 
+        color: #c0392b;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 90%;
+        vertical-align: baseline;
+    }
 }
