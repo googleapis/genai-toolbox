@@ -178,6 +178,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
 	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
 	}
