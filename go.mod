@@ -31,7 +31,7 @@ require (
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
 	github.com/microsoft/go-mssqldb v1.9.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
-	github.com/redis/go-redis/v9 v9.12.0
+	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/valkey-io/valkey-go v1.0.64
