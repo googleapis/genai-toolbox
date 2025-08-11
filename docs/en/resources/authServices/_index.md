@@ -68,6 +68,10 @@ parameter when loading tools, or the `add_auth_token_getter`() /
 
 ### Specifying tokens during load
 
+#### Python
+
+Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main)
+
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
 import asyncio
@@ -135,7 +139,32 @@ if **name** == "**main**":
     asyncio.run(main()){{< /tab >}}
 {{< /tabpane >}}
 
+#### Javascript/Typescript
+
+Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main)
+
+```javascript
+import { ToolboxClient } from '@toolbox-sdk/core';
+
+async function getAuthToken() {
+    // ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+    // This example just returns a placeholder. Replace with your actual token retrieval.
+    return "YOUR_ID_TOKEN" // Placeholder
+}
+
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+const authTool = await client.loadTool("my-tool", {"myAuth": getAuthToken});
+const result = await authTool({input:"some input"});
+console.log(result);
+print(result)
+```
+
+
 ### Specifying tokens for existing tools
+
+#### Python
+Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main)
 
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
@@ -181,5 +210,25 @@ authorized_tool = tools[0].add_auth_token_getters({
 })
 {{< /tab >}}
 {{< /tabpane >}}
+
+#### Javascript/Typescript
+
+Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main)
+
+```javascript
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+let tool = await client.loadTool("my-tool")
+
+const authTool = tool.addAuthTokenGetter("my_auth", get_auth_token)  // Single token
+
+// OR
+
+const multiAuthTool = tool.addAuthTokenGetters({
+    "my_auth_1": getAuthToken1,
+    "my_auth_2": getAuthToken2,
+})  // Multiple tokens
+
+```
 
 ## Kinds of Auth Services
