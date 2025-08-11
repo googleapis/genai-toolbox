@@ -180,15 +180,15 @@ import "github.com/googleapis/mcp-toolbox-sdk-go/core"
 
 func main() {
     // Replace with the Cloud Run service URL generated in the previous step.
-    URL := 'http://127.0.0.1:5000'
+    URL := "http://127.0.0.1:5000"
     token, err := core.GetGoogleIDToken(ctx, URL)
-  	if err != nil {
-  		log.Fatalf("Failed to fetch token %v", err)
+    if err != nil {
+        log.Fatalf("Failed to fetch token %v", err)
   	}
     toolboxClient, err := core.NewToolboxClient(URL, core.WithClientHeaderString("Authorization", token))
-  	if err != nil {
-  		log.Fatalf("Failed to create Toolbox client: %v", err)
-  	}
+    if err != nil {
+        log.Fatalf("Failed to create Toolbox client: %v", err)
+    }
 }
 {{< /tab >}}
 {{< /tabpane >}}
