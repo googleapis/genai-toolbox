@@ -30,7 +30,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -254,10 +253,6 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 
 		for k, v := range t.Headers {
 			req.Header.Set(k, v)
-		}
-
-		if ua, err := util.UserAgentFromContext(ctx); err == nil {
-			req.Header.Set("User-Agent", ua)
 		}
 
 		resp, err := t.Client.Do(req)
