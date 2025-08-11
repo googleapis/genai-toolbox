@@ -176,7 +176,7 @@ func getAuthToken() string {
 
 func main() {
     URL := 'http://127.0.0.1:5000'
-    client, err := core.NewToolboxClient("http://127.0.0.1:5000")
+    client, err := core.NewToolboxClient(URL)
     if err != nil {
   		log.Fatalf("Failed to create Toolbox client: %v", err)
   	}
@@ -270,11 +270,10 @@ Use the [Go SDK](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main).
 
 ```go
 import "github.com/googleapis/mcp-toolbox-sdk-go/core"
-import "fmt"
 
 func main() {
     URL := 'http://127.0.0.1:5000'
-    client, err := core.NewToolboxClient("http://127.0.0.1:5000")
+    client, err := core.NewToolboxClient(URL)
     if err != nil {
   		log.Fatalf("Failed to create Toolbox client: %v", err)
   	}
