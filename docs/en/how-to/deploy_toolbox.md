@@ -151,7 +151,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. Import and initialize the toolbox client with the URL retrieved above:
 
-{{< tabpane persist=header >}}
+    {{< tabpane persist=header >}}
 {{< tab header="Python" lang="python" >}}
 from toolbox_core import ToolboxClient, auth_methods
 
@@ -169,8 +169,10 @@ async with ToolboxClient(
 import { ToolboxClient } from '@toolbox-sdk/core';
 import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
 
+// Replace with the Cloud Run service URL generated in the previous step.
 const URL = 'http://127.0.0.1:5000';
 const getGoogleIdTokenGetter = () => getGoogleIdToken(URL);
+
 const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGetter});
 {{< /tab >}}
 {{< /tabpane >}}

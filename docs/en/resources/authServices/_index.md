@@ -70,7 +70,7 @@ parameter when loading tools, or the `add_auth_token_getter`() /
 
 #### Python
 
-Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main)
+Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
 
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
@@ -141,7 +141,7 @@ if **name** == "**main**":
 
 #### Javascript/Typescript
 
-Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main)
+Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main).
 
 ```javascript
 import { ToolboxClient } from '@toolbox-sdk/core';
@@ -164,7 +164,7 @@ print(result)
 ### Specifying tokens for existing tools
 
 #### Python
-Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main)
+Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
 
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
@@ -213,7 +213,7 @@ authorized_tool = tools[0].add_auth_token_getters({
 
 #### Javascript/Typescript
 
-Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main)
+Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main).
 
 ```javascript
 const URL = 'http://127.0.0.1:5000';
