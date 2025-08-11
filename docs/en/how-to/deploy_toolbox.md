@@ -171,9 +171,9 @@ import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
 
 // Replace with the Cloud Run service URL generated in the previous step.
 const URL = 'http://127.0.0.1:5000';
-const getGoogleIdTokenGetter = () => getGoogleIdToken(URL);
+const authTokenProvider = () => getGoogleIdToken(URL);
 
-const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGetter});
+const client = new ToolboxClient(URL, null, {"Authorization": authTokenProvider});
 {{< /tab >}}
 {{< /tabpane >}}
 

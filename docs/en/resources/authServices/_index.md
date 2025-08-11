@@ -154,8 +154,8 @@ async function getAuthToken() {
 
 const URL = 'http://127.0.0.1:5000';
 let client = new ToolboxClient(URL);
-const authTool = await client.loadTool("my-tool", {"myAuth": getAuthToken});
-const result = await authTool({input:"some input"});
+const authTool = await client.loadTool("my-tool", {"my_auth_app_1": getAuthToken});
+const result = await authTool({param:"value"});
 console.log(result);
 print(result)
 ```
@@ -220,14 +220,14 @@ const URL = 'http://127.0.0.1:5000';
 let client = new ToolboxClient(URL);
 let tool = await client.loadTool("my-tool")
 
-const authTool = tool.addAuthTokenGetter("my_auth", get_auth_token)  // Single token
+// for a single token
+const authorizedTool = tool.addAuthTokenGetter("my_auth", get_auth_token)
 
-// OR
-
+// OR, if multiple tokens are needed
 const multiAuthTool = tool.addAuthTokenGetters({
     "my_auth_1": getAuthToken1,
     "my_auth_2": getAuthToken2,
-})  // Multiple tokens
+})
 
 ```
 
