@@ -197,6 +197,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(singlestore_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
 	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
 	}
