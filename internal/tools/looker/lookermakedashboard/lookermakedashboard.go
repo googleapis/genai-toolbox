@@ -134,6 +134,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	title := paramsMap["title"].(string)
 	description := paramsMap["description"].(string)
 
+	if mresp.PersonalFolderId == nil || *mresp.PersonalFolderId == "" {
+		return nil, fmt.Errorf("user does not have a personal folder. cannot continue")
+	}
+
 	dashs, err := t.Client.FolderDashboards(*mresp.PersonalFolderId, "title", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error getting existing dashboards in folder: %s", err)
