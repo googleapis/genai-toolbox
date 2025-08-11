@@ -175,6 +175,22 @@ const authTokenProvider = () => getGoogleIdToken(URL);
 
 const client = new ToolboxClient(URL, null, {"Authorization": authTokenProvider});
 {{< /tab >}}
+{{< tab header="Go" lang="go" >}}
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+func main() {
+    // Replace with the Cloud Run service URL generated in the previous step.
+    URL := 'http://127.0.0.1:5000';
+    token, err := core.GetGoogleIDToken(ctx, toolboxURL)
+  	if err != nil {
+  		log.Fatalf("Failed to fetch token %v", err)
+  	}
+    toolboxClient, err := core.NewToolboxClient(toolboxURL, core.WithClientHeaderString("Authorization", token))
+  	if err != nil {
+  		log.Fatalf("Failed to create Toolbox client: %v", err)
+  	}
+}
+{{< /tab >}}
 {{< /tabpane >}}
 
 
