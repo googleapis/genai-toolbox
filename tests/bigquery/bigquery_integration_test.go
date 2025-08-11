@@ -1524,7 +1524,10 @@ func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowed
 			name:           "invoke on disallowed table",
 			sql:            fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
 			wantStatusCode: http.StatusBadRequest,
-			wantInError:    fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list", strings.Split(disallowedTableFullName, ".")[1]),
+			wantInError: fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list",
+				strings.Join(
+					strings.Split(strings.Trim(disallowedTableFullName, "`"), ".")[0:2],
+					".")),
 		},
 	}
 
