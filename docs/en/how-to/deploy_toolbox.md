@@ -184,7 +184,7 @@ func main() {
     token, err := core.GetGoogleIDToken(ctx, URL)
     if err != nil {
         log.Fatalf("Failed to fetch token %v", err)
-  	}
+    }
     toolboxClient, err := core.NewToolboxClient(URL, core.WithClientHeaderString("Authorization", token))
     if err != nil {
         log.Fatalf("Failed to create Toolbox client: %v", err)
