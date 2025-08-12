@@ -31,14 +31,6 @@ import (
 
 const kind string = "bigquery-execute-sql"
 
-var reliableStatementTypes = map[string]bool{
-	"SELECT": true,
-	"INSERT": true,
-	"UPDATE": true,
-	"DELETE": true,
-	"MERGE":  true,
-}
-
 func init() {
 	if !tools.Register(kind, newConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", kind))
@@ -108,7 +100,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			if len(parts) == 2 {
 				datasetID = parts[1]
 			}
-			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. To query a table within this dataset (e.g., `my_table`), qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
+			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. "+
+				"To query a table within this dataset (e.g., `my_table`), "+
+				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
 		} else {
 			sqlDescription += fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
 		}
@@ -179,18 +173,38 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if len(t.AllowedDatasets) > 0 {
 		switch statementType {
 		case "CREATE_SCHEMA", "DROP_SCHEMA", "ALTER_SCHEMA":
-			return nil, fmt.Errorf("dataset/schema operations (%s) are not allowed", statementType)
+			return nil, fmt.Errorf("dataset-level operations like '%s' are not allowed when dataset restrictions are in place", statementType)
+		case "CREATE_FUNCTION", "CREATE_TABLE_FUNCTION", "CREATE_PROCEDURE":
+			return nil, fmt.Errorf("creating stored routines ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType)
+		case "CALL":
+			return nil, fmt.Errorf("calling stored procedures ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType)
 		}
-		// Two-stage table name parsing logic.
-		var tableNames []string
-		// Stage 1: Attempt to get table names from the dry run result for reliable statement types.
-		if reliableStatementTypes[statementType] && len(dryRunJob.Statistics.Query.ReferencedTables) > 0 {
-			for _, tableRef := range dryRunJob.Statistics.Query.ReferencedTables {
-				tableNames = append(tableNames, fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId))
+
+		// Use a map to avoid duplicate table names.
+		tableIDSet := make(map[string]struct{})
+
+		// Stage 1: Get all tables from the dry run result. This is the most reliable method.
+		queryStats := dryRunJob.Statistics.Query
+		if queryStats != nil {
+			for _, tableRef := range queryStats.ReferencedTables {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			}
+			if tableRef := queryStats.DdlTargetTable; tableRef != nil {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			}
+			if tableRef := queryStats.DdlDestinationTable; tableRef != nil {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
 			}
 		}
-		// Stage 2: If the previous stage failed, use table parser as a fallback.
-		if len(tableNames) == 0 {
+
+		var tableNames []string
+		if len(tableIDSet) > 0 {
+			for tableID := range tableIDSet {
+				tableNames = append(tableNames, tableID)
+			}
+		} else if statementType != "SELECT" {
+			// If dry run yields no tables, fall back to the parser for non-SELECT statements
+			// to catch unsafe operations like EXECUTE IMMEDIATE.
 			parsedTables, parseErr := TableParser(sql, t.Client.Project())
 			if parseErr != nil {
 				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.

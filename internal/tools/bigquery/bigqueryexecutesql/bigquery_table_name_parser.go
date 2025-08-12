@@ -50,7 +50,6 @@ const (
 	verbUpdate = "update"
 	verbDelete = "delete"
 	verbMerge  = "merge"
-	verbCall   = "call"
 )
 
 var tableFollowsKeywords = map[string]bool{
@@ -62,7 +61,6 @@ var tableFollowsKeywords = map[string]bool{
 	"using":  true, // MERGE ... USING
 	"insert": true, // INSERT my_table
 	"merge":  true, // MERGE my_table
-	"call":   true, // CALL my_procedure
 }
 
 var tableContextExitKeywords = map[string]bool{
@@ -214,11 +212,14 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				if len(parts) == 1 {
 					keyword := strings.ToLower(parts[0])
 					if keyword == "execute" {
-						return 0, fmt.Errorf("parsing SQL with EXECUTE IMMEDIATE is not supported")
+						return 0, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place, as its contents cannot be safely analyzed")
+					}
+					if keyword == "call" {
+						return 0, fmt.Errorf("CALL is not allowed when dataset restrictions are in place, as the called procedure's contents cannot be safely analyzed")
 					}
 
 					switch keyword {
-					case verbCreate, verbAlter, verbDrop, verbSelect, verbInsert, verbUpdate, verbDelete, verbMerge, verbCall:
+					case verbCreate, verbAlter, verbDrop, verbSelect, verbInsert, verbUpdate, verbDelete, verbMerge:
 						if statementVerb == "" {
 							statementVerb = keyword
 						}
@@ -226,8 +227,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 
 					if statementVerb == verbCreate || statementVerb == verbAlter || statementVerb == verbDrop {
 						if keyword == "schema" || keyword == "dataset" {
-							// Use a more specific error message.
-							return 0, fmt.Errorf("dataset/schema operations (%s %s) are not allowed by the parser", strings.ToUpper(statementVerb), strings.ToUpper(keyword))
+							return 0, fmt.Errorf("dataset-level operations like '%s %s' are not allowed when dataset restrictions are in place", strings.ToUpper(statementVerb), strings.ToUpper(keyword))
 						}
 					}
 

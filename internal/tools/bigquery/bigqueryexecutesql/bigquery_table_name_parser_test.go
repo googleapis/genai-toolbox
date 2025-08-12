@@ -16,6 +16,7 @@ package bigqueryexecutesql_test
 
 import (
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -29,6 +30,7 @@ func TestTableParser(t *testing.T) {
 		defaultProjectID string
 		want             []string
 		wantErr          bool
+		wantErrMsg       string
 	}{
 		{
 			name:             "single fully qualified table",
@@ -155,6 +157,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "execute immediate with multiple spaces",
@@ -162,6 +165,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "execute immediate with newline",
@@ -169,6 +173,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "execute immediate with comment",
@@ -176,6 +181,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "nested execute immediate",
@@ -183,6 +189,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "begin execute immediate",
@@ -190,6 +197,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "table inside string literal should be ignored",
@@ -337,6 +345,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "dataset-level operations like 'CREATE SCHEMA' are not allowed",
 		},
 		{
 			name:             "create dataset statement",
@@ -344,6 +353,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "dataset-level operations like 'CREATE DATASET' are not allowed",
 		},
 		{
 			name:             "drop schema statement",
@@ -351,6 +361,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "dataset-level operations like 'DROP SCHEMA' are not allowed",
 		},
 		{
 			name:             "drop dataset statement",
@@ -358,6 +369,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "dataset-level operations like 'DROP DATASET' are not allowed",
 		},
 		{
 			name:             "alter schema statement",
@@ -365,6 +377,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "dataset-level operations like 'ALTER SCHEMA' are not allowed",
 		},
 		{
 			name:             "alter dataset statement",
@@ -372,6 +385,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "default-proj",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "dataset-level operations like 'ALTER DATASET' are not allowed",
 		},
 		{
 			name:             "begin...end block",
@@ -395,24 +409,27 @@ func TestTableParser(t *testing.T) {
 		},
 		{
 			name:             "call fully qualified procedure",
-			sql:              "CALL my-project.my_dataset.my_procedure(1, 'foo')",
+			sql:              "CALL my-project.my_dataset.my_procedure()",
 			defaultProjectID: "default-proj",
-			want:             []string{"my-project.my_dataset.my_procedure"},
-			wantErr:          false,
+			want:             nil,
+			wantErr:          true,
+			wantErrMsg:       "CALL is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "call partially qualified procedure",
 			sql:              "CALL my_dataset.my_procedure()",
 			defaultProjectID: "default-proj",
-			want:             []string{"default-proj.my_dataset.my_procedure"},
-			wantErr:          false,
+			want:             nil,
+			wantErr:          true,
+			wantErrMsg:       "CALL is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "call procedure in begin...end block",
 			sql:              "BEGIN CALL proj.data.proc1(); SELECT * FROM proj.data.tbl1; END;",
 			defaultProjectID: "default-proj",
-			want:             []string{"proj.data.proc1", "proj.data.tbl1"},
-			wantErr:          false,
+			want:             nil,
+			wantErr:          true,
+			wantErrMsg:       "CALL is not allowed when dataset restrictions are in place",
 		},
 		{
 			name:             "call procedure without default project should fail",
@@ -420,6 +437,7 @@ func TestTableParser(t *testing.T) {
 			defaultProjectID: "",
 			want:             nil,
 			wantErr:          true,
+			wantErrMsg:       "CALL is not allowed when dataset restrictions are in place",
 		},
 	}
 
@@ -429,6 +447,11 @@ func TestTableParser(t *testing.T) {
 			if (err != nil) != tc.wantErr {
 				t.Errorf("TableParser() error = %v, wantErr %v", err, tc.wantErr)
 				return
+			}
+			if tc.wantErr && tc.wantErrMsg != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantErrMsg) {
+					t.Errorf("TableParser() error = %v, want err containing %q", err, tc.wantErrMsg)
+				}
 			}
 			// Sort slices to ensure comparison is order-independent.
 			sort.Strings(got)

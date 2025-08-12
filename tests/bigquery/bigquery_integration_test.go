@@ -1509,6 +1509,12 @@ func runGetTableInfoWithRestriction(t *testing.T, allowedDatasetName, disallowed
 }
 
 func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowedTableFullName string) {
+	allowedTableParts := strings.Split(strings.Trim(allowedTableFullName, "`"), ".")
+	if len(allowedTableParts) != 3 {
+		t.Fatalf("invalid allowed table name format: %s", allowedTableFullName)
+	}
+	allowedDatasetID := allowedTableParts[1]
+
 	testCases := []struct {
 		name           string
 		sql            string
@@ -1528,6 +1534,24 @@ func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowed
 				strings.Join(
 					strings.Split(strings.Trim(disallowedTableFullName, "`"), ".")[0:2],
 					".")),
+		},
+		{
+			name:           "disallowed create schema",
+			sql:            "CREATE SCHEMA another_dataset",
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "dataset-level operations like 'CREATE_SCHEMA' are not allowed",
+		},
+		{
+			name:           "disallowed create function",
+			sql:            fmt.Sprintf("CREATE FUNCTION %s.my_func() RETURNS INT64 AS (1)", allowedDatasetID),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "creating stored routines ('CREATE_FUNCTION') is not allowed",
+		},
+		{
+			name:           "disallowed execute immediate",
+			sql:            "EXECUTE IMMEDIATE 'SELECT 1'",
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
 		},
 	}
 
