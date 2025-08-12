@@ -36,7 +36,6 @@ var (
 	CassandraSourceKind = "cassandra"
 	CassandraToolKind   = "cassandra-cql"
 	Hosts               = os.Getenv("CASSANDRA_HOSTS") //Comma separated string with host IPs (default: []string{"localhost"})
-	Port                = os.Getenv("CASSANDRA_PORT")  // 9042
 	tableName           = "example_keyspace.users"
 	Keyspace            = "example_keyspace"
 	Username            = os.Getenv("CASSANDRA_USERNAME")
