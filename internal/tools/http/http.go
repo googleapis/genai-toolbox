@@ -31,7 +31,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const kind string = "http"
@@ -312,10 +311,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	// Set request headers
 	for k, v := range allHeaders {
 		req.Header.Set(k, v)
-	}
-
-	if ua, err := util.UserAgentFromContext(ctx); err == nil {
-		req.Header.Set("User-Agent", ua)
 	}
 
 	// Make request and fetch response
