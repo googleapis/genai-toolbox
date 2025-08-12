@@ -567,14 +567,15 @@ async function main() {
 main();
 
 {{< /tab >}}
-{{< tab header="JsGenai" lang="js" >}}
+{{< tab header="Google Gen AI" lang="js" >}}
 
 
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { z } from 'zod';
 
-const GOOGLE_API_KEY = 'enter-your-api-here'; // <-- IMPORTANT: Update your API key here
+const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
+const GOOGLE_API_KEY = 'enter-your-api-here'; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -608,7 +609,7 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
 }
 
 async function runApplication() {
-    const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
+    const toolboxClient = new ToolboxClient(TOOLBOX_URL);
     let toolboxTools = [];
     try {
         console.log("Loading toolset 'my-toolset'...");
@@ -619,6 +620,7 @@ async function runApplication() {
         return;
     }
 
+    // Convert tools to `functionDeclaration`
     const geminiTools = [{
         functionDeclarations: toolboxTools.map(tool => {
             const schema = tool.getParamSchema();
@@ -657,8 +659,7 @@ async function runApplication() {
     });
 
     for (const query of queries) {
-
-        console.log(query)
+        console.log(`\nUser: ${query}`)
         let currentResult = await chat.sendMessage({ message: query });
         let loopCount = 0;
         const MAX_LOOPS = 10;
