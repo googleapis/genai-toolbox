@@ -181,7 +181,10 @@ func main() {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
   	}
 	dynamicTokenSource := core.NewCustomTokenSource(getAuthToken)
-	authTool, err := client.LoadTool("my-tool", ctx, core.WithAuthTokenSource("my_auth_app_1", dynamicTokenSource))
+	authTool, err := client.LoadTool(
+		"my-tool",
+		ctx,
+		core.WithAuthTokenSource("my_auth_app_1", dynamicTokenSource))
 	if err != nil {
 		log.Fatalf("Failed to load tool: %v", err)
 	}
