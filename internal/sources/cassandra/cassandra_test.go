@@ -31,7 +31,33 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		want server.SourceConfigs
 	}{
 		{
-			desc: "basic example",
+			desc: "basic example (without optional fields)",
+			in: `
+			sources:
+				my-cassandra-instance:
+					kind: cassandra
+					hosts: 
+						- "my-host1"
+						- "my-host2"
+			`,
+			want: server.SourceConfigs{
+				"my-cassandra-instance": cassandra.Config{
+					Name:                   "my-cassandra-instance",
+					Kind:                   cassandra.SourceKind,
+					Hosts:                  []string{"my-host1", "my-host2"},
+					Username:               "",
+					Password:               "",
+					ProtoVersion:           0,
+					CAPath:                 "",
+					CertPath:               "",
+					KeyPath:                "",
+					Keyspace:               "",
+					EnableHostVerification: false,
+				},
+			},
+		},
+		{
+			desc: "with optional fields",
 			in: `
 			sources:
 				my-cassandra-instance:
@@ -41,10 +67,12 @@ func TestParseFromYamlCassandra(t *testing.T) {
 						- "my-host2"
 					username: "user"
 					password: "pass"
+					keyspace: "example_keyspace"
 					protoVersion: 4
 					caPath: "path/to/ca.crt"
 					certPath: "path/to/cert"
 					keyPath: "path/to/key"
+					enableHostVerification: true
 			`,
 			want: server.SourceConfigs{
 				"my-cassandra-instance": cassandra.Config{
@@ -53,12 +81,12 @@ func TestParseFromYamlCassandra(t *testing.T) {
 					Hosts:                  []string{"my-host1", "my-host2"},
 					Username:               "user",
 					Password:               "pass",
+					Keyspace:               "example_keyspace",
 					ProtoVersion:           4,
 					CAPath:                 "path/to/ca.crt",
 					CertPath:               "path/to/cert",
 					KeyPath:                "path/to/key",
-					Keyspace:               "",
-					EnableHostVerification: false,
+					EnableHostVerification: true,
 				},
 			},
 		},
