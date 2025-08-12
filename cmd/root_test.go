@@ -1250,7 +1250,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"dataplex-tools": tools.ToolsetConfig{
 					Name:      "dataplex-tools",
-					ToolNames: []string{"dataplex_search_entries"},
+					ToolNames: []string{"dataplex_search_entries", "dataplex_lookup_entry"},
 				},
 			},
 		},
@@ -1290,7 +1290,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker-tools": tools.ToolsetConfig{
 					Name:      "looker-tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "get_looks", "run_look"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element"},
 				},
 			},
 		},

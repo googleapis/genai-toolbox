@@ -184,5 +184,5 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return true
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

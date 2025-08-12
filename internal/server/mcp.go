@@ -214,7 +214,7 @@ func (s *stdioSession) write(ctx context.Context, response any) error {
 func mcpRouter(s *Server) (chi.Router, error) {
 	r := chi.NewRouter()
 
-	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(middleware.AllowContentType("application/json", "application/json-rpc", "application/jsonrequest"))
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
