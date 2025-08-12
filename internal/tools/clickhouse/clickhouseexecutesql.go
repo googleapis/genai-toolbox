@@ -40,8 +40,6 @@ func newExecuteSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder
 	return actual, nil
 }
 
-// compatibleSource interface is defined in clickhousedescribetable.go
-
 type ExecuteSQLConfig struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`

@@ -21,14 +21,6 @@ description: >
 - [`clickhouse-sql`](../tools/clickhouse/clickhouse-sql.md)  
   Execute SQL queries as prepared statements in ClickHouse.
 
-- [`clickhouse-describe-table`](../tools/clickhouse/clickhouse-describe-table.md)  
-  Get metadata about a specific table including schema, engine details, and storage statistics.
-
-- [`clickhouse-list-tables`](../tools/clickhouse/clickhouse-list-tables.md)  
-  List detailed schema information for tables in all databases or a specific database.
-
-- [`clickhouse-list-databases`](../tools/clickhouse/clickhouse-list-databases.md)  
-  List all databases in the ClickHouse instance with some metadata.
 
 ## Requirements
 

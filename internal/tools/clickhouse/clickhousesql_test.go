@@ -107,7 +107,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 	}
 }
 
-func TestSQLConfig_Initialize_MissingSource(t *testing.T) {
+func TestSQLConfigInitializeMissingSource(t *testing.T) {
 	config := SQLConfig{
 		Name:        "test-tool",
 		Kind:        sqlKind,
@@ -130,7 +130,7 @@ func TestSQLConfig_Initialize_MissingSource(t *testing.T) {
 	}
 }
 
-func TestSQLConfig_Initialize_IncompatibleSource(t *testing.T) {
+func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 	config := SQLConfig{
 		Name:        "test-tool",
 		Kind:        sqlKind,
@@ -140,7 +140,6 @@ func TestSQLConfig_Initialize_IncompatibleSource(t *testing.T) {
 		Parameters:  tools.Parameters{},
 	}
 
-	// Create a mock incompatible source
 	mockSource := &mockIncompatibleSource{}
 
 	sources := map[string]sources.Source{
@@ -157,7 +156,7 @@ func TestSQLConfig_Initialize_IncompatibleSource(t *testing.T) {
 	}
 }
 
-func TestSQLTool_Manifest(t *testing.T) {
+func TestSQLToolManifest(t *testing.T) {
 	tool := SQLTool{
 		manifest: tools.Manifest{
 			Description: "Test description",
@@ -171,7 +170,7 @@ func TestSQLTool_Manifest(t *testing.T) {
 	}
 }
 
-func TestSQLTool_McpManifest(t *testing.T) {
+func TestSQLToolMcpManifest(t *testing.T) {
 	tool := SQLTool{
 		mcpManifest: tools.McpManifest{
 			Name:        "test-tool",
