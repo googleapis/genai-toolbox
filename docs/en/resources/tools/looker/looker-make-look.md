@@ -1,23 +1,24 @@
 ---
-title: "looker-query-url"
+title: "looker-make-look"
 type: docs
 weight: 1
 description: >
-  "looker-query-url" generates a url link to a Looker explore.
+  "looker-make-look" generates a Looker look in the users personal folder in
+  Looker
 aliases:
-- /resources/tools/looker-query-url
+- /resources/tools/looker-make-look
 ---
 
 ## About
 
-The `looker-query-url` generates a url link to an explore in
-Looker so the query can be investigated further.
+The `looker-make-look` creates a saved Look in the user's
+Looker personal folder.
 
 It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-query-url` takes eight parameters:
+`looker-make-look` takes eleven parameters:
 
 1. the `model`
 2. the `explore`
@@ -27,27 +28,38 @@ It's compatible with the following sources:
 6. an optional set of `sorts`
 7. an optional `limit`
 8. an optional `tz`
+9. an optional `vis_config`
+10. the `title`
+11. an optional `description`
 
 ## Example
 
 ```yaml
 tools:
-    query_url:
-        kind: looker-query-url
+    make_look:
+        kind: looker-make-look
         source: looker-source
         description: |
-          Query URL Tool
+          make_look Tool
 
-          This tool is used to generate the URL of a query in Looker.
-          The user can then explore the query further inside Looker.
-          The tool also returns the query_id and slug. The parameters
-          are the same as the `looker-query` tool.
+          This tool creates a new look in Looker, using the query
+          parameters and the vis_config specified.
+
+          Most of the parameters are the same as the query_url
+          tool. In addition, there is a title and a description
+          that must be provided.
+
+          The newly created look will be created in the user's
+          personal folder in looker. The look name must be unique.
+
+          The result is a json document with a link to the newly
+          created look.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-query-url"                                                                       |
+| kind        |                   string                   |     true     | Must be "looker-make-look"                                                                       |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

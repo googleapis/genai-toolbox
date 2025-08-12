@@ -45,13 +45,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name        string `yaml:"name" validate:"required"`
-	Kind        string `yaml:"kind" validate:"required"`
-	Source      string `yaml:"source" validate:"required"`
-	Description string `yaml:"description" validate:"required"`
-	// AuthRequired specifies the authentication services required for this tool.
-	// Currently, this field is not actively used for authorization checks within the tool itself,
-	// as the Authorized method always returns true. It is included for potential future extensibility.
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -76,6 +73,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	parameters := lookercommon.GetQueryParameters()
+
+	vizParameter := tools.NewMapParameterWithDefault("vis_config",
+		map[string]any{},
+		"The visualization config for the query",
+		"",
+	)
+	parameters = append(parameters, vizParameter)
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -124,6 +128,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("error building query request: %w", err)
 	}
+
+	paramsMap := params.AsMap()
+	visConfig := paramsMap["vis_config"].(map[string]any)
+	wq.VisConfig = &visConfig
+
 	respFields := "id,slug,share_url,expanded_share_url"
 	resp, err := t.Client.CreateQuery(*wq, respFields, t.ApiSettings)
 	if err != nil {
@@ -162,7 +171,5 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	// Currently, all Looker tools are considered authorized if the source is correctly configured.
-	// The AuthRequired field in the Config struct is reserved for future, more granular authorization.
-	return true
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

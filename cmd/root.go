@@ -61,6 +61,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetfilters"
@@ -68,6 +70,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmeasures"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetparameters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
@@ -802,7 +806,7 @@ func run(cmd *Command) error {
 		}
 		cmd.logger.InfoContext(ctx, "Server ready to serve!")
 		if cmd.cfg.UI {
-			cmd.logger.InfoContext(ctx, "Toolbox UI is up and running at: http://localhost:5000/ui")
+			cmd.logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://localhost:%d/ui", cmd.cfg.Port))
 		}
 
 		go func() {
