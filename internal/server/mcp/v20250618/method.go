@@ -21,21 +21,23 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"net/http"
 
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
 	switch method {
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
-		return toolsCallHandler(ctx, id, tools, body, accessToken)
+		return toolsCallHandler(ctx, id, tools, authServices, body, header)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -69,7 +71,7 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -111,9 +113,41 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
+	// Tool authentication
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
-	// Since MCP doesn't support auth, an empty map will be use every time.
 	claimsFromAuth := make(map[string]map[string]any)
+
+	// if using stdio, header will be nil and auth will not be supported
+	if header != nil {
+		for _, aS := range authServices {
+			claims, err := aS.GetClaimsFromHeader(ctx, header)
+			if err != nil {
+				logger.DebugContext(ctx, err.Error())
+				continue
+			}
+			if claims == nil {
+				// authService not present in header
+				continue
+			}
+			claimsFromAuth[aS.GetName()] = claims
+		}
+	}
+
+	// Tool authorization check
+	verifiedAuthServices := make([]string, len(claimsFromAuth))
+	i := 0
+	for k := range claimsFromAuth {
+		verifiedAuthServices[i] = k
+		i++
+	}
+
+	// Check if any of the specified auth services is verified
+	isAuthorized := tool.Authorized(verifiedAuthServices)
+	if !isAuthorized {
+		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	logger.DebugContext(ctx, "tool invocation authorized")
 
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
