@@ -4088,6 +4088,18 @@ exponential backoff.&lt;/p>
  
  
  
+ &lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>
+ &lt;/div>
+ 
+
+ 
+ 
+
+ 
+ &lt;div class="notebook-markdown">
+ 
+ 
+ 
  &lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
 &lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p>
  &lt;/div>
