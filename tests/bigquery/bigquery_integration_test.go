@@ -1359,14 +1359,12 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName, disallow
 	testCases := []struct {
 		name           string
 		wantStatusCode int
-		wantInResult   string
-		notInResult    string
+		wantResult     string
 	}{
 		{
 			name:           "invoke list-dataset-ids with restriction",
 			wantStatusCode: http.StatusOK,
-			wantInResult:   allowedDatasetName,
-			notInResult:    disallowedDatasetName,
+			wantResult:     fmt.Sprintf(`["%s"]`, allowedDatasetName),
 		},
 	}
 
@@ -1397,11 +1395,8 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName, disallow
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
-			if !strings.Contains(got, tc.wantInResult) {
-				t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
-			}
-			if tc.notInResult != "" && strings.Contains(got, tc.notInResult) {
-				t.Errorf("unexpected result: got %q, did not want to contain %q", got, tc.notInResult)
+			if got != tc.wantResult {
+				t.Errorf("unexpected result: got %q, want %q", got, tc.wantResult)
 			}
 		})
 	}
@@ -1546,6 +1541,12 @@ func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowed
 			sql:            fmt.Sprintf("CREATE FUNCTION %s.my_func() RETURNS INT64 AS (1)", allowedDatasetID),
 			wantStatusCode: http.StatusBadRequest,
 			wantInError:    "creating stored routines ('CREATE_FUNCTION') is not allowed",
+		},
+		{
+			name:           "disallowed create procedure",
+			sql:            fmt.Sprintf("CREATE PROCEDURE %s.my_proc() BEGIN SELECT 1; END", allowedDatasetID),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "creating stored routines ('CREATE_PROCEDURE') is not allowed",
 		},
 		{
 			name:           "disallowed execute immediate",

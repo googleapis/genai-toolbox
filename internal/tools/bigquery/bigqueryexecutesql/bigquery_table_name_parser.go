@@ -103,6 +103,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 	state := stateNormal
 	expectingTable := false
 	var lastTableKeyword string
+	var lastToken string
 	var statementVerb string
 	runes := []rune(sql)
 
@@ -152,6 +153,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 
 			if char == ';' {
 				statementVerb = ""
+				lastToken = ""
 				i++
 				continue
 
@@ -211,11 +213,18 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 
 				if len(parts) == 1 {
 					keyword := strings.ToLower(parts[0])
-					if keyword == "execute" {
-						return 0, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place, as its contents cannot be safely analyzed")
-					}
 					if keyword == "call" {
 						return 0, fmt.Errorf("CALL is not allowed when dataset restrictions are in place, as the called procedure's contents cannot be safely analyzed")
+					}
+					if lastToken == "execute" && keyword == "immediate" {
+						return 0, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place, as its contents cannot be safely analyzed")
+					}
+
+					// The statementVerb is set by the first DML/DDL keyword and is used to identify context.
+					if keyword == "procedure" || keyword == "function" {
+						if lastToken == "create" || lastToken == "create or replace" {
+							return 0, fmt.Errorf("unanalyzable statements like '%s %s' are not allowed", strings.ToUpper(lastToken), strings.ToUpper(keyword))
+						}
 					}
 
 					switch keyword {
@@ -238,6 +247,13 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 						expectingTable = false
 						lastTableKeyword = ""
 					}
+					if lastToken == "create" && keyword == "or" {
+						lastToken = "create or"
+					} else if lastToken == "create or" && keyword == "replace" {
+						lastToken = "create or replace"
+					} else {
+						lastToken = keyword
+					}
 				} else if len(parts) >= 2 {
 					// This is a multi-part identifier. If we were expecting a table, this is it.
 					if expectingTable {
@@ -253,6 +269,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 							expectingTable = false
 						}
 					}
+					lastToken = ""
 				}
 
 				i += consumed

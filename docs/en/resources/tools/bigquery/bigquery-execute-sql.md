@@ -15,15 +15,20 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-execute-sql` takes one input parameter `sql` and runs the SQL
-statement against the `source`. If the associated `bigquery` source has a
-`datasets` list configured, this tool will parse the SQL statement to identify
-accessed datasets and return an error if any of them are not in the allowed
-list. Note that the toolbox cannot determine which datasets are accessed within
-an `EXECUTE IMMEDIATE` statement. Therefore, when `datasets` restrictions are
-active, any SQL from this tool containing `EXECUTE IMMEDIATE` will be rejected.
-It also supports an optional `dry_run` parameter to validate a query without 
-executing it.
+`bigquery-execute-sql` executes a GoogleSQL statement. It takes an `sql`
+parameter for the query string and an optional `dry_run` parameter to validate
+the query without running it. Its behavior changes based on the source
+configuration:
+
+- **Without `datasets` restriction:** The tool can execute any valid GoogleSQL
+  query.
+- **With `datasets` restriction:** The tool performs a dry run to analyze the query.
+  It will reject the query if it attempts to access any table outside the
+  allowed `datasets` list. To enforce this restriction, the following operations
+  are also disallowed:
+  - **Dataset-level operations** (e.g., `CREATE SCHEMA`, `ALTER SCHEMA`).
+  - **Unanalyzable operations** where the accessed tables cannot be determined
+    statically (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`, `CALL`).
 
 ## Example
 
