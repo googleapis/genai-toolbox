@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
+  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [JsGenai](https://github.com/googleapis/js-genai).
 ---
 
 ## Before you begin
@@ -569,13 +569,14 @@ main();
 {{< /tab >}}
 {{< tab header="Google Gen AI" lang="js" >}}
 
-
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { z } from 'zod';
+import lodash from 'lodash';
+const { snakeCase, kebabCase } = lodash;
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-const GOOGLE_API_KEY = 'enter-your-api-here'; // Replace it with your API key
+const GOOGLE_API_KEY = 'enter-api-key'; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -594,10 +595,8 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-const toGeminiFunctionName = (name) => name.replace(/-/g, '_');
-const fromSnakeCaseToKebabCase = (name) => name.replace(/_/g, '-');
-
 function mapZodTypeToOpenAPIType(zodTypeName) {
+
     const typeMap = {
         'ZodString': 'string',
         'ZodNumber': 'number',
@@ -612,17 +611,18 @@ async function runApplication() {
     const toolboxClient = new ToolboxClient(TOOLBOX_URL);
     let toolboxTools = [];
     try {
-        console.log("Loading toolset 'my-toolset'...");
+
         toolboxTools = await toolboxClient.loadToolset("my-toolset");
         console.log("Toolset loaded successfully.");
     } catch (error) {
-        console.error("Failed to load toolset. Make sure your Toolbox server is running at http://127.0.0.1:5000:", error);
+        console.error(`"Failed to load toolset. Make sure your Toolbox server is running at ${TOOLBOX_URL}", ${error}`);
         return;
     }
 
-    // Convert tools to `functionDeclaration`
+
     const geminiTools = [{
         functionDeclarations: toolboxTools.map(tool => {
+            
             const schema = tool.getParamSchema();
             const properties = {};
             const required = [];
@@ -633,19 +633,15 @@ async function runApplication() {
                         type: mapZodTypeToOpenAPIType(param.constructor.name),
                         description: param.description || '',
                     };
-                    if (!param.isOptional()) {
-                        required.push(key);
-                    }
                 }
             }
             return {
-                name: toGeminiFunctionName(tool.getName()),
+                name: snakeCase(tool.getName()),
                 description: tool.getDescription(),
                 parameters: { type: 'object', properties, required },
             };
         })
     }];
-   
 
 
     const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
@@ -659,23 +655,25 @@ async function runApplication() {
     });
 
     for (const query of queries) {
+        
         console.log(`\nUser: ${query}`)
         let currentResult = await chat.sendMessage({ message: query });
+        
         let loopCount = 0;
-        const MAX_LOOPS = 10;
-        let finalResponseGiven = false;
-
-        while (loopCount < MAX_LOOPS && !finalResponseGiven) {
+        let MAX_LOOPS = 10
+        let finalResponseGiven = false
+        while (!finalResponseGiven && loopCount <= MAX_LOOPS) {
+            
             const response = currentResult;
             const functionCalls = response.functionCalls || [];
 
             if (functionCalls.length === 0) {
-                console.log(response.text);
+                console.log(response.text)
                 finalResponseGiven = true;
             } else {
                 const toolResponses = [];
                 for (const call of functionCalls) {
-                    const toolName = fromSnakeCaseToKebabCase(call.name);
+                    const toolName = kebabCase(call.name);
                     const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
                     
                     if (toolToExecute) {
@@ -697,9 +695,7 @@ async function runApplication() {
             }
             loopCount++;
         }
-        if (loopCount >= MAX_LOOPS) {
-            console.warn(`[Warning: Maximum interaction loops (${MAX_LOOPS}) reached.]`);
-        }
+        
     }
 }
 
