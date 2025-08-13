@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -585,11 +586,13 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 
 func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		wantRegex   string
-		isErr       bool
+		name               string
+		api                string
+		requestBody        io.Reader
+		wantKeys           []string
+		validateDocData    bool
+		expectedDocData    map[string]interface{}
+		isErr              bool
 	}{
 		{
 			name: "add document with simple types",
@@ -604,8 +607,8 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 					"notes": {"nullValue": null}
 				}
 			}`, collectionName))),
-			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+"`,
-			isErr:     false,
+			wantKeys: []string{"documentPath", "createTime"},
+			isErr:    false,
 		},
 		{
 			name: "add document with complex types",
@@ -640,8 +643,8 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 					}
 				}
 			}`, collectionName))),
-			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+"`,
-			isErr:     false,
+			wantKeys: []string{"documentPath", "createTime"},
+			isErr:    false,
 		},
 		{
 			name: "add document with returnDocumentData",
@@ -654,8 +657,13 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 				},
 				"returnDocumentData": true
 			}`, collectionName))),
-			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+","documentData":{[^}]+}`,
-			isErr:     false,
+			wantKeys:        []string{"documentPath", "createTime", "documentData"},
+			validateDocData: true,
+			expectedDocData: map[string]interface{}{
+				"name":  "Return Test",
+				"value": float64(123), // JSON numbers are decoded as float64
+			},
+			isErr: false,
 		},
 		{
 			name: "add document with nested maps and arrays",
@@ -694,8 +702,8 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 					}
 				}
 			}`, collectionName))),
-			wantRegex: `"documentPath":"[^"]+","createTime":"[^"]+"`,
-			isErr:     false,
+			wantKeys: []string{"documentPath", "createTime"},
+			isErr:    false,
 		},
 		{
 			name:        "missing collectionPath parameter",
@@ -750,13 +758,30 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 				t.Fatalf("unable to find result in response body")
 			}
 
-			if tc.wantRegex != "" {
-				matched, err := regexp.MatchString(tc.wantRegex, got)
-				if err != nil {
-					t.Fatalf("invalid regex pattern: %v", err)
+			// Parse the result string as JSON
+			var resultJSON map[string]interface{}
+			err = json.Unmarshal([]byte(got), &resultJSON)
+			if err != nil {
+				t.Fatalf("error parsing result as JSON: %v", err)
+			}
+
+			// Check if all wanted keys exist
+			for _, key := range tc.wantKeys {
+				if _, exists := resultJSON[key]; !exists {
+					t.Fatalf("expected key %q not found in result: %s", key, got)
 				}
-				if !matched {
-					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+			}
+
+			// Validate document data if required
+			if tc.validateDocData {
+				docData, ok := resultJSON["documentData"].(map[string]interface{})
+				if !ok {
+					t.Fatalf("documentData is not a map: %v", resultJSON["documentData"])
+				}
+
+				// Use reflect.DeepEqual to compare the document data
+				if !reflect.DeepEqual(docData, tc.expectedDocData) {
+					t.Fatalf("documentData mismatch:\nexpected: %v\nactual: %v", tc.expectedDocData, docData)
 				}
 			}
 		})
