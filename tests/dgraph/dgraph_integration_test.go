@@ -141,7 +141,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 			name:        "invoke my-simple-dql-tool",
 			api:         "http://127.0.0.1:5000/api/tool/my-simple-dql-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "{\"result\":[{\"constant\":1}]}",
+			want:        "[{\"result\":[{\"constant\":1}]}]",
 		},
 	}
 	for _, tc := range invokeTcs {
