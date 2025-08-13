@@ -38,8 +38,8 @@ var (
 	Hosts               = os.Getenv("CASSANDRA_HOSTS") //Comma separated string with host IPs (default: []string{"localhost"})
 	tableName           = "example_keyspace.users"
 	Keyspace            = "example_keyspace"
-	Username            = os.Getenv("CASSANDRA_USERNAME")
-	Password            = os.Getenv("CASSANDRA_PASSWORD")
+	Username            = os.Getenv("CASSANDRA_USER")
+	Password            = os.Getenv("CASSANDRA_PASS")
 )
 
 func initCassandraSession() (*gocql.Session, error) {
@@ -170,7 +170,7 @@ func TestCassandra(t *testing.T) {
 	tests.RunToolGetTest(t)
 	selectByIdWant, selectAllWant, selectAllTemplateWant, selectByIdTemplateWant := getCassandraWants()
 	runToolInvokeTest(t, selectByIdWant, selectAllWant)
-	RunToolInvokeWithTemplateParameters(t, tableName, selectAllTemplateWant, selectByIdTemplateWant)
+	runToolInvokeWithTemplateParameters(t, tableName, selectAllTemplateWant, selectByIdTemplateWant)
 }
 
 func createParamToolInfo() (string, string, string, string) {
@@ -427,7 +427,7 @@ func runToolInvokeTest(t *testing.T, selectByIdWant, selectAllWant string) {
 	}
 }
 
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName, selectAllTemplateWant, selectByIdTemplateWant string) {
+func runToolInvokeWithTemplateParameters(t *testing.T, tableName, selectAllTemplateWant, selectByIdTemplateWant string) {
 	invokeTcs := []struct {
 		name          string
 		api           string

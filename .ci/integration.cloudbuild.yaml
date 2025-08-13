@@ -542,7 +542,7 @@ steps:
       - "HOSTS=$HOSTS"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "CASSANDRA_HOSTS=$_CASSANDRA_HOSTS"
-    secretEnv: ["CLIENT_ID", "CASSANDRA_USERNAME", "CASSANDRA_PASSWORD"]
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -616,6 +616,10 @@ availableSecrets:
       env: TIDB_USER
     - versionName: projects/107716898620/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
+    - versionName: projects/107716898620/secrets/cassandra_user/versions/latest
+      env: CASSANDRA_USER
+    - versionName: projects/107716898620/secrets/cassandra_pass/versions/latest
+      env: CASSANDRA_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
