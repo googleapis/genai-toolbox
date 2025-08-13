@@ -66,7 +66,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](#template-parameters).
+> [templateParameters](..#template-parameters).
 
 ```yaml
 tools:
@@ -96,5 +96,5 @@ tools:
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute                                                                                                                   |
 | parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be used with the SQL statement.                                               |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 | authRequired       |                array[string]                     |    false     | List of auth services that are required to use this tool.                                                                                  |
