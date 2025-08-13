@@ -211,7 +211,7 @@ func isValidDocumentPath(path string) bool {
 	if path == "" {
 		return false
 	}
-	
+
 	// Split the path by '/' and check if it has an even number of segments
 	segments := splitPath(path)
 	return len(segments) > 0 && len(segments)%2 == 0
@@ -222,7 +222,7 @@ func splitPath(path string) []string {
 	if path == "" {
 		return []string{}
 	}
-	
+
 	var segments []string
 	segment := ""
 	for _, char := range path {
@@ -238,6 +238,6 @@ func splitPath(path string) []string {
 	if segment != "" {
 		segments = append(segments, segment)
 	}
-	
+
 	return segments
 }

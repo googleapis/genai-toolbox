@@ -586,13 +586,13 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 
 func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
-		name               string
-		api                string
-		requestBody        io.Reader
-		wantKeys           []string
-		validateDocData    bool
-		expectedDocData    map[string]interface{}
-		isErr              bool
+		name            string
+		api             string
+		requestBody     io.Reader
+		wantKeys        []string
+		validateDocData bool
+		expectedDocData map[string]interface{}
+		isErr           bool
 	}{
 		{
 			name: "add document with simple types",
