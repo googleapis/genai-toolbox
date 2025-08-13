@@ -115,9 +115,62 @@ tools:
         type: string
         description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
         default: ""
+  alloydb-list-clusters:
+      kind: http
+      source: alloydb-api-source
+      method: GET
+      path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters
+      description: "Lists all AlloyDB clusters in a given project and location."
+      pathParams:
+        - name: projectId
+          type: string
+          description: "The GCP project ID to list clusters for."
+        - name: locationId
+          type: string
+          description: "The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations."
+          default: "-"
+  alloydb-list-instances:
+    kind: http
+    source: alloydb-api-source
+    method: GET
+    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/instances
+    description: "Lists all AlloyDB instances within a specific cluster."
+    pathParams:
+      - name: projectId
+        type: string
+        description: "The GCP project ID."
+      - name: locationId
+        type: string
+        description: "The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions."
+        default: "-"
+      - name: clusterId
+        type: string
+        description: "The ID of the cluster to list instances from. Use '-' to get results for all clusters."
+        default: "-"
+  alloydb-list-users:
+    kind: http
+    source: alloydb-api-source
+    method: GET
+    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/users
+    description: "Lists all database users within a specific AlloyDB cluster."
+    pathParams:
+      - name: projectId
+        type: string
+        description: "The GCP project ID."
+      - name: locationId
+        type: string
+        description: "The location of the cluster (e.g., 'us-central1')."
+        default: us-central1
+      - name: clusterId
+        type: string
+        description: "The ID of the cluster to list users from."
 
 toolsets:
   alloydb-postgres-admin-tools:
     - alloydb-create-cluster
     - alloydb-operations-get
     - alloydb-create-instance
+    - alloydb-list-clusters
+    - alloydb-list-instances
+    - alloydb-list-users
+  
