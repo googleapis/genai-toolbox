@@ -405,14 +405,16 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeIdNullW
 
 // TemplateParameterTestConfig represents the various configuration options for template parameter tests.
 type TemplateParameterTestConfig struct {
-	ignoreDdl      bool
-	ignoreInsert   bool
-	selectAllWant  string
-	select1Want    string
-	nameFieldArray string
-	nameColFilter  string
-	createColArray string
-	insert1Want    string
+	ignoreDdl       bool
+	ignoreInsert    bool
+	ddlWant         string
+	selectAllWant   string
+	select1Want     string
+	selectEmptyWant string
+	nameFieldArray  string
+	nameColFilter   string
+	createColArray  string
+	insert1Want     string
 }
 
 type Option func(*TemplateParameterTestConfig)
@@ -431,6 +433,13 @@ func WithIgnoreInsert() Option {
 	}
 }
 
+// WithDdlWant is the option function to configure ddlWant.
+func WithDdlWant(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.ddlWant = s
+	}
+}
+
 // WithSelectAllWant is the option function to configure selectAllWant.
 func WithSelectAllWant(s string) Option {
 	return func(c *TemplateParameterTestConfig) {
@@ -442,6 +451,13 @@ func WithSelectAllWant(s string) Option {
 func WithSelect1Want(s string) Option {
 	return func(c *TemplateParameterTestConfig) {
 		c.select1Want = s
+	}
+}
+
+// WithSelectEmptyWant is the option function to configure selectEmptyWant.
+func WithSelectEmptyWant(s string) Option {
+	return func(c *TemplateParameterTestConfig) {
+		c.selectEmptyWant = s
 	}
 }
 
@@ -475,14 +491,16 @@ func WithInsert1Want(s string) Option {
 // NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
 func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
 	templateParamTestOption := &TemplateParameterTestConfig{
-		ignoreDdl:      false,
-		ignoreInsert:   false,
-		selectAllWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
-		select1Want:    "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
-		nameFieldArray: `["name"]`,
-		nameColFilter:  "name",
-		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
-		insert1Want:    "null",
+		ignoreDdl:       false,
+		ignoreInsert:    false,
+		ddlWant:         "null",
+		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
+		select1Want:     "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectEmptyWant: "null",
+		nameFieldArray:  `["name"]`,
+		nameColFilter:   "name",
+		createColArray:  `["id INT","name VARCHAR(20)","age INT"]`,
+		insert1Want:     "null",
 	}
 
 	// Apply provided options
@@ -514,7 +532,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, config.createColArray))),
-			want:          "null",
+			want:          config.ddlWant,
 			isErr:         false,
 		},
 		{
@@ -552,6 +570,14 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			isErr:         false,
 		},
 		{
+			name:          "invoke select-templateParams-combined-tool with no results",
+			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName))),
+			want:          config.selectEmptyWant,
+			isErr:         false,
+		},
+		{
 			name:          "invoke select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
@@ -573,7 +599,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          "null",
+			want:          config.ddlWant,
 			isErr:         false,
 		},
 	}

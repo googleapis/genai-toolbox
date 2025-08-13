@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolsets View</title>
+    <link rel="stylesheet" href="/ui/css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div id="navbar-container" data-active-nav="/ui/toolsets"></div>
+
+    <aside class="second-nav">
+        <h4>Retrieve Toolset</h4>
+        <div class="search-container">
+            <input type="text" id="toolset-search-input" placeholder="Enter toolset name...">
+            <button id="toolset-search-button" aria-label="Retrieve Tools">
+                <span class="material-icons">search</span>
+            </button>
+        </div>
+        <div id="secondary-panel-content">
+            <p>Retrieve toolset to see available tools.</p>
+        </div>
+    </aside>
+
+    <div id="main-content-container"></div>
+
+    <script type="module" src="/ui/js/toolsets.js"></script>
+    <script src="/ui/js/navbar.js"></script>
+    <script src="/ui/js/mainContent.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            const activeNav = navbarContainer.getAttribute('data-active-nav');
+            renderNavbar('navbar-container', activeNav);
+            renderMainContent('main-content-container', 'tool-display-area', getToolsetInstructions());
+        });
+    </script>
+</body>
+</html>

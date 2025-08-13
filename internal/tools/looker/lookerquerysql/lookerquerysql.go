@@ -21,12 +21,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
-
-	"github.com/thlib/go-timezone-local/tzlocal"
 )
 
 const kind string = "looker-query-sql"
@@ -73,42 +72,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
-	exploreParameter := tools.NewStringParameter("explore", "The explore to be queried.")
-	fieldsParameter := tools.NewArrayParameterWithDefault("fields",
-		[]any{},
-		"The fields to be retrieved.",
-		tools.NewStringParameter("field", "A field to be returned in the query"),
-	)
-	filtersParameter := tools.NewMapParameterWithDefault("filters",
-		map[string]any{},
-		"The filters for the query",
-		"",
-	)
-	pivotsParameter := tools.NewArrayParameterWithDefault("pivots",
-		[]any{},
-		"The query pivots (must be included in fields as well).",
-		tools.NewStringParameter("pivot_field", "A field to be used as a pivot in the query"),
-	)
-	sortsParameter := tools.NewArrayParameterWithDefault("sorts",
-		[]any{},
-		"The sorts like \"field.id desc 0\".",
-		tools.NewStringParameter("sort_field", "A field to be used as a sort in the query"),
-	)
-	limitParameter := tools.NewIntParameterWithDefault("limit", 500, "The row limit.")
-
-	tzParameter := tools.NewStringParameterWithRequired("tz", "The query timezone.", false)
-
-	parameters := tools.Parameters{
-		modelParameter,
-		exploreParameter,
-		fieldsParameter,
-		filtersParameter,
-		pivotsParameter,
-		sortsParameter,
-		limitParameter,
-		tzParameter,
-	}
+	parameters := lookercommon.GetQueryParameters()
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -152,59 +116,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
-	logger.DebugContext(ctx, "params = ", params)
-	paramsMap := params.AsMap()
-
-	f, err := tools.ConvertAnySliceToTyped(paramsMap["fields"].([]any), "string")
+	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("can't convert fields to array of strings: %s", err)
-	}
-	fields := f.([]string)
-	filters := paramsMap["filters"].(map[string]any)
-	// Sometimes filters come as "'field.id'": "expression" so strip extra ''
-	for k, v := range filters {
-		if len(k) > 0 && k[0] == '\'' && k[len(k)-1] == '\'' {
-			delete(filters, k)
-			filters[k[1:len(k)-1]] = v
-		}
-	}
-	p, err := tools.ConvertAnySliceToTyped(paramsMap["pivots"].([]any), "string")
-	if err != nil {
-		return nil, fmt.Errorf("can't convert pivots to array of strings: %s", err)
-	}
-	pivots := p.([]string)
-	s, err := tools.ConvertAnySliceToTyped(paramsMap["sorts"].([]any), "string")
-	if err != nil {
-		return nil, fmt.Errorf("can't convert sorts to array of strings: %s", err)
-	}
-	sorts := s.([]string)
-	limit := int64(paramsMap["limit"].(int))
-
-	var tz string
-	if paramsMap["tz"] != nil {
-		tz = paramsMap["tz"].(string)
-	} else {
-		tzname, err := tzlocal.RuntimeTZ()
-		if err != nil {
-			logger.ErrorContext(ctx, fmt.Sprintf("Error getting local timezone: %s", err))
-			tzname = "Etc/UTC"
-		}
-		tz = tzname
-	}
-
-	wq := v4.WriteQuery{
-		Model:         paramsMap["model"].(string),
-		View:          paramsMap["explore"].(string),
-		Fields:        &fields,
-		Pivots:        &pivots,
-		Filters:       &filters,
-		Sorts:         &sorts,
-		QueryTimezone: &tz,
+		return nil, fmt.Errorf("error building query request: %w", err)
 	}
 	req := v4.RequestRunInlineQuery{
+		Body:         *wq,
 		ResultFormat: "sql",
-		Limit:        &limit,
-		Body:         wq,
 	}
 	resp, err := t.Client.RunInlineQuery(req, t.ApiSettings)
 	if err != nil {
@@ -228,5 +146,5 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return true
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
