@@ -1,0 +1,49 @@
+{{ $notebookFile := .Get 0 }}
+{{ with .Page.Resources.Get $notebookFile }}
+
+  {{ $content := .Content | transform.Unmarshal }}
+  {{ range $content.cells }}
+
+    {{ if eq .cell_type "markdown" }}
+      <div class="notebook-markdown">
+        {{/* FIX: Use a range loop to build the string before markdownifying */}}
+        {{ $markdown := "" }}
+        {{ range .source }}{{ $markdown = print $markdown . }}{{ end }}
+        {{ $markdown | markdownify }}
+      </div>
+    {{ end }}
+
+    {{ if eq .cell_type "code" }}
+      <div class="notebook-code">
+        {{/* FIX: Build the code string with a range loop before highlighting */}}
+        {{ $code := "" }}
+        {{ range .source }}{{ $code = print $code . }}{{ end }}
+        {{ highlight $code "python" "" }}
+
+        {{ range .outputs }}
+          <div class="notebook-output">
+            {{ with .text }}
+              <pre class="notebook-stream"><code>{{- range . }}{{ . }}{{ end -}}</code></pre>
+            {{ end }}
+
+            {{ with .data }}
+              {{ with index . "image/png" }}
+                <img src="data:image/png;base64,{{ . }}" alt="Notebook output image">
+              {{ end }}
+              {{ with index . "image/jpeg" }}
+                <img src="data:image/jpeg;base64,{{ . }}" alt="Notebook output image">
+              {{ end }}
+              {{ with index . "text/html" }}
+                {{ $html := "" }}
+                {{ range . }}{{ $html = print $html . }}{{ end }}
+                {{ $html | safeHTML }}
+              {{ end }}
+            {{ end }}
+          </div>
+        {{ end }}
+      </div>
+    {{ end }}
+  {{ end }}
+{{ else }}
+  <p style="color: red;">Error: Notebook '{{ $notebookFile }}' not found in page resources.</p>
+{{ end }}
