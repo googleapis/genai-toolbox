@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookeradddashboardelement
+package lookeradddashboardfilter
 
 import (
 	"context"
@@ -29,7 +29,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-add-dashboard-element"
+const kind string = "looker-add-dashboard-filter"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -74,28 +74,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	params := lookercommon.GetQueryParameters()
+	params := parameters.Parameters{}
 
-	dashIdParameter := parameters.NewStringParameter("dashboard_id", "The id of the dashboard where this tile will exist")
+	dashIdParameter := parameters.NewStringParameter("dashboard_id", "The id of the dashboard where this filter will exist")
 	params = append(params, dashIdParameter)
-	titleParameter := parameters.NewStringParameterWithDefault("title", "", "The title of the Dashboard Element")
+	nameParameter := parameters.NewStringParameter("name", "The name of the Dashboard Filter")
+	params = append(params, nameParameter)
+	titleParameter := parameters.NewStringParameter("title", "The title of the Dashboard Filter")
 	params = append(params, titleParameter)
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
-		"The visualization config for the query",
-		"",
-	)
-	params = append(params, vizParameter)
-	dashFilters := parameters.NewArrayParameterWithRequired("dashboard_filters",
-		`An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
-		false,
-		parameters.NewMapParameterWithDefault("dashboard_filter",
-			map[string]any{},
-			`A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
-			"",
-		),
-	)
-	params = append(params, dashFilters)
+	typeParameter := parameters.NewStringParameterWithDefault("type", "field", "The type of the Dashboard Filter: date_filter, number_filter, string_filter, field_filter (default field_filter)")
+	params = append(params, typeParameter)
+	defaultParameter := parameters.NewStringParameterWithRequired("default_value", "The default_value of the Dashboard Filter (optional)", false)
+	params = append(params, defaultParameter)
+	modelParameter := parameters.NewStringParameterWithRequired("model", "The model of a field type Dashboard Filter (required if type field)", false)
+	params = append(params, modelParameter)
+	exploreParameter := parameters.NewStringParameterWithRequired("explore", "The explore of a field type Dashboard Filter (required if type field)", false)
+	params = append(params, exploreParameter)
+	dimensionParameter := parameters.NewStringParameterWithRequired("dimension", "The dimension of a field type Dashboard Filter (required if type field)", false)
+	params = append(params, dimensionParameter)
+	multiValueParameter := parameters.NewBooleanParameterWithDefault("allow_multiple_values", true, "The Dashboard Filter should allow multiple values (default true)")
+	params = append(params, multiValueParameter)
+	requiredParameter := parameters.NewBooleanParameterWithDefault("required", false, "The Dashboard Filter is required to run dashboard (default false)")
+	params = append(params, requiredParameter)
 
 	annotations := cfg.Annotations
 	if annotations == nil {
@@ -110,11 +110,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	return Tool{
 		Config:              cfg,
-		Parameters:          params,
+		Name:                cfg.Name,
+		Kind:                kind,
 		UseClientOAuth:      s.UseClientAuthorization(),
 		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
 		Client:              s.Client,
 		ApiSettings:         s.ApiSettings,
+		Parameters:          params,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   params.Manifest(),
@@ -129,10 +131,13 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
+	Name                string `yaml:"name"`
+	Kind                string `yaml:"kind"`
 	UseClientOAuth      bool
 	AuthTokenHeaderName string
 	Client              *v4.LookerSDK
 	ApiSettings         *rtl.ApiSettings
+	AuthRequired        []string              `yaml:"authRequired"`
 	Parameters          parameters.Parameters `yaml:"parameters"`
 	manifest            tools.Manifest
 	mcpManifest         tools.McpManifest
@@ -142,112 +147,87 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-var (
-	dataType string = "data"
-	visType  string = "vis"
-)
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
-
 	logger.DebugContext(ctx, "params = ", params)
-
-	ptr_wq, err := lookercommon.ProcessQueryArgs(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("error building query request: %w", err)
-	}
 
 	paramsMap := params.AsMap()
 	dashboard_id := paramsMap["dashboard_id"].(string)
+	name := paramsMap["name"].(string)
 	title := paramsMap["title"].(string)
+	filterType := paramsMap["type"].(string)
+	switch filterType {
+	case "date_filter":
+	case "number_filter":
+	case "string_filter":
+	case "field_filter":
+	default:
+		return nil, fmt.Errorf("invalid filter type: %s. Must be one of date_filter, number_filter, string_filter, field_filter", filterType)
+	}
+	allowMultipleValues := paramsMap["allow_multiple_values"].(bool)
+	required := paramsMap["required"].(bool)
 
-	visConfig := paramsMap["vis_config"].(map[string]any)
-	ptr_wq.VisConfig = &visConfig
+	req := v4.WriteCreateDashboardFilter{
+		DashboardId:         dashboard_id,
+		Name:                name,
+		Title:               title,
+		Type:                filterType,
+		AllowMultipleValues: &allowMultipleValues,
+		Required:            &required,
+	}
+
+	if v, ok := paramsMap["default_value"]; ok {
+		if v != nil {
+			defaultValue := paramsMap["default_value"].(string)
+			req.DefaultValue = &defaultValue
+		}
+	}
+
+	if filterType == "field_filter" {
+		if _, ok := paramsMap["model"]; !ok {
+			return nil, fmt.Errorf("model must be specified for field_filter type")
+		}
+		model := paramsMap["model"].(string)
+		if _, ok := paramsMap["explore"]; !ok {
+			return nil, fmt.Errorf("explore must be specified for field_filter type")
+		}
+		explore := paramsMap["explore"].(string)
+		if _, ok := paramsMap["dimension"]; !ok {
+			return nil, fmt.Errorf("dimension must be specified for field_filter type")
+		}
+		dimension := paramsMap["dimension"].(string)
+
+		switch "" {
+		case model:
+			return nil, fmt.Errorf("model must be specified for field_filter type")
+		case explore:
+			return nil, fmt.Errorf("explore must be specified for field_filter type")
+		case dimension:
+			return nil, fmt.Errorf("dimension must be specified for field_filter type")
+		}
+
+		req.Model = &model
+		req.Explore = &explore
+		req.Dimension = &dimension
+	}
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
 
-	qresp, err := sdk.CreateQuery(*ptr_wq, "id", t.ApiSettings)
+	resp, err := sdk.CreateDashboardFilter(req, "name", t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making create query request: %w", err)
-	}
-
-	dashFilters := []any{}
-	if v, ok := paramsMap["dashboard_filters"]; ok {
-		if v != nil {
-			dashFilters = paramsMap["dashboard_filters"].([]any)
-		}
-	}
-
-	var filterables []v4.ResultMakerFilterables
-	for _, m := range dashFilters {
-		f := m.(map[string]any)
-		name, ok := f["dashboard_filter_name"].(string)
-		if !ok {
-			return nil, fmt.Errorf("error processing dashboard filter: %w", err)
-		}
-		field, ok := f["field"].(string)
-		if !ok {
-			return nil, fmt.Errorf("error processing dashboard filter: %w", err)
-		}
-		listener := v4.ResultMakerFilterablesListen{
-			DashboardFilterName: &name,
-			Field:               &field,
-		}
-		listeners := []v4.ResultMakerFilterablesListen{listener}
-
-		filter := v4.ResultMakerFilterables{
-			Listen: &listeners,
-		}
-
-		filterables = append(filterables, filter)
-	}
-
-	if len(filterables) == 0 {
-		filterables = nil
-	}
-
-	wrm := v4.WriteResultMakerWithIdVisConfigAndDynamicFields{
-		Query:       ptr_wq,
-		VisConfig:   &visConfig,
-		Filterables: &filterables,
-	}
-	wde := v4.WriteDashboardElement{
-		DashboardId: &dashboard_id,
-		Title:       &title,
-		ResultMaker: &wrm,
-		Query:       ptr_wq,
-		QueryId:     qresp.Id,
-	}
-
-	switch len(visConfig) {
-	case 0:
-		wde.Type = &dataType
-	default:
-		wde.Type = &visType
-	}
-
-	fields := ""
-
-	req := v4.RequestCreateDashboardElement{
-		Body:   wde,
-		Fields: &fields,
-	}
-
-	resp, err := sdk.CreateDashboardElement(req, t.ApiSettings)
-	if err != nil {
-		return nil, fmt.Errorf("error making create dashboard element request: %w", err)
+		return nil, fmt.Errorf("error making create dashboard filter request: %s", err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
 	data := make(map[string]any)
 
-	data["result"] = fmt.Sprintf("Dashboard element added to dashboard %s", dashboard_id)
+	data["result"] = fmt.Sprintf("Dashboard filter \"%s\" added to dashboard %s", *resp.Name, dashboard_id)
 
 	return data, nil
 }

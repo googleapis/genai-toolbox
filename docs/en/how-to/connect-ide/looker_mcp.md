@@ -323,6 +323,7 @@ instance and create new saved content.
    data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
+1. **add_dashboard_filter**: Add a filter to a dashboard
 
 ### Looker Instance Health Tools
 
