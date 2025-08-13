@@ -688,7 +688,7 @@ tools:
 
           The result is a json document with a link to the newly
           created dashboard and the id of the dashboard. Use the id
-          when calling add_dashboard_element.
+          when calling add_dashboard_filter and add_dashboard_element.
 
     add_dashboard_element:
         kind: looker-add-dashboard-element
@@ -706,6 +706,38 @@ tools:
 
           This tool can be called many times for one dashboard_id
           and the resulting tiles will be added in order.
+
+          A dashboard element can be connected to one or more
+          dashboard filters by specifying the filter name and the
+          field to which the filter should apply formatted as
+          `view_name.field_name`.
+
+    add_dashboard_filter:
+        kind: looker-add-dashboard-filter
+        source: looker-source
+        description: |
+          add_dashboard_filter Tool
+
+          This tool will add a filter to a dashboard. The name of the
+          filter will be used to refer to the filter when creating
+          dashboard elements. The title will be displayed with the
+          filter in the Looker UI.
+
+          The type of the filter is the datatype. If it is `field_filter` then
+          the type will be inherited from a field in the model, and that
+          field will be used to suggest filter values. Otherwise the value
+          of type can be `date_filter`, `number_filter`, or `string_filter`.
+
+          The default value is optional.
+
+          The parameters model, explore, and dimension should only be
+          specified if the type is `field_filter`.
+
+          Add any dashboard filters after creating the dashboard but
+          before adding any dashboard elements. When adding dashboard
+          elements specify the name of the dashboad filter and the
+          field of that element's query to which the filter should
+          apply.
 
     health_pulse:
         kind: looker-health-pulse
@@ -899,6 +931,7 @@ toolsets:
         - run_dashboard
         - make_dashboard
         - add_dashboard_element
+        - add_dashboard_filter
         - health_pulse
         - health_analyze
         - health_vacuum
