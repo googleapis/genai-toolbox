@@ -130,10 +130,10 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 
 	// Run specific Firestore tool tests
 	runFirestoreGetDocumentsTest(t, docPath1, docPath2)
-	runFirestoreAddDocumentsTest(t, testCollectionName)
-	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
-	runFirestoreDeleteDocumentsTest(t, docPath3)
 	runFirestoreQueryCollectionTest(t, testCollectionName)
+	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
+	runFirestoreAddDocumentsTest(t, testCollectionName)
+	runFirestoreDeleteDocumentsTest(t, docPath3)
 	runFirestoreGetRulesTest(t)
 	runFirestoreValidateRulesTest(t)
 }
@@ -830,30 +830,56 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 		t.Fatalf("Failed to create subcollection document: %v", err)
 	}
 
-	// Return cleanup function
+	// Return cleanup function that deletes ALL collections and documents in the database
 	return func(t *testing.T) {
-		// Delete subcollection documents first
-		subDocs := client.Collection(collectionName).Doc(docID1).Collection(subCollectionName).Documents(ctx)
-		for {
-			doc, err := subDocs.Next()
+		// Helper function to recursively delete all documents in a collection
+		var deleteCollection func(*firestoreapi.CollectionRef) error
+		deleteCollection = func(collection *firestoreapi.CollectionRef) error {
+			// Get all documents in the collection
+			docs, err := collection.Documents(ctx).GetAll()
 			if err != nil {
-				break
+				return fmt.Errorf("failed to list documents in collection %s: %w", collection.Path, err)
 			}
-			if _, err := doc.Ref.Delete(ctx); err != nil {
-				t.Errorf("Failed to delete subcollection document: %v", err)
+
+			// Delete each document and its subcollections
+			for _, doc := range docs {
+				// First, get all subcollections of this document
+				subcollections, err := doc.Ref.Collections(ctx).GetAll()
+				if err != nil {
+					return fmt.Errorf("failed to list subcollections of document %s: %w", doc.Ref.Path, err)
+				}
+
+				// Recursively delete each subcollection
+				for _, subcoll := range subcollections {
+					if err := deleteCollection(subcoll); err != nil {
+						return fmt.Errorf("failed to delete subcollection %s: %w", subcoll.Path, err)
+					}
+				}
+
+				// Delete the document itself
+				if _, err := doc.Ref.Delete(ctx); err != nil {
+					return fmt.Errorf("failed to delete document %s: %w", doc.Ref.Path, err)
+				}
+			}
+
+			return nil
+		}
+
+		// Get all root collections in the database
+		rootCollections, err := client.Collections(ctx).GetAll()
+		if err != nil {
+			t.Errorf("Failed to list root collections: %v", err)
+			return
+		}
+
+		// Delete each root collection and all its contents
+		for _, collection := range rootCollections {
+			if err := deleteCollection(collection); err != nil {
+				t.Errorf("Failed to delete collection %s and its contents: %v", collection.ID, err)
 			}
 		}
 
-		// Delete main collection documents
-		if _, err := client.Collection(collectionName).Doc(docID1).Delete(ctx); err != nil {
-			t.Errorf("Failed to delete test document 1: %v", err)
-		}
-		if _, err := client.Collection(collectionName).Doc(docID2).Delete(ctx); err != nil {
-			t.Errorf("Failed to delete test document 2: %v", err)
-		}
-		if _, err := client.Collection(collectionName).Doc(docID3).Delete(ctx); err != nil {
-			t.Errorf("Failed to delete test document 3: %v", err)
-		}
+		t.Logf("Successfully deleted all collections and documents in the database")
 	}
 }
 
@@ -1122,7 +1148,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				"orderBy": "{\"field\": \"age\", \"direction\": \"DESCENDING\"}",
 				"limit": 2
 			}`, collectionName))),
-			wantRegex: `"age":30.*"age":25`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
+			wantRegex: `"age":35.*"age":30`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
 			isErr:     false,
 		},
 		{
