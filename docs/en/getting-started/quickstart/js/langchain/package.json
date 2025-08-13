@@ -1,22 +1,19 @@
 {
-  "name": "langchain-quickstart",
+  "name": "langchain",
   "version": "1.0.0",
-  "description": "GenAI Toolbox quickstart for LangChain JS",
+  "description": "",
   "main": "quickstart.js",
   "type": "module",
   "scripts": {
-    "start": "node quickstart.js",
     "test": "node test_quickstart.js"
   },
-  "dependencies": {
-    "@toolbox-sdk/core": "^0.1.0",
-    "@langchain/google-vertexai": "^0.1.0",
-    "@langchain/core": "^0.1.0",
-    "@langchain/langgraph": "^0.1.0"
-  },
-  "devDependencies": {
-  },
-  "keywords": ["genai", "toolbox", "langchain", "quickstart"],
+  "keywords": [],
   "author": "",
-  "license": "MIT"
-} 
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/core": "^0.3.68",
+    "@langchain/google-genai": "^0.2.16",
+    "@langchain/langgraph": "^0.4.3",
+    "@toolbox-sdk/core": "^0.1.1"
+  }
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/googleapis/mcp-toolbox-sdk-go/core"
@@ -133,7 +134,7 @@ func main() {
 
 		params.Messages = append(params.Messages, openai.AssistantMessage(query))
 
-		println("\n", completion.Choices[0].Message.Content)
+		fmt.Println("\n", completion.Choices[0].Message.Content)
 
 	}
 

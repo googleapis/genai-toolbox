@@ -1,4 +1,8 @@
-Found Hotels: Hilton Basel (ID: 1), Hyatt Regency Basel (ID: 3), Holiday Inn Basel (ID: 8).
-Booking confirmed for Hilton Basel (ID: 1).
-Cancellation for Hilton Basel confirmed. Booking confirmed for Hyatt Regency Basel (ID: 3).
-Check-in and check-out dates have been updated for your booking at Hyatt Regency Basel (ID: 3).
+Hilton Basel
+Hyatt Regency
+booked
+updated
+confirmed
+check-in date
+check-out date
+cancelled,booked the Hyatt Regency

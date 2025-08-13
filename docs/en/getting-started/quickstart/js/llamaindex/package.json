@@ -1,22 +1,19 @@
 {
-  "name": "llamaindex-quickstart",
+  "name": "llamaindex",
   "version": "1.0.0",
-  "description": "GenAI Toolbox quickstart for LlamaIndex JS",
+  "description": "",
   "main": "quickstart.js",
   "type": "module",
   "scripts": {
-    "start": "node quickstart.js",
-    "test": "node test_quickstart.js"
+    "test": "node quickstart_test.js"
   },
-  "dependencies": {
-    "@toolbox-sdk/core": "^0.1.0",
-    "@llamaindex/google": "^0.1.0",
-    "@llamaindex/workflow": "^0.1.0",
-    "llamaindex": "^0.1.0"
-  },
-  "devDependencies": {
-  },
-  "keywords": ["genai", "toolbox", "llamaindex", "quickstart"],
+  "keywords": [],
   "author": "",
-  "license": "MIT"
-} 
+  "license": "ISC",
+  "dependencies": {
+    "@llamaindex/google": "^0.3.19",
+    "@llamaindex/workflow": "^1.1.20",
+    "@toolbox-sdk/core": "^0.1.1",
+    "llamaindex": "^0.11.26"
+  }
+}

@@ -1,3 +1,18 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { genkit } from "genkit";
 import { googleAI } from '@genkit-ai/googleai';
@@ -62,6 +77,7 @@ async function run() {
 
     const toolRequests = response.toolRequests;
     if (toolRequests?.length > 0) {
+      console.log("Tool call request:", JSON.stringify(toolRequests, null, 2));
       // Execute tools concurrently and collect their responses.
       const toolResponses = await Promise.all(
         toolRequests.map(async (call) => {
@@ -74,14 +90,14 @@ async function run() {
           }
         })
       );
-      
+
       conversationHistory.push(...toolResponses);
-      
+
       // Call the AI again with the tool results.
       response = await ai.generate({ messages: conversationHistory, tools });
       conversationHistory.push(response.message);
     }
-    
+
     console.log(response.text);
   }
 }
