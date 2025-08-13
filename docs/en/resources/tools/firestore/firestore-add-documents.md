@@ -1,5 +1,12 @@
-# firestore-add-documents
-
+---
+title: "firestore-add-documents"
+type: docs
+weight: 1
+description: >
+  A "firestore-add-documents" tool adds document to a given collection path.
+aliases:
+- /resources/tools/firestore-add-documents
+---
 ## Description
 
 The `firestore-add-documents` tool allows you to add new documents to a Firestore collection. It supports all Firestore data types using Firestore's native JSON format. The tool automatically generates a unique document ID for each new document.
