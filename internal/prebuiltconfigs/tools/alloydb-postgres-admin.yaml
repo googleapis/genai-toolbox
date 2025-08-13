@@ -164,7 +164,54 @@ tools:
       - name: clusterId
         type: string
         description: "The ID of the cluster to list users from."
-
+  alloydb-create-user:
+    kind: http
+    source: alloydb-api-source
+    method: POST
+    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/users
+    description: "Creates a new database user in an AlloyDB cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned."
+    pathParams:
+      - name: projectId
+        type: string
+        description: "The GCP project ID."
+      - name: locationId
+        type: string
+        description: "The location of the cluster (e.g., 'us-central1')."
+        default: us-central1
+      - name: clusterId
+        type: string
+        description: "The ID of the cluster where the user will be created."
+    queryParams:
+      - name: userId
+        type: string
+        description: "The name for the new user. Must be unique within the cluster."
+    requestBody: |
+      {
+        "userType": "{{.userType}}"
+        {{- if eq .userType "ALLOYDB_BUILT_IN" -}}
+        , "password": "{{.password}}"
+        {{- end -}}
+        {{- if .databaseRoles }}
+        , "databaseRoles": [{{range $i, $role := .databaseRoles}}{{if $i}},{{end}}"{{$role}}"{{end}}]
+        {{- end }}
+      }
+    bodyParams:
+      - name: password
+        type: string
+        description: "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType."
+        required: false
+      - name: databaseRoles
+        type: array
+        description: "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']). If not specified, the user will have no roles."
+        items:
+          name: role
+          type: string
+          description: "A single database role to grant to the user (e.g., 'pg_read_all_data')."
+      - name: userType
+        type: string
+        description: "The type of user to create. Valid values are: USER_TYPE_UNSPECIFIED, ALLOYDB_BUILT_IN, ALLOYDB_IAM_USER."
+        default: "ALLOYDB_BUILT_IN"
+        
 toolsets:
   alloydb-postgres-admin-tools:
     - alloydb-create-cluster
@@ -173,4 +220,4 @@ toolsets:
     - alloydb-list-clusters
     - alloydb-list-instances
     - alloydb-list-users
-  
+    - alloydb-create-user
