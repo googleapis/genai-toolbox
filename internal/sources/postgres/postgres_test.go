@@ -15,6 +15,8 @@
 package postgres_test
 
 import (
+	"sort"
+	"strings"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
@@ -51,6 +53,37 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					Database: "my_db",
 					User:     "my_user",
 					Password: "my_pass",
+				},
+			},
+		},
+		{
+			desc: "example with query params",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: postgres
+					host: my-host
+					port: my-port
+					database: my_db
+					user: my_user
+					password: my_pass
+					queryParams:
+						sslmode: verify-full
+						sslrootcert: /tmp/ca.crt
+			`,
+			want: server.SourceConfigs{
+				"my-pg-instance": postgres.Config{
+					Name:     "my-pg-instance",
+					Kind:     postgres.SourceKind,
+					Host:     "my-host",
+					Port:     "my-port",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+					QueryParams: map[string]string{
+						"sslmode":     "verify-full",
+						"sslrootcert": "/tmp/ca.crt",
+					},
 				},
 			},
 		},
@@ -121,6 +154,48 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestConvertParamMapToRawQuery(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   map[string]string
+		want string
+	}{
+		{
+			desc: "nil param",
+			in:   nil,
+			want: "",
+		},
+		{
+			desc: "single query param",
+			in: map[string]string{
+				"foo": "bar",
+			},
+			want: "foo=bar",
+		},
+		{
+			desc: "more than one query param",
+			in: map[string]string{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			want: "foo=bar&hello=world",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := postgres.ConvertParamMapToRawQuery(tc.in)
+			if strings.Contains(got, "&") {
+				splitGot := strings.Split(got, "&")
+				sort.Strings(splitGot)
+				got = strings.Join(splitGot, "&")
+			}
+			if got != tc.want {
+				t.Fatalf("incorrect conversion: got %s want %s", got, tc.want)
 			}
 		})
 	}
