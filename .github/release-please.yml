@@ -24,6 +24,7 @@ extraFiles: [
     "docs/en/getting-started/local_quickstart_js.md",
     "docs/en/getting-started/local_quickstart_go.md",
     "docs/en/getting-started/mcp_quickstart/_index.md",
+    "docs/en/samples/alloydb/_index.md",
     "docs/en/samples/bigquery/local_quickstart.md",
     "docs/en/samples/bigquery/mcp_quickstart/_index.md",
     "docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb",
@@ -37,6 +38,8 @@ extraFiles: [
     "docs/en/how-to/connect-ide/cloud_sql_mysql_mcp.md",
     "docs/en/how-to/connect-ide/firestore_mcp.md",
     "docs/en/how-to/connect-ide/looker_mcp.md",
+    "docs/en/how-to/connect-ide/mysql_mcp.md",
+    "docs/en/how-to/connect-ide/mssql_mcp.md",
     "docs/en/how-to/connect-ide/postgres_mcp.md",
     "docs/en/how-to/connect-ide/spanner_mcp.md",
 ]

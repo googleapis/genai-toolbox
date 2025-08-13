@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"google.golang.org/api/iterator"
 )
 
@@ -145,11 +146,18 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	sql, ok := sliceParams[0].(string)
+	paramsMap := params.AsMap()
+	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
 	}
+
+	// Log the query executed for debugging.
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting logger: %s", err)
+	}
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
 	var results []any
 	var opErr error
