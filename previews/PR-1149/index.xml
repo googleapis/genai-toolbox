@@ -4087,7 +4087,6 @@ exponential backoff.&lt;/p>
  &lt;/span>Info&lt;/p></description></item><item><title>Toolbox: AlloyDB AI NL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
  
  
- 
  &lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>
  &lt;/div>
  
@@ -4097,7 +4096,6 @@ exponential backoff.&lt;/p>
 
  
  &lt;div class="notebook-markdown">
- 
  
  
  &lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
@@ -4110,7 +4108,6 @@ exponential backoff.&lt;/p>
 
  
  &lt;div class="notebook-markdown">
- 
  
  
  &lt;h2 id="set-up-alloydb">Set up AlloyDB&lt;/h2>
@@ -4128,7 +4125,6 @@ exponential backoff.&lt;/p>
  &lt;div class="notebook-code">
  
  
- 
  &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Run this and allow access through the pop-up&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">google.colab&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">auth&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
@@ -4143,7 +4139,6 @@ exponential backoff.&lt;/p>
  &lt;div class="notebook-markdown">
  
  
- 
  &lt;h3 id="connect-your-google-cloud-project">Connect Your Google Cloud Project&lt;/h3>
 
  &lt;/div>
@@ -4156,7 +4151,6 @@ exponential backoff.&lt;/p>
 
  
  &lt;div class="notebook-code">
- 
  
  
  &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># @markdown Please fill in the value below with your GCP project ID and then run the cell.&lt;/span>
@@ -4179,7 +4173,6 @@ exponential backoff.&lt;/p>
  &lt;div class="notebook-markdown">
  
  
- 
  &lt;h3 id="set-up-alloydb">Set up AlloyDB&lt;/h3>
 
  &lt;/div>
@@ -4190,7 +4183,6 @@ exponential backoff.&lt;/p>
 
  
  &lt;div class="notebook-markdown">
- 
  
  
  &lt;p>You will need a Postgres AlloyDB instance for the following stages of this notebook. Please set the following variables to connect to your instance or create a new instance.&lt;/p></description></item></channel></rss>
