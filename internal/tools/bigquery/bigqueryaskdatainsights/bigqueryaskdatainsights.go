@@ -34,6 +34,11 @@ import (
 
 const kind string = "bigquery-ask-data-insights"
 
+const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
+1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
+2. **OUTPUT FORMAT:** Your entire response MUST be in plain text format ONLY.
+3. **NO CHARTS:** You are STRICTLY FORBIDDEN from generating any charts, graphs, images, or any other form of visualization.`
+
 func init() {
 	if !tools.Register(kind, newConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", kind))
@@ -181,6 +186,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	// Extract parameters from the map
 	mapParams := params.AsMap()
 	userQuery, _ := mapParams["user_query_with_context"].(string)
+
+	finalQueryText := fmt.Sprintf("%s\n**User Query and Context:**\n%s", instructions, userQuery)
+
 	tableRefsJSON, _ := mapParams["table_references"].(string)
 	var tableRefs []BQTableReference
 	if tableRefsJSON != "" {
@@ -204,7 +212,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	payload := CAPayload{
 		Project:  fmt.Sprintf("projects/%s", projectID),
-		Messages: []Message{{UserMessage: UserMessage{Text: userQuery}}},
+		Messages: []Message{{UserMessage: UserMessage{Text: finalQueryText}}},
 		InlineContext: InlineContext{
 			DatasourceReferences: DatasourceReferences{
 				BQ: BQDatasource{TableReferences: tableRefs},
@@ -404,7 +412,10 @@ func handleDataResponse(resp map[string]any, maxRows int) map[string]any {
 	}
 	if result, ok := resp["result"].(map[string]any); ok {
 		schema, _ := result["schema"].(map[string]any)
-		dataRows, _ := result["data"].([]any)
+		var dataRows []any
+		if data, ok := result["data"]; ok {
+			dataRows, _ = data.([]any)
+		}
 		fieldsVal, _ := schema["fields"].([]any)
 
 		var headers []string
