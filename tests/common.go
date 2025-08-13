@@ -292,6 +292,29 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
+// AddMindsDBExecuteSqlConfig gets the tools config for `mindsdb-execute-sql`
+func AddMindsDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "mindsdb-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "mindsdb-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
 // AddMSSQLExecuteSqlConfig gets the tools config for `mssql-execute-sql`
 func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
@@ -429,6 +452,77 @@ func GetMySQLWants() (string, string, string) {
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
 	return select1Want, failInvocationWant, createTableStatement
+}
+
+// GetMindsDBParamToolInfo returns statements and param for my-tool mindsdb-sql kind
+func GetMindsDBParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE files.%s (id INT PRIMARY KEY, name VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO files.%s (id, name) VALUES (1, 'Alice'), (2, 'Jane'), (3, 'Sid'), (4, NULL);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM files.%s WHERE id = ? OR name = ?;", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM files.%s WHERE id = ?;", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM files.%s WHERE name = ?;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM files.%s WHERE id IN (?) AND name IN (?);", tableName)
+	// MindsDB doesn't use parameters for INSERT, so we pass empty params
+	params := []any{}
+	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+}
+
+// GetMindsDBAuthToolInfo returns statements and param of my-auth-tool for mindsdb-sql kind
+func GetMindsDBAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE files.%s (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO files.%s (id, name, email) VALUES (1, 'Alice', '%s'), (2, 'Jane', 'janedoe@gmail.com')", tableName, ServiceAccountEmail)
+	toolStatement := fmt.Sprintf("SELECT name FROM files.%s WHERE email = ?;", tableName)
+	// MindsDB doesn't use parameters for INSERT, so we pass empty params
+	params := []any{}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+// GetMindsDBTmplToolStatement returns statements and param for template parameter test cases for mindsdb-sql kind
+func GetMindsDBTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM files.{{.tableName}} WHERE id = ?"
+	tmplSelectFilterCombined := "SELECT * FROM files.{{.tableName}} WHERE {{.columnFilter}} = ?"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}
+
+// GetMindsDBWants return the expected wants for mindsdb
+func GetMindsDBWants() (string, string, string) {
+	select1Want := "[{\"1\":1}]"
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1149: The SQL statement cannot be parsed - SELEC 1: syntax error"}],"isError":true}}`
+	createTableStatement := `"CREATE TABLE files.t (id INT PRIMARY KEY, name VARCHAR(255))"`
+	return select1Want, failInvocationWant, createTableStatement
+}
+
+// SetupMindsDBTable creates and inserts data into a table of tool
+// compatible with mindsdb-sql tool
+func SetupMindsDBTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+	err := pool.PingContext(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	// Create table
+	_, err = pool.QueryContext(ctx, createStatement)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data - MindsDB doesn't use parameters for INSERT
+	if len(params) > 0 {
+		_, err = pool.QueryContext(ctx, insertStatement, params...)
+	} else {
+		_, err = pool.QueryContext(ctx, insertStatement)
+	}
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE files.%s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
 }
 
 // SetupPostgresSQLTable creates and inserts data into a table of tool
