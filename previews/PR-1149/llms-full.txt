@@ -10029,8 +10029,8 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 
 
-# Toolbox: AlloyDB NL to SQL
-A walkthrough of using a Jupyter Notebook to generate SQL queries from natural language with AlloyDB AI.
+# Toolbox: AlloyDB AI NL
+A walkthrough of using a Jupyter Notebook to execute SQL queries from natural language with AlloyDB AI.
 
 
 {{< ipynb "alloydb_ai_nl.ipynb" >}}

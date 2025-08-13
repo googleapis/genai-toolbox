@@ -100,7 +100,7 @@ Samples and guides for using Toolbox.
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
 - [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
-  - [Toolbox: AlloyDB NL to SQL](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/): A walkthrough of using a Jupyter Notebook to generate SQL queries from natural language with AlloyDB AI.
+  - [Toolbox: AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/): A walkthrough of using a Jupyter Notebook to execute SQL queries from natural language with AlloyDB AI.
 
 ### About
 
