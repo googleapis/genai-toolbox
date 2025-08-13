@@ -1211,12 +1211,12 @@ func (p *MapParameter) Manifest() ParameterManifest {
 
 	var additionalProperties any
 	if p.ValueType != "" {
-		prototype, err := getPrototypeParameter(p.ValueType)
+		_, err := getPrototypeParameter(p.ValueType)
 		if err != nil {
 			panic(err)
 		}
-		valueSchema := prototype.Manifest()
-		additionalProperties = &valueSchema
+		valueSchema := map[string]any{"type": p.ValueType}
+		additionalProperties = valueSchema
 	} else {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
@@ -1236,12 +1236,12 @@ func (p *MapParameter) Manifest() ParameterManifest {
 func (p *MapParameter) McpManifest() ParameterMcpManifest {
 	var additionalProperties any
 	if p.ValueType != "" {
-		prototype, err := getPrototypeParameter(p.ValueType)
+		_, err := getPrototypeParameter(p.ValueType)
 		if err != nil {
 			panic(err)
 		}
-		valueSchema := prototype.McpManifest()
-		additionalProperties = &valueSchema
+		valueSchema := map[string]any{"type": p.ValueType}
+		additionalProperties = valueSchema
 	} else {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
