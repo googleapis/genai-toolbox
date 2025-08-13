@@ -200,7 +200,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Configure source with dataset restriction.
 	sourceConfig := getBigQueryVars(t)
-	sourceConfig["datasets"] = []string{allowedDatasetName}
+	sourceConfig["allowed_datasets"] = []string{allowedDatasetName}
 
 	// Configure tool
 	toolsConfig := map[string]any{
@@ -260,6 +260,56 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	runGetDatasetInfoWithRestriction(t, allowedDatasetName, disallowedDatasetName)
 	runGetTableInfoWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName)
 	runExecuteSqlWithRestriction(t, allowedTableNameParam, disallowedTableNameParam)
+}
+
+func TestBigQueryToolWithNonExistentDataset(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Configure source with a non-existent dataset.
+	sourceConfig := getBigQueryVars(t)
+	nonExistentDataset := fmt.Sprintf("non_existent_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	sourceConfig["allowed_datasets"] = []string{nonExistentDataset}
+
+	// Configure a dummy tool
+	toolsConfig := map[string]any{
+		"list": map[string]any{
+			"kind":        "bigquery-list-dataset-ids",
+			"source":      "my-instance",
+			"description": "Some description.",
+		},
+	}
+
+	// Create config file
+	config := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"tools": toolsConfig,
+	}
+
+	// Start server
+	cmd, cleanup, err := tests.StartCmd(ctx, config)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	// Expect server startup to fail.
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err == nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox started successfully, but it was expected to fail")
+	}
+
+	// Check for the correct error message in the logs.
+	wantError := fmt.Sprintf("allowed_dataset '%s' not found in project '%s'", nonExistentDataset, BigqueryProject)
+	if !strings.Contains(out, wantError) {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Errorf("unexpected error message: got logs do not contain %q", wantError)
+	}
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
@@ -1364,7 +1414,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName, disallow
 		{
 			name:           "invoke list-dataset-ids with restriction",
 			wantStatusCode: http.StatusOK,
-			wantResult:     fmt.Sprintf(`["%s"]`, allowedDatasetName),
+			wantResult:     fmt.Sprintf(`["%s.%s"]`, BigqueryProject, allowedDatasetName),
 		},
 	}
 
@@ -1546,7 +1596,7 @@ func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowed
 			name:           "disallowed create procedure",
 			sql:            fmt.Sprintf("CREATE PROCEDURE %s.my_proc() BEGIN SELECT 1; END", allowedDatasetID),
 			wantStatusCode: http.StatusBadRequest,
-			wantInError:    "creating stored routines ('CREATE_PROCEDURE') is not allowed",
+			wantInError:    "unanalyzable statements like 'CREATE PROCEDURE' are not allowed",
 		},
 		{
 			name:           "disallowed execute immediate",

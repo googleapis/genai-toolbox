@@ -17,6 +17,7 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"strings"
 
@@ -27,6 +28,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -51,11 +53,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string   `yaml:"name" validate:"required"`
-	Kind     string   `yaml:"kind" validate:"required"`
-	Project  string   `yaml:"project" validate:"required"`
-	Location string   `yaml:"location"`
-	Datasets []string `yaml:"datasets"`
+	Name            string   `yaml:"name" validate:"required"`
+	Kind            string   `yaml:"kind" validate:"required"`
+	Project         string   `yaml:"project" validate:"required"`
+	Location        string   `yaml:"location"`
+	AllowedDatasets []string `yaml:"allowed_datasets"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -71,14 +73,31 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	allowedDatasets := make(map[string]struct{})
-	// Get full id of allowed datasets
-	if len(r.Datasets) > 0 {
-		for _, allowed := range r.Datasets {
-			var allowedFullID string
+	// Get full id of allowed datasets and verify they exist.
+	if len(r.AllowedDatasets) > 0 {
+		for _, allowed := range r.AllowedDatasets {
+			var projectID, datasetID, allowedFullID string
 			if strings.Contains(allowed, ".") {
+				parts := strings.Split(allowed, ".")
+				if len(parts) != 2 {
+					return nil, fmt.Errorf("invalid allowed_dataset format: %q, expected 'project.dataset' or 'dataset'", allowed)
+				}
+				projectID = parts[0]
+				datasetID = parts[1]
 				allowedFullID = allowed
 			} else {
-				allowedFullID = fmt.Sprintf("%s.%s", client.Project(), allowed)
+				projectID = client.Project()
+				datasetID = allowed
+				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
+			}
+
+			dataset := client.DatasetInProject(projectID, datasetID)
+			_, err := dataset.Metadata(ctx)
+			if err != nil {
+				if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+					return nil, fmt.Errorf("allowed_dataset '%s' not found in project '%s'", datasetID, projectID)
+				}
+				return nil, fmt.Errorf("failed to verify allowed_dataset '%s' in project '%s': %w", datasetID, projectID, err)
 			}
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
