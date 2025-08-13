@@ -539,10 +539,8 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "HOSTS=$HOSTS"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-      - "CASSANDRA_HOSTS=$_CASSANDRA_HOSTS"
-    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS"]
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOSTS"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -620,6 +618,8 @@ availableSecrets:
       env: CASSANDRA_USER
     - versionName: projects/107716898620/secrets/cassandra_pass/versions/latest
       env: CASSANDRA_PASS
+    - versionName: projects/107716898620/secrets/cassandra_host/versions/latest
+      env: CASSANDRA_HOSTS
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -654,4 +654,3 @@ substitutions:
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
-  _CASSANDRA_HOSTS: "127.0.0.1"
