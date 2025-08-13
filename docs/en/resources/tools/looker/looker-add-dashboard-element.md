@@ -51,6 +51,11 @@ tools:
 
           This tool can be called many times for one dashboard_id
           and the resulting tiles will be added in order.
+
+          A dashboard element can be connected to one or more
+          dashboard filters by specifying the filter name and the
+          field to which the filter should apply formatted as
+          `view_name.field_name`.
 ```
 
 ## Reference

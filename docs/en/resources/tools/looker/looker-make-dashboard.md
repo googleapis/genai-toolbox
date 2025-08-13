@@ -41,7 +41,7 @@ tools:
 
           The result is a json document with a link to the newly
           created dashboard and the id of the dashboard. Use the id
-          when calling add_dashboard_element.
+          when calling add_dashboard_filter and add_dashboard_element.
 ```
 
 ## Reference
