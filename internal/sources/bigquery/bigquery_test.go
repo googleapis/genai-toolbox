@@ -37,14 +37,34 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				my-instance:
 					kind: bigquery
 					project: my-project
-					location: us
 			`,
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
-					Name:     "my-instance",
-					Kind:     bigquery.SourceKind,
-					Project:  "my-project",
-					Location: "us",
+					Name:      "my-instance",
+					Kind:      bigquery.SourceKind,
+					Project:   "my-project",
+					Location:  "",
+					WriteMode: "",
+				},
+			},
+		},
+		{
+			desc: "all fields specified",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: asia
+					write_mode: blocked
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:      "my-instance",
+					Kind:      bigquery.SourceKind,
+					Project:   "my-project",
+					Location:  "asia",
+					WriteMode: "blocked",
 				},
 			},
 		},

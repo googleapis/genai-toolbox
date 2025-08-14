@@ -30,6 +30,15 @@ import (
 
 const SourceKind string = "bigquery"
 
+const (
+	// No write operations are allowed.
+	WriteModeBlocked string = "blocked"
+	// Only protected write operations are allowed in a BigQuery session.
+	WriteModeProtected string = "protected"
+	// All write operations are allowed.
+	WriteModeAllowed string = "allowed"
+)
+
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -49,10 +58,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Name      string `yaml:"name" validate:"required"`
+	Kind      string `yaml:"kind" validate:"required"`
+	Project   string `yaml:"project" validate:"required"`
+	Location  string `yaml:"location"`
+	WriteMode string `yaml:"write_mode"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -61,6 +71,10 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	if r.WriteMode == "" {
+		r.WriteMode = WriteModeAllowed
+	}
+
 	// Initializes a BigQuery Google SQL source
 	client, restService, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
 	if err != nil {
@@ -73,6 +87,55 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:      client,
 		RestService: restService,
 		Location:    r.Location,
+		WriteMode:   r.WriteMode,
+	}
+
+	switch r.WriteMode {
+	case WriteModeAllowed, WriteModeBlocked:
+		// Valid write mode, do not need session
+	case WriteModeProtected:
+		if err != nil {
+			return nil, fmt.Errorf("failed to create BigQuery REST client for session creation: %w", err)
+		}
+
+		job := &bigqueryrestapi.Job{
+			JobReference: &bigqueryrestapi.JobReference{
+				ProjectId: r.Project,
+				Location:  r.Location,
+			},
+			Configuration: &bigqueryrestapi.JobConfiguration{
+				DryRun: true,
+				Query: &bigqueryrestapi.JobConfigurationQuery{
+					Query:         "SELECT 1",
+					CreateSession: true,
+				},
+			},
+		}
+
+		createdJob, err := restService.Jobs.Insert(r.Project, job).Do()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create BigQuery session via job: %w", err)
+		}
+
+		var sessionID, sessionDatasetID string
+		if createdJob.Status != nil && createdJob.Statistics.SessionInfo != nil {
+			sessionID = createdJob.Statistics.SessionInfo.SessionId
+		} else {
+			return nil, fmt.Errorf("did not get session info back from session creation job")
+		}
+
+		if createdJob.Configuration != nil && createdJob.Configuration.Query != nil && createdJob.Configuration.Query.DestinationTable != nil {
+			sessionDatasetID = createdJob.Configuration.Query.DestinationTable.DatasetId
+		} else {
+			return nil, fmt.Errorf("did not get destination dataset ID from session creation job")
+		}
+
+		s.Session = &Session{
+			ID:        sessionID,
+			DatasetID: sessionDatasetID,
+		}
+	default:
+		return nil, fmt.Errorf("invalid write_mode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
 	}
 	return s, nil
 
@@ -87,6 +150,13 @@ type Source struct {
 	Client      *bigqueryapi.Client
 	RestService *bigqueryrestapi.Service
 	Location    string `yaml:"location"`
+	WriteMode   string `yaml:"writemode"`
+	Session     *Session
+}
+
+type Session struct {
+	ID        string
+	DatasetID string
 }
 
 func (s *Source) SourceKind() string {
@@ -102,6 +172,14 @@ func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
 }
 
+func (s *Source) BigQueryWriteMode() string {
+	return s.WriteMode
+}
+
+func (s *Source) BigQuerySession() *Session {
+	return s.Session
+}
+
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -112,7 +190,7 @@ func initBigQueryConnection(
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+	cred, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
 	}

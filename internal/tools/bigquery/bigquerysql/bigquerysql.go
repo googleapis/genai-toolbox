@@ -47,6 +47,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
+	BigQuerySession() *bigqueryds.Session
+	BigQueryWriteMode() string
 	BigQueryRestService() *bigqueryrestapi.Service
 }
 
@@ -105,6 +107,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		RestService:        s.BigQueryRestService(),
+		Session:            s.BigQuerySession(),
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 	}
@@ -124,6 +127,7 @@ type Tool struct {
 	Statement          string
 	Client             *bigqueryapi.Client
 	RestService        *bigqueryrestapi.Service
+	Session            *bigqueryds.Session
 	manifest           tools.Manifest
 	mcpManifest        tools.McpManifest
 }
@@ -209,19 +213,29 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	query.Parameters = highLevelParams
 	query.Location = t.Client.Location
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	if t.Session != nil {
+		// Add session ID to the connection properties for subsequent calls.
+		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: t.Session.ID},
+		}
+	}
+
+	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), query.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
-		// This is a fallback check in case the switch logic was bypassed.
-		return nil, fmt.Errorf("final query validation failed: %w", err)
+		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
 	statementType := dryRunJob.Statistics.Query.StatementType
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
 	// column names to values, and return the collection of rows.
-	it, err := query.Read(ctx)
+	job, err := query.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	it, err := job.Read(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 
 	var out []any
