@@ -49,6 +49,11 @@ Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
 Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p>
 &lt;/li>
 &lt;/ul>
+&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/">Cloud SQL for MySQL using MCP&lt;/a>&lt;br>
+Connect your IDE to Cloud SQL for MySQL using Toolbox.&lt;/li>
+&lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
 &lt;p>By default, this source uses the &lt;a href="https://github.com/GoogleCloudPlatform/cloud-sql-go-connector">Cloud SQL Go Connector&lt;/a> to
@@ -70,6 +75,11 @@ Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
+&lt;/ul>
+&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/">Cloud SQL for Postgres using MCP&lt;/a>&lt;br>
+Connect your IDE to Cloud SQL for Postgres using Toolbox.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
@@ -228,17 +238,7 @@ Run DQL (Dgraph Query Language) queries.&lt;/li>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>When &lt;strong>connecting to a hosted Dgraph database&lt;/strong>, this source uses the API key
 for access. If you are using a dedicated environment, you will additionally need
-the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>DuckDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/duckdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/duckdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://duckdb.org/">DuckDB&lt;/a> is an embedded analytical database management system that runs in-process with the client application. It is optimized for analytical workloads, providing high performance for complex queries with minimal setup.&lt;/p>
-&lt;p>DuckDB has the following notable characteristics:&lt;/p>
-&lt;ul>
-&lt;li>In-process, serverless database engine&lt;/li>
-&lt;li>Supports complex SQL queries for analytical processing&lt;/li>
-&lt;li>Can operate on in-memory or persistent storage&lt;/li>
-&lt;li>Zero-configuration - no external dependencies or server setup required&lt;/li>
-&lt;li>Highly optimized for columnar data storage and query execution&lt;/li>
-&lt;/ul>
-&lt;p>For more details, refer to the &lt;a href="https://duckdb.org/">DuckDB Documentation&lt;/a>.&lt;/p></description></item><item><title>Firestore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/firestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/firestore/</guid><description>&lt;h1 id="firestore-source">Firestore Source&lt;/h1>
+the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>Firestore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/firestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/firestore/</guid><description>&lt;h1 id="firestore-source">Firestore Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a> is a NoSQL document database built for automatic
 scaling, high performance, and ease of application development. While the
 Firestore interface has many of the same features as traditional databases,
@@ -632,11 +632,16 @@ Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;/ul>
+&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/">PostgreSQL using MCP&lt;/a>&lt;br>
+Connect your IDE to PostgreSQL using Toolbox.&lt;/li>
+&lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source only uses standard authentication. You will need to &lt;a href="https://www.postgresql.org/docs/current/sql-createuser.html">create a
 PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>Redis is an open-source, in-memory data structure store, used as a database,
+&lt;p>Redis is a in-memory data structure store, used as a database,
 cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.&lt;/p>
@@ -700,7 +705,16 @@ Run SQL queries against a local SQLite database.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-file">Database File&lt;/h3>
-&lt;p>You need a SQLite database file. This can be:&lt;/p></description></item><item><title>Valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>You need a SQLite database file. This can be:&lt;/p></description></item><item><title>TiDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/tidb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/tidb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.&lt;/p>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source uses standard MySQL protocol authentication. You will need to &lt;a href="https://docs.pingcap.com/tidb/stable/user-account-management">create a TiDB user&lt;/a> to login to the database with.&lt;/p>
+&lt;p>For TiDB Cloud users, you can create database users through the TiDB Cloud console.&lt;/p>
+&lt;h2 id="ssl-configuration">SSL Configuration&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>TiDB Cloud&lt;/p></description></item><item><title>Valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/resources/sources/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>Valkey is an open-source, in-memory data structure store that originated as a
 fork of Redis. It&amp;rsquo;s designed to be used as a database, cache, and message
 broker, supporting a wide range of data structures like strings, hashes, lists,
