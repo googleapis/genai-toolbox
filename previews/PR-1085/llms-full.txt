@@ -991,7 +991,7 @@ async def main():
       )
 
       queries = [
-          "Find hotels in Basel with Basel in it's name.",
+          "Find hotels in Basel with Basel in its name.",
           "Can you book the Hilton Basel for me?",
           "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
           "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -1042,7 +1042,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -1095,7 +1095,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -1158,7 +1158,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Please book the hotel Hilton Basel for me.",
     "This is too expensive. Please cancel it.",
     "Please book Hyatt Regency for me",
@@ -2724,7 +2724,7 @@ func main() {
 			log.Println("No function call")
 		}
 
-		// If there is a was a function call, continue the conversation
+		// If there was a function call, continue the conversation
 		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 		for _, toolCall := range toolCalls {
 
@@ -3071,7 +3071,7 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of your `tools.yaml` define your the actions your agent can
+The `tools` section of your `tools.yaml` defines the actions your agent can
 take: what kind of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
@@ -3102,7 +3102,7 @@ toolsets:
   my_first_toolset:
     - my_first_tool
     - my_second_tool
-   my_second_toolset:
+  my_second_toolset:
     - my_second_tool
     - my_third_tool
 ```
@@ -5291,7 +5291,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. (Only for local runs) Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
-   for the principle you set up the `Cloud Run Invoker` role access to.
+   for the principal you set up the `Cloud Run Invoker` role access to.
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
@@ -5407,8 +5407,8 @@ How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernet
     gcloud iam service-accounts create $SA_NAME
     ```
 
-1. Grant any IAM roles necessary to the IAM service account. Each source have a
-    list of necessary IAM permissions listed on it's page. The example below is
+1. Grant any IAM roles necessary to the IAM service account. Each source has a
+    list of necessary IAM permissions listed on its page. The example below is
     for cloud sql postgres source:
 
     ```bash
@@ -5699,7 +5699,7 @@ networks:
 
 {{< notice tip >}}
 
-You can use this setup quickly set up Toolbox + Postgres to follow along in our
+You can use this setup to quickly set up Toolbox + Postgres to follow along in our
 [Quickstart](../getting-started/local_quickstart.md)
 
 {{< /notice >}}
@@ -6172,7 +6172,7 @@ ID.
 When using [Authenticated Parameters][auth-params], any [claim provided by the
 id-token][provided-claims] can be used for the parameter.
 
-[auth-params]: ../tools/#authenticated-phugarameters
+[auth-params]: ../tools/#authenticated-parameters
 [provided-claims]:
     https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
 
@@ -7488,12 +7488,12 @@ sources:
 
 The Looker base url will look like "https://looker.example.com", don't include
 a trailing "/". In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port numner like
+on-premises, you may need to add the API port number like
 "https://looker.example.com:19999".
 
 Verify ssl should almost always be "true" (all lower case) unless you are using
 a self-signed ssl certificate for the Looker server. Anything other than "true"
-will be interpretted as false.
+will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
 assigned by the looker server.
@@ -8017,7 +8017,7 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "spanner".                                                                                                  |
+| kind      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
 
 ### Connection Properties
@@ -9052,7 +9052,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -10060,11 +10060,11 @@ Frequently asked questions about Toolbox.
 
 ## How can I deploy or run Toolbox?
 
-MCP Toolbox for Databases is open-source and can be ran or deployed to a
+MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release [compiled binaries and
 docker images][release-notes] (but you can always compile yourself as well!).
 
-For detailed instructions, check our these resources:
+For detailed instructions, check out these resources:
 
 - [Quickstart: How to Run Locally](../getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../how-to/deploy_toolbox.md)
@@ -10172,7 +10172,7 @@ Python client SDK
 <html>
   <head>
     <link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-python"/>
-    <meta http-equiv="refresh" content="0;url=hhttps://github.com/googleapis/mcp-toolbox-sdk-python"/>
+    <meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-python"/>
   </head>
 </html>
 

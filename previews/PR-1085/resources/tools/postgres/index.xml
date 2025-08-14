@@ -56,7 +56,7 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1085/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://www.postgresql.org/docs/current/sql-prepare.html">prepared statement&lt;/a>,
-and specified parameters will inserted according to their position: e.g. &lt;code>1&lt;/code>
-will be the first parameter specified, &lt;code>$@&lt;/code> will be the second parameter, and so
+and specified parameters will be inserted according to their position: e.g. &lt;code>$1&lt;/code>
+will be the first parameter specified, &lt;code>$2&lt;/code> will be the second parameter, and so
 on. If template parameters are included, they will be resolved before execution
 of the prepared statement.&lt;/p></description></item></channel></rss>
