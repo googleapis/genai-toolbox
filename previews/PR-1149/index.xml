@@ -2509,7 +2509,21 @@ saved Look.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>MCP Quickstart</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol
+that standardizes how applications provide context to LLMs. Check out this page
+on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1149/how-to/connect_via_mcp/">connect to Toolbox via MCP&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>This guide assumes you have already done the following:&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and instance&lt;/a> with a database and user.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB Studio&lt;/a>, &lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any other PostgreSQL client.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
 flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
