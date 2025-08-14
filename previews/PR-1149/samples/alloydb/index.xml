@@ -24,7 +24,7 @@
  &lt;div class="notebook-markdown">
  
  
- &lt;h2 id="set-up-alloydb">Set up AlloyDB&lt;/h2>
+ &lt;h2 id="step-1-set-up-database">Step 1: Set up Database&lt;/h2>
 &lt;h3 id="authenticate-to-google-cloud-within-colab">Authenticate to Google Cloud within Colab&lt;/h3>
 &lt;p>You need to authenticate as an IAM user so this notebook can access your Google Cloud Project. This access is necessary to use Google&amp;rsquo;s LLM models.&lt;/p>
  &lt;/div>
