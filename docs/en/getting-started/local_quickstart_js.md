@@ -297,7 +297,7 @@ from Toolbox.
 npm install langchain @langchain/google-genai
 {{< /tab >}}
 {{< tab header="GenkitJS" lang="bash" >}}
-npm install genkit @genkit-ai/vertexai
+npm install genkit @genkit-ai/googleai
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
