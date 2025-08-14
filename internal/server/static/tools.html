@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools View</title>
+    <link rel="stylesheet" href="/ui/css/style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div id="navbar-container" data-active-nav="/ui/tools"></div>
+
+    <aside class="second-nav">
+        <h4>My Tools</h4>
+        <div id="secondary-panel-content">
+            <p>Fetching tools...</p>
+        </div>
+    </aside>
+
+    <div id="main-content-container"></div>
+
+    <script type="module" src="/ui/js/tools.js"></script>
+    <script src="/ui/js/navbar.js"></script>
+    <script src="/ui/js/mainContent.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            const activeNav = navbarContainer.getAttribute('data-active-nav');
+            renderNavbar('navbar-container', activeNav);
+            renderMainContent('main-content-container', 'tool-display-area', getToolInstructions())
+        });
+    </script>
+</body>
+</html>
