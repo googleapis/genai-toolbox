@@ -144,7 +144,12 @@ func TestCassandra(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer session.Close()
-	defer session.Query(fmt.Sprintf("drop table %s", tableName)).Exec()
+	defer func() {
+		err := session.Query(fmt.Sprintf("drop table %s", tableName)).Exec()
+		if err != nil {
+			t.Logf("Failed to drop table %s: %v", tableName, err)
+		}
+	}()
 	sourceConfig := getCassandraVars()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
