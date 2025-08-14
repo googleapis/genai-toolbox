@@ -124,7 +124,7 @@ func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.OAuthAccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
 	pageSize, _ := paramsMap["pageSize"].(int32)

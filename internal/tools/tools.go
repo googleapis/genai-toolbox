@@ -63,8 +63,10 @@ type ToolConfig interface {
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 
+type OAuthAccessToken string
+
 type Tool interface {
-	Invoke(context.Context, ParamValues) (any, error)
+	Invoke(context.Context, ParamValues, OAuthAccessToken) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
