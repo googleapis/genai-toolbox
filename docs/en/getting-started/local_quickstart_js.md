@@ -683,7 +683,7 @@ async function runApplication() {
                                 functionResponse: { name: call.name, response: { result: functionResult } }
                             });
                         } catch (e) {
-                            console.error(`[ Error executing tool '${toolName}':]`, e);
+                            console.error(`Error executing tool '${toolName}':`, e);
                             toolResponses.push({
                                 functionResponse: { name: call.name, response: { error: e.message } }
                             });
