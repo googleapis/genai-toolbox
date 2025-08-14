@@ -9,7 +9,7 @@
 How to get started with Toolbox.
 - [Introduction](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/introduction/): An introduction to MCP Toolbox for Databases.
 - [Python Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/local_quickstart/): How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
-- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
+- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [JsGenai](https://github.com/googleapis/js-genai).
 - [Go Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/local_quickstart_go/): How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
 - [Quickstart (MCP)](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/mcp_quickstart/): How to get started running Toolbox locally with MCP Inspector.
 - [Configuration](https://googleapis.github.io/genai-toolbox/previews/PR-1037/getting-started/configure/): How to configure Toolbox's tools.yaml file.
@@ -31,9 +31,10 @@ List of guides detailing how to do different things with Toolbox.
   - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/cloud_sql_mssql_mcp/): Connect your IDE to Cloud SQL for SQL Server using Toolbox.
   - [Firestore using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/firestore_mcp/): Connect your IDE to Firestore using Toolbox.
   - [Looker using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/looker_mcp/): Connect your IDE to Looker using Toolbox.
-  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
+  - [MySQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
-- [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
+  - [SQL Server using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect-ide/mssql_mcp/): Connect your IDE to SQL Server using Toolbox.- [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
+- [Toolbox UI](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/toolbox-ui/): How to effectively use Toolbox UI.
 - [Deploy to Cloud Run](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_toolbox/): How to set up and configure Toolbox to run on Cloud Run.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
@@ -54,7 +55,6 @@ List of reference documentation for resources in Toolbox.
   - [couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
-  - [DuckDB](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/duckdb/): DuckDB is an in-process SQL OLAP database management system designed for analytical query processing.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/looker/): Looker is a business intelligence tool that also provides a semantic layer.
@@ -66,6 +66,7 @@ List of reference documentation for resources in Toolbox.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
+  - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
@@ -74,7 +75,6 @@ List of reference documentation for resources in Toolbox.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/dgraph/): Tools that work with Dgraph Sources.
-  - [DuckDB](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/duckdb/): Tools that work with DuckDB Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/firestore/): Tools that work with Firestore Sources.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/http/): Tools that work with HTTP Sources.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/looker/): Tools that work with Looker Sources.
@@ -86,6 +86,7 @@ List of reference documentation for resources in Toolbox.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/sqlite/): Tools that work with SQLite Sources.
+  - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/tidb/): Tools that work with TiDB Sources, such as TiDB Cloud and self-hosted TiDB.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/tools/valkey/): Tools that work with Valkey Sources.
 

@@ -6,7 +6,12 @@ Authenticated Parameters and Authorized invocation).&lt;/p>
 &lt;p>We recommend using the native SDKs over MCP clients to leverage these features.
 The native SDKs can be combined with MCP clients in many cases.&lt;/p>
 &lt;h3 id="protocol-versions">Protocol Versions&lt;/h3>
-&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>Deploy to Cloud Run</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_toolbox/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>Toolbox UI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/toolbox-ui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/toolbox-ui/</guid><description>&lt;p>Toolbox UI is a built-in web interface that allows users to visually inspect and test out configured resources such as tools and toolsets.&lt;/p>
+&lt;h2 id="launching-toolbox-ui">Launching Toolbox UI&lt;/h2>
+&lt;p>To launch Toolbox&amp;rsquo;s interactive UI, use the &lt;code>--ui&lt;/code> flag.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sh" data-lang="sh">&lt;span class="line">&lt;span class="cl">./toolbox --ui
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server, with the &lt;code>/ui&lt;/code> suffix. Once Toolbox
+is launched, the following INFO log with Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>Deploy to Cloud Run</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1037/how-to/deploy_toolbox/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install&lt;/a> the Google Cloud CLI.&lt;/p>
