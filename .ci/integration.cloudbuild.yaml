@@ -365,6 +365,23 @@ steps:
       - -c
       - |
         ./valkey.test -test.v
+  
+  - id: "yugabytedb"
+    name : golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "YUGABYTE_DATABASE=$_YUGABYTE_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["YUGABYTE_USER", "YUGABYTE_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        ./yugabytedb.test -test.v
     
 
 availableSecrets:
@@ -451,3 +468,6 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
+  _YUGABYTE_DATABASE: "yugabyte"
+  _YUGABYTE_PORT: "5433"
+  _YUGABYTEDB_LOADBALANCE: "false"
