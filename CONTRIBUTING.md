@@ -184,9 +184,9 @@ resources.
 * **Title:** All pull request title should follow the formatting of
   [Conventional 
   Commit](https://www.conventionalcommits.org/) guidelines: `<type>[optional
-  scope]: description`. For example, if you are fixing a typo on postgres
-  source, the title should be `fix(source/postgres): fix typo for in source
-  initialization`.
+  scope]: description`. For example, if you are adding a new field in postgres
+  source, the title should be `feat(source/postgres): add support for
+  "new-field" field in postgres source`.
   
   Here are some commonly used `type` in this GitHub repo.
 
@@ -204,8 +204,10 @@ resources.
   | style           | Update src code, with only formatting and whitespace updates (e.g. code formatter or linter changes). |
 
   Pull requests should always add scope whenever possible. The scope is
-  formatted as `<scope-type>/<scope-kind>`. For example, `sources/postgres`, or
-  `tools/mssql-sql`. Ideally, **each PR covers only one scope**, if this is
+  formatted as `<scope-type>/<scope-kind>` (e.g., `sources/postgres`, or
+  `tools/mssql-sql`).
+  
+  Ideally, **each PR covers only one scope**, if this is
   inevitable, multiple scopes can be seaparated with a comma (e.g.
   `sources/postgres,sources/alloydbpg`). If the PR covers multiple `scope-type`
   (such as adding a new database), you can disregard the `scope-type`, e.g.
