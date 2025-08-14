@@ -178,7 +178,44 @@ To run Toolbox from binary:
 > Toolbox enables dynamic reloading by default. To disable, use the
 > `--disable-reload` flag.
 
-#### Homebrew Users
+</details>
+
+<details>
+
+<summary>Container image</summary>
+
+To run the server after pulling the [container image](#installing-the-server):
+
+```sh
+export VERSION=0.11.0 # Use the version you pulled
+docker run -p 5000:5000 \
+-v $(pwd)/tools.yaml:/app/tools.yaml \
+us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
+--tools-file "/app/tools.yaml"
+```
+
+>[!NOTE]>The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps the container's port `5000` to your host's port `5000`.
+
+</details>
+
+<details>
+
+<summary>Source</summary>
+
+To run the server directly from source, navigate to the project root directory and run:
+
+```sh
+go run .
+```
+
+>[!NOTE]
+> This command runs the project from source, and is more suitable for development and testing. It does **not** compile a binary into your `$GOPATH`. If you want to compile a binary instead, refer the [Developer Documentation](./DEVELOPER.md#building-the-binary).
+
+</details>
+
+<details>
+
+<summary>Homebrew Users</summary>
 
 If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
 
@@ -186,12 +223,15 @@ If you installed Toolbox using Homebrew, the `toolbox` binary is available in yo
 toolbox --tools-file "tools.yaml"
 ```
 
+</details>
+
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
 
 For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
 section](https://googleapis.github.io/genai-toolbox/how-to/)
+
 
 ### Integrating your application
 
