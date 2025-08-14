@@ -304,7 +304,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -392,7 +392,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -480,7 +480,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -530,7 +530,7 @@ func TestLooker(t *testing.T) {
 						"type":        "string",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The visualization config for the query",
 						"name":                 "vis_config",
