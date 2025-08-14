@@ -122,6 +122,11 @@ func initBigQueryConnection(
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("error retrieving logger from context: %s", err)
+	}
+
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
@@ -146,6 +151,8 @@ func initBigQueryConnection(
 	}
 
 	clientCreator := newBigQueryClientCreator(ctx, project, location, userAgent)
+
+	logger.InfoContext(ctx, "Initialized BigQuery Connection with Application Default Credentials.")
 	return client, restService, clientCreator, nil
 }
 
@@ -156,6 +163,12 @@ func initBigQueryConnectionWithOAuthToken(
 	userAgent string,
 	tokenString tools.OAuthAccessToken,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	// Get logger.
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error retrieving logger from context: %s", err)
+	}
+
 	// Construct token source
 	token := &oauth2.Token{
 		AccessToken: string(tokenString),
@@ -174,7 +187,7 @@ func initBigQueryConnectionWithOAuthToken(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}
-
+	logger.DebugContext(ctx, "Initialized BigQuery Connection with client's OAuth token: %s.", tokenString)
 	return client, restService, nil
 }
 

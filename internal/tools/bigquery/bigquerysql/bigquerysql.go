@@ -230,7 +230,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	query.Parameters = highLevelParams
 	query.Location = t.Client.Location
 
-	dryRunJob, err := dryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	dryRunJob, err := dryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		// This is a fallback check in case the switch logic was bypassed.
 		return nil, fmt.Errorf("final query validation failed: %w", err)
