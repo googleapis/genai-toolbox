@@ -15,19 +15,10 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-114
 &lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>Toolbox: AlloyDB AI NL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
  
  
- &lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>
- &lt;/div>
- 
-
- 
- 
-
- 
- &lt;div class="notebook-markdown">
- 
- 
- &lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
+ &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>&lt;/p>
+&lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
 &lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p>
+
  &lt;/div>
  
 
