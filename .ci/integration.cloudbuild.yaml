@@ -584,15 +584,15 @@ availableSecrets:
       env: REDIS_PASS
     - versionName: projects/$PROJECT_ID/secrets/memorystore_valkey_address/versions/latest
       env: VALKEY_ADDRESS
-    - versionName: projects/107716898620/secrets/looker_base_url/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/looker_base_url/versions/latest
       env: LOOKER_BASE_URL
-    - versionName: projects/107716898620/secrets/looker_client_id/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/looker_client_id/versions/latest
       env: LOOKER_CLIENT_ID
-    - versionName: projects/107716898620/secrets/looker_client_secret/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/looker_client_secret/versions/latest
       env: LOOKER_CLIENT_SECRET
-    - versionName: projects/107716898620/secrets/tidb_user/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/tidb_user/versions/latest
       env: TIDB_USER
-    - versionName: projects/107716898620/secrets/tidb_pass/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
 
 options:
