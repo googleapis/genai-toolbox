@@ -745,6 +745,24 @@ tools:
 
           The result is a list of objects that are candidates for deletion.
 
+    get_projects:
+        kind: looker-get-projects
+        source: looker-source
+        description: |
+          get_projects Tool
+
+          This tool returns the project_id and projecrt_name for
+          all the LookML projects on the looker instance.
+
+    get_project_filess:
+        kind: looker-get-project-files
+        source: looker-source
+        description: |
+          get_project_filess Tool
+
+          Given a project_id this tool returns the details about
+          the LookML files that make up that project.
+
 toolsets:
     looker_tools:
         - get_models
@@ -765,3 +783,5 @@ toolsets:
         - health_pulse
         - health_analyze
         - health_vacuum
+        - get_projects
+        - get_project_files

@@ -110,6 +110,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthpulse"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojectfiles"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojects"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"

@@ -164,6 +164,16 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Vacuums unused content from a Looker instance.",
 			},
+			"get_projects": map[string]any{
+				"kind":        "looker-get-projects",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_project_files": map[string]any{
+				"kind":        "looker-get-project-files",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -651,6 +661,32 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "get_projects",
+		map[string]any{
+			"get_projects": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_project_files",
+		map[string]any{
+			"get_explores": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 
 	tests.RunToolGetTestByName(t, "conversational_analytics",
 		map[string]any{
@@ -859,6 +895,12 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
+
+	wantResult = "the_look"
+	tests.RunToolInvokeSimpleTest(t, "get_projects", wantResult)
+
+	wantResult = "order_items.view"
+	tests.RunToolInvokeParametersTest(t, "get_project_files", []byte(`{"project_id": "the_look"}`), wantResult)
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
