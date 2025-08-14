@@ -125,7 +125,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
 		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 

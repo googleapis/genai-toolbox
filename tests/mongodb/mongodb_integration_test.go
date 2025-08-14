@@ -109,7 +109,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	nullString := "null"
 
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullString, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunMCPToolCallMethod(t, select1Want, mcpInvokeParamWant, failInvocationWant)
 
 	delete1Want := "1"
 	deleteManyWant := "2"
