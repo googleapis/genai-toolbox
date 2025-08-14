@@ -42,7 +42,7 @@ tools:
       LIMIT 10
     description: |
       Use this tool to get a list of movies for a specific actor and a given minimum release year.
-      Takes an full actor name, e.g. "Tom Hanks" and a year e.g 1993 and returns a list of movie titles and release years.
+      Takes a full actor name, e.g. "Tom Hanks" and a year e.g 1993 and returns a list of movie titles and release years.
       Do NOT use this tool with a movie title. Do NOT guess an actor name, Do NOT guess a year.
       A actor name is a fully qualified name with first and last name separated by a space.
       For example, if given "Hanks, Tom" the actor name is "Tom Hanks".
