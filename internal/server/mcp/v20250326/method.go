@@ -145,7 +145,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
 		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
@@ -160,6 +160,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: %w", tools.ErrUnauthorized)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
+
+    // Get access token
+    accessToken := tools.AccessToken(header.Get("Authorization"))
 
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, params, accessToken)
