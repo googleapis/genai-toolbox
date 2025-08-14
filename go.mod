@@ -14,7 +14,7 @@ require (
 	cloud.google.com/go/spanner v1.84.1
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
-	github.com/cenkalti/backoff/v5 v5.0.2
+	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/couchbase/gocb/v2 v2.10.1
 	github.com/couchbase/tools-common/http v1.0.9
 	github.com/fsnotify/fsnotify v1.9.0
