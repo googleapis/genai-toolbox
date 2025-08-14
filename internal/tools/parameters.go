@@ -419,7 +419,7 @@ type ParameterManifest struct {
 	Description          string             `json:"description"`
 	AuthServices         []string           `json:"authSources"`
 	Items                *ParameterManifest `json:"items,omitempty"`
-	AdditionalProperties any                `json:"AdditionalProperties,omitempty"`
+	AdditionalProperties any                `json:"additionalProperties,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
@@ -427,7 +427,7 @@ type ParameterMcpManifest struct {
 	Type                 string                `json:"type"`
 	Description          string                `json:"description"`
 	Items                *ParameterMcpManifest `json:"items,omitempty"`
-	AdditionalProperties any                   `json:"AdditionalProperties,omitempty"`
+	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
@@ -1211,12 +1211,12 @@ func (p *MapParameter) Manifest() ParameterManifest {
 
 	var additionalProperties any
 	if p.ValueType != "" {
-		prototype, err := getPrototypeParameter(p.ValueType)
+		_, err := getPrototypeParameter(p.ValueType)
 		if err != nil {
 			panic(err)
 		}
-		valueSchema := prototype.Manifest()
-		additionalProperties = &valueSchema
+		valueSchema := map[string]any{"type": p.ValueType}
+		additionalProperties = valueSchema
 	} else {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
@@ -1236,12 +1236,12 @@ func (p *MapParameter) Manifest() ParameterManifest {
 func (p *MapParameter) McpManifest() ParameterMcpManifest {
 	var additionalProperties any
 	if p.ValueType != "" {
-		prototype, err := getPrototypeParameter(p.ValueType)
+		_, err := getPrototypeParameter(p.ValueType)
 		if err != nil {
 			panic(err)
 		}
-		valueSchema := prototype.McpManifest()
-		additionalProperties = &valueSchema
+		valueSchema := map[string]any{"type": p.ValueType}
+		additionalProperties = valueSchema
 	} else {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
