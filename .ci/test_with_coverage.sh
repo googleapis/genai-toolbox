@@ -2,8 +2,10 @@
 
 # Arguments:
 # $1: Display name for logs (e.g., "Cloud SQL Postgres")
-# $2: Source package name (e.g., cloudsqlpg)
-# $3, $4, ...: Tool package names for grep (e.g., postgressql)
+# $2: Integration test's package name (e.g., cloudsqlpg)
+# $3, $4, ...: Tool package names for grep (e.g., postgressql), if the
+# integration test specifically check a separate package inside a folder, please
+# specify the full path instead (e.g., postgressql/postgresexecutesql)
 
 DISPLAY_NAME="$1"
 SOURCE_PACKAGE_NAME="$2"

@@ -2,7 +2,7 @@
 title: "firestore-get-rules"
 type: docs
 weight: 1
-description: > 
+description: >
   A "firestore-get-rules" tool retrieves the active Firestore security rules for the current project.
 aliases:
 - /resources/tools/firestore-get-rules
@@ -10,13 +10,15 @@ aliases:
 
 ## About
 
-A `firestore-get-rules` tool retrieves the active [Firestore security rules](https://firebase.google.com/docs/firestore/security/get-started) for the current project.
+A `firestore-get-rules` tool retrieves the active [Firestore security
+rules](https://firebase.google.com/docs/firestore/security/get-started) for the
+current project.
 It's compatible with the following sources:
 
-- [firestore](../sources/firestore.md)
+- [firestore](../../sources/firestore.md)
 
-`firestore-get-rules` takes no input parameters and returns the security rules content along with metadata 
-such as the ruleset name, and timestamps.
+`firestore-get-rules` takes no input parameters and returns the security rules
+content along with metadata such as the ruleset name, and timestamps.
 
 ## Example
 
@@ -30,8 +32,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "firestore-get-rules".                                                                  |
-| source      |                   string                   |     true     | Name of the Firestore source to retrieve rules from.                                            |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
+| **field**   |    **type**   | **required** | **description**                                       |
+|-------------|:-------------:|:------------:|-------------------------------------------------------|
+| kind        |     string    |     true     | Must be "firestore-get-rules".                        |
+| source      |     string    |     true     | Name of the Firestore source to retrieve rules from.  |
+| description |     string    |     true     | Description of the tool that is passed to the LLM.    |

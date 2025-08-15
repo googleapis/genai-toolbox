@@ -11,7 +11,7 @@ sources:
 tools:
     execute_sql:
         kind: mssql-execute-sql
-        source: cloud-sql-mssql-source
+        source: cloudsql-mssql-source
         description: Use this tool to execute SQL.
 
     list_tables:
@@ -183,79 +183,84 @@ tools:
             SELECT
                 ti.schema_name,
                 ti.table_name AS object_name,
-                (
-                    SELECT
-                        ti.schema_name AS schema_name,
-                        ti.table_name AS object_name,
-                        ti.object_type_detail AS object_type,
-                        ti.table_owner AS owner,
-                        ti.table_comment AS comment,
-                        JSON_QUERY(ISNULL((
+                CASE
+                    WHEN @output_format = 'simple' THEN
+                        (SELECT ti.table_name AS name FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+                    ELSE
+                        (
                             SELECT
-                                ci.column_name,
-                                ci.data_type,
-                                ci.column_ordinal_position,
-                                ci.is_not_nullable,
-                                ci.column_default,
-                                ci.column_comment
-                            FROM columns_info ci
-                            WHERE ci.table_oid = ti.table_oid
-                            ORDER BY ci.column_ordinal_position
-                            FOR JSON PATH
-                        ), '[]')) AS columns,
-                        JSON_QUERY(ISNULL((
-                            SELECT
-                                cons.constraint_name,
-                                cons.constraint_type,
-                                cons.constraint_definition,
-                                JSON_QUERY(
-                                    CASE
-                                        WHEN cons.constraint_columns IS NOT NULL AND LTRIM(RTRIM(cons.constraint_columns)) <> ''
-                                        THEN '[' + (SELECT STRING_AGG('"' + LTRIM(RTRIM(value)) + '"', ',') FROM STRING_SPLIT(cons.constraint_columns, ',')) + ']'
-                                        ELSE '[]'
-                                    END
-                                ) AS constraint_columns,
-                                cons.foreign_key_referenced_table,
-                                JSON_QUERY(
-                                    CASE
-                                        WHEN cons.foreign_key_referenced_columns IS NOT NULL AND LTRIM(RTRIM(cons.foreign_key_referenced_columns)) <> ''
-                                        THEN '[' + (SELECT STRING_AGG('"' + LTRIM(RTRIM(value)) + '"', ',') FROM STRING_SPLIT(cons.foreign_key_referenced_columns, ',')) + ']'
-                                        ELSE '[]'
-                                    END
-                                ) AS foreign_key_referenced_columns
-                            FROM constraints_info cons
-                            WHERE cons.table_oid = ti.table_oid
-                            FOR JSON PATH
-                        ), '[]')) AS constraints,
-                        JSON_QUERY(ISNULL((
-                            SELECT
-                                ii.index_name,
-                                ii.index_definition_details AS index_definition,
-                                ii.is_unique,
-                                ii.is_primary,
-                                ii.index_method,
-                                JSON_QUERY(
-                                    CASE
-                                        WHEN ii.index_columns IS NOT NULL AND LTRIM(RTRIM(ii.index_columns)) <> ''
-                                        THEN '[' + (SELECT STRING_AGG('"' + LTRIM(RTRIM(value)) + '"', ',') FROM STRING_SPLIT(ii.index_columns, ',')) + ']'
-                                        ELSE '[]'
-                                    END
-                                ) AS index_columns
-                            FROM indexes_info ii
-                            WHERE ii.table_oid = ti.table_oid
-                            FOR JSON PATH
-                        ), '[]')) AS indexes,
-                        JSON_QUERY(ISNULL((
-                            SELECT
-                                tri.trigger_name,
-                                tri.trigger_definition,
-                                tri.trigger_enabled_state
-                            FROM triggers_info tri
-                            WHERE tri.table_oid = ti.table_oid
-                            FOR JSON PATH
-                        ), '[]')) AS triggers
-                    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER -- Creates a single JSON object for this table's details
-                ) AS object_details
+                                ti.schema_name AS schema_name,
+                                ti.table_name AS object_name,
+                                ti.object_type_detail AS object_type,
+                                ti.table_owner AS owner,
+                                ti.table_comment AS comment,
+                                JSON_QUERY(ISNULL((
+                                    SELECT
+                                        ci.column_name,
+                                        ci.data_type,
+                                        ci.column_ordinal_position,
+                                        ci.is_not_nullable,
+                                        ci.column_default,
+                                        ci.column_comment
+                                    FROM columns_info ci
+                                    WHERE ci.table_oid = ti.table_oid
+                                    ORDER BY ci.column_ordinal_position
+                                    FOR JSON PATH
+                                ), '[]')) AS columns,
+                                JSON_QUERY(ISNULL((
+                                    SELECT
+                                        cons.constraint_name,
+                                        cons.constraint_type,
+                                        cons.constraint_definition,
+                                        JSON_QUERY(
+                                            CASE
+                                                WHEN cons.constraint_columns IS NOT NULL AND LTRIM(RTRIM(cons.constraint_columns)) <> ''
+                                                THEN '[' + (SELECT STRING_AGG('"' + LTRIM(RTRIM(value)) + '"', ',') FROM STRING_SPLIT(cons.constraint_columns, ',')) + ']'
+                                                ELSE '[]'
+                                            END
+                                        ) AS constraint_columns,
+                                        cons.foreign_key_referenced_table,
+                                        JSON_QUERY(
+                                            CASE
+                                                WHEN cons.foreign_key_referenced_columns IS NOT NULL AND LTRIM(RTRIM(cons.foreign_key_referenced_columns)) <> ''
+                                                THEN '[' + (SELECT STRING_AGG('"' + LTRIM(RTRIM(value)) + '"', ',') FROM STRING_SPLIT(cons.foreign_key_referenced_columns, ',')) + ']'
+                                                ELSE '[]'
+                                            END
+                                        ) AS foreign_key_referenced_columns
+                                    FROM constraints_info cons
+                                    WHERE cons.table_oid = ti.table_oid
+                                    FOR JSON PATH
+                                ), '[]')) AS constraints,
+                                JSON_QUERY(ISNULL((
+                                    SELECT
+                                        ii.index_name,
+                                        ii.index_definition_details AS index_definition,
+                                        ii.is_unique,
+                                        ii.is_primary,
+                                        ii.index_method,
+                                        JSON_QUERY(
+                                            CASE
+                                                WHEN ii.index_columns IS NOT NULL AND LTRIM(RTRIM(ii.index_columns)) <> ''
+                                                THEN '[' + (SELECT STRING_AGG('"' + LTRIM(RTRIM(value)) + '"', ',') FROM STRING_SPLIT(ii.index_columns, ',')) + ']'
+                                                ELSE '[]'
+                                            END
+                                        ) AS index_columns
+                                    FROM indexes_info ii
+                                    WHERE ii.table_oid = ti.table_oid
+                                    FOR JSON PATH
+                                ), '[]')) AS indexes,
+                                JSON_QUERY(ISNULL((
+                                    SELECT
+                                        tri.trigger_name,
+                                        tri.trigger_definition,
+                                        tri.trigger_enabled_state
+                                    FROM triggers_info tri
+                                    WHERE tri.table_oid = ti.table_oid
+                                    FOR JSON PATH
+                                ), '[]')) AS triggers
+                            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER -- Creates a single JSON object for this table's details
+                        )
+                END AS object_details
             FROM
                 table_info ti
             ORDER BY
@@ -264,6 +269,10 @@ tools:
             - name: table_names
               type: string
               description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+            - name: output_format
+              type: string
+              description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
+              default: "detailed"
 
 toolsets:
     cloud-sql-mssql-database-tools:

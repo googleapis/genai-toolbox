@@ -79,7 +79,7 @@ database are in the same VPC network.
 
 Create a `tools.yaml` file that contains your configuration for Toolbox. For
 details, see the
-[configuration](https://googleapis.github.io/genai-toolbox/resources/sources/)
+[configuration](../resources/sources/)
 section.
 
 ## Deploy to Cloud Run
@@ -125,7 +125,7 @@ section.
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
-        # TODO(dev): update the following to match your VPC if necessary 
+        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
@@ -141,7 +141,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. (Only for local runs) Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
-   for the principle you set up the `Cloud Run Invoker` role access to.
+   for the principal you set up the `Cloud Run Invoker` role access to.
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
@@ -151,18 +151,49 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. Import and initialize the toolbox client with the URL retrieved above:
 
-    ```python
-    from toolbox_core import ToolboxClient, auth_methods
+    {{< tabpane persist=header >}}
+{{< tab header="Python" lang="python" >}}
+from toolbox_core import ToolboxClient, auth_methods
 
-    # Replace with the Cloud Run service URL generated in the previous step.
-    URL = "https://cloud-run-url.app"
+# Replace with the Cloud Run service URL generated in the previous step.
+URL = "https://cloud-run-url.app"
 
-    auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
+auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
-    async with ToolboxClient(
+async with ToolboxClient(
+    URL,
+    client_headers={"Authorization": auth_token_provider},
+) as toolbox:
+{{< /tab >}}
+{{< tab header="Javascript" lang="javascript" >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
+
+// Replace with the Cloud Run service URL generated in the previous step.
+const URL = 'http://127.0.0.1:5000';
+const authTokenProvider = () => getGoogleIdToken(URL);
+
+const client = new ToolboxClient(URL, null, {"Authorization": authTokenProvider});
+{{< /tab >}}
+{{< tab header="Go" lang="go" >}}
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+func main() {
+    // Replace with the Cloud Run service URL generated in the previous step.
+    URL := "http://127.0.0.1:5000"
+    auth_token_provider, err := core.GetGoogleIDToken(ctx, URL)
+    if err != nil {
+        log.Fatalf("Failed to fetch token %v", err)
+    }
+    toolboxClient, err := core.NewToolboxClient(
         URL,
-        client_headers={"Authorization": auth_token_provider},
-    ) as toolbox:
-    ```
+        core.WithClientHeaderString("Authorization", auth_token_provider))
+    if err != nil {
+        log.Fatalf("Failed to create Toolbox client: %v", err)
+    }
+}
+{{< /tab >}}
+{{< /tabpane >}}
+
 
 Now, you can use this client to connect to the deployed Cloud Run instance!

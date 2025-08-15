@@ -20,6 +20,20 @@ to a database by following these instructions][csql-pg-quickstart].
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
 [csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
+## Available Tools
+
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+  Execute SQL queries as prepared statements in PostgreSQL.
+
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+  Run parameterized SQL statements in PostgreSQL.
+
+### Pre-built Configurations
+
+- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)  
+Connect your IDE to Cloud SQL for Postgres using Toolbox.
+
+
 ## Requirements
 
 ### IAM Permissions

@@ -15,6 +15,19 @@ reputation for reliability, feature robustness, and performance.
 
 [pg-docs]: https://www.postgresql.org/
 
+## Available Tools
+
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+  Execute SQL queries as prepared statements in PostgreSQL.
+
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+  Run parameterized SQL statements in PostgreSQL.
+
+### Pre-built Configurations
+
+- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
+Connect your IDE to PostgreSQL using Toolbox.
+
 ## Requirements
 
 ### Database User
@@ -44,11 +57,12 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "postgres".                                                    |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
-| port      |  string  |     true     | Port to connect to (e.g. "5432")                                       |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
-| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
-| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
+|  **field**  |      **type**      | **required** | **description**                                                        |
+|-------------|:------------------:|:------------:|------------------------------------------------------------------------|
+| kind        |       string       |     true     | Must be "postgres".                                                    |
+| host        |       string       |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
+| port        |       string       |     true     | Port to connect to (e.g. "5432")                                       |
+| database    |       string       |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
+| user        |       string       |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
+| password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
+| queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |

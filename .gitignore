@@ -4,6 +4,9 @@
 # vscode
 .vscode/
 
+# idea
+.idea/
+
 # npm
 node_modules
 
@@ -14,4 +17,7 @@ node_modules
 
 # coverage
 .coverage
+
+# executable
 genai-toolbox
+toolbox

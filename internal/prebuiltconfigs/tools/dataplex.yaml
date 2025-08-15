@@ -1,0 +1,24 @@
+sources:
+  dataplex-source:
+    kind: "dataplex"
+    project: ${DATAPLEX_PROJECT}
+
+tools:
+  dataplex_search_entries:
+    kind: dataplex-search-entries
+    source: dataplex-source
+    description: Use this tool to search for entries in Dataplex Catalog based on the provided search query.
+  dataplex_lookup_entry:
+    kind: dataplex-lookup-entry
+    source: dataplex-source
+    description: Use this tool to retrieve a specific entry from Dataplex Catalog.
+  dataplex_search_aspect_types:
+    kind: dataplex-search-aspect-types
+    source: dataplex-source
+    description: Use this tool to find aspect types relevant to the query.
+
+toolsets:
+  dataplex-tools:
+    - dataplex_search_entries
+    - dataplex_lookup_entry
+    - dataplex_search_aspect_types

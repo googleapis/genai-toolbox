@@ -22,6 +22,11 @@ SQLite has the following notable characteristics:
 - Zero-configuration - no setup or administration needed
 - Transactional with ACID properties
 
+## Available Tools
+
+- [`sqlite-sql`](../tools/sqlite/sqlite-sql.md)  
+  Run SQL queries against a local SQLite database.
+
 ## Requirements
 
 ### Database File
@@ -56,7 +61,7 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "spanner".                                                                                                  |
+| kind      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
 
 ### Connection Properties

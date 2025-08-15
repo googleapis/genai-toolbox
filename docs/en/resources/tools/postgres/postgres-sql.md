@@ -2,7 +2,7 @@
 title: "postgres-sql"
 type: docs
 weight: 1
-description: > 
+description: >
   A "postgres-sql" tool executes a pre-defined SQL statement against a Postgres
   database.
 aliases:
@@ -14,13 +14,13 @@ aliases:
 A `postgres-sql` tool executes a pre-defined SQL statement against a Postgres
 database. It's compatible with any of the following sources:
 
-- [alloydb-postgres](../sources/alloydb-pg.md)
-- [cloud-sql-postgres](../sources/cloud-sql-pg.md)
-- [postgres](../sources/postgres.md)
+- [alloydb-postgres](../../sources/alloydb-pg.md)
+- [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
+- [postgres](../../sources/postgres.md)
 
 The specified SQL statement is executed as a [prepared statement][pg-prepare],
-and specified parameters will inserted according to their position: e.g. `1`
-will be the first parameter specified, `$@` will be the second parameter, and so
+and specified parameters will be inserted according to their position: e.g. `$1`
+will be the first parameter specified, `$2` will be the second parameter, and so
 on. If template parameters are included, they will be resolved before execution
 of the prepared statement.
 
@@ -77,7 +77,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](..#template-parameters).
 
 ```yaml
 tools:
@@ -106,5 +106,5 @@ tools:
 | source              |                   string                                  |     true     | Name of the source the SQL should execute on.                                                                                              |
 | description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
-| parameters          | [parameters](_index#specifying-parameters)                |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters  |  [templateParameters](_index#template-parameters)         |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| parameters          | [parameters](../#specifying-parameters)                |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters  |  [templateParameters](..#template-parameters)         |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
