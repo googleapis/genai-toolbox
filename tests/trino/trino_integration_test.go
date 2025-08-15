@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	_ "github.com/trinodb/trino-go-client/trino" // Import Trino SQL driver
 )
 
 var (
