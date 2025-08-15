@@ -159,15 +159,14 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	}
 
 	result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
-
 	if err != nil {
 		return nil, fmt.Errorf("error populating project payload: %s", err)
 	}
 
 	var projection any
-	err = bson.Unmarshal([]byte(result), &projection)
+	err = json.Unmarshal([]byte(result), &projection)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
+		return nil, fmt.Errorf("error unmarshaling projection: %s", err)
 	}
 	opts = opts.SetProjection(projection)
 
