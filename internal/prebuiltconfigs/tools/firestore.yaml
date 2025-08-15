@@ -9,6 +9,10 @@ tools:
     kind: firestore-get-documents
     source: firestore-source
     description: Gets multiple documents from Firestore by their paths
+  firestore-add-documents:
+    kind: firestore-add-documents
+    source: firestore-source
+    description: Adds a new document to a Firestore collection
   firestore-list-collections:
     kind: firestore-list-collections
     source: firestore-source
@@ -35,6 +39,7 @@ tools:
 toolsets:
   firestore-database-tools:
     - firestore-get-documents
+    - firestore-add-documents
     - firestore-list-collections
     - firestore-delete-documents
     - firestore-query-collection
