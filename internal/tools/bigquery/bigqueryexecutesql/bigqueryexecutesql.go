@@ -90,8 +90,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		sqlParamDescription = "The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; " +
 			"other statement types will fail."
 	case bigqueryds.WriteModeProtected:
-		sqlParamDescription = fmt.Sprintf("The SQL to execute. In 'protected' mode, only SELECT statements and writes to "+
-			"the session's temporary dataset (ID: %s) are allowed (e.g., `CREATE TEMP TABLE ...`).", s.BigQuerySession().DatasetID)
+		sqlParamDescription = fmt.Sprintf("The SQL to execute. Only SELECT statements and writes to the session's"+
+			" temporary dataset (ID: %s) are allowed (e.g., `CREATE TEMP TABLE ...`).", s.BigQuerySession().DatasetID)
 	default: // WriteModeAllowed
 		sqlParamDescription = "The SQL to execute."
 	}
@@ -169,12 +169,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
 
+	if dryRunJob.Status != nil && dryRunJob.Status.ErrorResult != nil {
+		return nil, fmt.Errorf("query validation failed: %s", dryRunJob.Status.ErrorResult.Message)
+	}
+
 	if dryRunJob.Statistics == nil || dryRunJob.Statistics.Query == nil {
-		// This can happen for queries that are syntactically valid but have semantic errors that are caught early.
-		return nil, fmt.Errorf("could not retrieve query statistics from dry run, the query may have semantic errors")
+		return nil, fmt.Errorf("query validation failed: unable to retrieve statistics from the dry run job")
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
+	if statementType == "" {
+		// This can happen for queries that are syntactically valid but have semantic errors that are caught early.
+		return nil, fmt.Errorf("query validation failed: unable to infer the statement type from the dry run job")
+	}
 
 	switch t.WriteMode {
 	case bigqueryds.WriteModeBlocked:
