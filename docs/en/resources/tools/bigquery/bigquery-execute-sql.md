@@ -25,7 +25,7 @@ The behavior of this tool is influenced by the `write_mode` setting on its `bigq
 
 - **`allowed` (default):** All SQL statements are permitted.
 - **`blocked`:** Only `SELECT` statements are allowed. Any other type of statement (e.g., `INSERT`, `UPDATE`, `CREATE`) will be rejected.
-- **`protected`:** This mode enables session-based execution. Only `SELECT` statements or write operations targeting the session's temporary dataset (e.g., `CREATE TEMP TABLE ...`) are allowed. This prevents modifications to permanent datasets while allowing stateful, multi-step operations within a secure session.
+- **`protected`:** This mode enables session-based execution. `SELECT` statements and writes to the session's temporary dataset are allowed (e.g., `CREATE TEMP TABLE ...`). This prevents modifications to permanent datasets while allowing stateful, multi-step operations within a secure session.
 
 > **Note:** This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents.
 
