@@ -101,6 +101,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinoexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
@@ -128,6 +130,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/trino"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
