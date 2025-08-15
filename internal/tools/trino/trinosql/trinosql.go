@@ -42,7 +42,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Database() *sql.DB
+	TrinoDB() *sql.DB
 }
 
 // validate compatible sources are still compatible
@@ -81,7 +81,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	allParameters, paramManifest, paramMcpManifest, err := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	if err != nil {
+		return nil, fmt.Errorf("unable to process parameters: %w", err)
+	}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -98,7 +101,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AllParams:          allParameters,
 		Statement:          cfg.Statement,
 		AuthRequired:       cfg.AuthRequired,
-		Pool:               s.Database(),
+		Db:                 s.TrinoDB(),
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 	}
@@ -117,13 +120,23 @@ type Tool struct {
 	AllParams          tools.Parameters `yaml:"allParams"`
 
 	Statement   string
-	Pool        *sql.DB
+	Db          *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	results, err := t.Pool.QueryContext(ctx, t.Statement, params.AsSlice()...)
+	paramsMap := params.AsMap()
+	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract template params %w", err)
+	}
+	newParams, err := tools.GetParams(t.Parameters, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	sliceParams := newParams.AsSlice()
+	results, err := t.Db.QueryContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

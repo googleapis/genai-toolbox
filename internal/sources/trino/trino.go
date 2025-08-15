@@ -21,9 +21,9 @@ import (
 	"net/url"
 	"time"
 
-	_ "github.com/trinodb/trino-go-client/trino"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	_ "github.com/trinodb/trino-go-client/trino"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -96,7 +96,7 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) Database() *sql.DB {
+func (s *Source) TrinoDB() *sql.DB {
 	return s.Pool
 }
 
@@ -125,44 +125,36 @@ func initTrinoConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 }
 
 func buildTrinoDSN(host, port, user, password, catalog, schema, queryTimeout, accessToken string, kerberosEnabled, sslEnabled bool) (string, error) {
-	// Base URL scheme
+	// Build query parameters
+	query := url.Values{}
+	query.Set("catalog", catalog)
+	query.Set("schema", schema)
+	if queryTimeout != "" {
+		query.Set("queryTimeout", queryTimeout)
+	}
+	if accessToken != "" {
+		query.Set("accessToken", accessToken)
+	}
+	if kerberosEnabled {
+		query.Set("KerberosEnabled", "true")
+	}
+
+	// Build URL
 	scheme := "http"
 	if sslEnabled {
 		scheme = "https"
 	}
 
-	// Build base URL
-	baseURL := fmt.Sprintf("%s://%s@%s:%s", scheme, user, host, port)
-
-	// Parse URL to add query parameters
-	u, err := url.Parse(baseURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse base URL: %w", err)
-	}
-
-	// Add query parameters
-	params := u.Query()
-	params.Set("catalog", catalog)
-	params.Set("schema", schema)
-
-	// Add optional parameters
-	if queryTimeout != "" {
-		params.Set("queryTimeout", queryTimeout)
-	}
-
-	if accessToken != "" {
-		params.Set("accessToken", accessToken)
-	}
-
-	if kerberosEnabled {
-		params.Set("KerberosEnabled", "true")
+	u := &url.URL{
+		Scheme:   scheme,
+		User:     url.User(user),
+		Host:     fmt.Sprintf("%s:%s", host, port),
+		RawQuery: query.Encode(),
 	}
 
 	if password != "" {
 		// For basic auth, set password in userinfo
 		u.User = url.UserPassword(user, password)
 	}
-
-	u.RawQuery = params.Encode()
 	return u.String(), nil
 }

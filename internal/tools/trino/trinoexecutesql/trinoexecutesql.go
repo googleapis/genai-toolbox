@@ -42,7 +42,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Database() *sql.DB
+	TrinoDB() *sql.DB
 }
 
 // validate compatible sources are still compatible
@@ -93,7 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Pool:         s.Database(),
+		Db:           s.TrinoDB(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -109,7 +109,7 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Pool        *sql.DB
+	Db          *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -121,7 +121,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("unable to cast sql parameter: %v", sliceParams[0])
 	}
 
-	results, err := t.Pool.QueryContext(ctx, sql)
+	results, err := t.Db.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

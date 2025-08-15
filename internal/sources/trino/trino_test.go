@@ -17,7 +17,10 @@ package trino
 import (
 	"testing"
 
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
 func TestBuildTrinoDSN(t *testing.T) {
@@ -37,14 +40,14 @@ func TestBuildTrinoDSN(t *testing.T) {
 		wantErr         bool
 	}{
 		{
-			name:     "basic configuration",
-			host:     "localhost",
-			port:     "8080",
-			user:     "testuser",
-			catalog:  "hive",
-			schema:   "default",
-			want:     "http://testuser@localhost:8080?catalog=hive&schema=default",
-			wantErr:  false,
+			name:    "basic configuration",
+			host:    "localhost",
+			port:    "8080",
+			user:    "testuser",
+			catalog: "hive",
+			schema:  "default",
+			want:    "http://testuser@localhost:8080?catalog=hive&schema=default",
+			wantErr: false,
 		},
 		{
 			name:     "with password",
@@ -58,26 +61,26 @@ func TestBuildTrinoDSN(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:         "with SSL",
-			host:         "localhost",
-			port:         "8443",
-			user:         "testuser",
-			catalog:      "hive",
-			schema:       "default",
-			sslEnabled:   true,
-			want:         "https://testuser@localhost:8443?catalog=hive&schema=default",
-			wantErr:      false,
+			name:       "with SSL",
+			host:       "localhost",
+			port:       "8443",
+			user:       "testuser",
+			catalog:    "hive",
+			schema:     "default",
+			sslEnabled: true,
+			want:       "https://testuser@localhost:8443?catalog=hive&schema=default",
+			wantErr:    false,
 		},
 		{
-			name:            "with access token",
-			host:            "localhost",
-			port:            "8080",
-			user:            "testuser",
-			catalog:         "hive",
-			schema:          "default",
-			accessToken:     "jwt-token-here",
-			want:            "http://testuser@localhost:8080?accessToken=jwt-token-here&catalog=hive&schema=default",
-			wantErr:         false,
+			name:        "with access token",
+			host:        "localhost",
+			port:        "8080",
+			user:        "testuser",
+			catalog:     "hive",
+			schema:      "default",
+			accessToken: "jwt-token-here",
+			want:        "http://testuser@localhost:8080?accessToken=jwt-token-here&catalog=hive&schema=default",
+			wantErr:     false,
 		},
 		{
 			name:            "with kerberos",
@@ -112,6 +115,88 @@ func TestBuildTrinoDSN(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("buildTrinoDSN() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestParseFromYamlTrino(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want server.SourceConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			sources:
+				my-trino-instance:
+					kind: trino
+					host: localhost
+					port: "8080"
+					user: testuser
+					catalog: hive
+					schema: default
+			`,
+			want: server.SourceConfigs{
+				"my-trino-instance": Config{
+					Name:    "my-trino-instance",
+					Kind:    SourceKind,
+					Host:    "localhost",
+					Port:    "8080",
+					User:    "testuser",
+					Catalog: "hive",
+					Schema:  "default",
+				},
+			},
+		},
+		{
+			desc: "example with optional fields",
+			in: `
+			sources:
+				my-trino-instance:
+					kind: trino
+					host: localhost
+					port: "8443"
+					user: testuser
+					password: testpass
+					catalog: hive
+					schema: default
+					queryTimeout: "30m"
+					accessToken: "jwt-token-here"
+					kerberosEnabled: true
+					sslEnabled: true
+			`,
+			want: server.SourceConfigs{
+				"my-trino-instance": Config{
+					Name:            "my-trino-instance",
+					Kind:            SourceKind,
+					Host:            "localhost",
+					Port:            "8443",
+					User:            "testuser",
+					Password:        "testpass",
+					Catalog:         "hive",
+					Schema:          "default",
+					QueryTimeout:    "30m",
+					AccessToken:     "jwt-token-here",
+					KerberosEnabled: true,
+					SSLEnabled:      true,
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(tc.want, got.Sources) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
 			}
 		})
 	}

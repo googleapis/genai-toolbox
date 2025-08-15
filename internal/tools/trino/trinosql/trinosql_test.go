@@ -12,60 +12,172 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trinosql
+package trinosql_test
 
 import (
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
 )
 
-func TestToolName(t *testing.T) {
-	tool := Tool{
-		Name: "test-trino-sql-tool",
+func TestParseFromYamlTrino(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	got := tool.Name
-	want := "test-trino-sql-tool"
-
-	if got != want {
-		t.Errorf("Tool.Name = %v, want %v", got, want)
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: trino-sql
+					source: my-trino-instance
+					description: some description
+					statement: |
+						SELECT * FROM catalog.schema.table WHERE id = ?;
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+					parameters:
+						- name: id
+						  type: string
+						  description: ID to filter by
+						  authServices:
+							- name: my-google-auth-service
+							  field: user_id
+							- name: other-auth-service
+							  field: user_id
+			`,
+			want: server.ToolConfigs{
+				"example_tool": trinosql.Config{
+					Name:         "example_tool",
+					Kind:         "trino-sql",
+					Source:       "my-trino-instance",
+					Description:  "some description",
+					Statement:    "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					Parameters: []tools.Parameter{
+						tools.NewStringParameterWithAuth("id", "ID to filter by",
+							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+								{Name: "other-auth-service", Field: "user_id"}}),
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
 	}
 }
 
-func TestToolDescription(t *testing.T) {
-	manifest := tools.Manifest{
-		Description: "Execute parameterized SQL queries on Trino",
+func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	tool := Tool{
-		Name:     "test-tool",
-		manifest: manifest,
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: trino-sql
+					source: my-trino-instance
+					description: some description
+					statement: |
+						SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+					parameters:
+						- name: country
+						  type: string
+						  description: some description
+						  authServices:
+							- name: my-google-auth-service
+							  field: user_id
+							- name: other-auth-service
+							  field: user_id
+					templateParameters:
+						- name: catalog
+						  type: string
+						  description: The catalog to query from.
+						- name: schema
+						  type: string
+						  description: The schema to query from.
+						- name: tableName
+						  type: string
+						  description: The table to select data from.
+						- name: fieldArray
+						  type: array
+						  description: The columns to return for the query.
+						  items: 
+								name: column
+								type: string
+								description: A column name that will be returned from the query.
+			`,
+			want: server.ToolConfigs{
+				"example_tool": trinosql.Config{
+					Name:         "example_tool",
+					Kind:         "trino-sql",
+					Source:       "my-trino-instance",
+					Description:  "some description",
+					Statement:    "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					Parameters: []tools.Parameter{
+						tools.NewStringParameterWithAuth("country", "some description",
+							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+								{Name: "other-auth-service", Field: "user_id"}}),
+					},
+					TemplateParameters: []tools.Parameter{
+						tools.NewStringParameter("catalog", "The catalog to query from."),
+						tools.NewStringParameter("schema", "The schema to query from."),
+						tools.NewStringParameter("tableName", "The table to select data from."),
+						tools.NewArrayParameter("fieldArray", "The columns to return for the query.", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+					},
+				},
+			},
+		},
 	}
-
-	got := tool.Manifest().Description
-	want := "Execute parameterized SQL queries on Trino"
-
-	if got != want {
-		t.Errorf("Tool.Manifest().Description = %v, want %v", got, want)
-	}
-}
-
-func TestToolParameters(t *testing.T) {
-	tableNameParameter := tools.NewStringParameter("table_name", "Name of the table to query")
-	params := tools.Parameters{tableNameParameter}
-
-	tool := Tool{
-		Name:       "test-tool",
-		Parameters: params,
-		manifest:   tools.Manifest{Parameters: params.Manifest()},
-	}
-
-	got := tool.Manifest().Parameters
-	expected := params.Manifest()
-
-	if diff := cmp.Diff(expected, got); diff != "" {
-		t.Errorf("Tool parameters mismatch (-want +got):\n%s", diff)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
 	}
 }

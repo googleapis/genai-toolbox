@@ -12,60 +12,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trinoexecutesql
+package trinoexecutesql_test
 
 import (
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools/trino/trinoexecutesql"
 )
 
-func TestToolParameters(t *testing.T) {
-	sqlParameter := tools.NewStringParameter("sql", "The SQL query to execute against the Trino database.")
-	expected := tools.Parameters{sqlParameter}
-
-	tool := Tool{
-		Name:       "test-tool",
-		Parameters: expected,
-		manifest:   tools.Manifest{Parameters: expected.Manifest()},
+func TestParseFromYamlTrinoExecuteSQL(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	params := tool.Manifest().Parameters
-	expectedManifest := expected.Manifest()
-
-	if diff := cmp.Diff(expectedManifest, params); diff != "" {
-		t.Errorf("Tool parameters mismatch (-want +got):\n%s", diff)
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: trino-execute-sql
+					source: my-trino-instance
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"example_tool": trinoexecutesql.Config{
+					Name:         "example_tool",
+					Kind:         "trino-execute-sql",
+					Source:       "my-trino-instance",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+				},
+			},
+		},
 	}
-}
-
-func TestToolName(t *testing.T) {
-	tool := Tool{
-		Name: "test-trino-tool",
-	}
-
-	got := tool.Name
-	want := "test-trino-tool"
-
-	if got != want {
-		t.Errorf("Tool.Name = %v, want %v", got, want)
-	}
-}
-
-func TestToolDescription(t *testing.T) {
-	manifest := tools.Manifest{
-		Description: "Execute SQL queries on Trino",
-	}
-
-	tool := Tool{
-		Name:     "test-tool",
-		manifest: manifest,
-	}
-
-	got := tool.Manifest().Description
-	want := "Execute SQL queries on Trino"
-
-	if got != want {
-		t.Errorf("Tool.Manifest().Description = %v, want %v", got, want)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
 	}
 }
