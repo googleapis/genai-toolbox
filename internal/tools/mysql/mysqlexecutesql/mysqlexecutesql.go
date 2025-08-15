@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -168,13 +169,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 				continue
 			}
 
-			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
-			// we'll need to cast it back to string
-			switch colTypes[i].DatabaseTypeName() {
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(val.([]byte))
-			default:
-				vMap[name] = val
+			vMap[name], err = mysqlcommon.ConvertToType(colTypes[i], val)
+			if err != nil {
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
 			}
 		}
 		out = append(out, vMap)
