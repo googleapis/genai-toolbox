@@ -24,7 +24,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -47,6 +46,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
+	BigQuerySession() *bigqueryds.Session
+	BigQueryWriteMode() string
 	BigQueryRestService() *bigqueryrestapi.Service
 }
 
@@ -83,12 +84,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	var sqlParamDescription string
+	switch s.BigQueryWriteMode() {
+	case bigqueryds.WriteModeBlocked:
+		sqlParamDescription = "The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; " +
+			"other statement types will fail."
+	case bigqueryds.WriteModeProtected:
+		sqlParamDescription = fmt.Sprintf("The SQL to execute. In 'protected' mode, only SELECT statements and writes to "+
+			"the session's temporary dataset (ID: %s) are allowed (e.g., `CREATE TEMP TABLE ...`).", s.BigQuerySession().DatasetID)
+	default: // WriteModeAllowed
+		sqlParamDescription = "The SQL to execute."
+	}
+	sqlParameter := tools.NewStringParameter("sql", sqlParamDescription)
+
 	dryRunParameter := tools.NewBooleanParameterWithDefault(
 		"dry_run",
 		false,
-		"If set to true, the query will be validated and information about the execution "+
-			"will be returned without running the query. Defaults to false.",
+		"If set to true, the query will be validated and information about the execution will be returned "+
+			"without running the query. Defaults to false.",
 	)
 	parameters := tools.Parameters{sqlParameter, dryRunParameter}
 
@@ -106,6 +119,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.BigQueryClient(),
 		RestService:  s.BigQueryRestService(),
+		WriteMode:    s.BigQueryWriteMode(),
+		Session:      s.BigQuerySession(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -122,6 +137,8 @@ type Tool struct {
 	Parameters   tools.Parameters `yaml:"parameters"`
 	Client       *bigqueryapi.Client
 	RestService  *bigqueryrestapi.Service
+	WriteMode    string
+	Session      *bigqueryds.Session
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
 }
@@ -137,9 +154,40 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
+	query := t.Client.Query(sql)
+	query.Location = t.Client.Location
+
+	if t.WriteMode == bigqueryds.WriteModeProtected {
+		// Add session ID to the connection properties for subsequent calls.
+		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: t.Session.ID},
+		}
+	}
+
+	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), query.Location, sql, query.ConnectionProperties)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+	}
+
+	if dryRunJob.Statistics == nil || dryRunJob.Statistics.Query == nil {
+		// This can happen for queries that are syntactically valid but have semantic errors that are caught early.
+		return nil, fmt.Errorf("could not retrieve query statistics from dry run, the query may have semantic errors")
+	}
+
+	statementType := dryRunJob.Statistics.Query.StatementType
+
+	switch t.WriteMode {
+	case bigqueryds.WriteModeBlocked:
+		if statementType != "SELECT" {
+			return nil, fmt.Errorf("write mode is 'blocked', only SELECT statements are allowed")
+		}
+	case bigqueryds.WriteModeProtected:
+		if dryRunJob.Configuration != nil && dryRunJob.Configuration.Query != nil {
+			if dest := dryRunJob.Configuration.Query.DestinationTable; dest != nil && dest.DatasetId != t.Session.DatasetID {
+				return nil, fmt.Errorf("protected write mode only supports SELECT statements, or write operations in the anonymous "+
+					"dataset of a BigQuery session, but destination was %q", dest.DatasetId)
+			}
+		}
 	}
 
 	if dryRun {
@@ -154,25 +202,17 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return "Dry run was requested, but no job information was returned.", nil
 	}
 
-	statementType := dryRunJob.Statistics.Query.StatementType
-	// JobStatistics.QueryStatistics.StatementType
-	query := t.Client.Query(sql)
-	query.Location = t.Client.Location
-
-	// Log the query executed for debugging.
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
-	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
-
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
 	// column names to values, and return the collection of rows.
 	var out []any
-	it, err := query.Read(ctx)
+	job, err := query.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	it, err := job.Read(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 	for {
 		var row map[string]bigqueryapi.Value
@@ -223,8 +263,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 // dryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string) (*bigqueryrestapi.Job, error) {
+func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, connProps []*bigqueryapi.ConnectionProperty) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
+
+	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
+	for i, prop := range connProps {
+		restConnProps[i] = &bigqueryrestapi.ConnectionProperty{Key: prop.Key, Value: prop.Value}
+	}
+
 	jobToInsert := &bigqueryrestapi.Job{
 		JobReference: &bigqueryrestapi.JobReference{
 			ProjectId: projectID,
@@ -233,8 +279,9 @@ func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 		Configuration: &bigqueryrestapi.JobConfiguration{
 			DryRun: true,
 			Query: &bigqueryrestapi.JobConfigurationQuery{
-				Query:        sql,
-				UseLegacySql: &useLegacySql,
+				Query:                sql,
+				UseLegacySql:         &useLegacySql,
+				ConnectionProperties: restConnProps,
 			},
 		},
 	}
