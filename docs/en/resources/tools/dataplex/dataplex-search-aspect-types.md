@@ -1,27 +1,25 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-search-aspect-types"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  A "dataplex-search-aspect-types" tool allows to to find aspect types relevant to the query.
 aliases:
-- /resources/tools/dataplex-search-entries
+- /resources/tools/dataplex-search-aspect-types
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Dataplex Catalog (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-search-aspect-types` tool allows to fetch the metadata template of aspect types based on search query.
 It's compatible with the following sources:
 
 - [dataplex](../../sources/dataplex.md)
 
-`dataplex-search-entries` takes a required `query` parameter based on which
-entries are filtered and returned to the user. It also optionally accepts following parameters:
+`dataplex-search-aspect-types` accepts following parameters optionally:
 
-- `pageSize` - Number of results in the search page. Defaults to `5`.
-- `orderBy` - Specifies the ordering of results. Supported values are: relevance
-  (default), last_modified_timestamp, last_modified_timestamp asc.
+- `query` - Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all aspect types available to the user.
+- `pageSize` - Number of returned aspect types in the search page. Defaults to `5`.
+- `orderBy` - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc.
 
 ## Requirements
 
@@ -49,16 +47,16 @@ applying IAM permissions and roles to an identity.
 
 ```yaml
 tools:
-  dataplex-search-entries:
-    kind: dataplex-search-entries
+  dataplex-search-aspect-types:
+    kind: dataplex-search-aspect-types
     source: my-dataplex-source
-    description: Use this tool to get all the entries based on the provided query.
+    description: Use this tool to find aspect types relevant to the query.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "dataplex-search-entries".                                                               |
+| kind        |                   string                   |     true     | Must be "dataplex-search-aspect-types".                                                          |
 | source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

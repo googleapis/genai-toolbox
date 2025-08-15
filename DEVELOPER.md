@@ -108,7 +108,7 @@ variables for each source.
 * AlloyDB - setup in the test project
   * AI Natural Language ([setup
     instructions](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries))
-    has been configured for `alloydb-a`-nl` tool tests
+    has been configured for `alloydb-ai-nl` tool tests
   * The Cloud Build service account is a user
 * Bigtable - setup in the test project
   * The Cloud Build service account is a user

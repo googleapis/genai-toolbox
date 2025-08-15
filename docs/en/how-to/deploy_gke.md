@@ -60,8 +60,8 @@ description: >
     gcloud iam service-accounts create $SA_NAME
     ```
 
-1. Grant any IAM roles necessary to the IAM service account. Each source have a
-    list of necessary IAM permissions listed on it's page. The example below is
+1. Grant any IAM roles necessary to the IAM service account. Each source has a
+    list of necessary IAM permissions listed on its page. The example below is
     for cloud sql postgres source:
 
     ```bash
