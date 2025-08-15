@@ -423,7 +423,7 @@ async function run() {
         apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
       })
     ],
-    model: googleAI.model('gemini-2.0-flash'),
+    model: googleAI.model('gemini-1.5-pro'),
   });
 
   const toolboxTools = await toolboxClient.loadToolset("my-toolset");
