@@ -823,11 +823,16 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant string) {
+func RunMCPToolCallMethod(t *testing.T, select1Want, invokeParamWant, failInvocationWant string) {
 	sessionId := RunInitialize(t, "2024-11-05")
 	header := map[string]string{}
 	if sessionId != "" {
 		header["Mcp-Session-Id"] = sessionId
+	}
+
+	idToken, err := GetGoogleIdToken(ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
 	// Test tool invoke endpoint
@@ -912,7 +917,7 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 		{
 			name:          "MCP Invoke my-auth-required-tool",
 			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
 				Id:      "invoke my-auth-required-tool",
@@ -924,7 +929,41 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					"arguments": map[string]any{},
 				},
 			},
-			want: "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool\"}}",
+			want: select1Want,
+		},
+		{
+			name:          "MCP Invoke my-auth-required-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-auth-required-tool with invalid token",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-auth-required-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			want: "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool with invalid token\",\"error\":{\"code\":-32600,\"message\":\"tool invocation not authorized. Please make sure your specify correct auth headers\"}}",
+		},
+		{
+			name:          "MCP Invoke my-auth-required-tool without auth token",
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-auth-required-tool without token",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-auth-required-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			want: "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool without token\",\"error\":{\"code\":-32600,\"message\":\"tool invocation not authorized. Please make sure your specify correct auth headers\"}}",
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
@@ -949,6 +988,10 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 			reqMarshal, err := json.Marshal(tc.requestBody)
 			if err != nil {
 				t.Fatalf("unexpected error during marshaling of request body")
+			}
+
+			for k, v := range tc.requestHeader {
+				header[k] = v
 			}
 
 			_, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), header)
