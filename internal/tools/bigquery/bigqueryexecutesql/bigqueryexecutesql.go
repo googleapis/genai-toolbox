@@ -18,13 +18,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -48,6 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -83,7 +85,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	sqlDescription := "The sql to execute."
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+
+		if len(datasetIDs) == 1 {
+			datasetFQN := allowedDatasets[0]
+			parts := strings.Split(datasetFQN, ".")
+			datasetID := datasetFQN
+			if len(parts) == 2 {
+				datasetID = parts[1]
+			}
+			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. "+
+				"To query a table within this dataset (e.g., `my_table`), "+
+				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
+		} else {
+			sqlDescription += fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+		}
+	}
+	sqlParameter := tools.NewStringParameter("sql", sqlDescription)
 	dryRunParameter := tools.NewBooleanParameterWithDefault(
 		"dry_run",
 		false,
@@ -100,14 +124,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.BigQueryClient(),
-		RestService:  s.BigQueryRestService(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		Client:           s.BigQueryClient(),
+		RestService:      s.BigQueryRestService(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		AllowedDatasets:  allowedDatasets,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -116,14 +142,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	Client       *bigqueryapi.Client
-	RestService  *bigqueryrestapi.Service
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name             string           `yaml:"name"`
+	Kind             string           `yaml:"kind"`
+	AuthRequired     []string         `yaml:"authRequired"`
+	Parameters       tools.Parameters `yaml:"parameters"`
+	Client           *bigqueryapi.Client
+	RestService      *bigqueryrestapi.Service
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	AllowedDatasets  []string
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
@@ -136,10 +164,64 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if !ok {
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
-
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+	}
+	statementType := dryRunJob.Statistics.Query.StatementType
+
+	if len(t.AllowedDatasets) > 0 {
+		switch statementType {
+		case "CREATE_SCHEMA", "DROP_SCHEMA", "ALTER_SCHEMA":
+			return nil, fmt.Errorf("dataset-level operations like '%s' are not allowed when dataset restrictions are in place", statementType)
+		case "CREATE_FUNCTION", "CREATE_TABLE_FUNCTION", "CREATE_PROCEDURE":
+			return nil, fmt.Errorf("creating stored routines ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType)
+		case "CALL":
+			return nil, fmt.Errorf("calling stored procedures ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType)
+		}
+
+		// Use a map to avoid duplicate table names.
+		tableIDSet := make(map[string]struct{})
+
+		// Stage 1: Get all tables from the dry run result. This is the most reliable method.
+		queryStats := dryRunJob.Statistics.Query
+		if queryStats != nil {
+			for _, tableRef := range queryStats.ReferencedTables {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			}
+			if tableRef := queryStats.DdlTargetTable; tableRef != nil {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			}
+			if tableRef := queryStats.DdlDestinationTable; tableRef != nil {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			}
+		}
+
+		var tableNames []string
+		if len(tableIDSet) > 0 {
+			for tableID := range tableIDSet {
+				tableNames = append(tableNames, tableID)
+			}
+		} else if statementType != "SELECT" {
+			// If dry run yields no tables, fall back to the parser for non-SELECT statements
+			// to catch unsafe operations like EXECUTE IMMEDIATE.
+			parsedTables, parseErr := TableParser(sql, t.Client.Project())
+			if parseErr != nil {
+				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.
+				return nil, fmt.Errorf("could not parse tables from query to validate against allowed datasets: %w", parseErr)
+			}
+			tableNames = parsedTables
+		}
+
+		for _, tableID := range tableNames {
+			parts := strings.Split(tableID, ".")
+			if len(parts) == 3 {
+				projectID, datasetID := parts[0], parts[1]
+				if !t.IsDatasetAllowed(projectID, datasetID) {
+					return nil, fmt.Errorf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID)
+				}
+			}
+		}
 	}
 
 	if dryRun {
@@ -154,17 +236,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return "Dry run was requested, but no job information was returned.", nil
 	}
 
-	statementType := dryRunJob.Statistics.Query.StatementType
-	// JobStatistics.QueryStatistics.StatementType
 	query := t.Client.Query(sql)
 	query.Location = t.Client.Location
-
-	// Log the query executed for debugging.
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
-	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
