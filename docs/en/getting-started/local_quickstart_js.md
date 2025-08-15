@@ -167,7 +167,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -294,10 +294,10 @@ from Toolbox.
 
    {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="bash" >}}
-npm install langchain @langchain/google-vertexai
+npm install langchain @langchain/google-genai
 {{< /tab >}}
 {{< tab header="GenkitJS" lang="bash" >}}
-npm install genkit @genkit-ai/vertexai
+npm install genkit @genkit-ai/googleai
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
@@ -309,7 +309,7 @@ npm install llamaindex @llamaindex/google @llamaindex/workflow
     {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
 
-import { ChatVertexAI } from "@langchain/google-vertexai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { tool } from "@langchain/core/tools";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
@@ -336,7 +336,7 @@ const queries = [
 ];
 
 async function runApplication() {
-  const model = new ChatVertexAI({
+  const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash",
   });
 

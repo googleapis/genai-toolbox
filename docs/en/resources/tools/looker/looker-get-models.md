@@ -1,44 +1,40 @@
 ---
-title: "looker-get-filters"
+title: "looker-get-models"
 type: docs
 weight: 1
 description: >
-  A "looker-get-filters" tool returns all the filters from a given explore
-  in a given model in the source.
+  A "looker-get-models" tool returns all the models in the source.
 aliases:
-- /resources/tools/looker-get-filters
+- /resources/tools/looker-get-models
 ---
 
 ## About
 
-A `looker-get-filters` tool returns all the filters from a given explore
-in a given mode in the source.
+A `looker-get-models` tool returns all the models in the source.
 
 It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-get-filters` accepts two parameters, the `model` and the `explore`.
+`looker-get-models` accepts no parameters.
 
 ## Example
 
 ```yaml
 tools:
-    get_dimensions:
-        kind: looker-get-filters
+    get_models:
+        kind: looker-get-models
         source: looker-source
         description: |
-          The get_filters tool retrieves the list of filters defined in
-          an explore.
+          The get_models tool retrieves the list of LookML models in the Looker system.
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          It takes no parameters.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-get-filters".                                                                    |
+| kind        |                   string                   |     true     | Must be "looker-get-models".                                                                     |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
