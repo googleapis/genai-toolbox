@@ -153,12 +153,23 @@ func TestTiDBToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
+	// Get configs for tests
 	select1Want, failInvocationWant, createTableStatement := getTiDBWants()
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+	toolInvokeConfig := tests.NewInvokeTestConfig(
+		tests.WithInvoketestSelect1Want(select1Want),
+		tests.WithDisableArray(),
+	)
+	mcpConfig := tests.NewMCPTestConfig(tests.WithFailInvocationWant(failInvocationWant))
+	executeSqlConfig := tests.NewExecuteSqlTestConfig(
+		tests.WithCreateTableStatement(createTableStatement),
+		tests.WithExecSqlSelect1Want(select1Want),
+	)
+	templateParamTestConfig := tests.NewTemplateParameterTestConfig()
+
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, toolInvokeConfig)
+	tests.RunMCPToolCallMethod(t, mcpConfig)
+	tests.RunExecuteSqlToolInvokeTest(t, executeSqlConfig)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 }
