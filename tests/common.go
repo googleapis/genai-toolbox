@@ -399,14 +399,6 @@ func GetMySQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string, string, string) {
-	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-	invokeIdNullWant := "[{\"id\":4,\"name\":null}]"
-	nullWant := "null"
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
-}
-
 // GetPostgresWants return the expected wants for postgres
 func GetPostgresWants() (string, string, string) {
 	select1Want := "[{\"?column?\":1}]"
