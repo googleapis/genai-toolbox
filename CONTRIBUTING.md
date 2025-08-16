@@ -116,7 +116,8 @@ tools.
 * **Add a test file** under a new directory `tests/newdb`.
 * **Add pre-defined integration test suites** in the
   `/tests/newdb/newdb_test.go` that are **required** to be run as long as your
-  code contains related features:
+  code contains related features. Refer to [config option][./tests/option.go]
+  for test specific default values.:
 
      1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
             tool's manifest.
