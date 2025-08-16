@@ -1,0 +1,19 @@
+sources:
+  clickhouse-source:
+    kind: clickhouse
+    host: ${CLICKHOUSE_HOST}
+    port: ${CLICKHOUSE_PORT}
+    user: ${CLICKHOUSE_USER}
+    password: ${CLICKHOUSE_PASSWORD}
+    database: ${CLICKHOUSE_DATABASE}
+    protocol: ${CLICKHOUSE_PROTOCOL}
+
+tools:
+  execute_sql:
+    kind: clickhouse-execute-sql
+    source: clickhouse-source
+    description: Use this tool to execute SQL.
+
+toolsets:
+  clickhouse-database-tools:
+    - execute_sql
