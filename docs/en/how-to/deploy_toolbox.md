@@ -141,7 +141,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. (Only for local runs) Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
-   for the principle you set up the `Cloud Run Invoker` role access to.
+   for the principal you set up the `Cloud Run Invoker` role access to.
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 

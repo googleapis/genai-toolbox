@@ -177,6 +177,43 @@ and data.
 
 #### 6. Submit a Pull Request
 
-* **Submit a pull request** to the repository with your changes. Be sure to
-  include a detailed description of your changes and any requests for long term
-  testing resources.
+Submit a pull request to the repository with your changes. Be sure to include a
+detailed description of your changes and any requests for long term testing
+resources.
+
+* **Title:** All pull request title should follow the formatting of
+  [Conventional 
+  Commit](https://www.conventionalcommits.org/) guidelines: `<type>[optional
+  scope]: description`. For example, if you are adding a new field in postgres
+  source, the title should be `feat(source/postgres): add support for
+  "new-field" field in postgres source`.
+  
+  Here are some commonly used `type` in this GitHub repo.
+
+  |     **type**    |                                **description**                                                        |
+  |-----------------|-------------------------------------------------------------------------------------------------------|
+  | Breaking Change | Anything with this type of a `!` after the type/scope introduces a breaking change.                   |
+  | feat            | Adding a new feature to the codebase.                                                                 |
+  | fix             | Fixing a bug or typo in the codebase. This does not include fixing docs.                              |
+  | test            | Changes made to test files.                                                                           |
+  | ci              | Changes made to the cicd configuration files or scripts.                                              |
+  | docs            | Documentation-related PRs, including fixes on docs.                                                   |
+  | chore           | Other small tasks or updates that don't fall into any of the above types.                             |
+  | refactor        | Change src code but unlike feat, there are no tests broke and no line lost coverage.                  |
+  | revert          | Revert changes made in another commit.                                                                |
+  | style           | Update src code, with only formatting and whitespace updates (e.g. code formatter or linter changes). |
+
+  Pull requests should always add scope whenever possible. The scope is
+  formatted as `<scope-type>/<scope-kind>` (e.g., `sources/postgres`, or
+  `tools/mssql-sql`).
+  
+  Ideally, **each PR covers only one scope**, if this is
+  inevitable, multiple scopes can be seaparated with a comma (e.g.
+  `sources/postgres,sources/alloydbpg`). If the PR covers multiple `scope-type`
+  (such as adding a new database), you can disregard the `scope-type`, e.g.
+  `feat(new-db): adding support for new-db source and tool`.
+
+* **PR Description:** PR description should **always** be included. It should
+  include a concise description of the changes, it's impact, along with a
+  summary of the solution. If the PR is related to a specific issue, the issue
+  number should be mentioned in the PR description (e.g. `Fixes #1`).

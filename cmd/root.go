@@ -53,6 +53,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cassandra/cassandracql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
