@@ -3,7 +3,7 @@ title: "Trino"
 type: docs
 weight: 160
 description: >
-  Trino is a distributed SQL query engine for big data analytics.
+  Trino is a distributed SQL query engine designed to query large data sets distributed over one or more heterogeneous data sources.
 ---
 
 ## About
