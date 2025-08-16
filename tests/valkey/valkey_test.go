@@ -100,11 +100,23 @@ func TestValkeyToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
+	// Get configs for tests
 	select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	toolInvokeConfig := tests.NewInvokeTestConfig(
+		tests.WithInvoketestSelect1Want(select1Want),
+		tests.WithInvokeParamWant(invokeParamWant),
+		tests.WithInvokeIdNullWant(invokeIdNullWant),
+		tests.WithNullString(nullWant),
+	)
+	mcpConfig := tests.NewMCPTestConfig(
+		tests.WithMcpInvokeParamWant(mcpInvokeParamWant),
+		tests.WithFailInvocationWant(failInvocationWant),
+	)
+
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, toolInvokeConfig)
+	tests.RunMCPToolCallMethod(t, mcpConfig)
 }
 
 func setupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func(*testing.T) {

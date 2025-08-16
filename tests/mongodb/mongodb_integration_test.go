@@ -99,27 +99,34 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
+	// Get configs for tests
+	toolInvokeConfig := tests.NewInvokeTestConfig(
+		tests.WithInvoketestSelect1Want(`[{"_id":3,"id":3,"name":"Sid"}]`),
+		tests.WithInvokeParamWant(`[{"_id":5,"id":3,"name":"Alice"}]`),
+		tests.WithInvokeIdNullWant(`[{"_id":4,"id":4,"name":null}]`),
+	)
+	mcpConfig := tests.NewMCPTestConfig(
+		tests.WithMcpInvokeParamWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\    "id\":3,\"name\":\"Alice\"}"}]}}`),
+		tests.WithFailInvocationWant(`invalid JSON input: missing colon after key `),
+	)
+
+	// Run tests
 	tests.RunToolGetTest(t)
-
-	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
-	failInvocationWant := `invalid JSON input: missing colon after key `
-	invokeParamWant := `[{"_id":5,"id":3,"name":"Alice"}]`
-	invokeIdNullWant := `[{"_id":4,"id":4,"name":null}]`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
-	nullString := "null"
-
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullString, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	tests.RunToolInvokeTest(t, toolInvokeConfig)
+	tests.RunMCPToolCallMethod(t, mcpConfig)
 
 	delete1Want := "1"
 	deleteManyWant := "2"
 	RunToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
+
 	insert1Want := `["68666e1035bb36bf1b4d47fb"]`
 	insertManyWant := `["68667a6436ec7d0363668db7","68667a6436ec7d0363668db8","68667a6436ec7d0363668db9"]`
 	RunToolInsertInvokeTest(t, insert1Want, insertManyWant)
+
 	update1Want := "1"
 	updateManyWant := "[2,0,2]"
 	RunToolUpdateInvokeTest(t, update1Want, updateManyWant)
+
 	aggregate1Want := `[{"id":2}]`
 	aggregateManyWant := `[{"id":500},{"id":501}]`
 	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)

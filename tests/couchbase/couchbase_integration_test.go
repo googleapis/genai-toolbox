@@ -135,21 +135,24 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
-	select1Want := "[{\"$1\":1}]"
-	failMcpInvocationWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: parsing failure | {\\\"statement\\\":\\\"SELEC 1;\\\""
-
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failMcpInvocationWant)
-
+	// Get configs for tests
+	toolInvokeConfig := tests.NewInvokeTestConfig(
+		tests.WithInvoketestSelect1Want("[{\"$1\":1}]"),
+	)
+	mcpConfig := tests.NewMCPTestConfig(
+		tests.WithFailInvocationWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`),
+	)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
 		tests.WithIgnoreDdl(),
 		tests.WithIgnoreInsert(),
-		tests.WithSelect1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
+		tests.WithTmplSelect1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
 		tests.WithSelectAllWant("[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"),
 	)
+
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, toolInvokeConfig)
+	tests.RunMCPToolCallMethod(t, mcpConfig)
 	tests.RunToolInvokeWithTemplateParameters(t, collectionNameTemplateParam, templateParamTestConfig)
 }
 
