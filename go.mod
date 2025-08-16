@@ -2,7 +2,7 @@ module github.com/googleapis/genai-toolbox
 
 go 1.24
 
-toolchain go1.24.6
+toolchain go1.25.0
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
