@@ -7,6 +7,8 @@
 [![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@mcp_toolbox)
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/googleapis/genai-toolbox)](https://archestra.ai/mcp-catalog/googleapis__genai-toolbox)
+
 > [!NOTE]
 > MCP Toolbox for Databases is currently in beta, and may see breaking
 > changes until the first stable release (v1.0).
