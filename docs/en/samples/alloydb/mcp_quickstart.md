@@ -1,5 +1,5 @@
 ---
-title: "MCP Quickstart"
+title: "Quickstart (MCP with AlloyDB)"
 type: docs
 weight: 1
 description: >
