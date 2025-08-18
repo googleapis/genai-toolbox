@@ -75,7 +75,7 @@ networks:
 
 {{< notice tip >}}
 
-You can use this setup quickly set up Toolbox + Postgres to follow along in our
+You can use this setup to quickly set up Toolbox + Postgres to follow along in our
 [Quickstart](../getting-started/local_quickstart.md)
 
 {{< /notice >}}

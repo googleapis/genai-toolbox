@@ -210,45 +210,22 @@ func ResolveTemplateParams(templateParams Parameters, originalStatement string, 
 
 // ProcessParameters concatenate templateParameters and parameters from a tool.
 // It returns a list of concatenated parameters, concatenated Toolbox manifest, and concatenated MCP Manifest.
-func ProcessParameters(templateParams Parameters, params Parameters) (Parameters, []ParameterManifest, McpToolsSchema) {
+func ProcessParameters(templateParams Parameters, params Parameters) (Parameters, []ParameterManifest, McpToolsSchema, error) {
 	allParameters := slices.Concat(params, templateParams)
 
-	paramManifest := slices.Concat(
-		params.Manifest(),
-		templateParams.Manifest(),
-	)
+	// verify no duplicate parameter names
+	err := CheckDuplicateParameters(allParameters)
+	if err != nil {
+		return nil, nil, McpToolsSchema{}, err
+	}
+
+	// create Toolbox manifest
+	paramManifest := allParameters.Manifest()
 	if paramManifest == nil {
 		paramManifest = make([]ParameterManifest, 0)
 	}
 
-	parametersMcpManifest := params.McpManifest()
-	templateParametersMcpManifest := templateParams.McpManifest()
-
-	// Concatenate parameters for MCP `required` field
-	concatRequiredManifest := slices.Concat(
-		parametersMcpManifest.Required,
-		templateParametersMcpManifest.Required,
-	)
-	if concatRequiredManifest == nil {
-		concatRequiredManifest = []string{}
-	}
-
-	// Concatenate parameters for MCP `properties` field
-	concatPropertiesManifest := make(map[string]ParameterMcpManifest)
-	for name, p := range parametersMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-	for name, p := range templateParametersMcpManifest.Properties {
-		concatPropertiesManifest[name] = p
-	}
-
-	// Create a new McpToolsSchema with all parameters
-	paramMcpManifest := McpToolsSchema{
-		Type:       "object",
-		Properties: concatPropertiesManifest,
-		Required:   concatRequiredManifest,
-	}
-	return allParameters, paramManifest, paramMcpManifest
+	return allParameters, paramManifest, allParameters.McpManifest(), nil
 }
 
 type Parameter interface {
@@ -419,7 +396,7 @@ type ParameterManifest struct {
 	Description          string             `json:"description"`
 	AuthServices         []string           `json:"authSources"`
 	Items                *ParameterManifest `json:"items,omitempty"`
-	AdditionalProperties any                `json:"AdditionalProperties,omitempty"`
+	AdditionalProperties any                `json:"additionalProperties,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
@@ -427,7 +404,7 @@ type ParameterMcpManifest struct {
 	Type                 string                `json:"type"`
 	Description          string                `json:"description"`
 	Items                *ParameterMcpManifest `json:"items,omitempty"`
-	AdditionalProperties any                   `json:"AdditionalProperties,omitempty"`
+	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
