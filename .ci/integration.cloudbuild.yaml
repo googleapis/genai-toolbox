@@ -715,6 +715,13 @@ availableSecrets:
       env: OCEANBASE_USER
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_pass/versions/latest
       env: OCEANBASE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/yugabyte_host/versions/latest
+      env: YUGABYTE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/yugabyte_user/versions/latest
+      env: YUGABYTE_USER
+    - versionName: projects/$PROJECT_ID/secrets/yugabyte_pass/versions/latest
+      env: YUGABYTE_PASS
+
 
 options:
   logging: CLOUD_LOGGING_ONLY
