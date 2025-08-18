@@ -177,7 +177,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -402,7 +402,7 @@ async def main():
       )
 
       queries = [
-          "Find hotels in Basel with Basel in it's name.",
+          "Find hotels in Basel with Basel in its name.",
           "Can you book the Hilton Basel for me?",
           "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
           "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -453,7 +453,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -506,7 +506,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -569,7 +569,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Please book the hotel Hilton Basel for me.",
     "This is too expensive. Please cancel it.",
     "Please book Hyatt Regency for me",

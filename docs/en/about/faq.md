@@ -7,11 +7,11 @@ description: Frequently asked questions about Toolbox.
 
 ## How can I deploy or run Toolbox?
 
-MCP Toolbox for Databases is open-source and can be ran or deployed to a
+MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release [compiled binaries and
 docker images][release-notes] (but you can always compile yourself as well!).
 
-For detailed instructions, check our these resources:
+For detailed instructions, check out these resources:
 
 - [Quickstart: How to Run Locally](../getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../how-to/deploy_toolbox.md)
