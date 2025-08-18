@@ -617,7 +617,11 @@ Run Cypher queries against your Neo4j graph database.&lt;/li>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source only uses standard authentication. You will need to &lt;a href="https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-users/">create a Neo4j
 user&lt;/a> to log in to the database with, or use the default &lt;code>neo4j&lt;/code>
-user if available.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
+user if available.&lt;/p></description></item><item><title>OceanBase</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/oceanbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/oceanbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://www.oceanbase.com/">OceanBase&lt;/a> is a distributed relational database management system (RDBMS) that provides high availability, scalability, and strong consistency. It&amp;rsquo;s designed to handle large-scale data processing and is compatible with MySQL, making it easy for developers to migrate from MySQL to OceanBase.&lt;/p>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source only uses standard authentication. You will need to create an OceanBase user to login to the database with. OceanBase supports MySQL-compatible user management syntax.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.postgresql.org/">PostgreSQL&lt;/a> is a powerful, open source object-relational database
 system with over 35 years of active development that has earned it a strong
 reputation for reliability, feature robustness, and performance.&lt;/p>
