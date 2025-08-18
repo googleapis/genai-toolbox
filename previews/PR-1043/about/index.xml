@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>About on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/about/</link><description>Recent content in About on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1043/about/index.xml" rel="self" type="application/rss+xml"/><item><title>FAQ</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/about/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/about/faq/</guid><description>&lt;h2 id="how-can-i-deploy-or-run-toolbox">How can I deploy or run Toolbox?&lt;/h2>
-&lt;p>MCP Toolbox for Databases is open-source and can be ran or deployed to a
+&lt;p>MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release &lt;a href="https://github.com/googleapis/genai-toolbox/releases/">compiled binaries and
 docker images&lt;/a> (but you can always compile yourself as well!).&lt;/p>
-&lt;p>For detailed instructions, check our these resources:&lt;/p>
+&lt;p>For detailed instructions, check out these resources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/local_quickstart/">Quickstart: How to Run Locally&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1043/how-to/deploy_toolbox/">Deploy to Cloud Run&lt;/a>&lt;/li>
