@@ -141,7 +141,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. (Only for local runs) Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
-   for the principle you set up the `Cloud Run Invoker` role access to.
+   for the principal you set up the `Cloud Run Invoker` role access to.
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
@@ -174,6 +174,24 @@ const URL = 'http://127.0.0.1:5000';
 const authTokenProvider = () => getGoogleIdToken(URL);
 
 const client = new ToolboxClient(URL, null, {"Authorization": authTokenProvider});
+{{< /tab >}}
+{{< tab header="Go" lang="go" >}}
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+func main() {
+    // Replace with the Cloud Run service URL generated in the previous step.
+    URL := "http://127.0.0.1:5000"
+    auth_token_provider, err := core.GetGoogleIDToken(ctx, URL)
+    if err != nil {
+        log.Fatalf("Failed to fetch token %v", err)
+    }
+    toolboxClient, err := core.NewToolboxClient(
+        URL,
+        core.WithClientHeaderString("Authorization", auth_token_provider))
+    if err != nil {
+        log.Fatalf("Failed to create Toolbox client: %v", err)
+    }
+}
 {{< /tab >}}
 {{< /tabpane >}}
 
