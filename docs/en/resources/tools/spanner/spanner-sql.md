@@ -34,8 +34,8 @@ inserted according to their name: e.g. `@name`.
 ### PostgreSQL
 
 For the `postgresql` dialect, the specified SQL statement is executed as a [prepared
-statement][pg-prepare], and specified parameters will inserted according to
-their position: e.g. `$1` will be the first parameter specified, `$@` will be
+statement][pg-prepare], and specified parameters will be inserted according to
+their position: e.g. `$1` will be the first parameter specified, `$2` will be
 the second parameter, and so on.
 
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html

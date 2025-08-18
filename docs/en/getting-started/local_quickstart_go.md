@@ -167,7 +167,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -873,7 +873,7 @@ func main() {
 			log.Println("No function call")
 		}
 
-		// If there is a was a function call, continue the conversation
+		// If there was a function call, continue the conversation
 		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 		for _, toolCall := range toolCalls {
 
