@@ -16,8 +16,8 @@ The `firestore-add-documents` tool allows you to add new documents to a Firestor
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `collectionPath` | string | Yes | The path of the collection where the document will be added |
-| `documentData` | map | Yes | The data to be added as a document to the given collection. Must use Firestore's native JSON format with typed values |
-| `returnDocumentData` | boolean | No | If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context |
+| `documentData` | map | Yes | The data to be added as a document to the given collection. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
+| `returnData` | boolean | No | If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context |
 
 ## Output
 
@@ -27,7 +27,7 @@ The tool returns a map containing:
 |-------|------|-------------|
 | `documentPath` | string | The full resource name of the created document (e.g., `projects/{projectId}/databases/{databaseId}/documents/{document_path}`) |
 | `createTime` | string | The timestamp when the document was created |
-| `documentData` | map | The data that was added (only included when `returnDocumentData` is true) |
+| `documentData` | map | The data that was added (only included when `returnData` is true) |
 
 ## Data Type Format
 
@@ -166,7 +166,7 @@ Usage:
       }
     }
   },
-  "returnDocumentData": true
+  "returnData": true
 }
 ```
 
@@ -261,7 +261,7 @@ Common errors include:
 
 1. **Always use typed values**: Every field must be wrapped with its appropriate type indicator (e.g., `{"stringValue": "text"}`)
 2. **Integer values can be strings**: The tool accepts integer values as strings (e.g., `{"integerValue": "1500"}`)
-3. **Use returnDocumentData sparingly**: Only set to true when you need to verify the exact data that was written
+3. **Use returnData sparingly**: Only set to true when you need to verify the exact data that was written
 4. **Validate data before sending**: Ensure your data matches Firestore's native JSON format
 5. **Handle timestamps properly**: Use RFC3339 format for timestamp strings
 6. **Base64 encode binary data**: Binary data must be base64 encoded in the `bytesValue` field

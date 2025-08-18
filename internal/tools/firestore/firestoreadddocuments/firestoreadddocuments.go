@@ -29,7 +29,7 @@ import (
 const kind string = "firestore-add-documents"
 const collectionPathKey string = "collectionPath"
 const documentDataKey string = "documentData"
-const returnDocumentDataKey string = "returnDocumentData"
+const returnDocumentDataKey string = "returnData"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -105,7 +105,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		"", // Empty string for generic map that accepts any value type
 	)
 
-	returnDocumentDataParameter := tools.NewBooleanParameterWithDefault(
+	returnDataParameter := tools.NewBooleanParameterWithDefault(
 		returnDocumentDataKey,
 		false,
 		"If set to true the output will have the data of the created document. This flag if set to false will help avoid overloading the context of the agent.",
@@ -114,7 +114,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	parameters := tools.Parameters{
 		collectionPathParameter,
 		documentDataParameter,
-		returnDocumentDataParameter,
+		returnDataParameter,
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -173,9 +173,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 
 	// Get return document data flag
-	returnDocumentData := false
+	returnData := false
 	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
-		returnDocumentData = val
+		returnData = val
 	}
 
 	// Get the collection reference
@@ -194,7 +194,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	}
 
 	// Add document data if requested
-	if returnDocumentData {
+	if returnData {
 		// Convert the document data back to simple JSON format
 		simplifiedData := util.FirestoreValueToJSON(documentData)
 		response["documentData"] = simplifiedData

@@ -647,7 +647,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 			isErr:    false,
 		},
 		{
-			name: "add document with returnDocumentData",
+			name: "add document with returnData",
 			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
@@ -655,7 +655,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 					"name": {"stringValue": "Return Test"},
 					"value": {"integerValue": "123"}
 				},
-				"returnDocumentData": true
+				"returnData": true
 			}`, collectionName))),
 			wantKeys:        []string{"documentPath", "createTime", "documentData"},
 			validateDocData: true,
