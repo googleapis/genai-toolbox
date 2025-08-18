@@ -1,0 +1,19 @@
+{
+  "name": "langchain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "quickstart.js",
+  "type" : "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/core": "^0.3.71",
+    "@langchain/google-genai": "^0.2.16",
+    "@langchain/langgraph": "^0.4.5",
+    "@toolbox-sdk/core": "^0.1.1"
+  }
+}
