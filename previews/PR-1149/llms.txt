@@ -94,8 +94,8 @@ List of reference documentation for resources in Toolbox.
 
 Samples and guides for using Toolbox.
 - [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/): How to get started with Toolbox using AlloyDB.
-  - [MCP Quickstart](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
-  - [Toolbox: AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/): A walkthrough of using a Jupyter Notebook to execute SQL queries from natural language with AlloyDB AI.
+  - [Quickstart (MCP with AlloyDB)](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
+  - [Getting started with alloydb-ai-nl tool](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/): An end to end tutorial for building an ADK agent using the AlloyDB AI NL tool.
 - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/bigquery/): How to get started with Toolbox using BigQuery.
   - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AlloyDB on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/</link><description>Recent content in AlloyDB on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/index.xml" rel="self" type="application/rss+xml"/><item><title>MCP Quickstart</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AlloyDB on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/</link><description>Recent content in AlloyDB on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/index.xml" rel="self" type="application/rss+xml"/><item><title>Quickstart (MCP with AlloyDB)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/mcp_quickstart/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
 &lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
 on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1149/how-to/connect_via_mcp/">connect to Toolbox via MCP&lt;/a>.&lt;/p>
@@ -12,7 +12,7 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-114
 &lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB Studio&lt;/a>, &lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any other PostgreSQL client.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>Toolbox: AlloyDB AI NL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
+&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
  
  
  &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>&lt;/p>
@@ -30,78 +30,6 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-114
  
  
  &lt;h2 id="step-1-set-up-database">Step 1: Set up Database&lt;/h2>
+&lt;p>Here, we will set up a sample AlloyDB database for testing out our &lt;code>alloydb-ai-nl&lt;/code> tool.&lt;/p>
 &lt;h3 id="authenticate-to-google-cloud-within-colab">Authenticate to Google Cloud within Colab&lt;/h3>
-&lt;p>You need to authenticate as an IAM user so this notebook can access your Google Cloud Project. This access is necessary to use Google&amp;rsquo;s LLM models.&lt;/p>
- &lt;/div>
- 
-
- 
- 
-
- 
-
- 
- &lt;div class="notebook-code">
- 
- 
- &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Run this and allow access through the pop-up&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">google.colab&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">auth&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">auth&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">authenticate_user&lt;/span>&lt;span class="p">()&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-
- 
- &lt;/div>
- 
- 
-
- 
- &lt;div class="notebook-markdown">
- 
- 
- &lt;h3 id="connect-your-google-cloud-project">Connect Your Google Cloud Project&lt;/h3>
-
- &lt;/div>
- 
-
- 
- 
-
- 
-
- 
- &lt;div class="notebook-code">
- 
- 
- &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># @markdown Please fill in the value below with your GCP project ID and then run the cell.&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Please fill in these values.&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">project_id&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;project-id&amp;#34;&lt;/span> &lt;span class="c1"># @param {type:&amp;#34;string&amp;#34;}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Quick input validations.&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">assert&lt;/span> &lt;span class="n">project_id&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;⚠️ Please provide a Google Cloud project ID&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Configure gcloud.&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">gcloud&lt;/span> &lt;span class="n">config&lt;/span> &lt;span class="nb">set&lt;/span> &lt;span class="n">project&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="n">project_id&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-
- 
- &lt;/div>
- 
- 
-
- 
- &lt;div class="notebook-markdown">
- 
- 
- &lt;h3 id="set-up-alloydb">Set up AlloyDB&lt;/h3>
-
- &lt;/div>
- 
-
- 
- 
-
- 
- &lt;div class="notebook-markdown">
- 
- 
- &lt;p>You will need a Postgres AlloyDB instance for the following stages of this notebook. Please set the following variables to connect to your instance or create a new instance.&lt;/p></description></item></channel></rss>
+&lt;p>You need to authenticate as an IAM user so this notebook can access your Google Cloud Project. This access is necessary to use Google&amp;rsquo;s LLM models.&lt;/p></description></item></channel></rss>
