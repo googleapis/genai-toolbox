@@ -17,8 +17,9 @@ package util
 import (
 	"encoding/base64"
 	"fmt"
-	"time"
+	"strconv"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/genproto/googleapis/type/latlng"
@@ -54,11 +55,12 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 					case int64:
 						return num, nil
 					case string:
-						// Parse string representation if needed
-						var i int64
-						if _, err := fmt.Sscanf(num, "%d", &i); err == nil {
-							return i, nil
+						// Parse string representation using strconv for better performance
+						i, err := strconv.ParseInt(strings.TrimSpace(num), 10, 64)
+						if err != nil {
+							return nil, fmt.Errorf("invalid integer value: %v", val)
 						}
+						return i, nil
 					}
 					return nil, fmt.Errorf("invalid integer value: %v", val)
 				case "doubleValue":
