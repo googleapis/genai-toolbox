@@ -413,7 +413,7 @@ in the cloud, on GCP, or on premises.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">timeout&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">600s&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The Looker base url will look like &amp;ldquo;&lt;a href="https://looker.example.com">https://looker.example.com&lt;/a>&amp;rdquo;, don&amp;rsquo;t include
 a trailing &amp;ldquo;/&amp;rdquo;. In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port numner like
+on-premises, you may need to add the API port number like
 &amp;ldquo;&lt;a href="https://looker.example.com:19999">https://looker.example.com:19999&lt;/a>&amp;rdquo;.&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
 flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
@@ -641,7 +641,7 @@ Connect your IDE to PostgreSQL using Toolbox.&lt;/li>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source only uses standard authentication. You will need to &lt;a href="https://www.postgresql.org/docs/current/sql-createuser.html">create a
 PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>Redis is an open-source, in-memory data structure store, used as a database,
+&lt;p>Redis is a in-memory data structure store, used as a database,
 cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.&lt;/p>

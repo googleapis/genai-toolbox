@@ -186,7 +186,7 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1037/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
+&lt;p>&lt;code>bigquery-list-table-ids&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
 from which to list table IDs. It also optionally accepts a &lt;code>project&lt;/code> parameter to
 define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
 tool defaults to using the project defined in the source configuration.&lt;/p>
