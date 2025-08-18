@@ -1,0 +1,19 @@
+{
+  "name": "genkit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "quickstart.js",
+  "type" : "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@genkit-ai/googleai": "^1.16.1",
+    "@genkit-ai/vertexai": "^1.16.1",
+    "@toolbox-sdk/core": "^0.1.1",
+    "genkit": "^1.16.1"
+  }
+}
