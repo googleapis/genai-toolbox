@@ -22,7 +22,7 @@ allowing tools to execute SQL queries against it.
 sources:
     my-couchbase-instance:
         kind: couchbase
-        connectionString: couchbase://localhost:127.0.0.1
+        connectionString: couchbase://localhost
         bucket: travel-sample
         scope: inventory
         username: Administrator
