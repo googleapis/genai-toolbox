@@ -568,12 +568,9 @@ main();
 
 {{< /tab >}}
 {{< tab header="Google Gen AI" lang="js" >}}
-
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
-import { z } from 'zod';
-import lodash from 'lodash';
-const { snakeCase, kebabCase } = lodash;
+
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
 const GOOGLE_API_KEY = 'enter-api-key'; // Replace it with your API key
@@ -610,16 +607,9 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
 async function runApplication() {
     const toolboxClient = new ToolboxClient(TOOLBOX_URL);
     let toolboxTools = [];
-    try {
 
-        toolboxTools = await toolboxClient.loadToolset("my-toolset");
-        console.log("Toolset loaded successfully.");
-    } catch (error) {
-        console.error(`"Failed to load toolset. Make sure your Toolbox server is running at ${TOOLBOX_URL}", ${error}`);
-        return;
-    }
-
-
+    toolboxTools = await toolboxClient.loadToolset("my-toolset");
+    
     const geminiTools = [{
         functionDeclarations: toolboxTools.map(tool => {
             
@@ -627,16 +617,16 @@ async function runApplication() {
             const properties = {};
             const required = [];
 
-            if (schema instanceof z.ZodObject) {
-                for (const [key, param] of Object.entries(schema.shape)) {
-                    properties[key] = {
+         
+            for (const [key, param] of Object.entries(schema.shape)) {
+                properties[key] = {
                         type: mapZodTypeToOpenAPIType(param.constructor.name),
                         description: param.description || '',
                     };
                 }
-            }
+            
             return {
-                name: snakeCase(tool.getName()),
+                name: tool.getName(),
                 description: tool.getDescription(),
                 parameters: { type: 'object', properties, required },
             };
@@ -656,13 +646,10 @@ async function runApplication() {
 
     for (const query of queries) {
         
-        console.log(`\nUser: ${query}`)
         let currentResult = await chat.sendMessage({ message: query });
         
-        let loopCount = 0;
-        let MAX_LOOPS = 10
         let finalResponseGiven = false
-        while (!finalResponseGiven && loopCount <= MAX_LOOPS) {
+        while (!finalResponseGiven) {
             
             const response = currentResult;
             const functionCalls = response.functionCalls || [];
@@ -673,7 +660,7 @@ async function runApplication() {
             } else {
                 const toolResponses = [];
                 for (const call of functionCalls) {
-                    const toolName = kebabCase(call.name);
+                    const toolName = call.name
                     const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
                     
                     if (toolToExecute) {
@@ -690,12 +677,9 @@ async function runApplication() {
                         }
                     }
                 }
-                
                 currentResult = await chat.sendMessage({ message: toolResponses });
             }
-            loopCount++;
         }
-        
     }
 }
 
