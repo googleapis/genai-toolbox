@@ -20,6 +20,8 @@ import (
 	"testing"
 
 	"github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"go.opentelemetry.io/otel"
 )
 
@@ -39,16 +41,16 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "all fields specified",
 			yaml: `
-name: test-clickhouse
-kind: clickhouse
-host: localhost
-port: "8443"
-user: default
-password: "mypass"
-database: mydb
-protocol: https
-secure: true
-`,
+				name: test-clickhouse
+				kind: clickhouse
+				host: localhost
+				port: "8443"
+				user: default
+				password: "mypass"
+				database: mydb
+				protocol: https
+				secure: true
+			`,
 			expected: Config{
 				Name:     "test-clickhouse",
 				Kind:     "clickhouse",
@@ -64,13 +66,13 @@ secure: true
 		{
 			name: "minimal configuration with defaults",
 			yaml: `
-name: minimal-clickhouse
-kind: clickhouse
-host: 127.0.0.1
-port: "8123"
-user: testuser
-database: testdb
-`,
+				name: minimal-clickhouse
+				kind: clickhouse
+				host: 127.0.0.1
+				port: "8123"
+				user: testuser
+				database: testdb
+			`,
 			expected: Config{
 				Name:     "minimal-clickhouse",
 				Kind:     "clickhouse",
@@ -86,16 +88,16 @@ database: testdb
 		{
 			name: "http protocol",
 			yaml: `
-name: http-clickhouse
-kind: clickhouse
-host: clickhouse.example.com
-port: "8123"
-user: analytics
-password: "securepass"
-database: analytics_db
-protocol: http
-secure: false
-`,
+				name: http-clickhouse
+				kind: clickhouse
+				host: clickhouse.example.com
+				port: "8123"
+				user: analytics
+				password: "securepass"
+				database: analytics_db
+				protocol: http
+				secure: false
+			`,
 			expected: Config{
 				Name:     "http-clickhouse",
 				Kind:     "clickhouse",
@@ -111,16 +113,16 @@ secure: false
 		{
 			name: "https with secure connection",
 			yaml: `
-name: secure-clickhouse
-kind: clickhouse
-host: secure.clickhouse.io
-port: "8443"
-user: secureuser
-password: "verysecure"
-database: production
-protocol: https
-secure: true
-`,
+				name: secure-clickhouse
+				kind: clickhouse
+				host: secure.clickhouse.io
+				port: "8443"
+				user: secureuser
+				password: "verysecure"
+				database: production
+				protocol: https
+				secure: true
+			`,
 			expected: Config{
 				Name:     "secure-clickhouse",
 				Kind:     "clickhouse",
@@ -137,7 +139,7 @@ secure: true
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(tt.yaml))
+			decoder := yaml.NewDecoder(strings.NewReader(string(testutils.FormatYaml(tt.yaml))))
 			config, err := newConfig(context.Background(), tt.expected.Name, decoder)
 			if err != nil {
 				t.Fatalf("Failed to create config: %v", err)
@@ -148,32 +150,8 @@ secure: true
 				t.Fatalf("Expected Config type, got %T", config)
 			}
 
-			if clickhouseConfig.Name != tt.expected.Name {
-				t.Errorf("Name: expected %q, got %q", tt.expected.Name, clickhouseConfig.Name)
-			}
-			if clickhouseConfig.Kind != tt.expected.Kind {
-				t.Errorf("Kind: expected %q, got %q", tt.expected.Kind, clickhouseConfig.Kind)
-			}
-			if clickhouseConfig.Host != tt.expected.Host {
-				t.Errorf("Host: expected %q, got %q", tt.expected.Host, clickhouseConfig.Host)
-			}
-			if clickhouseConfig.Port != tt.expected.Port {
-				t.Errorf("Port: expected %q, got %q", tt.expected.Port, clickhouseConfig.Port)
-			}
-			if clickhouseConfig.User != tt.expected.User {
-				t.Errorf("User: expected %q, got %q", tt.expected.User, clickhouseConfig.User)
-			}
-			if clickhouseConfig.Password != tt.expected.Password {
-				t.Errorf("Password: expected %q, got %q", tt.expected.Password, clickhouseConfig.Password)
-			}
-			if clickhouseConfig.Database != tt.expected.Database {
-				t.Errorf("Database: expected %q, got %q", tt.expected.Database, clickhouseConfig.Database)
-			}
-			if clickhouseConfig.Protocol != tt.expected.Protocol {
-				t.Errorf("Protocol: expected %q, got %q", tt.expected.Protocol, clickhouseConfig.Protocol)
-			}
-			if clickhouseConfig.Secure != tt.expected.Secure {
-				t.Errorf("Secure: expected %v, got %v", tt.expected.Secure, clickhouseConfig.Secure)
+			if diff := cmp.Diff(tt.expected, clickhouseConfig); diff != "" {
+				t.Errorf("Config mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -188,25 +166,25 @@ func TestNewConfigInvalidYAML(t *testing.T) {
 		{
 			name: "invalid yaml syntax",
 			yaml: `
-name: test-clickhouse
-kind: clickhouse
-host: [invalid
-`,
+				name: test-clickhouse
+				kind: clickhouse
+				host: [invalid
+			`,
 			expectError: true,
 		},
 		{
 			name: "missing required fields",
 			yaml: `
-name: test-clickhouse
-kind: clickhouse
-`,
+				name: test-clickhouse
+				kind: clickhouse
+			`,
 			expectError: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(tt.yaml))
+			decoder := yaml.NewDecoder(strings.NewReader(string(testutils.FormatYaml(tt.yaml))))
 			_, err := newConfig(context.Background(), "test-clickhouse", decoder)
 			if tt.expectError && err == nil {
 				t.Errorf("Expected error but got none")

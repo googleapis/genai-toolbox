@@ -51,9 +51,9 @@ type Config struct {
 	Kind     string `yaml:"kind" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
+	Database string `yaml:"database" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
 	Password string `yaml:"password"`
-	Database string `yaml:"database" validate:"required"`
 	Protocol string `yaml:"protocol"`
 	Secure   bool   `yaml:"secure"`
 }

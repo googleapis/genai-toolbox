@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,7 +39,15 @@ func TestNewSQLConfig(t *testing.T) {
 		t.Fatalf("Failed to create context with logger: %v", err)
 	}
 
-	yamlContent := `
+	tests := []struct {
+		name    string
+		yaml    string
+		want    SQLConfig
+		wantErr bool
+	}{
+		{
+			name: "valid config with parameters",
+			yaml: `
 name: test-clickhouse-tool
 kind: clickhouse-sql
 source: test-source
@@ -48,30 +57,62 @@ parameters:
   - name: id
     type: string
     description: Test ID
-`
-
-	decoder := yaml.NewDecoder(strings.NewReader(yamlContent))
-	config, err := newSQLConfig(ctx, "test-clickhouse-tool", decoder)
-	if err != nil {
-		t.Fatalf("Failed to create config: %v", err)
+`,
+			want: SQLConfig{
+				Name:        "test-clickhouse-tool",
+				Kind:        "clickhouse-sql",
+				Source:      "test-source",
+				Description: "Test ClickHouse tool",
+				Statement:   "SELECT * FROM test_table WHERE id = $1",
+				Parameters: tools.Parameters{
+					tools.NewStringParameter("id", "Test ID"),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid config without parameters",
+			yaml: `
+name: simple-tool
+kind: clickhouse-sql
+source: ch-source
+description: Simple query
+statement: SELECT 1
+`,
+			want: SQLConfig{
+				Name:        "simple-tool",
+				Kind:        "clickhouse-sql",
+				Source:      "ch-source",
+				Description: "Simple query",
+				Statement:   "SELECT 1",
+				Parameters:  nil,
+			},
+			wantErr: false,
+		},
 	}
 
-	clickhouseConfig, ok := config.(SQLConfig)
-	if !ok {
-		t.Fatalf("Expected Config type, got %T", config)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			decoder := yaml.NewDecoder(strings.NewReader(tt.yaml))
+			got, err := newSQLConfig(ctx, tt.want.Name, decoder)
+			
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("newSQLConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			
+			if err != nil {
+				return
+			}
 
-	if clickhouseConfig.Name != "test-clickhouse-tool" {
-		t.Errorf("Expected name 'test-clickhouse-tool', got %s", clickhouseConfig.Name)
-	}
-	if clickhouseConfig.Source != "test-source" {
-		t.Errorf("Expected source 'test-source', got %s", clickhouseConfig.Source)
-	}
-	if clickhouseConfig.Description != "Test ClickHouse tool" {
-		t.Errorf("Expected description 'Test ClickHouse tool', got %s", clickhouseConfig.Description)
-	}
-	if clickhouseConfig.Statement != "SELECT * FROM test_table WHERE id = $1" {
-		t.Errorf("Expected statement 'SELECT * FROM test_table WHERE id = $1', got %s", clickhouseConfig.Statement)
+			gotConfig, ok := got.(SQLConfig)
+			if !ok {
+				t.Fatalf("Expected SQLConfig type, got %T", got)
+			}
+
+			if diff := cmp.Diff(tt.want, gotConfig); diff != "" {
+				t.Errorf("newSQLConfig() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
@@ -97,7 +138,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
 
-	clickhouseTool, ok := tool.(SQLTool)
+	clickhouseTool, ok := tool.(Tool)
 	if !ok {
 		t.Fatalf("Expected Tool type, got %T", tool)
 	}
@@ -130,6 +171,13 @@ func TestSQLConfigInitializeMissingSource(t *testing.T) {
 	}
 }
 
+// mockIncompatibleSource is a mock source that doesn't implement the compatibleSource interface
+type mockIncompatibleSource struct{}
+
+func (m *mockIncompatibleSource) SourceKind() string {
+	return "mock"
+}
+
 func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 	config := SQLConfig{
 		Name:        "test-tool",
@@ -156,8 +204,8 @@ func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 	}
 }
 
-func TestSQLToolManifest(t *testing.T) {
-	tool := SQLTool{
+func TestToolManifest(t *testing.T) {
+	tool := Tool{
 		manifest: tools.Manifest{
 			Description: "Test description",
 			Parameters:  []tools.ParameterManifest{},
@@ -170,8 +218,8 @@ func TestSQLToolManifest(t *testing.T) {
 	}
 }
 
-func TestSQLToolMcpManifest(t *testing.T) {
-	tool := SQLTool{
+func TestToolMcpManifest(t *testing.T) {
+	tool := Tool{
 		mcpManifest: tools.McpManifest{
 			Name:        "test-tool",
 			Description: "Test description",
@@ -187,7 +235,7 @@ func TestSQLToolMcpManifest(t *testing.T) {
 	}
 }
 
-func TestSQLTool_Authorized(t *testing.T) {
+func TestToolAuthorized(t *testing.T) {
 	tests := []struct {
 		name                 string
 		authRequired         []string
@@ -222,7 +270,7 @@ func TestSQLTool_Authorized(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool := SQLTool{
+			tool := Tool{
 				AuthRequired: tt.authRequired,
 			}
 

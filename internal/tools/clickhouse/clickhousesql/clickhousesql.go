@@ -24,6 +24,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
+type compatibleSource interface {
+	ClickHousePool() *sql.DB
+}
+
+var compatibleSources = []string{"clickhouse"}
+
 const sqlKind string = "clickhouse-sql"
 
 func init() {
@@ -76,7 +82,7 @@ func (cfg SQLConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, err
 		InputSchema: paramMcpManifest,
 	}
 
-	t := SQLTool{
+	t := Tool{
 		Name:               cfg.Name,
 		Kind:               sqlKind,
 		Parameters:         cfg.Parameters,
@@ -91,9 +97,9 @@ func (cfg SQLConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, err
 	return t, nil
 }
 
-var _ tools.Tool = SQLTool{}
+var _ tools.Tool = Tool{}
 
-type SQLTool struct {
+type Tool struct {
 	Name               string           `yaml:"name"`
 	Kind               string           `yaml:"kind"`
 	AuthRequired       []string         `yaml:"authRequired"`
@@ -107,7 +113,7 @@ type SQLTool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t SQLTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -180,18 +186,18 @@ func (t SQLTool) Invoke(ctx context.Context, params tools.ParamValues) (any, err
 	return out, nil
 }
 
-func (t SQLTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.AllParams, data, claims)
 }
 
-func (t SQLTool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t SQLTool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t SQLTool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

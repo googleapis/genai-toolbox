@@ -24,6 +24,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
+type compatibleSource interface {
+	ClickHousePool() *sql.DB
+}
+
+var compatibleSources = []string{"clickhouse"}
+
 const executeSQLKind string = "clickhouse-execute-sql"
 
 func init() {
@@ -100,13 +106,13 @@ type ExecuteSQLTool struct {
 }
 
 func (t ExecuteSQLTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	sqlStatement, ok := sliceParams[0].(string)
+	paramsMap := params.AsMap()
+	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast sql parameter %v", sliceParams[0])
+		return nil, fmt.Errorf("unable to cast sql parameter %s", paramsMap["sql"])
 	}
 
-	results, err := t.Pool.QueryContext(ctx, sqlStatement)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

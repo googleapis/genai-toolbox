@@ -616,6 +616,7 @@ availableSecrets:
       env: TIDB_USER
     - versionName: projects/107716898620/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_host/versions/latest
       env: CLICKHOUSE_HOST
     - versionName: projects/$PROJECT_ID/secrets/clickhouse_user/versions/latest
       env: CLICKHOUSE_USER
