@@ -114,20 +114,21 @@ func TestSnowflake(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := tests.GetSnowflakeParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupSnowflakeTable(t, ctx, db, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := getSnowflakeParamToolInfo(tableNameParam)
+	teardownTable1 := setupSnowflakeTable(t, ctx, db, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetSnowflakeAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupSnowflakeTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getSnowflakeAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupSnowflakeTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddSnowflakeExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetSnowflakeTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
+toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
+tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
+toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -145,10 +146,100 @@ func TestSnowflake(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetSnowflakeWants()
+	select1Want, failInvocationWant, createTableStatement := getSnowflakeWants()
 	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
 	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+}
+
+// addSnowflakeExecuteSqlConfig gets the tools config for `snowflake-execute-sql`
+func addSnowflakeExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+
+tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+
+tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "snowflake-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+
+tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "snowflake-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+// getSnowflakeParamToolInfo returns statements and param for my-param-tool snowflake-sql kind
+func getSnowflakeParamToolInfo(tableName string) (string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
+}
+
+// getSnowflakeAuthToolInfo returns statements and param of my-auth-tool for snowflake-sql kind
+func getSnowflakeAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING, email STRING);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
+	params := []any{"Alice", tests.ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+// getSnowflakeTmplToolStatement returns statements and param for template parameter test cases for snowflake-sql kind
+func getSnowflakeTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}
+
+// getSnowflakeWants return the expected wants for snowflake
+func getSnowflakeWants() (string, string, string) {
+	select1Want := "[{\"1\":1}]"
+	failInvocationWant := `{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: 000606 (57P03): No active warehouse selected in the current session.  Select an active warehouse with the 'use warehouse' command.\"}],\"isError\":true}}`
+	createTableStatement := "\"CREATE TABLE t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)\""
+	return select1Want, failInvocationWant, createTableStatement
+}
+
+// setupSnowflakeTable creates and inserts data into a table of tool
+// compatible with snowflake-sql tool
+func setupSnowflakeTable(t *testing.T, ctx context.Context, db *sqlx.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+	err := db.PingContext(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	// Create table
+	_, err = db.QueryxContext(ctx, createStatement)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	_, err = db.QueryxContext(ctx, insertStatement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = db.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
 }
