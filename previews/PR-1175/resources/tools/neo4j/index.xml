@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Neo4j on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/</link><description>Recent content in Neo4j on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/index.xml" rel="self" type="application/rss+xml"/><item><title>neo4j-cypher</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/neo4j-cypher/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/neo4j-cypher/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>neo4j-cypher&lt;/code> tool executes a pre-defined Cypher statement against a Neo4j
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/sources/neo4j/">neo4j&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified Cypher statement is executed as a &lt;a href="https://neo4j.com/docs/cypher-manual/current/syntax/parameters/">parameterized
+statement&lt;/a>, and specified parameters will be used according to
+their name: e.g. &lt;code>$id&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>neo4j-execute-cypher</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/neo4j-execute-cypher/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/neo4j-execute-cypher/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>neo4j-execute-cypher&lt;/code> tool executes an arbitrary Cypher query provided as a
+string parameter against a Neo4j database. It&amp;rsquo;s designed to be a flexible tool
+for interacting with the database when a pre-defined query is not sufficient.
+This tool is compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/sources/neo4j/">neo4j&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>For security, the tool can be configured to be read-only. If the &lt;code>readOnly&lt;/code> flag
+is set to &lt;code>true&lt;/code>, the tool will analyze the incoming Cypher query and reject any
+write operations (like &lt;code>CREATE&lt;/code>, &lt;code>MERGE&lt;/code>, &lt;code>DELETE&lt;/code>, etc.) before execution.&lt;/p></description></item><item><title>neo4j-schema</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/neo4j-schema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/tools/neo4j/neo4j-schema/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>neo4j-schema&lt;/code> tool connects to a Neo4j database and extracts its complete schema information. It runs multiple queries concurrently to efficiently gather details about node labels, relationships, properties, constraints, and indexes.&lt;/p>
+&lt;p>The tool automatically detects if the APOC (Awesome Procedures on Cypher) library is available. If so, it uses APOC procedures like &lt;code>apoc.meta.schema&lt;/code> for a highly detailed overview of the database structure; otherwise, it falls back to using native Cypher queries.&lt;/p></description></item></channel></rss>
