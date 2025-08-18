@@ -567,7 +567,6 @@ async function main() {
 main();
 
 {{< /tab >}}
-{{< tab header="Google Gen AI" lang="js" >}}
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 
