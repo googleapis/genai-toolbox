@@ -12,7 +12,7 @@ aliases:
 ## About
 
 A `looker-get-filters` tool returns all the filters from a given explore
-in a given mode in the source.
+in a given model in the source.
 
 It's compatible with the following sources:
 
