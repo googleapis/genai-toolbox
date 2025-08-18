@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -28,6 +29,8 @@ import (
 // ProcessMethod returns a response for the request.
 func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte) (any, error) {
 	switch method {
+	case PING:
+		return mcputil.PingHandler(id)
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
