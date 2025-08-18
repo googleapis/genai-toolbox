@@ -25,7 +25,7 @@ import (
 	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 )
 
-func TestParseFromYamlLookerQuery(t *testing.T) {
+func TestParseFromYamlLookerMakeLook(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -73,7 +73,7 @@ func TestParseFromYamlLookerQuery(t *testing.T) {
 
 }
 
-func TestFailParseFromYamlLookerQuery(t *testing.T) {
+func TestFailParseFromYamlLookerMakeLook(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)

@@ -120,6 +120,16 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_looks": map[string]any{
+				"kind":        "looker-get-looks",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_dashboards": map[string]any{
+				"kind":        "looker-get-dashboards",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -294,7 +304,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -347,6 +357,266 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "query_sql",
+		map[string]any{
+			"query_sql": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore to be queried.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The fields to be retrieved.",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be returned in the query",
+							"name":        "field",
+							"required":    true,
+							"type":        "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The filters for the query",
+						"name":                 "filters",
+						"required":             false,
+						"type":                 "object",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a pivot in the query",
+							"name":        "pivot_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a sort in the query",
+							"name":        "sort_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The row limit.",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query timezone.",
+						"name":        "tz",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "query_url",
+		map[string]any{
+			"query_url": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore to be queried.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The fields to be retrieved.",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be returned in the query",
+							"name":        "field",
+							"required":    true,
+							"type":        "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The filters for the query",
+						"name":                 "filters",
+						"required":             false,
+						"type":                 "object",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a pivot in the query",
+							"name":        "pivot_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a sort in the query",
+							"name":        "sort_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The row limit.",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query timezone.",
+						"name":        "tz",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The visualization config for the query",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_looks",
+		map[string]any{
+			"get_looks": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The title of the look.",
+						"name":        "title",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The description of the look.",
+						"name":        "desc",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The number of looks to fetch. Default 100",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The number of looks to skip before fetching. Default 0",
+						"name":        "offset",
+						"required":    false,
+						"type":        "integer",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_dashboards",
+		map[string]any{
+			"get_dashboards": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The title of the dashboard.",
+						"name":        "title",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The description of the dashboard.",
+						"name":        "desc",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The number of dashboards to fetch. Default 100",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The number of dashboards to skip before fetching. Default 0",
+						"name":        "offset",
+						"required":    false,
+						"type":        "integer",
+					},
+				},
+			},
+		},
+	)
 
 	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
@@ -374,4 +644,11 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "system__activity"
 	tests.RunToolInvokeParametersTest(t, "query_url", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+
+	// A system that is just being used for testing has no looks or dashboards
+	wantResult = "null"
+	tests.RunToolInvokeParametersTest(t, "get_looks", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
+
+	wantResult = "null"
+	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
 }

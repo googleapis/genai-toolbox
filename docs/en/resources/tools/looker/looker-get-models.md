@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-A `looker-get-models` tool returns all the models the source.
+A `looker-get-models` tool returns all the models in the source.
 
 It's compatible with the following sources:
 

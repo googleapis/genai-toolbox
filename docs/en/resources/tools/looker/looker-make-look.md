@@ -18,7 +18,7 @@ It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-make-look` takes eight parameters:
+`looker-make-look` takes eleven parameters:
 
 1. the `model`
 2. the `explore`

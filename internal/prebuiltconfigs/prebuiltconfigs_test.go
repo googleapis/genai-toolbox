@@ -34,6 +34,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		"looker",
 		"mssql",
 		"mysql",
+		"oceanbase",
 		"postgres",
 		"snowflake",
 		"spanner-postgres",
@@ -80,6 +81,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	firestoreconfig, _ := Get("firestore")
 	mysql_config, _ := Get("mysql")
 	mssql_config, _ := Get("mssql")
+	oceanbase_config, _ := Get("oceanbase")
 	postgresconfig, _ := Get("postgres")
 	snowflake_config, _ := Get("snowflake")
 	spanner_config, _ := Get("spanner")
@@ -113,6 +115,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(mssql_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch mssql prebuilt tools yaml")
+	}
+	if len(oceanbase_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch oceanbase prebuilt tools yaml")
 	}
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")

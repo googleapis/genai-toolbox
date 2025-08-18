@@ -39,12 +39,12 @@ sources:
 
 The Looker base url will look like "https://looker.example.com", don't include
 a trailing "/". In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port numner like
+on-premises, you may need to add the API port number like
 "https://looker.example.com:19999".
 
 Verify ssl should almost always be "true" (all lower case) unless you are using
 a self-signed ssl certificate for the Looker server. Anything other than "true"
-will be interpretted as false.
+will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
 assigned by the looker server.
