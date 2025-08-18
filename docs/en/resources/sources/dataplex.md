@@ -218,22 +218,45 @@ Search syntax supports the following qualifiers:
 - "label.foo" - Matches BigQuery resources that have a label whose key equals foo as a string.
 - "type=TYPE" - Matches resources of a specific entry type or its type alias.
 - "projectid:bar" - Matches resources within Google Cloud projects that match bar as a substring in the ID.
-- "parent:x" - Matches x as a substring of the hierarchical path of a resource. The parent path is a fully_qualified_name of the parent resource.
+- "parent:x" - Matches x as a substring of the hierarchical path of a resource. It supports same syntax as `name` predicate.
 - "orgid=number" - Matches resources within a Google Cloud organization with the exact ID value of the number.
 - "system=SYSTEM" - Matches resources from a specified system. For example, system=bigquery matches BigQuery resources.
 - "location=LOCATION" - Matches resources in a specified location with an exact name. For example, location=us-central1 matches assets hosted in Iowa. BigQuery Omni assets support this qualifier by using the BigQuery Omni location name. For example, location=aws-us-east-1 matches BigQuery Omni assets in Northern Virginia.
 - "createtime" -
 Finds resources that were created within, before, or after a given date or time. For example "createtime:2019-01-01" matches resources created on 2019-01-01. 
 - "updatetime" - Finds resources that were updated within, before, or after a given date or time. For example "updatetime>2019-01-01" matches resources updated after 2019-01-01.
-- "fully_qualified_name:x" - Matches x as a substring of fully_qualified_name.
-- "fully_qualified_name=x" - Matches x as fully_qualified_name.
+
+### Aspect Search
+To search for entries based on their attached aspects, use the following query syntax.
+
+aspect:x	Matches x as a substring of the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
+aspect=x	Matches x as the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
+aspect:xOPERATORvalue	
+Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID.FIELD_NAME
+
+The list of supported {OPERATOR}s depends on the type of field in the aspect, as follows:
+- String: = (exact match) and : (substring)
+- All number types: =, :, <, >, <=, >=, =>, =<
+- Enum: =
+- Datetime: same as for numbers, but the values to compare are treated as datetimes instead of numbers
+- Boolean: =
+
+Only top-level fields of the aspect are searchable. For example, all of the following queries match entries where the value of the is-enrolled field in the employee-info aspect type is true. Other entries that match on the substring are also returned.
+- aspect:example-project.us-central1.employee-info.is-enrolled=true
+- aspect:example-project.us-central1.employee=true
+- aspect:employee=true
+
+Example:-
+You can use following filters
+- dataplex-types.global.bigquery-table.type={BIGLAKE_TABLE, BIGLAKE_OBJECT_TABLE, EXTERNAL_TABLE, TABLE}
+- dataplex-types.global.storage.type={STRUCTURED, UNSTRUCTURED}
 
 ### Logical operators
 A query can consist of several predicates with logical operators. If you don't specify an operator, logical AND is implied. For example, foo bar returns resources that match both predicate foo and predicate bar.
 Logical AND and logical OR are supported. For example, foo OR bar.
 
 You can negate a predicate with a - (hyphen) or NOT prefix. For example, -name:foo returns resources with names that don't match the predicate foo.
-Logical operators aren't case-sensitive. For example, both or and OR are acceptable.
+Logical operators are case-sensitive. `OR` and `AND` are acceptable whereas `or` and `and` are not.
 
 ### Request
 1. Always try to rewrite the prompt using search syntax.
@@ -287,7 +310,7 @@ Logical operators aren't case-sensitive. For example, both or and OR are accepta
 
 ## Tool: dataplex_lookup_entry
 ### Request
-1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter.
+1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter. If you do not know the name of the aspect type, use the `dataplex_search_aspect_types` tool.
 2. If you do not know the name of the entry, use `dataplex_search_entries` tool
 ### Response
 1. Unless asked for a specific aspect, respond with all aspects attached to the entry.
