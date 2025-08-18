@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"time"
+	"strings"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/genproto/googleapis/type/latlng"
@@ -219,25 +220,12 @@ func isValidDocumentPath(path string) bool {
 
 // splitPath splits a path by '/' while handling empty segments correctly
 func splitPath(path string) []string {
-	if path == "" {
-		return []string{}
-	}
-
-	var segments []string
-	segment := ""
-	for _, char := range path {
-		if char == '/' {
-			if segment != "" {
-				segments = append(segments, segment)
-				segment = ""
-			}
-		} else {
-			segment += string(char)
-		}
-	}
-	if segment != "" {
-		segments = append(segments, segment)
-	}
-
-	return segments
-}
+    rawSegments := strings.Split(path, "/")
+    var segments []string
+     for _, s := range rawSegments {
+         if s != "" {
+             segments = append(segments, s)
+         }
+     }
+     return segments
+ }
