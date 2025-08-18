@@ -38,19 +38,19 @@ timeout 5s ./toolbox --prebuilt snowflake --stdio 2>&1 | head -5
 echo ""
 echo "=== Testing Custom Configuration ==="
 echo "This will attempt to initialize with the custom Snowflake configuration:"
-echo "Command: ./toolbox --tools-file examples/snowflake-config.yaml --stdio"
+echo "Command: ./toolbox --tools-file docs/en/samples/snowflake/snowflake-config.yaml --stdio"
 echo ""
 echo "Expected result: Connection failure due to test credentials (this is normal)"
 echo ""
 
 # Test the custom configuration (this will fail with test credentials, which is expected)
-timeout 5s ./toolbox --tools-file examples/snowflake-config.yaml --stdio 2>&1 | head -5
+timeout 5s ./toolbox --tools-file docs/en/samples/snowflake/snowflake-config.yaml --stdio 2>&1 | head -5
 
 echo ""
 echo "=== Instructions for Real Usage ==="
-echo "1. Copy examples/snowflake-env.sh to your own file"
+echo "1. Copy docs/en/samples/snowflake/snowflake-env.sh to your own file"
 echo "2. Edit it with your actual Snowflake credentials"
 echo "3. Source the file: source your-snowflake-env.sh"
 echo "4. Run: ./toolbox --prebuilt snowflake"
 echo ""
-echo "For more information, see examples/README.md"
+echo "For more information, see docs/en/samples/snowflake"
