@@ -820,13 +820,14 @@ func TestParseToolFileWithAuth(t *testing.T) {
 
 func TestEnvVarReplacement(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
-	os.Setenv("TestHeader", "ACTUAL_HEADER")
-	os.Setenv("API_KEY", "ACTUAL_API_KEY")
-	os.Setenv("clientId", "ACTUAL_CLIENT_ID")
-	os.Setenv("clientId2", "ACTUAL_CLIENT_ID_2")
-	os.Setenv("toolset_name", "ACTUAL_TOOLSET_NAME")
-	os.Setenv("cat_string", "cat")
-	os.Setenv("food_string", "food")
+	t.Setenv("TestHeader", "ACTUAL_HEADER")
+	t.Setenv("API_KEY", "ACTUAL_API_KEY")
+	t.Setenv("clientId", "ACTUAL_CLIENT_ID")
+	t.Setenv("clientId2", "ACTUAL_CLIENT_ID_2")
+	t.Setenv("toolset_name", "ACTUAL_TOOLSET_NAME")
+	t.Setenv("cat_string", "cat")
+	t.Setenv("food_string", "food")
+	t.Setenv("TestHeader", "ACTUAL_HEADER")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1161,6 +1162,7 @@ func TestSingleEdit(t *testing.T) {
 }
 
 func TestPrebuiltTools(t *testing.T) {
+	// Get prebuilt configs
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
@@ -1175,6 +1177,44 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+
+	// Set environment variables
+	t.Setenv("API_KEY", "your_api_key")
+	t.Setenv("BIGQUERY_PROJECT", "your_gcp_project_id")
+	t.Setenv("DATAPLEX_PROJECT", "your_gcp_project_id")
+	t.Setenv("FIRESTORE_PROJECT", "your_gcp_project_id")
+	t.Setenv("FIRESTORE_DATABASE", "your_firestore_db_name")
+	t.Setenv("SPANNER_DATABASE", "your_spanner_db")
+	t.Setenv("CLOUD_SQL_MYSQL_PROJECT", "your_gcp_project")
+	t.Setenv("CLOUD_SQL_MYSQL_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_SQL_MYSQL_INSTANCE", "your_instance")
+	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
+	t.Setenv("CLOUD_SQL_MYSQL_USER", "your_cloudsql_mysql_user")
+	t.Setenv("CLOUD_SQL_MYSQL_PASSWORD", "your_cloudsql_mysql_password")
+	t.Setenv("CLOUD_SQL_MYSQL_DATABASE", "your_cloudsql_mysql_db")
+	t.Setenv("CLOUD_SQL_MSSQL_IP_ADDRESS", "127.0.0.1")
+	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
+	t.Setenv("ALLOYDB_POSTGRES_PASSWORD", "your_alloydb_password")
+	t.Setenv("POSTGRES_HOST", "localhost")
+	t.Setenv("POSTGRES_USER", "your_postgres_user")
+	t.Setenv("POSTGRES_PASSWORD", "your_postgres_password")
+	t.Setenv("POSTGRES_DATABASE", "your_postgres_db")
+	t.Setenv("POSTGRES_PORT", "5432")
+	t.Setenv("MYSQL_HOST", "localhost")
+	t.Setenv("MYSQL_USER", "your_mysql_user")
+	t.Setenv("MYSQL_PASSWORD", "your_mysql_password")
+	t.Setenv("MYSQL_DATABASE", "your_mysql_db")
+	t.Setenv("MYSQL_PORT", "3306")
+	t.Setenv("MSSQL_HOST", "localhost")
+	t.Setenv("MSSQL_USER", "your_mssql_user")
+	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
+	t.Setenv("MSSQL_DATABASE", "your_mssql_db")
+	t.Setenv("MSSQL_PORT", "1433")
+	t.Setenv("LOOKER_BASE_URL", "https://yourlooker.com")
+	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
+	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
+	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
