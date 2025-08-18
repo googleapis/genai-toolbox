@@ -12,7 +12,7 @@ aliases:
 
 A `bigquery-ask-data-insights` tool allows you to ask questions about your data in natural language. 
 
-This function takes a user's  question (which can include conversational history for context) 
+This function takes a user's question (which can include conversational history for context) 
 and references to specific BigQuery tables, and sends them to a stateless conversational API.
 
 The API uses a GenAI agent to understand the question, generate and execute SQL queries 
