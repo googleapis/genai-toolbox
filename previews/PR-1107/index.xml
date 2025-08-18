@@ -729,10 +729,10 @@ with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/
  &lt;td>&lt;code>documentData&lt;/code>&lt;/td>
  &lt;td>map&lt;/td>
  &lt;td>Yes&lt;/td>
- &lt;td>The data to be added as a document to the given collection. Must use Firestore&amp;rsquo;s native JSON format with typed values&lt;/td>
+ &lt;td>The data to be added as a document to the given collection. Must use &lt;a href="https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value">Firestore&amp;rsquo;s native JSON format&lt;/a> with typed values&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td>&lt;code>returnDocumentData&lt;/code>&lt;/td>
+ &lt;td>&lt;code>returnData&lt;/code>&lt;/td>
  &lt;td>boolean&lt;/td>
  &lt;td>No&lt;/td>
  &lt;td>If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context&lt;/td>
