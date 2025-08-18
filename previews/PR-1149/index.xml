@@ -4126,21 +4126,16 @@ exponential backoff.&lt;/p>
  &lt;/span>Info&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1149/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
  
  
- &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>&lt;/p>
+ &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
+Colab">&lt;/a>&lt;/p>
+&lt;h1 id="objective">Objective&lt;/h1>
+&lt;p>In this notebook, we will be using the &lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/alloydb-ai-nl/">AlloyDB AI NL
+tool&lt;/a>
+to generate and execute SQL queries on AlloyDB databases. We will start by
+setting up an AlloyDB database and then connecting to it using &lt;a href="https://github.com/googleapis/genai-toolbox">MCP
+Toolbox&lt;/a> and &lt;a href="https://google.github.io/adk-docs/">ADK&lt;/a>. This allows us to leverage AlloyDB
+NL to SQL capabilities in agentic applications.&lt;/p>
+&lt;p>For detailed information on the AlloyDB capability, please see &lt;a href="https://cloud.google.com/alloydb/docs/ai/natural-language-overview">AlloyDB AI
+Natural Language Overview&lt;/a>.&lt;/p>
 &lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
-&lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p>
-
- &lt;/div>
- 
-
- 
- 
-
- 
- &lt;div class="notebook-markdown">
- 
- 
- &lt;h2 id="step-1-set-up-database">Step 1: Set up Database&lt;/h2>
-&lt;p>Here, we will set up a sample AlloyDB database for testing out our &lt;code>alloydb-ai-nl&lt;/code> tool.&lt;/p>
-&lt;h3 id="authenticate-to-google-cloud-within-colab">Authenticate to Google Cloud within Colab&lt;/h3>
-&lt;p>You need to authenticate as an IAM user so this notebook can access your Google Cloud Project. This access is necessary to use Google&amp;rsquo;s LLM models.&lt;/p></description></item></channel></rss>
+&lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p></description></item></channel></rss>
