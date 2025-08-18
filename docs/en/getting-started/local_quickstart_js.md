@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [JsGenai](https://github.com/googleapis/js-genai).
+  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [Google Genai](https://github.com/googleapis/js-genai).
 ---
 
 ## Before you begin
@@ -302,7 +302,7 @@ npm install genkit @genkit-ai/googleai
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
-{{< tab header="JsGenai" lang="bash" >}}
+{{< tab header="Google Genai" lang="bash" >}}
 npm install @google/genai 
 {{< /tab >}}
 {{< /tabpane >}}
@@ -567,16 +567,14 @@ async function main() {
 main();
 
 {{< /tab >}}
-{{< tab header="Google Gen AI" lang="js" >}}
 
+{{< tab header="Google Gen AI" lang="js" >}}
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
-import { z } from 'zod';
-import lodash from 'lodash';
-const { snakeCase, kebabCase } = lodash;
+
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-const GOOGLE_API_KEY = 'enter-api-key'; // Replace it with your API key
+const GOOGLE_API_KEY = 'enter your api here '; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -590,7 +588,7 @@ Don't ask for confirmations from the user.
 
 const queries = [
   "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
+  "Can you book  Hilton Basel for me?",
   "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
@@ -610,16 +608,9 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
 async function runApplication() {
     const toolboxClient = new ToolboxClient(TOOLBOX_URL);
     let toolboxTools = [];
-    try {
 
-        toolboxTools = await toolboxClient.loadToolset("my-toolset");
-        console.log("Toolset loaded successfully.");
-    } catch (error) {
-        console.error(`"Failed to load toolset. Make sure your Toolbox server is running at ${TOOLBOX_URL}", ${error}`);
-        return;
-    }
-
-
+    toolboxTools = await toolboxClient.loadToolset("my-toolset");
+    
     const geminiTools = [{
         functionDeclarations: toolboxTools.map(tool => {
             
@@ -627,16 +618,16 @@ async function runApplication() {
             const properties = {};
             const required = [];
 
-            if (schema instanceof z.ZodObject) {
-                for (const [key, param] of Object.entries(schema.shape)) {
-                    properties[key] = {
+         
+            for (const [key, param] of Object.entries(schema.shape)) {
+                properties[key] = {
                         type: mapZodTypeToOpenAPIType(param.constructor.name),
                         description: param.description || '',
                     };
                 }
-            }
+            
             return {
-                name: snakeCase(tool.getName()),
+                name: tool.getName(),
                 description: tool.getDescription(),
                 parameters: { type: 'object', properties, required },
             };
@@ -656,13 +647,10 @@ async function runApplication() {
 
     for (const query of queries) {
         
-        console.log(`\nUser: ${query}`)
         let currentResult = await chat.sendMessage({ message: query });
         
-        let loopCount = 0;
-        let MAX_LOOPS = 10
         let finalResponseGiven = false
-        while (!finalResponseGiven && loopCount <= MAX_LOOPS) {
+        while (!finalResponseGiven) {
             
             const response = currentResult;
             const functionCalls = response.functionCalls || [];
@@ -673,7 +661,7 @@ async function runApplication() {
             } else {
                 const toolResponses = [];
                 for (const call of functionCalls) {
-                    const toolName = kebabCase(call.name);
+                    const toolName = call.name
                     const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
                     
                     if (toolToExecute) {
@@ -690,12 +678,9 @@ async function runApplication() {
                         }
                     }
                 }
-                
                 currentResult = await chat.sendMessage({ message: toolResponses });
             }
-            loopCount++;
         }
-        
     }
 }
 
