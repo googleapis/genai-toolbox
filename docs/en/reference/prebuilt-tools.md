@@ -1,0 +1,245 @@
+---
+title: "Prebuilt Tools Reference"
+type: docs
+weight: 1
+description: >
+    This page lists all the prebuilt tools available.
+---
+
+## AlloyDB Postgres
+
+*   **Environment Variables:**
+    *   `ALLOYDB_POSTGRES_PROJECT`: The GCP project ID.
+    *   `ALLOYDB_POSTGRES_REGION`: The region of your AlloyDB instance.
+    *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
+    *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
+    *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
+    *   `ALLOYDB_POSTGRES_USER`: The database username.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   The user's IP address must be authorized to connect to the AlloyDB instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## AlloyDB Postgres Admin
+
+*   **Environment Variables:**
+    *   `API_KEY`: Your API key for the AlloyDB API.
+*   **Permissions:**
+    *   **AlloyDB Admin** (`roles/alloydb.admin`) IAM role is required on the project.
+*   **Tools:**
+    *   `alloydb-create-cluster`: Creates a new AlloyDB cluster.
+    *   `alloydb-operations-get`: Polls the operations API to track the status of long-running operations.
+    *   `alloydb-create-instance`: Creates a new AlloyDB instance within a cluster.
+    *   `alloydb-list-clusters`: Lists all AlloyDB clusters in a project.
+    *   `alloydb-list-instances`: Lists all instances within an AlloyDB cluster.
+    *   `alloydb-list-users`: Lists all database users within an AlloyDB cluster.
+    *   `alloydb-create-user`: Creates a new database user in an AlloyDB cluster.
+
+## BigQuery
+
+*   **Environment Variables:**
+    *   `BIGQUERY_PROJECT`: The GCP project ID.
+*   **Permissions:**
+    *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
+    *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
+    *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL statement.
+    *   `get_dataset_info`: Gets dataset metadata.
+    *   `get_table_info`: Gets table metadata.
+    *   `list_dataset_ids`: Lists datasets.
+    *   `list_table_ids`: Lists tables.
+
+## Cloud SQL for MySQL
+
+*   **Environment Variables:**
+    *   `CLOUD_SQL_MYSQL_PROJECT`: The GCP project ID.
+    *   `CLOUD_SQL_MYSQL_REGION`: The region of your Cloud SQL instance.
+    *   `CLOUD_SQL_MYSQL_INSTANCE`: The ID of your Cloud SQL instance.
+    *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
+    *   `CLOUD_SQL_MYSQL_USER`: The database username.
+    *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
+    *   The user's IP address must be authorized to connect.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for PostgreSQL
+
+*   **Environment Variables:**
+    *   `CLOUD_SQL_POSTGRES_PROJECT`: The GCP project ID.
+    *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
+    *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
+    *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
+    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
+    *   The user's IP address must be authorized to connect.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for SQL Server
+
+*   **Environment Variables:**
+    *   `CLOUD_SQL_MSSQL_PROJECT`: The GCP project ID.
+    *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
+    *   `CLOUD_SQL_MSSQL_INSTANCE`: The ID of your Cloud SQL instance.
+    *   `CLOUD_SQL_MSSQL_DATABASE`: The name of the database to connect to.
+    *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
+    *   `CLOUD_SQL_MSSQL_USER`: The database username.
+    *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
+    *   The user's IP address must be authorized to connect.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Dataplex
+
+*   **Environment Variables:**
+    *   `DATAPLEX_PROJECT`: The GCP project ID.
+*   **Permissions:**
+    *   **Dataplex Reader** (`roles/dataplex.viewer`) to search and look up entries.
+    *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
+*   **Tools:**
+    *   `dataplex_search_entries`: Searches for entries in Dataplex Catalog.
+    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex Catalog.
+    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the query.
+
+## Firestore
+
+*   **Environment Variables:**
+    *   `FIRESTORE_PROJECT`: The GCP project ID.
+    *   `FIRESTORE_DATABASE`: The Firestore database ID.
+*   **Permissions:**
+    *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
+    *   **Cloud Datastore Owner** (`roles/datastore.owner`) to delete documents.
+    *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
+*   **Tools:**
+    *   `firestore-get-documents`: Gets multiple documents from Firestore by their paths.
+    *   `firestore-list-collections`: Lists Firestore collections for a given parent path.
+    *   `firestore-delete-documents`: Deletes multiple documents from Firestore.
+    *   `firestore-query-collection`: Retrieves one or more Firestore documents from a collection.
+    *   `firestore-get-rules`: Retrieves the active Firestore security rules.
+    *   `firestore-validate-rules`: Checks the provided Firestore Rules source for syntax and validation errors.
+
+## Looker
+
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+*   **Permissions:**
+    *   A Looker account with permissions to access the desired models, explores, and data is required.
+*   **Tools:**
+    *   `get_models`: Retrieves the list of LookML models.
+    *   `get_explores`: Retrieves the list of explores in a model.
+    *   `get_dimensions`: Retrieves the list of dimensions in an explore.
+    *   `get_measures`: Retrieves the list of measures in an explore.
+    *   `get_filters`: Retrieves the list of filters in an explore.
+    *   `get_parameters`: Retrieves the list of parameters in an explore.
+    *   `query`: Runs a query against the LookML model.
+    *   `query_sql`: Generates the SQL for a query.
+    *   `query_url`: Generates a URL for a query in Looker.
+    *   `get_looks`: Searches for saved looks.
+    *   `run_look`: Runs the query associated with a look.
+    *   `make_look`: Creates a new look.
+    *   `get_dashboards`: Searches for saved dashboards.
+    *   `make_dashboard`: Creates a new dashboard.
+    *   `add_dashboard_element`: Adds a tile to a dashboard.
+
+## Microsoft SQL Server
+
+*   **Environment Variables:**
+    *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
+    *   `MSSQL_PORT`: The port number for the SQL Server instance.
+    *   `MSSQL_DATABASE`: The name of the database to connect to.
+    *   `MSSQL_USER`: The database username.
+    *   `MSSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## MySQL
+
+*   **Environment Variables:**
+    *   `MYSQL_HOST`: The hostname or IP address of the MySQL server.
+    *   `MYSQL_PORT`: The port number for the MySQL server.
+    *   `MYSQL_DATABASE`: The name of the database to connect to.
+    *   `MYSQL_USER`: The database username.
+    *   `MYSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## OceanBase
+
+*   **Environment Variables:**
+    *   `OCEANBASE_HOST`: The hostname or IP address of the OceanBase server.
+    *   `OCEANBASE_PORT`: The port number for the OceanBase server.
+    *   `OCEANBASE_DATABASE`: The name of the database to connect to.
+    *   `OCEANBASE_USER`: The database username.
+    *   `OCEANBASE_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## PostgreSQL
+
+*   **Environment Variables:**
+    *   `POSTGRES_HOST`: The hostname or IP address of the PostgreSQL server.
+    *   `POSTGRES_PORT`: The port number for the PostgreSQL server.
+    *   `POSTGRES_DATABASE`: The name of the database to connect to.
+    *   `POSTGRES_USER`: The database username.
+    *   `POSTGRES_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Spanner
+
+*   **Environment Variables:**
+    *   `SPANNER_PROJECT`: The GCP project ID.
+    *   `SPANNER_INSTANCE`: The Spanner instance ID.
+    *   `SPANNER_DATABASE`: The Spanner database ID.
+*   **Permissions:**
+    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to execute DQL queries and list tables.
+    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to execute DML queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a DML SQL query.
+    *   `execute_sql_dql`: Executes a DQL SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Spanner (PostgreSQL dialect)
+
+*   **Environment Variables:**
+    *   `SPANNER_PROJECT`: The GCP project ID.
+    *   `SPANNER_INSTANCE`: The Spanner instance ID.
+    *   `SPANNER_DATABASE`: The Spanner database ID.
+*   **Permissions:**
+    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to execute DQL queries and list tables.
+    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to execute DML queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
+    *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
+    *   `list_tables`: Lists tables in the database.
