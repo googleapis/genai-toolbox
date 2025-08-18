@@ -63,7 +63,7 @@ List of reference documentation for resources in Toolbox.
   - [Neo4j](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/neo4j/): Neo4j is a powerful, open source graph database system
   - [OceanBase](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/oceanbase/): OceanBase is a distributed relational database that provides high availability, scalability, and compatibility with MySQL.
   - [PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/postgres/): PostgreSQL is a powerful, open source object-relational database.
-  - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/redis/): Redis is an open-source, in-memory data structure store.
+  - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/redis/): Redis is a in-memory data structure store.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.

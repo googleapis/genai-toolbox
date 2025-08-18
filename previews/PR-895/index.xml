@@ -228,7 +228,7 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
+&lt;p>&lt;code>bigquery-list-table-ids&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
 from which to list table IDs. It also optionally accepts a &lt;code>project&lt;/code> parameter to
 define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
 tool defaults to using the project defined in the source configuration.&lt;/p>
@@ -652,7 +652,24 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
 user and group access to Dataplex resources. Toolbox will use your
 &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
-interacting with [Dataplex][dataplex-docs].&lt;/p></description></item><item><title>dataplex-search-entries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/dataplex/dataplex-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/dataplex/dataplex-search-entries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+interacting with [Dataplex][dataplex-docs].&lt;/p></description></item><item><title>dataplex-search-aspect-types</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/dataplex/dataplex-search-aspect-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/dataplex/dataplex-search-aspect-types/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-search-aspect-types&lt;/code> tool allows to fetch the metadata template of aspect types based on search query.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>dataplex-search-aspect-types&lt;/code> accepts following parameters optionally:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>query&lt;/code> - Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all aspect types available to the user.&lt;/li>
+&lt;li>&lt;code>pageSize&lt;/code> - Number of returned aspect types in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
+&lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex">Dataplex&lt;/a>.&lt;/p></description></item><item><title>dataplex-search-entries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/dataplex/dataplex-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/dataplex/dataplex-search-entries/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>dataplex-search-entries&lt;/code> tool returns all entries in Dataplex Catalog (e.g.
 tables, views, models) that matches given user query.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -660,10 +677,18 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>dataplex-search-entries&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which
-entries are filtered and returned to the user and a required &lt;code>name&lt;/code> parameter
-which is constructed using source&amp;rsquo;s project if user does not provide it
-explicitly and has the following format: projects/{project}/locations/global. It
-also optionally accepts following parameters:&lt;/p></description></item><item><title>Dgraph</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/dgraph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/dgraph/</guid><description>&lt;h2 id="about">About&lt;/h2>
+entries are filtered and returned to the user. It also optionally accepts following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>pageSize&lt;/code> - Number of results in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
+&lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance
+(default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex">Dataplex&lt;/a>.&lt;/p></description></item><item><title>Dgraph</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/dgraph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/dgraph/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://dgraph.io/docs">Dgraph&lt;/a> is an open-source graph database. It is designed for
 real-time workloads, horizontal scalability, and data flexibility. Implemented
 as a distributed system, Dgraph processes queries in parallel to deliver the
@@ -1172,7 +1197,7 @@ in the cloud, on GCP, or on premises.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">timeout&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">600s&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The Looker base url will look like &amp;ldquo;&lt;a href="https://looker.example.com">https://looker.example.com&lt;/a>&amp;rdquo;, don&amp;rsquo;t include
 a trailing &amp;ldquo;/&amp;rdquo;. In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port numner like
+on-premises, you may need to add the API port number like
 &amp;ldquo;&lt;a href="https://looker.example.com:19999">https://looker.example.com:19999&lt;/a>&amp;rdquo;.&lt;/p></description></item><item><title>looker-add-dashboard-element</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-add-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-add-dashboard-element/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-add-dashboard-element&lt;/code> creates a dashboard element
 in the given dashboard.&lt;/p>
@@ -1307,7 +1332,7 @@ default to 100 and 0.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-dimensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-dimensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-dimensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-dimensions&lt;/code> tool returns all the dimensions from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -1405,7 +1430,7 @@ for a given model from the source.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-filters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-filters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-filters/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-filters&lt;/code> tool returns all the filters from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -1517,7 +1542,7 @@ default to 100 and 0.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-measures</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-measures/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-measures/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-measures&lt;/code> tool returns all the measures from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -1565,7 +1590,7 @@ in a given mode in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-models</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-models/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-models/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>looker-get-models&lt;/code> tool returns all the models the source.&lt;/p>
+&lt;p>A &lt;code>looker-get-models&lt;/code> tool returns all the models in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -1612,7 +1637,7 @@ in a given mode in the source.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-parameters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-parameters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-parameters/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-parameters&lt;/code> tool returns all the parameters from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -3081,8 +3106,8 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://www.postgresql.org/docs/current/sql-prepare.html">prepared statement&lt;/a>,
-and specified parameters will inserted according to their position: e.g. &lt;code>1&lt;/code>
-will be the first parameter specified, &lt;code>$@&lt;/code> will be the second parameter, and so
+and specified parameters will be inserted according to their position: e.g. &lt;code>$1&lt;/code>
+will be the first parameter specified, &lt;code>$2&lt;/code> will be the second parameter, and so
 on. If template parameters are included, they will be resolved before execution
 of the prepared statement.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.postgresql.org/">PostgreSQL&lt;/a> is a powerful, open source object-relational database
@@ -3140,7 +3165,7 @@ SET, GET, HGETALL) and subsequent elements are its arguments.&lt;/p>
 &lt;p>Command arguments can be templated using the &lt;code>$variableName&lt;/code> annotation. The
 array type parameters will be expanded once into multiple arguments. Take the
 following config for example:&lt;/p></description></item><item><title>Redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>Redis is an open-source, in-memory data structure store, used as a database,
+&lt;p>Redis is a in-memory data structure store, used as a database,
 cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.&lt;/p>
@@ -3364,7 +3389,7 @@ names, or other parts of the query.&lt;/p></description></item><item><title>Tool
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server, with the &lt;code>/ui&lt;/code> suffix. Once Toolbox
 is launched, the following INFO log with Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A valkey tool executes a series of pre-defined Valkey commands against a
-Memorystore for Valkey instance.&lt;/p>
+Valkey instance.&lt;/p>
 &lt;p>The specified Valkey commands are executed sequentially. Each command is
 represented as a string array, where the first element is the command name
 (e.g., SET, GET, HGETALL) and subsequent elements are its arguments.&lt;/p>
@@ -3535,10 +3560,10 @@ time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ld
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/sql/docs/sqlserver/pre-built-tools-with-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>FAQ</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/about/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/about/faq/</guid><description>&lt;h2 id="how-can-i-deploy-or-run-toolbox">How can I deploy or run Toolbox?&lt;/h2>
-&lt;p>MCP Toolbox for Databases is open-source and can be ran or deployed to a
+&lt;p>MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release &lt;a href="https://github.com/googleapis/genai-toolbox/releases/">compiled binaries and
 docker images&lt;/a> (but you can always compile yourself as well!).&lt;/p>
-&lt;p>For detailed instructions, check our these resources:&lt;/p>
+&lt;p>For detailed instructions, check out these resources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/getting-started/local_quickstart/">Quickstart: How to Run Locally&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/how-to/deploy_toolbox/">Deploy to Cloud Run&lt;/a>&lt;/li>
@@ -3774,7 +3799,7 @@ local development:&lt;/p>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p></description></item><item><title>Python SDK</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/sdks/python-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/sdks/python-sdk/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-python"/>
- &lt;meta http-equiv="refresh" content="0;url=hhttps://github.com/googleapis/mcp-toolbox-sdk-python"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-python"/>
  &lt;/head>
 &lt;/html></description></item><item><title>Quickstart (MCP with Looker and Gemini-CLI)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/samples/looker/looker_gemini/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/samples/looker/looker_gemini/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
 &lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol

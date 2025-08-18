@@ -89,7 +89,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.11.0
+export VERSION=0.12.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -100,7 +100,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.11.0
+export VERSION=0.12.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -118,7 +118,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.11.0
+go install github.com/googleapis/genai-toolbox@v0.12.0
 ```
 
 {{% /tab %}}
@@ -768,7 +768,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -991,7 +991,7 @@ async def main():
       )
 
       queries = [
-          "Find hotels in Basel with Basel in it's name.",
+          "Find hotels in Basel with Basel in its name.",
           "Can you book the Hilton Basel for me?",
           "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
           "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -1042,7 +1042,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -1095,7 +1095,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -1158,7 +1158,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Please book the hotel Hilton Basel for me.",
     "This is too expensive. Please cancel it.",
     "Please book Hyatt Regency for me",
@@ -1443,7 +1443,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1573,7 +1573,7 @@ from Toolbox.
 npm install langchain @langchain/google-genai
 {{< /tab >}}
 {{< tab header="GenkitJS" lang="bash" >}}
-npm install genkit @genkit-ai/vertexai
+npm install genkit @genkit-ai/googleai
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
@@ -2019,7 +2019,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -2724,7 +2724,7 @@ func main() {
 			log.Println("No function call")
 		}
 
-		// If there is a was a function call, continue the conversation
+		// If there was a function call, continue the conversation
 		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 		for _, toolCall := range toolCalls {
 
@@ -2882,7 +2882,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -3071,7 +3071,7 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of your `tools.yaml` define your the actions your agent can
+The `tools` section of your `tools.yaml` defines the actions your agent can
 take: what kind of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
@@ -3102,7 +3102,7 @@ toolsets:
   my_first_toolset:
     - my_first_tool
     - my_second_tool
-   my_second_toolset:
+  my_second_toolset:
     - my_second_tool
     - my_third_tool
 ```
@@ -3466,19 +3466,19 @@ to expose your developer assistant tools to a Firestore instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolbox
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3781,19 +3781,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -4046,19 +4046,19 @@ Connect your IDE to MySQL using Toolbox.
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -4346,19 +4346,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -4618,19 +4618,19 @@ Connect your IDE to SQL Server using Toolbox.
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -5291,7 +5291,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. (Only for local runs) Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
-   for the principle you set up the `Cloud Run Invoker` role access to.
+   for the principal you set up the `Cloud Run Invoker` role access to.
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
@@ -5407,8 +5407,8 @@ How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernet
     gcloud iam service-accounts create $SA_NAME
     ```
 
-1. Grant any IAM roles necessary to the IAM service account. Each source have a
-    list of necessary IAM permissions listed on it's page. The example below is
+1. Grant any IAM roles necessary to the IAM service account. Each source has a
+    list of necessary IAM permissions listed on its page. The example below is
     for cloud sql postgres source:
 
     ```bash
@@ -5699,7 +5699,7 @@ networks:
 
 {{< notice tip >}}
 
-You can use this setup quickly set up Toolbox + Postgres to follow along in our
+You can use this setup to quickly set up Toolbox + Postgres to follow along in our
 [Quickstart](../getting-started/local_quickstart.md)
 
 {{< /notice >}}
@@ -6172,7 +6172,7 @@ ID.
 When using [Authenticated Parameters][auth-params], any [claim provided by the
 id-token][provided-claims] can be used for the parameter.
 
-[auth-params]: ../tools/#authenticated-phugarameters
+[auth-params]: ../tools/#authenticated-parameters
 [provided-claims]:
     https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
 
@@ -7157,22 +7157,45 @@ Search syntax supports the following qualifiers:
 - "label.foo" - Matches BigQuery resources that have a label whose key equals foo as a string.
 - "type=TYPE" - Matches resources of a specific entry type or its type alias.
 - "projectid:bar" - Matches resources within Google Cloud projects that match bar as a substring in the ID.
-- "parent:x" - Matches x as a substring of the hierarchical path of a resource. The parent path is a fully_qualified_name of the parent resource.
+- "parent:x" - Matches x as a substring of the hierarchical path of a resource. It supports same syntax as `name` predicate.
 - "orgid=number" - Matches resources within a Google Cloud organization with the exact ID value of the number.
 - "system=SYSTEM" - Matches resources from a specified system. For example, system=bigquery matches BigQuery resources.
 - "location=LOCATION" - Matches resources in a specified location with an exact name. For example, location=us-central1 matches assets hosted in Iowa. BigQuery Omni assets support this qualifier by using the BigQuery Omni location name. For example, location=aws-us-east-1 matches BigQuery Omni assets in Northern Virginia.
 - "createtime" -
 Finds resources that were created within, before, or after a given date or time. For example "createtime:2019-01-01" matches resources created on 2019-01-01. 
 - "updatetime" - Finds resources that were updated within, before, or after a given date or time. For example "updatetime>2019-01-01" matches resources updated after 2019-01-01.
-- "fully_qualified_name:x" - Matches x as a substring of fully_qualified_name.
-- "fully_qualified_name=x" - Matches x as fully_qualified_name.
+
+### Aspect Search
+To search for entries based on their attached aspects, use the following query syntax.
+
+aspect:x	Matches x as a substring of the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
+aspect=x	Matches x as the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
+aspect:xOPERATORvalue	
+Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID.FIELD_NAME
+
+The list of supported {OPERATOR}s depends on the type of field in the aspect, as follows:
+- String: = (exact match) and : (substring)
+- All number types: =, :, <, >, <=, >=, =>, =<
+- Enum: =
+- Datetime: same as for numbers, but the values to compare are treated as datetimes instead of numbers
+- Boolean: =
+
+Only top-level fields of the aspect are searchable. For example, all of the following queries match entries where the value of the is-enrolled field in the employee-info aspect type is true. Other entries that match on the substring are also returned.
+- aspect:example-project.us-central1.employee-info.is-enrolled=true
+- aspect:example-project.us-central1.employee=true
+- aspect:employee=true
+
+Example:-
+You can use following filters
+- dataplex-types.global.bigquery-table.type={BIGLAKE_TABLE, BIGLAKE_OBJECT_TABLE, EXTERNAL_TABLE, TABLE}
+- dataplex-types.global.storage.type={STRUCTURED, UNSTRUCTURED}
 
 ### Logical operators
 A query can consist of several predicates with logical operators. If you don't specify an operator, logical AND is implied. For example, foo bar returns resources that match both predicate foo and predicate bar.
 Logical AND and logical OR are supported. For example, foo OR bar.
 
 You can negate a predicate with a - (hyphen) or NOT prefix. For example, -name:foo returns resources with names that don't match the predicate foo.
-Logical operators aren't case-sensitive. For example, both or and OR are acceptable.
+Logical operators are case-sensitive. `OR` and `AND` are acceptable whereas `or` and `and` are not.
 
 ### Request
 1. Always try to rewrite the prompt using search syntax.
@@ -7226,7 +7249,7 @@ Logical operators aren't case-sensitive. For example, both or and OR are accepta
 
 ## Tool: dataplex_lookup_entry
 ### Request
-1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter.
+1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter. If you do not know the name of the aspect type, use the `dataplex_search_aspect_types` tool.
 2. If you do not know the name of the entry, use `dataplex_search_entries` tool
 ### Response
 1. Unless asked for a specific aspect, respond with all aspects attached to the entry.
@@ -7238,7 +7261,6 @@ Logical operators aren't case-sensitive. For example, both or and OR are accepta
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "dataplex".                                                              |
 | project   |  string  |     true     | ID of the GCP project used for quota and billing purposes (e.g. "my-project-id").|
-
 
 # Dgraph
 Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
@@ -7466,12 +7488,12 @@ sources:
 
 The Looker base url will look like "https://looker.example.com", don't include
 a trailing "/". In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port numner like
+on-premises, you may need to add the API port number like
 "https://looker.example.com:19999".
 
 Verify ssl should almost always be "true" (all lower case) unless you are using
 a self-signed ssl certificate for the Looker server. Anything other than "true"
-will be interpretted as false.
+will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
 assigned by the looker server.
@@ -7763,23 +7785,24 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "postgres".                                                    |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
-| port      |  string  |     true     | Port to connect to (e.g. "5432")                                       |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
-| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
-| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
+|  **field**  |      **type**      | **required** | **description**                                                        |
+|-------------|:------------------:|:------------:|------------------------------------------------------------------------|
+| kind        |       string       |     true     | Must be "postgres".                                                    |
+| host        |       string       |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
+| port        |       string       |     true     | Port to connect to (e.g. "5432")                                       |
+| database    |       string       |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
+| user        |       string       |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
+| password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
+| queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |
 
 
 # Redis
-Redis is an open-source, in-memory data structure store.
+Redis is a in-memory data structure store.
 
 
 ## About
 
-Redis is an open-source, in-memory data structure store, used as a database,
+Redis is a in-memory data structure store, used as a database,
 cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.
@@ -8063,7 +8086,7 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "spanner".                                                                                                  |
+| kind      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
 
 ### Connection Properties
@@ -8771,7 +8794,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9103,7 +9126,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -9405,7 +9428,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9585,7 +9608,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9695,7 +9718,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9876,7 +9899,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.11.0"
+    export VERSION="0.12.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -10111,11 +10134,11 @@ Frequently asked questions about Toolbox.
 
 ## How can I deploy or run Toolbox?
 
-MCP Toolbox for Databases is open-source and can be ran or deployed to a
+MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release [compiled binaries and
 docker images][release-notes] (but you can always compile yourself as well!).
 
-For detailed instructions, check our these resources:
+For detailed instructions, check out these resources:
 
 - [Quickstart: How to Run Locally](../getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../how-to/deploy_toolbox.md)
@@ -10223,7 +10246,7 @@ Python client SDK
 <html>
   <head>
     <link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-python"/>
-    <meta http-equiv="refresh" content="0;url=hhttps://github.com/googleapis/mcp-toolbox-sdk-python"/>
+    <meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-python"/>
   </head>
 </html>
 

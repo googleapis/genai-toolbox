@@ -132,7 +132,7 @@ default to 100 and 0.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-dimensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-dimensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-dimensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-dimensions&lt;/code> tool returns all the dimensions from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -230,7 +230,7 @@ for a given model from the source.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-filters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-filters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-filters/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-filters&lt;/code> tool returns all the filters from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -342,7 +342,7 @@ default to 100 and 0.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-measures</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-measures/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-measures/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-measures&lt;/code> tool returns all the measures from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -390,7 +390,7 @@ in a given mode in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-models</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-models/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-models/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>looker-get-models&lt;/code> tool returns all the models the source.&lt;/p>
+&lt;p>A &lt;code>looker-get-models&lt;/code> tool returns all the models in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
@@ -437,7 +437,7 @@ in a given mode in the source.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-get-parameters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-parameters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/tools/looker/looker-get-parameters/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-parameters&lt;/code> tool returns all the parameters from a given explore
-in a given mode in the source.&lt;/p>
+in a given model in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-895/resources/sources/looker/">looker&lt;/a>&lt;/li>
