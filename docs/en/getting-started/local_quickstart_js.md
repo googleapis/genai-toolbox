@@ -568,7 +568,7 @@ main();
 
 {{< /tab >}}
 
-{{< tab header="Google Gen AI" lang="js" >}}
+{{< tab header="GoogleGenAI" lang="js" >}}
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 
