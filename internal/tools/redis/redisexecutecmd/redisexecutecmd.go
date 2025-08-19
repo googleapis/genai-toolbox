@@ -16,7 +16,6 @@ package redisexecutecmd
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -78,7 +77,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	queryParameter := tools.NewStringParameter("cmd", "The command to execute.")
+	queryParameter := tools.NewArrayParameter("cmd", "The command to execute, represented as an array of strings.", tools.NewStringParameter("token", "An individual word or token in a command, such as a command name, key, or value"))
 	parameters := tools.Parameters{queryParameter}
 
 	mcpManifest := tools.McpManifest{
@@ -120,7 +119,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 // Invoke implements tools.Tool.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
-	query, ok := paramsMap["cmd"].(string)
+	cmds, ok := paramsMap["cmd"].([]any)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", paramsMap["cmd"])
 	}
@@ -130,8 +129,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool command: %s", kind, query)
-	cmds := toAnySlice(query)
+	logger.DebugContext(ctx, "executing `%s` tool command: %v", kind, cmds)
+
 	if len(cmds) == 0 {
 		return nil, fmt.Errorf("invalid command statement")
 	}
@@ -141,7 +140,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("error from executing command: %v", err)
 	}
 
-	var out any
 	// If result is a map, convert map[any]any to map[string]any
 	// Because the Go's built-in json/encoding marshalling doesn't support
 	// map[any]any as an input
@@ -158,7 +156,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		}
 		return strMap, nil
 	}
-	return out, nil
+	return result, nil
 }
 
 // Manifest implements tools.Tool.
@@ -174,13 +172,4 @@ func (t Tool) McpManifest() tools.McpManifest {
 // ParseParams implements tools.Tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
-}
-
-func toAnySlice(query string) []any {
-	strs := strings.Fields(query)
-	var result []any
-	for _, v := range strs {
-		result = append(result, v)
-	}
-	return result
 }

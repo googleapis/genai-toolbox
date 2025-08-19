@@ -16,7 +16,7 @@ instance. It's compatible with any of the following sources:
 
 - [redis](../../sources/redis.md)
 
-`redis-execute-cmd` takes one input parameter `cmd` and runs the redis command with arguments against the `source`.
+`redis-execute-cmd` takes one input parameter `cmd` as an array of strings and runs the redis command with arguments against the `source`.
 
 > **Note:** This tool is intended for developer assistant workflows with
 > human-in-the-loop and shouldn't be used for production agents.
