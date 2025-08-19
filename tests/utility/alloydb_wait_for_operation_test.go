@@ -196,14 +196,16 @@ func getWaitToolsConfig(baseURL string) map[string]any {
 	return map[string]any{
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":        waitToolKind,
-				"description": "wait for op1",
-				"baseURL":     baseURL,
+				"kind":         waitToolKind,
+				"description":  "wait for op1",
+				"baseURL":      baseURL,
+				"authRequired": []string{},
 			},
 			"wait-for-op2": map[string]any{
-				"kind":        waitToolKind,
-				"description": "wait for op2",
-				"baseURL":     baseURL,
+				"kind":         waitToolKind,
+				"description":  "wait for op2",
+				"baseURL":      baseURL,
+				"authRequired": []string{},
 			},
 		},
 	}

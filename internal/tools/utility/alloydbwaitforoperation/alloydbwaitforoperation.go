@@ -130,7 +130,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: inputSchema,
 	}
 
-	baseURL := "https://alloydb.googleapis.com"
+	baseURL := cfg.BaseURL
+	if baseURL == "" {
+		baseURL = "https://alloydb.googleapis.com"
+	}
 
 	var delay time.Duration
 	if cfg.Delay == "" {
