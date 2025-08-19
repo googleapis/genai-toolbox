@@ -628,7 +628,7 @@ steps:
       - "GOPATH=/gopath"
       - "YUGABYTE_DATABASE=$_YUGABYTE_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["YUGABYTE_USER", "YUGABYTE_PASS", "CLIENT_ID"]
+    secretEnv: ["YUGABYTE_USER", "YUGABYTE_PASS", "YUGABYTE_HOST", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
