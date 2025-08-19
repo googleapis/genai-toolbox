@@ -532,6 +532,29 @@ steps:
           tidb \
           tidbsql tidbexecutesql
 
+  - id: "trino"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "TRINO_HOST=$_TRINO_HOST"
+      - "TRINO_PORT=$_TRINO_PORT"
+      - "TRINO_CATALOG=$_TRINO_CATALOG"
+      - "TRINO_SCHEMA=$_TRINO_SCHEMA"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "TRINO_USER"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Trino" \
+          trino \
+          trinosql trinoexecutesql
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -594,6 +617,8 @@ availableSecrets:
       env: TIDB_USER
     - versionName: projects/$PROJECT_ID/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/trino_user/versions/latest
+      env: TRINO_USER
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -628,3 +653,7 @@ substitutions:
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
+  _TRINO_HOST: 127.0.0.1
+  _TRINO_PORT: "8080"
+  _TRINO_CATALOG: "generator"
+  _TRINO_SCHEMA: "default"
