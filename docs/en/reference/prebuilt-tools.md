@@ -8,6 +8,7 @@ description: >
 
 ## AlloyDB Postgres
 
+*   `--prebuilt` value: `alloydb-pg`
 *   **Environment Variables:**
     *   `ALLOYDB_POSTGRES_PROJECT`: The GCP project ID.
     *   `ALLOYDB_POSTGRES_REGION`: The region of your AlloyDB instance.
@@ -17,7 +18,7 @@ description: >
     *   `ALLOYDB_POSTGRES_USER`: The database username.
     *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
 *   **Permissions:**
-    *   The user's IP address must be authorized to connect to the AlloyDB instance.
+    *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -40,6 +41,7 @@ description: >
 
 ## BigQuery
 
+*   `--prebuilt` value: `bigquery`
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
 *   **Permissions:**
@@ -55,6 +57,7 @@ description: >
 
 ## Cloud SQL for MySQL
 
+*   `--prebuilt` value: `cloud-sql-mysql`
 *   **Environment Variables:**
     *   `CLOUD_SQL_MYSQL_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_MYSQL_REGION`: The region of your Cloud SQL instance.
@@ -64,7 +67,6 @@ description: >
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   The user's IP address must be authorized to connect.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -72,6 +74,7 @@ description: >
 
 ## Cloud SQL for PostgreSQL
 
+*   `--prebuilt` value: `cloud-sql-pg`
 *   **Environment Variables:**
     *   `CLOUD_SQL_POSTGRES_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
@@ -81,7 +84,6 @@ description: >
     *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   The user's IP address must be authorized to connect.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -89,6 +91,7 @@ description: >
 
 ## Cloud SQL for SQL Server
 
+*   `--prebuilt` value: `cloud-sql-mssql`
 *   **Environment Variables:**
     *   `CLOUD_SQL_MSSQL_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
@@ -99,7 +102,6 @@ description: >
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   The user's IP address must be authorized to connect.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -107,6 +109,7 @@ description: >
 
 ## Dataplex
 
+*   `--prebuilt` value: `dataplex`
 *   **Environment Variables:**
     *   `DATAPLEX_PROJECT`: The GCP project ID.
 *   **Permissions:**
@@ -119,12 +122,12 @@ description: >
 
 ## Firestore
 
+*   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
     *   `FIRESTORE_DATABASE`: The Firestore database ID.
 *   **Permissions:**
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
-    *   **Cloud Datastore Owner** (`roles/datastore.owner`) to delete documents.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
 *   **Tools:**
     *   `firestore-get-documents`: Gets multiple documents from Firestore by their paths.
@@ -136,6 +139,7 @@ description: >
 
 ## Looker
 
+*   `--prebuilt` value: `looker`
 *   **Environment Variables:**
     *   `LOOKER_BASE_URL`: The URL of your Looker instance.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
@@ -162,6 +166,7 @@ description: >
 
 ## Microsoft SQL Server
 
+*   `--prebuilt` value: `mssql`
 *   **Environment Variables:**
     *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
     *   `MSSQL_PORT`: The port number for the SQL Server instance.
@@ -176,6 +181,7 @@ description: >
 
 ## MySQL
 
+*   `--prebuilt` value: `mysql`
 *   **Environment Variables:**
     *   `MYSQL_HOST`: The hostname or IP address of the MySQL server.
     *   `MYSQL_PORT`: The port number for the MySQL server.
@@ -190,6 +196,7 @@ description: >
 
 ## OceanBase
 
+*   `--prebuilt` value: `oceanbase`
 *   **Environment Variables:**
     *   `OCEANBASE_HOST`: The hostname or IP address of the OceanBase server.
     *   `OCEANBASE_PORT`: The port number for the OceanBase server.
@@ -204,6 +211,7 @@ description: >
 
 ## PostgreSQL
 
+*   `--prebuilt` value: `postgres`
 *   **Environment Variables:**
     *   `POSTGRES_HOST`: The hostname or IP address of the PostgreSQL server.
     *   `POSTGRES_PORT`: The port number for the PostgreSQL server.
@@ -218,6 +226,7 @@ description: >
 
 ## Spanner
 
+*   `--prebuilt` value: `spanner`
 *   **Environment Variables:**
     *   `SPANNER_PROJECT`: The GCP project ID.
     *   `SPANNER_INSTANCE`: The Spanner instance ID.
@@ -232,6 +241,7 @@ description: >
 
 ## Spanner (PostgreSQL dialect)
 
+*   `--prebuilt` value: `spanner-postgres`
 *   **Environment Variables:**
     *   `SPANNER_PROJECT`: The GCP project ID.
     *   `SPANNER_INSTANCE`: The Spanner instance ID.
