@@ -19,6 +19,8 @@ This guide assumes you have already done the following:
 ### Cloud Setup (Optional)
 {{< snippet "local_quickstart.md" "cloud_setup" >}}
 
+{{< snippet "test.py" "demo" "py" >}}
+
 ## Step 1: Set up your database
 {{< snippet "local_quickstart.md" "database_setup" >}}
 
