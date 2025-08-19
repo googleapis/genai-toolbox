@@ -5867,7 +5867,7 @@ This page describes the `toolbox` command-line options.
 
 # Examples
 
-### Transport Configuration
+## Transport Configuration
 
 **Server Settings:**
 - `--address`, `-a`: Server listening address (default: "127.0.0.1")
@@ -5876,14 +5876,14 @@ This page describes the `toolbox` command-line options.
 **STDIO:**
 - `--stdio`: Run in MCP STDIO mode instead of HTTP server
 
-#### Usage Examples
+### Usage Examples
 
 ```bash
 # Basic server with custom port configuration
 ./toolbox --tools-file "config.yaml" --port 8080
 ```
 
-### Tool Configuration Sources
+## Tool Configuration Sources
 
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
@@ -5901,6 +5901,10 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 
 The CLI enforces mutual exclusivity between configuration source flags, preventing simultaneous use of `--prebuilt` with file-based options, and ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is used at a time.
 
+## Hot Reload
+
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
 
 # Prebuilt Tools Reference
 This page lists all the prebuilt tools available.
@@ -5908,6 +5912,7 @@ This page lists all the prebuilt tools available.
 
 ## AlloyDB Postgres
 
+*   `--prebuilt` value: `alloydb-pg`
 *   **Environment Variables:**
     *   `ALLOYDB_POSTGRES_PROJECT`: The GCP project ID.
     *   `ALLOYDB_POSTGRES_REGION`: The region of your AlloyDB instance.
@@ -5917,7 +5922,7 @@ This page lists all the prebuilt tools available.
     *   `ALLOYDB_POSTGRES_USER`: The database username.
     *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
 *   **Permissions:**
-    *   The user's IP address must be authorized to connect to the AlloyDB instance.
+    *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -5940,6 +5945,7 @@ This page lists all the prebuilt tools available.
 
 ## BigQuery
 
+*   `--prebuilt` value: `bigquery`
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
 *   **Permissions:**
@@ -5955,6 +5961,7 @@ This page lists all the prebuilt tools available.
 
 ## Cloud SQL for MySQL
 
+*   `--prebuilt` value: `cloud-sql-mysql`
 *   **Environment Variables:**
     *   `CLOUD_SQL_MYSQL_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_MYSQL_REGION`: The region of your Cloud SQL instance.
@@ -5964,7 +5971,6 @@ This page lists all the prebuilt tools available.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   The user's IP address must be authorized to connect.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -5972,6 +5978,7 @@ This page lists all the prebuilt tools available.
 
 ## Cloud SQL for PostgreSQL
 
+*   `--prebuilt` value: `cloud-sql-pg`
 *   **Environment Variables:**
     *   `CLOUD_SQL_POSTGRES_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
@@ -5981,7 +5988,6 @@ This page lists all the prebuilt tools available.
     *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   The user's IP address must be authorized to connect.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -5989,6 +5995,7 @@ This page lists all the prebuilt tools available.
 
 ## Cloud SQL for SQL Server
 
+*   `--prebuilt` value: `cloud-sql-mssql`
 *   **Environment Variables:**
     *   `CLOUD_SQL_MSSQL_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
@@ -5999,7 +6006,6 @@ This page lists all the prebuilt tools available.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   The user's IP address must be authorized to connect.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
@@ -6007,6 +6013,7 @@ This page lists all the prebuilt tools available.
 
 ## Dataplex
 
+*   `--prebuilt` value: `dataplex`
 *   **Environment Variables:**
     *   `DATAPLEX_PROJECT`: The GCP project ID.
 *   **Permissions:**
@@ -6019,12 +6026,12 @@ This page lists all the prebuilt tools available.
 
 ## Firestore
 
+*   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
     *   `FIRESTORE_DATABASE`: The Firestore database ID.
 *   **Permissions:**
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
-    *   **Cloud Datastore Owner** (`roles/datastore.owner`) to delete documents.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
 *   **Tools:**
     *   `firestore-get-documents`: Gets multiple documents from Firestore by their paths.
@@ -6036,6 +6043,7 @@ This page lists all the prebuilt tools available.
 
 ## Looker
 
+*   `--prebuilt` value: `looker`
 *   **Environment Variables:**
     *   `LOOKER_BASE_URL`: The URL of your Looker instance.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
@@ -6062,6 +6070,7 @@ This page lists all the prebuilt tools available.
 
 ## Microsoft SQL Server
 
+*   `--prebuilt` value: `mssql`
 *   **Environment Variables:**
     *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
     *   `MSSQL_PORT`: The port number for the SQL Server instance.
@@ -6076,6 +6085,7 @@ This page lists all the prebuilt tools available.
 
 ## MySQL
 
+*   `--prebuilt` value: `mysql`
 *   **Environment Variables:**
     *   `MYSQL_HOST`: The hostname or IP address of the MySQL server.
     *   `MYSQL_PORT`: The port number for the MySQL server.
@@ -6090,6 +6100,7 @@ This page lists all the prebuilt tools available.
 
 ## OceanBase
 
+*   `--prebuilt` value: `oceanbase`
 *   **Environment Variables:**
     *   `OCEANBASE_HOST`: The hostname or IP address of the OceanBase server.
     *   `OCEANBASE_PORT`: The port number for the OceanBase server.
@@ -6104,6 +6115,7 @@ This page lists all the prebuilt tools available.
 
 ## PostgreSQL
 
+*   `--prebuilt` value: `postgres`
 *   **Environment Variables:**
     *   `POSTGRES_HOST`: The hostname or IP address of the PostgreSQL server.
     *   `POSTGRES_PORT`: The port number for the PostgreSQL server.
@@ -6118,6 +6130,7 @@ This page lists all the prebuilt tools available.
 
 ## Spanner
 
+*   `--prebuilt` value: `spanner`
 *   **Environment Variables:**
     *   `SPANNER_PROJECT`: The GCP project ID.
     *   `SPANNER_INSTANCE`: The Spanner instance ID.
@@ -6132,6 +6145,7 @@ This page lists all the prebuilt tools available.
 
 ## Spanner (PostgreSQL dialect)
 
+*   `--prebuilt` value: `spanner-postgres`
 *   **Environment Variables:**
     *   `SPANNER_PROJECT`: The GCP project ID.
     *   `SPANNER_INSTANCE`: The Spanner instance ID.

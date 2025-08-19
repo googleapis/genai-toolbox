@@ -108,9 +108,10 @@
  &lt;/tbody>
 &lt;/table>
 &lt;h1 id="examples">Examples&lt;/h1>
-&lt;h3 id="transport-configuration">Transport Configuration&lt;/h3>
+&lt;h2 id="transport-configuration">Transport Configuration&lt;/h2>
 &lt;p>&lt;strong>Server Settings:&lt;/strong>&lt;/p></description></item><item><title>Prebuilt Tools Reference</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/</guid><description>&lt;h2 id="alloydb-postgres">AlloyDB Postgres&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-pg&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -124,7 +125,7 @@
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>The user&amp;rsquo;s IP address must be authorized to connect to the AlloyDB instance.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Client&lt;/strong> (&lt;code>roles/alloydb.client&lt;/code>) to connect to the instance.&lt;/li>
 &lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
@@ -161,6 +162,7 @@
 &lt;/ul>
 &lt;h2 id="bigquery">BigQuery&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>bigquery&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -185,6 +187,7 @@
 &lt;/ul>
 &lt;h2 id="cloud-sql-for-mysql">Cloud SQL for MySQL&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -198,7 +201,6 @@
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>The user&amp;rsquo;s IP address must be authorized to connect.&lt;/li>
 &lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
@@ -211,6 +213,7 @@
 &lt;/ul>
 &lt;h2 id="cloud-sql-for-postgresql">Cloud SQL for PostgreSQL&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-pg&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -224,7 +227,6 @@
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>The user&amp;rsquo;s IP address must be authorized to connect.&lt;/li>
 &lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
@@ -237,6 +239,7 @@
 &lt;/ul>
 &lt;h2 id="cloud-sql-for-sql-server">Cloud SQL for SQL Server&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -251,7 +254,6 @@
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>The user&amp;rsquo;s IP address must be authorized to connect.&lt;/li>
 &lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
@@ -264,6 +266,7 @@
 &lt;/ul>
 &lt;h2 id="dataplex">Dataplex&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>dataplex&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>DATAPLEX_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -285,6 +288,7 @@
 &lt;/ul>
 &lt;h2 id="firestore">Firestore&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>firestore&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>FIRESTORE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -294,7 +298,6 @@
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;strong>Cloud Datastore User&lt;/strong> (&lt;code>roles/datastore.user&lt;/code>) to get documents, list collections, and query collections.&lt;/li>
-&lt;li>&lt;strong>Cloud Datastore Owner&lt;/strong> (&lt;code>roles/datastore.owner&lt;/code>) to delete documents.&lt;/li>
 &lt;li>&lt;strong>Firebase Rules Viewer&lt;/strong> (&lt;code>roles/firebaserules.viewer&lt;/code>) to get and validate Firestore rules.&lt;/li>
 &lt;/ul>
 &lt;/li>
@@ -311,6 +314,7 @@
 &lt;/ul>
 &lt;h2 id="looker">Looker&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>looker&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>
@@ -346,6 +350,7 @@
 &lt;/ul>
 &lt;h2 id="microsoft-sql-server">Microsoft SQL Server&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>mssql&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>MSSQL_HOST&lt;/code>: The hostname or IP address of the SQL Server instance.&lt;/li>
@@ -369,6 +374,7 @@
 &lt;/ul>
 &lt;h2 id="mysql">MySQL&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>mysql&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>MYSQL_HOST&lt;/code>: The hostname or IP address of the MySQL server.&lt;/li>
@@ -392,6 +398,7 @@
 &lt;/ul>
 &lt;h2 id="oceanbase">OceanBase&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>oceanbase&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>OCEANBASE_HOST&lt;/code>: The hostname or IP address of the OceanBase server.&lt;/li>
@@ -415,6 +422,7 @@
 &lt;/ul>
 &lt;h2 id="postgresql">PostgreSQL&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>postgres&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>POSTGRES_HOST&lt;/code>: The hostname or IP address of the PostgreSQL server.&lt;/li>
@@ -438,6 +446,7 @@
 &lt;/ul>
 &lt;h2 id="spanner">Spanner&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>SPANNER_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
@@ -461,6 +470,7 @@
 &lt;/ul>
 &lt;h2 id="spanner-postgresql-dialect">Spanner (PostgreSQL dialect)&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner-postgres&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>SPANNER_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
