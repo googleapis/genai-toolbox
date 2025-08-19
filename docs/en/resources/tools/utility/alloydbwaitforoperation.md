@@ -19,18 +19,9 @@ and shouldn't be used for production agents.
 ## Example
 
 ```yaml
-sources:
-  alloydb-api-source:
-    kind: http
-    baseUrl: https://alloydb.googleapis.com
-    headers:
-      Authorization: Bearer ${API_KEY}
-      Content-Type: application/json
-
 tools:
   alloydb-operations-get:
     kind: alloydb-wait-for-operation
-    source: alloydb-api-source
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
     delay: 1s
     maxDelay: 4m
@@ -43,7 +34,6 @@ tools:
 | **field**   | **type** | **required** | **description**                                                                                                  |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
 | kind        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
-| source      |  string  |     true     | Name of the source the HTTP request should be sent to.                                                           |
 | description |  string  |    true      | A description of the tool.                                                                                       |
 | delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |
 | maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                  |
