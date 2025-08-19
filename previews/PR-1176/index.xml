@@ -475,7 +475,7 @@ inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--prebuilt&lt;/code>&lt;/td>
- &lt;td>Use a prebuilt tool configuration by source type. Cannot be used with &amp;ndash;tools-file. Allowed: &amp;lsquo;alloydb-postgres-admin&amp;rsquo;, alloydb-postgres&amp;rsquo;, &amp;lsquo;bigquery&amp;rsquo;, &amp;lsquo;cloud-sql-mysql&amp;rsquo;, &amp;lsquo;cloud-sql-postgres&amp;rsquo;, &amp;lsquo;cloud-sql-mssql&amp;rsquo;, &amp;lsquo;dataplex&amp;rsquo;, &amp;lsquo;firestore&amp;rsquo;, &amp;rsquo;looker&amp;rsquo;, &amp;lsquo;mssql&amp;rsquo;, &amp;lsquo;mysql&amp;rsquo;, &amp;lsquo;oceanbase&amp;rsquo;, &amp;lsquo;postgres&amp;rsquo;, &amp;lsquo;spanner&amp;rsquo;, &amp;lsquo;spanner-postgres&amp;rsquo;.&lt;/td>
+ &lt;td>Use a prebuilt tool configuration by source type. Cannot be used with &amp;ndash;tools-file. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>

@@ -5854,7 +5854,7 @@ This page describes the `toolbox` command-line options.
 | | `--log-level` | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'. | `info` |
 | | `--logging-format` | Specify logging format to use. Allowed: 'standard' or 'JSON'. | `standard` |
 | `-p` | `--port` | Port the server will listen on. | `5000` |
-| | `--prebuilt` | Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'oceanbase', 'postgres', 'spanner', 'spanner-postgres'. | |
+| | `--prebuilt` | Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values. | |
 | | `--stdio` | Listens via MCP STDIO instead of acting as a remote HTTP server. | |
 | | `--telemetry-gcp` | Enable exporting directly to Google Cloud Monitoring. | |
 | | `--telemetry-otlp` | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318') | |
@@ -5879,7 +5879,7 @@ This page describes the `toolbox` command-line options.
 #### Usage Examples
 
 ```bash
-# Basic server with custom configuration
+# Basic server with custom port configuration
 ./toolbox --tools-file "config.yaml" --port 8080
 ```
 
