@@ -1198,6 +1198,13 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("ALLOYDB_POSTGRES_USER", "your_alloydb_user")
 	t.Setenv("ALLOYDB_POSTGRES_PASSWORD", "your_alloydb_password")
 
+	t.Setenv("CLOUD_SQL_POSTGRES_PROJECT", "your_pg_project")
+	t.Setenv("CLOUD_SQL_POSTGRES_INSTANCE", "your_pg_instance")
+	t.Setenv("CLOUD_SQL_POSTGRES_DATABASE", "your_pg_db")
+	t.Setenv("CLOUD_SQL_POSTGRES_REGION", "your_pg_region")
+	t.Setenv("CLOUD_SQL_POSTGRES_USER", "your_pg_user")
+	t.Setenv("CLOUD_SQL_POSTGRES_PASS", "your_pg_pass")
+
 	t.Setenv("CLOUD_SQL_MYSQL_PROJECT", "your_gcp_project_id")
 	t.Setenv("CLOUD_SQL_MYSQL_REGION", "your_gcp_region")
 	t.Setenv("CLOUD_SQL_MYSQL_INSTANCE", "your_instance")
