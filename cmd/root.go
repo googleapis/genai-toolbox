@@ -44,6 +44,7 @@ import (
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygetdatasetinfo"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygettableinfo"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylistdatasetids"
@@ -51,9 +52,11 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/duckdbsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
@@ -61,6 +64,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetfilters"
@@ -68,8 +73,11 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmeasures"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetparameters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
@@ -87,12 +95,16 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbaseexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
@@ -108,7 +120,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/duckdb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
@@ -116,10 +127,12 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/oceanbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
@@ -218,9 +231,10 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'oceanbase', 'postgres', 'spanner', 'spanner-postgres'.")
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
+	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -797,6 +811,9 @@ func run(cmd *Command) error {
 			return errMsg
 		}
 		cmd.logger.InfoContext(ctx, "Server ready to serve!")
+		if cmd.cfg.UI {
+			cmd.logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://localhost:%d/ui", cmd.cfg.Port))
+		}
 
 		go func() {
 			defer close(srvErr)

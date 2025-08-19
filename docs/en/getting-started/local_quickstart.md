@@ -140,7 +140,7 @@ postgres` and a password next time.
 
     ```sql
     INSERT INTO hotels(id, name, location, price_tier, checkin_date, checkout_date, booked)
-    VALUES 
+    VALUES
       (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', B'0'),
       (2, 'Marriott Zurich', 'Zurich', 'Upscale', '2024-04-14', '2024-04-21', B'0'),
       (3, 'Hyatt Regency Basel', 'Basel', 'Upper Upscale', '2024-04-02', '2024-04-20', B'0'),
@@ -177,7 +177,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -402,7 +402,7 @@ async def main():
       )
 
       queries = [
-          "Find hotels in Basel with Basel in it's name.",
+          "Find hotels in Basel with Basel in its name.",
           "Can you book the Hilton Basel for me?",
           "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
           "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -453,7 +453,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -506,7 +506,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
@@ -569,7 +569,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Please book the hotel Hilton Basel for me.",
     "This is too expensive. Please cancel it.",
     "Please book Hyatt Regency for me",

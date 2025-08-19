@@ -80,12 +80,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
-	name := tools.NewStringParameterWithDefault("name", fmt.Sprintf("projects/%s/locations/global", s.ProjectID()), "The project to which the request should be attributed in the following form: projects/{project}/locations/global")
 	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
 	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
-	parameters := tools.Parameters{query, name, pageSize, pageToken, orderBy, semanticSearch}
+	parameters := tools.Parameters{query, pageSize, orderBy}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -93,7 +90,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: parameters.McpManifest(),
 	}
 
-	t := &SearchTool{
+	t := Tool{
 		Name:          cfg.Name,
 		Kind:          kind,
 		Parameters:    parameters,
@@ -110,7 +107,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-type SearchTool struct {
+type Tool struct {
 	Name          string
 	Kind          string
 	Parameters    tools.Parameters
@@ -121,26 +118,22 @@ type SearchTool struct {
 	mcpManifest   tools.McpManifest
 }
 
-func (t *SearchTool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
-	name, _ := paramsMap["name"].(string)
-	pageSize, _ := paramsMap["pageSize"].(int32)
-	pageToken, _ := paramsMap["pageToken"].(string)
+	pageSize := int32(paramsMap["pageSize"].(int))
 	orderBy, _ := paramsMap["orderBy"].(string)
-	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
 
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query,
-		Name:           name,
+		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
 		PageSize:       pageSize,
-		PageToken:      pageToken,
 		OrderBy:        orderBy,
-		SemanticSearch: semanticSearch,
+		SemanticSearch: true,
 	}
 
 	it := t.CatalogClient.SearchEntries(ctx, req)
@@ -159,17 +152,17 @@ func (t *SearchTool) Invoke(ctx context.Context, params tools.ParamValues) (any,
 	return results, nil
 }
 
-func (t *SearchTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	// Parse parameters from the provided data
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t *SearchTool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	// Returns the tool manifest
 	return t.manifest
 }
 
-func (t *SearchTool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	// Returns the tool MCP manifest
 	return t.mcpManifest
 }

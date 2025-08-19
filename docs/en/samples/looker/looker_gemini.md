@@ -34,7 +34,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.10.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -46,7 +46,8 @@ In this section, we will download Toolbox and run the Toolbox server.
 
 1. Edit the file `~/.gemini/settings.json` and add the following
    to the list of mcpServers. Use the Client Id and Client Secret
-   you obtained earlier.
+   you obtained earlier. The name of the server - here
+   `looker-toolbox` - can be anything meaningful to you.
 
    ```json
       "mcpServers": {
@@ -99,6 +100,7 @@ In this section, we will download Toolbox and run the Toolbox server.
         - looker-toolbox__query_sql
         - looker-toolbox__get_dimensions
         - looker-toolbox__run_look
+        - looker-toolbox__query_url
     ```
 
 1. Start exploring your Looker instance with commands like
@@ -106,4 +108,5 @@ In this section, we will download Toolbox and run the Toolbox server.
    inventory broken down by item category`.
 
 1. Gemini will prompt you for your approval before using
-   a tool. You can approve all the tools.
+   a tool. You can approve all the tools at once or
+   one at a time.

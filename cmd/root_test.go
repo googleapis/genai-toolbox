@@ -1190,7 +1190,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb-postgres-admin-tools": tools.ToolsetConfig{
 					Name:      "alloydb-postgres-admin-tools",
-					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance"},
+					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance", "alloydb-list-clusters", "alloydb-list-instances", "alloydb-list-users", "alloydb-create-user"},
 				},
 			},
 		},
@@ -1210,7 +1210,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery-database-tools": tools.ToolsetConfig{
 					Name:      "bigquery-database-tools",
-					ToolNames: []string{"execute_sql", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
 				},
 			},
 		},
@@ -1250,7 +1250,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"dataplex-tools": tools.ToolsetConfig{
 					Name:      "dataplex-tools",
-					ToolNames: []string{"dataplex_search_entries"},
+					ToolNames: []string{"dataplex_search_entries", "dataplex_lookup_entry", "dataplex_search_aspect_types"},
 				},
 			},
 		},
@@ -1260,7 +1260,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"firestore-database-tools": tools.ToolsetConfig{
 					Name:      "firestore-database-tools",
-					ToolNames: []string{"firestore-get-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
+					ToolNames: []string{"firestore-get-documents", "firestore-add-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
 				},
 			},
 		},
@@ -1290,7 +1290,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker-tools": tools.ToolsetConfig{
 					Name:      "looker-tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "get_looks", "run_look"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element"},
 				},
 			},
 		},
