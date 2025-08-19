@@ -29,7 +29,7 @@ description: >
 
 # Examples
 
-### Transport Configuration
+## Transport Configuration
 
 **Server Settings:**
 - `--address`, `-a`: Server listening address (default: "127.0.0.1")
@@ -38,14 +38,14 @@ description: >
 **STDIO:**
 - `--stdio`: Run in MCP STDIO mode instead of HTTP server
 
-#### Usage Examples
+### Usage Examples
 
 ```bash
 # Basic server with custom port configuration
 ./toolbox --tools-file "config.yaml" --port 8080
 ```
 
-### Tool Configuration Sources
+## Tool Configuration Sources
 
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
@@ -62,3 +62,8 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 - `--prebuilt`: Use predefined configurations for specific database types (e.g., 'bigquery', 'postgres', 'spanner')
 
 The CLI enforces mutual exclusivity between configuration source flags, preventing simultaneous use of `--prebuilt` with file-based options, and ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is used at a time.
+
+## Hot Reload
+
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
