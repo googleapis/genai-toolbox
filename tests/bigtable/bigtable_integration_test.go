@@ -119,17 +119,17 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want("[{\"$col1\":1}]"),
-		tests.WithInvokeIdNullWant(`[{"id":4,"name":""}]`),
+		tests.WithSelect1Want("[{\"$col1\":1}]"),
+		tests.WithMyToolById4Want(`[{"id":4,"name":""}]`),
 	)
 	mcpConfig := tests.NewMCPTestConfig(
-		tests.WithFailInvocationWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`),
+		tests.WithMyFailToolWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`),
 	)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithIgnoreDdl(),
-		tests.WithIgnoreInsert(),
-		tests.WithReplaceNameFieldArray(`["CAST(cf['name'] AS string) as name"]`),
-		tests.WithReplaceNameColFilter("CAST(cf['name'] AS string)"),
+		tests.WithNameFieldArray(`["CAST(cf['name'] AS string) as name"]`),
+		tests.WithNameColFilter("CAST(cf['name'] AS string)"),
+		tests.DisableDdlTest(),
+		tests.DisableInsertTest(),
 	)
 
 	// Run tests

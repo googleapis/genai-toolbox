@@ -101,13 +101,13 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want(`[{"_id":3,"id":3,"name":"Sid"}]`),
-		tests.WithInvokeParamWant(`[{"_id":5,"id":3,"name":"Alice"}]`),
-		tests.WithInvokeIdNullWant(`[{"_id":4,"id":4,"name":null}]`),
+		tests.WithSelect1Want(`[{"_id":3,"id":3,"name":"Sid"}]`),
+		tests.WithMyToolId3NameAliceWant(`[{"_id":5,"id":3,"name":"Alice"}]`),
+		tests.WithMyToolById4Want(`[{"_id":4,"id":4,"name":null}]`),
 	)
 	mcpConfig := tests.NewMCPTestConfig(
-		tests.WithMcpInvokeParamWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\    "id\":3,\"name\":\"Alice\"}"}]}}`),
-		tests.WithFailInvocationWant(`invalid JSON input: missing colon after key `),
+		tests.WithMcpMyToolId3NameAliceWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\    "id\":3,\"name\":\"Alice\"}"}]}}`),
+		tests.WithMyFailToolWant(`invalid JSON input: missing colon after key `),
 	)
 
 	// Run tests

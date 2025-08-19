@@ -153,18 +153,18 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
 	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want(select1Want),
-		tests.WithInvokeParamWant(invokeParamWant),
-		tests.WithInvokeIdNullWant(`[{"id":"4","name":null}]`),
+		tests.WithSelect1Want(select1Want),
+		tests.WithMyToolId3NameAliceWant(invokeParamWant),
+		tests.WithMyToolById4Want(`[{"id":"4","name":null}]`),
 	)
 	mcpConfig := tests.NewMCPTestConfig(
-		tests.WithMcpInvokeParamWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`),
-		tests.WithFailInvocationWant(`"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`),
+		tests.WithMcpMyToolId3NameAliceWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`),
+		tests.WithMyFailToolWant(`"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`),
 	)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithIgnoreDdl(),
 		tests.WithSelectAllWant("[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"},{\"age\":\"100\",\"id\":\"2\",\"name\":\"Alice\"}]"),
-		tests.WithTmplSelect1Want("[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"}]"),
+		tests.WithTmplSelectId1Want("[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"}]"),
+		tests.DisableDdlTest(),
 	)
 
 	// Run tests

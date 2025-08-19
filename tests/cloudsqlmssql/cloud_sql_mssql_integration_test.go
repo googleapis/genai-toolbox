@@ -161,10 +161,10 @@ func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	select1Want, failInvocationWant, createTableStatement := tests.GetMSSQLWants()
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want(select1Want),
-		tests.WithDisableArray(),
+		tests.WithSelect1Want(select1Want),
+		tests.DisableArrayTest(),
 	)
-	mcpConfig := tests.NewMCPTestConfig(tests.WithFailInvocationWant(failInvocationWant))
+	mcpConfig := tests.NewMCPTestConfig(tests.WithMyFailToolWant(failInvocationWant))
 	executeSqlConfig := tests.NewExecuteSqlTestConfig(
 		tests.WithCreateTableStatement(createTableStatement),
 		tests.WithExecSqlSelect1Want(select1Want),

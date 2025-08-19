@@ -303,8 +303,8 @@ func TestHttpToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want(`"hello world"`),
-        tests.WithDisableArray(),
+		tests.WithSelect1Want(`"hello world"`),
+		tests.DisableArrayTest(),
 	)
 
 	// Run tests

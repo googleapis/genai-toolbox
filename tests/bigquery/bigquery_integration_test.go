@@ -159,12 +159,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want(select1Want),
-		tests.WithDisableNullParam(),
+		tests.WithSelect1Want(select1Want),
+		tests.DisableOptionalNullParamTest(),
 	)
 	mcpConfig := tests.NewMCPTestConfig(
 		// Partial message; the full error message is too long.
-		tests.WithFailInvocationWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`),
+		tests.WithMyFailToolWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`),
 	)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
 		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),

@@ -14,27 +14,36 @@
 
 package tests
 
+/* Configurations for RunToolInvokeTest()  */
+
 // InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
 type InvokeTestConfig struct {
-	select1Want      string
-	invokeParamWant  string
-	invokeIdNullWant string
-	nullString       string
-	supportNullParam bool
-	supportArray     bool
+	select1Want              string
+	myToolId3NameAliceWant   string
+	myToolById4Want          string
+	nullWant                 string
+	supportOptionalNullParam bool
+	supportArrayParam        bool
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
 
 // NewInvokeTestConfig creates a new InvokeTestConfig instances with options.
+// If the source config differs from the default values, use the associated function to
+// update these values.
+// e.g. invokeTestConfigs := NewInvokeTestConfig(
+//
+//	   WithSelect1Want("custom select1 response"),
+//	)
 func NewInvokeTestConfig(options ...InvokeTestOption) *InvokeTestConfig {
+	// default values for InvokeTestConfig
 	invokeTestOption := &InvokeTestConfig{
-		select1Want:      "",
-		invokeParamWant:  "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
-		invokeIdNullWant: "[{\"id\":4,\"name\":null}]",
-		nullString:       "null",
-		supportNullParam: true,
-		supportArray:     true,
+		select1Want:              "",
+		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		nullWant:                 "null",
+		supportOptionalNullParam: true,
+		supportArrayParam:        true,
 	}
 
 	// Apply provided options
@@ -45,55 +54,71 @@ func NewInvokeTestConfig(options ...InvokeTestOption) *InvokeTestConfig {
 	return invokeTestOption
 }
 
-func WithInvoketestSelect1Want(s string) InvokeTestOption {
+// WithSelect1Want represents the response value for select 1 statement.
+func WithSelect1Want(s string) InvokeTestOption {
 	return func(c *InvokeTestConfig) {
 		c.select1Want = s
 	}
 }
 
-func WithInvokeParamWant(s string) InvokeTestOption {
+// WithMyToolId3NameAliceWant represents the response value for my-tool with id=3 and name=Alice.
+func WithMyToolId3NameAliceWant(s string) InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.invokeParamWant = s
+		c.myToolId3NameAliceWant = s
 	}
 }
 
-func WithInvokeIdNullWant(s string) InvokeTestOption {
+// WithMyToolById4Want represents the response value for my-tool-by-id with id=4.
+// This response includes a null value column.
+func WithMyToolById4Want(s string) InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.invokeIdNullWant = s
+		c.myToolById4Want = s
 	}
 }
 
-func WithNullString(s string) InvokeTestOption {
+// WithNullWant represents a response value of null string.
+func WithNullWant(s string) InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.nullString = s
+		c.nullWant = s
 	}
 }
 
-func WithDisableNullParam() InvokeTestOption {
+// DisableOptionalNullParamTest disables tests for optional null parameters.
+func DisableOptionalNullParamTest() InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.supportNullParam = false
+		c.supportOptionalNullParam = false
 	}
 }
 
-func WithDisableArray() InvokeTestOption {
+// DisableArrayTest disables tests for sources that do not support array.
+func DisableArrayTest() InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.supportArray = false
+		c.supportArrayParam = false
 	}
 }
+
+/* Configurations for RunMCPToolCallMethod()  */
 
 // MCPTestConfig represents the various configuration options for mcp tool call tests.
 type MCPTestConfig struct {
-	invokeParamWant    string
-	failInvocationWant string
+	myToolId3NameAliceWant string
+	myFailToolWant         string
 }
 
 type McpTestOption func(*MCPTestConfig)
 
 // NewMCPTestConfig creates a new ExecuteSqlTestConfig instances with options.
+// If the source config differs from the default values, use the associated function to
+// update these values.
+// e.g. mcpTestConfigs := NewMCPTestConfig(
+//
+//	    WithMcpMyToolId3NameAliceWant("custom my-tool response"),
+//	)
 func NewMCPTestConfig(options ...McpTestOption) *MCPTestConfig {
+	// default values for MCPTestConfig
 	mcpTestOption := &MCPTestConfig{
-		invokeParamWant:    `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
-		failInvocationWant: "",
+		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+		myFailToolWant:         "",
 	}
 
 	// Apply provided options
@@ -104,17 +129,21 @@ func NewMCPTestConfig(options ...McpTestOption) *MCPTestConfig {
 	return mcpTestOption
 }
 
-func WithMcpInvokeParamWant(s string) McpTestOption {
+// WithMcpMyToolId3NameAliceWant represents the response value for my-tool with id=3 and name=Alice.
+func WithMcpMyToolId3NameAliceWant(s string) McpTestOption {
 	return func(c *MCPTestConfig) {
-		c.invokeParamWant = s
+		c.myToolId3NameAliceWant = s
 	}
 }
 
-func WithFailInvocationWant(s string) McpTestOption {
+// WithMyFailToolWant respresents the response value for my-fail-tool.
+func WithMyFailToolWant(s string) McpTestOption {
 	return func(c *MCPTestConfig) {
-		c.failInvocationWant = s
+		c.myFailToolWant = s
 	}
 }
+
+/* Configurations for RunExecuteSqlToolInvokeTest()  */
 
 // ExecuteSqlTestConfig represents the various configuration options for RunExecuteSqlToolInvokeTest()
 type ExecuteSqlTestConfig struct {
@@ -126,7 +155,14 @@ type ExecuteSqlTestConfig struct {
 type ExecuteSqlOption func(*ExecuteSqlTestConfig)
 
 // NewExecuteSqlTestConfig creates a new ExecuteSqlTestConfig instances with options.
+// If the source config differs from the default values, use the associated function to
+// update these values.
+// e.g. executeSqlTestConfigs := NewExecuteSqlTestConfig(
+//
+//	    WithExecSqlSelect1Statement("custom select 1 statement"),
+//	)
 func NewExecuteSqlTestConfig(options ...ExecuteSqlOption) *ExecuteSqlTestConfig {
+	// default values for ExecuteSqlTestConfig
 	executeSqlTestOption := &ExecuteSqlTestConfig{
 		select1Statement:     `"SELECT 1"`,
 		createTableStatement: "",
@@ -141,53 +177,69 @@ func NewExecuteSqlTestConfig(options ...ExecuteSqlOption) *ExecuteSqlTestConfig 
 	return executeSqlTestOption
 }
 
-func WithSelect1Statement(s string) ExecuteSqlOption {
+// WithExecSqlSelect1Statement represents the database's statement for `SELECT 1`.
+func WithExecSqlSelect1Statement(s string) ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
 		c.select1Statement = s
 	}
 }
 
+// WithCreateTableStatement represents the database's statement for creating a new table.
 func WithCreateTableStatement(s string) ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
 		c.createTableStatement = s
 	}
 }
 
+// WithExecSqlSelect1Want represents the response value for select 1 statement.
 func WithExecSqlSelect1Want(s string) ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
 		c.select1Want = s
 	}
 }
 
+/* Configurations for RunToolInvokeWithTemplateParameters()  */
+
 // TemplateParameterTestConfig represents the various configuration options for template parameter tests.
 type TemplateParameterTestConfig struct {
-	ignoreDdl       bool
-	ignoreInsert    bool
 	ddlWant         string
 	selectAllWant   string
-	select1Want     string
+	selectId1Want   string
 	selectEmptyWant string
-	nameFieldArray  string
-	nameColFilter   string
-	createColArray  string
 	insert1Want     string
+
+	nameFieldArray string
+	nameColFilter  string
+	createColArray string
+
+	supportDdl    bool
+	supportInsert bool
 }
 
 type TemplateParamOption func(*TemplateParameterTestConfig)
 
 // NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
+// If the source config differs from the default values, use the associated function to
+// update these values.
+// e.g. templateParamTestConfigs := NewTemplateParameterTestConfig(
+//
+//	    WithDdlWant("custom ddl response"),
+//	)
 func NewTemplateParameterTestConfig(options ...TemplateParamOption) *TemplateParameterTestConfig {
+	// default values for TemplateParameterTestConfig
 	templateParamOption := &TemplateParameterTestConfig{
-		ignoreDdl:       false,
-		ignoreInsert:    false,
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
-		select1Want:     "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		selectEmptyWant: "null",
-		nameFieldArray:  `["name"]`,
-		nameColFilter:   "name",
-		createColArray:  `["id INT","name VARCHAR(20)","age INT"]`,
 		insert1Want:     "null",
+
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+
+		supportDdl:    true,
+		supportInsert: true,
 	}
 
 	// Apply provided options
@@ -198,71 +250,72 @@ func NewTemplateParameterTestConfig(options ...TemplateParamOption) *TemplatePar
 	return templateParamOption
 }
 
-// WithIgnoreDdl is the option function to configure ignoreDdl.
-func WithIgnoreDdl() TemplateParamOption {
-	return func(c *TemplateParameterTestConfig) {
-		c.ignoreDdl = true
-	}
-}
-
-// WithIgnoreInsert is the option function to configure ignoreInsert.
-func WithIgnoreInsert() TemplateParamOption {
-	return func(c *TemplateParameterTestConfig) {
-		c.ignoreInsert = true
-	}
-}
-
-// WithDdlWant is the option function to configure ddlWant.
+// WithDdlWant represents the response value of ddl statements.
 func WithDdlWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.ddlWant = s
 	}
 }
 
-// WithSelectAllWant is the option function to configure selectAllWant.
+// WithSelectAllWant represents the response value of select-templateParams-tool.
 func WithSelectAllWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectAllWant = s
 	}
 }
 
-// WithTmplSelect1Want is the option function to configure select1Want.
-func WithTmplSelect1Want(s string) TemplateParamOption {
+// WithTmplSelectId1Want represents the response value of select-templateParams-combined-tool with id=1.
+func WithTmplSelectId1Want(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
-		c.select1Want = s
+		c.selectId1Want = s
 	}
 }
 
-// WithSelectEmptyWant is the option function to configure selectEmptyWant.
+// WithSelectEmptyWant represents the response value of select-templateParams-combined-tool with no results.
 func WithSelectEmptyWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectEmptyWant = s
 	}
 }
 
-// WithReplaceNameFieldArray is the option function to configure replaceNameFieldArray.
-func WithReplaceNameFieldArray(s string) TemplateParamOption {
+// WithInsert1Want represents the response value of insert-table-templateParams-tool.
+func WithInsert1Want(s string) TemplateParamOption {
+	return func(c *TemplateParameterTestConfig) {
+		c.insert1Want = s
+	}
+}
+
+// WithNameFieldArray represents fields array parameter for select-fields-templateParams-tool.
+func WithNameFieldArray(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.nameFieldArray = s
 	}
 }
 
-// WithReplaceNameColFilter is the option function to configure replaceNameColFilter.
-func WithReplaceNameColFilter(s string) TemplateParamOption {
+// WithNameColFilter represents the columnFilter parameter for select-filter-templateParams-combined-tool.
+func WithNameColFilter(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.nameColFilter = s
 	}
 }
 
-// WithCreateColArray is the option function to configure replaceNameColFilter.
+// WithCreateColArray represents the columns array parameter for create-table-templateParams-tool.
 func WithCreateColArray(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.createColArray = s
 	}
 }
 
-func WithInsert1Want(s string) TemplateParamOption {
+// DisableDdlTest disables tests for ddl statements for sources that do not support ddl.
+func DisableDdlTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
-		c.insert1Want = s
+		c.supportDdl = false
+	}
+}
+
+// DisableInsertTest disables tests of insert statements for sources that do not support insert.
+func DisableInsertTest() TemplateParamOption {
+	return func(c *TemplateParameterTestConfig) {
+		c.supportInsert = false
 	}
 }

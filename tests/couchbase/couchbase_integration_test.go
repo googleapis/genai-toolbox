@@ -137,16 +137,16 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithInvoketestSelect1Want("[{\"$1\":1}]"),
+		tests.WithSelect1Want("[{\"$1\":1}]"),
 	)
 	mcpConfig := tests.NewMCPTestConfig(
-		tests.WithFailInvocationWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`),
+		tests.WithMyFailToolWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`),
 	)
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithIgnoreDdl(),
-		tests.WithIgnoreInsert(),
-		tests.WithTmplSelect1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
+		tests.WithTmplSelectId1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
 		tests.WithSelectAllWant("[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"),
+		tests.DisableDdlTest(),
+		tests.DisableInsertTest(),
 	)
 
 	// Run tests
