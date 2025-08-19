@@ -33,15 +33,14 @@ import (
 )
 
 var (
-	httpSourceKind = "http"
-	waitToolKind   = "alloydb-wait-for-operation"
+	waitToolKind = "alloydb-wait-for-operation"
 )
 
 type operation struct {
-	Name   string `json:"name"`
-	Done   bool   `json:"done"`
-	Result string `json:"result,omitempty"`
-	Error  *struct {
+	Name     string `json:"name"`
+	Done     bool   `json:"done"`
+	Response any    `json:"response,omitempty"`
+	Error    *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
@@ -80,7 +79,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func TestWaitToolEndpoints(t *testing.T) {
 	h := &handler{
 		operations: map[string]*operation{
-			"op1": {Name: "op1", Done: false, Result: "success"},
+			"op1": {Name: "op1", Done: false, Response: "success"},
 			"op2": {Name: "op2", Done: false, Error: &struct {
 				Code    int    `json:"code"`
 				Message string `json:"message"`
@@ -90,16 +89,12 @@ func TestWaitToolEndpoints(t *testing.T) {
 	server := httptest.NewServer(h)
 	defer server.Close()
 
-	sourceConfig := map[string]any{
-		"kind":    httpSourceKind,
-		"baseUrl": server.URL,
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	toolsFile := getWaitToolsConfig(sourceConfig)
+	toolsFile := getWaitToolsConfig(server.URL)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -115,17 +110,18 @@ func TestWaitToolEndpoints(t *testing.T) {
 	}
 
 	tcs := []struct {
-		name        string
-		toolName    string
-		body        string
-		want        string
-		expectError bool
+		name          string
+		toolName      string
+		body          string
+		want          string
+		expectError   bool
+		wantSubstring bool
 	}{
 		{
 			name:     "successful operation",
 			toolName: "wait-for-op1",
 			body:     `{"project": "p1", "location": "l1", "operation_id": "op1"}`,
-			want:     `{"name":"op1","done":true,"result":"success"}`,
+			want:     `{"name":"op1","done":true,"response":"success"}`,
 		},
 		{
 			name:        "failed operation",
@@ -168,6 +164,13 @@ func TestWaitToolEndpoints(t *testing.T) {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
+			if tc.wantSubstring {
+				if !bytes.Contains([]byte(result.Result), []byte(tc.want)) {
+					t.Fatalf("unexpected result: got %q, want substring %q", result.Result, tc.want)
+				}
+				return
+			}
+
 			// The result is a JSON-encoded string, so we need to unmarshal it twice.
 			var unmarshaledResult string
 			if err := json.Unmarshal([]byte(result.Result), &unmarshaledResult); err != nil {
@@ -189,21 +192,18 @@ func TestWaitToolEndpoints(t *testing.T) {
 	}
 }
 
-func getWaitToolsConfig(sourceConfig map[string]any) map[string]any {
+func getWaitToolsConfig(baseURL string) map[string]any {
 	return map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
 				"kind":        waitToolKind,
 				"description": "wait for op1",
-				"source":      "my-instance",
+				"baseURL":     baseURL,
 			},
 			"wait-for-op2": map[string]any{
 				"kind":        waitToolKind,
 				"description": "wait for op2",
-				"source":      "my-instance",
+				"baseURL":     baseURL,
 			},
 		},
 	}
