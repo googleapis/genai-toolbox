@@ -77,7 +77,7 @@ jobs:
       - name: Run tests with coverage
         if: ${{ runner.os == 'Linux' }}
         env:
-          GOTOOLCHAIN: auto
+          GOTOOLCHAIN: go1.25.0+auto
         run: |
           source_dir="./internal/sources/*"
           tool_dir="./internal/tools/*"
