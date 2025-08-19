@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -30,7 +29,7 @@ import (
 func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte) (any, error) {
 	switch method {
 	case PING:
-		return mcputil.PingHandler(id)
+		return pingHandler(id)
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
@@ -39,6 +38,15 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
+}
+
+// pingHandler handles the "ping" method by returning a "pong" response.
+func pingHandler(id jsonrpc.RequestId) (any, error) {
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  struct{}{},
+	}, nil
 }
 
 func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) (any, error) {

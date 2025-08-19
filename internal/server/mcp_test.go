@@ -351,6 +351,22 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 				},
 				{
+					name: "ping",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "ping-test-123",
+						Request: jsonrpc.Request{
+							Method: "ping",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "ping-test-123",
+						"result":  map[string]any{},
+					},
+				},
+				{
 					name: "tools/list",
 					url:  "/",
 					body: jsonrpc.JSONRPCRequest{
