@@ -164,9 +164,9 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	}
 
 	var projection any
-	err = json.Unmarshal([]byte(result), &projection)
+	err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshaling projection: %s", err)
+		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
 	}
 	opts = opts.SetProjection(projection)
 
