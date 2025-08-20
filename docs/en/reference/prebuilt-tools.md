@@ -26,6 +26,7 @@ description: >
 
 ## AlloyDB Postgres Admin
 
+* `--prebuilt` value: `alloydb-pg-admin`
 *   **Environment Variables:**
     *   `API_KEY`: Your API key for the AlloyDB API.
 *   **Permissions:**
