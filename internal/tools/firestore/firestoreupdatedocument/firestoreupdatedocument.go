@@ -203,7 +203,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	// Prepare update data
 	var writeResult *firestoreapi.WriteResult
-	var err error
+	var writeErr error
 
 	if len(updatePaths) > 0 {
 		// Use selective field update with update mask
@@ -229,18 +229,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 			})
 		}
 
-		writeResult, err = docRef.Update(ctx, updates)
+		writeResult, writeErr = docRef.Update(ctx, updates)
 	} else {
 		// Update all fields in the document data (merge)
 		documentData, err := util.JSONToFirestoreValue(documentDataRaw, t.Client)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert document data: %w", err)
 		}
-		writeResult, err = docRef.Set(ctx, documentData, firestoreapi.MergeAll)
+		writeResult, writeErr = docRef.Set(ctx, documentData, firestoreapi.MergeAll)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to update document: %w", err)
+	if writeErr != nil {
+		return nil, fmt.Errorf("failed to update document: %w", writeErr)
 	}
 
 	// Build the response

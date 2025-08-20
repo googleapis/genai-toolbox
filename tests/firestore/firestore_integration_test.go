@@ -592,7 +592,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 
 func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID string) {
 	docPath := fmt.Sprintf("%s/%s", collectionName, docID)
-	
+
 	invokeTcs := []struct {
 		name            string
 		api             string

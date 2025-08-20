@@ -462,7 +462,6 @@ func TestGetFieldValue(t *testing.T) {
 	}
 }
 
-
 // mockIncompatibleSource is a mock source that doesn't implement compatibleSource
 type mockIncompatibleSource struct{}
 
