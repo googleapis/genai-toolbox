@@ -180,16 +180,22 @@ tools:
       SELECT
         TI.TABLE_SCHEMA AS schema_name,
         TI.TABLE_NAME AS object_name,
-        CONCAT(
-          '{',
-          '"schema_name":"', IFNULL(TI.TABLE_SCHEMA, ''), '",',
-          '"object_name":"', IFNULL(TI.TABLE_NAME, ''), '",',
-          '"object_type":"', IFNULL(TI.TABLE_TYPE, ''), '",',
-          '"columns":[', ARRAY_TO_STRING(COALESCE(CI.columns_json_array_elements, []), ','), '],',
-          '"constraints":[', ARRAY_TO_STRING(COALESCE(CONSI.constraints_json_array_elements, []), ','), '],',
-          '"indexes":[', ARRAY_TO_STRING(COALESCE(II.indexes_json_array_elements, []), ','), '],',
-          '}'
-        ) AS object_details
+        CASE
+          WHEN @output_format = 'simple' THEN
+            -- IF format is 'simple', return basic JSON
+                CONCAT('{"name":"', IFNULL(REPLACE(TI.TABLE_NAME, '"', '\"'), ''), '"}')
+          ELSE
+            CONCAT(
+              '{',
+              '"schema_name":"', IFNULL(TI.TABLE_SCHEMA, ''), '",',
+              '"object_name":"', IFNULL(TI.TABLE_NAME, ''), '",',
+              '"object_type":"', IFNULL(TI.TABLE_TYPE, ''), '",',
+              '"columns":[', ARRAY_TO_STRING(COALESCE(CI.columns_json_array_elements, []), ','), '],',
+              '"constraints":[', ARRAY_TO_STRING(COALESCE(CONSI.constraints_json_array_elements, []), ','), '],',
+              '"indexes":[', ARRAY_TO_STRING(COALESCE(II.indexes_json_array_elements, []), ','), '],',
+              '}'
+            )
+        END AS object_details
       FROM table_info_cte AS TI
       LEFT JOIN columns_info_cte AS CI
         ON TI.TABLE_SCHEMA = CI.TABLE_SCHEMA AND TI.TABLE_NAME = CI.TABLE_NAME
@@ -203,6 +209,10 @@ tools:
       - name: table_names
         type: string
         description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+      - name: output_format
+        type: string
+        description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
+        default: "detailed"
 
 toolsets:
   spanner-database-tools:

@@ -68,6 +68,10 @@ parameter when loading tools, or the `add_auth_token_getter`() /
 
 ### Specifying tokens during load
 
+#### Python
+
+Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
+
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
 import asyncio
@@ -135,7 +139,68 @@ if **name** == "**main**":
     asyncio.run(main()){{< /tab >}}
 {{< /tabpane >}}
 
+#### Javascript/Typescript
+
+Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main).
+
+```javascript
+import { ToolboxClient } from '@toolbox-sdk/core';
+
+async function getAuthToken() {
+    // ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+    // This example just returns a placeholder. Replace with your actual token retrieval.
+    return "YOUR_ID_TOKEN" // Placeholder
+}
+
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+const authTool = await client.loadTool("my-tool", {"my_auth_app_1": getAuthToken});
+const result = await authTool({param:"value"});
+console.log(result);
+print(result)
+```
+
+#### Go
+
+Use the [Go SDK](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main).
+
+```go
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+import "fmt"
+
+func getAuthToken() string {
+	// ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+	// This example just returns a placeholder. Replace with your actual token retrieval.
+	return "YOUR_ID_TOKEN" // Placeholder
+}
+
+func main() {
+	URL := 'http://127.0.0.1:5000'
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+  	}
+	dynamicTokenSource := core.NewCustomTokenSource(getAuthToken)
+	authTool, err := client.LoadTool(
+		"my-tool",
+		ctx,
+		core.WithAuthTokenSource("my_auth_app_1", dynamicTokenSource))
+	if err != nil {
+		log.Fatalf("Failed to load tool: %v", err)
+	}
+	inputs := map[string]any{"param": "value"}
+	result, err := authTool.Invoke(ctx, inputs)
+	if err != nil {
+		log.Fatalf("Failed to invoke tool: %v", err)
+	}
+	fmt.Println(result)
+}
+```
+
 ### Specifying tokens for existing tools
+
+#### Python
+Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
 
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
@@ -181,5 +246,58 @@ authorized_tool = tools[0].add_auth_token_getters({
 })
 {{< /tab >}}
 {{< /tabpane >}}
+
+#### Javascript/Typescript
+
+Use the [JS SDK](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main).
+
+```javascript
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+let tool = await client.loadTool("my-tool")
+
+// for a single token
+const authorizedTool = tool.addAuthTokenGetter("my_auth", get_auth_token)
+
+// OR, if multiple tokens are needed
+const multiAuthTool = tool.addAuthTokenGetters({
+    "my_auth_1": getAuthToken1,
+    "my_auth_2": getAuthToken2,
+})
+
+```
+
+#### Go
+
+Use the [Go SDK](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main).
+
+```go
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+func main() {
+	URL := 'http://127.0.0.1:5000'
+	client, err := core.NewToolboxClient(URL)
+	if err != nil {
+		log.Fatalf("Failed to create Toolbox client: %v", err)
+	}
+	tool, err := client.LoadTool("my-tool", ctx))
+	if err != nil {
+		log.Fatalf("Failed to load tool: %v", err)
+	}
+	dynamicTokenSource1 := core.NewCustomTokenSource(getAuthToken1)
+	dynamicTokenSource2 := core.NewCustomTokenSource(getAuthToken1)
+
+	// For a single token
+	authTool, err := tool.ToolFrom(
+		core.WithAuthTokenSource("my-auth", dynamicTokenSource),
+	)
+
+	// OR, if multiple tokens are needed
+	authTool, err := tool.ToolFrom(
+		core.WithAuthTokenSource("my-auth_1", dynamicTokenSource1),
+		core.WithAuthTokenSource("my-auth_2", dynamicTokenSource2),
+	)
+}
+```
 
 ## Kinds of Auth Services

@@ -19,8 +19,8 @@ database. It's compatible with any of the following sources:
 - [postgres](../../sources/postgres.md)
 
 The specified SQL statement is executed as a [prepared statement][pg-prepare],
-and specified parameters will inserted according to their position: e.g. `1`
-will be the first parameter specified, `$@` will be the second parameter, and so
+and specified parameters will be inserted according to their position: e.g. `$1`
+will be the first parameter specified, `$2` will be the second parameter, and so
 on. If template parameters are included, they will be resolved before execution
 of the prepared statement.
 
@@ -77,7 +77,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](#template-parameters).
+> [templateParameters](..#template-parameters).
 
 ```yaml
 tools:
@@ -107,4 +107,4 @@ tools:
 | description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
 | parameters          | [parameters](../#specifying-parameters)                |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters  |  [templateParameters](#template-parameters)         |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| templateParameters  |  [templateParameters](..#template-parameters)         |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
