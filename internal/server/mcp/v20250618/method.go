@@ -40,7 +40,7 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	}
 }
 
-// pingHandler handles the "ping" method by returning a "pong" response.
+// pingHandler handles the "ping" method by returning an empty response.
 func pingHandler(id jsonrpc.RequestId) (any, error) {
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
