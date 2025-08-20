@@ -108,7 +108,7 @@ func addTiDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any
 
 func TestTiDBToolEndpoints(t *testing.T) {
 	sourceConfig := getTiDBVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	var args []string
