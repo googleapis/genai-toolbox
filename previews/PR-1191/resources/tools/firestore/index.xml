@@ -286,39 +286,7 @@ with filters, ordering, and limit capabilities.&lt;/p>
 &lt;/table>
 &lt;h3 id="filter-format">Filter Format&lt;/h3>
 &lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following
-structure:&lt;/p></description></item><item><title>firestore-validate-rules</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-validate-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-validate-rules/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
-&lt;p>The &lt;code>firestore-validate-rules&lt;/code> tool validates Firestore security rules syntax
-and semantic correctness without deploying them. It provides detailed error
-reporting with source positions and code snippets.&lt;/p>
-&lt;h2 id="configuration">Configuration&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">firestore-validate-rules&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">firestore-validate-rules&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">&amp;lt;firestore-source-name&amp;gt;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Checks the provided Firestore Rules source for syntax and validation errors&amp;#34;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="authentication">Authentication&lt;/h2>
-&lt;p>This tool requires authentication if the source requires authentication.&lt;/p>
-&lt;h2 id="parameters">Parameters&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>parameters&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>The Firestore Rules source code to validate&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table>
-&lt;h2 id="response">Response&lt;/h2>
-&lt;p>The tool returns a &lt;code>ValidationResult&lt;/code> object containing:&lt;/p></description></item><item><title>firestore-update-document</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-update-document/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-update-document/</guid><description>&lt;h2 id="description">Description&lt;/h2>
+structure:&lt;/p></description></item><item><title>firestore-update-document</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-update-document/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-update-document/</guid><description>&lt;h2 id="description">Description&lt;/h2>
 &lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. It also supports field deletion when using selective updates.&lt;/p>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
@@ -358,4 +326,36 @@ reporting with source positions and code snippets.&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;h2 id="output">Output&lt;/h2>
-&lt;p>The tool returns a map containing:&lt;/p></description></item></channel></rss>
+&lt;p>The tool returns a map containing:&lt;/p></description></item><item><title>firestore-validate-rules</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-validate-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-validate-rules/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>The &lt;code>firestore-validate-rules&lt;/code> tool validates Firestore security rules syntax
+and semantic correctness without deploying them. It provides detailed error
+reporting with source positions and code snippets.&lt;/p>
+&lt;h2 id="configuration">Configuration&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">firestore-validate-rules&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">firestore-validate-rules&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">&amp;lt;firestore-source-name&amp;gt;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Checks the provided Firestore Rules source for syntax and validation errors&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="authentication">Authentication&lt;/h2>
+&lt;p>This tool requires authentication if the source requires authentication.&lt;/p>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>parameters&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The Firestore Rules source code to validate&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="response">Response&lt;/h2>
+&lt;p>The tool returns a &lt;code>ValidationResult&lt;/code> object containing:&lt;/p></description></item></channel></rss>
