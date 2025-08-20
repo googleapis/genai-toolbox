@@ -34,8 +34,8 @@ sources:
     kind: trino
     host: trino.example.com
     port: "8080"
-        user: ${TRINO_USER}
-        password: ${TRINO_PASSWORD}
+      user: ${TRINO_USER}
+      password: ${TRINO_PASSWORD}
     catalog: hive
     schema: default
 ```
