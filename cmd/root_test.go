@@ -1210,7 +1210,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery-database-tools": tools.ToolsetConfig{
 					Name:      "bigquery-database-tools",
-					ToolNames: []string{"execute_sql", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
 				},
 			},
 		},
@@ -1260,7 +1260,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"firestore-database-tools": tools.ToolsetConfig{
 					Name:      "firestore-database-tools",
-					ToolNames: []string{"firestore-get-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
+					ToolNames: []string{"firestore-get-documents", "firestore-add-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
 				},
 			},
 		},
