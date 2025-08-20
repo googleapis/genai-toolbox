@@ -98,22 +98,18 @@ func TestRedisToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
-	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithSelect1Want(select1Want),
+	select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(invokeParamWant),
 		tests.WithMyToolById4Want(invokeIdNullWant),
 		tests.WithNullWant(nullWant),
 	)
-	mcpConfig := tests.NewMCPTestConfig(
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant,
 		tests.WithMcpMyToolId3NameAliceWant(mcpInvokeParamWant),
-		tests.WithMyFailToolWant(failInvocationWant),
 	)
-
-	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
-	tests.RunMCPToolCallMethod(t, mcpConfig)
 }
 
 func setupRedisDB(t *testing.T, ctx context.Context, client *redis.Client) func(*testing.T) {

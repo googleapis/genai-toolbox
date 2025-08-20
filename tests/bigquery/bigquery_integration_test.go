@@ -158,26 +158,21 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
-	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithSelect1Want(select1Want),
-		tests.DisableOptionalNullParamTest(),
-	)
-	mcpConfig := tests.NewMCPTestConfig(
-		// Partial message; the full error message is too long.
-		tests.WithMyFailToolWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`),
-	)
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),
-		tests.WithDdlWant(ddlWant),
-		tests.WithSelectEmptyWant(`"The query returned 0 rows."`),
-		tests.WithInsert1Want(ddlWant),
-	)
+	// Partial message; the full error message is too long.
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
+	createColArray := `["id INT64", "name STRING", "age INT64"]`
+	selectEmptyWant := `"The query returned 0 rows."`
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
-	tests.RunMCPToolCallMethod(t, mcpConfig)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
+		tests.WithCreateColArray(createColArray),
+		tests.WithDdlWant(ddlWant),
+		tests.WithSelectEmptyWant(selectEmptyWant),
+		tests.WithInsert1Want(ddlWant),
+	)
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)

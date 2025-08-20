@@ -244,7 +244,22 @@ func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpl
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
+func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
+	// Resolve options
+	// Default values for InvokeTestConfig
+	configs := &InvokeTestConfig{
+		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		nullWant:                 "null",
+		supportOptionalNullParam: true,
+		supportArrayParam:        true,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -265,7 +280,7 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          c.select1Want,
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
@@ -273,7 +288,7 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          c.myToolId3NameAliceWant,
+			want:          configs.myToolId3NameAliceWant,
 			isErr:         false,
 		},
 		{
@@ -281,7 +296,7 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"id": 4}`)),
-			want:          c.myToolById4Want,
+			want:          configs.myToolById4Want,
 			isErr:         false,
 		},
 		{
@@ -289,8 +304,8 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          c.nullWant,
-			isErr:         !c.supportOptionalNullParam,
+			want:          configs.nullWant,
+			isErr:         !configs.supportOptionalNullParam,
 		},
 		{
 			name:          "Invoke my-tool without parameters",
@@ -311,8 +326,8 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 			api:           "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
-			want:          c.myToolId3NameAliceWant,
-			isErr:         !c.supportArrayParam,
+			want:          configs.myToolId3NameAliceWant,
+			isErr:         !configs.supportArrayParam,
 		},
 		{
 			name:          "Invoke my-auth-tool with auth token",
@@ -342,7 +357,7 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
-			want:          c.select1Want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
@@ -404,7 +419,29 @@ func RunToolInvokeTest(t *testing.T, c *InvokeTestConfig) {
 }
 
 // RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config *TemplateParameterTestConfig) {
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
+	// Resolve options
+	// Default values for TemplateParameterTestConfig
+	configs := &TemplateParameterTestConfig{
+		ddlWant:         "null",
+		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
+		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectEmptyWant: "null",
+		insert1Want:     "null",
+
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+
+		supportDdl:    true,
+		supportInsert: true,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
 	// Test tool invoke endpoint
@@ -423,8 +460,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, config.createColArray))),
-			want:          config.ddlWant,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray))),
+			want:          configs.ddlWant,
 			isErr:         false,
 		},
 		{
@@ -433,7 +470,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
-			want:          config.insert1Want,
+			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -442,7 +479,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
-			want:          config.insert1Want,
+			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -450,7 +487,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          config.selectAllWant,
+			want:          configs.selectAllWant,
 			isErr:         false,
 		},
 		{
@@ -458,7 +495,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
-			want:          config.selectId1Want,
+			want:          configs.selectId1Want,
 			isErr:         false,
 		},
 		{
@@ -466,14 +503,14 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName))),
-			want:          config.selectEmptyWant,
+			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, config.nameFieldArray))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
 			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
@@ -481,8 +518,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			name:          "invoke select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, config.nameColFilter))),
-			want:          config.selectId1Want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
+			want:          configs.selectId1Want,
 			isErr:         false,
 		},
 		{
@@ -491,16 +528,16 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          config.ddlWant,
+			want:          configs.ddlWant,
 			isErr:         false,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// if test case is DDL and source support ddl test cases
-			ddlAllow := !tc.ddl || (tc.ddl && config.supportDdl)
+			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
 			// if test case is insert statement and source support insert test cases
-			insertAllow := !tc.insert || (tc.insert && config.supportInsert)
+			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 			if ddlAllow && insertAllow {
 				// Send Tool invocation request
 				req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
@@ -546,7 +583,18 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 	}
 }
 
-func RunExecuteSqlToolInvokeTest(t *testing.T, c *ExecuteSqlTestConfig) {
+func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want string, options ...ExecuteSqlOption) {
+	// Resolve options
+	// Default values for ExecuteSqlTestConfig
+	configs := &ExecuteSqlTestConfig{
+		select1Statement: `"SELECT 1"`,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -566,15 +614,15 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, c *ExecuteSqlTestConfig) {
 			name:          "invoke my-exec-sql-tool",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, c.select1Statement))),
-			want:          c.select1Want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
+			want:          select1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke my-exec-sql-tool create table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, c.createTableStatement))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, createTableStatement))),
 			want:          "null",
 			isErr:         false,
 		},
@@ -605,22 +653,22 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, c *ExecuteSqlTestConfig) {
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, c.select1Statement))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         false,
-			want:          c.select1Want,
+			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, c.select1Statement))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, c.select1Statement))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         true,
 		},
 	}
@@ -715,7 +763,18 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, c *MCPTestConfig) {
+func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTestOption) {
+	// Resolve options
+	// Default values for MCPTestConfig
+	configs := &MCPTestConfig{
+		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	sessionId := RunInitialize(t, "2024-11-05")
 	header := map[string]string{}
 	if sessionId != "" {
@@ -748,7 +807,7 @@ func RunMCPToolCallMethod(t *testing.T, c *MCPTestConfig) {
 					},
 				},
 			},
-			want: c.myToolId3NameAliceWant,
+			want: configs.myToolId3NameAliceWant,
 		},
 		{
 			name:          "MCP Invoke invalid tool",
@@ -833,7 +892,7 @@ func RunMCPToolCallMethod(t *testing.T, c *MCPTestConfig) {
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: c.myFailToolWant,
+			want: myFailToolWant,
 		},
 	}
 	for _, tc := range invokeTcs {

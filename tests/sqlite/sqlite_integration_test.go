@@ -155,17 +155,11 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"1\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
-	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithSelect1Want(select1Want),
-		tests.DisableArrayTest(),
-	)
-	mcpConfig := tests.NewMCPTestConfig(tests.WithMyFailToolWant(failInvocationWant))
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig()
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
-	tests.RunMCPToolCallMethod(t, mcpConfig)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }

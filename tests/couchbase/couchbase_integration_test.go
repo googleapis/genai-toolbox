@@ -136,24 +136,21 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithSelect1Want("[{\"$1\":1}]"),
-	)
-	mcpConfig := tests.NewMCPTestConfig(
-		tests.WithMyFailToolWant(`{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`),
-	)
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithTmplSelectId1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
-		tests.WithSelectAllWant("[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"),
-		tests.DisableDdlTest(),
-		tests.DisableInsertTest(),
-	)
+	select1Want := "[{\"$1\":1}]"
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`
+	tmplSelectId1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
+	selectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
-	tests.RunMCPToolCallMethod(t, mcpConfig)
-	tests.RunToolInvokeWithTemplateParameters(t, collectionNameTemplateParam, templateParamTestConfig)
+	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunToolInvokeWithTemplateParameters(t, collectionNameTemplateParam,
+		tests.WithTmplSelectId1Want(tmplSelectId1Want),
+		tests.WithSelectAllWant(selectAllWant),
+		tests.DisableDdlTest(),
+		tests.DisableInsertTest(),
+	)
 }
 
 // setupCouchbaseCollection creates a scope and collection and inserts test data

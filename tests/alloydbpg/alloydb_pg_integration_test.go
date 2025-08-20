@@ -166,20 +166,13 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want, failInvocationWant, createTableStatement := tests.GetPostgresWants()
-	toolInvokeConfig := tests.NewInvokeTestConfig(tests.WithSelect1Want(select1Want))
-	mcpConfig := tests.NewMCPTestConfig(tests.WithMyFailToolWant(failInvocationWant))
-	executeSqlConfig := tests.NewExecuteSqlTestConfig(
-		tests.WithCreateTableStatement(createTableStatement),
-		tests.WithExecSqlSelect1Want(select1Want),
-	)
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig()
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
-	tests.RunMCPToolCallMethod(t, mcpConfig)
-	tests.RunExecuteSqlToolInvokeTest(t, executeSqlConfig)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolCallMethod(t, failInvocationWant)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // Test connection with different IP type

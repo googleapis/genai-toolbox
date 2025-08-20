@@ -301,15 +301,9 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Get configs for tests
-	toolInvokeConfig := tests.NewInvokeTestConfig(
-		tests.WithSelect1Want(`"hello world"`),
-		tests.DisableArrayTest(),
-	)
-
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
+	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
 	runAdvancedHTTPInvokeTest(t)
 }
 

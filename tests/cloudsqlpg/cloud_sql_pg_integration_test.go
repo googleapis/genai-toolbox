@@ -150,21 +150,14 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, failInvocationWant, createTableStatement := tests.GetPostgresWants()
-	toolInvokeConfig := tests.NewInvokeTestConfig(tests.WithSelect1Want(select1Want))
-	mcpConfig := tests.NewMCPTestConfig(tests.WithMyFailToolWant(failInvocationWant))
-	executeSqlConfig := tests.NewExecuteSqlTestConfig(
-		tests.WithCreateTableStatement(createTableStatement),
-		tests.WithExecSqlSelect1Want(select1Want),
-	)
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig()
+	select1Want, mcpMyFailToolWant, createTableStatement := tests.GetPostgresWants()
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, toolInvokeConfig)
-	tests.RunMCPToolCallMethod(t, mcpConfig)
-	tests.RunExecuteSqlToolInvokeTest(t, executeSqlConfig)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // Test connection with different IP type
