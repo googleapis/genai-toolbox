@@ -5930,6 +5930,7 @@ This page lists all the prebuilt tools available.
 
 ## AlloyDB Postgres Admin
 
+* `--prebuilt` value: `alloydb-pg-admin`
 *   **Environment Variables:**
     *   `API_KEY`: Your API key for the AlloyDB API.
 *   **Permissions:**

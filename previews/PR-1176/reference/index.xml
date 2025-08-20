@@ -138,6 +138,7 @@
 &lt;/ul>
 &lt;h2 id="alloydb-postgres-admin">AlloyDB Postgres Admin&lt;/h2>
 &lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-pg-admin&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>API_KEY&lt;/code>: Your API key for the AlloyDB API.&lt;/li>
