@@ -1,7 +1,7 @@
 ---
 title: "firestore-update-document"
 type: docs
-weight: 2
+weight: 1
 description: >
   A "firestore-update-document" tool updates an existing document in Firestore.
 aliases:
@@ -308,7 +308,7 @@ Common errors include:
 ## Differences from Add Documents
 
 - **Purpose**: Updates existing documents vs. creating new ones
-- **Document must exist**: For standard updates (though Set with MergeAll will create if missing)
+- **Document must exist**: For standard updates (though not using updateMask will create if missing with given document id)
 - **Update mask support**: Allows selective field updates
 - **Field deletion**: Supports removing specific fields with `deleteValue`
 - **Returns updateTime**: Instead of createTime
