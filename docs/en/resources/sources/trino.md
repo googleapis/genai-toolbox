@@ -1,7 +1,7 @@
 ---
 title: "Trino"
 type: docs
-weight: 160
+weight: 1
 description: >
   Trino is a distributed SQL query engine for big data analytics.
 ---
