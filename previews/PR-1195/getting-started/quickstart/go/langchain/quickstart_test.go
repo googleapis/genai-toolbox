@@ -1,0 +1,60 @@
+package main
+
+import (
+	"bytes"
+	"os"
+	"os/exec"
+	"strings"
+	"testing"
+)
+
+func TestAgentOutputAndKeywords(t *testing.T) {
+	if os.Getenv("GOOGLE_API_KEY") == "" {
+		t.Skip("Skipping integration test: GOOGLE_API_KEY environment variable is not set.")
+	}
+
+	buildCmd := exec.Command("go", "build", "-o", "quickstart_test_binary", ".")
+	if err := buildCmd.Run(); err != nil {
+		t.Fatalf("Failed to compile quickstart.go: %v", err)
+	}
+	defer os.Remove("quickstart_test_binary")
+
+	cmd := exec.Command("./quickstart_test_binary")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	actualOutput := stdout.String()
+
+	t.Logf("--- SCRIPT OUTPUT ---\n%s", actualOutput)
+	if stderr.Len() > 0 {
+		t.Logf("--- SCRIPT STDERR ---\n%s", stderr.String())
+	}
+
+	if err != nil {
+		t.Fatalf("❌ FAILED: Script execution failed with error: %v", err)
+	}
+	if len(actualOutput) == 0 {
+		t.Fatalf("❌ FAILED: Script ran successfully but produced no output.")
+	}
+	t.Log("✅ PASSED: Script ran successfully and produced output.")
+
+	goldenFile, err := os.ReadFile("../../golden.txt")
+	if err != nil {
+		t.Logf("⚠️ WARNING: Could not read golden.txt to check for keywords: %v", err)
+		return
+	}
+
+	keywords := strings.Split(string(goldenFile), "\n")
+	for _, keyword := range keywords {
+		if keyword == "" {
+			continue
+		}
+		if strings.Contains(actualOutput, keyword) {
+			t.Logf("✅ INFO: Found keyword '%s' in output.", keyword)
+		} else {
+			t.Logf("⚠️ INFO: Did not find keyword '%s' in output.", keyword)
+		}
+	}
+}
