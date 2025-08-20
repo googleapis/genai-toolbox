@@ -17,6 +17,9 @@ allowing tools to execute SQL queries against it.
   Run SQL++ statements on Couchbase with parameterized input.
 
 ## Example
+{{< notice note >}}
+For more details about custom ports refer to this link [`custom ports`](https://docs.couchbase.com/java-sdk/current/howtos/managing-connections.html)
+{{< /notice >}}
 
 ```yaml
 sources:
