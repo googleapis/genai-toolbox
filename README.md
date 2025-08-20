@@ -736,7 +736,7 @@ While the major version is `0`, the public API should be considered unstable.
 The version will be incremented  as follows:
 
 - **`0.MINOR.PATCH`**: The **MINOR** version is incremented when we add
-  functionality or make breaking, incompatible API changes.
+  new functionality or make breaking, incompatible API changes.
 - **`0.MINOR.PATCH`**: The **PATCH** version is incremented for
   backward-compatible bug fixes.
 
