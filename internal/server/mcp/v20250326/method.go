@@ -119,7 +119,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	}
 
 	// run tool invocation and generate response.
-	results, err := tool.Invoke(ctx, params)
+	results, err := tool.Invoke(ctx, params, "")
 	if err != nil {
 		text := TextContent{
 			Type: "text",
