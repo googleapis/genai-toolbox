@@ -133,6 +133,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	runFirestoreQueryCollectionTest(t, testCollectionName)
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
 	runFirestoreAddDocumentsTest(t, testCollectionName)
+	runFirestoreUpdateDocumentTest(t, testCollectionName, testDocID1)
 	runFirestoreDeleteDocumentsTest(t, docPath3)
 	runFirestoreGetRulesTest(t)
 	runFirestoreValidateRulesTest(t)
@@ -576,11 +577,248 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"source":      "my-instance",
 			"description": "Add documents to Firestore",
 		},
+		"firestore-update-doc": map[string]any{
+			"kind":        "firestore-update-document",
+			"source":      "my-instance",
+			"description": "Update a document in Firestore",
+		},
 	}
 
 	return map[string]any{
 		"sources": sources,
 		"tools":   tools,
+	}
+}
+
+func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID string) {
+	docPath := fmt.Sprintf("%s/%s", collectionName, docID)
+	
+	invokeTcs := []struct {
+		name            string
+		api             string
+		requestBody     io.Reader
+		wantKeys        []string
+		validateContent bool
+		expectedContent map[string]interface{}
+		isErr           bool
+	}{
+		{
+			name: "update document with simple fields",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"name": {"stringValue": "Alice Updated"},
+					"status": {"stringValue": "active"}
+				}
+			}`, docPath))),
+			wantKeys: []string{"documentPath", "updateTime"},
+			isErr:    false,
+		},
+		{
+			name: "update document with selective fields using updateMask",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"age": {"integerValue": "31"},
+					"email": {"stringValue": "alice@example.com"}
+				},
+				"updateMask": ["age"]
+			}`, docPath))),
+			wantKeys: []string{"documentPath", "updateTime"},
+			isErr:    false,
+		},
+		{
+			name: "update document with field deletion",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"name": {"stringValue": "Alice Final"},
+					"status": {"deleteValue": true}
+				},
+				"updateMask": ["name", "status"]
+			}`, docPath))),
+			wantKeys: []string{"documentPath", "updateTime"},
+			isErr:    false,
+		},
+		{
+			name: "update document with complex types",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"location": {
+						"geoPointValue": {
+							"latitude": 40.7128,
+							"longitude": -74.0060
+						}
+					},
+					"tags": {
+						"arrayValue": {
+							"values": [
+								{"stringValue": "updated"},
+								{"stringValue": "test"}
+							]
+						}
+					},
+					"metadata": {
+						"mapValue": {
+							"fields": {
+								"lastModified": {"timestampValue": "2025-01-15T10:00:00Z"},
+								"version": {"integerValue": "2"}
+							}
+						}
+					}
+				}
+			}`, docPath))),
+			wantKeys: []string{"documentPath", "updateTime"},
+			isErr:    false,
+		},
+		{
+			name: "update document with returnData",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"testField": {"stringValue": "test value"},
+					"testNumber": {"integerValue": "42"}
+				},
+				"returnData": true
+			}`, docPath))),
+			wantKeys:        []string{"documentPath", "updateTime", "documentData"},
+			validateContent: true,
+			expectedContent: map[string]interface{}{
+				"testField":  "test value",
+				"testNumber": float64(42), // JSON numbers are decoded as float64
+			},
+			isErr: false,
+		},
+		{
+			name: "update nested fields with updateMask",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"profile": {
+						"mapValue": {
+							"fields": {
+								"bio": {"stringValue": "Updated bio"},
+								"avatar": {"stringValue": "avatar.jpg"}
+							}
+						}
+					}
+				},
+				"updateMask": ["profile.bio", "profile.avatar"]
+			}`, docPath))),
+			wantKeys: []string{"documentPath", "updateTime"},
+			isErr:    false,
+		},
+		{
+			name:        "missing documentPath parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"documentData": {"test": {"stringValue": "value"}}}`)),
+			isErr:       true,
+		},
+		{
+			name:        "missing documentData parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"documentPath": "%s"}`, docPath))),
+			isErr:       true,
+		},
+		{
+			name: "update non-existent document",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{
+				"documentPath": "non-existent-collection/non-existent-doc",
+				"documentData": {
+					"field": {"stringValue": "value"}
+				}
+			}`)),
+			wantKeys: []string{"documentPath", "updateTime"}, // Set with MergeAll creates if doesn't exist
+			isErr:    false,
+		},
+		{
+			name: "invalid field in updateMask",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"documentPath": "%s",
+				"documentData": {
+					"field1": {"stringValue": "value1"}
+				},
+				"updateMask": ["field1", "nonExistentField"]
+			}`, docPath))),
+			isErr: true, // Should fail because nonExistentField is not in documentData
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			// Parse the result string as JSON
+			var resultJSON map[string]interface{}
+			err = json.Unmarshal([]byte(got), &resultJSON)
+			if err != nil {
+				t.Fatalf("error parsing result as JSON: %v", err)
+			}
+
+			// Check if all wanted keys exist
+			for _, key := range tc.wantKeys {
+				if _, exists := resultJSON[key]; !exists {
+					t.Fatalf("expected key %q not found in result: %s", key, got)
+				}
+			}
+
+			// Validate document data if required
+			if tc.validateContent {
+				docData, ok := resultJSON["documentData"].(map[string]interface{})
+				if !ok {
+					t.Fatalf("documentData is not a map: %v", resultJSON["documentData"])
+				}
+
+				// Check that expected fields are present with correct values
+				for key, expectedValue := range tc.expectedContent {
+					actualValue, exists := docData[key]
+					if !exists {
+						t.Fatalf("expected field %q not found in documentData", key)
+					}
+					if actualValue != expectedValue {
+						t.Fatalf("field %q mismatch: expected %v, got %v", key, expectedValue, actualValue)
+					}
+				}
+			}
+		})
 	}
 }
 

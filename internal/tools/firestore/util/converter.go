@@ -28,9 +28,16 @@ import (
 // JSONToFirestoreValue converts a JSON value with type information to a Firestore-compatible value
 // The input should be a map with a single key indicating the type (e.g., "stringValue", "integerValue")
 // If a client is provided, referenceValue types will be converted to *firestore.DocumentRef
-func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interface{}, error) {
+// If allowDelete is true, deleteValue markers will be converted to firestore.Delete
+func JSONToFirestoreValue(value interface{}, client *firestore.Client, allowDelete ...bool) (interface{}, error) {
 	if value == nil {
 		return nil, nil
+	}
+
+	// Check if delete values are allowed (optional parameter)
+	allowDeleteValue := false
+	if len(allowDelete) > 0 {
+		allowDeleteValue = allowDelete[0]
 	}
 
 	switch v := value.(type) {
@@ -39,6 +46,15 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 		if len(v) == 1 {
 			for key, val := range v {
 				switch key {
+				case "deleteValue":
+					// Handle delete marker if allowed
+					if allowDeleteValue {
+						if b, ok := val.(bool); ok && b {
+							return firestore.Delete, nil
+						}
+					}
+					// If not allowed or not true, treat as regular map
+					return convertPlainMap(v, client, allowDeleteValue)
 				case "nullValue":
 					return nil, nil
 				case "booleanValue":
@@ -109,7 +125,7 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 						if values, ok := arrayMap["values"].([]interface{}); ok {
 							result := make([]interface{}, len(values))
 							for i, item := range values {
-								converted, err := JSONToFirestoreValue(item, client)
+								converted, err := JSONToFirestoreValue(item, client, allowDeleteValue)
 								if err != nil {
 									return nil, fmt.Errorf("array item %d: %w", i, err)
 								}
@@ -125,7 +141,7 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 						if fields, ok := mapMap["fields"].(map[string]interface{}); ok {
 							result := make(map[string]interface{})
 							for k, v := range fields {
-								converted, err := JSONToFirestoreValue(v, client)
+								converted, err := JSONToFirestoreValue(v, client, allowDeleteValue)
 								if err != nil {
 									return nil, fmt.Errorf("map field %q: %w", k, err)
 								}
@@ -147,12 +163,12 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 					return nil, fmt.Errorf("reference value must be a string")
 				default:
 					// If not a typed value, treat as regular map
-					return convertPlainMap(v, client)
+					return convertPlainMap(v, client, allowDeleteValue)
 				}
 			}
 		}
 		// Regular map without type annotation
-		return convertPlainMap(v, client)
+		return convertPlainMap(v, client, allowDeleteValue)
 	default:
 		// Plain values (for backward compatibility)
 		return value, nil
@@ -160,10 +176,10 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 }
 
 // convertPlainMap converts a plain map to Firestore format
-func convertPlainMap(m map[string]interface{}, client *firestore.Client) (map[string]interface{}, error) {
+func convertPlainMap(m map[string]interface{}, client *firestore.Client, allowDelete bool) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 	for k, v := range m {
-		converted, err := JSONToFirestoreValue(v, client)
+		converted, err := JSONToFirestoreValue(v, client, allowDelete)
 		if err != nil {
 			return nil, fmt.Errorf("field %q: %w", k, err)
 		}
