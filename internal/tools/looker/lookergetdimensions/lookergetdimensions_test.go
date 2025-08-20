@@ -54,6 +54,26 @@ func TestParseFromYamlLookerGetDimensions(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with auth required",
+			in: `
+			tools:
+				example_tool:
+					kind: looker-get-dimensions
+					source: my-instance
+					description: Tool to get dimensions with descriptions
+					authRequired: ["google-oauth"]
+				`,
+			want: server.ToolConfigs{
+				"example_tool": lkr.Config{
+					Name:         "example_tool",
+					Kind:         "looker-get-dimensions",
+					Source:       "my-instance",
+					Description:  "Tool to get dimensions with descriptions",
+					AuthRequired: []string{"google-oauth"},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
