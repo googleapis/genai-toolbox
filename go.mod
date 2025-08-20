@@ -31,7 +31,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
 	github.com/microsoft/go-mssqldb v1.9.2
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.2
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
@@ -47,7 +47,8 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/oauth2 v0.30.0
-	google.golang.org/api v0.247.0
+	google.golang.org/api v0.248.0
+	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
 	modernc.org/sqlite v1.38.2
 )
 
@@ -61,7 +62,7 @@ require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go v0.121.4 // indirect
 	cloud.google.com/go/alloydb v1.18.0 // indirect
-	cloud.google.com/go/auth v0.16.4 // indirect
+	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
@@ -158,9 +159,8 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250728155136-f173205681a0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811230008-5f3141c8851a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
