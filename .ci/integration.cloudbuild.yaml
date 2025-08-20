@@ -682,7 +682,7 @@ substitutions:
   _TIDB_PORT: "4000"
   _TRINO_HOST: 127.0.0.1
   _TRINO_PORT: "8080"
-  _TRINO_CATALOG: "generator"
+  _TRINO_CATALOG: "memory"
   _TRINO_SCHEMA: "default"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"

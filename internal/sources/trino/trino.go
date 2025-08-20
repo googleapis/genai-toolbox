@@ -51,7 +51,7 @@ type Config struct {
 	Kind            string `yaml:"kind" validate:"required"`
 	Host            string `yaml:"host" validate:"required"`
 	Port            string `yaml:"port" validate:"required"`
-	User            string `yaml:"user" validate:"required"`
+	User            string `yaml:"user"`
 	Password        string `yaml:"password"`
 	Catalog         string `yaml:"catalog" validate:"required"`
 	Schema          string `yaml:"schema" validate:"required"`
@@ -147,14 +147,17 @@ func buildTrinoDSN(host, port, user, password, catalog, schema, queryTimeout, ac
 
 	u := &url.URL{
 		Scheme:   scheme,
-		User:     url.User(user),
 		Host:     fmt.Sprintf("%s:%s", host, port),
 		RawQuery: query.Encode(),
 	}
 
-	if password != "" {
-		// For basic auth, set password in userinfo
-		u.User = url.UserPassword(user, password)
+	// Only set user if not empty
+	if user != "" {
+		u.User = url.User(user)
+		if password != "" {
+			// For basic auth, set password in userinfo
+			u.User = url.UserPassword(user, password)
+		}
 	}
 	return u.String(), nil
 }

@@ -47,8 +47,7 @@ func getTrinoVars(t *testing.T) map[string]any {
 		t.Fatal("'TRINO_HOST' not set")
 	case TrinoPort:
 		t.Fatal("'TRINO_PORT' not set")
-	case TrinoUser:
-		t.Fatal("'TRINO_USER' not set")
+	// TrinoUser is optional for anonymous access
 	case TrinoCatalog:
 		t.Fatal("'TRINO_CATALOG' not set")
 	case TrinoSchema:
@@ -93,10 +92,16 @@ func buildTrinoDSN(host, port, user, password, catalog, schema, queryTimeout, ac
 		scheme = "https"
 	}
 
-	dsn := fmt.Sprintf("%s://%s@%s:%s?catalog=%s&schema=%s", scheme, user, host, port, catalog, schema)
+	// Build base DSN without user info
+	dsn := fmt.Sprintf("%s://%s:%s?catalog=%s&schema=%s", scheme, host, port, catalog, schema)
 
-	if password != "" {
-		dsn = fmt.Sprintf("%s://%s:%s@%s:%s?catalog=%s&schema=%s", scheme, user, password, host, port, catalog, schema)
+	// Add user authentication if provided
+	if user != "" {
+		if password != "" {
+			dsn = fmt.Sprintf("%s://%s:%s@%s:%s?catalog=%s&schema=%s", scheme, user, password, host, port, catalog, schema)
+		} else {
+			dsn = fmt.Sprintf("%s://%s@%s:%s?catalog=%s&schema=%s", scheme, user, host, port, catalog, schema)
+		}
 	}
 
 	if queryTimeout != "" {

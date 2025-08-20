@@ -104,6 +104,15 @@ func TestBuildTrinoDSN(t *testing.T) {
 			want:         "http://testuser@localhost:8080?catalog=hive&queryTimeout=30m&schema=default",
 			wantErr:      false,
 		},
+		{
+			name:    "anonymous access (empty user)",
+			host:    "localhost",
+			port:    "8080",
+			catalog: "hive",
+			schema:  "default",
+			want:    "http://localhost:8080?catalog=hive&schema=default",
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -181,6 +190,28 @@ func TestParseFromYamlTrino(t *testing.T) {
 					AccessToken:     "jwt-token-here",
 					KerberosEnabled: true,
 					SSLEnabled:      true,
+				},
+			},
+		},
+		{
+			desc: "anonymous access without user",
+			in: `
+			sources:
+				my-trino-anonymous:
+					kind: trino
+					host: localhost
+					port: "8080"
+					catalog: hive
+					schema: default
+			`,
+			want: server.SourceConfigs{
+				"my-trino-anonymous": Config{
+					Name:    "my-trino-anonymous",
+					Kind:    SourceKind,
+					Host:    "localhost",
+					Port:    "8080",
+					Catalog: "hive",
+					Schema:  "default",
 				},
 			},
 		},
