@@ -588,13 +588,14 @@ Don't ask for confirmations from the user.
 
 const queries = [
   "Find hotels in Basel with Basel in its name.",
-  "Can you book  Hilton Basel for me?",
+  "Can you book the Hilton Basel for me?",
   "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
 function mapZodTypeToOpenAPIType(zodTypeName) {
 
+    console.log(zodTypeName)
     const typeMap = {
         'ZodString': 'string',
         'ZodNumber': 'number',
@@ -606,10 +607,9 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
 }
 
 async function runApplication() {
-    const toolboxClient = new ToolboxClient(TOOLBOX_URL);
-    let toolboxTools = [];
-
-    toolboxTools = await toolboxClient.loadToolset("my-toolset");
+   
+    const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
+    const toolboxTools = await toolboxClient.loadToolset("my-toolset");
     
     const geminiTools = [{
         functionDeclarations: toolboxTools.map(tool => {
@@ -624,6 +624,7 @@ async function runApplication() {
                         type: mapZodTypeToOpenAPIType(param.constructor.name),
                         description: param.description || '',
                     };
+                required.push(key)
                 }
             
             return {
@@ -678,9 +679,11 @@ async function runApplication() {
                         }
                     }
                 }
+                
                 currentResult = await chat.sendMessage({ message: toolResponses });
             }
         }
+        
     }
 }
 
