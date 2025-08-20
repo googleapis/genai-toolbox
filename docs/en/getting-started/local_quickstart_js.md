@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [Google Genai](https://github.com/googleapis/js-genai).
+  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 ---
 
 ## Before you begin
@@ -302,7 +302,7 @@ npm install genkit @genkit-ai/vertexai
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
-{{< tab header="Google Genai" lang="bash" >}}
+{{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @google/genai 
 {{< /tab >}}
 {{< /tabpane >}}
@@ -568,13 +568,13 @@ main();
 
 {{< /tab >}}
 
-{{< tab header="Google Gen AI" lang="js" >}}
+{{< tab header="GoogleGenAI" lang="js" >}}
 import { GoogleGenAI } from "@google/genai";
 import { ToolboxClient } from "@toolbox-sdk/core";
 
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-const GOOGLE_API_KEY = 'enter your api here '; // Replace it with your API key
+const GOOGLE_API_KEY = 'enter your api here'; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -588,13 +588,14 @@ Don't ask for confirmations from the user.
 
 const queries = [
   "Find hotels in Basel with Basel in its name.",
-  "Can you book  Hilton Basel for me?",
+  "Can you book the Hilton Basel for me?",
   "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
 function mapZodTypeToOpenAPIType(zodTypeName) {
 
+    console.log(zodTypeName)
     const typeMap = {
         'ZodString': 'string',
         'ZodNumber': 'number',
@@ -606,10 +607,9 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
 }
 
 async function runApplication() {
-    const toolboxClient = new ToolboxClient(TOOLBOX_URL);
-    let toolboxTools = [];
-
-    toolboxTools = await toolboxClient.loadToolset("my-toolset");
+   
+    const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
+    const toolboxTools = await toolboxClient.loadToolset("my-toolset");
     
     const geminiTools = [{
         functionDeclarations: toolboxTools.map(tool => {
@@ -624,6 +624,7 @@ async function runApplication() {
                         type: mapZodTypeToOpenAPIType(param.constructor.name),
                         description: param.description || '',
                     };
+                required.push(key)
                 }
             
             return {
@@ -678,9 +679,11 @@ async function runApplication() {
                         }
                     }
                 }
+                
                 currentResult = await chat.sendMessage({ message: toolResponses });
             }
         }
+        
     }
 }
 
