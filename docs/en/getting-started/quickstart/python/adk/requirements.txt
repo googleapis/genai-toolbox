@@ -1,0 +1,2 @@
+google-adk>=0.1.0
+toolbox-core>=0.5.0
