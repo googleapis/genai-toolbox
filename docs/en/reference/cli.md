@@ -49,7 +49,7 @@ description: >
 
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
-**Single File:**
+**Single File:** (default)
 - `--tools-file`: Path to a single YAML configuration file
 
 **Multiple Files:**
