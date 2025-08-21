@@ -42,7 +42,7 @@ description: >
 
 ```bash
 # Basic server with custom port configuration
-./toolbox --tools-file "config.yaml" --port 8080
+./toolbox --tools-file "tools.yaml" --port 8080
 ```
 
 ### Tool Configuration Sources
