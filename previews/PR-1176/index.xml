@@ -3577,7 +3577,7 @@ PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
-&lt;h2 id="spanner">Spanner&lt;/h2>
+&lt;h2 id="spanner-googlesql-dialect">Spanner (GoogleSQL dialect)&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>

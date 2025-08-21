@@ -5887,7 +5887,7 @@ This page describes the `toolbox` command-line options.
 
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
-**Single File:**
+**Single File:** (default)
 - `--tools-file`: Path to a single YAML configuration file
 
 **Multiple Files:**
@@ -6129,7 +6129,7 @@ This page lists all the prebuilt tools available.
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
 
-## Spanner
+## Spanner (GoogleSQL dialect)
 
 *   `--prebuilt` value: `spanner`
 *   **Environment Variables:**
