@@ -16,6 +16,11 @@ This tool is intended for developer assistant workflows with human-in-the-loop
 and shouldn't be used for production agents.
 {{< /notice >}}
 
+{{< notice info >}}
+This tool does not have a `source` and authenticates using the environment's
+[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
+{{< /notice >}}
+
 ## Example
 
 ```yaml
