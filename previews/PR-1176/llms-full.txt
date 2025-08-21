@@ -5906,6 +5906,10 @@ The CLI enforces mutual exclusivity between configuration source flags, preventi
 Toolbox enables dynamic reloading by default. To disable, use the
 `--disable-reload` flag.
 
+### Toolbox UI
+
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test tools and toolsets with features such as authorized parameters. To learn more, visit [Toolbox UI](../how-to/toolbox-ui/index.md).
+
 # Prebuilt Tools Reference
 This page lists all the prebuilt tools available.
 
