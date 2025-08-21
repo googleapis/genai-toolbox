@@ -17,6 +17,7 @@ package bigquerygetdatasetinfo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -45,6 +46,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -80,8 +83,32 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
-	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to get metadata information.")
+	defaultProjectID := s.BigQueryClient().Project()
+	projectDescription := "The Google Cloud project ID containing the dataset."
+	datasetDescription := "The dataset to get metadata information."
+	var datasetParameter tools.Parameter
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	if len(allowedDatasets) > 0 {
+		if len(allowedDatasets) == 1 {
+			parts := strings.Split(allowedDatasets[0], ".")
+			defaultProjectID = parts[0]
+			datasetID := parts[1]
+			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
+			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
+			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
+		} else {
+			datasetIDs := []string{}
+			for _, ds := range allowedDatasets {
+				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+			}
+			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
+			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
+		}
+	} else {
+		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
+	}
+
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.McpManifest{
@@ -92,13 +119,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.BigQueryClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		Client:           s.BigQueryClient(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -112,10 +140,10 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Client      *bigqueryapi.Client
-	Statement   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Client           *bigqueryapi.Client
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
@@ -130,11 +158,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
 	}
 
+	// Handle fully-qualified dataset ID in the dataset parameter.
+	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
+		projectId = parts[0]
+		datasetId = parts[1]
+	}
+
+	if !t.IsDatasetAllowed(projectId, datasetId) {
+		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
+	}
+
 	dsHandle := t.Client.DatasetInProject(projectId, datasetId)
 
 	metadata, err := dsHandle.Metadata(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, t.Client.Project(), err)
+		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, projectId, err)
 	}
 
 	return metadata, nil
