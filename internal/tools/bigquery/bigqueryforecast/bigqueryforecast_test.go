@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbwaitforoperation_test
+package bigqueryforecast_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
 )
 
-func TestParseFromYaml(t *testing.T) {
+func TestParseFromYamlBigQueryForecast(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -38,24 +38,18 @@ func TestParseFromYaml(t *testing.T) {
 			desc: "basic example",
 			in: `
 			tools:
-				wait-for-thing:
-					kind: alloydb-wait-for-operation
+				example_tool:
+					kind: bigquery-forecast
+					source: my-instance
 					description: some description
-					delay: 1s
-					maxDelay: 5s
-					multiplier: 1.5
-					maxRetries: 5
 			`,
 			want: server.ToolConfigs{
-				"wait-for-thing": alloydbwaitforoperation.Config{
-					Name:         "wait-for-thing",
-					Kind:         "alloydb-wait-for-operation",
+				"example_tool": bigqueryforecast.Config{
+					Name:         "example_tool",
+					Kind:         "bigquery-forecast",
+					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
-					Delay:        "1s",
-					MaxDelay:     "5s",
-					Multiplier:   1.5,
-					MaxRetries:   5,
 				},
 			},
 		},
@@ -75,4 +69,5 @@ func TestParseFromYaml(t *testing.T) {
 			}
 		})
 	}
+
 }
