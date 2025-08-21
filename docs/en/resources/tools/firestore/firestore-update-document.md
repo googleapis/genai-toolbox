@@ -62,6 +62,15 @@ When `updateMask` is not provided, the tool performs a merge operation that upda
 
 When `updateMask` is provided, only the fields listed in the mask are updated. This allows for precise control over which fields are modified, added, or deleted.
 
+## Reference
+
+| **field**   |     **type**   | **required** | **description**                                          |
+|-------------|:--------------:|:------------:|----------------------------------------------------------|
+| kind        |     string     |     true     | Must be "firestore-update-document".                     |
+| source      |     string     |     true     | Name of the Firestore source to update documents in.     |
+| description |     string     |     true     | Description of the tool that is passed to the LLM.       |
+
+
 ## Examples
 
 ### Basic Document Update (Full Merge)
