@@ -1,4 +1,38 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Firestore on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/</link><description>Recent content in Firestore on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/index.xml" rel="self" type="application/rss+xml"/><item><title>firestore-delete-documents</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/firestore-delete-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/firestore-delete-documents/</guid><description>&lt;h2 id="about">About&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Firestore on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/</link><description>Recent content in Firestore on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/index.xml" rel="self" type="application/rss+xml"/><item><title>firestore-add-documents</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/firestore-add-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/firestore-add-documents/</guid><description>&lt;h2 id="description">Description&lt;/h2>
+&lt;p>The &lt;code>firestore-add-documents&lt;/code> tool allows you to add new documents to a Firestore collection. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool automatically generates a unique document ID for each new document.&lt;/p>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Parameter&lt;/th>
+ &lt;th>Type&lt;/th>
+ &lt;th>Required&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>collectionPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>Yes&lt;/td>
+ &lt;td>The path of the collection where the document will be added&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>documentData&lt;/code>&lt;/td>
+ &lt;td>map&lt;/td>
+ &lt;td>Yes&lt;/td>
+ &lt;td>The data to be added as a document to the given collection. Must use &lt;a href="https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value">Firestore&amp;rsquo;s native JSON format&lt;/a> with typed values&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>returnData&lt;/code>&lt;/td>
+ &lt;td>boolean&lt;/td>
+ &lt;td>No&lt;/td>
+ &lt;td>If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="output">Output&lt;/h2>
+&lt;p>The tool returns a map containing:&lt;/p></description></item><item><title>firestore-delete-documents</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/firestore-delete-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1176/resources/tools/firestore/firestore-delete-documents/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>firestore-delete-documents&lt;/code> tool deletes multiple documents from Firestore by
 their paths.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
