@@ -151,13 +151,12 @@ func buildTrinoDSN(host, port, user, password, catalog, schema, queryTimeout, ac
 		RawQuery: query.Encode(),
 	}
 
-	// Only set user if not empty
-	if user != "" {
+	// Only set user and password if not empty
+	if user != "" && password != "" {
+		u.User = url.UserPassword(user, password)
+	} else if user != "" {
 		u.User = url.User(user)
-		if password != "" {
-			// For basic auth, set password in userinfo
-			u.User = url.UserPassword(user, password)
-		}
 	}
+
 	return u.String(), nil
 }
