@@ -6,9 +6,13 @@ description: >
     This page lists all the prebuilt tools available.
 ---
 
+Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.
+
+See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
+
 ## AlloyDB Postgres
 
-*   `--prebuilt` value: `alloydb-pg`
+*   `--prebuilt` value: `alloydb-postgres`
 *   **Environment Variables:**
     *   `ALLOYDB_POSTGRES_PROJECT`: The GCP project ID.
     *   `ALLOYDB_POSTGRES_REGION`: The region of your AlloyDB instance.
@@ -26,7 +30,7 @@ description: >
 
 ## AlloyDB Postgres Admin
 
-* `--prebuilt` value: `alloydb-pg-admin`
+* `--prebuilt` value: `alloydb-postgres-admin`
 *   **Environment Variables:**
     *   `API_KEY`: Your API key for the AlloyDB API.
 *   **Permissions:**
@@ -75,7 +79,7 @@ description: >
 
 ## Cloud SQL for PostgreSQL
 
-*   `--prebuilt` value: `cloud-sql-pg`
+*   `--prebuilt` value: `cloud-sql-postgres`
 *   **Environment Variables:**
     *   `CLOUD_SQL_POSTGRES_PROJECT`: The GCP project ID.
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.

@@ -6,7 +6,7 @@ description: >
   This page describes the `toolbox` command-line options.
 ---
 
-# Reference
+## Reference
 
 | Flag (Short) | Flag (Long) | Description | Default |
 |---|---|---|---|
@@ -27,9 +27,9 @@ description: >
 | | `--ui` | Launches the Toolbox UI web server. | |
 | `-v` | `--version` | version for toolbox | |
 
-# Examples
+## Examples
 
-## Transport Configuration
+### Transport Configuration
 
 **Server Settings:**
 - `--address`, `-a`: Server listening address (default: "127.0.0.1")
@@ -38,14 +38,14 @@ description: >
 **STDIO:**
 - `--stdio`: Run in MCP STDIO mode instead of HTTP server
 
-### Usage Examples
+#### Usage Examples
 
 ```bash
 # Basic server with custom port configuration
 ./toolbox --tools-file "config.yaml" --port 8080
 ```
 
-## Tool Configuration Sources
+### Tool Configuration Sources
 
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
@@ -59,11 +59,13 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 - `--tools-folder`: Directory containing YAML files to load and merge
 
 **Prebuilt Configurations:**
-- `--prebuilt`: Use predefined configurations for specific database types (e.g., 'bigquery', 'postgres', 'spanner')
+- `--prebuilt`: Use predefined configurations for specific database types (e.g., 'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.
 
+{{< notice tip >}}
 The CLI enforces mutual exclusivity between configuration source flags, preventing simultaneous use of `--prebuilt` with file-based options, and ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is used at a time.
+{{< /notice >}}
 
-## Hot Reload
+### Hot Reload
 
 Toolbox enables dynamic reloading by default. To disable, use the
 `--disable-reload` flag.
