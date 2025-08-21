@@ -40,12 +40,6 @@ List of guides detailing how to do different things with Toolbox.
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/previews/PR-1176/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
 - [Export Telemetry](https://googleapis.github.io/genai-toolbox/previews/PR-1176/how-to/export_telemetry/): How to set up and configure Toolbox to use the Otel Collector.
 
-### Reference
-
-This section contains reference documentation.
-- [CLI Reference](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/cli/): This page describes the `toolbox` command-line options.
-- [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
-
 ### Resources
 
 List of reference documentation for resources in Toolbox.
@@ -117,3 +111,9 @@ A list of other information related to Toolbox.
 
 Client SDKs to connect to the MCP Toolbox server.
 - [Go SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1176/sdks/go-sdk/): Go lang client SDK- [JS SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1176/sdks/js-sdk/): Javascript client SDK- [Python SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1176/sdks/python-sdk/): Python client SDK
+### Reference
+
+This section contains reference documentation.
+- [CLI Reference](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/cli/): This page describes the `toolbox` command-line options.
+- [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
+
