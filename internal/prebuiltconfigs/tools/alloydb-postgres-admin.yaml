@@ -50,7 +50,6 @@ tools:
         description: "The name for the initial superuser. If not provided, it defaults to 'postgres'. The initial database will always be named 'postgres'."
   alloydb-operations-get:
     kind: alloydb-wait-for-operation
-    source: alloydb-api-source
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
     delay: 1s
     maxDelay: 4m

@@ -57,6 +57,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
@@ -251,32 +252,36 @@ type ToolsFile struct {
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
-func parseEnv(input string) string {
+func parseEnv(input string) (string, error) {
 	re := regexp.MustCompile(`\$\{(\w+)\}`)
 
-	return re.ReplaceAllStringFunc(input, func(match string) string {
+	var err error
+	output := re.ReplaceAllStringFunc(input, func(match string) string {
 		parts := re.FindStringSubmatch(match)
-		if len(parts) < 2 {
-			// technically shouldn't happen
-			return match
-		}
 
 		// extract the variable name
 		variableName := parts[1]
 		if value, found := os.LookupEnv(variableName); found {
 			return value
 		}
-		return match
+		err = fmt.Errorf("environment variable not found: %q", variableName)
+		return ""
 	})
+	return output, err
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
 func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
 	// Replace environment variables if found
-	raw = []byte(parseEnv(string(raw)))
+	output, err := parseEnv(string(raw))
+	if err != nil {
+		return toolsFile, fmt.Errorf("error parsing environment variables: %s", err)
+	}
+	raw = []byte(output)
+
 	// Parse contents
-	err := yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
 	if err != nil {
 		return toolsFile, err
 	}
