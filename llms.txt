@@ -113,3 +113,9 @@ A list of other information related to Toolbox.
 
 Client SDKs to connect to the MCP Toolbox server.
 - [Go SDK](https://googleapis.github.io/genai-toolbox/sdks/go-sdk/): Go lang client SDK- [JS SDK](https://googleapis.github.io/genai-toolbox/sdks/js-sdk/): Javascript client SDK- [Python SDK](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/): Python client SDK
+### Reference
+
+This section contains reference documentation.
+- [CLI](https://googleapis.github.io/genai-toolbox/reference/cli/): This page describes the `toolbox` command-line options.
+- [Prebuilt Tools](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
+
