@@ -114,6 +114,6 @@ Client SDKs to connect to the MCP Toolbox server.
 ### Reference
 
 This section contains reference documentation.
-- [CLI Reference](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/cli/): This page describes the `toolbox` command-line options.
-- [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
+- [CLI](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/cli/): This page describes the `toolbox` command-line options.
+- [Prebuilt Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1176/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
 
