@@ -298,7 +298,7 @@ Common errors include:
 - Missing or invalid document data
 - Permission denied (if Firestore security rules block the operation)
 - Invalid data type conversions
-- Field not found in document data when using update mask
+
 ## Best Practices
 1. **Use update masks for precision**: When you only need to update specific fields, use the `updateMask` parameter to avoid unintended changes
 2. **Always use typed values**: Every field must be wrapped with its appropriate type indicator (e.g., `{"stringValue": "text"}`)
