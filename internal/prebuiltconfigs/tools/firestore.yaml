@@ -28,7 +28,7 @@ tools:
      Updates an existing document in Firestore. Supports both full document updates and selective field updates using an update mask. Please follow the best practices:
       1. Use update masks for precision: When you only need to update specific fields, use the updateMask parameter to avoid unintended changes
       2. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
-      3. Use deleteValue for field removal: When using update mask, set {"deleteValue": true} to remove fields
+      3. Delete fields using update mask: To delete fields, include them in the updateMask but omit them from documentData
       4. Integer values can be strings: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
       5. Use returnData sparingly: Only set to true when you need to verify the exact data after the update
       6. Handle timestamps properly: Use RFC3339 format for timestamp strings

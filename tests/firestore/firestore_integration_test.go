@@ -635,8 +635,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
-					"name": {"stringValue": "Alice Final"},
-					"status": {"deleteValue": true}
+					"name": {"stringValue": "Alice Final"}
 				},
 				"updateMask": ["name", "status"]
 			}`, docPath))),

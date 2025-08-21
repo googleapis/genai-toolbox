@@ -9,7 +9,7 @@ aliases:
 ---
 ## Description
 
-The `firestore-update-document` tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore's native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. It also supports field deletion when using selective updates.
+The `firestore-update-document` tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore's native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. When using an update mask, fields referenced in the mask but not present in the document data will be deleted from the document, following Firestore's native behavior.
 
 ## Parameters
 
@@ -17,7 +17,7 @@ The `firestore-update-document` tool allows you to update existing documents in 
 |-----------|------|----------|-------------|
 | `documentPath` | string | Yes | The path of the document which needs to be updated |
 | `documentData` | map | Yes | The data to update in the document. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
-| `updateMask` | array | No | The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated |
+| `updateMask` | array | No | The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document |
 | `returnData` | boolean | No | If set to true, the output will include the data of the updated document. Defaults to false to help avoid overloading the context |
 
 ## Output
@@ -49,9 +49,6 @@ The tool requires Firestore's native JSON format for document data. Each field m
 - **Map**: `{"mapValue": {"fields": {"key1": {"stringValue": "value1"}, "key2": {"booleanValue": true}}}}`
 - **Reference**: `{"referenceValue": "collection/document"}`
 
-### Special Operations
-- **Delete Field**: `{"deleteValue": true}` (only works when `updateMask` is specified)
-
 ## Update Modes
 
 ### Full Document Update (Merge All)
@@ -60,7 +57,7 @@ When `updateMask` is not provided, the tool performs a merge operation that upda
 
 ### Selective Field Update
 
-When `updateMask` is provided, only the fields listed in the mask are updated. This allows for precise control over which fields are modified, added, or deleted.
+When `updateMask` is provided, only the fields listed in the mask are updated. This allows for precise control over which fields are modified, added, or deleted. To delete a field, include it in the `updateMask` but omit it from `documentData`.
 
 ## Reference
 
@@ -131,24 +128,24 @@ Usage:
 
 ### Update with Field Deletion
 
+To delete fields, include them in the `updateMask` but omit them from `documentData`:
+
 ```json
 {
   "documentPath": "users/user123",
   "documentData": {
     "name": {
       "stringValue": "John Smith"
-    },
-    "temporaryField": {
-      "deleteValue": true
-    },
-    "obsoleteData": {
-      "deleteValue": true
     }
   },
   "updateMask": ["name", "temporaryField", "obsoleteData"],
   "returnData": true
 }
 ```
+
+In this example:
+- `name` will be updated to "John Smith"
+- `temporaryField` and `obsoleteData` will be deleted from the document (they are in the mask but not in the data)
 
 ### Complex Update with Nested Data
 
@@ -311,7 +308,7 @@ Common errors include:
 6. **Handle timestamps properly**: Use RFC3339 format for timestamp strings
 7. **Base64 encode binary data**: Binary data must be base64 encoded in the `bytesValue` field
 8. **Consider security rules**: Ensure your Firestore security rules allow document updates
-9. **Use deleteValue for field removal**: When using update mask, set `{"deleteValue": true}` to remove fields
+9. **Delete fields using update mask**: To delete fields, include them in the `updateMask` but omit them from `documentData`
 10. **Test with non-production data first**: Always test your updates on non-critical documents first
 
 ## Differences from Add Documents
@@ -319,7 +316,7 @@ Common errors include:
 - **Purpose**: Updates existing documents vs. creating new ones
 - **Document must exist**: For standard updates (though not using updateMask will create if missing with given document id)
 - **Update mask support**: Allows selective field updates
-- **Field deletion**: Supports removing specific fields with `deleteValue`
+- **Field deletion**: Supports removing specific fields by including them in the mask but not in the data
 - **Returns updateTime**: Instead of createTime
 
 ## Related Tools

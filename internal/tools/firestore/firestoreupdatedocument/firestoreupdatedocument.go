@@ -103,16 +103,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 - Maps: {"mapValue": {"fields": {"key1": {"stringValue": "value1"}, "key2": {"booleanValue": true}}}}
 - Null: {"nullValue": null}
 - Bytes: {"bytesValue": "base64EncodedString"}
-- References: {"referenceValue": "collection/document"}
-- Delete field: {"deleteValue": true} (only works when updateMask is specified)`,
+- References: {"referenceValue": "collection/document"}`,
 		"", // Empty string for generic map that accepts any value type
 	)
 
 	updateMaskParameter := tools.NewArrayParameterWithRequired(
 		updateMaskKey,
-		"The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated, and you can use deleteValue to delete specific fields",
+		"The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document",
 		false, // not required
-		tools.NewStringParameter("field", "Field path to update. Use dot notation to access nested fields within maps (e.g., 'address.city' to update the city field within an address map, or 'user.profile.name' for deeply nested fields). Note: You cannot update individual array elements; you must update the entire array field"),
+		tools.NewStringParameter("field", "Field path to update or delete. Use dot notation to access nested fields within maps (e.g., 'address.city' to update the city field within an address map, or 'user.profile.name' for deeply nested fields). To delete a field, include it in the mask but omit it from documentData. Note: You cannot update individual array elements; you must update the entire array field"),
 	)
 
 	returnDataParameter := tools.NewBooleanParameterWithDefault(
@@ -209,20 +208,26 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		// Use selective field update with update mask
 		updates := make([]firestoreapi.Update, 0, len(updatePaths))
 
-		// Process the document data to handle special values
-		dataMap, err := processDocumentDataForDeleteMarkers(documentDataRaw, t.Client)
+		// Convert document data without delete markers
+		dataMap, err := util.JSONToFirestoreValue(documentDataRaw, t.Client)
 		if err != nil {
-			return nil, fmt.Errorf("failed to process document data: %w", err)
+			return nil, fmt.Errorf("failed to convert document data: %w", err)
+		}
+
+		// Ensure it's a map
+		dataMapTyped, ok := dataMap.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("document data must be a map")
 		}
 
 		for _, path := range updatePaths {
 			// Get the value for this path from the document data
-			value, exists := getFieldValue(dataMap, path)
+			value, exists := getFieldValue(dataMapTyped, path)
 			if !exists {
-				return nil, fmt.Errorf("field '%s' not found in document data", path)
+				// Field not in document data but in mask - delete it
+				value = firestoreapi.Delete
 			}
 
-			// The value will already be firestore.Delete if it was a deleteValue
 			updates = append(updates, firestoreapi.Update{
 				Path:  path,
 				Value: value,
@@ -265,22 +270,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	return response, nil
 }
 
-// processDocumentDataForDeleteMarkers processes the document data for update operations,
-// handling special values like deleteValue
-func processDocumentDataForDeleteMarkers(data interface{}, client *firestoreapi.Client) (map[string]interface{}, error) {
-	// Convert with delete support enabled
-	processed, err := util.JSONToFirestoreValue(data, client, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure it's a map
-	if processedMap, ok := processed.(map[string]interface{}); ok {
-		return processedMap, nil
-	}
-
-	return nil, fmt.Errorf("processed data is not a map")
-}
 
 // getFieldValue retrieves a value from a nested map using a dot-separated path
 func getFieldValue(data map[string]interface{}, path string) (interface{}, bool) {
