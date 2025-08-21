@@ -402,7 +402,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.logger.DebugContext(ctx, fmt.Sprintf("headers: %v", r.Header))
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)

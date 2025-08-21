@@ -219,7 +219,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// Extract OAuth access token from the "Authorization" header (currently for
 	// BigQuery end-user credentials usage only)
-	s.logger.DebugContext(ctx, fmt.Sprintf("headers: %v", r.Header))
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	res, err := tool.Invoke(ctx, params, accessToken)
