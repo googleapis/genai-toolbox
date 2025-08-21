@@ -35,17 +35,17 @@ func TestAgentOutputAndKeywords(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("❌ FAILED: Script execution failed with error: %v", err)
+		t.Fatalf("Script execution failed with error: %v", err)
 	}
 	if len(actualOutput) == 0 {
-		t.Fatalf("❌ FAILED: Script ran successfully but produced no output.")
+		t.Fatal("Script ran successfully but produced no output.")
 	}
-	t.Log("✅ PASSED: Script ran successfully and produced output.")
+	t.Log("Primary assertion passed: Script ran successfully and produced output.")
 
 	t.Log("--- Checking for essential keywords ---")
 	goldenFile, err := os.ReadFile("../../golden.txt")
 	if err != nil {
-		t.Logf("⚠️ WARNING: Could not read golden.txt to check for keywords: %v", err)
+		t.Logf("Warning: Could not read golden.txt to check for keywords: %v", err)
 		return
 	}
 
@@ -55,9 +55,9 @@ func TestAgentOutputAndKeywords(t *testing.T) {
 			continue
 		}
 		if strings.Contains(actualOutput, keyword) {
-			t.Logf("✅ INFO: Found keyword '%s' in output.", keyword)
+			t.Logf("Keyword check: Found keyword '%s' in output.", keyword)
 		} else {
-			t.Logf("⚠️ INFO: Did not find keyword '%s' in output.", keyword)
+			t.Logf("Keyword check: Did not find keyword '%s' in output.", keyword)
 		}
 	}
 }
