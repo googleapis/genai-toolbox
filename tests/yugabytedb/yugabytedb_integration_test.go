@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/yugabyte/pgx/v5/pgxpool"
 )
@@ -117,19 +118,19 @@ func TestYugabyteDB(t *testing.T) {
 		t.Fatalf("unable to create YugabyteDB connection pool: %s", err)
 	}
 
-	tableNameParam := "param_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
-	tableNameAuth := "auth_table_" + strings.Replace(uuid.New().String(), "-", "", -1)
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	create1, insert1, stmt1, params1 := tests.GetPostgresSQLParamToolInfo(tableNameParam)
-	teardown1 := SetupYugabyteDBSQLTable(t, ctx, pool, create1, insert1, tableNameParam, params1)
-	defer teardown1(t)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := SetupYugabyteDBSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	defer teardownTable1(t)
 
-	create2, insert2, stmt2, params2 := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
-	teardown2 := SetupYugabyteDBSQLTable(t, ctx, pool, create2, insert2, tableNameAuth, params2)
-	defer teardown2(t)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupYugabyteDBSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	defer teardownTable2(t)
 
-	toolsFile := tests.GetToolsConfig(sourceConfig, YBDB_TOOL_KIND, stmt1, stmt2)
+	toolsFile := tests.GetToolsConfig(sourceConfig, YBDB_TOOL_KIND, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, YBDB_TOOL_KIND, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -141,7 +142,7 @@ func TestYugabyteDB(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := cmd.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`))
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -151,8 +152,8 @@ func TestYugabyteDB(t *testing.T) {
 
 	select1Want := "[{\"?column?\":1}]"
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
-	invokeParamWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant)
+	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
 }
