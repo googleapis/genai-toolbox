@@ -2,4 +2,4 @@ Hilton Basel
 Hyatt Regency
 booked
 updated
-confirmed
+booked

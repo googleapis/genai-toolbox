@@ -30,7 +30,7 @@ queries = [
 ]
 
 async def run_application():
-    async with ToolboxClient("<http://127.0.0.1:5000>") as toolbox_client:
+    async with ToolboxClient("http://127.0.0.1:5000") as toolbox_client:
 
         # The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use
         # integration. While this example uses Google's genai client, these callables can be adapted for
