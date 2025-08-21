@@ -1066,7 +1066,7 @@ with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h3 id="filter-format">Filter Format&lt;/h3>
 &lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following
 structure:&lt;/p></description></item><item><title>firestore-update-document</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-update-document/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1191/resources/tools/firestore/firestore-update-document/</guid><description>&lt;h2 id="description">Description&lt;/h2>
-&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. It also supports field deletion when using selective updates.&lt;/p>
+&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. When using an update mask, fields referenced in the mask but not present in the document data will be deleted from the document, following Firestore&amp;rsquo;s native behavior.&lt;/p>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
  &lt;thead>
@@ -1094,7 +1094,7 @@ structure:&lt;/p></description></item><item><title>firestore-update-document</ti
  &lt;td>&lt;code>updateMask&lt;/code>&lt;/td>
  &lt;td>array&lt;/td>
  &lt;td>No&lt;/td>
- &lt;td>The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated&lt;/td>
+ &lt;td>The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>returnData&lt;/code>&lt;/td>
