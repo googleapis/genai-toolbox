@@ -40,7 +40,6 @@ func TestParseFromYaml(t *testing.T) {
 			tools:
 				wait-for-thing:
 					kind: alloydb-wait-for-operation
-					source: my-source
 					description: some description
 					delay: 1s
 					maxDelay: 5s
@@ -51,7 +50,6 @@ func TestParseFromYaml(t *testing.T) {
 				"wait-for-thing": alloydbwaitforoperation.Config{
 					Name:         "wait-for-thing",
 					Kind:         "alloydb-wait-for-operation",
-					Source:       "my-source",
 					Description:  "some description",
 					AuthRequired: []string{},
 					Delay:        "1s",
