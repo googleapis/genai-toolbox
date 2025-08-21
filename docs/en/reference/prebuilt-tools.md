@@ -225,7 +225,7 @@ description: >
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
 
-## Spanner
+## Spanner (GoogleSQL dialect)
 
 *   `--prebuilt` value: `spanner`
 *   **Environment Variables:**
