@@ -10495,7 +10495,7 @@ This page describes the `toolbox` command-line options.
 
 ```bash
 # Basic server with custom port configuration
-./toolbox --tools-file "config.yaml" --port 8080
+./toolbox --tools-file "tools.yaml" --port 8080
 ```
 
 ### Tool Configuration Sources
@@ -10503,7 +10503,7 @@ This page describes the `toolbox` command-line options.
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
 **Single File:** (default)
-- `--tools-file`: Path to a single YAML configuration file
+- `--tools-file`: Path to a single YAML configuration file (default: `tools.yaml`)
 
 **Multiple Files:**
 - `--tools-files`: Comma-separated list of YAML files to merge
