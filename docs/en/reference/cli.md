@@ -50,7 +50,7 @@ description: >
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
 **Single File:** (default)
-- `--tools-file`: Path to a single YAML configuration file
+- `--tools-file`: Path to a single YAML configuration file (default: `tools.yaml`)
 
 **Multiple Files:**
 - `--tools-files`: Comma-separated list of YAML files to merge
