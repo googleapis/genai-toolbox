@@ -159,13 +159,12 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	}
 
 	result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
-
 	if err != nil {
 		return nil, fmt.Errorf("error populating project payload: %s", err)
 	}
 
 	var projection any
-	err = bson.Unmarshal([]byte(result), &projection)
+	err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
 	}
@@ -174,7 +173,7 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	return opts, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	filterString, err := tools.PopulateTemplateWithJSON("MongoDBFindOneFilterString", t.FilterPayload, paramsMap)

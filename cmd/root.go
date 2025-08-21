@@ -234,7 +234,13 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'oceanbase', 'postgres', 'spanner', 'spanner-postgres'.")
+
+	// Fetch prebuilt tools sources to customize the help description
+	prebuiltHelp := fmt.Sprintf(
+		"Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: '%s'.",
+		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
+	)
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", prebuiltHelp)
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
@@ -254,32 +260,36 @@ type ToolsFile struct {
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
-func parseEnv(input string) string {
+func parseEnv(input string) (string, error) {
 	re := regexp.MustCompile(`\$\{(\w+)\}`)
 
-	return re.ReplaceAllStringFunc(input, func(match string) string {
+	var err error
+	output := re.ReplaceAllStringFunc(input, func(match string) string {
 		parts := re.FindStringSubmatch(match)
-		if len(parts) < 2 {
-			// technically shouldn't happen
-			return match
-		}
 
 		// extract the variable name
 		variableName := parts[1]
 		if value, found := os.LookupEnv(variableName); found {
 			return value
 		}
-		return match
+		err = fmt.Errorf("environment variable not found: %q", variableName)
+		return ""
 	})
+	return output, err
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
 func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
 	// Replace environment variables if found
-	raw = []byte(parseEnv(string(raw)))
+	output, err := parseEnv(string(raw))
+	if err != nil {
+		return toolsFile, fmt.Errorf("error parsing environment variables: %s", err)
+	}
+	raw = []byte(output)
+
 	// Parse contents
-	err := yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
 	if err != nil {
 		return toolsFile, err
 	}
