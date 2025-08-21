@@ -1,5 +1,5 @@
 ---
-title: "CLI Reference"
+title: "CLI"
 type: docs
 weight: 1
 description: >

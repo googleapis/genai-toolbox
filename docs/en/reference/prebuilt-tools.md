@@ -1,5 +1,5 @@
 ---
-title: "Prebuilt Tools Reference"
+title: "Prebuilt Tools"
 type: docs
 weight: 1
 description: >
