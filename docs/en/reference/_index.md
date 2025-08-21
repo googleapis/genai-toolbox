@@ -1,7 +1,7 @@
 ---
 title: "Reference"
 type: docs
-weight: 3
+weight: 7
 description: >
   This section contains reference documentation.
 ---
