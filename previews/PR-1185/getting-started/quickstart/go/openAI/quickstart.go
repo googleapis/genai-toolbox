@@ -106,7 +106,7 @@ func main() {
 			log.Println("No function call")
 		}
 
-		// If there is a was a function call, continue the conversation
+		// If there was a function call, continue the conversation
 		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 		for _, toolCall := range toolCalls {
 
