@@ -103,7 +103,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	collectionNameTemplateParam := "template_param_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// Set up data for param tool
-	paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, paramTestParams := getCouchbaseParamToolInfo(collectionNameParam)
+	paramToolStatement, paramToolStmt2, arrayToolStatement, paramTestParams := getCouchbaseParamToolInfo(collectionNameParam)
 	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, paramTestParams)
 	defer teardownCollection1(t)
 
@@ -118,7 +118,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	defer teardownCollection3(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, paramToolStmt2, arrayToolStatement, authToolStatement)
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -140,8 +140,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	select1Want := "[{\"$1\":1}]"
 	failMcpInvocationWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: parsing failure | {\\\"statement\\\":\\\"SELEC 1;\\\""
 
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
+	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
+	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
 	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failMcpInvocationWant)
 
 	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
@@ -230,27 +230,27 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 }
 
-// getCouchbaseParamToolInfo returns statements and params for my-tool couchbase-sql kind
-func getCouchbaseParamToolInfo(collectionName string) (string, string, string, string, []map[string]any) {
+// getCouchbaseParamToolInfo returns statements and params for my-param-tool couchbase-sql kind
+func getCouchbaseParamToolInfo(collectionName string) (string, string, string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) OR name = $name order by meta().id",
 		collectionName, collectionName)
-	idToolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
+
+	toolStatement2 := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE meta().id = TOSTRING($id) order by meta().id",
 		collectionName, collectionName)
-	nameToolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
-		"%s.* FROM %s WHERE name = $name order by meta().id",
-		collectionName, collectionName)
+
 	arrayToolStatemnt := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
 		"%s.* FROM %s WHERE TONUMBER(meta().id) IN $idArray AND name IN $nameArray order by meta().id", collectionName, collectionName)
+
 	params := []map[string]any{
 		{"name": "Alice"},
 		{"name": "Jane"},
 		{"name": "Sid"},
 		{"name": nil},
 	}
-	return toolStatement, idToolStatement, nameToolStatement, arrayToolStatemnt, params
+	return toolStatement, toolStatement2, arrayToolStatemnt, params
 }
 
 // getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
