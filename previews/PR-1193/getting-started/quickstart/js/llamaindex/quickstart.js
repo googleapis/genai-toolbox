@@ -18,7 +18,7 @@ import { agent } from "@llamaindex/workflow";
 import { createMemory, staticBlock, tool } from "llamaindex";
 import { ToolboxClient } from "@toolbox-sdk/core";
 
-const TOOLBOX_URL = "http://127.0.0.1:5000";
+const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
 process.env.GOOGLE_API_KEY = 'your-api-key'; // Replace it with your API key
 
 const prompt = `

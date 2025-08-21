@@ -77,7 +77,6 @@ async function run() {
 
     const toolRequests = response.toolRequests;
     if (toolRequests?.length > 0) {
-      console.log("Tool call request:", JSON.stringify(toolRequests, null, 2));
       // Execute tools concurrently and collect their responses.
       const toolResponses = await Promise.all(
         toolRequests.map(async (call) => {
