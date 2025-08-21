@@ -6,20 +6,17 @@ import ast
 from pathlib import Path
 
 
-# --- ADK Framework Configuration ---
-ADK_CONFIG = {
-    "name": "Google ADK",
+# --- LangChain Framework Configuration ---
+LANGCHAIN_CONFIG = {
+    "name": "LangChain",
     "expected_imports": {
-        'google.adk.agents': ['Agent'],
-        'google.adk.runners': ['Runner'],
-        'google.adk.sessions': ['InMemorySessionService'],
-        'google.adk.artifacts.in_memory_artifact_service': ['InMemoryArtifactService'],
-        'google.genai': ['types'],
-        'toolbox_core': ['ToolboxSyncClient'],
-        'asyncio': [],
-        'os': []
+        'langgraph.prebuilt': ['create_react_agent'],
+        'langchain_google_vertexai': ['ChatVertexAI'],
+        'langgraph.checkpoint.memory': ['MemorySaver'],
+        'toolbox_langchain': ['ToolboxClient'],
+        'asyncio': []
     },
-    "required_packages": ['google-adk', 'toolbox-core', 'pytest']
+    "required_packages": ['langchain', 'langchain-google-vertexai', 'langgraph', 'toolbox-langchain', 'pytest']
 }
 
 
@@ -29,7 +26,7 @@ def quickstart_path():
     """Provides the path to the quickstart.py script."""
     path = Path("quickstart.py")
     if not path.exists():
-        pytest.fail(f"ADK quickstart script not found: {path}")
+        pytest.fail(f"LangChain quickstart script not found: {path}")
     return path
 
 @pytest.fixture(scope="module")
@@ -46,11 +43,11 @@ def golden_keywords():
 
 
 # --- Import Tests ---
-class TestADKImports:
-    """Test ADK framework imports and dependencies."""
+class TestLangChainImports:
+    """Test LangChain framework imports and dependencies."""
 
     def test_required_imports_present(self, quickstart_path):
-        """Test that all required ADK imports are present."""
+        """Test that all required LangChain imports are present."""
         with open(quickstart_path, 'r') as f:
             tree = ast.parse(f.read())
         
@@ -69,7 +66,7 @@ class TestADKImports:
         
         # Check each expected import
         missing_imports = []
-        for expected_module, expected_names in ADK_CONFIG["expected_imports"].items():
+        for expected_module, expected_names in LANGCHAIN_CONFIG["expected_imports"].items():
             if expected_module not in found_imports:
                 missing_imports.append(f"Module '{expected_module}' not imported")
                 continue
@@ -80,12 +77,13 @@ class TestADKImports:
                     if expected_name not in found_names:
                         missing_imports.append(f"'{expected_name}' not imported from '{expected_module}'")
         
-        assert not missing_imports, f"Missing ADK imports: {missing_imports}"
+        assert not missing_imports, f"Missing LangChain imports: {missing_imports}"
+
 
 
 # --- Execution Tests ---
-class TestADKExecution:
-    """Test ADK framework execution and output validation."""
+class TestLangChainExecution:
+    """Test LangChain framework execution and output validation."""
 
     @pytest.fixture(autouse=True)
     def check_prerequisites(self):
@@ -95,7 +93,7 @@ class TestADKExecution:
 
     @pytest.fixture(scope="function")
     def script_output(self, quickstart_path):
-        """Run the ADK quickstart script and return output."""
+        """Run the LangChain quickstart script and return output."""
         try:
             result = subprocess.run(
                 [sys.executable, str(quickstart_path)],
@@ -105,28 +103,28 @@ class TestADKExecution:
             )
             return result
         except subprocess.TimeoutExpired:
-            pytest.fail("ADK script execution timed out after 2 minutes")
+            pytest.fail("LangChain script execution timed out after 2 minutes")
 
     def test_script_execution_success(self, script_output):
-        """Test that the ADK script runs without errors."""
-        assert script_output.returncode == 0, f"ADK script failed with return code {script_output.returncode}. stderr: {script_output.stderr}"
+        """Test that the LangChain script runs without errors."""
+        assert script_output.returncode == 0, f"LangChain script failed with return code {script_output.returncode}. stderr: {script_output.stderr}"
 
     def test_script_produces_output(self, script_output):
-        """Test that the ADK script produces meaningful output."""
-        assert script_output.stdout.strip(), "ADK script produced no output"
+        """Test that the LangChain script produces meaningful output."""
+        assert script_output.stdout.strip(), "LangChain script produced no output"
         
         # Check output length
         output_lines = [line.strip() for line in script_output.stdout.split('\n') if line.strip()]
-        assert len(output_lines) >= 4, f"ADK script produced insufficient output ({len(output_lines)} lines)"
+        assert len(output_lines) >= 4, f"LangChain script produced insufficient output ({len(output_lines)} lines)"
 
     def test_hotel_keywords_in_output(self, script_output, golden_keywords):
-        """Test that expected hotel keywords appear in ADK output."""
+        """Test that expected hotel keywords appear in LangChain output."""
         actual_output = script_output.stdout
         found_keywords = [keyword for keyword in golden_keywords if keyword in actual_output]
         missing_keywords = [keyword for keyword in golden_keywords if keyword not in actual_output]
         
         # Require all keywords to be present
-        assert not missing_keywords, f"ADK script: Missing required keywords: {missing_keywords}. Found: {found_keywords}"
+        assert not missing_keywords, f"LangChain script: Missing required keywords: {missing_keywords}. Found: {found_keywords}"
 
 
 if __name__ == "__main__":
