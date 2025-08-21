@@ -24,15 +24,20 @@ import (
 )
 
 const (
-	DimensionsFields = "fields(dimensions(name,type,label,label_short))"
-	FiltersFields    = "fields(filters(name,type,label,label_short))"
-	MeasuresFields   = "fields(measures(name,type,label,label_short))"
-	ParametersFields = "fields(parameters(name,type,label,label_short))"
+	DimensionsFields = "fields(dimensions(name,type,label,label_short,description))"
+	FiltersFields    = "fields(filters(name,type,label,label_short,description))"
+	MeasuresFields   = "fields(measures(name,type,label,label_short,description))"
+	ParametersFields = "fields(parameters(name,type,label,label_short,description))"
 )
 
 // ExtractLookerFieldProperties extracts common properties from Looker field objects.
 func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelExploreField) ([]any, error) {
-	var data []any
+	data := make([]any, 0)
+
+	// Handle nil fields pointer
+	if fields == nil {
+		return data, nil
+	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -55,6 +60,9 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 		}
 		if v.LabelShort != nil {
 			vMap["label_short"] = *v.LabelShort
+		}
+		if v.Description != nil {
+			vMap["description"] = *v.Description
 		}
 		logger.DebugContext(ctx, "Converted to %v\n", vMap)
 		data = append(data, vMap)
