@@ -68,6 +68,7 @@ List of reference documentation for resources in Toolbox.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
   - [TiDB](https://googleapis.github.io/genai-toolbox/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
+  - [Trino](https://googleapis.github.io/genai-toolbox/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
 - [Tools](https://googleapis.github.io/genai-toolbox/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
@@ -89,6 +90,7 @@ List of reference documentation for resources in Toolbox.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/tools/sqlite/): Tools that work with SQLite Sources.
   - [TiDB](https://googleapis.github.io/genai-toolbox/resources/tools/tidb/): Tools that work with TiDB Sources, such as TiDB Cloud and self-hosted TiDB.
+  - [Trino](https://googleapis.github.io/genai-toolbox/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/tools/valkey/): Tools that work with Valkey Sources.
 

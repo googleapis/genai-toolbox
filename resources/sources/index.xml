@@ -741,7 +741,22 @@ Run SQL queries against a local SQLite database.&lt;/li>
 &lt;h2 id="ssl-configuration">SSL Configuration&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>TiDB Cloud&lt;/p></description></item><item><title>Valkey</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>TiDB Cloud&lt;/p></description></item><item><title>Trino</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/trino/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/trino/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://trino.io/docs/">Trino&lt;/a> is a distributed SQL query engine designed for fast analytic queries against data of any size. It allows you to query data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/trino/trino-sql/">&lt;code>trino-sql&lt;/code>&lt;/a>&lt;br>
+Execute parameterized SQL queries against Trino.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/trino/trino-execute-sql/">&lt;code>trino-execute-sql&lt;/code>&lt;/a>&lt;br>
+Execute arbitrary SQL queries against Trino.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="trino-cluster">Trino Cluster&lt;/h3>
+&lt;p>You need access to a running Trino cluster with appropriate user permissions for the catalogs and schemas you want to query.&lt;/p></description></item><item><title>Valkey</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>Valkey is an open-source, in-memory data structure store that originated as a
 fork of Redis. It&amp;rsquo;s designed to be used as a database, cache, and message
 broker, supporting a wide range of data structures like strings, hashes, lists,
