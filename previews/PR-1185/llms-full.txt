@@ -615,13 +615,13 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -1027,7 +1027,7 @@ For more information, visit the [Python SDK repo](https://github.com/googleapis/
 
 
 # JS Quickstart (Local)
-How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
+How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 
 
 ## Before you begin
@@ -1041,13 +1041,13 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -1077,6 +1077,9 @@ npm install genkit @genkit-ai/googleai
 {{< /tab >}}
 {{< tab header="LlamaIndex" lang="bash" >}}
 npm install llamaindex @llamaindex/google @llamaindex/workflow
+{{< /tab >}}
+{{< tab header="GoogleGenAI" lang="bash" >}}
+npm install @google/genai 
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -1341,6 +1344,130 @@ main();
 
 {{< /tab >}}
 
+{{< tab header="GoogleGenAI" lang="js" >}}
+import { GoogleGenAI } from "@google/genai";
+import { ToolboxClient } from "@toolbox-sdk/core";
+
+
+const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
+const GOOGLE_API_KEY = 'enter your api here'; // Replace it with your API key
+
+const prompt = `
+You're a helpful hotel assistant. You handle hotel searching, booking, and
+cancellations. When the user searches for a hotel, you MUST use the available tools to find information. Mention its name, id,
+location and price tier. Always mention hotel id while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
+`;
+
+const queries = [
+  "Find hotels in Basel with Basel in its name.",
+  "Can you book the Hilton Basel for me?",
+  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+  "My check in dates would be from April 10, 2024 to April 19, 2024.",
+];
+
+function mapZodTypeToOpenAPIType(zodTypeName) {
+
+    console.log(zodTypeName)
+    const typeMap = {
+        'ZodString': 'string',
+        'ZodNumber': 'number',
+        'ZodBoolean': 'boolean',
+        'ZodArray': 'array',
+        'ZodObject': 'object',
+    };
+    return typeMap[zodTypeName] || 'string';
+}
+
+async function runApplication() {
+   
+    const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
+    const toolboxTools = await toolboxClient.loadToolset("my-toolset");
+    
+    const geminiTools = [{
+        functionDeclarations: toolboxTools.map(tool => {
+            
+            const schema = tool.getParamSchema();
+            const properties = {};
+            const required = [];
+
+         
+            for (const [key, param] of Object.entries(schema.shape)) {
+                properties[key] = {
+                        type: mapZodTypeToOpenAPIType(param.constructor.name),
+                        description: param.description || '',
+                    };
+                required.push(key)
+                }
+            
+            return {
+                name: tool.getName(),
+                description: tool.getDescription(),
+                parameters: { type: 'object', properties, required },
+            };
+        })
+    }];
+
+
+    const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
+    
+    const chat = genAI.chats.create({
+        model: "gemini-2.5-flash",
+        config: {
+            systemInstruction: prompt,
+            tools: geminiTools,
+        }
+    });
+
+    for (const query of queries) {
+        
+        let currentResult = await chat.sendMessage({ message: query });
+        
+        let finalResponseGiven = false
+        while (!finalResponseGiven) {
+            
+            const response = currentResult;
+            const functionCalls = response.functionCalls || [];
+
+            if (functionCalls.length === 0) {
+                console.log(response.text)
+                finalResponseGiven = true;
+            } else {
+                const toolResponses = [];
+                for (const call of functionCalls) {
+                    const toolName = call.name
+                    const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
+                    
+                    if (toolToExecute) {
+                        try {
+                            const functionResult = await toolToExecute(call.args);
+                            toolResponses.push({
+                                functionResponse: { name: call.name, response: { result: functionResult } }
+                            });
+                        } catch (e) {
+                            console.error(`Error executing tool '${toolName}':`, e);
+                            toolResponses.push({
+                                functionResponse: { name: call.name, response: { error: e.message } }
+                            });
+                        }
+                    }
+                }
+                
+                currentResult = await chat.sendMessage({ message: toolResponses });
+            }
+        }
+        
+    }
+}
+
+runApplication()
+  .catch(console.error)
+  .finally(() => console.log("\nApplication finished."));
+{{< /tab >}}
+
 {{< /tabpane >}}
 
 1. Run your agent, and observe the results:
@@ -1369,13 +1496,13 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -1786,6 +1913,7 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 # 
 
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START cloud_setup] -->
 If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
 `vertexai=True` or a Google GenAI model), follow these one-time setup steps for
@@ -1808,6 +1936,7 @@ local development:
 
 # 
 
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START configure_toolbox] -->
 In this section, we will download Toolbox, configure our tools in a
 `tools.yaml`, and then run the Toolbox server.
@@ -1932,6 +2061,7 @@ In this section, we will download Toolbox, configure our tools in a
 
 # 
 
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START database_setup] -->
 In this section, we will create a database, insert some data that needs to be
 accessed by our agent, and create a database user for Toolbox to connect with.
@@ -2679,6 +2809,7 @@ an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox]
 to expose your developer assistant tools to a Looker instance:
 
+* [Gemini-CLI][gemini-cli]
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
 * [Visual Studio Code][vscode] (Copilot)
@@ -2687,6 +2818,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Claude code][claudecode]
 
 [toolbox]: https://github.com/googleapis/genai-toolbox
+[gemini-cli]: #configure-your-mcp-client
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
 [vscode]: #configure-your-mcp-client
@@ -2746,6 +2878,36 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolb
 ## Configure your MCP Client
 
 {{< tabpane text=true >}}
+{{% tab header="Gemini-CLI" lang="en" %}}
+
+1. Install [Gemini-CLI](https://github.com/google-gemini/gemini-cli#install-globally-with-npm).
+1. Create a directory `.gemini` in your home directory if it doesn't exist.
+1. Create the file `.gemini/settings.json` if it doesn't exist.
+1. Add the following configuration, or add the mcpServers stanza if you already
+   have a `settings.json` with content. Replace the path to the toolbox
+   executable and the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "looker-toolbox": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
+          "env": {
+            "LOOKER_BASE_URL": "https://looker.example.com",
+            "LOOKER_CLIENT_ID": "",
+            "LOOKER_CLIENT_SECRET": "",
+            "LOOKER_VERIFY_SSL": "true"
+          }
+        }
+      }
+    }
+    ```
+
+1. Start Gemini-CLI with the `gemini` command and use the command `/mcp` to see
+   the configured MCP tools.
+{{% /tab %}}
+
 {{% tab header="Claude code" lang="en" %}}
 
 1. Install [Claude
@@ -2937,6 +3099,9 @@ The following tools are available to the LLM:
 1. **get_looks**: Return the saved Looks that match a title or description
 1. **run_look**: Run a saved Look and return the data
 1. **make_look**: Create a saved Look in Looker and return the URL
+1. **get_dashboards**: Return the saved dashboards that match a title or description
+1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
+1. **add_dashboard_element**: Add a tile to a dashboard
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4186,6 +4351,14 @@ section.
     ```bash
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
+{{< notice note >}}  
+**The `$PORT` Environment Variable**  
+Google Cloud Run dictates the port your application must listen on by setting the
+`$PORT` environment variable inside your container. This value defaults to
+**8080**. Your application's `--port` argument **must** be set to listen on this
+port. If there is a mismatch, the container will fail to start and the
+deployment will time out.  
+{{< /notice >}}
 
 1. Deploy Toolbox to Cloud Run using the following command:
 
@@ -4280,6 +4453,25 @@ func main() {
 
 
 Now, you can use this client to connect to the deployed Cloud Run instance!
+
+## Troubleshooting
+
+{{< notice note >}}  
+For any deployment or runtime error, the best first step is to check the logs for your service in the Google Cloud Console's Cloud Run section. They often contain the specific error message needed to diagnose the problem.  
+{{< /notice >}}
+
+* **Deployment Fails with "Container failed to start":** This is almost always
+    caused by a port mismatch. Ensure your container's `--port` argument is set to
+    `8080` to match the `$PORT` environment variable provided by Cloud Run.
+
+* **Client Receives Permission Denied Error (401 or 403):** If your client application (e.g., your local SDK) gets a `401 Unauthorized` or `403 Forbidden` error when trying to call your Cloud Run service, it means the client is not properly authenticated as an invoker.
+    * Ensure the user or service account calling the service has the **Cloud Run Invoker** (`roles/run.invoker`) IAM role.
+    * If running locally, make sure your Application Default Credentials are set up correctly by running `gcloud auth application-default login`.
+
+* **Service Fails to Access Secrets (in logs):** If your application starts but the logs show errors like "permission denied" when trying to access Secret Manager, it means the Toolbox service account is missing permissions.
+    * Ensure the `toolbox-identity` service account has the **Secret Manager Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
+
+
 
 
 # Deploy to Kubernetes
@@ -5847,12 +6039,16 @@ allowing tools to execute SQL queries against it.
 sources:
     my-couchbase-instance:
         kind: couchbase
-        connectionString: couchbase://localhost:8091
+        connectionString: couchbase://localhost
         bucket: travel-sample
         scope: inventory
         username: Administrator
         password: password
 ```
+
+{{< notice note >}}
+For more details about alternate addresses and custom ports refer to [Managing Connections](https://docs.couchbase.com/java-sdk/current/howtos/managing-connections.html).
+{{< /notice >}}
 
 ## Reference
 
@@ -7106,6 +7302,66 @@ instead of hardcoding your secrets into the configuration file.
 | ssl       |  boolean |    false     | Whether to use SSL/TLS encryption. Automatically enabled for TiDB Cloud instances.         |
 
 
+# Trino
+Trino is a distributed SQL query engine for big data analytics.
+
+
+## About
+
+[Trino][trino-docs] is a distributed SQL query engine designed for fast analytic queries against data of any size. It allows you to query data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores.
+
+[trino-docs]: https://trino.io/docs/
+
+## Available Tools
+
+- [`trino-sql`](../tools/trino/trino-sql.md)  
+  Execute parameterized SQL queries against Trino.
+
+- [`trino-execute-sql`](../tools/trino/trino-execute-sql.md)  
+  Execute arbitrary SQL queries against Trino.
+
+## Requirements
+
+### Trino Cluster
+
+You need access to a running Trino cluster with appropriate user permissions for the catalogs and schemas you want to query.
+
+## Example
+
+```yaml
+sources:
+    my-trino-source:
+    kind: trino
+    host: trino.example.com
+    port: "8080"
+    user: ${TRINO_USER}  # Optional for anonymous access
+    password: ${TRINO_PASSWORD}  # Optional
+    catalog: hive
+    schema: default
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+|  **field**  |      **type**      | **required** | **description**                                                        |
+|-------------|:------------------:|:------------:|------------------------------------------------------------------------|
+| kind        |       string       |     true     | Must be "trino".                                                       |
+| host        |       string       |     true     | Trino coordinator hostname (e.g. "trino.example.com")                 |
+| port        |       string       |     true     | Trino coordinator port (e.g. "8080", "8443")                          |
+| user        |       string       |     false    | Username for authentication (e.g. "analyst"). Optional for anonymous access. |
+| password    |       string       |     false    | Password for basic authentication                                      |
+| catalog     |       string       |     true     | Default catalog to use for queries (e.g. "hive")                      |
+| schema      |       string       |     true     | Default schema to use for queries (e.g. "default")                    |
+| queryTimeout|       string       |     false    | Query timeout duration (e.g. "30m", "1h")                             |
+| accessToken |       string       |     false    | JWT access token for authentication                                    |
+| kerberosEnabled | boolean        |     false    | Enable Kerberos authentication (default: false)                       |
+| sslEnabled  |       boolean      |     false    | Enable SSL/TLS (default: false)                                       |
+
+
 # Valkey
 Valkey is an open-source, in-memory data structure store, forked from Redis.
 
@@ -7530,6 +7786,11 @@ Tools that work with TiDB Sources, such as TiDB Cloud and self-hosted TiDB.
 
 
 
+# Trino
+Tools that work with Trino Sources, such as distributed SQL query engine.
+
+
+
 # Utility tools
 Tools that provide utility.
 
@@ -7543,6 +7804,353 @@ Tools that work with Valkey Sources.
 # Samples
 Samples and guides for using Toolbox.
 
+
+# AlloyDB
+How to get started with Toolbox using AlloyDB.
+
+
+
+# Quickstart (MCP with AlloyDB)
+How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
+
+
+## Overview
+
+[Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
+that standardizes how applications provide context to LLMs. Check out this page
+on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
+
+## Before you begin
+
+This guide assumes you have already done the following:
+
+1.  [Create a AlloyDB cluster and instance](https://cloud.google.com/alloydb/docs/cluster-create) with a database and user.
+1. Connect to the instance using [AlloyDB Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio), [`psql` command-line tool](https://www.postgresql.org/download/), or any other PostgreSQL client.
+
+2.  Enable the `pgvector` and `google_ml_integration` [extensions](https://cloud.google.com/alloydb/docs/ai). These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:
+
+    ```sql
+    CREATE EXTENSION IF NOT EXISTS "vector";
+    CREATE EXTENSION IF NOT EXISTS "google_ml_integration";
+    CREATE EXTENSION IF NOT EXISTS alloydb_ai_nl cascade;
+    CREATE EXTENSION IF NOT EXISTS parameterized_views;
+    ```
+
+## Step 1: Set up your AlloyDB database
+
+In this section, we will create the necessary tables and functions in your AlloyDB instance.
+
+1.  Create tables using the following commands:
+
+    ```sql
+    CREATE TABLE products (
+      product_id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      price DECIMAL(10, 2) NOT NULL,
+      category_id INT,
+      embedding vector(3072) -- Vector size for model(gemini-embedding-001)
+    );
+
+    CREATE TABLE customers (
+      customer_id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL
+    );
+
+    CREATE TABLE cart (
+      cart_id SERIAL PRIMARY KEY,
+      customer_id INT UNIQUE NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    );
+
+    CREATE TABLE cart_items (
+      cart_item_id SERIAL PRIMARY KEY,
+      cart_id INT NOT NULL,
+      product_id INT NOT NULL,
+      quantity INT NOT NULL,
+      price DECIMAL(10, 2) NOT NULL,
+      FOREIGN KEY (cart_id) REFERENCES cart(cart_id),
+      FOREIGN KEY (product_id) REFERENCES products(product_id)
+    );
+
+    CREATE TABLE categories (
+      category_id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL
+    );
+    ```
+
+2.  Insert sample data into the tables:
+
+    ```sql
+    INSERT INTO categories (category_id, name) VALUES
+    (1, 'Flowers'),
+    (2, 'Vases');
+
+    INSERT INTO products (product_id, name, description, price, category_id, embedding) VALUES
+    (1, 'Rose', 'A beautiful red rose', 2.50, 1, embedding('gemini-embedding-001', 'A beautiful red rose')),
+    (2, 'Tulip', 'A colorful tulip', 1.50, 1, embedding('gemini-embedding-001', 'A colorful tulip')),
+    (3, 'Glass Vase', 'A transparent glass vase', 10.00, 2, embedding('gemini-embedding-001', 'A transparent glass vase')),
+    (4, 'Ceramic Vase', 'A handmade ceramic vase', 15.00, 2, embedding('gemini-embedding-001', 'A handmade ceramic vase'));
+
+    INSERT INTO customers (customer_id, name, email) VALUES
+    (1, 'John Doe', 'john.doe@example.com'),
+    (2, 'Jane Smith', 'jane.smith@example.com');
+
+    INSERT INTO cart (cart_id, customer_id) VALUES
+    (1, 1),
+    (2, 2);
+
+    INSERT INTO cart_items (cart_id, product_id, quantity, price) VALUES
+    (1, 1, 2, 2.50),
+    (1, 3, 1, 10.00),
+    (2, 2, 5, 1.50);
+    ```
+
+## Step 2: Install Toolbox
+
+In this section, we will download and install the Toolbox binary.
+
+1. Download the latest version of Toolbox as a binary:
+
+    {{< notice tip >}}
+   Select the
+   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+   corresponding to your OS and CPU architecture.
+    {{< /notice >}}
+    <!-- {x-release-please-start-version} -->
+    ```bash
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export VERSION="0.11.0"
+    curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
+    ```
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+## Step 3: Configure the tools
+
+Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual AlloyDB configuration.
+
+First, define the data source for your tools. This tells Toolbox how to connect to your AlloyDB instance.
+
+```yaml
+sources:
+  alloydb-pg-source:
+    kind: alloydb-postgres
+    project: YOUR_PROJECT_ID
+    region: YOUR_REGION
+    cluster: YOUR_CLUSTER
+    instance: YOUR_INSTANCE
+    database: YOUR_DATABASE
+    user: YOUR_USER
+    password: YOUR_PASSWORD
+```
+
+Next, define the tools the agent can use. We will categorize them into three types:
+
+### 1. Structured Queries Tools
+
+These tools execute predefined SQL statements. They are ideal for common, structured queries like managing a shopping cart. Add the following to your `tools.yaml` file:
+
+```yaml
+tools:
+
+  access-cart-information:
+    kind: postgres-sql
+    source: alloydb-pg-source
+    description: >-
+      List items in customer cart.
+      Use this tool to list items in a customer cart. This tool requires the cart ID.
+    parameters:
+      - name: cart_id
+        type: integer
+        description: The id of the cart.
+    statement: |
+      SELECT
+        p.name AS product_name,
+        ci.quantity,
+        ci.price AS item_price,
+        (ci.quantity * ci.price) AS total_item_price,
+        c.created_at AS cart_created_at,
+        ci.product_id AS product_id
+      FROM
+        cart_items ci JOIN cart c ON ci.cart_id = c.cart_id
+        JOIN products p ON ci.product_id = p.product_id
+      WHERE
+        c.cart_id = $1;
+
+  add-to-cart:
+    kind: postgres-sql
+    source: alloydb-pg-source
+    description: >-
+      Add items to customer cart using the product ID and product prices from the product list.
+      Use this tool to add items to a customer cart.
+      This tool requires the cart ID, product ID, quantity, and price.
+    parameters:
+      - name: cart_id
+        type: integer
+        description: The id of the cart.
+      - name: product_id
+        type: integer
+        description: The id of the product.
+      - name: quantity
+        type: integer
+        description: The quantity of items to add.
+      - name: price
+        type: float
+        description: The price of items to add.
+    statement: |
+      INSERT INTO
+        cart_items (cart_id, product_id, quantity, price)
+      VALUES($1,$2,$3,$4);
+
+  delete-from-cart:
+    kind: postgres-sql
+    source: alloydb-pg-source
+    description: >-
+      Remove products from customer cart.
+      Use this tool to remove products from a customer cart.
+      This tool requires the cart ID and product ID.
+    parameters:
+      - name: cart_id
+        type: integer
+        description: The id of the cart.
+      - name: product_id
+        type: integer
+        description: The id of the product.
+    statement: |
+      DELETE FROM
+        cart_items
+      WHERE
+        cart_id = $1 AND product_id = $2;
+```
+
+### 2. Semantic Search Tools
+
+These tools use vector embeddings to find the most relevant results based on the meaning of a user's query, rather than just keywords. Append the following tools to the `tools` section in your `tools.yaml`:
+
+```yaml
+  search-product-recommendations:
+    kind: postgres-sql
+    source: alloydb-pg-source
+    description: >-
+      Search for products based on user needs.
+      Use this tool to search for products. This tool requires the user's needs.
+    parameters:
+      - name: query
+        type: string
+        description: The product characteristics
+    statement: |
+      SELECT
+        product_id,
+        name,
+        description,
+        ROUND(CAST(price AS numeric), 2) as price
+      FROM
+        products
+      ORDER BY
+        embedding('gemini-embedding-001', $1)::vector <=> embedding
+      LIMIT 5;
+```
+
+### 3. Natural Language to SQL (NL2SQL) Tools
+
+1. Create a [natural language configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config) for your AlloyDB cluster.
+
+    {{< notice tip >}}Before using NL2SQL tools,
+    you must first install the `alloydb_ai_nl` extension and
+    create the [semantic layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview) under a configuration named `flower_shop`.
+    {{< /notice >}}
+
+2. Configure your NL2SQL tool to use your configuration. These tools translate natural language questions into SQL queries, allowing users to interact with the database conversationally. Append the following tool to the `tools` section:
+
+```yaml
+  ask-questions-about-products:
+    kind: alloydb-ai-nl
+    source: alloydb-pg-source
+    nlConfig: flower_shop
+    description: >-
+      Ask questions related to products or brands.
+      Use this tool to ask questions about products or brands.
+      Always SELECT the IDs of objects when generating queries.
+```
+
+Finally, group the tools into a `toolset` to make them available to the model. Add the following to the end of your `tools.yaml` file:
+
+```yaml
+toolsets:
+  flower_shop:
+    - access-cart-information
+    - search-product-recommendations
+    - ask-questions-about-products
+    - add-to-cart
+    - delete-from-cart
+```
+
+For more info on tools, check out the
+[Tools](../../resources/tools/) section.
+
+## Step 4: Run the Toolbox server
+
+Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
+
+```bash
+./toolbox --tools-file "tools.yaml"
+```
+
+## Step 5: Connect to MCP Inspector
+
+1. Run the MCP Inspector:
+
+    ```bash
+    npx @modelcontextprotocol/inspector
+    ```
+
+1. Type `y` when it asks to install the inspector package.
+
+1. It should show the following when the MCP Inspector is up and running (please take note of `<YOUR_SESSION_TOKEN>`):
+
+    ```bash
+    Starting MCP inspector...
+    ⚙️ Proxy server listening on localhost:6277
+    🔑 Session token: <YOUR_SESSION_TOKEN>
+       Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
+
+    🚀 MCP Inspector is up and running at:
+       http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=<YOUR_SESSION_TOKEN>
+    ```
+
+1. Open the above link in your browser.
+
+1. For `Transport Type`, select `Streamable HTTP`.
+
+1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
+
+1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
+
+1. Click Connect.
+
+1. Select `List Tools`, you will see a list of tools configured in `tools.yaml`.
+
+1. Test out your tools here!
+
+## What's next
+
+- Learn more about [MCP Inspector](../../how-to/connect_via_mcp.md).
+- Learn more about [Toolbox Resources](../../resources/).
+- Learn more about [Toolbox How-to guides](../../how-to/).
+
+# Getting started with alloydb-ai-nl tool
+An end to end tutorial for building an ADK agent using the AlloyDB AI NL tool.
+
+
+{{< ipynb "alloydb_ai_nl.ipynb" >}}
 
 # BigQuery
 How to get started with Toolbox using BigQuery.
@@ -8718,344 +9326,6 @@ In this section, we will download Toolbox and run the Toolbox server.
 1. Test out your tools here!
 
 
-# AlloyDB
-How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
-
-
-## Overview
-
-[Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
-that standardizes how applications provide context to LLMs. Check out this page
-on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
-
-## Before you begin
-
-This guide assumes you have already done the following:
-
-1.  [Create a AlloyDB cluster and instance](https://cloud.google.com/alloydb/docs/cluster-create) with a database and user.
-1. Connect to the instance using [AlloyDB Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio), [`psql` command-line tool](https://www.postgresql.org/download/), or any other PostgreSQL client.
-
-2.  Enable the `pgvector` and `google_ml_integration` [extensions](https://cloud.google.com/alloydb/docs/ai). These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:
-
-    ```sql
-    CREATE EXTENSION IF NOT EXISTS "vector";
-    CREATE EXTENSION IF NOT EXISTS "google_ml_integration";
-    CREATE EXTENSION IF NOT EXISTS alloydb_ai_nl cascade;
-    CREATE EXTENSION IF NOT EXISTS parameterized_views;
-    ```
-
-## Step 1: Set up your AlloyDB database
-
-In this section, we will create the necessary tables and functions in your AlloyDB instance.
-
-1.  Create tables using the following commands:
-
-    ```sql
-    CREATE TABLE products (
-      product_id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      description TEXT,
-      price DECIMAL(10, 2) NOT NULL,
-      category_id INT,
-      embedding vector(3072) -- Vector size for model(gemini-embedding-001)
-    );
-
-    CREATE TABLE customers (
-      customer_id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      email VARCHAR(255) UNIQUE NOT NULL
-    );
-
-    CREATE TABLE cart (
-      cart_id SERIAL PRIMARY KEY,
-      customer_id INT UNIQUE NOT NULL,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
-    );
-
-    CREATE TABLE cart_items (
-      cart_item_id SERIAL PRIMARY KEY,
-      cart_id INT NOT NULL,
-      product_id INT NOT NULL,
-      quantity INT NOT NULL,
-      price DECIMAL(10, 2) NOT NULL,
-      FOREIGN KEY (cart_id) REFERENCES cart(cart_id),
-      FOREIGN KEY (product_id) REFERENCES products(product_id)
-    );
-
-    CREATE TABLE categories (
-      category_id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL
-    );
-    ```
-
-2.  Insert sample data into the tables:
-
-    ```sql
-    INSERT INTO categories (category_id, name) VALUES
-    (1, 'Flowers'),
-    (2, 'Vases');
-
-    INSERT INTO products (product_id, name, description, price, category_id, embedding) VALUES
-    (1, 'Rose', 'A beautiful red rose', 2.50, 1, embedding('gemini-embedding-001', 'A beautiful red rose')),
-    (2, 'Tulip', 'A colorful tulip', 1.50, 1, embedding('gemini-embedding-001', 'A colorful tulip')),
-    (3, 'Glass Vase', 'A transparent glass vase', 10.00, 2, embedding('gemini-embedding-001', 'A transparent glass vase')),
-    (4, 'Ceramic Vase', 'A handmade ceramic vase', 15.00, 2, embedding('gemini-embedding-001', 'A handmade ceramic vase'));
-
-    INSERT INTO customers (customer_id, name, email) VALUES
-    (1, 'John Doe', 'john.doe@example.com'),
-    (2, 'Jane Smith', 'jane.smith@example.com');
-
-    INSERT INTO cart (cart_id, customer_id) VALUES
-    (1, 1),
-    (2, 2);
-
-    INSERT INTO cart_items (cart_id, product_id, quantity, price) VALUES
-    (1, 1, 2, 2.50),
-    (1, 3, 1, 10.00),
-    (2, 2, 5, 1.50);
-    ```
-
-## Step 2: Install Toolbox
-
-In this section, we will download and install the Toolbox binary.
-
-1. Download the latest version of Toolbox as a binary:
-
-    {{< notice tip >}}
-   Select the
-   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
-   corresponding to your OS and CPU architecture.
-    {{< /notice >}}
-    <!-- {x-release-please-start-version} -->
-    ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.12.0"
-    curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
-    ```
-    <!-- {x-release-please-end} -->
-
-1. Make the binary executable:
-
-    ```bash
-    chmod +x toolbox
-    ```
-
-## Step 3: Configure the tools
-
-Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual AlloyDB configuration.
-
-First, define the data source for your tools. This tells Toolbox how to connect to your AlloyDB instance.
-
-```yaml
-sources:
-  alloydb-pg-source:
-    kind: alloydb-postgres
-    project: YOUR_PROJECT_ID
-    region: YOUR_REGION
-    cluster: YOUR_CLUSTER
-    instance: YOUR_INSTANCE
-    database: YOUR_DATABASE
-    user: YOUR_USER
-    password: YOUR_PASSWORD
-```
-
-Next, define the tools the agent can use. We will categorize them into three types:
-
-### 1. Structured Queries Tools
-
-These tools execute predefined SQL statements. They are ideal for common, structured queries like managing a shopping cart. Add the following to your `tools.yaml` file:
-
-```yaml
-tools:
-
-  access-cart-information:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      List items in customer cart.
-      Use this tool to list items in a customer cart. This tool requires the cart ID.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-    statement: |
-      SELECT
-        p.name AS product_name,
-        ci.quantity,
-        ci.price AS item_price,
-        (ci.quantity * ci.price) AS total_item_price,
-        c.created_at AS cart_created_at,
-        ci.product_id AS product_id
-      FROM
-        cart_items ci JOIN cart c ON ci.cart_id = c.cart_id
-        JOIN products p ON ci.product_id = p.product_id
-      WHERE
-        c.cart_id = $1;
-
-  add-to-cart:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Add items to customer cart using the product ID and product prices from the product list.
-      Use this tool to add items to a customer cart.
-      This tool requires the cart ID, product ID, quantity, and price.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-      - name: product_id
-        type: integer
-        description: The id of the product.
-      - name: quantity
-        type: integer
-        description: The quantity of items to add.
-      - name: price
-        type: float
-        description: The price of items to add.
-    statement: |
-      INSERT INTO
-        cart_items (cart_id, product_id, quantity, price)
-      VALUES($1,$2,$3,$4);
-
-  delete-from-cart:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Remove products from customer cart.
-      Use this tool to remove products from a customer cart.
-      This tool requires the cart ID and product ID.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-      - name: product_id
-        type: integer
-        description: The id of the product.
-    statement: |
-      DELETE FROM
-        cart_items
-      WHERE
-        cart_id = $1 AND product_id = $2;
-```
-
-### 2. Semantic Search Tools
-
-These tools use vector embeddings to find the most relevant results based on the meaning of a user's query, rather than just keywords. Append the following tools to the `tools` section in your `tools.yaml`:
-
-```yaml
-  search-product-recommendations:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Search for products based on user needs.
-      Use this tool to search for products. This tool requires the user's needs.
-    parameters:
-      - name: query
-        type: string
-        description: The product characteristics
-    statement: |
-      SELECT
-        product_id,
-        name,
-        description,
-        ROUND(CAST(price AS numeric), 2) as price
-      FROM
-        products
-      ORDER BY
-        embedding('gemini-embedding-001', $1)::vector <=> embedding
-      LIMIT 5;
-```
-
-### 3. Natural Language to SQL (NL2SQL) Tools
-
-1. Create a [natural language configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config) for your AlloyDB cluster.
-
-    {{< notice tip >}}Before using NL2SQL tools,
-    you must first install the `alloydb_ai_nl` extension and
-    create the [semantic layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview) under a configuration named `flower_shop`.
-    {{< /notice >}}
-
-2. Configure your NL2SQL tool to use your configuration. These tools translate natural language questions into SQL queries, allowing users to interact with the database conversationally. Append the following tool to the `tools` section:
-
-```yaml
-  ask-questions-about-products:
-    kind: alloydb-ai-nl
-    source: alloydb-pg-source
-    nlConfig: flower_shop
-    description: >-
-      Ask questions related to products or brands.
-      Use this tool to ask questions about products or brands.
-      Always SELECT the IDs of objects when generating queries.
-```
-
-Finally, group the tools into a `toolset` to make them available to the model. Add the following to the end of your `tools.yaml` file:
-
-```yaml
-toolsets:
-  flower_shop:
-    - access-cart-information
-    - search-product-recommendations
-    - ask-questions-about-products
-    - add-to-cart
-    - delete-from-cart
-```
-
-For more info on tools, check out the
-[Tools](../../resources/tools/) section.
-
-## Step 4: Run the Toolbox server
-
-Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
-
-```bash
-./toolbox --tools-file "tools.yaml"
-```
-
-## Step 5: Connect to MCP Inspector
-
-1. Run the MCP Inspector:
-
-    ```bash
-    npx @modelcontextprotocol/inspector
-    ```
-
-1. Type `y` when it asks to install the inspector package.
-
-1. It should show the following when the MCP Inspector is up and running (please take note of `<YOUR_SESSION_TOKEN>`):
-
-    ```bash
-    Starting MCP inspector...
-    ⚙️ Proxy server listening on localhost:6277
-    🔑 Session token: <YOUR_SESSION_TOKEN>
-       Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
-
-    🚀 MCP Inspector is up and running at:
-       http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=<YOUR_SESSION_TOKEN>
-    ```
-
-1. Open the above link in your browser.
-
-1. For `Transport Type`, select `Streamable HTTP`.
-
-1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
-
-1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
-
-1. Click Connect.
-
-1. Select `List Tools`, you will see a list of tools configured in `tools.yaml`.
-
-1. Test out your tools here!
-
-## What's next
-
-- Learn more about [MCP Inspector](../../how-to/connect_via_mcp.md).
-- Learn more about [Toolbox Resources](../../resources/).
-- Learn more about [Toolbox How-to guides](../../how-to/).
-
-
-
 # About
 A list of other information related to Toolbox.
 
@@ -9180,5 +9450,339 @@ Python client SDK
     <meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-python"/>
   </head>
 </html>
+
+
+# Reference
+This section contains reference documentation.
+
+
+# CLI
+This page describes the `toolbox` command-line options.
+
+
+## Reference
+
+| Flag (Short) | Flag (Long) | Description | Default |
+|---|---|---|---|
+| `-a` | `--address` | Address of the interface the server will listen on. | `127.0.0.1` |
+| | `--disable-reload` | Disables dynamic reloading of tools file. | |
+| `-h` | `--help` | help for toolbox | |
+| | `--log-level` | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'. | `info` |
+| | `--logging-format` | Specify logging format to use. Allowed: 'standard' or 'JSON'. | `standard` |
+| `-p` | `--port` | Port the server will listen on. | `5000` |
+| | `--prebuilt` | Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values. | |
+| | `--stdio` | Listens via MCP STDIO instead of acting as a remote HTTP server. | |
+| | `--telemetry-gcp` | Enable exporting directly to Google Cloud Monitoring. | |
+| | `--telemetry-otlp` | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318') | |
+| | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data. | `toolbox` |
+| | `--tools-file` | File path specifying the tool configuration. Cannot be used with --prebuilt, --tools-files, or --tools-folder. | |
+| | `--tools-files` | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder. | |
+| | `--tools-folder` | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files. | |
+| | `--ui` | Launches the Toolbox UI web server. | |
+| `-v` | `--version` | version for toolbox | |
+
+## Examples
+
+### Transport Configuration
+
+**Server Settings:**
+- `--address`, `-a`: Server listening address (default: "127.0.0.1")
+- `--port`, `-p`: Server listening port (default: 5000)
+
+**STDIO:**
+- `--stdio`: Run in MCP STDIO mode instead of HTTP server
+
+#### Usage Examples
+
+```bash
+# Basic server with custom port configuration
+./toolbox --tools-file "tools.yaml" --port 8080
+```
+
+### Tool Configuration Sources
+
+The CLI supports multiple mutually exclusive ways to specify tool configurations:
+
+**Single File:** (default)
+- `--tools-file`: Path to a single YAML configuration file (default: `tools.yaml`)
+
+**Multiple Files:**
+- `--tools-files`: Comma-separated list of YAML files to merge
+
+**Directory:**
+- `--tools-folder`: Directory containing YAML files to load and merge
+
+**Prebuilt Configurations:**
+- `--prebuilt`: Use predefined configurations for specific database types (e.g., 'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.
+
+{{< notice tip >}}
+The CLI enforces mutual exclusivity between configuration source flags, preventing simultaneous use of `--prebuilt` with file-based options, and ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is used at a time.
+{{< /notice >}}
+
+### Hot Reload
+
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
+
+### Toolbox UI
+
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test tools and toolsets with features such as authorized parameters. To learn more, visit [Toolbox UI](../how-to/toolbox-ui/index.md).
+
+# Prebuilt Tools
+This page lists all the prebuilt tools available.
+
+
+Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.
+
+See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
+
+## AlloyDB Postgres
+
+*   `--prebuilt` value: `alloydb-postgres`
+*   **Environment Variables:**
+    *   `ALLOYDB_POSTGRES_PROJECT`: The GCP project ID.
+    *   `ALLOYDB_POSTGRES_REGION`: The region of your AlloyDB instance.
+    *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
+    *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
+    *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
+    *   `ALLOYDB_POSTGRES_USER`: The database username.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## AlloyDB Postgres Admin
+
+* `--prebuilt` value: `alloydb-postgres-admin`
+*   **Environment Variables:**
+    *   `API_KEY`: Your API key for the AlloyDB API.
+*   **Permissions:**
+    *   **AlloyDB Admin** (`roles/alloydb.admin`) IAM role is required on the project.
+*   **Tools:**
+    *   `alloydb-create-cluster`: Creates a new AlloyDB cluster.
+    *   `alloydb-operations-get`: Polls the operations API to track the status of long-running operations.
+    *   `alloydb-create-instance`: Creates a new AlloyDB instance within a cluster.
+    *   `alloydb-list-clusters`: Lists all AlloyDB clusters in a project.
+    *   `alloydb-list-instances`: Lists all instances within an AlloyDB cluster.
+    *   `alloydb-list-users`: Lists all database users within an AlloyDB cluster.
+    *   `alloydb-create-user`: Creates a new database user in an AlloyDB cluster.
+
+## BigQuery
+
+*   `--prebuilt` value: `bigquery`
+*   **Environment Variables:**
+    *   `BIGQUERY_PROJECT`: The GCP project ID.
+*   **Permissions:**
+    *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
+    *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
+    *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL statement.
+    *   `get_dataset_info`: Gets dataset metadata.
+    *   `get_table_info`: Gets table metadata.
+    *   `list_dataset_ids`: Lists datasets.
+    *   `list_table_ids`: Lists tables.
+
+## Cloud SQL for MySQL
+
+*   `--prebuilt` value: `cloud-sql-mysql`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_MYSQL_PROJECT`: The GCP project ID.
+    *   `CLOUD_SQL_MYSQL_REGION`: The region of your Cloud SQL instance.
+    *   `CLOUD_SQL_MYSQL_INSTANCE`: The ID of your Cloud SQL instance.
+    *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
+    *   `CLOUD_SQL_MYSQL_USER`: The database username.
+    *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for PostgreSQL
+
+*   `--prebuilt` value: `cloud-sql-postgres`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_POSTGRES_PROJECT`: The GCP project ID.
+    *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
+    *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
+    *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
+    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for SQL Server
+
+*   `--prebuilt` value: `cloud-sql-mssql`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_MSSQL_PROJECT`: The GCP project ID.
+    *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
+    *   `CLOUD_SQL_MSSQL_INSTANCE`: The ID of your Cloud SQL instance.
+    *   `CLOUD_SQL_MSSQL_DATABASE`: The name of the database to connect to.
+    *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
+    *   `CLOUD_SQL_MSSQL_USER`: The database username.
+    *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Dataplex
+
+*   `--prebuilt` value: `dataplex`
+*   **Environment Variables:**
+    *   `DATAPLEX_PROJECT`: The GCP project ID.
+*   **Permissions:**
+    *   **Dataplex Reader** (`roles/dataplex.viewer`) to search and look up entries.
+    *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
+*   **Tools:**
+    *   `dataplex_search_entries`: Searches for entries in Dataplex Catalog.
+    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex Catalog.
+    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the query.
+
+## Firestore
+
+*   `--prebuilt` value: `firestore`
+*   **Environment Variables:**
+    *   `FIRESTORE_PROJECT`: The GCP project ID.
+    *   `FIRESTORE_DATABASE`: The Firestore database ID.
+*   **Permissions:**
+    *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
+    *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
+*   **Tools:**
+    *   `firestore-get-documents`: Gets multiple documents from Firestore by their paths.
+    *   `firestore-list-collections`: Lists Firestore collections for a given parent path.
+    *   `firestore-delete-documents`: Deletes multiple documents from Firestore.
+    *   `firestore-query-collection`: Retrieves one or more Firestore documents from a collection.
+    *   `firestore-get-rules`: Retrieves the active Firestore security rules.
+    *   `firestore-validate-rules`: Checks the provided Firestore Rules source for syntax and validation errors.
+
+## Looker
+
+*   `--prebuilt` value: `looker`
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+*   **Permissions:**
+    *   A Looker account with permissions to access the desired models, explores, and data is required.
+*   **Tools:**
+    *   `get_models`: Retrieves the list of LookML models.
+    *   `get_explores`: Retrieves the list of explores in a model.
+    *   `get_dimensions`: Retrieves the list of dimensions in an explore.
+    *   `get_measures`: Retrieves the list of measures in an explore.
+    *   `get_filters`: Retrieves the list of filters in an explore.
+    *   `get_parameters`: Retrieves the list of parameters in an explore.
+    *   `query`: Runs a query against the LookML model.
+    *   `query_sql`: Generates the SQL for a query.
+    *   `query_url`: Generates a URL for a query in Looker.
+    *   `get_looks`: Searches for saved looks.
+    *   `run_look`: Runs the query associated with a look.
+    *   `make_look`: Creates a new look.
+    *   `get_dashboards`: Searches for saved dashboards.
+    *   `make_dashboard`: Creates a new dashboard.
+    *   `add_dashboard_element`: Adds a tile to a dashboard.
+
+## Microsoft SQL Server
+
+*   `--prebuilt` value: `mssql`
+*   **Environment Variables:**
+    *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
+    *   `MSSQL_PORT`: The port number for the SQL Server instance.
+    *   `MSSQL_DATABASE`: The name of the database to connect to.
+    *   `MSSQL_USER`: The database username.
+    *   `MSSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## MySQL
+
+*   `--prebuilt` value: `mysql`
+*   **Environment Variables:**
+    *   `MYSQL_HOST`: The hostname or IP address of the MySQL server.
+    *   `MYSQL_PORT`: The port number for the MySQL server.
+    *   `MYSQL_DATABASE`: The name of the database to connect to.
+    *   `MYSQL_USER`: The database username.
+    *   `MYSQL_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## OceanBase
+
+*   `--prebuilt` value: `oceanbase`
+*   **Environment Variables:**
+    *   `OCEANBASE_HOST`: The hostname or IP address of the OceanBase server.
+    *   `OCEANBASE_PORT`: The port number for the OceanBase server.
+    *   `OCEANBASE_DATABASE`: The name of the database to connect to.
+    *   `OCEANBASE_USER`: The database username.
+    *   `OCEANBASE_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## PostgreSQL
+
+*   `--prebuilt` value: `postgres`
+*   **Environment Variables:**
+    *   `POSTGRES_HOST`: The hostname or IP address of the PostgreSQL server.
+    *   `POSTGRES_PORT`: The port number for the PostgreSQL server.
+    *   `POSTGRES_DATABASE`: The name of the database to connect to.
+    *   `POSTGRES_USER`: The database username.
+    *   `POSTGRES_PASSWORD`: The password for the database user.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Spanner (GoogleSQL dialect)
+
+*   `--prebuilt` value: `spanner`
+*   **Environment Variables:**
+    *   `SPANNER_PROJECT`: The GCP project ID.
+    *   `SPANNER_INSTANCE`: The Spanner instance ID.
+    *   `SPANNER_DATABASE`: The Spanner database ID.
+*   **Permissions:**
+    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to execute DQL queries and list tables.
+    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to execute DML queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a DML SQL query.
+    *   `execute_sql_dql`: Executes a DQL SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Spanner (PostgreSQL dialect)
+
+*   `--prebuilt` value: `spanner-postgres`
+*   **Environment Variables:**
+    *   `SPANNER_PROJECT`: The GCP project ID.
+    *   `SPANNER_INSTANCE`: The Spanner instance ID.
+    *   `SPANNER_DATABASE`: The Spanner database ID.
+*   **Permissions:**
+    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to execute DQL queries and list tables.
+    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to execute DML queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
+    *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
+    *   `list_tables`: Lists tables in the database.
 
 
