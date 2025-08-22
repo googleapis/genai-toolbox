@@ -25,10 +25,10 @@ import (
 )
 
 const (
-	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,tags))"
-	FiltersFields    = "fields(filters(name,type,label,label_short,description,tags))"
-	MeasuresFields   = "fields(measures(name,type,label,label_short,description,tags))"
-	ParametersFields = "fields(parameters(name,type,label,label_short,description,tags))"
+	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,synonyms,tags))"
+	FiltersFields    = "fields(filters(name,type,label,label_short,description,synonyms,tags))"
+	MeasuresFields   = "fields(measures(name,type,label,label_short,description,synonyms,tags))"
+	ParametersFields = "fields(parameters(name,type,label,label_short,description,synonyms,tags))"
 )
 
 // ExtractLookerFieldProperties extracts common properties from Looker field objects.
