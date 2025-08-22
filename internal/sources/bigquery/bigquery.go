@@ -35,7 +35,7 @@ const SourceKind string = "bigquery"
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 func init() {
 	if !sources.Register(SourceKind, newConfig) {
@@ -164,7 +164,7 @@ func initBigQueryConnectionWithOAuthToken(
 	project string,
 	location string,
 	userAgent string,
-	tokenString tools.OAuthAccessToken,
+	tokenString tools.AccessToken,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	// Construct token source
 	token := &oauth2.Token{
@@ -193,8 +193,8 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	userAgent string,
-) func(tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	return func(tokenString tools.OAuthAccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+) func(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	return func(tokenString tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 		return initBigQueryConnectionWithOAuthToken(ctx, project, location, userAgent, tokenString)
 	}
 }

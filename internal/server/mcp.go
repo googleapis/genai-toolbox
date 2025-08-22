@@ -371,23 +371,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		protocolVersion = headerProtocolVersion
 	}
 
-	// Tool authorization header check
-	toolName := chi.URLParam(r, "toolName")
-
-	tool, ok := s.ResourceMgr.GetTool(toolName)
-	if !ok {
-		render.Status(r, http.StatusNotFound)
-		render.JSON(w, r, map[string]string{"error": "tool not found"})
-		return
-	}
-
-	// Check if this specific tool requires auth
-	if tool.Authorized(r.Header) && r.Header.Get("Authorization") == "" {
-		render.Status(r, http.StatusUnauthorized)
-		render.JSON(w, r, map[string]string{"error": "Unauthorized: Authorization header is required for this tool"})
-		return
-	}
-
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))

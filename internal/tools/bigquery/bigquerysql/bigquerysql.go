@@ -298,7 +298,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }
 
 func BQTypeStringFromToolType(toolType string) (string, error) {
