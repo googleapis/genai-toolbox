@@ -432,14 +432,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"source":      "my-instance",
 		"description": "Tool to ask BigQuery conversational analytics",
 	}
-	tools["my-client-auth-tool"] = map[string]any{
-		"kind":        "bigquery-get-table-info",
-		"source":      "my-instance",
-		"description": "Tool to show dataset metadata",
-		"authRequired": []string{
-			"my-google-auth",
-		},
-	}
 	config["tools"] = tools
 	return config
 }
