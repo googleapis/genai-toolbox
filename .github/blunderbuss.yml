@@ -9,6 +9,7 @@ assign_issues_by:
     - Genesis929
     - shobsi
     - jiaxunwu
+  - labels:
     - 'product: looker'
     to:
     - drstrangelooker
