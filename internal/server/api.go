@@ -217,7 +217,11 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	res, err := tool.Invoke(ctx, params)
+	// Extract OAuth access token from the "Authorization" header (currently for
+	// BigQuery end-user credentials usage only)
+	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
+
+	res, err := tool.Invoke(ctx, params, accessToken)
 	if err != nil {
 		err = fmt.Errorf("error while invoking tool: %w", err)
 		s.logger.DebugContext(ctx, err.Error())

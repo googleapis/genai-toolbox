@@ -20,24 +20,37 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var expectedToolSources = []string{
+	"alloydb-postgres-admin",
+	"alloydb-postgres",
+	"bigquery",
+	"cloud-sql-mssql",
+	"cloud-sql-mysql",
+	"cloud-sql-postgres",
+	"dataplex",
+	"firestore",
+	"looker",
+	"mssql",
+	"mysql",
+	"oceanbase",
+	"postgres",
+	"spanner-postgres",
+	"spanner",
+}
+
+func TestGetPrebuiltSources(t *testing.T) {
+	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
+		sources := GetPrebuiltSources()
+		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
+			t.Fatalf("incorrect sources parse: diff %v", diff)
+		}
+
+	})
+}
+
 func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
-	expectedKeys := []string{
-		"alloydb-postgres-admin",
-		"alloydb-postgres",
-		"bigquery",
-		"cloud-sql-mssql",
-		"cloud-sql-mysql",
-		"cloud-sql-postgres",
-		"dataplex",
-		"firestore",
-		"looker",
-		"mssql",
-		"mysql",
-		"postgres",
-		"spanner-postgres",
-		"spanner",
-	}
+	expectedKeys := expectedToolSources
 	t.Run(test_name, func(t *testing.T) {
 		configsMap, keys, err := loadPrebuiltToolYAMLs()
 		if err != nil {
@@ -79,6 +92,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	firestoreconfig, _ := Get("firestore")
 	mysql_config, _ := Get("mysql")
 	mssql_config, _ := Get("mssql")
+	oceanbase_config, _ := Get("oceanbase")
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
@@ -111,6 +125,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(mssql_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch mssql prebuilt tools yaml")
+	}
+	if len(oceanbase_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch oceanbase prebuilt tools yaml")
 	}
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")

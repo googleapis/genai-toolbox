@@ -82,6 +82,23 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 		want  map[string]any
 	}{
 		{
+			name: "ping",
+			url:  "/",
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "ping-test-123",
+				Request: jsonrpc.Request{
+					Method: "ping",
+				},
+			},
+			isErr: false,
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "ping-test-123",
+				"result":  map[string]any{},
+			},
+		},
+		{
 			name: "tools/list",
 			url:  "/",
 			body: jsonrpc.JSONRPCRequest{
@@ -331,6 +348,22 @@ func TestMcpEndpoint(t *testing.T) {
 						Request: jsonrpc.Request{
 							Method: "notification",
 						},
+					},
+				},
+				{
+					name: "ping",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "ping-test-123",
+						Request: jsonrpc.Request{
+							Method: "ping",
+						},
+					},
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "ping-test-123",
+						"result":  map[string]any{},
 					},
 				},
 				{
