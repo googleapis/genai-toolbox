@@ -15,6 +15,10 @@ the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
+### Write Mode Behavior
+
+While the `bigquery-sql` tool's execution is generally not restricted by the `write_mode` setting on its source, there is a special behavior for `protected` mode. When the source's `write_mode` is set to `protected`, this tool will operate within the same session as `bigquery-execute-sql` using that source.
+
 ### GoogleSQL
 
 BigQuery uses [GoogleSQL][bigquery-googlesql] for querying data. The integration
