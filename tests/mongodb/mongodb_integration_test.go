@@ -104,7 +104,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
 	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
-	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
@@ -131,9 +131,6 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	aggregate1Want := `[{"id":2}]`
 	aggregateManyWant := `[{"id":500},{"id":501}]`
 	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
-
-	mcpInvokeParamWantFindOne := `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWantFindOne, failInvocationWant)
 }
 
 func RunToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
