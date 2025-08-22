@@ -1329,7 +1329,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"firestore-database-tools": tools.ToolsetConfig{
 					Name:      "firestore-database-tools",
-					ToolNames: []string{"firestore-get-documents", "firestore-add-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
+					ToolNames: []string{"firestore-get-documents", "firestore-add-documents", "firestore-update-document", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
 				},
 			},
 		},

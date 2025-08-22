@@ -62,6 +62,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreupdatedocument"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
