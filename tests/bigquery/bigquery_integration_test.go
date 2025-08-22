@@ -420,6 +420,14 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
+	tools["my-client-auth-tool"] = map[string]any{
+		"kind":        "bigquery-get-table-info",
+		"source":      "my-instance",
+		"description": "Tool to show dataset metadata",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
 	config["tools"] = tools
 	return config
 }
@@ -453,7 +461,13 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 			map[string]any{"name": "bool_array", "type": "array", "description": "an array of boolean values", "items": map[string]any{"name": "item", "type": "boolean", "description": "desc"}},
 		},
 	}
-
+	tools["my-client-auth-tool"] = map[string]any{
+		"kind":                   "bigquery-sql",
+		"source":                 "my-instance",
+		"description":            "Tool to test client authorization.",
+		"useClientAuthorization": true,
+		"statement":              "SELECT 1",
+	}
 	config["tools"] = tools
 	return config
 }
