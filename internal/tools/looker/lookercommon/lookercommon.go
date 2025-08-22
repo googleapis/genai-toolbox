@@ -16,6 +16,7 @@ package lookercommon
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -24,10 +25,10 @@ import (
 )
 
 const (
-	DimensionsFields = "fields(dimensions(name,type,label,label_short,description))"
-	FiltersFields    = "fields(filters(name,type,label,label_short,description))"
-	MeasuresFields   = "fields(measures(name,type,label,label_short,description))"
-	ParametersFields = "fields(parameters(name,type,label,label_short,description))"
+	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,tags))"
+	FiltersFields    = "fields(filters(name,type,label,label_short,description,tags))"
+	MeasuresFields   = "fields(measures(name,type,label,label_short,description,tags))"
+	ParametersFields = "fields(parameters(name,type,label,label_short,description,tags))"
 )
 
 // ExtractLookerFieldProperties extracts common properties from Looker field objects.
@@ -48,6 +49,9 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 
 	for _, v := range *fields {
 		logger.DebugContext(ctx, "Got response element of %v\n", v)
+		if v.Name != nil && strings.HasSuffix(*v.Name, "_raw") {
+			continue
+		}
 		vMap := make(map[string]any)
 		if v.Name != nil {
 			vMap["name"] = *v.Name
@@ -63,6 +67,12 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 		}
 		if v.Description != nil {
 			vMap["description"] = *v.Description
+		}
+		if v.Tags != nil {
+			vMap["tags"] = *v.Tags
+		}
+		if v.Synonyms != nil {
+			vMap["synonyms"] = *v.Synonyms
 		}
 		logger.DebugContext(ctx, "Converted to %v\n", vMap)
 		data = append(data, vMap)
