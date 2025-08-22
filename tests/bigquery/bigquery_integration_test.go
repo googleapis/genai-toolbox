@@ -466,11 +466,11 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		},
 	}
 	tools["my-client-auth-tool"] = map[string]any{
-		"kind":                   "bigquery-sql",
-		"source":                 "my-instance",
-		"description":            "Tool to test client authorization.",
-		"useClientAuthorization": true,
-		"statement":              "SELECT 1",
+		"kind":           "bigquery-sql",
+		"source":         "my-instance",
+		"description":    "Tool to test client authorization.",
+		"useClientOAuth": true,
+		"statement":      "SELECT 1",
 	}
 	config["tools"] = tools
 	return config
