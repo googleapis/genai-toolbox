@@ -615,13 +615,13 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -1041,13 +1041,13 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -1496,13 +1496,13 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -2498,6 +2498,7 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 # 
 
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START cloud_setup] -->
 If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
 `vertexai=True` or a Google GenAI model), follow these one-time setup steps for
@@ -2520,6 +2521,7 @@ local development:
 
 # 
 
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START configure_toolbox] -->
 In this section, we will download Toolbox, configure our tools in a
 `tools.yaml`, and then run the Toolbox server.
@@ -2644,6 +2646,7 @@ In this section, we will download Toolbox, configure our tools in a
 
 # 
 
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START database_setup] -->
 In this section, we will create a database, insert some data that needs to be
 accessed by our agent, and create a database user for Toolbox to connect with.

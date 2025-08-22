@@ -4471,6 +4471,8 @@ your preferred virtual environment tool for managing dependencies e.g. [venv][in
 
 
  
+
+ 
  
  
 
@@ -4694,6 +4696,8 @@ roles):&lt;/p>
 
 
 
+
+ 
 
  
  
@@ -4929,6 +4933,8 @@ section.&lt;/p>
 
 
 
+
+ 
 
  
  
@@ -5224,7 +5230,8 @@ NL to SQL capabilities in agentic applications.&lt;/p>
 &lt;p>For detailed information on the AlloyDB capability, please see &lt;a href="https://cloud.google.com/alloydb/docs/ai/natural-language-overview">AlloyDB AI
 Natural Language Overview&lt;/a>.&lt;/p>
 &lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
-&lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/cloud_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/cloud_setup/</guid><description>&lt;!-- [START cloud_setup] -->
+&lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/cloud_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/cloud_setup/</guid><description>&lt;!-- This file has been used in local_quickstart.md, local_quickstart_go.md &amp; local_quickstart_js.md -->
+&lt;!-- [START cloud_setup] -->
 &lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using
 &lt;code>vertexai=True&lt;/code> or a Google GenAI model), follow these one-time setup steps for
 local development:&lt;/p>
@@ -5241,7 +5248,8 @@ local development:&lt;/p>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">gcloud services &lt;span class="nb">enable&lt;/span> aiplatform.googleapis.com
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;/ol>
-&lt;!-- [END cloud_setup] --></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/configure_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/configure_toolbox/</guid><description>&lt;!-- [START configure_toolbox] -->
+&lt;!-- [END cloud_setup] --></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/configure_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/configure_toolbox/</guid><description>&lt;!-- This file has been used in local_quickstart.md, local_quickstart_go.md &amp; local_quickstart_js.md -->
+&lt;!-- [START configure_toolbox] -->
 &lt;p>In this section, we will download Toolbox, configure our tools in a
 &lt;code>tools.yaml&lt;/code>, and then run the Toolbox server.&lt;/p>
 &lt;ol>
@@ -5368,7 +5376,8 @@ local development:&lt;/p>
  &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Tip&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/database_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/database_setup/</guid><description>&lt;!-- [START database_setup] -->
+ &lt;/span>Tip&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/database_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1043/getting-started/quickstart/shared/database_setup/</guid><description>&lt;!-- This file has been used in local_quickstart.md, local_quickstart_go.md &amp; local_quickstart_js.md -->
+&lt;!-- [START database_setup] -->
 &lt;p>In this section, we will create a database, insert some data that needs to be
 accessed by our agent, and create a database user for Toolbox to connect with.&lt;/p>
 &lt;ol>
