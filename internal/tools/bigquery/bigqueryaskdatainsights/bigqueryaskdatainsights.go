@@ -171,7 +171,7 @@ type Tool struct {
 	MaxQueryResultRows int
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Get credentials for the API call
 	if t.TokenSource == nil {
 		return nil, fmt.Errorf("authentication error: found credentials but they are missing a valid token source")
