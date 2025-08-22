@@ -1,0 +1,19 @@
+{
+  "name": "llamaindex",
+  "version": "1.0.0",
+  "description": "",
+  "main": "quickstart.js",
+  "type": "module",
+  "scripts": {
+    "test": "node quickstart_test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@llamaindex/google": "^0.3.20",
+    "@llamaindex/workflow": "^1.1.21",
+    "@toolbox-sdk/core": "0.1.0",
+    "llamaindex": "^0.11.27"
+  }
+}
