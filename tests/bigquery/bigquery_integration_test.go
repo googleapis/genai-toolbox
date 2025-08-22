@@ -166,8 +166,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest())
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest(), tests.EnableClientAuthTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, tests.EnableMcpClientAuthTest())
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithCreateColArray(createColArray),
 		tests.WithDdlWant(ddlWant),
