@@ -8,7 +8,7 @@ defaultContentLanguageInSubdir = false
 enableGitInfo = true
 enableRobotsTXT = true
 
-ignoreFiles = ["quickstart/"]
+ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quickstart/go"]
 
 [languages]
   [languages.en]
