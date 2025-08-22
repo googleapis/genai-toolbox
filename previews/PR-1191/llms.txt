@@ -13,7 +13,7 @@ How to get started with Toolbox.
 - [Go Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1191/getting-started/local_quickstart_go/): How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
 - [Quickstart (MCP)](https://googleapis.github.io/genai-toolbox/previews/PR-1191/getting-started/mcp_quickstart/): How to get started running Toolbox locally with MCP Inspector.
 - [Configuration](https://googleapis.github.io/genai-toolbox/previews/PR-1191/getting-started/configure/): How to configure Toolbox's tools.yaml file.
-
+- [](https://googleapis.github.io/genai-toolbox/previews/PR-1191/getting-started/quickstart/shared/cloud_setup/): - [](https://googleapis.github.io/genai-toolbox/previews/PR-1191/getting-started/quickstart/shared/configure_toolbox/): - [](https://googleapis.github.io/genai-toolbox/previews/PR-1191/getting-started/quickstart/shared/database_setup/): 
 ### Concepts
 
 Some core concepts in Toolbox
