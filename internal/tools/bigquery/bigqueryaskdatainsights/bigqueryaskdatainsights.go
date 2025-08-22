@@ -245,6 +245,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}
+
 // StreamMessage represents a single message object from the streaming API response.
 type StreamMessage struct {
 	SystemMessage *SystemMessage `json:"systemMessage,omitempty"`
