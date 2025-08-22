@@ -45,7 +45,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
+				"statement":   "SELECT 1",
 			},
 			"my-tool": map[string]any{
 				"kind":        toolKind,
@@ -144,7 +144,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
-				"statement":   "SELECT 1;",
+				"statement":   "SELECT 1",
 				"authRequired": []string{
 					"my-google-auth",
 				},
