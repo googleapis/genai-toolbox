@@ -15,7 +15,6 @@
 package bigqueryaskdatainsights
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -246,15 +245,93 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func getStream(url string, payload CAPayload, headers map[string]string, maxRows int) ([]map[string]any, error) {
+// StreamMessage represents a single message object from the streaming API response.
+type StreamMessage struct {
+	SystemMessage *SystemMessage `json:"systemMessage,omitempty"`
+	Error         *ErrorResponse `json:"error,omitempty"`
+}
+
+// SystemMessage contains different types of system-generated content.
+type SystemMessage struct {
+	Text   *TextResponse   `json:"text,omitempty"`
+	Schema *SchemaResponse `json:"schema,omitempty"`
+	Data   *DataResponse   `json:"data,omitempty"`
+}
+
+// TextResponse contains textual parts of a message.
+type TextResponse struct {
+	Parts []string `json:"parts"`
+}
+
+// SchemaResponse contains schema-related information.
+type SchemaResponse struct {
+	Query  *SchemaQuery  `json:"query,omitempty"`
+	Result *SchemaResult `json:"result,omitempty"`
+}
+
+// SchemaQuery holds the question that prompted a schema lookup.
+type SchemaQuery struct {
+	Question string `json:"question"`
+}
+
+// SchemaResult contains the datasources with their schemas.
+type SchemaResult struct {
+	Datasources []Datasource `json:"datasources"`
+}
+
+// Datasource represents a data source with its reference and schema.
+type Datasource struct {
+	BigQueryTableReference *BQTableReference `json:"bigqueryTableReference,omitempty"`
+	Schema                 *BQSchema         `json:"schema,omitempty"`
+}
+
+// BQSchema defines the structure of a BigQuery table.
+type BQSchema struct {
+	Fields []BQField `json:"fields"`
+}
+
+// BQField describes a single column in a BigQuery table.
+type BQField struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Mode        string `json:"mode"`
+}
+
+// DataResponse contains data-related information, like queries and results.
+type DataResponse struct {
+	Query        *DataQuery  `json:"query,omitempty"`
+	GeneratedSQL string      `json:"generatedSql,omitempty"`
+	Result       *DataResult `json:"result,omitempty"`
+}
+
+// DataQuery holds information about a data retrieval query.
+type DataQuery struct {
+	Name     string `json:"name"`
+	Question string `json:"question"`
+}
+
+// DataResult contains the schema and rows of a query result.
+type DataResult struct {
+	Schema BQSchema         `json:"schema"`
+	Data   []map[string]any `json:"data"`
+}
+
+// ErrorResponse represents an error message from the API.
+type ErrorResponse struct {
+	Code    float64 `json:"code"` // JSON numbers are float64 by default
+	Message string  `json:"message"`
+}
+
+func getStream(url string, payload CAPayload, headers map[string]string, maxRows int) (string, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+		return "", fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -263,185 +340,145 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API returned non-200 status: %d %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("API returned non-200 status: %d %s", resp.StatusCode, string(body))
+	}
+
+	var messages []map[string]any
+	decoder := json.NewDecoder(resp.Body)
+
+	// The response is a JSON array, so we read the opening bracket.
+	if _, err := decoder.Token(); err != nil {
+		if err == io.EOF {
+			return "", nil // Empty response is valid
+		}
+		return "", fmt.Errorf("error reading start of json array: %w", err)
+	}
+
+	for decoder.More() {
+		var msg StreamMessage
+		if err := decoder.Decode(&msg); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", fmt.Errorf("error decoding stream message: %w", err)
+		}
+
+		var newMessage map[string]any
+		if msg.SystemMessage != nil {
+			if msg.SystemMessage.Text != nil {
+				newMessage = handleTextResponse(msg.SystemMessage.Text)
+			} else if msg.SystemMessage.Schema != nil {
+				newMessage = handleSchemaResponse(msg.SystemMessage.Schema)
+			} else if msg.SystemMessage.Data != nil {
+				newMessage = handleDataResponse(msg.SystemMessage.Data, maxRows)
+			}
+		} else if msg.Error != nil {
+			newMessage = handleError(msg.Error)
+		}
+		messages = appendMessage(messages, newMessage)
 	}
 
 	var acc strings.Builder
-	var messages []map[string]any
-	scanner := bufio.NewScanner(resp.Body)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			continue
+	for i, msg := range messages {
+		jsonBytes, err := json.MarshalIndent(msg, "", "  ")
+		if err != nil {
+			return "", fmt.Errorf("error marshalling message: %w", err)
 		}
-
-		if line == "[{" {
-			acc.WriteString("{")
-		} else if line == "}]" {
-			acc.WriteString("}")
-		} else if line == "," {
-			continue
-		} else {
-			acc.WriteString(line)
+		acc.Write(jsonBytes)
+		if i < len(messages)-1 {
+			acc.WriteString("\n")
 		}
-
-		jsonStr := acc.String()
-		var dataJSON map[string]any
-		if err := json.Unmarshal([]byte(jsonStr), &dataJSON); err != nil {
-			continue
-		}
-
-		// Successfully parsed a JSON object, now handle it
-		var newMessage map[string]any
-		if sysMsg, ok := dataJSON["systemMessage"].(map[string]any); ok {
-			if text, ok := sysMsg["text"].(map[string]any); ok {
-				newMessage = handleTextResponse(text)
-			} else if schema, ok := sysMsg["schema"].(map[string]any); ok {
-				newMessage = handleSchemaResponse(schema)
-			} else if data, ok := sysMsg["data"].(map[string]any); ok {
-				newMessage = handleDataResponse(data, maxRows)
-			}
-		} else if errData, ok := dataJSON["error"].(map[string]any); ok {
-			newMessage = handleError(errData)
-		}
-
-		messages = appendMessage(messages, newMessage)
-		acc.Reset()
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading stream: %w", err)
-	}
-
-	return messages, nil
+	return acc.String(), nil
 }
 
-func formatBqTableRef(tableRef map[string]any) string {
-	projectID, _ := tableRef["projectId"].(string)
-	datasetID, _ := tableRef["datasetId"].(string)
-	tableID, _ := tableRef["tableId"].(string)
-	return fmt.Sprintf("%s.%s.%s", projectID, datasetID, tableID)
+func formatBqTableRef(tableRef *BQTableReference) string {
+	return fmt.Sprintf("%s.%s.%s", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
 }
 
-func formatSchemaAsDict(data map[string]any) map[string]any {
+func formatSchemaAsDict(data *BQSchema) map[string]any {
 	headers := []string{"Column", "Type", "Description", "Mode"}
-	fieldsVal, ok := data["fields"].([]any)
-	if !ok {
+	if data == nil {
 		return map[string]any{"headers": headers, "rows": []any{}}
 	}
 
 	var rows [][]any
-	for _, fieldVal := range fieldsVal {
-		if field, ok := fieldVal.(map[string]any); ok {
-			name, _ := field["name"].(string)
-			typ, _ := field["type"].(string)
-			desc, _ := field["description"].(string)
-			mode, _ := field["mode"].(string)
-			rows = append(rows, []any{name, typ, desc, mode})
-		}
+	for _, field := range data.Fields {
+		rows = append(rows, []any{field.Name, field.Type, field.Description, field.Mode})
 	}
 	return map[string]any{"headers": headers, "rows": rows}
 }
 
-func formatDatasourceAsDict(datasource map[string]any) map[string]any {
+func formatDatasourceAsDict(datasource *Datasource) map[string]any {
 	var sourceName string
-	if ref, ok := datasource["bigqueryTableReference"].(map[string]any); ok {
-		sourceName = formatBqTableRef(ref)
+	if datasource.BigQueryTableReference != nil {
+		sourceName = formatBqTableRef(datasource.BigQueryTableReference)
 	}
 
 	var schema map[string]any
-	if s, ok := datasource["schema"].(map[string]any); ok {
-		schema = formatSchemaAsDict(s)
+	if datasource.Schema != nil {
+		schema = formatSchemaAsDict(datasource.Schema)
 	}
 
 	return map[string]any{"source_name": sourceName, "schema": schema}
 }
 
-func handleTextResponse(resp map[string]any) map[string]any {
-	var parts []string
-	if partsVal, ok := resp["parts"].([]any); ok {
-		for _, p := range partsVal {
-			if partStr, ok := p.(string); ok {
-				parts = append(parts, partStr)
-			}
-		}
-	}
-	return map[string]any{"Answer": strings.Join(parts, "")}
+func handleTextResponse(resp *TextResponse) map[string]any {
+	return map[string]any{"Answer": strings.Join(resp.Parts, "")}
 }
 
-func handleSchemaResponse(resp map[string]any) map[string]any {
-	if query, ok := resp["query"].(map[string]any); ok {
-		if question, ok := query["question"].(string); ok {
-			return map[string]any{"Question": question}
-		}
+func handleSchemaResponse(resp *SchemaResponse) map[string]any {
+	if resp.Query != nil {
+		return map[string]any{"Question": resp.Query.Question}
 	}
-	if result, ok := resp["result"].(map[string]any); ok {
+	if resp.Result != nil {
 		var formattedSources []map[string]any
-		if datasources, ok := result["datasources"].([]any); ok {
-			for _, dsVal := range datasources {
-				if ds, ok := dsVal.(map[string]any); ok {
-					formattedSources = append(formattedSources, formatDatasourceAsDict(ds))
-				}
-			}
+		for _, ds := range resp.Result.Datasources {
+			formattedSources = append(formattedSources, formatDatasourceAsDict(&ds))
 		}
 		return map[string]any{"Schema Resolved": formattedSources}
 	}
 	return nil
 }
 
-func handleDataResponse(resp map[string]any, maxRows int) map[string]any {
-	if query, ok := resp["query"].(map[string]any); ok {
-		queryName, _ := query["name"].(string)
-		question, _ := query["question"].(string)
+func handleDataResponse(resp *DataResponse, maxRows int) map[string]any {
+	if resp.Query != nil {
 		return map[string]any{
 			"Retrieval Query": map[string]any{
-				"Query Name": queryName,
-				"Question":   question,
+				"Query Name": resp.Query.Name,
+				"Question":   resp.Query.Question,
 			},
 		}
 	}
-	if sql, ok := resp["generatedSql"].(string); ok {
-		return map[string]any{"SQL Generated": sql}
+	if resp.GeneratedSQL != "" {
+		return map[string]any{"SQL Generated": resp.GeneratedSQL}
 	}
-	if result, ok := resp["result"].(map[string]any); ok {
-		schema, _ := result["schema"].(map[string]any)
-		var dataRows []any
-		if data, ok := result["data"]; ok {
-			dataRows, _ = data.([]any)
-		}
-		fieldsVal, _ := schema["fields"].([]any)
-
+	if resp.Result != nil {
 		var headers []string
-		for _, f := range fieldsVal {
-			if fieldMap, ok := f.(map[string]any); ok {
-				if name, ok := fieldMap["name"].(string); ok {
-					headers = append(headers, name)
-				}
-			}
+		for _, f := range resp.Result.Schema.Fields {
+			headers = append(headers, f.Name)
 		}
 
-		totalRows := len(dataRows)
+		totalRows := len(resp.Result.Data)
 		var compactRows [][]any
 		numRowsToDisplay := totalRows
 		if numRowsToDisplay > maxRows {
 			numRowsToDisplay = maxRows
 		}
 
-		for _, rowVal := range dataRows[:numRowsToDisplay] {
-			if rowDict, ok := rowVal.(map[string]any); ok {
-				var rowValues []any
-				for _, header := range headers {
-					rowValues = append(rowValues, rowDict[header])
-				}
-				compactRows = append(compactRows, rowValues)
+		for _, rowVal := range resp.Result.Data[:numRowsToDisplay] {
+			var rowValues []any
+			for _, header := range headers {
+				rowValues = append(rowValues, rowVal[header])
 			}
+			compactRows = append(compactRows, rowValues)
 		}
 
 		summary := fmt.Sprintf("Showing all %d rows.", totalRows)
@@ -460,13 +497,11 @@ func handleDataResponse(resp map[string]any, maxRows int) map[string]any {
 	return nil
 }
 
-func handleError(resp map[string]any) map[string]any {
-	code, _ := resp["code"].(float64) // JSON numbers are float64 by default
-	message, _ := resp["message"].(string)
+func handleError(resp *ErrorResponse) map[string]any {
 	return map[string]any{
 		"Error": map[string]any{
-			"Code":    int(code), // Convert to int for cleaner output
-			"Message": message,
+			"Code":    int(resp.Code),
+			"Message": resp.Message,
 		},
 	}
 }
@@ -477,7 +512,7 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 	}
 	if len(messages) > 0 {
 		if _, ok := messages[len(messages)-1]["Data Retrieved"]; ok {
-			messages = messages[:len(messages)-1] // Replace last element
+			messages = messages[:len(messages)-1]
 		}
 	}
 	return append(messages, newMessage)
