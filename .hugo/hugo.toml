@@ -8,6 +8,8 @@ defaultContentLanguageInSubdir = false
 enableGitInfo = true
 enableRobotsTXT = true
 
+ignoreFiles = ["quickstart/"]
+
 [languages]
   [languages.en]
     languageName ="English"
