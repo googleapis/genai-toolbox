@@ -92,3 +92,7 @@
 - name: 'product: bigquery'
   color: 5065c7
   description: 'Product: Assigned to the BigQuery team.'
+# Product Labels
+- name: 'product: Looker'
+  color: 5065c7
+  description: 'Product: Assigned to the Looker team.'
