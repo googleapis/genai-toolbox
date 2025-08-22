@@ -1177,6 +1177,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	trino_config, _ := prebuiltconfigs.Get("trino")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1232,6 +1233,13 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("MYSQL_DATABASE", "your_mysql_db")
 	t.Setenv("MYSQL_USER", "your_mysql_user")
 	t.Setenv("MYSQL_PASSWORD", "your_mysql_password")
+
+	t.Setenv("TRINO_HOST", "localhost")
+	t.Setenv("TRINO_PORT", "8080")
+	t.Setenv("TRINO_USER", "your_trino_user")
+	t.Setenv("TRINO_PASSWORD", "your_trino_password")
+	t.Setenv("TRINO_CATALOG", "hive")
+	t.Setenv("TRINO_SCHEMA", "default")
 
 	t.Setenv("MSSQL_HOST", "localhost")
 	t.Setenv("MSSQL_PORT", "1433")
@@ -1390,6 +1398,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-postgres-database-tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "trino prebuilt tools",
+			in:   trino_config,
+			wantToolset: server.ToolsetConfigs{
+				"trino-database-tools": tools.ToolsetConfig{
+					Name:      "trino-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_catalogs", "list_schemas", "describe_table", "sample_data", "query_with_limit", "cluster_info"},
 				},
 			},
 		},

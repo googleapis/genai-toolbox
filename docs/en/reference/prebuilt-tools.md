@@ -258,3 +258,26 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## Trino
+
+*   `--prebuilt` value: `trino`
+*   **Environment Variables:**
+    *   `TRINO_HOST`: The hostname or IP address of the Trino coordinator.
+    *   `TRINO_PORT`: The port number for the Trino coordinator.
+    *   `TRINO_USER`: The username for authentication.
+    *   `TRINO_PASSWORD`: The password for authentication (optional).
+    *   `TRINO_CATALOG`: The catalog to connect to.
+    *   `TRINO_SCHEMA`: The schema within the catalog.
+    *   `TRINO_ACCESS_TOKEN`: Access token for token-based authentication (optional).
+*   **Permissions:**
+    *   Trino access permissions depend on your specific Trino cluster configuration and catalog connectors.
+*   **Tools:**
+    *   `execute_sql`: Executes SQL statements against Trino.
+    *   `list_tables`: Lists detailed schema information for tables in the current catalog and schema.
+    *   `list_catalogs`: Lists all available catalogs in the Trino cluster.
+    *   `list_schemas`: Lists all schemas in the current or specified catalog.
+    *   `describe_table`: Describes the structure of a specific table, including columns and data types.
+    *   `sample_data`: Returns a sample of data from a specified table.
+    *   `query_with_limit`: Execute a SELECT query with automatic LIMIT to prevent large result sets.
+    *   `cluster_info`: Shows information about the Trino cluster, including coordinators and workers.

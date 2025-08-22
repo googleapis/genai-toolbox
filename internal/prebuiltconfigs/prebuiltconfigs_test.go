@@ -36,6 +36,7 @@ var expectedToolSources = []string{
 	"postgres",
 	"spanner-postgres",
 	"spanner",
+	"trino",
 }
 
 func TestGetPrebuiltSources(t *testing.T) {
@@ -96,6 +97,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	trino_config, _ := Get("trino")
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
@@ -137,6 +139,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(spannerpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+	}
+	if len(trino_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch trino prebuilt tools yaml")
 	}
 }
 

@@ -1,0 +1,220 @@
+sources:
+  trino-source:
+    kind: trino
+    host: ${TRINO_HOST}
+    port: ${TRINO_PORT}
+    user: ${TRINO_USER}
+    password: ${TRINO_PASSWORD}  # Optional
+    catalog: ${TRINO_CATALOG}
+    schema: ${TRINO_SCHEMA}
+    queryTimeout: 30s  # Optional
+    # Optional settings:
+    # accessToken: ${TRINO_ACCESS_TOKEN}
+    # kerberosEnabled: false
+    # sslEnabled: false
+
+tools:
+  execute_sql:
+    kind: trino-execute-sql
+    source: trino-source
+    description: Use this tool to execute SQL statements against Trino.
+
+  list_tables:
+    kind: trino-sql
+    source: trino-source
+    description: "Lists detailed schema information (table names, columns, data types) as JSON for tables in the current catalog and schema. Filters by a comma-separated list of table names. If names are omitted, lists all tables in the current schema."
+    statement: |
+      WITH table_filter AS (
+        SELECT 
+          CASE 
+            WHEN TRIM($1) = '' OR $1 IS NULL THEN ARRAY[]
+            ELSE SPLIT(REGEXP_REPLACE($1, '\s+', ''), ',')
+          END AS table_names_filter
+      ),
+      filtered_tables AS (
+        SELECT 
+          t.table_catalog,
+          t.table_schema, 
+          t.table_name,
+          t.table_type
+        FROM information_schema.tables t
+        CROSS JOIN table_filter tf
+        WHERE t.table_schema = CURRENT_SCHEMA
+          AND t.table_catalog = CURRENT_CATALOG
+          AND (CARDINALITY(tf.table_names_filter) = 0 OR t.table_name IN (SELECT * FROM UNNEST(tf.table_names_filter)))
+          AND t.table_type IN ('BASE TABLE', 'VIEW')
+      )
+      SELECT 
+        ft.table_schema AS schema_name,
+        ft.table_name AS object_name,
+        CASE 
+          WHEN $2 = 'simple' THEN
+            JSON_OBJECT('name': ft.table_name)
+          ELSE
+            JSON_OBJECT(
+              'schema_name': ft.table_schema,
+              'object_name': ft.table_name, 
+              'object_type': ft.table_type,
+              'catalog_name': ft.table_catalog,
+              'columns': (
+                SELECT JSON_ARRAYAGG(
+                  JSON_OBJECT(
+                    'column_name': c.column_name,
+                    'data_type': c.data_type,
+                    'ordinal_position': c.ordinal_position,
+                    'is_nullable': c.is_nullable,
+                    'column_default': c.column_default,
+                    'column_comment': COALESCE(c.column_comment, '')
+                  )
+                  ORDER BY c.ordinal_position
+                )
+                FROM information_schema.columns c
+                WHERE c.table_catalog = ft.table_catalog
+                  AND c.table_schema = ft.table_schema
+                  AND c.table_name = ft.table_name
+              )
+            )
+        END AS object_details
+      FROM filtered_tables ft
+      ORDER BY ft.table_schema, ft.table_name
+    parameters:
+      - name: table_names
+        type: string
+        description: "Optional: A comma-separated list of table names. If empty, details for all tables in the current schema will be listed."
+      - name: output_format
+        type: string
+        description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
+        default: "detailed"
+
+  list_catalogs:
+    kind: trino-sql
+    source: trino-source
+    description: "Lists all available catalogs in the Trino cluster."
+    statement: |
+      SELECT 
+        catalog_name,
+        JSON_OBJECT('catalog_name': catalog_name) AS catalog_details
+      FROM information_schema.schemata
+      WHERE schema_name = 'information_schema'
+      ORDER BY catalog_name
+
+  list_schemas:
+    kind: trino-sql  
+    source: trino-source
+    description: "Lists all schemas in the current catalog or a specified catalog."
+    statement: |
+      SELECT 
+        catalog_name,
+        schema_name,
+        JSON_OBJECT(
+          'catalog_name': catalog_name,
+          'schema_name': schema_name
+        ) AS schema_details
+      FROM information_schema.schemata
+      WHERE catalog_name = COALESCE(NULLIF(TRIM($1), ''), CURRENT_CATALOG)
+      ORDER BY catalog_name, schema_name
+    parameters:
+      - name: catalog_name
+        type: string
+        description: "Optional: Catalog name to list schemas from. If empty, uses current catalog."
+
+  describe_table:
+    kind: trino-sql
+    source: trino-source
+    description: "Describes the structure of a specific table, including columns, data types, and constraints."
+    statement: |
+      SELECT 
+        column_name,
+        data_type,
+        ordinal_position,
+        is_nullable,
+        column_default,
+        COALESCE(column_comment, '') AS column_comment,
+        JSON_OBJECT(
+          'column_name': column_name,
+          'data_type': data_type,
+          'ordinal_position': ordinal_position,
+          'is_nullable': is_nullable,
+          'column_default': column_default,
+          'column_comment': COALESCE(column_comment, '')
+        ) AS column_details
+      FROM information_schema.columns
+      WHERE table_catalog = COALESCE(NULLIF(TRIM($1), ''), CURRENT_CATALOG)
+        AND table_schema = COALESCE(NULLIF(TRIM($2), ''), CURRENT_SCHEMA)
+        AND table_name = $3
+      ORDER BY ordinal_position
+    parameters:
+      - name: catalog_name
+        type: string
+        description: "Optional: Catalog name. If empty, uses current catalog."
+      - name: schema_name
+        type: string
+        description: "Optional: Schema name. If empty, uses current schema."
+      - name: table_name
+        type: string
+        description: "Required: Name of the table to describe."
+
+  sample_data:
+    kind: trino-sql
+    source: trino-source
+    description: "Returns a sample of data from a specified table to understand its content."
+    statement: |
+      SELECT * FROM $1 LIMIT $2
+    parameters:
+      - name: table_name
+        type: string
+        description: "Required: Name of the table to sample (use format: catalog.schema.table or schema.table or just table_name)."
+      - name: limit_rows
+        type: integer
+        description: "Optional: Number of rows to return (default: 10)."
+        default: 10
+
+  query_with_limit:
+    kind: trino-sql
+    source: trino-source
+    description: "Execute a SELECT query with automatic LIMIT to prevent large result sets."
+    statement: |
+      WITH query_result AS (
+        $1
+      )
+      SELECT * FROM query_result LIMIT $2
+    parameters:
+      - name: select_query
+        type: string
+        description: "Required: SELECT query to execute (without LIMIT clause)."
+      - name: max_rows
+        type: integer
+        description: "Optional: Maximum number of rows to return (default: 100)."
+        default: 100
+
+  cluster_info:
+    kind: trino-sql
+    source: trino-source
+    description: "Shows information about the Trino cluster, including coordinators and workers."
+    statement: |
+      SELECT 
+        node_id,
+        http_uri,
+        node_version,
+        coordinator,
+        state,
+        JSON_OBJECT(
+          'node_id': node_id,
+          'http_uri': http_uri,
+          'node_version': node_version,
+          'coordinator': coordinator,
+          'state': state
+        ) AS node_details
+      FROM system.runtime.nodes
+      ORDER BY coordinator DESC, node_id
+
+toolsets:
+  trino-database-tools:
+    - execute_sql
+    - list_tables
+    - list_catalogs
+    - list_schemas
+    - describe_table
+    - sample_data
+    - query_with_limit
+    - cluster_info
