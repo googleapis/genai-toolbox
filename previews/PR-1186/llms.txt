@@ -9,7 +9,7 @@
 How to get started with Toolbox.
 - [Introduction](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/introduction/): An introduction to MCP Toolbox for Databases.
 - [Python Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/local_quickstart/): How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
-- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
+- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 - [Go Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/local_quickstart_go/): How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
 - [Quickstart (MCP)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/mcp_quickstart/): How to get started running Toolbox locally with MCP Inspector.
 - [Configuration](https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/configure/): How to configure Toolbox's tools.yaml file.
@@ -68,6 +68,7 @@ List of reference documentation for resources in Toolbox.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
+  - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
@@ -89,19 +90,22 @@ List of reference documentation for resources in Toolbox.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/sqlite/): Tools that work with SQLite Sources.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/tidb/): Tools that work with TiDB Sources, such as TiDB Cloud and self-hosted TiDB.
+  - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/valkey/): Tools that work with Valkey Sources.
 
 ### Samples
 
 Samples and guides for using Toolbox.
+- [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/): How to get started with Toolbox using AlloyDB.
+  - [Quickstart (MCP with AlloyDB)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
+  - [Getting started with alloydb-ai-nl tool](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/ai-nl/): An end to end tutorial for building an ADK agent using the AlloyDB AI NL tool.
 - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/): How to get started with Toolbox using BigQuery.
   - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.
 - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/looker/): How to get started with Toolbox using Looker.
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
-- [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
 
 ### About
 
@@ -111,3 +115,9 @@ A list of other information related to Toolbox.
 
 Client SDKs to connect to the MCP Toolbox server.
 - [Go SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1186/sdks/go-sdk/): Go lang client SDK- [JS SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1186/sdks/js-sdk/): Javascript client SDK- [Python SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1186/sdks/python-sdk/): Python client SDK
+### Reference
+
+This section contains reference documentation.
+- [CLI](https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/cli/): This page describes the `toolbox` command-line options.
+- [Prebuilt Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
+

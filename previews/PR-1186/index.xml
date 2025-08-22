@@ -446,7 +446,118 @@ inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
 &lt;/svg>
 
- &lt;/span>Note&lt;/p></description></item><item><title>Cloud SQL for MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/cloud-sql-mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/cloud-sql-mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+ &lt;/span>Note&lt;/p></description></item><item><title>CLI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/cli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/cli/</guid><description>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Flag (Short)&lt;/th>
+ &lt;th>Flag (Long)&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;th>Default&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>-a&lt;/code>&lt;/td>
+ &lt;td>&lt;code>--address&lt;/code>&lt;/td>
+ &lt;td>Address of the interface the server will listen on.&lt;/td>
+ &lt;td>&lt;code>127.0.0.1&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--disable-reload&lt;/code>&lt;/td>
+ &lt;td>Disables dynamic reloading of tools file.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>-h&lt;/code>&lt;/td>
+ &lt;td>&lt;code>--help&lt;/code>&lt;/td>
+ &lt;td>help for toolbox&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--log-level&lt;/code>&lt;/td>
+ &lt;td>Specify the minimum level logged. Allowed: &amp;lsquo;DEBUG&amp;rsquo;, &amp;lsquo;INFO&amp;rsquo;, &amp;lsquo;WARN&amp;rsquo;, &amp;lsquo;ERROR&amp;rsquo;.&lt;/td>
+ &lt;td>&lt;code>info&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--logging-format&lt;/code>&lt;/td>
+ &lt;td>Specify logging format to use. Allowed: &amp;lsquo;standard&amp;rsquo; or &amp;lsquo;JSON&amp;rsquo;.&lt;/td>
+ &lt;td>&lt;code>standard&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>-p&lt;/code>&lt;/td>
+ &lt;td>&lt;code>--port&lt;/code>&lt;/td>
+ &lt;td>Port the server will listen on.&lt;/td>
+ &lt;td>&lt;code>5000&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--prebuilt&lt;/code>&lt;/td>
+ &lt;td>Use a prebuilt tool configuration by source type. Cannot be used with &amp;ndash;tools-file. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--stdio&lt;/code>&lt;/td>
+ &lt;td>Listens via MCP STDIO instead of acting as a remote HTTP server.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--telemetry-gcp&lt;/code>&lt;/td>
+ &lt;td>Enable exporting directly to Google Cloud Monitoring.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--telemetry-otlp&lt;/code>&lt;/td>
+ &lt;td>Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. &amp;lsquo;http://127.0.0.1:4318&amp;rsquo;)&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--telemetry-service-name&lt;/code>&lt;/td>
+ &lt;td>Sets the value of the service.name resource attribute for telemetry data.&lt;/td>
+ &lt;td>&lt;code>toolbox&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--tools-file&lt;/code>&lt;/td>
+ &lt;td>File path specifying the tool configuration. Cannot be used with &amp;ndash;prebuilt, &amp;ndash;tools-files, or &amp;ndash;tools-folder.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--tools-files&lt;/code>&lt;/td>
+ &lt;td>Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with &amp;ndash;prebuilt, &amp;ndash;tools-file, or &amp;ndash;tools-folder.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--tools-folder&lt;/code>&lt;/td>
+ &lt;td>Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with &amp;ndash;prebuilt, &amp;ndash;tools-file, or &amp;ndash;tools-files.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--ui&lt;/code>&lt;/td>
+ &lt;td>Launches the Toolbox UI web server.&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>-v&lt;/code>&lt;/td>
+ &lt;td>&lt;code>--version&lt;/code>&lt;/td>
+ &lt;td>version for toolbox&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="examples">Examples&lt;/h2>
+&lt;h3 id="transport-configuration">Transport Configuration&lt;/h3>
+&lt;p>&lt;strong>Server Settings:&lt;/strong>&lt;/p></description></item><item><title>Cloud SQL for MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/cloud-sql-mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/cloud-sql-mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/mysql">Cloud SQL for MySQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your MySQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -534,108 +645,133 @@ Run SQL++ statements on Couchbase with parameterized input.&lt;/li>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-couchbase-instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">couchbase&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">connectionString&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">couchbase://localhost:8091&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">connectionString&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">couchbase://localhost&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bucket&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">travel-sample&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">scope&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">inventory&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">username&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Administrator&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">password&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;couchbase&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>connectionString&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Connection string for the Couchbase cluster.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>bucket&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the bucket to connect to.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>scope&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the scope within the bucket.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>username&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Username for authentication.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>password&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Password for authentication.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>clientCert&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Path to client certificate file for TLS authentication.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>clientCertPassword&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Password for the client certificate.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>clientKey&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Path to client key file for TLS authentication.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>clientKeyPassword&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Password for the client key.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>caCert&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Path to CA certificate file.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>noSslVerify&lt;/td>
- &lt;td style="text-align: center">boolean&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>If true, skip server certificate verification. &lt;strong>Warning:&lt;/strong> This option should only be used in development or testing environments. Disabling SSL verification poses significant security risks in production as it makes your connection vulnerable to man-in-the-middle attacks.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>profile&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Name of the connection profile to apply.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>queryScanConsistency&lt;/td>
- &lt;td style="text-align: center">integer&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Query scan consistency. Controls the consistency guarantee for index scanning. Values: 1 for &amp;ldquo;not_bounded&amp;rdquo; (fastest option, but results may not include the most recent operations), 2 for &amp;ldquo;request_plus&amp;rdquo; (highest consistency level, includes all operations up until the query started, but incurs a performance penalty). If not specified, defaults to the Couchbase Go SDK default.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>couchbase-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/couchbase/couchbase-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/couchbase/couchbase-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice note" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+ &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+&lt;/svg>
+
+ &lt;/span>Note&lt;/p></description></item><item><title>couchbase-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/couchbase/couchbase-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/couchbase/couchbase-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>couchbase-sql&lt;/code> tool executes a pre-defined SQL statement against a Couchbase
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -1040,7 +1176,47 @@ with filters, ordering, and limit capabilities.&lt;/p>
 &lt;/table>
 &lt;h3 id="filter-format">Filter Format&lt;/h3>
 &lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following
-structure:&lt;/p></description></item><item><title>firestore-validate-rules</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/firestore/firestore-validate-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/firestore/firestore-validate-rules/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+structure:&lt;/p></description></item><item><title>firestore-update-document</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/firestore/firestore-update-document/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/firestore/firestore-update-document/</guid><description>&lt;h2 id="description">Description&lt;/h2>
+&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. When using an update mask, fields referenced in the mask but not present in the document data will be deleted from the document, following Firestore&amp;rsquo;s native behavior.&lt;/p>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Parameter&lt;/th>
+ &lt;th>Type&lt;/th>
+ &lt;th>Required&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>documentPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>Yes&lt;/td>
+ &lt;td>The path of the document which needs to be updated&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>documentData&lt;/code>&lt;/td>
+ &lt;td>map&lt;/td>
+ &lt;td>Yes&lt;/td>
+ &lt;td>The data to update in the document. Must use &lt;a href="https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value">Firestore&amp;rsquo;s native JSON format&lt;/a> with typed values&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>updateMask&lt;/code>&lt;/td>
+ &lt;td>array&lt;/td>
+ &lt;td>No&lt;/td>
+ &lt;td>The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>returnData&lt;/code>&lt;/td>
+ &lt;td>boolean&lt;/td>
+ &lt;td>No&lt;/td>
+ &lt;td>If set to true, the output will include the data of the updated document. Defaults to false to help avoid overloading the context&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="output">Output&lt;/h2>
+&lt;p>The tool returns a map containing:&lt;/p></description></item><item><title>firestore-validate-rules</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/firestore/firestore-validate-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/firestore/firestore-validate-rules/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
 &lt;p>The &lt;code>firestore-validate-rules&lt;/code> tool validates Firestore security rules syntax
 and semantic correctness without deploying them. It provides detailed error
 reporting with source positions and code snippets.&lt;/p>
@@ -3185,7 +3361,392 @@ Connect your IDE to PostgreSQL using Toolbox.&lt;/li>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source only uses standard authentication. You will need to &lt;a href="https://www.postgresql.org/docs/current/sql-createuser.html">create a
-PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Quickstart (Local with BigQuery)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
+PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Prebuilt Tools</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/reference/prebuilt-tools/</guid><description>&lt;p>Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.&lt;/p>
+&lt;p>See guides, &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/">Connect from your IDE&lt;/a>, for details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.&lt;/p>
+&lt;h2 id="alloydb-postgres">AlloyDB Postgres&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_REGION&lt;/code>: The region of your AlloyDB instance.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_CLUSTER&lt;/code>: The ID of your AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_INSTANCE&lt;/code>: The ID of your AlloyDB instance.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>AlloyDB Client&lt;/strong> (&lt;code>roles/alloydb.client&lt;/code>) to connect to the instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="alloydb-postgres-admin">AlloyDB Postgres Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>API_KEY&lt;/code>: Your API key for the AlloyDB API.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) IAM role is required on the project.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>alloydb-create-cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>alloydb-operations-get&lt;/code>: Polls the operations API to track the status of long-running operations.&lt;/li>
+&lt;li>&lt;code>alloydb-create-instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
+&lt;li>&lt;code>alloydb-list-clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
+&lt;li>&lt;code>alloydb-list-instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>alloydb-list-users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>alloydb-create-user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="bigquery">BigQuery&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>bigquery&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>BigQuery User&lt;/strong> (&lt;code>roles/bigquery.user&lt;/code>) to execute queries and view metadata.&lt;/li>
+&lt;li>&lt;strong>BigQuery Metadata Viewer&lt;/strong> (&lt;code>roles/bigquery.metadataViewer&lt;/code>) to view all datasets.&lt;/li>
+&lt;li>&lt;strong>BigQuery Data Editor&lt;/strong> (&lt;code>roles/bigquery.dataEditor&lt;/code>) to create or modify datasets and tables.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL statement.&lt;/li>
+&lt;li>&lt;code>get_dataset_info&lt;/code>: Gets dataset metadata.&lt;/li>
+&lt;li>&lt;code>get_table_info&lt;/code>: Gets table metadata.&lt;/li>
+&lt;li>&lt;code>list_dataset_ids&lt;/code>: Lists datasets.&lt;/li>
+&lt;li>&lt;code>list_table_ids&lt;/code>: Lists tables.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-mysql">Cloud SQL for MySQL&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-postgresql">Cloud SQL for PostgreSQL&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-sql-server">Cloud SQL for SQL Server&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_ADDRESS&lt;/code>: The IP address of the Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="dataplex">Dataplex&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>dataplex&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>DATAPLEX_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Dataplex Reader&lt;/strong> (&lt;code>roles/dataplex.viewer&lt;/code>) to search and look up entries.&lt;/li>
+&lt;li>&lt;strong>Dataplex Editor&lt;/strong> (&lt;code>roles/dataplex.editor&lt;/code>) to modify entries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>dataplex_search_entries&lt;/code>: Searches for entries in Dataplex Catalog.&lt;/li>
+&lt;li>&lt;code>dataplex_lookup_entry&lt;/code>: Retrieves a specific entry from Dataplex Catalog.&lt;/li>
+&lt;li>&lt;code>dataplex_search_aspect_types&lt;/code>: Finds aspect types relevant to the query.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="firestore">Firestore&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>firestore&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>FIRESTORE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: The Firestore database ID.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud Datastore User&lt;/strong> (&lt;code>roles/datastore.user&lt;/code>) to get documents, list collections, and query collections.&lt;/li>
+&lt;li>&lt;strong>Firebase Rules Viewer&lt;/strong> (&lt;code>roles/firebaserules.viewer&lt;/code>) to get and validate Firestore rules.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>firestore-get-documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
+&lt;li>&lt;code>firestore-list-collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
+&lt;li>&lt;code>firestore-delete-documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
+&lt;li>&lt;code>firestore-query-collection&lt;/code>: Retrieves one or more Firestore documents from a collection.&lt;/li>
+&lt;li>&lt;code>firestore-get-rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
+&lt;li>&lt;code>firestore-validate-rules&lt;/code>: Checks the provided Firestore Rules source for syntax and validation errors.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="looker">Looker&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>looker&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>
+&lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
+&lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
+&lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>A Looker account with permissions to access the desired models, explores, and data is required.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>get_models&lt;/code>: Retrieves the list of LookML models.&lt;/li>
+&lt;li>&lt;code>get_explores&lt;/code>: Retrieves the list of explores in a model.&lt;/li>
+&lt;li>&lt;code>get_dimensions&lt;/code>: Retrieves the list of dimensions in an explore.&lt;/li>
+&lt;li>&lt;code>get_measures&lt;/code>: Retrieves the list of measures in an explore.&lt;/li>
+&lt;li>&lt;code>get_filters&lt;/code>: Retrieves the list of filters in an explore.&lt;/li>
+&lt;li>&lt;code>get_parameters&lt;/code>: Retrieves the list of parameters in an explore.&lt;/li>
+&lt;li>&lt;code>query&lt;/code>: Runs a query against the LookML model.&lt;/li>
+&lt;li>&lt;code>query_sql&lt;/code>: Generates the SQL for a query.&lt;/li>
+&lt;li>&lt;code>query_url&lt;/code>: Generates a URL for a query in Looker.&lt;/li>
+&lt;li>&lt;code>get_looks&lt;/code>: Searches for saved looks.&lt;/li>
+&lt;li>&lt;code>run_look&lt;/code>: Runs the query associated with a look.&lt;/li>
+&lt;li>&lt;code>make_look&lt;/code>: Creates a new look.&lt;/li>
+&lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
+&lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
+&lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="microsoft-sql-server">Microsoft SQL Server&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>mssql&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>MSSQL_HOST&lt;/code>: The hostname or IP address of the SQL Server instance.&lt;/li>
+&lt;li>&lt;code>MSSQL_PORT&lt;/code>: The port number for the SQL Server instance.&lt;/li>
+&lt;li>&lt;code>MSSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>MSSQL_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="mysql">MySQL&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>mysql&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>MYSQL_HOST&lt;/code>: The hostname or IP address of the MySQL server.&lt;/li>
+&lt;li>&lt;code>MYSQL_PORT&lt;/code>: The port number for the MySQL server.&lt;/li>
+&lt;li>&lt;code>MYSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>MYSQL_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>MYSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="oceanbase">OceanBase&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>oceanbase&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>OCEANBASE_HOST&lt;/code>: The hostname or IP address of the OceanBase server.&lt;/li>
+&lt;li>&lt;code>OCEANBASE_PORT&lt;/code>: The port number for the OceanBase server.&lt;/li>
+&lt;li>&lt;code>OCEANBASE_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>OCEANBASE_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>OCEANBASE_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="postgresql">PostgreSQL&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>postgres&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>POSTGRES_HOST&lt;/code>: The hostname or IP address of the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>POSTGRES_PORT&lt;/code>: The port number for the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
+&lt;li>&lt;code>POSTGRES_USER&lt;/code>: The database username.&lt;/li>
+&lt;li>&lt;code>POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="spanner-googlesql-dialect">Spanner (GoogleSQL dialect)&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>SPANNER_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>SPANNER_INSTANCE&lt;/code>: The Spanner instance ID.&lt;/li>
+&lt;li>&lt;code>SPANNER_DATABASE&lt;/code>: The Spanner database ID.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to execute DQL queries and list tables.&lt;/li>
+&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to execute DML queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query.&lt;/li>
+&lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="spanner-postgresql-dialect">Spanner (PostgreSQL dialect)&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner-postgres&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>SPANNER_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>SPANNER_INSTANCE&lt;/code>: The Spanner instance ID.&lt;/li>
+&lt;li>&lt;code>SPANNER_DATABASE&lt;/code>: The Spanner database ID.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to execute DQL queries and list tables.&lt;/li>
+&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to execute DML queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface for Spanner.&lt;/li>
+&lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL interface for Spanner.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul></description></item><item><title>Quickstart (Local with BigQuery)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/bigquery/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
 Colab">&lt;/a>&lt;/p>
 &lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
@@ -3208,7 +3769,21 @@ actual project ID):&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">gcloud config &lt;span class="nb">set&lt;/span> project YOUR_PROJECT_ID
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">export&lt;/span> &lt;span class="nv">GOOGLE_CLOUD_PROJECT&lt;/span>&lt;span class="o">=&lt;/span>YOUR_PROJECT_ID
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox and the client libraries will use this project for BigQuery, unless
-overridden in configurations.&lt;/p></description></item><item><title>redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/redis/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/redis/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
+overridden in configurations.&lt;/p></description></item><item><title>Quickstart (MCP with AlloyDB)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/mcp_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/mcp_quickstart/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol
+that standardizes how applications provide context to LLMs. Check out this page
+on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect_via_mcp/">connect to Toolbox via MCP&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>This guide assumes you have already done the following:&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and instance&lt;/a> with a database and user.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB Studio&lt;/a>, &lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any other PostgreSQL client.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/redis/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/redis/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A redis tool executes a series of pre-defined Redis commands against a
 Redis source.&lt;/p>
 &lt;p>The specified Redis commands are executed sequentially. Each command is
@@ -3440,7 +4015,79 @@ names, or other parts of the query.&lt;/p></description></item><item><title>Tool
 &lt;p>To launch Toolbox&amp;rsquo;s interactive UI, use the &lt;code>--ui&lt;/code> flag.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sh" data-lang="sh">&lt;span class="line">&lt;span class="cl">./toolbox --ui
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server, with the &lt;code>/ui&lt;/code> suffix. Once Toolbox
-is launched, the following INFO log with Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
+is launched, the following INFO log with Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>Trino</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/trino/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/trino/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://trino.io/docs/">Trino&lt;/a> is a distributed SQL query engine designed for fast analytic queries against data of any size. It allows you to query data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/trino-sql/">&lt;code>trino-sql&lt;/code>&lt;/a>&lt;br>
+Execute parameterized SQL queries against Trino.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/trino-execute-sql/">&lt;code>trino-execute-sql&lt;/code>&lt;/a>&lt;br>
+Execute arbitrary SQL queries against Trino.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="trino-cluster">Trino Cluster&lt;/h3>
+&lt;p>You need access to a running Trino cluster with appropriate user permissions for the catalogs and schemas you want to query.&lt;/p></description></item><item><title>trino-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/trino-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/trino-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>trino-execute-sql&lt;/code> tool executes a SQL statement against a Trino
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/trino/">trino&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>trino-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">trino-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-trino-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;trino-execute-sql&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>trino-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/trino-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/trino/trino-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>trino-sql&lt;/code> tool executes a pre-defined SQL statement against a Trino
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/sources/trino/">trino&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://trino.io/docs/current/sql/prepare.html">prepared statement&lt;/a>,
+and specified parameters will be inserted according to their position: e.g. &lt;code>$1&lt;/code>
+will be the first parameter specified, &lt;code>$2&lt;/code> will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A valkey tool executes a series of pre-defined Valkey commands against a
 Valkey instance.&lt;/p>
 &lt;p>The specified Valkey commands are executed sequentially. Each command is
@@ -3667,6 +4314,7 @@ an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
 to expose your developer assistant tools to a Looker instance:&lt;/p>
 &lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Gemini-CLI&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Visual Studio Code&lt;/a> (Copilot)&lt;/li>
@@ -3863,6 +4511,8 @@ your preferred virtual environment tool for managing dependencies e.g. [venv][in
 
 
  
+
+ 
  
  
 
@@ -3997,15 +4647,6 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-118
 your Looker instance. Refer to the documentation
 &lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">here&lt;/a>.
 You may need to ask an administrator to get the Client ID and Client Secret
-for you.&lt;/p></description></item><item><title>Quickstart (MCP with Looker)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/looker/looker_mcp_inspector/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/looker/looker_mcp_inspector/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
-&lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol
-that standardizes how applications provide context to LLMs. Check out this page
-on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect_via_mcp/">connect to Toolbox via MCP&lt;/a>.&lt;/p>
-&lt;h2 id="step-1-get-a-looker-client-id-and-client-secret">Step 1: Get a Looker Client ID and Client Secret&lt;/h2>
-&lt;p>The Looker Client ID and Client Secret can be obtained from the Users page of
-your Looker instance. Refer to the documentation
-&lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">here&lt;/a>.
-You may need to ask an administrator to get the Client ID and Client Secret
 for you.&lt;/p></description></item><item><title>Spanner using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/spanner_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/how-to/connect-ide/spanner_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>
@@ -4095,6 +4736,8 @@ roles):&lt;/p>
 
 
 
+
+ 
 
  
  
@@ -4330,6 +4973,8 @@ section.&lt;/p>
 
 
 
+
+ 
 
  
  
@@ -4610,7 +5255,23 @@ exponential backoff.&lt;/p>
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/cloud_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/cloud_setup/</guid><description>&lt;!-- [START cloud_setup] -->
+ &lt;/span>Info&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
+ 
+ 
+ &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
+Colab">&lt;/a>&lt;/p>
+&lt;h1 id="objective">Objective&lt;/h1>
+&lt;p>In this notebook, we will be using the &lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/alloydb-ai-nl/">AlloyDB AI NL
+tool&lt;/a>
+to generate and execute SQL queries on AlloyDB databases. We will start by
+setting up an AlloyDB database and then connecting to it using &lt;a href="https://github.com/googleapis/genai-toolbox">MCP
+Toolbox&lt;/a> and &lt;a href="https://google.github.io/adk-docs/">ADK&lt;/a>. This allows us to leverage AlloyDB
+NL to SQL capabilities in agentic applications.&lt;/p>
+&lt;p>For detailed information on the AlloyDB capability, please see &lt;a href="https://cloud.google.com/alloydb/docs/ai/natural-language-overview">AlloyDB AI
+Natural Language Overview&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
+&lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/cloud_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/cloud_setup/</guid><description>&lt;!-- This file has been used in local_quickstart.md, local_quickstart_go.md &amp; local_quickstart_js.md -->
+&lt;!-- [START cloud_setup] -->
 &lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using
 &lt;code>vertexai=True&lt;/code> or a Google GenAI model), follow these one-time setup steps for
 local development:&lt;/p>
@@ -4627,7 +5288,8 @@ local development:&lt;/p>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">gcloud services &lt;span class="nb">enable&lt;/span> aiplatform.googleapis.com
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;/ol>
-&lt;!-- [END cloud_setup] --></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/configure_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/configure_toolbox/</guid><description>&lt;!-- [START configure_toolbox] -->
+&lt;!-- [END cloud_setup] --></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/configure_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/configure_toolbox/</guid><description>&lt;!-- This file has been used in local_quickstart.md, local_quickstart_go.md &amp; local_quickstart_js.md -->
+&lt;!-- [START configure_toolbox] -->
 &lt;p>In this section, we will download Toolbox, configure our tools in a
 &lt;code>tools.yaml&lt;/code>, and then run the Toolbox server.&lt;/p>
 &lt;ol>
@@ -4754,7 +5416,8 @@ local development:&lt;/p>
  &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Tip&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/database_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/database_setup/</guid><description>&lt;!-- [START database_setup] -->
+ &lt;/span>Tip&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/database_setup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1186/getting-started/quickstart/shared/database_setup/</guid><description>&lt;!-- This file has been used in local_quickstart.md, local_quickstart_go.md &amp; local_quickstart_js.md -->
+&lt;!-- [START database_setup] -->
 &lt;p>In this section, we will create a database, insert some data that needs to be
 accessed by our agent, and create a database user for Toolbox to connect with.&lt;/p>
 &lt;ol>
