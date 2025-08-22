@@ -63,6 +63,10 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
+func (t MockTool) RequiresClientAuthorization() bool {
+	return false
+}
+
 func (t MockTool) McpManifest() tools.McpManifest {
 	properties := make(map[string]tools.ParameterMcpManifest)
 	required := make([]string, 0)

@@ -184,6 +184,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}
+
 // checkAPOCProcedures verifies if essential APOC procedures are available in the database.
 // It returns true only if all required procedures are found.
 func (t Tool) checkAPOCProcedures(ctx context.Context) (bool, error) {
