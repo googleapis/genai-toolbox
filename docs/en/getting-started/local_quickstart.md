@@ -18,11 +18,10 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
-<!-- [START cloud_setup] -->
-### Cloud Setup (Optional)
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
