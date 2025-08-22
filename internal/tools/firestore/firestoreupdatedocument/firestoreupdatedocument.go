@@ -87,7 +87,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create parameters
 	documentPathParameter := tools.NewStringParameter(
 		documentPathKey,
-		"The path of the document which needs to be updated",
+		"The relative path of the document which needs to be updated (e.g., 'users/userId' or 'users/userId/posts/postId'). Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'",
 	)
 
 	documentDataParameter := tools.NewMapParameter(
@@ -167,6 +167,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	documentPath, ok := mapParams[documentPathKey].(string)
 	if !ok || documentPath == "" {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", documentPathKey)
+	}
+
+	// Validate document path
+	if err := util.ValidateDocumentPath(documentPath); err != nil {
+		return nil, fmt.Errorf("invalid document path: %w", err)
 	}
 
 	// Get document data
