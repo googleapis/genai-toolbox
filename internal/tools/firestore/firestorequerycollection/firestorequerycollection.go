@@ -267,7 +267,7 @@ type QueryResponse struct {
 }
 
 // Invoke executes the Firestore query based on the provided parameters
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Parse parameters
 	queryParams, err := t.parseQueryParameters(params)
 	if err != nil {

@@ -143,7 +143,7 @@ type Tool struct {
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Check if a valid schema is already in the cache.
 	if cachedSchema, ok := t.cache.Get("schema"); ok {
 		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {

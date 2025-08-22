@@ -26,16 +26,27 @@ import (
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
 	switch method {
+	case PING:
+		return pingHandler(id)
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
-		return toolsCallHandler(ctx, id, tools, body)
+		return toolsCallHandler(ctx, id, tools, body, accessToken)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
+}
+
+// pingHandler handles the "ping" method by returning an empty response.
+func pingHandler(id jsonrpc.RequestId) (any, error) {
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  struct{}{},
+	}, nil
 }
 
 func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) (any, error) {
@@ -56,7 +67,7 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[string]tools.Tool, body []byte) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -108,7 +119,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	}
 
 	// run tool invocation and generate response.
-	results, err := tool.Invoke(ctx, params)
+	results, err := tool.Invoke(ctx, params, accessToken)
 	if err != nil {
 		text := TextContent{
 			Type: "text",

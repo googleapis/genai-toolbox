@@ -27,6 +27,7 @@ const PROTOCOL_VERSION = "2025-06-18"
 
 // methods that are supported.
 const (
+	PING       = "ping"
 	TOOLS_LIST = "tools/list"
 	TOOLS_CALL = "tools/call"
 )

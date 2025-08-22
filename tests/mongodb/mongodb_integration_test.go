@@ -124,6 +124,8 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	aggregateManyWant := `[{"id":500},{"id":501}]`
 	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
 
+	mcpInvokeParamWantFindOne := `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	tests.RunMCPToolCallMethod(t, mcpInvokeParamWantFindOne, failInvocationWant)
 }
 
 func RunToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
@@ -481,13 +483,14 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":          "mongodb-find-one",
-				"source":        "my-instance",
-				"description":   "Simple tool to test end to end functionality.",
-				"collection":    "test_collection",
-				"filterPayload": `{ "_id" : 3 }`,
-				"filterParams":  []any{},
-				"database":      MongoDbDatabase,
+				"kind":           "mongodb-find-one",
+				"source":         "my-instance",
+				"description":    "Simple tool to test end to end functionality.",
+				"collection":     "test_collection",
+				"filterPayload":  `{ "_id" : 3 }`,
+				"filterParams":   []any{},
+				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
+				"database":       MongoDbDatabase,
 			},
 			"my-tool": map[string]any{
 				"kind":          toolKind,
