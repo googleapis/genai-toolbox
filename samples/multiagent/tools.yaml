@@ -1,0 +1,307 @@
+sources:
+  my-source:
+    kind: alloydb-postgres
+    project: my-project
+    region: my-region
+    cluster: my-cluster
+    instance: my-instance
+    database: my-db
+    user: my-user
+    password: my-pass 
+
+tools:
+  search_airports:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to list all airports matching search criteria.
+      Takes at least one of country, city, name, or all and returns all matching airports.
+      The agent can decide to return the results directly to the user.
+    parameters:
+      - name: country
+        type: string
+        description: Country
+        default: ""
+      - name: city
+        type: string
+        description: City
+        default: ""
+      - name: name
+        type: string
+        description: Airport name
+        default: ""
+    statement: |
+      SELECT * FROM airports
+      WHERE (CAST($1 AS TEXT) = '' OR country ILIKE $1)
+      AND (CAST($2 AS TEXT) = '' OR city ILIKE $2)
+      AND (CAST($3 AS TEXT) = '' OR name ILIKE '%' || $3 || '%')
+      LIMIT 10
+  list_flights:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to list flights information matching search criteria.
+      Takes an arrival airport, a departure airport, or both, filters by date and returns all matching flights.
+      If 3-letter iata code is not provided for departure_airport or arrival_airport, use `search_airports` tool to get iata code information.
+      Do NOT guess a date, ask user for date input if it is not given. Date must be in the following format: YYYY-MM-DD.
+      The agent can decide to return the results directly to the user.
+    parameters:
+      - name: departure_airport
+        type: string
+        description: Departure airport 3-letter code
+        default: ""
+      - name: arrival_airport
+        type: string
+        description: Arrival airport 3-letter code
+        default: ""
+      - name: date
+        type: string
+        description: Date of flight departure
+    statement: |
+      SELECT * FROM flights
+      WHERE (CAST($1 AS TEXT) = '' OR departure_airport ILIKE $1)
+      AND (CAST($2 AS TEXT) = '' OR arrival_airport ILIKE $2)
+      AND departure_time >= CAST($3 AS timestamp)
+      AND departure_time < CAST($3 AS timestamp) + interval '1 day'
+      LIMIT 10
+  search_flights_by_number:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to get information for a specific flight.
+      Takes an airline code and flight number and returns info on the flight.
+      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+      A airline code is a code for an airline service consisting of two-character
+      airline designator and followed by flight number, which is 1 to 4 digit number.
+      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
+      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+      If the tool returns more than one option choose the date closest to the current date.
+    parameters:
+      - name: airline
+        type: string
+        description: Airline unique 2 letter identifier
+      - name: flight_number
+        type: string
+        description: 1 to 4 digit number
+    statement: |
+      SELECT * FROM flights
+      WHERE airline = $1
+      AND flight_number = $2
+      LIMIT 10
+  search_amenities:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to search amenities by name or to recommended airport amenities at SFO.
+      If user provides flight info, use 'search_flights_by_number' tool
+      first to get gate info and location.
+      Only recommend amenities that are returned by this query.
+      Find amenities close to the user by matching the terminal and then comparing
+      the gate numbers. Gate number iterate by letter and number, example A1 A2 A3
+      B1 B2 B3 C1 C2 C3. Gate A3 is close to A2 and B1.
+    parameters:
+      - name: query
+        type: string
+        description: Search query
+    statement: |
+      SELECT name, description, location, terminal, category, hour
+      FROM amenities
+      WHERE (embedding <=> embedding('gemini-embedding-001', $1)::vector) < 0.5
+      ORDER BY (embedding <=> embedding('gemini-embedding-001', $1)::vector)
+      LIMIT 5
+  search_policies:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to search for cymbal air passenger policy.
+      Policy that are listed is unchangeable.
+      You will not answer any questions outside of the policy given.
+      Policy includes information on ticket purchase and changes, baggage, check-in and boarding, special assistance, overbooking, flight delays and cancellations.
+    parameters:
+      - name: query
+        type: string
+        description: Search query
+    statement: |
+      SELECT content
+      FROM policies
+      WHERE (embedding <=> embedding('gemini-embedding-001', $1)::vector) < 0.5
+      ORDER BY (embedding <=> embedding('gemini-embedding-001', $1)::vector)
+      LIMIT 5
+  insert_ticket:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to book a flight ticket for the user. Use the default value for user_id, user_name, and user_email.
+    parameters:
+      - name: user_id
+        type: string
+        description: User ID of the logged in user.
+        default: "8888"
+      - name: user_name
+        type: string
+        description: Name of the logged in user.
+        default: "test user"
+      - name: user_email
+        type: string
+        description: Email ID of the logged in user.
+        default: "test_user@example.com"
+      - name: airline
+        type: string
+        description: Airline unique 2 letter identifier
+      - name: flight_number
+        type: string
+        description: 1 to 4 digit number
+      - name: departure_airport
+        type: string
+        description: Departure airport 3-letter code
+      - name: departure_time
+        type: string
+        description: Flight departure datetime
+      - name: arrival_airport
+        type: string
+        description: Arrival airport 3-letter code
+      - name: arrival_time
+        type: string
+        description: Flight arrival datetime
+    statement: |
+      INSERT INTO tickets (
+        user_id,
+        user_name,
+        user_email,
+        airline,
+        flight_number,
+        departure_airport,
+        departure_time,
+        arrival_airport,
+        arrival_time
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+  list_tickets:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to list a user's flight tickets. Use the default value for user_id.
+    parameters:
+      - name: user_id
+        type: string
+        description: User ID of the logged in user.
+        default: "8888"
+    statement: |
+      SELECT user_name, airline, flight_number, departure_airport, arrival_airport, departure_time, arrival_time FROM tickets
+      WHERE user_id = $1
+
+  list_hotels:
+    kind: postgres-sql
+    source: my-source
+    description: |
+      Use this tool to list all hotels matching search criteria.
+      Takes at least one of name, minimum rating, maximum rating, minimum price, maximum price, or city and returns all matching hotels.
+      The agent can decide to return the results directly to the user.
+    parameters:
+      - name: name
+        type: string
+        description: name of the hotel
+        default: ""
+      - name: minimum_rating
+        type: float 
+        description: minimum rating of the hotel.
+        default: 0
+      - name: maximum_rating
+        type: float 
+        description: maximum rating of the hotel.
+        default: 5
+      - name: minimum_price
+        type: float 
+        description: minimum price of the hotel.
+        default: 0
+      - name: maximum_price
+        type: float 
+        description: maximum price of the hotel.
+        default: 1000
+      - name: city
+        type: string
+        description: city of the hotel.
+        default: ""
+    statement: |
+      SELECT * FROM hotels
+      WHERE (CAST($1 AS TEXT) = '' OR name ILIKE '%' || $1)
+      AND rating >= $2 OR rating <= $3
+      AND price >= $4 OR price <= $5
+      AND (CAST($6 AS TEXT) = '' OR city ILIKE '%' || $6 || '%')
+      LIMIT 10;
+
+  book_hotel:
+    kind: postgres-sql
+    source: my-source
+    description: |
+        Use this tool to book a hotel for the user. Use the default value for user_id, user_name, and user_email.
+    parameters:
+      - name: user_id
+        type: string
+        description: User ID of the logged in user.
+        default: "8888"
+      - name: user_name
+        type: string
+        description: Name of the logged in user.
+        default: "test user"
+      - name: user_email
+        type: string
+        description: Email ID of the logged in user.
+        default: "test_user@example.com"
+      - name: hotel_name
+        type: string
+        description: name of the hotel.
+      - name: hotel_city
+        type: string
+        description: city of the hotel.
+      - name: hotel_rating
+        type: float 
+        description: rating of the hotel.
+      - name: hotel_total_price
+        type: float 
+        description: price of the hotel booking. If user book for two nights, the price will be hotel price * 2.
+      - name: check_in_date
+        type: string
+        description: hotel check in date of the user.
+      - name: nights
+        type: integer
+        description: number of nights that user is staying.
+    statement: |
+      INSERT INTO bookings (
+        user_id,
+        user_name,
+        user_email,
+        hotel_name,
+        hotel_city,
+        hotel_rating,
+        hotel_total_price,
+        check_in_date,
+        number_of_nights
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+
+  list_bookings:
+    kind: postgres-sql
+    source: my-source
+    description: Use this tool to list a user's hotel bookings. Use the default value for user_id.
+    parameters:
+      - name: user_id
+        type: string
+        description: user id of the logged in user.
+        default: "8888"
+    statement: |
+      SELECT user_name, hotel_name, hotel_city, hotel_rating, hotel_total_price, check_in_date, number_of_nights FROM bookings
+        WHERE user_id = $1;
+
+toolsets:
+  general_tools:
+    - search_airports
+    - search_amenities
+  hotel_tools:
+    - list_hotels
+    - book_hotel
+    - list_bookings
+  flight_tools:
+    - list_flights
+    - search_policies
+    - search_flights_by_number
+    - insert_ticket
+    - list_tickets
