@@ -276,6 +276,9 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}
 func BQTypeStringFromToolType(toolType string) (string, error) {
 	switch toolType {
 	case "string":

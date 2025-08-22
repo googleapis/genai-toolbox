@@ -36,7 +36,7 @@ require (
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
-	github.com/trinodb/trino-go-client v0.326.0
+	github.com/trinodb/trino-go-client v0.328.0
 	github.com/valkey-io/valkey-go v1.0.64
 	go.mongodb.org/mongo-driver v1.17.4
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
@@ -49,7 +49,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.248.0
-	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
+	google.golang.org/genproto v0.0.0-20250818200422-3122310a409c
 	modernc.org/sqlite v1.38.2
 )
 
@@ -164,7 +164,7 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250728155136-f173205681a0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250811230008-5f3141c8851a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
