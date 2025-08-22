@@ -174,9 +174,8 @@ To run Toolbox from binary:
 ./toolbox --tools-file "tools.yaml"
 ```
 
-> [!NOTE]
-> Toolbox enables dynamic reloading by default. To disable, use the
-> `--disable-reload` flag.
+ⓘ **NOTE:**  
+Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
 
 </details>
 
@@ -194,8 +193,8 @@ us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
 --tools-file "/app/tools.yaml"
 ```
 
-> [!NOTE]
-> The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps the container's port `5000` to your host's port `5000`.
+ⓘ **NOTE:**  
+The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps the container's port `5000` to your host's port `5000`.
 
 </details>
 
@@ -209,8 +208,8 @@ To run the server directly from source, navigate to the project root directory a
 go run .
 ```
 
-> [!NOTE]
-> This command runs the project from source, and is more suitable for development and testing. It does **not** compile a binary into your `$GOPATH`. If you want to compile a binary instead, refer the [Developer Documentation](./DEVELOPER.md#building-the-binary).
+ⓘ **NOTE:**  
+This command runs the project from source, and is more suitable for development and testing. It does **not** compile a binary into your `$GOPATH`. If you want to compile a binary instead, refer the [Developer Documentation](./DEVELOPER.md#building-the-binary).
 
 </details>
 
