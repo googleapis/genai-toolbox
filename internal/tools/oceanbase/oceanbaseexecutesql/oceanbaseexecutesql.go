@@ -115,7 +115,7 @@ type Tool struct {
 }
 
 // Invoke executes the SQL statement provided in the parameters.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	sliceParams := params.AsSlice()
 	sqlStr, ok := sliceParams[0].(string)
 	if !ok {
