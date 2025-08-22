@@ -115,7 +115,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	cmds, err := replaceCommandsParams(t.Commands, t.Parameters, params)
 	if err != nil {
 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)

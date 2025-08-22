@@ -242,7 +242,7 @@ func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string,
 	return allHeaders, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	// Calculate request body
