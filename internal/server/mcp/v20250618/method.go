@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -87,6 +88,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Check if this specific tool requires the standard authorization header
+	if tool.RequiresClientAuthorization() {
+		if accessToken == "" {
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), mcputil.ErrUnauthorizedRequest
+		}
 	}
 
 	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.

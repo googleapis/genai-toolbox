@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -402,9 +403,19 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract OAuth access token from the "Authorization" header (currently for
+	// BigQuery end-user credentials usage only)
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)
+
+	// if unauthorized, return 401 Unauthorized status code
+	if errors.Is(err, mcputil.ErrUnauthorizedRequest) {
+		w.WriteHeader(http.StatusUnauthorized)
+		render.JSON(w, r, res)
+		return
+	}
+
 	// notifications will return empty string
 	if res == nil {
 		// Notifications do not expect a response
@@ -495,6 +506,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			err = fmt.Errorf("toolset does not exist")
 			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
+
 		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), body, accessToken)
 		return "", res, err
 	}
