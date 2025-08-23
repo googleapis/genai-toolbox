@@ -400,14 +400,14 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		},
 		{
 			name:          "Invoke my-client-auth-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         !configs.supportClientAuth,
 		},
 		{
 			name:          "Invoke my-client-auth-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
@@ -415,7 +415,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 
 			name:          "Invoke my-client-auth-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
