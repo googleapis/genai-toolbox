@@ -102,6 +102,16 @@ func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
 	return toolset, ok
 }
 
+func (r *ResourceManager) GetToolsetNames() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	names := make([]string, 0, len(r.toolsets))
+	for name := range r.toolsets {
+		names = append(names, name)
+	}
+	return names
+}
+
 func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
