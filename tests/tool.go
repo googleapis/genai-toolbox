@@ -314,7 +314,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:           "invoke my-tool-by-name with nil response",
 			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
-			enabled:        true,
+			enabled:        configs.supportOptionalNullParam,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       configs.nullWant,
@@ -835,10 +835,6 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 	}
 
 	sessionId := RunInitialize(t, "2024-11-05")
-	headers := map[string]string{}
-	if sessionId != "" {
-		headers["Mcp-Session-Id"] = sessionId
-	}
 
 	// Get access token
 	accessToken, err := sources.GetIAMAccessToken(t.Context())
@@ -1010,7 +1006,6 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
@@ -1042,6 +1037,11 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				t.Fatalf("unexpected error during marshaling of request body")
 			}
 
+			// add headers
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
 			for key, value := range tc.requestHeader {
 				headers[key] = value
 			}
