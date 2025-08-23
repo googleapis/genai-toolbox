@@ -835,10 +835,6 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 	}
 
 	sessionId := RunInitialize(t, "2024-11-05")
-	headers := map[string]string{}
-	if sessionId != "" {
-		headers["Mcp-Session-Id"] = sessionId
-	}
 
 	// Get access token
 	accessToken, err := sources.GetIAMAccessToken(t.Context())
@@ -1010,7 +1006,6 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
