@@ -5207,10 +5207,7 @@ have multiple files, you can tell toolbox which to load with the &lt;code>--tool
 etc., you could use environment variables instead with the format &lt;code>${ENV_NAME}&lt;/code>.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="sources">Sources&lt;/h3>
-&lt;p>The &lt;code>sources&lt;/code> section of your &lt;code>tools.yaml&lt;/code> defines what data sources your
-Toolbox should have access to. Most tools will have at least one source to
-execute against.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1222/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1222/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>A default value can be specified like &lt;code>${ENV_NAME-default}&lt;/code>.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1222/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1222/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB
 Admin API operation status endpoint until the operation is finished, using
 exponential backoff.&lt;/p>
