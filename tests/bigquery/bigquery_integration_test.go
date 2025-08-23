@@ -72,7 +72,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -111,6 +111,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 
+	tableNameAnalyzeContribution := fmt.Sprintf("`%s.%s.analyze_contribution_table_%s`",
+		BigqueryProject,
+		datasetName,
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
+	)
+
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
 	teardownTable1 := setupBigQueryTable(t, ctx, client, createParamTableStmt, insertParamTableStmt, datasetName, tableNameParam, paramTestParams)
@@ -130,6 +136,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	createForecastTableStmt, insertForecastTableStmt, forecastTestParams := getBigQueryForecastToolInfo(tableNameForecast)
 	teardownTable4 := setupBigQueryTable(t, ctx, client, createForecastTableStmt, insertForecastTableStmt, datasetName, tableNameForecast, forecastTestParams)
 	defer teardownTable4(t)
+
+	// set up data for analyze contribution tool
+	createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, analyzeContributionTestParams := getBigQueryAnalyzeContributionToolInfo(tableNameAnalyzeContribution)
+	teardownTable5 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, datasetName, tableNameAnalyzeContribution, analyzeContributionTestParams)
+	defer teardownTable5(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
@@ -177,6 +188,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
 	runBigQueryForecastToolInvokeTest(t, tableNameForecast)
+	runBigQueryAnalyzeContributionToolInvokeTest(t, tableNameAnalyzeContribution)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -239,7 +251,7 @@ func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryap
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (ts TIMESTAMP, data FLOAT64, id STRING);`, tableName)
 	insertStatement := fmt.Sprintf(`
-		INSERT INTO %s (ts, data, id) VALUES 
+		INSERT INTO %s (ts, data, id) VALUES
 		(?, ?, ?), (?, ?, ?), (?, ?, ?), 
 		(?, ?, ?), (?, ?, ?), (?, ?, ?);`, tableName)
 	params := []bigqueryapi.QueryParameter{
@@ -249,6 +261,26 @@ func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryap
 		{Value: "2025-01-01T00:00:00Z"}, {Value: 20.0}, {Value: "b"},
 		{Value: "2025-01-01T01:00:00Z"}, {Value: 21.0}, {Value: "b"},
 		{Value: "2025-01-01T02:00:00Z"}, {Value: 22.0}, {Value: "b"},
+	}
+	return createStatement, insertStatement, params
+}
+
+// getBigQueryAnalyzeContributionToolInfo returns statements and params for the analyze-contribution tool.
+func getBigQueryAnalyzeContributionToolInfo(tableName string) (string, string, []bigqueryapi.QueryParameter) {
+	createStatement := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (dim1 STRING, dim2 STRING, is_test BOOL, metric FLOAT64);`, tableName)
+	insertStatement := fmt.Sprintf(`
+		INSERT INTO %s (dim1, dim2, is_test, metric) VALUES 
+		(?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?);`, tableName)
+	params := []bigqueryapi.QueryParameter{
+		{Value: "a"}, {Value: "x"}, {Value: true}, {Value: 100.0},
+		{Value: "a"}, {Value: "x"}, {Value: false}, {Value: 110.0},
+		{Value: "a"}, {Value: "y"}, {Value: true}, {Value: 120.0},
+		{Value: "a"}, {Value: "y"}, {Value: false}, {Value: 100.0},
+		{Value: "b"}, {Value: "x"}, {Value: true}, {Value: 40.0},
+		{Value: "b"}, {Value: "x"}, {Value: false}, {Value: 100.0},
+		{Value: "b"}, {Value: "y"}, {Value: true}, {Value: 60.0},
+		{Value: "b"}, {Value: "y"}, {Value: false}, {Value: 60.0},
 	}
 	return createStatement, insertStatement, params
 }
@@ -364,6 +396,19 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-forecast",
 		"source":      "my-instance",
 		"description": "Tool to forecast time series data with auth.",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-analyze-contribution-tool"] = map[string]any{
+		"kind":        "bigquery-analyze-contribution",
+		"source":      "my-instance",
+		"description": "Tool to analyze contribution.",
+	}
+	tools["my-auth-analyze-contribution-tool"] = map[string]any{
+		"kind":        "bigquery-analyze-contribution",
+		"source":      "my-instance",
+		"description": "Tool to analyze contribution with auth.",
 		"authRequired": []string{
 			"my-google-auth",
 		},
@@ -773,6 +818,97 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-forecast-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	historyDataTable := strings.ReplaceAll(tableName, "`", "")
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-analyze-contribution-tool without required params",
+			api:           "http://127.0.0.1:5000/api/tool/my-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s"}`, historyDataTable))),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-analyze-contribution-tool with table",
+			api:           "http://127.0.0.1:5000/api/tool/my-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, historyDataTable))),
+			want:          `"relative_difference"`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-analyze-contribution-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, historyDataTable))),
+			want:          `"relative_difference"`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-analyze-contribution-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, historyDataTable))),
 			isErr:         true,
 		},
 	}

@@ -4,6 +4,11 @@ sources:
     project: ${BIGQUERY_PROJECT}
 
 tools:
+  analyze_contribution:
+    kind: bigquery-analyze-contribution
+    source: bigquery-source
+    description: Use this tool to analyze the contribution about changes to key metrics in multi-dimensional data.
+
   execute_sql:
     kind: bigquery-execute-sql
     source: bigquery-source
@@ -36,6 +41,7 @@ tools:
 
 toolsets:
   bigquery-database-tools:
+    - analyze_contribution
     - execute_sql
     - forecast
     - get_dataset_info
