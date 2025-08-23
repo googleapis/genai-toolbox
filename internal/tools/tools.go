@@ -71,6 +71,7 @@ type Tool interface {
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
+	RequiresClientAuthorization() bool
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
