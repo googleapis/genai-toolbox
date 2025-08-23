@@ -208,6 +208,42 @@ tools:
       FROM system.runtime.nodes
       ORDER BY coordinator DESC, node_id
 
+  get_schema:
+    kind: trino-schema
+    source: trino-source
+    description: "Retrieves comprehensive schema information including all catalogs, schemas, tables, columns, and cluster details with caching support."
+    cacheExpireMinutes: 10
+
+  analyze_query:
+    kind: trino-analyze
+    source: trino-source
+    description: "Analyzes SQL queries to get execution plans, performance insights, and optimization recommendations."
+
+  table_statistics:
+    kind: trino-table-statistics
+    source: trino-source
+    description: "Gets detailed statistics and metadata for a specific table including row counts, column statistics, partition information, and storage details."
+
+  list_catalogs_tool:
+    kind: trino-list-catalogs
+    source: trino-source
+    description: "Lists all available catalogs in the Trino cluster with schema counts."
+
+  list_schemas_tool:
+    kind: trino-list-schemas
+    source: trino-source
+    description: "Lists schemas within a specific catalog or the current catalog, with optional system schema filtering."
+
+  list_tables_tool:
+    kind: trino-list-tables
+    source: trino-source
+    description: "Lists tables within a specific schema with optional filtering, view inclusion, and detailed column counts."
+
+  get_table_info_tool:
+    kind: trino-get-table-info
+    source: trino-source
+    description: "Retrieves comprehensive metadata about a specific table including columns, data types, statistics, and sample data."
+
 toolsets:
   trino-database-tools:
     - execute_sql
@@ -218,3 +254,10 @@ toolsets:
     - sample_data
     - query_with_limit
     - cluster_info
+    - get_schema
+    - analyze_query
+    - table_statistics
+    - list_catalogs_tool
+    - list_schemas_tool
+    - list_tables_tool
+    - get_table_info_tool

@@ -281,3 +281,10 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `sample_data`: Returns a sample of data from a specified table.
     *   `query_with_limit`: Execute a SELECT query with automatic LIMIT to prevent large result sets.
     *   `cluster_info`: Shows information about the Trino cluster, including coordinators and workers.
+    *   `get_schema`: Retrieves comprehensive schema information including all catalogs, schemas, tables, columns, and cluster details with caching support.
+    *   `analyze_query`: Analyzes SQL queries to get execution plans, performance insights, and optimization recommendations.
+    *   `table_statistics`: Gets detailed statistics and metadata for a specific table including row counts, column statistics, partition information, and storage details.
+    *   `list_catalogs_tool`: Lists all available catalogs in the Trino cluster with schema counts (dedicated implementation).
+    *   `list_schemas_tool`: Lists schemas within a specific catalog with optional system schema filtering (dedicated implementation).
+    *   `list_tables_tool`: Lists tables within a specific schema with filtering and detailed information (dedicated implementation).
+    *   `get_table_info_tool`: Retrieves comprehensive metadata about a specific table including columns, statistics, and sample data (dedicated implementation).
