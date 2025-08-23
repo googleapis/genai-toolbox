@@ -399,27 +399,30 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:          "Invoke my-client-auth-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          select1Want,
-			isErr:         !configs.supportClientAuth,
+			name:           "Invoke my-client-auth-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": accessToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-client-auth-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-client-auth-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 
-			name:          "Invoke my-client-auth-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-client-auth-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -832,16 +835,16 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 	}
 
 	sessionId := RunInitialize(t, "2024-11-05")
+	headers := map[string]string{}
+	if sessionId != "" {
+		headers["Mcp-Session-Id"] = sessionId
+	}
 
 	// Get access token
 	accessToken, err := sources.GetIAMAccessToken(t.Context())
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
-
-	fmt.Println("-------!---------")
-	fmt.Println(accessToken)
-	fmt.Println("-------!---------")
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -969,7 +972,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			want:           "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
 		},
 		{
 			name:          "MCP Invoke my-client-auth-tool without access token",
@@ -988,7 +991,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				},
 			},
 			wantStatusCode: http.StatusUnauthorized,
-			want:           "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
 		},
 		{
 			name:          "MCP Invoke my-client-auth-tool with invalid access token",
@@ -1007,7 +1010,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			want:           "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
@@ -1075,6 +1078,10 @@ func runRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 
 	for k, v := range headers {
 		req.Header.Set(k, v)
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

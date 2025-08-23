@@ -95,7 +95,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	// Check if this specific tool requires the standard authorization header
 	if tool.RequiresClientAuthorization() {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), mcputil.ErrUnauthorizedRequest
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), mcputil.ErrUnauthorizedRequest
 		}
 	}
 
