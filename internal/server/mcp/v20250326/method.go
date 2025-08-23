@@ -69,9 +69,6 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
-	fmt.Println("-------2---------")
-	fmt.Println(accessToken)
-	fmt.Println("-------2---------")
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -96,7 +93,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	// Check if this specific tool requires the standard authorization header
 	if tool.RequiresClientAuthorization() {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), mcputil.ErrUnauthorizedRequest
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), mcputil.ErrUnauthorizedRequest
 		}
 	}
 
