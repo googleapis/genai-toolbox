@@ -403,6 +403,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          select1Want,
 			isErr:         !configs.supportClientAuth,
 		},
 		{
