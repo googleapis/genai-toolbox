@@ -88,7 +88,8 @@ tools:
           Filters are provided as a map of {"field.id": "condition",
           "field.id2": "condition2", ...}. Do not put the field.id in
           quotes. Filter expressions can be found at
-          https://cloud.google.com/looker/docs/filter-expressions.
+          https://cloud.google.com/looker/docs/filter-expressions. There
+          is one mistake in that, however. Use "not null" instead of "-NULL".
 
           Sorts can be specified like [ "field.id desc 0" ].
 
@@ -215,6 +216,7 @@ tools:
 
           ### Pie / Donut
 
+          *   Pie charts must have exactly one dimension and one numerical measure.
           *   `type`: Must be `looker_pie`.
           *   `value_labels`: Where to display values (`'legend'`, `'labels'`).
           *   `label_type`: The format of data labels (`'labPer'`, `'labVal'`, `'lab'`, `'val'`, `'per'`).
