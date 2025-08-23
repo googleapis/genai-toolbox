@@ -839,6 +839,10 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
 
+	fmt.Println("-------!---------")
+	fmt.Println(accessToken)
+	fmt.Println("-------!---------")
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name           string
