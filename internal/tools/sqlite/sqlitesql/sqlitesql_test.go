@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
 )
 
 func TestParseFromYamlSQLite(t *testing.T) {
