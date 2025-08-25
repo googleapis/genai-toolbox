@@ -21,7 +21,7 @@ sources:
     my-mongodb:
         kind: mongodb
         uri: "mongodb+srv://username:password@host.mongodb.net"
-        database: sample_mflix
+        
         
 ```
 
@@ -31,4 +31,3 @@ sources:
 |-----------|:--------:|:------------:|-------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "mongodb".                                                |
 | uri       |  string  |     true     | connection string to connect to MongoDB                           |
-| database  |  string  |     true     | Name of the mongodb database to connect to (e.g. "sample_mflix"). |
