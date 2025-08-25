@@ -42,7 +42,7 @@ type MockTool struct {
 	manifest    tools.Manifest
 }
 
-func (t MockTool) Invoke(context.Context, tools.ParamValues) (any, error) {
+func (t MockTool) Invoke(context.Context, tools.ParamValues, tools.AccessToken) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
 }
@@ -61,6 +61,10 @@ func (t MockTool) Manifest() tools.Manifest {
 }
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return true
+}
+
+func (t MockTool) RequiresClientAuthorization() bool {
+	return false
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
