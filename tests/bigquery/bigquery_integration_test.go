@@ -152,24 +152,27 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
+	// Get configs for tests
 	select1Want := "[{\"f0_\":1}]"
-	// Partial message; the full error message is too long.
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
+	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, false, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithCreateColArray(`["id INT64", "name STRING", "age INT64"]`),
+	// Partial message; the full error message is too long.
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
+	createColArray := `["id INT64", "name STRING", "age INT64"]`
+	selectEmptyWant := `"The query returned 0 rows."`
+
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
+		tests.WithCreateColArray(createColArray),
 		tests.WithDdlWant(ddlWant),
-		tests.WithSelectEmptyWant(`"The query returned 0 rows."`),
+		tests.WithSelectEmptyWant(selectEmptyWant),
 		tests.WithInsert1Want(ddlWant),
 	)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
