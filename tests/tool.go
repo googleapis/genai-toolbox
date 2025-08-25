@@ -268,120 +268,141 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
+		name           string
+		api            string
+		enabled        bool
+		requestHeader  map[string]string
+		requestBody    io.Reader
+		wantStatusCode int
+		wantBody       string
 	}{
 		{
-			name:          "invoke my-simple-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          select1Want,
-			isErr:         false,
+			name:           "invoke my-simple-tool",
+			api:            "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "invoke my-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          configs.myToolId3NameAliceWant,
-			isErr:         false,
+			name:           "invoke my-tool",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
+			wantBody:       configs.myToolId3NameAliceWant,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "invoke my-tool-by-id with nil response",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"id": 4}`)),
-			want:          configs.myToolById4Want,
-			isErr:         false,
+			name:           "invoke my-tool-by-id with nil response",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"id": 4}`)),
+			wantBody:       configs.myToolById4Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "invoke my-tool-by-name with nil response",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          configs.nullWant,
-			isErr:         !configs.supportOptionalNullParam,
+			name:           "invoke my-tool-by-name with nil response",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
+			enabled:        configs.supportOptionalNullParam,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       configs.nullWant,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-tool without parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-tool without parameters",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:          "Invoke my-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"id": 1}`)),
-			isErr:         true,
+			name:           "Invoke my-tool with insufficient parameters",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"id": 1}`)),
+			wantBody:       "",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:          "invoke my-array-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
-			want:          configs.myToolId3NameAliceWant,
-			isErr:         !configs.supportArrayParam,
+			name:           "invoke my-array-tool",
+			api:            "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
+			enabled:        configs.supportArrayParam,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
+			wantBody:       configs.myToolId3NameAliceWant,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-auth-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          "[{\"name\":\"Alice\"}]",
-			isErr:         false,
+			name:           "Invoke my-auth-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "[{\"name\":\"Alice\"}]",
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-auth-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:          "Invoke my-auth-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:       true,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         false,
-			want:          select1Want,
+
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-auth-required-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-required-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:          "Invoke my-auth-required-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-required-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusBadRequest,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
 			// Send Tool invocation request
 			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
+			// Add headers
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
@@ -391,19 +412,22 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			}
 			defer resp.Body.Close()
 
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			// Check status code
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Errorf("StatusCode mismatch: got %d, want %d. Response body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+
+			// skip response body check
+			if tc.wantBody == "" {
+				return
 			}
 
 			// Check response body
 			var body map[string]interface{}
 			err = json.NewDecoder(resp.Body).Decode(&body)
 			if err != nil {
-				t.Fatalf("error parsing response body")
+				t.Fatalf("error parsing response body: %s", err)
 			}
 
 			got, ok := body["result"].(string)
@@ -411,8 +435,8 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				t.Fatalf("unable to find result in response body")
 			}
 
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			if got != tc.wantBody {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
 			}
 		})
 	}
@@ -776,22 +800,21 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 	}
 
 	sessionId := RunInitialize(t, "2024-11-05")
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
-	}
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestBody   jsonrpc.JSONRPCRequest
-		requestHeader map[string]string
-		want          string
+		name           string
+		api            string
+		enabled        bool // switch to turn on/off the test case
+		requestBody    jsonrpc.JSONRPCRequest
+		requestHeader  map[string]string
+		wantStatusCode int
+		wantBody       string
 	}{
 		{
 			name:          "MCP Invoke my-tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -807,11 +830,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					},
 				},
 			},
-			want: configs.myToolId3NameAliceWant,
+			wantStatusCode: http.StatusOK,
+			wantBody:       configs.myToolId3NameAliceWant,
 		},
 		{
 			name:          "MCP Invoke invalid tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -824,11 +849,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 		},
 		{
 			name:          "MCP Invoke my-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -841,11 +868,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-tool with insufficient parameters",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -858,11 +887,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -875,11 +906,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					"arguments": map[string]any{},
 				},
 			},
-			want: "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool\"}}",
+			wantStatusCode: http.StatusOK,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool\"}}",
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -892,27 +925,46 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: myFailToolWant,
+			wantStatusCode: http.StatusOK,
+			wantBody:       myFailToolWant,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
 			reqMarshal, err := json.Marshal(tc.requestBody)
 			if err != nil {
 				t.Fatalf("unexpected error during marshaling of request body")
 			}
 
-			_, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), header)
-			got := string(bytes.TrimSpace(respBody))
+			// add headers
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
+			for key, value := range tc.requestHeader {
+				headers[key] = value
+			}
 
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.want)
+			httpResponse, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
+
+			// Check status code
+			if httpResponse.StatusCode != tc.wantStatusCode {
+				t.Errorf("StatusCode mismatch: got %d, want %d", httpResponse.StatusCode, tc.wantStatusCode)
+			}
+
+			// Check response body
+			got := string(bytes.TrimSpace(respBody))
+			if !strings.Contains(got, tc.wantBody) {
+				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantBody)
 			}
 		})
 	}
 }
 
-func runRequest(t *testing.T, method, url string, body io.Reader, header map[string]string) (*http.Response, []byte) {
+func runRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -920,8 +972,12 @@ func runRequest(t *testing.T, method, url string, body io.Reader, header map[str
 	}
 
 	req.Header.Add("Content-type", "application/json")
-	for k, v := range header {
+	for k, v := range headers {
 		req.Header.Add(k, v)
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
