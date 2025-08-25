@@ -67,16 +67,10 @@ func validatePath(path string, pathType PathType) error {
 		return fmt.Errorf("path must be relative (e.g., '%s'), not absolute (matching pattern: ^projects/[^/]+/databases/[^/]+/documents/)", example)
 	}
 
-	// Split the path and validate segments
-	segments := strings.Split(path, "/")
-	
-	// Filter out empty segments
-	var validSegments []string
-	for _, segment := range segments {
-		if segment != "" {
-			validSegments = append(validSegments, segment)
-		}
-	}
+	// Split the path and validate segments.
+	// Use a regex split to handle multiple consecutive slashes and leading/trailing slashes,
+	// which would result in empty segments from strings.Split.
+	validSegments := regexp.MustCompile("/+").Split(path, -1)
 
 	// Check for empty result
 	if len(validSegments) == 0 {
@@ -85,16 +79,12 @@ func validatePath(path string, pathType PathType) error {
 
 	// Check segment count based on path type
 	segmentCount := len(validSegments)
-	if pathType == CollectionPath {
+	if pathType == CollectionPath && segmentCount%2 == 0 {
 		// Collection paths must have an odd number of segments
-		if segmentCount%2 == 0 {
-			return fmt.Errorf("invalid collection path: must have an odd number of segments (e.g., 'collection' or 'collection/doc/subcollection'), got %d segments", segmentCount)
-		}
-	} else {
+		return fmt.Errorf("invalid collection path: must have an odd number of segments (e.g., 'collection' or 'collection/doc/subcollection'), got %d segments", segmentCount)
+	} else if pathType == DocumentPath && segmentCount%2 != 0 {
 		// Document paths must have an even number of segments
-		if segmentCount%2 != 0 {
-			return fmt.Errorf("invalid document path: must have an even number of segments (e.g., 'collection/doc'), got %d segments", segmentCount)
-		}
+		return fmt.Errorf("invalid document path: must have an even number of segments (e.g., 'collection/doc'), got %d segments", segmentCount)
 	}
 
 	// Validate each segment
