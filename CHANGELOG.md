@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0](https://github.com/googleapis/genai-toolbox/compare/v0.12.0...v1.0.0) (2025-08-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **prebuilt/alloydb:** Add bearer token support for alloydb-wait-for-operation ([#1183](https://github.com/googleapis/genai-toolbox/issues/1183))
+
+### Features
+
+* **firebird:** Add Firebird SQL 2.5+ source and tool support ([#1011](https://github.com/googleapis/genai-toolbox/issues/1011)) ([4f6b806](https://github.com/googleapis/genai-toolbox/commit/4f6b806de947efc4e12bdb50dff7781aedb7b966))
+* **prebuilt/alloydb:** Add bearer token support for alloydb-wait-for-operation ([#1183](https://github.com/googleapis/genai-toolbox/issues/1183)) ([f8f0981](https://github.com/googleapis/genai-toolbox/commit/f8f09818c76967ae947a8e435706f7f1980e4d6a))
+* **server/mcp:** Support `ping` mechanism ([#1178](https://github.com/googleapis/genai-toolbox/issues/1178)) ([5dcc66c](https://github.com/googleapis/genai-toolbox/commit/5dcc66c84fa72c75ec50a9ac5198018212ec2979))
+* **server:** Fail-fast on environment variable substitution ([#1177](https://github.com/googleapis/genai-toolbox/issues/1177)) ([212aaba](https://github.com/googleapis/genai-toolbox/commit/212aaba74c8b431de8a5f7b9822a0af4afcaaa0e))
+* **tool/looker:** Add support for "description" field in looker tool ([#1199](https://github.com/googleapis/genai-toolbox/issues/1199)) ([97f0dd2](https://github.com/googleapis/genai-toolbox/commit/97f0dd2acf26caf28ecad65abea8779c196a27f1))
+* **tools/bigquery-forecast:** Add bigqueryforecast tool ([#1148](https://github.com/googleapis/genai-toolbox/issues/1148)) ([2ad0ccf](https://github.com/googleapis/genai-toolbox/commit/2ad0ccf83df542340087742468d6762f81eedee6))
+* **tools/firestore-add-documents:** Add firestore-add-documents tool ([#1107](https://github.com/googleapis/genai-toolbox/issues/1107)) ([ee4a70a](https://github.com/googleapis/genai-toolbox/commit/ee4a70a0e82b346b07b5b4c60dfa060da2273f50))
+* **tools/firestore-update-document:** Add firestore-update-document tool ([#1191](https://github.com/googleapis/genai-toolbox/issues/1191)) ([0010123](https://github.com/googleapis/genai-toolbox/commit/00101232a39c70288aac5715649c184858d351e3))
+* **tools/oceanbase:** Add oceanbase Source and Tool  ([#895](https://github.com/googleapis/genai-toolbox/issues/895)) ([6fc4982](https://github.com/googleapis/genai-toolbox/commit/6fc49826d43f46c84028e752ebebddf3d94b3d13))
+* **trino:** Add Trino source and tools ([#948](https://github.com/googleapis/genai-toolbox/issues/948)) ([7dd123b](https://github.com/googleapis/genai-toolbox/commit/7dd123b3d76b8eb2b74b5d960959c1f90684b37e))
+
+
+### Bug Fixes
+
+* Https://github.com/googleapis/genai-toolbox/issues/1159 ([212aaba](https://github.com/googleapis/genai-toolbox/commit/212aaba74c8b431de8a5f7b9822a0af4afcaaa0e))
+* **tools/mongodb-find-one:** ProjectPayload unmarshaling ([#1167](https://github.com/googleapis/genai-toolbox/issues/1167)) ([8ea6a98](https://github.com/googleapis/genai-toolbox/commit/8ea6a98bd9096ba97722e5f807366887e864004f))
+
 ## [0.12.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.12.0) (2025-08-14)
 
 
