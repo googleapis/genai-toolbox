@@ -85,6 +85,8 @@ to expose your developer assistant tools to a Postgres instance:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1210/how-to/connect-ide/postgres_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1210/how-to/connect-ide/postgres_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1210/how-to/connect-ide/postgres_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1210/how-to/connect-ide/postgres_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1210/how-to/connect-ide/postgres_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;style type="text/css">
  

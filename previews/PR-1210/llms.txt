@@ -55,6 +55,7 @@ List of reference documentation for resources in Toolbox.
   - [couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
+  - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/firebird/): Firebird is a powerful, cross-platform, and open-source relational database.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/sources/looker/): Looker is a business intelligence tool that also provides a semantic layer.
@@ -77,6 +78,7 @@ List of reference documentation for resources in Toolbox.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/dgraph/): Tools that work with Dgraph Sources.
+  - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/firebird/): Tools that work with Firebird Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/firestore/): Tools that work with Firestore Sources.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/http/): Tools that work with HTTP Sources.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1210/resources/tools/looker/): Tools that work with Looker Sources.
