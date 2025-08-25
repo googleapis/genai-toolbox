@@ -183,7 +183,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
-	runBigQueryAskDataInsightsInvokeTest(t, datasetName, tableName, dataInsightsWant)
+	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
@@ -422,15 +422,15 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
-	tools["my-ask-data-insights-tool"] = map[string]any{
-		"kind":        "bigquery-ask-data-insights",
+	tools["my-conversational-analytics-tool"] = map[string]any{
+		"kind":        "bigquery-conversational-analytics",
 		"source":      "my-instance",
-		"description": "Tool to ask BigQuery data insights",
+		"description": "Tool to ask BigQuery conversational analytics",
 	}
-	tools["my-auth-ask-data-insights-tool"] = map[string]any{
-		"kind":        "bigquery-ask-data-insights",
+	tools["my-auth-conversational-analytics-tool"] = map[string]any{
+		"kind":        "bigquery-conversational-analytics",
 		"source":      "my-instance",
-		"description": "Tool to ask BigQuery data insights",
+		"description": "Tool to ask BigQuery conversational analytics",
 		"authRequired": []string{
 			"my-google-auth",
 		},
@@ -1365,7 +1365,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 	}
 }
 
-func runBigQueryAskDataInsightsInvokeTest(t *testing.T, datasetName, tableName, dataInsightsWant string) {
+func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tableName, dataInsightsWant string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -1383,8 +1383,8 @@ func runBigQueryAskDataInsightsInvokeTest(t *testing.T, datasetName, tableName, 
 		isErr         bool
 	}{
 		{
-			name:          "invoke my-ask-data-insights-tool successfully",
-			api:           "http://127.0.0.1:5000/api/tool/my-ask-data-insights-tool/invoke",
+			name:          "invoke my-conversational-analytics-tool successfully",
+			api:           "http://127.0.0.1:5000/api/tool/my-conversational-analytics-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -1394,8 +1394,8 @@ func runBigQueryAskDataInsightsInvokeTest(t *testing.T, datasetName, tableName, 
 			isErr: false,
 		},
 		{
-			name:          "invoke my-auth-ask-data-insights-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-ask-data-insights-tool/invoke",
+			name:          "invoke my-auth-conversational-analytics-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-conversational-analytics-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -1405,8 +1405,8 @@ func runBigQueryAskDataInsightsInvokeTest(t *testing.T, datasetName, tableName, 
 			isErr: false,
 		},
 		{
-			name:          "invoke my-auth-ask-data-insights-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-ask-data-insights-tool/invoke",
+			name:          "invoke my-auth-conversational-analytics-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-conversational-analytics-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"user_query_with_context": "What are the names in the table?"}`)),
 			isErr:         true,

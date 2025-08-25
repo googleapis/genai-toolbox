@@ -5,7 +5,7 @@ sources:
 
 tools:
   ask_data_insights:
-    kind: bigquery-ask-data-insights
+    kind: bigquery-conversational-analytics
     source: bigquery-source
     description: |
       Use this tool to perform data analysis, get insights,
