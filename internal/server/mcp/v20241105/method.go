@@ -114,7 +114,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	if !tool.Authorized([]string{}) {
-		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool: %w", tools.ErrUnauthorized)
+		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: %w", tools.ErrUnauthorized)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
