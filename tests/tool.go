@@ -354,7 +354,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:           "Invoke my-auth-tool without auth token",
@@ -362,7 +362,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
@@ -388,7 +388,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusUnauthorized,
 		},
 	}
 	for _, tc := range invokeTcs {

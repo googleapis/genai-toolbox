@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -28,7 +29,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	"google.golang.org/api/googleapi"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -212,6 +212,12 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
+		// If auth error, return 401
+		if errors.Is(err, tools.ErrUnauthorized) {
+			s.logger.DebugContext(ctx, fmt.Sprintf("error parsing authenticated parameters from ID token: %s", err))
+			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+			return
+		}
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
@@ -224,7 +230,33 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	res, err := tool.Invoke(ctx, params, accessToken)
+
+	// Determin what error to return to the users.
 	if err != nil {
+		errStr := err.Error()
+		var statusCode int
+
+		// Upstream API auth error propagation
+		switch {
+		case strings.Contains(errStr, "401"):
+			statusCode = http.StatusUnauthorized
+		case strings.Contains(errStr, "403"):
+			statusCode = http.StatusForbidden
+		}
+
+		if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+			if tool.RequiresClientAuthorization() {
+				// Propagate the original 401/403 error.
+				s.logger.DebugContext(ctx, fmt.Sprintf("error invoking tool. Client credentials lack authorization to the source: %v", err))
+				_ = render.Render(w, r, newErrResponse(err, statusCode))
+				return
+			}
+			// ADC lacking permission or credentials configuration error.
+			internalErr := fmt.Errorf("unexpected auth error occured during Tool invocation")
+			s.logger.ErrorContext(ctx, fmt.Sprintf("%s: %v", internalErr, err))
+			_ = render.Render(w, r, newErrResponse(internalErr, http.StatusInternalServerError))
+			return
+		}
 		err = fmt.Errorf("error while invoking tool: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
@@ -233,24 +265,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	resMarshal, err := json.Marshal(res)
 	if err != nil {
-		var apiErr *googleapi.Error
-		if errors.As(err, &apiErr) {
-			statusCode := apiErr.Code
-			// Check if the error is an authorization error.
-			if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-				if tool.RequiresClientAuthorization() {
-					// Propagate the original 401/403 error.
-					s.logger.DebugContext(ctx, fmt.Sprintf("error invoking tool. Client credentials lack authorization to the source: %v", err))
-					_ = render.Render(w, r, newErrResponse(err, statusCode))
-					return
-				}
-				// ADC lacking permission or credentials configuration error.
-				internalErr := fmt.Errorf("unexpected auth error occured during Tool invocation")
-				s.logger.ErrorContext(ctx, fmt.Sprintf("%s: %v", internalErr, err))
-				_ = render.Render(w, r, newErrResponse(internalErr, http.StatusInternalServerError))
-				return
-			}
-		}
 		err = fmt.Errorf("unable to marshal result: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
