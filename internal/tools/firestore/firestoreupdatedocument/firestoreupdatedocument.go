@@ -275,7 +275,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return response, nil
 }
 
-
 // getFieldValue retrieves a value from a nested map using a dot-separated path
 func getFieldValue(data map[string]interface{}, path string) (interface{}, bool) {
 	// Split the path by dots for nested field access
@@ -316,4 +315,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

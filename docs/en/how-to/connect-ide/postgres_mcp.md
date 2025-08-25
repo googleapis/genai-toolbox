@@ -17,6 +17,8 @@ to expose your developer assistant tools to a Postgres instance:
 * [Cline][cline]  (VS Code extension)
 * [Claude desktop][claudedesktop]
 * [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
 
 [toolbox]: https://github.com/googleapis/genai-toolbox
 [cursor]: #configure-your-mcp-client
@@ -25,6 +27,8 @@ to expose your developer assistant tools to a Postgres instance:
 [cline]: #configure-your-mcp-client
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
 
 {{< notice tip >}}
 This guide can be used with [AlloyDB
@@ -258,6 +262,57 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolb
 
     ```
 
+{{% /tab %}}
+
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "postgres": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","postgres","--stdio"],
+          "env": {
+            "POSTGRES_HOST": "",
+            "POSTGRES_PORT": "",
+            "POSTGRES_DATABASE": "",
+            "POSTGRES_USER": "",
+            "POSTGRES_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "postgres": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","postgres","--stdio"],
+          "env": {
+            "POSTGRES_HOST": "",
+            "POSTGRES_PORT": "",
+            "POSTGRES_DATABASE": "",
+            "POSTGRES_USER": "",
+            "POSTGRES_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
 {{% /tab %}}
 {{< /tabpane >}}
 
