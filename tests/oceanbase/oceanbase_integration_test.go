@@ -124,14 +124,15 @@ func TestOceanBaseToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
+	// Get configs for tests
+	select1Want, mcpMyFailToolWant, createTableStatement := getOceanBaseWants()
 
-	select1Want, failInvocationWant, createTableStatement := getOceanBaseWants()
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // OceanBase specific parameter tool info
@@ -165,9 +166,9 @@ func getOceanBaseTmplToolStatement() (string, string) {
 // OceanBase specific expected results
 func getOceanBaseWants() (string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your OceanBase version for the right syntax to use near 'SELEC 1;' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your OceanBase version for the right syntax to use near 'SELEC 1;' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))"`
-	return select1Want, failInvocationWant, createTableStatement
+	return select1Want, mcpMyFailToolWant, createTableStatement
 }
 
 // Add OceanBase Execute SQL configuration

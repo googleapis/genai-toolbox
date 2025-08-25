@@ -176,6 +176,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}
+
 // replaceCommandsParams is a helper function to replace parameters in the commands
 
 func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {

@@ -116,7 +116,9 @@ tools.
 * **Add a test file** under a new directory `tests/newdb`.
 * **Add pre-defined integration test suites** in the
   `/tests/newdb/newdb_test.go` that are **required** to be run as long as your
-  code contains related features:
+  code contains related features. Please check each test suites for the config
+  defaults, if your source require test suites config updates, please refer to
+  [config option](./tests/option.go):
 
      1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
             tool's manifest.
@@ -135,7 +137,7 @@ tools.
             parameters][temp-param-doc]. Only run this test if template
             parameters apply to your tool.
 
-* **Add the new database to the test config** in
+* **Add the new database to the integration test workflow** in
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 
 [tool-get]:
