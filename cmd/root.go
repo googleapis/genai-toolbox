@@ -241,7 +241,6 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'clickhouse', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'oceanbase', 'postgres', 'spanner', 'spanner-postgres'.")
 
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(

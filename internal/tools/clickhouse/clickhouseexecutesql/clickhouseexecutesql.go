@@ -105,7 +105,7 @@ type ExecuteSQLTool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t ExecuteSQLTool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t ExecuteSQLTool) Invoke(ctx context.Context, params tools.ParamValues, token tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -184,4 +184,8 @@ func (t ExecuteSQLTool) McpManifest() tools.McpManifest {
 
 func (t ExecuteSQLTool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t ExecuteSQLTool) RequiresClientAuthorization() bool {
+	return false
 }
