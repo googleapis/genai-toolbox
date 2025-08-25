@@ -45,7 +45,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1;",
+				"statement":   "SELECT 1",
 			},
 			"my-tool": map[string]any{
 				"kind":        toolKind,
@@ -144,7 +144,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
-				"statement":   "SELECT 1;",
+				"statement":   "SELECT 1",
 				"authRequired": []string{
 					"my-google-auth",
 				},
@@ -399,36 +399,28 @@ func GetMySQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-func GetNonSpannerInvokeParamWant() (string, string, string, string) {
-	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-	invokeIdNullWant := "[{\"id\":4,\"name\":null}]"
-	nullWant := "null"
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
-	return invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
-}
-
 // GetPostgresWants return the expected wants for postgres
 func GetPostgresWants() (string, string, string) {
 	select1Want := "[{\"?column?\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
-	return select1Want, failInvocationWant, createTableStatement
+	return select1Want, mcpMyFailToolWant, createTableStatement
 }
 
 // GetMSSQLWants return the expected wants for mssql
 func GetMSSQLWants() (string, string, string) {
 	select1Want := "[{\"\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(MAX))"`
-	return select1Want, failInvocationWant, createTableStatement
+	return select1Want, mcpMyFailToolWant, createTableStatement
 }
 
 // GetMySQLWants return the expected wants for mysql
 func GetMySQLWants() (string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
-	return select1Want, failInvocationWant, createTableStatement
+	return select1Want, mcpMyFailToolWant, createTableStatement
 }
 
 // SetupPostgresSQLTable creates and inserts data into a table of tool
@@ -521,12 +513,12 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 // GetRedisWants return the expected wants for redis
 func GetRedisValkeyWants() (string, string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
-	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
+	mcpMyFailToolWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
 	invokeIdNullWant := `[{"id":"4","name":""}]`
 	nullWant := `["null"]`
 	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	return select1Want, failInvocationWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
+	return select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant
 }
 
 func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
