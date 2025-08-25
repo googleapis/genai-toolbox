@@ -522,6 +522,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"fmt
 
 	"github.com/googleapis/mcp-toolbox-sdk-go/core"
 	openai "github.com/openai/openai-go"
@@ -651,7 +652,7 @@ func main() {
 
 		params.Messages = append(params.Messages, openai.AssistantMessage(query))
 
-		println("\n", completion.Choices[0].Message.Content)
+		fmt.println("\n", completion.Choices[0].Message.Content)
 
 	}
 
