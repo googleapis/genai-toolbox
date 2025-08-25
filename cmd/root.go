@@ -58,12 +58,15 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreupdatedocument"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
@@ -107,6 +110,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinoexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
@@ -123,6 +128,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/firebird"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
@@ -136,6 +142,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/trino"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
 )
 
@@ -235,6 +242,13 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'clickhouse', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'oceanbase', 'postgres', 'spanner', 'spanner-postgres'.")
+
+	// Fetch prebuilt tools sources to customize the help description
+	prebuiltHelp := fmt.Sprintf(
+		"Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: '%s'.",
+		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
+	)
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", prebuiltHelp)
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")

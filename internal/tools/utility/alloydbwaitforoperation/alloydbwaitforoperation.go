@@ -205,7 +205,7 @@ type Tool struct {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -372,4 +372,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 // Authorized checks if the tool is authorized.
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }
