@@ -86,7 +86,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	allParameters, paramManifest, paramMcpManifest, err := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	if err != nil {
+		return nil, err
+	}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -128,7 +131,7 @@ type Tool struct {
 	mcpManifest        tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
 	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
 
@@ -273,6 +276,9 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}
 func BQTypeStringFromToolType(toolType string) (string, error) {
 	switch toolType {
 	case "string":

@@ -63,12 +63,15 @@ type ToolConfig interface {
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 
+type AccessToken string
+
 type Tool interface {
-	Invoke(context.Context, ParamValues) (any, error)
+	Invoke(context.Context, ParamValues, AccessToken) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
+	RequiresClientAuthorization() bool
 }
 
 // Manifest is the representation of tools sent to Client SDKs.

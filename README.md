@@ -33,12 +33,15 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 - [Getting Started](#getting-started)
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
+    - [Homebrew Users](#homebrew-users)
   - [Integrating your application](#integrating-your-application)
 - [Configuration](#configuration)
   - [Sources](#sources)
   - [Tools](#tools)
   - [Toolsets](#toolsets)
 - [Versioning](#versioning)
+  - [Pre-1.0.0 Versioning](#pre-100-versioning)
+  - [Post-1.0.0 Versioning](#post-100-versioning)
 - [Contributing](#contributing)
 - [Community](#community)
 
@@ -114,7 +117,7 @@ To install Toolbox as a binary:
 <!-- {x-release-please-start-version} -->
 ```sh
 # see releases page for other versions
-export VERSION=0.11.0
+export VERSION=0.12.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -127,7 +130,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.11.0
+export VERSION=0.12.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -151,7 +154,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.11.0
+go install github.com/googleapis/genai-toolbox@v0.12.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -724,12 +727,26 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 ## Versioning
 
-This project uses [semantic versioning](https://semver.org/), including a
-`MAJOR.MINOR.PATCH` version number that increments with:
+This project uses [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+Since the project is in a pre-release stage (version `0.x.y`), we follow the
+standard conventions for initial  development:
 
-- MAJOR version when we make incompatible API changes
-- MINOR version when we add functionality in a backward compatible manner
-- PATCH version when we make backward compatible bug fixes
+### Pre-1.0.0 Versioning
+While the major version is `0`, the public API should be considered unstable.
+The version will be incremented  as follows:
+
+- **`0.MINOR.PATCH`**: The **MINOR** version is incremented when we add
+  new functionality or make breaking, incompatible API changes.
+- **`0.MINOR.PATCH`**: The **PATCH** version is incremented for
+  backward-compatible bug fixes.
+
+### Post-1.0.0 Versioning
+Once the project reaches a stable `1.0.0` release, the versioning will follow
+the more common convention:
+
+- **`MAJOR.MINOR.PATCH`**: Incremented for incompatible API changes.
+- **`MAJOR.MINOR.PATCH`**: Incremented for new, backward-compatible functionality.
+- **`MAJOR.MINOR.PATCH`**: Incremented for backward-compatible bug fixes.
 
 The public API that this applies to is the CLI associated with Toolbox, the
 interactions with official SDKs, and the definitions in the `tools.yaml` file.

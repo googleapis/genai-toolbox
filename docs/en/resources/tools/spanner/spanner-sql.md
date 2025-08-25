@@ -34,8 +34,8 @@ inserted according to their name: e.g. `@name`.
 ### PostgreSQL
 
 For the `postgresql` dialect, the specified SQL statement is executed as a [prepared
-statement][pg-prepare], and specified parameters will inserted according to
-their position: e.g. `$1` will be the first parameter specified, `$@` will be
+statement][pg-prepare], and specified parameters will be inserted according to
+their position: e.g. `$1` will be the first parameter specified, `$2` will be
 the second parameter, and so on.
 
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
@@ -134,7 +134,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](#template-parameters).
+> [templateParameters](..#template-parameters).
 
 ```yaml
 tools:
@@ -165,4 +165,4 @@ tools:
 | statement          |                   string                         |     true     | SQL statement to execute on.                                                                                                               |
 | parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
 | readOnly           |                   bool                           |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`.                                                   |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

@@ -20,9 +20,8 @@ flexible, JSON-like documents, making it easy to develop and scale applications.
 sources:
     my-mongodb:
         kind: mongodb
-        uri: "mongodb+srv://username:password@host.mongodb.net"
-        
-        
+        uri: "mongodb+srv://username:password@host.mongodb.net"       
+
 ```
 
 ## Reference
