@@ -19,9 +19,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -405,15 +407,28 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)
+
+	if err != nil {
+		s.logger.DebugContext(ctx, err.Error())
+
+		// Check for specific authorization errors to return an HTTP 401.
+		errStr := err.Error()
+		if errors.Is(err, tools.ErrUnauthorized) || strings.Contains(errStr, "401") {
+			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+			return
+		}
+		if strings.Contains(errStr, "403") {
+			_ = render.Render(w, r, newErrResponse(err, http.StatusForbidden))
+			return
+		}
+	}
+
 	// notifications will return empty string
 	if res == nil {
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
 		w.WriteHeader(http.StatusAccepted)
 		return
-	}
-	if err != nil {
-		s.logger.DebugContext(ctx, err.Error())
 	}
 
 	// for v20250326, add the `Mcp-Session-Id` header
