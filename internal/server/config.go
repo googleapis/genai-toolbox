@@ -218,6 +218,11 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
 
+		// `authRequired` and `useClientOAuth` cannot be specified together
+		if v["authRequired"] != nil && v["useClientOAuth"] == true {
+			return fmt.Errorf("`authRequired` and `useClientOAuth` are mutually exclusive. Choose only one authentication method")
+		}
+
 		// Make `authRequired` an empty list instead of nil for Tool manifest
 		if v["authRequired"] == nil {
 			v["authRequired"] = []string{}
