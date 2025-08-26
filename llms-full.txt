@@ -2427,6 +2427,11 @@ etc., you could use environment variables instead with the format `${ENV_NAME}`.
   user: ${USER_NAME}
   password: ${PASSWORD}
 ```
+A default value can be specified like `${ENV_NAME:default}`.
+
+```yaml
+  port: ${DB_PORT:3306}
+```
 
 ### Sources
 
