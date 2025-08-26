@@ -69,14 +69,6 @@ func DisableArrayTest() InvokeTestOption {
 	}
 }
 
-// DisableClientAuthTest disables tests for sources that do not support client auth.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.DisableClientAuthTest())
-func EnableClientAuthTest() InvokeTestOption {
-	return func(c *InvokeTestConfig) {
-		c.supportClientAuth = true
-	}
-}
-
 /* Configurations for RunMCPToolCallMethod()  */
 
 // MCPTestConfig represents the various configuration options for mcp tool call tests.

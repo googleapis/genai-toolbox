@@ -1005,7 +1005,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 					"arguments": map[string]any{},
 				},
 			},
-			wantStatusCode: http.StatusOK,
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
@@ -1073,10 +1073,6 @@ func runRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 
 	for k, v := range headers {
 		req.Header.Set(k, v)
-	}
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
