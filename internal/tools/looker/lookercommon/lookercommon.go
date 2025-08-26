@@ -34,16 +34,8 @@ type transportWithAuthHeader struct {
 }
 
 func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Authorization", string(t.AuthToken))
-	return t.Base.RoundTrip(req)
-}
-
-type transportWithHeaders struct {
-	Base http.RoundTripper
-}
-
-func (t *transportWithHeaders) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("x-looker-appid", "go-sdk")
+	req.Header.Set("Authorization", string(t.AuthToken))
 	return t.Base.RoundTrip(req)
 }
 
@@ -57,13 +49,8 @@ func GetLookerSDK(config *rtl.ApiSettings, accessToken tools.AccessToken) *v4.Lo
 			},
 		}
 
-		base := transportWithHeaders{
-			Base: transport,
-		}
-
-		// Make a new transport with the same base and the authToken.
 		newTransport := &transportWithAuthHeader{
-			Base:      &base,
+			Base:      transport,
 			AuthToken: accessToken,
 		}
 
