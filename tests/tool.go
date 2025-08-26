@@ -952,7 +952,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 					"arguments": map[string]any{},
 				},
 			},
-			wantStatusCode: http.StatusUnauthorized,
+			wantStatusCode: http.StatusOK,
 			wantBody:       select1Want,
 		},
 		{
