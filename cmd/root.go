@@ -263,21 +263,34 @@ type ToolsFile struct {
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
 }
 
-// parseEnv replaces environment variables ${ENV_NAME} with their values.
+// parseEnv replaces environment variables ${ENV_NAME} or ${ENV_NAME:-default} with their values.
 func parseEnv(input string) (string, error) {
-	re := regexp.MustCompile(`\$\{(\w+)\}`)
+	// Support both ${VAR} and ${VAR:-default} syntax
+	re := regexp.MustCompile(`\$\{([^}:]+)(?::-([^}]*))?\}`)
 
 	var err error
 	output := re.ReplaceAllStringFunc(input, func(match string) string {
 		parts := re.FindStringSubmatch(match)
 
-		// extract the variable name
+		// extract the variable name and optional default value
 		variableName := parts[1]
+		defaultValue := ""
+		if len(parts) > 2 {
+			defaultValue = parts[2]
+		}
+
 		if value, found := os.LookupEnv(variableName); found {
 			return value
 		}
-		err = fmt.Errorf("environment variable not found: %q", variableName)
-		return ""
+		
+		// If no default value and variable not found, return error
+		if len(parts) <= 2 {
+			err = fmt.Errorf("environment variable not found: %q", variableName)
+			return ""
+		}
+		
+		// Return default value
+		return defaultValue
 	})
 	return output, err
 }
