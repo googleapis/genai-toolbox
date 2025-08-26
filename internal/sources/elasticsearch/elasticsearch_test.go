@@ -32,14 +32,13 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-sources:
-  my-es-instance:
-    kind: elasticsearch
-    addresses:
-      - http://localhost:9200
-    apikey: somekey
-`,
-
+            sources:
+              my-es-instance:
+                kind: elasticsearch
+                addresses:
+                  - http://localhost:9200
+                apikey: somekey
+            `,
 			want: server.SourceConfigs{
 				"my-es-instance": elasticsearch.Config{
 					Name:      "my-es-instance",
