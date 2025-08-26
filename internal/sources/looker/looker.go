@@ -39,7 +39,14 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, SslVerification: "true", Timeout: "600s"} // Default Ssl,timeout
+	actual := Config{
+		Name:               name,
+		SslVerification:    true,
+		Timeout:            "600s",
+		ShowHiddenModels:   true,
+		ShowHiddenExplores: true,
+		ShowHiddenFields:   true,
+	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -52,11 +59,11 @@ type Config struct {
 	BaseURL            string `yaml:"base_url" validate:"required"`
 	ClientId           string `yaml:"client_id" validate:"required"`
 	ClientSecret       string `yaml:"client_secret" validate:"required"`
-	SslVerification    string `yaml:"verify_ssl"`
+	SslVerification    bool   `yaml:"verify_ssl"`
 	Timeout            string `yaml:"timeout"`
-	ShowHiddenModels   string `yaml:"show_hidden_models"`
-	ShowHiddenExplores string `yaml:"show_hidden_explores"`
-	ShowHiddenFields   string `yaml:"show_hidden_fields"`
+	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
+	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
+	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -80,14 +87,14 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to parse Timeout string as time.Duration: %s", err)
 	}
 
-	if r.SslVerification != "true" {
+	if !r.SslVerification {
 		logger.WarnContext(ctx, "Insecure HTTP is enabled for Looker source %s. TLS certificate verification is skipped.\n", r.Name)
 	}
 	cfg := rtl.ApiSettings{
 		AgentTag:     userAgent,
 		BaseUrl:      r.BaseURL,
 		ApiVersion:   "4.0",
-		VerifySsl:    (r.SslVerification == "true"),
+		VerifySsl:    r.SslVerification,
 		Timeout:      int32(duration.Seconds()),
 		ClientId:     r.ClientId,
 		ClientSecret: r.ClientSecret,
@@ -106,9 +113,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Timeout:            r.Timeout,
 		Client:             sdk,
 		ApiSettings:        &cfg,
-		ShowHiddenModels:   (r.ShowHiddenModels == "true"),
-		ShowHiddenExplores: (r.ShowHiddenExplores == "true"),
-		ShowHiddenFields:   (r.ShowHiddenFields == "true"),
+		ShowHiddenModels:   r.ShowHiddenModels,
+		ShowHiddenExplores: r.ShowHiddenExplores,
+		ShowHiddenFields:   r.ShowHiddenFields,
 	}
 	return s, nil
 
