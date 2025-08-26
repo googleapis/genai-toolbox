@@ -97,7 +97,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
 		ApiSettings:  s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -114,7 +113,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name         string `yaml:"name"`
 	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
 	ApiSettings  *rtl.ApiSettings
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
@@ -146,7 +144,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	wq.VisConfig = &visConfig
 
 	qrespFields := "id"
-	qresp, err := t.Client.CreateQuery(*wq, qrespFields, t.ApiSettings)
+
+	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
+	qresp, err := sdk.CreateQuery(*wq, qrespFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create query request: %s", err)
 	}
@@ -170,7 +170,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		Fields: &fields,
 	}
 
-	resp, err := t.Client.CreateDashboardElement(req, t.ApiSettings)
+	resp, err := sdk.CreateDashboardElement(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create dashboard element request: %s", err)
 	}

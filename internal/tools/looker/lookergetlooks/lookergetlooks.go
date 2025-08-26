@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -94,7 +95,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
 		ApiSettings:  s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -111,7 +111,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name         string `yaml:"name"`
 	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
 	ApiSettings  *rtl.ApiSettings
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
@@ -138,13 +137,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	limit := int64(paramsMap["limit"].(int))
 	offset := int64(paramsMap["offset"].(int))
 
+	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
 	req := v4.RequestSearchLooks{
 		Title:       title_ptr,
 		Description: desc_ptr,
 		Limit:       &limit,
 		Offset:      &offset,
 	}
-	resp, err := t.Client.SearchLooks(req, t.ApiSettings)
+	resp, err := sdk.SearchLooks(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_looks request: %s", err)
 	}

@@ -25,7 +25,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
-	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 const kind string = "looker-query-url"
@@ -93,7 +92,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
 		ApiSettings:  s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -110,7 +108,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name         string `yaml:"name"`
 	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
 	ApiSettings  *rtl.ApiSettings
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
@@ -133,8 +130,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	visConfig := paramsMap["vis_config"].(map[string]any)
 	wq.VisConfig = &visConfig
 
+	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
 	respFields := "id,slug,share_url,expanded_share_url"
-	resp, err := t.Client.CreateQuery(*wq, respFields, t.ApiSettings)
+	resp, err := sdk.CreateQuery(*wq, respFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making query request: %s", err)
 	}

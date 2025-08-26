@@ -86,7 +86,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
 		ApiSettings:  s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -104,7 +103,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name             string `yaml:"name"`
 	Kind             string `yaml:"kind"`
-	Client           *v4.LookerSDK
 	ApiSettings      *rtl.ApiSettings
 	AuthRequired     []string         `yaml:"authRequired"`
 	Parameters       tools.Parameters `yaml:"parameters"`
@@ -124,12 +122,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	fields := lookercommon.ParametersFields
+	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
 	req := v4.RequestLookmlModelExplore{
 		LookmlModelName: *model,
 		ExploreName:     *explore,
 		Fields:          &fields,
 	}
-	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
+	resp, err := sdk.LookmlModelExplore(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_parameters request: %w", err)
 	}

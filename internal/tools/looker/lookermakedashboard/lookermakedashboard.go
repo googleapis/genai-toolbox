@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -92,7 +93,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
 		ApiSettings:  s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -109,7 +109,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name         string `yaml:"name"`
 	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
 	ApiSettings  *rtl.ApiSettings
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
@@ -124,8 +123,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	logger.DebugContext(ctx, "params = ", params)
 
+	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
 	mrespFields := "id,personal_folder_id"
-	mresp, err := t.Client.Me(mrespFields, t.ApiSettings)
+	mresp, err := sdk.Me(mrespFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making me request: %s", err)
 	}
@@ -138,7 +138,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("user does not have a personal folder. cannot continue")
 	}
 
-	dashs, err := t.Client.FolderDashboards(*mresp.PersonalFolderId, "title", t.ApiSettings)
+	dashs, err := sdk.FolderDashboards(*mresp.PersonalFolderId, "title", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error getting existing dashboards in folder: %s", err)
 	}
@@ -157,13 +157,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		Description: &description,
 		FolderId:    mresp.PersonalFolderId,
 	}
-	resp, err := t.Client.CreateDashboard(wd, t.ApiSettings)
+	resp, err := sdk.CreateDashboard(wd, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create dashboard request: %s", err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
-	setting, err := t.Client.GetSetting("host_url", t.ApiSettings)
+	setting, err := sdk.GetSetting("host_url", t.ApiSettings)
 	if err != nil {
 		logger.ErrorContext(ctx, "error getting settings: %s", err)
 	}

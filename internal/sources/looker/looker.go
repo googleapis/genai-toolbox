@@ -100,18 +100,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		ClientSecret: r.ClientSecret,
 	}
 
-	sdk := v4.NewLookerSDK(rtl.NewAuthSession(cfg))
-	me, err := sdk.Me("", &cfg)
-	if err != nil {
-		return nil, fmt.Errorf("unable to log in: %s", err)
-	}
-	logger.DebugContext(ctx, fmt.Sprintf("logged in as user %v %v.\n", *me.FirstName, *me.LastName))
-
 	s := &Source{
 		Name:               r.Name,
 		Kind:               SourceKind,
 		Timeout:            r.Timeout,
-		Client:             sdk,
 		ApiSettings:        &cfg,
 		ShowHiddenModels:   r.ShowHiddenModels,
 		ShowHiddenExplores: r.ShowHiddenExplores,

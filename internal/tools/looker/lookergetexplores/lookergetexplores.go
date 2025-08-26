@@ -21,10 +21,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
-	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 const kind string = "looker-get-explores"
@@ -86,7 +86,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
 		ApiSettings:  s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -104,7 +103,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name               string `yaml:"name"`
 	Kind               string `yaml:"kind"`
-	Client             *v4.LookerSDK
 	ApiSettings        *rtl.ApiSettings
 	AuthRequired       []string         `yaml:"authRequired"`
 	Parameters         tools.Parameters `yaml:"parameters"`
@@ -124,7 +122,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
 	}
 
-	resp, err := t.Client.LookmlModel(model, "explores(name,description,label,group_label,hidden)", t.ApiSettings)
+	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
+	resp, err := sdk.LookmlModel(model, "explores(name,description,label,group_label,hidden)", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_explores request: %s", err)
 	}
