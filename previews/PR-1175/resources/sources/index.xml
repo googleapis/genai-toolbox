@@ -485,12 +485,6 @@ flexible, JSON-like documents, making it easy to develop and scale applications.
  &lt;td style="text-align: center">true&lt;/td>
  &lt;td>connection string to connect to MongoDB&lt;/td>
  &lt;/tr>
- &lt;tr>
- &lt;td>database&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the mongodb database to connect to (e.g. &amp;ldquo;sample_mflix&amp;rdquo;).&lt;/td>
- &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/sources/mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1175/resources/sources/mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mysql.com/">MySQL&lt;/a> is a relational database management system (RDBMS) that
