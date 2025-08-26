@@ -19,9 +19,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -405,15 +407,17 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)
+
+	if err != nil {
+		s.logger.DebugContext(ctx, fmt.Errorf("error invoking tool: %w", err).Error())
+	}
+
 	// notifications will return empty string
 	if res == nil {
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
 		w.WriteHeader(http.StatusAccepted)
 		return
-	}
-	if err != nil {
-		s.logger.DebugContext(ctx, err.Error())
 	}
 
 	// for v20250326, add the `Mcp-Session-Id` header
@@ -432,6 +436,22 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			s.logger.DebugContext(ctx, "session is close")
 		default:
 			s.logger.DebugContext(ctx, "unable to add to event queue")
+		}
+	}
+	if rpcResponse, ok := res.(jsonrpc.JSONRPCError); ok {
+		code := rpcResponse.Error.Code
+		switch {
+		case code == jsonrpc.INTERNAL_ERROR:
+			w.WriteHeader(http.StatusInternalServerError)
+		case code == jsonrpc.INVALID_REQUEST:
+			errStr := err.Error()
+			if errors.Is(err, tools.ErrUnauthorized) {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if strings.Contains(errStr, "Error 401") {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if strings.Contains(errStr, "Error 403") {
+				w.WriteHeader(http.StatusForbidden)
+			}
 		}
 	}
 
