@@ -770,10 +770,10 @@ github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 h1:aQ3y1lwWyqYPiWZThqv
 github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443/go.mod h1:W+zGtBO5Y1IgJhy4+A9GOqVhqLpfZi+vwmdNXUehLA8=
 github.com/containerd/continuity v0.4.3 h1:6HVkalIp+2u1ZLH1J/pYX2oBVXlJZvh1X1A7bEZ9Su8=
 github.com/containerd/continuity v0.4.3/go.mod h1:F6PTNCKepoxEaXLQp3wDAjygEnImnZ/7o4JzpodfroQ=
-github.com/couchbase/gocb/v2 v2.10.1 h1:5r1jngGxw3dTZdtq6Xmjq3pdU6hOwRvynvbVIp58T64=
-github.com/couchbase/gocb/v2 v2.10.1/go.mod h1:GGEJuYjrfnPHCQLcxTcIco+Puy63PS2p8QQd8FRw66I=
-github.com/couchbase/gocbcore/v10 v10.7.1 h1:6jsNDtqyfoQ8Xg6kv99rzccc3CrHbp7FjeY+ahWXTF4=
-github.com/couchbase/gocbcore/v10 v10.7.1/go.mod h1:Q8JWVenMCEOuRgrDQKApHbzzPif38HzefGgRVe9apAI=
+github.com/couchbase/gocb/v2 v2.11.0 h1:OVB+KlVeXlKVtziKx/LWZT7DClLsoQHQFrI4wan5Ijc=
+github.com/couchbase/gocb/v2 v2.11.0/go.mod h1:Y+lODSgyVzDSaf0Sy8sIzIa0RTAw3vlZUsjY6+FUq9Y=
+github.com/couchbase/gocbcore/v10 v10.8.0 h1:zDcJyYqOirFyC8T/aVvNL4N9oj6GI4qtaBuTGGWCDb4=
+github.com/couchbase/gocbcore/v10 v10.8.0/go.mod h1:OWKfU9R5Nm5V3QZBtfdZl5qCfgxtxTqOgXiNr4pn9/c=
 github.com/couchbase/gocbcoreps v0.1.3 h1:fILaKGCjxFIeCgAUG8FGmRDSpdrRggohOMKEgO9CUpg=
 github.com/couchbase/gocbcoreps v0.1.3/go.mod h1:hBFpDNPnRno6HH5cRXExhqXYRmTsFJlFHQx7vztcXPk=
 github.com/couchbase/goprotostellar v1.0.2 h1:yoPbAL9sCtcyZ5e/DcU5PRMOEFaJrF9awXYu3VPfGls=
@@ -1276,8 +1276,8 @@ go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJyS
 go.opentelemetry.io/auto/sdk v1.1.0/go.mod h1:3wSPjt5PWp2RhlCcmmOial7AvC4DQqZb7a7wCow3W8A=
 go.opentelemetry.io/contrib/detectors/gcp v1.36.0 h1:F7q2tNlCaHY9nMKHR6XH9/qkp8FktLnIcy6jJNyOCQw=
 go.opentelemetry.io/contrib/detectors/gcp v1.36.0/go.mod h1:IbBN8uAIIx734PTonTPxAxnjc2pQTxWNkwfstZ+6H2k=
-go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 h1:q4XOmH/0opmeuJtPsbFNivyl7bCt7yRBbeEm2sC/XtQ=
-go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0/go.mod h1:snMWehoOh2wsEwnvvwtDyFCxVeDAODenXHtn5vzrKjo=
+go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.62.0 h1:rbRJ8BBoVMsQShESYZ0FkvcITu8X8QNwJogcLUmDNNw=
+go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.62.0/go.mod h1:ru6KHrNtNHxM4nD/vd6QrLVWgKhxPYgblq4VAtNawTQ=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0 h1:Hf9xI/XLML9ElpiHVDNwvqI0hIFlzV8dgIr35kV1kRU=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0/go.mod h1:NfchwuyNoMcZ5MLHwPrODwUF1HWCXWrL31s8gSAdIKY=
 go.opentelemetry.io/contrib/propagators/autoprop v0.62.0 h1:1+EHlhAe/tukctfePZRrDruB9vn7MdwyC+rf36nUSPM=
