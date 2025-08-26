@@ -47,13 +47,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name            string `yaml:"name" validate:"required"`
-	Kind            string `yaml:"kind" validate:"required"`
-	BaseURL         string `yaml:"base_url" validate:"required"`
-	ClientId        string `yaml:"client_id" validate:"required"`
-	ClientSecret    string `yaml:"client_secret" validate:"required"`
-	SslVerification string `yaml:"verify_ssl"`
-	Timeout         string `yaml:"timeout"`
+	Name               string `yaml:"name" validate:"required"`
+	Kind               string `yaml:"kind" validate:"required"`
+	BaseURL            string `yaml:"base_url" validate:"required"`
+	ClientId           string `yaml:"client_id" validate:"required"`
+	ClientSecret       string `yaml:"client_secret" validate:"required"`
+	SslVerification    string `yaml:"verify_ssl"`
+	Timeout            string `yaml:"timeout"`
+	ShowHiddenModels   string `yaml:"show_hidden_models"`
+	ShowHiddenExplores string `yaml:"show_hidden_explores"`
+	ShowHiddenFields   string `yaml:"show_hidden_fields"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -98,11 +101,14 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	logger.DebugContext(ctx, fmt.Sprintf("logged in as user %v %v.\n", *me.FirstName, *me.LastName))
 
 	s := &Source{
-		Name:        r.Name,
-		Kind:        SourceKind,
-		Timeout:     r.Timeout,
-		Client:      sdk,
-		ApiSettings: &cfg,
+		Name:               r.Name,
+		Kind:               SourceKind,
+		Timeout:            r.Timeout,
+		Client:             sdk,
+		ApiSettings:        &cfg,
+		ShowHiddenModels:   (r.ShowHiddenModels == "true"),
+		ShowHiddenExplores: (r.ShowHiddenExplores == "true"),
+		ShowHiddenFields:   (r.ShowHiddenFields == "true"),
 	}
 	return s, nil
 
@@ -111,11 +117,14 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name        string `yaml:"name"`
-	Kind        string `yaml:"kind"`
-	Timeout     string `yaml:"timeout"`
-	Client      *v4.LookerSDK
-	ApiSettings *rtl.ApiSettings
+	Name               string `yaml:"name"`
+	Kind               string `yaml:"kind"`
+	Timeout            string `yaml:"timeout"`
+	Client             *v4.LookerSDK
+	ApiSettings        *rtl.ApiSettings
+	ShowHiddenModels   bool `yaml:"show_hidden_models"`
+	ShowHiddenExplores bool `yaml:"show_hidden_explores"`
+	ShowHiddenFields   bool `yaml:"show_hidden_fields"`
 }
 
 func (s *Source) SourceKind() string {
