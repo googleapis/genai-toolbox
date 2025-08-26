@@ -65,19 +65,23 @@ Connect your IDE to BigQuery using Toolbox.
 
 BigQuery uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to BigQuery resources like projects, datasets, and tables.
-Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize
-and authenticate when interacting with [BigQuery][bigquery-docs].
 
-In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the correct IAM permissions for the queries
-you intend to run. Common roles include `roles/bigquery.user` (which includes
-permissions to run jobs and read data) or `roles/bigquery.dataViewer`. See
+By default, Toolbox will use your [Application Default Credentials (ADC)][adc]
+to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
+However, if the `useClientOAuth` parameter is set to true, Toolbox will instead
+use the user's OAuth access token. This token is parsed from the "Authorization"
+header passed in with the Tool invocation request, allowing queries to be made
+on behalf of the end-user.
+
+Regardless of the authentication method, you need to ensure the corresponding
+IAM identity has the correct permissions for the queries you intend to run.
+Common roles include `roles/bigquery.user` (which includes permissions to run
+jobs and read data) or `roles/bigquery.dataViewer`. See
 [Introduction to BigQuery IAM][grant-permissions] for more information on
 applying IAM permissions and roles to an identity.
 
 [iam-overview]: https://cloud.google.com/bigquery/docs/access-control
 [adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [grant-permissions]: https://cloud.google.com/bigquery/docs/access-control
 
 ## Example
@@ -91,8 +95,9 @@ sources:
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                               |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigquery".                                                           |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
-| location  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
+|----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
+| project        |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                                                                                                           |
+| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
