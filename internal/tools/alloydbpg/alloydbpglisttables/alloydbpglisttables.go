@@ -156,7 +156,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("table_names", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
-		tools.NewStringParameterWithDefault("output_format", "Optional: Use 'simple' for names only or 'detailed' for full info.", "detailed"),
+		tools.NewStringParameterWithDefault("output_format", "detailed", "Optional: Use 'simple' for names only or 'detailed' for full info."),
 	}
 	paramManifest := allParameters.Manifest()
 	inputSchema := allParameters.McpManifest()
@@ -197,8 +197,14 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	tableNames, _ := paramsMap["table_names"].(string)
+	tableNames, ok := paramsMap["table_names"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", tableNames)
+	}
 	outputFormat, _ := paramsMap["output_format"].(string)
+    if outputFormat != "simple" && outputFormat != "detailed" {
+        return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
+    }
 
 	results, err := t.Pool.Query(ctx, listTablesStatement, tableNames, outputFormat)
 	if err != nil {

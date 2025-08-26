@@ -253,6 +253,27 @@ func runAlloyDBListTablesTest(t *testing.T, tableNameParam, tableNameAuth string
 			},
 		},
 		{
+			name:        "invoke list_tables with invalid output format",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
+			isErr:       true,
+			validation: nil,
+		},
+		{
+			name:        "invoke list_tables with missing table_names parameter",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			isErr:       true,
+			validation: nil,
+		},
+		{
+			name:        "invoke list_tables with malformed table_names parameter",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
+			isErr:       true,
+			validation: nil,
+		},
+		{
 			name:        "invoke list_tables with multiple table names",
 			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
