@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Concepts on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/concepts/</link><description>Recent content in Concepts on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1244/concepts/index.xml" rel="self" type="application/rss+xml"/><item><title>Telemetry</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/concepts/telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/concepts/telemetry/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Telemetry data such as logs, metrics, and traces will help developers understand
+the internal state of the system. This page walks though different types of
+telemetry and observability available in Toolbox.&lt;/p>
+&lt;p>Toolbox exports telemetry data of logs via standard out/err, and traces/metrics
+through &lt;a href="https://opentelemetry.io/">OpenTelemetry&lt;/a>. Additional flags can be
+passed to Toolbox to enable different logging behavior, or to export metrics
+through a specific &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1244/concepts/telemetry/#exporter">exporter&lt;/a>.&lt;/p>
+&lt;h2 id="logging">Logging&lt;/h2>
+&lt;p>The following flags can be used to customize Toolbox logging:&lt;/p></description></item></channel></rss>
