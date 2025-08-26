@@ -24,7 +24,7 @@ var expectedToolSources = []string{
 	"alloydb-postgres-admin",
 	"alloydb-postgres",
 	"bigquery",
-  "clickhouse",
+	"clickhouse",
 	"cloud-sql-mssql",
 	"cloud-sql-mysql",
 	"cloud-sql-postgres",

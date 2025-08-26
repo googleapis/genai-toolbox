@@ -33,7 +33,7 @@ import (
 	clickhouseexecutesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
 	clickhousesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	"github.com/googleapis/genai-toolbox/tests"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 var (
@@ -670,6 +670,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		_, err = tool.Invoke(ctx, params, "")
 		// This should either fail or only execute the first statement
 		// dont check the specific error as behavior may vary
+		_ = err // We're not checking the error intentionally
 	})
 
 	t.Logf("✅ clickhouse-execute-sql tool tests completed successfully")
@@ -858,7 +859,7 @@ func createMockSource(t *testing.T, pool *sql.DB) sources.Source {
 		Secure:   false,
 	}
 
-	source, err := config.Initialize(context.Background(), trace.NewNoopTracerProvider().Tracer(""))
+	source, err := config.Initialize(context.Background(), noop.NewTracerProvider().Tracer(""))
 	if err != nil {
 		t.Fatalf("Failed to initialize source: %v", err)
 	}

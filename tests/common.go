@@ -510,7 +510,6 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 	}
 }
 
-
 // GetRedisWants return the expected wants for redis
 func GetRedisValkeyWants() (string, string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
