@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"net/http"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
@@ -144,7 +144,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	// Check if any of the specified auth services is verified
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
-		err = fmt.Errorf("tool invocation not authorized. Please make sure your specify correct auth headers")
+		err = fmt.Errorf("unauthorized Tool call: Please make sure your specify correct auth headersi: %w", tools.ErrUnauthorized)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
@@ -156,13 +156,8 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	if !tool.Authorized([]string{}) {
-		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: %w", tools.ErrUnauthorized)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-	}
-
-    // Get access token
-    accessToken := tools.AccessToken(header.Get("Authorization"))
+	// Get access token
+	accessToken := tools.AccessToken(header.Get("Authorization"))
 
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, params, accessToken)

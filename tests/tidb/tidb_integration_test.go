@@ -80,12 +80,8 @@ func getTiDBWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 5 near \"SELEC 1;\" "}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
-<<<<<<< HEAD
-	return select1Want, mcpMyFailToolWant, createTableStatement
-=======
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
-	return select1Want, failInvocationWant, createTableStatement, mcpSelect1Want
->>>>>>> 8ab2fca5f (update integration test)
+	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
 }
 
 // addTiDBExecuteSqlConfig gets the tools config for `tidb-execute-sql`
