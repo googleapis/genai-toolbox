@@ -35,6 +35,20 @@ tools:
           explore_name looked up from get_explores.
 ```
 
+The response is a json array with the following elements:
+
+```json
+{
+  "name": "field name",
+  "description": "field description",
+  "type": "field type",
+  "label": "field label",
+  "label_short": "field short label",
+  "tags": ["tags", ...],
+  "synonyms": ["synonyms", ...]
+}
+```
+
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |

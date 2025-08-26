@@ -16,8 +16,10 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -210,6 +212,12 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
+		// If auth error, return 401
+		if errors.Is(err, tools.ErrUnauthorized) {
+			s.logger.DebugContext(ctx, fmt.Sprintf("error parsing authenticated parameters from ID token: %s", err))
+			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+			return
+		}
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
@@ -222,7 +230,33 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	res, err := tool.Invoke(ctx, params, accessToken)
+
+	// Determine what error to return to the users.
 	if err != nil {
+		errStr := err.Error()
+		var statusCode int
+
+		// Upstream API auth error propagation
+		switch {
+		case strings.Contains(errStr, "Error 401"):
+			statusCode = http.StatusUnauthorized
+		case strings.Contains(errStr, "Error 403"):
+			statusCode = http.StatusForbidden
+		}
+
+		if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+			if tool.RequiresClientAuthorization() {
+				// Propagate the original 401/403 error.
+				s.logger.DebugContext(ctx, fmt.Sprintf("error invoking tool. Client credentials lack authorization to the source: %v", err))
+				_ = render.Render(w, r, newErrResponse(err, statusCode))
+				return
+			}
+			// ADC lacking permission or credentials configuration error.
+			internalErr := fmt.Errorf("unexpected auth error occured during Tool invocation: %w", err)
+			s.logger.ErrorContext(ctx, internalErr.Error())
+			_ = render.Render(w, r, newErrResponse(internalErr, http.StatusInternalServerError))
+			return
+		}
 		err = fmt.Errorf("error while invoking tool: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))

@@ -18,7 +18,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -67,7 +69,7 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[string]tools.Tool, body []byte, accessToken tools.AccessToken) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -83,7 +85,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	toolName := req.Params.Name
 	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
-	tool, ok := tools[toolName]
+	tool, ok := toolsMap[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -114,13 +116,28 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, tools map[strin
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	if !tool.Authorized([]string{}) {
-		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool")
+		err = fmt.Errorf("unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: %w", tools.ErrUnauthorized)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, params, accessToken)
 	if err != nil {
+		errStr := err.Error()
+		// Missing authService tokens.
+		if errors.Is(err, tools.ErrUnauthorized) {
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+		// Upstream auth error
+		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
+			if tool.RequiresClientAuthorization() {
+				// Error with client credentials should pass down to the client
+				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			}
+			// Auth error with ADC should raise internal 500 error
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		}
+
 		text := TextContent{
 			Type: "text",
 			Text: err.Error(),
