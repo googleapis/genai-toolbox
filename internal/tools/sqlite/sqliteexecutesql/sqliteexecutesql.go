@@ -121,6 +121,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("missing or invalid 'sql' parameter")
 	}
+	if sql == "" {
+		return nil, fmt.Errorf("sql parameter cannot be empty")
+	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
@@ -180,6 +183,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	if err := results.Err(); err != nil {
 		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
+
+	if len(out) == 0 {
+		return nil, nil
 	}
 
 	return out, nil
