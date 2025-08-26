@@ -409,7 +409,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)
 
 	if err != nil {
-		s.logger.DebugContext(ctx, err.Error())
+		s.logger.DebugContext(ctx, fmt.Errorf("error invoking tool: %w", err).Error())
 	}
 
 	// notifications will return empty string
@@ -440,7 +440,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	if rpcResponse, ok := res.(jsonrpc.JSONRPCError); ok {
 		code := rpcResponse.Error.Code
-		fmt.Println(res)
 		switch {
 		case code == jsonrpc.INTERNAL_ERROR:
 			w.WriteHeader(http.StatusInternalServerError)

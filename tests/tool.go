@@ -971,13 +971,10 @@ func runRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 		t.Fatalf("unable to create request: %s", err)
 	}
 
-	req.Header.Add("Content-type", "application/json")
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
+	req.Header.Set("Content-type", "application/json")
 
-	for key, value := range headers {
-		req.Header.Set(key, value)
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

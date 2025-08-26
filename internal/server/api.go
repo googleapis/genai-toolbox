@@ -252,8 +252,8 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// ADC lacking permission or credentials configuration error.
-			internalErr := fmt.Errorf("unexpected auth error occured during Tool invocation")
-			s.logger.ErrorContext(ctx, fmt.Sprintf("%s: %v", internalErr, err))
+			internalErr := fmt.Errorf("unexpected auth error occured during Tool invocation: %w", err)
+			s.logger.ErrorContext(ctx, internalErr.Error())
 			_ = render.Render(w, r, newErrResponse(internalErr, http.StatusInternalServerError))
 			return
 		}
