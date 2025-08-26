@@ -69,6 +69,15 @@ func DisableArrayTest() InvokeTestOption {
 	}
 }
 
+// EnableClientAuthTest runs the client authorization tests.
+// Only enable it if your source supports the `useClientOAuth` configuration.
+// Currently, this should only be used with the BigQuery tests.
+func EnableClientAuthTest() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.supportClientAuth = true
+	}
+}
+
 /* Configurations for RunMCPToolCallMethod()  */
 
 // MCPTestConfig represents the various configuration options for mcp tool call tests.
@@ -87,6 +96,9 @@ func WithMcpMyToolId3NameAliceWant(s string) McpTestOption {
 	}
 }
 
+// EnableMcpClientAuthTest runs the client authorization tests.
+// Only enable it if your source supports the `useClientOAuth` configuration.
+// Currently, this should only be used with the BigQuery tests.
 func EnableMcpClientAuthTest() McpTestOption {
 	return func(c *MCPTestConfig) {
 		c.supportClientAuth = true

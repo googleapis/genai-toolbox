@@ -442,10 +442,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	if rpcResponse, ok := res.(jsonrpc.JSONRPCError); ok {
 		code := rpcResponse.Error.Code
-		switch {
-		case code == jsonrpc.INTERNAL_ERROR:
+		switch code {
+		case jsonrpc.INTERNAL_ERROR:
 			w.WriteHeader(http.StatusInternalServerError)
-		case code == jsonrpc.INVALID_REQUEST:
+		case jsonrpc.INVALID_REQUEST:
 			errStr := err.Error()
 			if errors.Is(err, tools.ErrUnauthorized) {
 				w.WriteHeader(http.StatusUnauthorized)
