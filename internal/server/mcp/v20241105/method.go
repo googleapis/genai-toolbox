@@ -124,21 +124,20 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	results, err := tool.Invoke(ctx, params, accessToken)
 	if err != nil {
 		errStr := err.Error()
+		// Missing authService tokens.
 		if errors.Is(err, tools.ErrUnauthorized) {
 			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		if strings.Contains(errStr, "Error 401") {
-			if !tool.RequiresClientAuthorization() {
-				return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		// Upstream auth error
+		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
+			if tool.RequiresClientAuthorization() {
+				// Error with client credentials should pass down to the client
+				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 			}
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			// Auth error with ADC should raise internal 500 error
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 		}
-		if strings.Contains(errStr, "Error 403") {
-			if !tool.RequiresClientAuthorization() {
-				return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-			}
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-		}
+
 		text := TextContent{
 			Type: "text",
 			Text: err.Error(),
