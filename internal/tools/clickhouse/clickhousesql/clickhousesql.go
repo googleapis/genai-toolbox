@@ -39,14 +39,14 @@ func init() {
 }
 
 func newSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := SQLConfig{Name: name}
+	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
-type SQLConfig struct {
+type Config struct {
 	Name               string           `yaml:"name" validate:"required"`
 	Kind               string           `yaml:"kind" validate:"required"`
 	Source             string           `yaml:"source" validate:"required"`
@@ -57,13 +57,13 @@ type SQLConfig struct {
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 }
 
-var _ tools.ToolConfig = SQLConfig{}
+var _ tools.ToolConfig = Config{}
 
-func (cfg SQLConfig) ToolConfigKind() string {
+func (cfg Config) ToolConfigKind() string {
 	return sqlKind
 }
 
-func (cfg SQLConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)

@@ -43,7 +43,7 @@ func TestParseFromYamlClickHouseExecuteSQL(t *testing.T) {
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": ExecuteSQLConfig{
+				"example_tool": Config{
 					Name:         "example_tool",
 					Kind:         "clickhouse-execute-sql",
 					Source:       "my-instance",

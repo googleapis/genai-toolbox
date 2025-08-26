@@ -510,62 +510,6 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 	}
 }
 
-// GetClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql kind
-func GetClickHouseSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
-	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String) ENGINE = Memory", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, ?)", tableName)
-	paramStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? AND name = ?", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?", tableName)
-	arrayStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN (?) AND name IN (?)", tableName)
-	params := []any{1, "Alice", 2, "Bob", 3, "Sid", 4, "RandomName"}
-	return createStatement, insertStatement, paramStatement, idParamStatement, nameParamStatement, arrayStatement, params
-}
-
-// GetClickHouseSQLAuthToolInfo returns statements and param of my-auth-tool for clickhouse-sql kind
-func GetClickHouseSQLAuthToolInfo(tableName string) (string, string, string, []any) {
-	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String, email String) ENGINE = Memory", tableName)
-	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (?, ?, ?), (?, ?, ?)", tableName)
-	authStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?", tableName)
-	params := []any{1, "Alice", "test@google.com", 2, "Bob", "bob@example.com"}
-	return createStatement, insertStatement, authStatement, params
-}
-
-// GetClickHouseSQLTmplToolStatement returns statements and param for template parameter test cases for clickhouse-sql kind
-func GetClickHouseSQLTmplToolStatement() (string, string) {
-	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
-	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
-	return tmplSelectCombined, tmplSelectFilterCombined
-}
-
-// SetupClickHouseSQLTable creates and inserts data into a table of tool
-// compatible with clickhouse-sql tool
-func SetupClickHouseSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
-	err := pool.PingContext(ctx)
-	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
-	}
-
-	// Create table
-	_, err = pool.ExecContext(ctx, createStatement)
-	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
-	}
-
-	// Insert test data
-	_, err = pool.ExecContext(ctx, insertStatement, params...)
-	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName))
-		if err != nil {
-			t.Errorf("Teardown failed: %s", err)
-		}
-	}
-}
 
 // GetRedisWants return the expected wants for redis
 func GetRedisValkeyWants() (string, string, string, string, string, string) {

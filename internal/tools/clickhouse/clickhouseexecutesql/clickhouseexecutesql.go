@@ -39,14 +39,14 @@ func init() {
 }
 
 func newExecuteSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := ExecuteSQLConfig{Name: name}
+	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
-type ExecuteSQLConfig struct {
+type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
@@ -54,13 +54,13 @@ type ExecuteSQLConfig struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-var _ tools.ToolConfig = ExecuteSQLConfig{}
+var _ tools.ToolConfig = Config{}
 
-func (cfg ExecuteSQLConfig) ToolConfigKind() string {
+func (cfg Config) ToolConfigKind() string {
 	return executeSQLKind
 }
 
-func (cfg ExecuteSQLConfig) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)

@@ -120,17 +120,17 @@ func TestClickHouse(t *testing.T) {
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetClickHouseSQLParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupClickHouseSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := GetClickHouseSQLParamToolInfo(tableNameParam)
+	teardownTable1 := SetupClickHouseSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	defer teardownTable1(t)
 
-	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetClickHouseSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := GetClickHouseSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := SetupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
 	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = AddClickHouseExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetClickHouseSQLTmplToolStatement()
+	tmplSelectCombined, tmplSelectFilterCombined := GetClickHouseSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -150,11 +150,10 @@ func TestClickHouse(t *testing.T) {
 	tests.RunToolGetTest(t)
 
 	select1Want, failInvocationWant, createTableStatement := GetClickHouseWants()
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, false)
+	tests.RunToolInvokeTest(t, select1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+	tests.RunMCPToolCallMethod(t, failInvocationWant)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 func AddClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
@@ -295,7 +294,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	}
 
 	t.Run("SimpleSelect", func(t *testing.T) {
-		toolConfig := clickhousesql.SQLConfig{
+		toolConfig := clickhousesql.Config{
 			Name:        "test-select",
 			Kind:        "clickhouse-sql",
 			Source:      "test-clickhouse",
@@ -313,7 +312,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		result, err := tool.Invoke(ctx, tools.ParamValues{})
+		result, err := tool.Invoke(ctx, tools.ParamValues{}, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -329,7 +328,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	})
 
 	t.Run("ParameterizedQuery", func(t *testing.T) {
-		toolConfig := clickhousesql.SQLConfig{
+		toolConfig := clickhousesql.Config{
 			Name:        "test-param-query",
 			Kind:        "clickhouse-sql",
 			Source:      "test-clickhouse",
@@ -354,7 +353,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			{Name: "min_age", Value: 28},
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -370,7 +369,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	})
 
 	t.Run("EmptyResult", func(t *testing.T) {
-		toolConfig := clickhousesql.SQLConfig{
+		toolConfig := clickhousesql.Config{
 			Name:        "test-empty-result",
 			Kind:        "clickhouse-sql",
 			Source:      "test-clickhouse",
@@ -395,7 +394,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			{Name: "id", Value: 999}, // Non-existent ID
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -411,7 +410,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	})
 
 	t.Run("InvalidSQL", func(t *testing.T) {
-		toolConfig := clickhousesql.SQLConfig{
+		toolConfig := clickhousesql.Config{
 			Name:        "test-invalid-sql",
 			Kind:        "clickhouse-sql",
 			Source:      "test-clickhouse",
@@ -429,7 +428,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		_, err = tool.Invoke(ctx, tools.ParamValues{})
+		_, err = tool.Invoke(ctx, tools.ParamValues{}, "")
 		if err == nil {
 			t.Error("Expected error for invalid SQL, got nil")
 		}
@@ -456,7 +455,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	tableName := "test_exec_sql_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	t.Run("CreateTable", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-create-table",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -484,7 +483,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: createSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to create table: %v", err)
 		}
@@ -500,7 +499,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	})
 
 	t.Run("InsertData", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-insert",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -522,7 +521,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: insertSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to insert data: %v", err)
 		}
@@ -538,7 +537,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	})
 
 	t.Run("SelectData", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-select",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -560,7 +559,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: selectSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to select data: %v", err)
 		}
@@ -576,7 +575,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	})
 
 	t.Run("DropTable", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-drop-table",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -598,7 +597,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: dropSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to drop table: %v", err)
 		}
@@ -614,7 +613,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	})
 
 	t.Run("MissingSQL", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-missing-sql",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -636,7 +635,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: ""},
 		}
 
-		_, err = tool.Invoke(ctx, params)
+		_, err = tool.Invoke(ctx, params, "")
 		if err == nil {
 			t.Error("Expected error for empty SQL parameter, got nil")
 		} else {
@@ -645,7 +644,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	})
 
 	t.Run("SQLInjectionAttempt", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-sql-injection",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -668,7 +667,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: injectionSQL},
 		}
 
-		_, err = tool.Invoke(ctx, params)
+		_, err = tool.Invoke(ctx, params, "")
 		// This should either fail or only execute the first statement
 		// dont check the specific error as behavior may vary
 	})
@@ -695,7 +694,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 		}
 		longQuery := "SELECT 1 WHERE " + strings.Join(conditions, " AND ")
 
-		toolConfig := clickhouseexecutesql.ExecuteSQLConfig{
+		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-long-query",
 			Kind:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
@@ -716,7 +715,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			{Name: "sql", Value: longQuery},
 		}
 
-		result, err := tool.Invoke(ctx, params)
+		result, err := tool.Invoke(ctx, params, "")
 		if err != nil {
 			t.Fatalf("Failed to execute long query: %v", err)
 		}
@@ -753,7 +752,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to insert null value: %v", err)
 		}
 
-		toolConfig := clickhousesql.SQLConfig{
+		toolConfig := clickhousesql.Config{
 			Name:        "test-null-values",
 			Kind:        "clickhouse-sql",
 			Source:      "test-clickhouse",
@@ -771,7 +770,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		result, err := tool.Invoke(ctx, tools.ParamValues{})
+		result, err := tool.Invoke(ctx, tools.ParamValues{}, "")
 		if err != nil {
 			t.Fatalf("Failed to select null values: %v", err)
 		}
@@ -794,7 +793,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("ConcurrentQueries", func(t *testing.T) {
-		toolConfig := clickhousesql.SQLConfig{
+		toolConfig := clickhousesql.Config{
 			Name:        "test-concurrent",
 			Kind:        "clickhouse-sql",
 			Source:      "test-clickhouse",
@@ -825,7 +824,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 					{Name: "limit", Value: n + 1},
 				}
 
-				result, err := tool.Invoke(ctx, params)
+				result, err := tool.Invoke(ctx, params, "")
 				if err != nil {
 					t.Errorf("Concurrent query %d failed: %v", n, err)
 					return
@@ -865,4 +864,61 @@ func createMockSource(t *testing.T, pool *sql.DB) sources.Source {
 	}
 
 	return source
+}
+
+// GetClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql kind
+func GetClickHouseSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String) ENGINE = Memory", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, ?)", tableName)
+	paramStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? AND name = ?", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?", tableName)
+	arrayStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN (?) AND name IN (?)", tableName)
+	params := []any{1, "Alice", 2, "Bob", 3, "Sid", 4, "RandomName"}
+	return createStatement, insertStatement, paramStatement, idParamStatement, nameParamStatement, arrayStatement, params
+}
+
+// GetClickHouseSQLAuthToolInfo returns statements and param of my-auth-tool for clickhouse-sql kind
+func GetClickHouseSQLAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String, email String) ENGINE = Memory", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (?, ?, ?), (?, ?, ?)", tableName)
+	authStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?", tableName)
+	params := []any{1, "Alice", "test@google.com", 2, "Bob", "bob@example.com"}
+	return createStatement, insertStatement, authStatement, params
+}
+
+// GetClickHouseSQLTmplToolStatement returns statements and param for template parameter test cases for clickhouse-sql kind
+func GetClickHouseSQLTmplToolStatement() (string, string) {
+	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
+	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
+	return tmplSelectCombined, tmplSelectFilterCombined
+}
+
+// SetupClickHouseSQLTable creates and inserts data into a table of tool
+// compatible with clickhouse-sql tool
+func SetupClickHouseSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+	err := pool.PingContext(ctx)
+	if err != nil {
+		t.Fatalf("unable to connect to test database: %s", err)
+	}
+
+	// Create table
+	_, err = pool.ExecContext(ctx, createStatement)
+	if err != nil {
+		t.Fatalf("unable to create test table %s: %s", tableName, err)
+	}
+
+	// Insert test data
+	_, err = pool.ExecContext(ctx, insertStatement, params...)
+	if err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName))
+		if err != nil {
+			t.Errorf("Teardown failed: %s", err)
+		}
+	}
 }

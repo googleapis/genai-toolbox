@@ -15,11 +15,11 @@
 package clickhouse
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -27,97 +27,90 @@ import (
 )
 
 func TestConfigToolConfigKind(t *testing.T) {
-	config := SQLConfig{}
+	config := Config{}
 	if config.ToolConfigKind() != sqlKind {
 		t.Errorf("Expected %s, got %s", sqlKind, config.ToolConfigKind())
 	}
 }
 
-func TestNewSQLConfig(t *testing.T) {
+func TestParseFromYamlClickHouseSQL(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
-		t.Fatalf("Failed to create context with logger: %v", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	tests := []struct {
-		name    string
-		yaml    string
-		want    SQLConfig
-		wantErr bool
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
 	}{
 		{
-			name: "valid config with parameters",
-			yaml: `
-name: test-clickhouse-tool
-kind: clickhouse-sql
-source: test-source
-description: Test ClickHouse tool
-statement: SELECT * FROM test_table WHERE id = $1
-parameters:
-  - name: id
-    type: string
-    description: Test ID
-`,
-			want: SQLConfig{
-				Name:        "test-clickhouse-tool",
-				Kind:        "clickhouse-sql",
-				Source:      "test-source",
-				Description: "Test ClickHouse tool",
-				Statement:   "SELECT * FROM test_table WHERE id = $1",
-				Parameters: tools.Parameters{
-					tools.NewStringParameter("id", "Test ID"),
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: clickhouse-sql
+					source: my-instance
+					description: some description
+					statement: SELECT 1
+			`,
+			want: server.ToolConfigs{
+				"example_tool": Config{
+					Name:         "example_tool",
+					Kind:         "clickhouse-sql",
+					Source:       "my-instance",
+					Description:  "some description",
+					Statement:    "SELECT 1",
+					AuthRequired: []string{},
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name: "valid config without parameters",
-			yaml: `
-name: simple-tool
-kind: clickhouse-sql
-source: ch-source
-description: Simple query
-statement: SELECT 1
-`,
-			want: SQLConfig{
-				Name:        "simple-tool",
-				Kind:        "clickhouse-sql",
-				Source:      "ch-source",
-				Description: "Simple query",
-				Statement:   "SELECT 1",
-				Parameters:  nil,
+			desc: "with parameters",
+			in: `
+			tools:
+				param_tool:
+					kind: clickhouse-sql
+					source: test-source
+					description: Test ClickHouse tool
+					statement: SELECT * FROM test_table WHERE id = $1
+					parameters:
+					  - name: id
+					    type: string
+					    description: Test ID
+			`,
+			want: server.ToolConfigs{
+				"param_tool": Config{
+					Name:        "param_tool",
+					Kind:        "clickhouse-sql",
+					Source:      "test-source",
+					Description: "Test ClickHouse tool",
+					Statement:   "SELECT * FROM test_table WHERE id = $1",
+					Parameters: tools.Parameters{
+						tools.NewStringParameter("id", "Test ID"),
+					},
+					AuthRequired: []string{},
+				},
 			},
-			wantErr: false,
 		},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(tt.yaml))
-			got, err := newSQLConfig(ctx, tt.want.Name, decoder)
-			
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("newSQLConfig() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
-				return
+				t.Fatalf("unable to unmarshal: %s", err)
 			}
-
-			gotConfig, ok := got.(SQLConfig)
-			if !ok {
-				t.Fatalf("Expected SQLConfig type, got %T", got)
-			}
-
-			if diff := cmp.Diff(tt.want, gotConfig); diff != "" {
-				t.Errorf("newSQLConfig() mismatch (-want +got):\n%s", diff)
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
 	}
 }
 
 func TestSQLConfigInitializeValidSource(t *testing.T) {
-	config := SQLConfig{
+	config := Config{
 		Name:        "test-tool",
 		Kind:        sqlKind,
 		Source:      "test-clickhouse",
@@ -149,7 +142,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 }
 
 func TestSQLConfigInitializeMissingSource(t *testing.T) {
-	config := SQLConfig{
+	config := Config{
 		Name:        "test-tool",
 		Kind:        sqlKind,
 		Source:      "missing-source",
@@ -179,7 +172,7 @@ func (m *mockIncompatibleSource) SourceKind() string {
 }
 
 func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
-	config := SQLConfig{
+	config := Config{
 		Name:        "test-tool",
 		Kind:        sqlKind,
 		Source:      "incompatible-source",
