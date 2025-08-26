@@ -231,16 +231,16 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	res, err := tool.Invoke(ctx, params, accessToken)
 
-	// Determin what error to return to the users.
+	// Determine what error to return to the users.
 	if err != nil {
 		errStr := err.Error()
 		var statusCode int
 
 		// Upstream API auth error propagation
 		switch {
-		case strings.Contains(errStr, "401"):
+		case strings.Contains(errStr, "Error 401"):
 			statusCode = http.StatusUnauthorized
-		case strings.Contains(errStr, "403"):
+		case strings.Contains(errStr, "Error 403"):
 			statusCode = http.StatusForbidden
 		}
 

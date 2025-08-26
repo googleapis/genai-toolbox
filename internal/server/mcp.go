@@ -413,11 +413,11 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 		// Check for specific authorization errors to return an HTTP 401.
 		errStr := err.Error()
-		if errors.Is(err, tools.ErrUnauthorized) || strings.Contains(errStr, "401") {
+		if errors.Is(err, tools.ErrUnauthorized) || strings.Contains(errStr, "Error 401") {
 			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 			return
 		}
-		if strings.Contains(errStr, "403") {
+		if strings.Contains(errStr, "Error 403") {
 			_ = render.Render(w, r, newErrResponse(err, http.StatusForbidden))
 			return
 		}
