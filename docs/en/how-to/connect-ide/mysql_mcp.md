@@ -182,7 +182,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","mysql","--stdio"],
