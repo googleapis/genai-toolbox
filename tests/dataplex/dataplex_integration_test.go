@@ -109,7 +109,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 
 	teardownTable1 := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
 	teardownAspectType1 := setupDataplexThirdPartyAspectType(t, ctx, dataplexClient, aspectTypeId)
-	time.Sleep(2 * time.Minute) // wait for table and aspect type to be ingested
+	time.Sleep(10 * time.Minute) // wait for table and aspect type to be ingested
 	defer teardownTable1(t)
 	defer teardownAspectType1(t)
 
