@@ -25,33 +25,39 @@ This project follows
 
 ## Contribution process
 
-### Code reviews
+> [!NOTE]
+> New contributions should always include both unit and integration tests.
+ 
 
 All submissions, including submissions by project members, require review. We
 use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
-Within 2-5 days, a reviewer will review your PR. They may approve it, or request
-changes. When requesting changes, reviewers should self-assign the PR to ensure
+### Code reviews
+
+* Within 2-5 days, a reviewer will review your PR. They may approve it, or request
+changes. 
+* When requesting changes, reviewers should self-assign the PR to ensure
 they are aware of any updates.
-If additional changes are needed, push additional commits to your PR branch -
-this helps the reviewer know which parts of the PR have changed. Commits will be
+* If additional changes are needed, push additional commits to your PR branch -
+this helps the reviewer know which parts of the PR have changed. 
+* Commits will be
 squashed when merged.
-Please follow up with changes promptly. If a PR is awaiting changes by the
+* Please follow up with changes promptly. 
+* If a PR is awaiting changes by the
 author for more than 10 days, maintainers may mark that PR as Draft. PRs that
 are inactive for more than 30 days may be closed.
 
-### Adding a New Database Source and Tool
+## Adding a New Database Source or Tool
 
 We recommend creating an
 [issue](https://github.com/googleapis/genai-toolbox/issues) before
 implementation to ensure we can accept the contribution and no duplicated work.
 If you have any questions, reach out on our
-[Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team. New
-contributions should be added with both unit tests and integration tests.
+[Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team.  
 
-#### 1. Implement the New Data Source
+### Adding a New Database Source
 
 We recommend looking at an [example source
 implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/sources/postgres/postgres.go).
@@ -78,7 +84,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 * **Implement `init()`** to register the new Source.
 * **Implement Unit Tests** in a file named `newdb_test.go`.
 
-#### 2. Implement the New Tool
+### Adding a New Tool
 
 We recommend looking at an [example tool
 implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
@@ -111,7 +117,7 @@ tools.
 * **Implement `init()`** to register the new Tool.
 * **Implement Unit Tests** in a file named `newdb_test.go`.
 
-#### 3. Add Integration Tests
+### Adding Integration Tests
 
 * **Add a test file** under a new directory `tests/newdb`.
 * **Add pre-defined integration test suites** in the
@@ -153,7 +159,7 @@ tools.
 [temp-param-doc]:
     https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
 
-#### 4. Add Documentation
+### Adding Documentation
 
 * **Update the documentation** to include information about your new data source
   and tool. This includes:
@@ -163,7 +169,7 @@ tools.
 
 * **(Optional) Add samples** to the `docs/en/samples/<newdb>` directory.
 
-#### (Optional) 5. Add Prebuilt Tools
+### (Optional) Adding Prebuilt Tools
 
 You can provide developers with a set of "build-time" tools to aid common
 software development user journeys like viewing and creating tables/collections
@@ -177,7 +183,7 @@ and data.
   [internal/prebuiltconfigs/prebuiltconfigs_test.go](internal/prebuiltconfigs/prebuiltconfigs_test.go)
   and [cmd/root_test.go](cmd/root_test.go).
 
-#### 6. Submit a Pull Request
+## Submitting a Pull Request
 
 Submit a pull request to the repository with your changes. Be sure to include a
 detailed description of your changes and any requests for long term testing
