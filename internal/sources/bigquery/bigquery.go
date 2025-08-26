@@ -159,6 +159,8 @@ func initBigQueryConnection(
 	return client, restService, cred.TokenSource, clientCreator, nil
 }
 
+// initBigQueryConnectionWithOAuthToken initialize a BigQuery client with an
+// OAuth access token.
 func initBigQueryConnectionWithOAuthToken(
 	ctx context.Context,
 	project string,
@@ -188,6 +190,9 @@ func initBigQueryConnectionWithOAuthToken(
 	return client, restService, nil
 }
 
+// newBigQueryClientCreator sets the project parameters for the init helper
+// function. The returned function takes in an OAuth access token and uses it to
+// create a BQ client.
 func newBigQueryClientCreator(
 	ctx context.Context,
 	project string,

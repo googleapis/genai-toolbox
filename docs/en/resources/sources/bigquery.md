@@ -66,31 +66,50 @@ Connect your IDE to BigQuery using Toolbox.
 BigQuery uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to BigQuery resources like projects, datasets, and tables.
 
-By default, Toolbox will use your [Application Default Credentials (ADC)][adc]
-to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
-However, if the `useClientOAuth` parameter is set to true, Toolbox will instead
-use the user's OAuth access token. This token is parsed from the "Authorization"
-header passed in with the Tool invocation request, allowing queries to be made
-on behalf of the end-user.
+## Authentication via Application Default Credentials (ADC)
 
-Regardless of the authentication method, you need to ensure the corresponding
-IAM identity has the correct permissions for the queries you intend to run.
-Common roles include `roles/bigquery.user` (which includes permissions to run
-jobs and read data) or `roles/bigquery.dataViewer`. See
-[Introduction to BigQuery IAM][grant-permissions] for more information on
-applying IAM permissions and roles to an identity.
+By **default**, Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
+
+When using this method, you need to ensure the IAM identity associated with your
+ADC (such as a service account) has the correct permissions for the queries you
+intend to run. Common roles include `roles/bigquery.user` (which includes
+permissions to run jobs and read data) or `roles/bigbigquery.dataViewer`.
+Follow this [guide][set-adc] to set up your ADC.
+
+### Authentication via User's OAuth Token (`useClientOAuth`)
+
+If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the end-user's OAuth access token for authentication. This token is parsed from the `Authorization` header passed in with the tool invocation request. This method allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the end-user.
+
+When using this on-behalf-of authentication, you must ensure that the
+**end-user's** identity has been granted the correct IAM permissions. Currently,
+`useClientOAuth` can only be used with the following tools:
+
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
 
 [iam-overview]: https://cloud.google.com/bigquery/docs/access-control
 [adc]: https://cloud.google.com/docs/authentication#adc
-[grant-permissions]: https://cloud.google.com/bigquery/docs/access-control
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 
 ## Example
+
+Initialize a BigQuery source that uses ADC:
 
 ```yaml
 sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+```
+
+Initialize a BigQuery source that uses the client access token:
+
+```yaml
+sources:
+  my-bigquery-client-auth-source:
+    kind: "bigquery"
+    project: "my-project-id"
+    useClientOAuth: true
 ```
 
 ## Reference

@@ -15,8 +15,6 @@
 package util
 
 import (
-	"errors"
-
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 )
 
@@ -112,6 +110,3 @@ type Implementation struct {
 	BaseMetadata
 	Version string `json:"version"`
 }
-
-// ErrUnauthorizedRequest is thrown when a tool call request is unauthorized
-var ErrUnauthorizedRequest = errors.New("authorization header required but not provided")
