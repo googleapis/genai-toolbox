@@ -410,17 +410,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.logger.DebugContext(ctx, err.Error())
-
-		// Check for specific authorization errors to return an HTTP 401.
-		errStr := err.Error()
-		if errors.Is(err, tools.ErrUnauthorized) || strings.Contains(errStr, "Error 401") {
-			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
-			return
-		}
-		if strings.Contains(errStr, "Error 403") {
-			_ = render.Render(w, r, newErrResponse(err, http.StatusForbidden))
-			return
-		}
 	}
 
 	// notifications will return empty string
@@ -447,6 +436,23 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			s.logger.DebugContext(ctx, "session is close")
 		default:
 			s.logger.DebugContext(ctx, "unable to add to event queue")
+		}
+	}
+	if rpcResponse, ok := res.(jsonrpc.JSONRPCError); ok {
+		code := rpcResponse.Error.Code
+		fmt.Println(res)
+		switch {
+		case code == jsonrpc.INTERNAL_ERROR:
+			w.WriteHeader(http.StatusInternalServerError)
+		case code == jsonrpc.INVALID_REQUEST:
+			errStr := err.Error()
+			if errors.Is(err, tools.ErrUnauthorized) {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if strings.Contains(errStr, "Error 401") {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if strings.Contains(errStr, "Error 403") {
+				w.WriteHeader(http.StatusForbidden)
+			}
 		}
 	}
 

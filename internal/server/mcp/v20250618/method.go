@@ -18,7 +18,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -121,6 +123,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, params, accessToken)
 	if err != nil {
+		errStr := err.Error()
+		if errors.Is(err, tools.ErrUnauthorized) || strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
 		text := TextContent{
 			Type: "text",
 			Text: err.Error(),

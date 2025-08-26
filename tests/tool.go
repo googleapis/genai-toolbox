@@ -907,7 +907,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 				},
 			},
 			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call\"}}",
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: unauthorized\"}}",
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
