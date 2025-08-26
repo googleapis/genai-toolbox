@@ -93,7 +93,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
+		mcpManifest:        mcpManifest,
+		ShowHiddenExplores: s.ShowHiddenExplores,
 	}, nil
 }
 
@@ -101,17 +102,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name               string `yaml:"name"`
+	Kind               string `yaml:"kind"`
+	Client             *v4.LookerSDK
+	ApiSettings        *rtl.ApiSettings
+	AuthRequired       []string         `yaml:"authRequired"`
+	Parameters         tools.Parameters `yaml:"parameters"`
+	manifest           tools.Manifest
+	mcpManifest        tools.McpManifest
+	ShowHiddenExplores bool
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -122,7 +124,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
 	}
 
-	resp, err := t.Client.LookmlModel(model, "explores(name,label,group_label)", t.ApiSettings)
+	resp, err := t.Client.LookmlModel(model, "explores(name,description,label,group_label,hidden)", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_explores request: %s", err)
 	}
@@ -130,6 +132,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	var data []any
 	for _, v := range *resp.Explores {
 		logger.DebugContext(ctx, "Got response element of %v\n", v)
+		if !t.ShowHiddenExplores && v.Hidden != nil && *v.Hidden {
+			continue
+		}
 		vMap := make(map[string]any)
 		if v.Name != nil {
 			vMap["name"] = *v.Name
@@ -162,4 +167,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

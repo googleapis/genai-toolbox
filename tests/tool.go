@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 )
 
 // RunToolGet runs the tool get endpoint
@@ -244,129 +245,198 @@ func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpl
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeIdNullWant, nullString string, supportNullParam, supportsArray bool) {
+func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
+	// Resolve options
+	// Default values for InvokeTestConfig
+	configs := &InvokeTestConfig{
+		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		nullWant:                 "null",
+		supportOptionalNullParam: true,
+		supportArrayParam:        true,
+		supportClientAuth:        false,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
+		name           string
+		api            string
+		enabled        bool
+		requestHeader  map[string]string
+		requestBody    io.Reader
+		wantStatusCode int
+		wantBody       string
 	}{
 		{
-			name:          "invoke my-simple-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          select1Want,
-			isErr:         false,
+			name:           "invoke my-simple-tool",
+			api:            "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "invoke my-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
-			want:          invokeParamWant,
-			isErr:         false,
+			name:           "invoke my-tool",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
+			wantBody:       configs.myToolId3NameAliceWant,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "invoke my-tool-by-id with nil response",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"id": 4}`)),
-			want:          invokeIdNullWant,
-			isErr:         false,
+			name:           "invoke my-tool-by-id with nil response",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"id": 4}`)),
+			wantBody:       configs.myToolById4Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "invoke my-tool-by-name with nil response",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          nullString,
-			isErr:         !supportNullParam,
+			name:           "invoke my-tool-by-name with nil response",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
+			enabled:        configs.supportOptionalNullParam,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       configs.nullWant,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-tool without parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-tool without parameters",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:          "Invoke my-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"id": 1}`)),
-			isErr:         true,
+			name:           "Invoke my-tool with insufficient parameters",
+			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"id": 1}`)),
+			wantBody:       "",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:          "invoke my-array-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
-			want:          invokeParamWant,
-			isErr:         !supportsArray,
+			name:           "invoke my-array-tool",
+			api:            "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
+			enabled:        configs.supportArrayParam,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
+			wantBody:       configs.myToolId3NameAliceWant,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-auth-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          "[{\"name\":\"Alice\"}]",
-			isErr:         false,
+			name:           "Invoke my-auth-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "[{\"name\":\"Alice\"}]",
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-auth-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:          "Invoke my-auth-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:       true,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         false,
-			want:          select1Want,
+
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:          "Invoke my-auth-required-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-required-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:          "Invoke my-auth-required-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			name:           "Invoke my-auth-required-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name:           "Invoke my-client-auth-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": accessToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-client-auth-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+
+			name:           "Invoke my-client-auth-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
 			// Send Tool invocation request
 			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
+			// Add headers
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
@@ -376,19 +446,22 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeIdNullW
 			}
 			defer resp.Body.Close()
 
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			// Check status code
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Errorf("StatusCode mismatch: got %d, want %d. Response body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+
+			// skip response body check
+			if tc.wantBody == "" {
+				return
 			}
 
 			// Check response body
 			var body map[string]interface{}
 			err = json.NewDecoder(resp.Body).Decode(&body)
 			if err != nil {
-				t.Fatalf("error parsing response body")
+				t.Fatalf("error parsing response body: %s", err)
 			}
 
 			got, ok := body["result"].(string)
@@ -396,123 +469,37 @@ func RunToolInvokeTest(t *testing.T, select1Want, invokeParamWant, invokeIdNullW
 				t.Fatalf("unable to find result in response body")
 			}
 
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			if got != tc.wantBody {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
 			}
 		})
 	}
 }
 
-// TemplateParameterTestConfig represents the various configuration options for template parameter tests.
-type TemplateParameterTestConfig struct {
-	ignoreDdl       bool
-	ignoreInsert    bool
-	ddlWant         string
-	selectAllWant   string
-	select1Want     string
-	selectEmptyWant string
-	nameFieldArray  string
-	nameColFilter   string
-	createColArray  string
-	insert1Want     string
-}
-
-type Option func(*TemplateParameterTestConfig)
-
-// WithIgnoreDdl is the option function to configure ignoreDdl.
-func WithIgnoreDdl() Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.ignoreDdl = true
-	}
-}
-
-// WithIgnoreInsert is the option function to configure ignoreInsert.
-func WithIgnoreInsert() Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.ignoreInsert = true
-	}
-}
-
-// WithDdlWant is the option function to configure ddlWant.
-func WithDdlWant(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.ddlWant = s
-	}
-}
-
-// WithSelectAllWant is the option function to configure selectAllWant.
-func WithSelectAllWant(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.selectAllWant = s
-	}
-}
-
-// WithSelect1Want is the option function to configure select1Want.
-func WithSelect1Want(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.select1Want = s
-	}
-}
-
-// WithSelectEmptyWant is the option function to configure selectEmptyWant.
-func WithSelectEmptyWant(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.selectEmptyWant = s
-	}
-}
-
-// WithReplaceNameFieldArray is the option function to configure replaceNameFieldArray.
-func WithReplaceNameFieldArray(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.nameFieldArray = s
-	}
-}
-
-// WithReplaceNameColFilter is the option function to configure replaceNameColFilter.
-func WithReplaceNameColFilter(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.nameColFilter = s
-	}
-}
-
-// WithCreateColArray is the option function to configure replaceNameColFilter.
-func WithCreateColArray(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.createColArray = s
-	}
-}
-
-func WithInsert1Want(s string) Option {
-	return func(c *TemplateParameterTestConfig) {
-		c.insert1Want = s
-	}
-}
-
-// NewTemplateParameterTestConfig creates a new TemplateParameterTestConfig instances with options.
-func NewTemplateParameterTestConfig(options ...Option) *TemplateParameterTestConfig {
-	templateParamTestOption := &TemplateParameterTestConfig{
-		ignoreDdl:       false,
-		ignoreInsert:    false,
+// RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
+func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
+	// Resolve options
+	// Default values for TemplateParameterTestConfig
+	configs := &TemplateParameterTestConfig{
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
-		select1Want:     "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		selectEmptyWant: "null",
-		nameFieldArray:  `["name"]`,
-		nameColFilter:   "name",
-		createColArray:  `["id INT","name VARCHAR(20)","age INT"]`,
 		insert1Want:     "null",
+
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+
+		supportDdl:    true,
+		supportInsert: true,
 	}
 
 	// Apply provided options
 	for _, option := range options {
-		option(templateParamTestOption)
+		option(configs)
 	}
 
-	return templateParamTestOption
-}
-
-// RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
-func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config *TemplateParameterTestConfig) {
 	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
 	// Test tool invoke endpoint
@@ -531,8 +518,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, config.createColArray))),
-			want:          config.ddlWant,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray))),
+			want:          configs.ddlWant,
 			isErr:         false,
 		},
 		{
@@ -541,7 +528,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
-			want:          config.insert1Want,
+			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -550,7 +537,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
-			want:          config.insert1Want,
+			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
@@ -558,7 +545,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          config.selectAllWant,
+			want:          configs.selectAllWant,
 			isErr:         false,
 		},
 		{
@@ -566,7 +553,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
-			want:          config.select1Want,
+			want:          configs.selectId1Want,
 			isErr:         false,
 		},
 		{
@@ -574,14 +561,14 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName))),
-			want:          config.selectEmptyWant,
+			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, config.nameFieldArray))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
 			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
@@ -589,8 +576,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			name:          "invoke select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, config.nameColFilter))),
-			want:          config.select1Want,
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
+			want:          configs.selectId1Want,
 			isErr:         false,
 		},
 		{
@@ -599,16 +586,16 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
-			want:          config.ddlWant,
+			want:          configs.ddlWant,
 			isErr:         false,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// if test case is DDL and source does not ignore ddl test cases
-			ddlAllow := !tc.ddl || (tc.ddl && !config.ignoreDdl)
-			// if test case is insert statement and source does not ignore insert test cases
-			insertAllow := !tc.insert || (tc.insert && !config.ignoreInsert)
+			// if test case is DDL and source support ddl test cases
+			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
+			// if test case is insert statement and source support insert test cases
+			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 			if ddlAllow && insertAllow {
 				// Send Tool invocation request
 				req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
@@ -654,7 +641,18 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, config 
 	}
 }
 
-func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, select1Want string) {
+func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want string, options ...ExecuteSqlOption) {
+	// Resolve options
+	// Default values for ExecuteSqlTestConfig
+	configs := &ExecuteSqlTestConfig{
+		select1Statement: `"SELECT 1"`,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	// Get ID token
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
@@ -674,7 +672,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 			name:          "invoke my-exec-sql-tool",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			want:          select1Want,
 			isErr:         false,
 		},
@@ -713,7 +711,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         false,
 			want:          select1Want,
 		},
@@ -721,14 +719,14 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement string, sele
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         true,
 		},
 	}
@@ -823,24 +821,41 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 }
 
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
-func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant string) {
+func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTestOption) {
+	// Resolve options
+	// Default values for MCPTestConfig
+	configs := &MCPTestConfig{
+		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+		supportClientAuth:      false,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
 	sessionId := RunInitialize(t, "2024-11-05")
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
 	}
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestBody   jsonrpc.JSONRPCRequest
-		requestHeader map[string]string
-		want          string
+		name           string
+		api            string
+		enabled        bool // switch to turn on/off the test case
+		requestBody    jsonrpc.JSONRPCRequest
+		requestHeader  map[string]string
+		wantStatusCode int
+		wantBody       string
 	}{
 		{
 			name:          "MCP Invoke my-tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -856,11 +871,13 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					},
 				},
 			},
-			want: invokeParamWant,
+			wantStatusCode: http.StatusOK,
+			wantBody:       configs.myToolId3NameAliceWant,
 		},
 		{
 			name:          "MCP Invoke invalid tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -873,11 +890,13 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 		},
 		{
 			name:          "MCP Invoke my-tool without parameters",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -890,11 +909,13 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-tool with insufficient parameters",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -907,11 +928,13 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -924,11 +947,70 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					"arguments": map[string]any{},
 				},
 			},
-			want: "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool\"}}",
+			wantStatusCode: http.StatusUnauthorized,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: unauthorized\"}}",
+		},
+
+		{
+			name:          "MCP Invoke my-client-auth-tool",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusOK,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
+		},
+		{
+			name:          "MCP Invoke my-client-auth-tool without access token",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusUnauthorized,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
+		},
+		{
+			name:          "MCP Invoke my-client-auth-tool with invalid access token",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",
 			api:           "http://127.0.0.1:5000/mcp",
+			enabled:       true,
 			requestHeader: map[string]string{},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -941,36 +1023,56 @@ func RunMCPToolCallMethod(t *testing.T, invokeParamWant, failInvocationWant stri
 					"arguments": map[string]any{"id": 1},
 				},
 			},
-			want: failInvocationWant,
+			wantStatusCode: http.StatusOK,
+			wantBody:       myFailToolWant,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
 			reqMarshal, err := json.Marshal(tc.requestBody)
 			if err != nil {
 				t.Fatalf("unexpected error during marshaling of request body")
 			}
 
-			_, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), header)
-			got := string(bytes.TrimSpace(respBody))
+			// add headers
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
+			for key, value := range tc.requestHeader {
+				headers[key] = value
+			}
 
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.want)
+			httpResponse, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
+
+			// Check status code
+			if httpResponse.StatusCode != tc.wantStatusCode {
+				t.Errorf("StatusCode mismatch: got %d, want %d", httpResponse.StatusCode, tc.wantStatusCode)
+			}
+
+			// Check response body
+			got := string(bytes.TrimSpace(respBody))
+			if !strings.Contains(got, tc.wantBody) {
+				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantBody)
 			}
 		})
 	}
 }
 
-func runRequest(t *testing.T, method, url string, body io.Reader, header map[string]string) (*http.Response, []byte) {
+func runRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		t.Fatalf("unable to create request: %s", err)
 	}
 
-	req.Header.Add("Content-type", "application/json")
-	for k, v := range header {
-		req.Header.Add(k, v)
+	req.Header.Set("Content-type", "application/json")
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

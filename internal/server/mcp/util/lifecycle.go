@@ -14,7 +14,9 @@
 
 package util
 
-import "github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+import (
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+)
 
 const (
 	// SERVER_NAME is the server name used in Implementation.

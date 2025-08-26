@@ -120,7 +120,7 @@ type Tool struct {
 	mcpManifest     tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	if len(t.AllowedDatasets) > 0 {
 		datasetIds := make([]any, len(t.AllowedDatasets))
 		for i, v := range t.AllowedDatasets {
@@ -167,4 +167,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }
