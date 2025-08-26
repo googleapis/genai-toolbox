@@ -2001,6 +2001,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"fmt
 
 	"github.com/googleapis/mcp-toolbox-sdk-go/core"
 	openai "github.com/openai/openai-go"
@@ -2130,7 +2131,7 @@ func main() {
 
 		params.Messages = append(params.Messages, openai.AssistantMessage(query))
 
-		println("\n", completion.Choices[0].Message.Content)
+		fmt.println("\n", completion.Choices[0].Message.Content)
 
 	}
 
@@ -2425,6 +2426,11 @@ etc., you could use environment variables instead with the format `${ENV_NAME}`.
 ```yaml
   user: ${USER_NAME}
   password: ${PASSWORD}
+```
+A default value can be specified like `${ENV_NAME:default}`.
+
+```yaml
+  port: ${DB_PORT:3306}
 ```
 
 ### Sources
@@ -7092,6 +7098,7 @@ sources:
     my-mongodb:
         kind: mongodb
         uri: "mongodb+srv://username:password@host.mongodb.net"       
+
 ```
 
 ## Reference
@@ -7100,7 +7107,6 @@ sources:
 |-----------|:--------:|:------------:|-------------------------------------------------------------------|
 | kind      |  string  |     true     | Must be "mongodb".                                                |
 | uri       |  string  |     true     | connection string to connect to MongoDB                           |
-| database  |  string  |     true     | Name of the mongodb database to connect to (e.g. "sample_mflix"). |
 
 
 # MySQL
@@ -10014,8 +10020,11 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
     *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
     *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
+    *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
 *   **Tools:**
+    *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
+    *   `forecast`: Use this tool to forecast time series data.
     *   `get_dataset_info`: Gets dataset metadata.
     *   `get_table_info`: Gets table metadata.
     *   `list_dataset_ids`: Lists datasets.
