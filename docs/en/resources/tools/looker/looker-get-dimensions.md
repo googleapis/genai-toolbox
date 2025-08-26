@@ -35,7 +35,7 @@ tools:
           explore_name looked up from get_explores.
 ```
 
-The response is a json array with the following elements
+The response is a json array with the following elements:
 
 ```json
 {

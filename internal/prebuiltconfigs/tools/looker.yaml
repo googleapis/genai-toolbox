@@ -89,7 +89,7 @@ tools:
           "field.id2": "condition2", ...}. Do not put the field.id in
           quotes. Filter expressions can be found at
           https://cloud.google.com/looker/docs/filter-expressions. There
-          is one mistake in that, however. Use "not null" instead of "-NULL".
+          is one mistake in that, however, Use `not null` instead of `-NULL`.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
