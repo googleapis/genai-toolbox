@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/ssh"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -54,6 +55,7 @@ type Config struct {
 	Password    string            `yaml:"password" validate:"required"`
 	Database    string            `yaml:"database" validate:"required"`
 	QueryParams map[string]string `yaml:"queryParams"`
+	SSH         *ssh.Config       `yaml:"ssh"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -61,20 +63,29 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams)
+	// Resolve SSH tunneling - this is the single line addition for SSH support
+	host, port, cleanup, err := ssh.ResolveConnection(ctx, r.Host, r.Port, r.SSH)
 	if err != nil {
+		return nil, err
+	}
+
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, host, port, r.User, r.Password, r.Database, r.QueryParams)
+	if err != nil {
+		cleanup() // Clean up tunnel on failure
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
 	err = pool.Ping(ctx)
 	if err != nil {
+		cleanup() // Clean up tunnel on failure
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Name:    r.Name,
+		Kind:    SourceKind,
+		Pool:    pool,
+		cleanup: cleanup,
 	}
 	return s, nil
 }
@@ -82,9 +93,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
-	Pool *pgxpool.Pool
+	Name    string `yaml:"name"`
+	Kind    string `yaml:"kind"`
+	Pool    *pgxpool.Pool
+	cleanup func() error
 }
 
 func (s *Source) SourceKind() string {
@@ -93,6 +105,17 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
+}
+
+// Close cleans up the PostgreSQL source and any SSH tunnel
+func (s *Source) Close() error {
+	if s.Pool != nil {
+		s.Pool.Close()
+	}
+	if s.cleanup != nil {
+		return s.cleanup()
+	}
+	return nil
 }
 
 func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string) (*pgxpool.Pool, error) {
