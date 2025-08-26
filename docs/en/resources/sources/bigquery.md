@@ -66,7 +66,7 @@ Connect your IDE to BigQuery using Toolbox.
 BigQuery uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to BigQuery resources like projects, datasets, and tables.
 
-## Authentication via Application Default Credentials (ADC)
+### Authentication via Application Default Credentials (ADC)
 
 By **default**, Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
 
@@ -76,13 +76,17 @@ intend to run. Common roles include `roles/bigquery.user` (which includes
 permissions to run jobs and read data) or `roles/bigbigquery.dataViewer`.
 Follow this [guide][set-adc] to set up your ADC.
 
-### Authentication via User's OAuth Token (`useClientOAuth`)
+### Authentication via User's OAuth Access Token
 
-If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the end-user's OAuth access token for authentication. This token is parsed from the `Authorization` header passed in with the tool invocation request. This method allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the end-user.
+If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
+OAuth access token for authentication. This token is parsed from the
+`Authorization` header passed in with the tool invocation request. This method
+allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
+client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
-**end-user's** identity has been granted the correct IAM permissions. Currently,
-`useClientOAuth` can only be used with the following tools:
+identity used has been granted the correct IAM permissions. Currently,
+this option is only supported by the following BigQuery tools:
 
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
   Run SQL queries directly against BigQuery datasets.
@@ -102,7 +106,7 @@ sources:
     project: "my-project-id"
 ```
 
-Initialize a BigQuery source that uses the client access token:
+Initialize a BigQuery source that uses the client's access token:
 
 ```yaml
 sources:
