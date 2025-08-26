@@ -265,7 +265,7 @@ type ToolsFile struct {
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
-// also support ${ENV_NAME-default_value}.
+// also support ${ENV_NAME:default_value}.
 func parseEnv(input string) (string, error) {
 	re := regexp.MustCompile(`\$\{(\w+)(:(\w+))?\}`)
 
