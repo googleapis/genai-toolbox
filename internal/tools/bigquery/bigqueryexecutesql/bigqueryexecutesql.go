@@ -164,6 +164,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
+
 	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)

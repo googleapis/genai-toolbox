@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
