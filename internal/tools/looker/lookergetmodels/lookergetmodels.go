@@ -92,7 +92,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
+		mcpManifest:      mcpManifest,
+		ShowHiddenModels: s.ShowHiddenModels,
 	}, nil
 }
 
@@ -100,14 +101,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name             string `yaml:"name"`
+	Kind             string `yaml:"kind"`
+	Client           *v4.LookerSDK
+	ApiSettings      *rtl.ApiSettings
+	AuthRequired     []string         `yaml:"authRequired"`
+	Parameters       tools.Parameters `yaml:"parameters"`
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
+	ShowHiddenModels bool
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -117,7 +119,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	excludeEmpty := false
-	excludeHidden := false
+	excludeHidden := !t.ShowHiddenModels
 	includeInternal := true
 
 	req := v4.RequestAllLookmlModels{

@@ -206,6 +206,72 @@ func TestServerConfigFlags(t *testing.T) {
 	}
 }
 
+func TestParseEnv(t *testing.T) {
+	tcs := []struct {
+		desc      string
+		env       map[string]string
+		in        string
+		want      string
+		err       bool
+		errString string
+	}{
+		{
+			desc:      "without default without env",
+			in:        "${FOO}",
+			want:      "",
+			err:       true,
+			errString: `environment variable not found: "FOO"`,
+		},
+		{
+			desc: "without default with env",
+			env: map[string]string{
+				"FOO": "bar",
+			},
+			in:   "${FOO}",
+			want: "bar",
+		},
+		{
+			desc: "with empty default",
+			in:   "${FOO:}",
+			want: "",
+		},
+		{
+			desc: "with default",
+			in:   "${FOO:bar}",
+			want: "bar",
+		},
+		{
+			desc: "with default with env",
+			env: map[string]string{
+				"FOO": "hello",
+			},
+			in:   "${FOO:bar}",
+			want: "hello",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.env != nil {
+				for k, v := range tc.env {
+					t.Setenv(k, v)
+				}
+			}
+			got, err := parseEnv(tc.in)
+			if tc.err {
+				if err == nil {
+					t.Fatalf("expected error not found")
+				}
+				if tc.errString != err.Error() {
+					t.Fatalf("incorrect error string: got %s, want %s", err, tc.errString)
+				}
+			}
+			if tc.want != got {
+				t.Fatalf("unexpected want: got %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestToolFileFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
@@ -1279,7 +1345,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery-database-tools": tools.ToolsetConfig{
 					Name:      "bigquery-database-tools",
-					ToolNames: []string{"execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
 				},
 			},
 		},
