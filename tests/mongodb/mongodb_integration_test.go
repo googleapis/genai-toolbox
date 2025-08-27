@@ -112,7 +112,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 		tests.WithMyToolId3NameAliceWant(myToolId3NameAliceWant),
 		tests.WithMyToolById4Want(myToolById4Want),
 	)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant,
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, select1Want,
 		tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant),
 	)
 

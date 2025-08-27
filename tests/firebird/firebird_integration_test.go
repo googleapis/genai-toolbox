@@ -127,7 +127,7 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, failInvocationWant, createTableStatement := getFirebirdWants()
+	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := getFirebirdWants()
 	nullWant := `[{"id":4,"name":null}]`
 	select1Statement := `"SELECT 1 AS \"constant\" FROM RDB$DATABASE;"`
 	templateParamCreateColArray := `["id INTEGER","name VARCHAR(255)","age INTEGER"]`
@@ -137,7 +137,7 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithNullWant(nullWant),
 		tests.DisableArrayTest())
-	tests.RunMCPToolCallMethod(t, failInvocationWant)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithSelect1Statement(select1Statement))
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithCreateColArray(templateParamCreateColArray))
@@ -303,11 +303,12 @@ func getFirebirdAuthToolInfo(tableName string) ([]string, string, string, []any)
 	return createStatements, insertStatement, toolStatement, params
 }
 
-func getFirebirdWants() (string, string, string) {
+func getFirebirdWants() (string, string, string, string) {
 	select1Want := `[{"constant":1}]`
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Dynamic SQL Error\nSQL error code = -104\nToken unknown - line 1, column 1\nSELEC\n"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Dynamic SQL Error\nSQL error code = -104\nToken unknown - line 1, column 1\nSELEC\n"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INTEGER PRIMARY KEY, name VARCHAR(50))"`
-	return select1Want, failInvocationWant, createTableStatement
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"constant\":1}"}]}}`
+	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
 }
 
 func getFirebirdToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {

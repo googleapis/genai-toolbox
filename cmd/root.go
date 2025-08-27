@@ -267,7 +267,7 @@ type ToolsFile struct {
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
 // also support ${ENV_NAME:default_value}.
 func parseEnv(input string) (string, error) {
-	re := regexp.MustCompile(`\$\{(\w+)(:(\w+))?\}`)
+	re := regexp.MustCompile(`\$\{(\w+)(:(\w*))?\}`)
 
 	var err error
 	output := re.ReplaceAllStringFunc(input, func(match string) string {
@@ -278,7 +278,7 @@ func parseEnv(input string) (string, error) {
 		if value, found := os.LookupEnv(variableName); found {
 			return value
 		}
-		if len(parts) == 4 {
+		if parts[2] != "" {
 			return parts[3]
 		}
 		err = fmt.Errorf("environment variable not found: %q", variableName)

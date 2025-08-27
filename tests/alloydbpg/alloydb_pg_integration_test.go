@@ -165,12 +165,12 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, failInvocationWant, createTableStatement := tests.GetPostgresWants()
+	select1Want, failInvocationWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
 
 	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want)
-	tests.RunMCPToolCallMethod(t, failInvocationWant)
+	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }

@@ -212,7 +212,7 @@ func TestToolGetEndpoint(t *testing.T) {
 }
 
 func TestToolInvokeEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2}
+	mockTools := []MockTool{tool1, tool2, tool4, tool5}
 	toolsMap, toolsets := setUpResources(t, mockTools)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
 	defer shutdown()
@@ -243,6 +243,20 @@ func TestToolInvokeEndpoint(t *testing.T) {
 		{
 			name:        "invalid tool",
 			toolName:    "some_imaginary_tool",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "",
+			isErr:       true,
+		},
+		{
+			name:        "tool4",
+			toolName:    tool4.Name,
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "",
+			isErr:       true,
+		},
+		{
+			name:        "tool5",
+			toolName:    tool5.Name,
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "",
 			isErr:       true,
