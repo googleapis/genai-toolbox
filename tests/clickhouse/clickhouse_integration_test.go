@@ -120,18 +120,18 @@ func TestClickHouse(t *testing.T) {
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := GetClickHouseSQLParamToolInfo(tableNameParam)
-	teardownTable1 := SetupClickHouseSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getClickHouseSQLParamToolInfo(tableNameParam)
+	teardownTable1 := setupClickHouseSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	defer teardownTable1(t)
 
-	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := GetClickHouseSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := SetupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getClickHouseSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := setupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
 	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = AddClickHouseExecuteSqlConfig(t, toolsFile)
-	tmplSelectCombined, tmplSelectFilterCombined := GetClickHouseSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = addClickHouseExecuteSqlConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := getClickHouseSQLTmplToolStatement()
+	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -149,14 +149,14 @@ func TestClickHouse(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, mcpSelect1Want, failInvocationWant, createTableStatement := GetClickHouseWants()
-	tests.RunToolInvokeTest(t, select1Want)
+	select1Want, mcpSelect1Want, failInvocationWant, createTableStatement, nilIdWant := getClickHouseWants()
+	tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolById4Want(nilIdWant))
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
-func AddClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+func addClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -175,6 +175,91 @@ func AddClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[stri
 		},
 	}
 	config["tools"] = tools
+	return config
+}
+
+func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+	toolsMap, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+
+	// ClickHouse-specific template parameter tools with compatible syntax
+	toolsMap["create-table-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Create table tool with template parameters",
+		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}}) ORDER BY id",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("columns", "The columns to create", tools.NewStringParameter("column", "A column name that will be created")),
+		},
+	}
+	toolsMap["insert-table-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Insert table tool with template parameters",
+		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewArrayParameter("columns", "The columns to insert into", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+			tools.NewStringParameter("values", "The values to insert as a comma separated string"),
+		},
+	}
+	toolsMap["select-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Select table tool with template parameters",
+		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}} ORDER BY id",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-templateParams-combined-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Select table tool with combined template parameters",
+		"statement":   tmplSelectCombined,
+		"parameters": []tools.Parameter{
+			tools.NewIntParameter("id", "the id of the user"),
+		},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-fields-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Select specific fields tool with template parameters",
+		"statement":   "SELECT name AS \"name\" FROM {{.tableName}} ORDER BY id",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Select table tool with filter template parameters",
+		"statement":   tmplSelectFilterCombined,
+		"parameters": []tools.Parameter{
+			tools.NewStringParameter("name", "the name to filter by"),
+		},
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+			tools.NewStringParameter("columnFilter", "some description"),
+		},
+	}
+	// Firebird uses simple DROP TABLE syntax without IF EXISTS
+	toolsMap["drop-table-templateParams-tool"] = map[string]any{
+		"kind":        toolKind,
+		"source":      "my-instance",
+		"description": "Drop table tool with template parameters",
+		"statement":   "DROP TABLE {{.tableName}}",
+		"templateParameters": []tools.Parameter{
+			tools.NewStringParameter("tableName", "some description"),
+		},
+	}
+	config["tools"] = toolsMap
 	return config
 }
 
@@ -251,12 +336,13 @@ func TestClickHouseBasicConnection(t *testing.T) {
 	t.Logf("✅ ClickHouse basic connection test completed successfully")
 }
 
-func GetClickHouseWants() (string, string, string, string) {
+func getClickHouseWants() (string, string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpSelect1Want := `{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"1\\\":1}\"}]}}`
-	failInvocationWant := `{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: clickhouse [execute]:: 400 code: Code: 62. DB::Exception: Syntax error: failed at position 1 (SELEC): SELEC 1;. Expected one of: Query, Query with output, EXPLAIN, EXPLAIN, SELECT query, possibly with UNION, list of union elements, SELECT query, subquery, possibly with UNION, SELECT subquery, SELECT query, WITH, FROM, SELECT, SHOW CREATE QUOTA query, SHOW CREATE, SHOW [FULL] [TEMPORARY] TABLES|DATABASES|CLUSTERS|CLUSTER|MERGES 'name' [[NOT] [I]LIKE 'str'] [LIMIT expr], SHOW, SHOW COLUMNS query, SHOW ENGINES query, SHOW ENGINES, SHOW FUNCTIONS query, SHOW FUNCTIONS, SHOW INDEXES query, SHOW SETTING query, SHOW SETTING, EXISTS or SHOW CREATE query, EXISTS, DESCRIBE FILESYSTEM CACHE query, DESCRIBE, DESC, DESCRIBE query, SHOW PROCESSLIST query, SHOW PROCESSLIST, CREATE TABLE or ATTACH TABLE query, CREATE, ATTACH, REPLACE, CREATE DATABASE query, CREATE VIEW query, CREATE DICTIONARY, CREATE LIVE VIEW query, CREATE WINDOW VIEW query, ALTER query, ALTER TABLE, ALTER TEMPORARY TABLE, ALTER DATABASE, RENAME query, RENAME DATABASE, RENAME TABLE, EXCHANGE TABLES, RENAME DICTIONARY, EXCHANGE DICTIONARIES, RENAME, DROP query, DROP, DETACH, TRUNCATE, UNDROP query, UNDROP, CHECK ALL TABLES, CHECK TABLE, KILL QUERY query, KILL, OPTIMIZE query, OPTIMIZE TABLE, WATCH query, WATCH, SHOW ACCESS query, SHOW ACCESS, ShowAccessEntitiesQuery, SHOW GRANTS query, SHOW GRANTS, SHOW PRIVILEGES query, SHOW PRIVILEGES, BACKUP or RESTORE query, BACKUP, RESTORE, INSERT query, INSERT INTO, USE query, USE, SET ROLE or SET DEFAULT ROLE query, SET ROLE DEFAULT, SET ROLE, SET DEFAULT ROLE, SET query, SET, SYSTEM query, SYSTEM, CREATE USER or ALTER USER query, ALTER USER, CREATE USER, CREATE ROLE or ALTER ROLE query, ALTER ROLE, CREATE ROLE, CREATE QUOTA or ALTER QUOTA query, ALTER QUOTA, CREATE QUOTA, CREATE ROW POLICY or ALTER ROW POLICY query, ALTER POLICY, ALTER ROW POLICY, CREATE POLICY, CREATE ROW POLICY, CREATE SETTINGS PROFILE or ALTER SETTINGS PROFILE query, ALTER SETTINGS PROFILE, ALTER PROFILE, CREATE SETTINGS PROFILE, CREATE PROFILE, CREATE FUNCTION query, DROP FUNCTION query, CREATE WORKLOAD query, DROP WORKLOAD query, CREATE RESOURCE query, DROP RESOURCE query, CREATE NAMED COLLECTION, DROP NAMED COLLECTION query, Alter NAMED COLLECTION query, ALTER, CREATE INDEX query, DROP INDEX query, DROP access entity query, MOVE access entity query, MOVE, GRANT or REVOKE query, REVOKE, GRANT, CHECK GRANT, CHECK GRANT, EXTERNAL DDL query, EXTERNAL DDL FROM, TCL query, BEGIN TRANSACTION, START TRANSACTION, COMMIT, ROLLBACK, SET TRANSACTION SNAPSHOT, Delete query, DELETE, Update query, UPDATE. (SYNTAX_ERROR) (version 25.7.5.34 (official build))\\n\"}],\"isError\":true}}`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: clickhouse [execute]:: 400 code: Code: 62. DB::Exception: Syntax error: failed at position 1 (SELEC): SELEC 1;. Expected one of: Query, Query with output, EXPLAIN, EXPLAIN, SELECT query, possibly with UNION, list of union elements, SELECT query, subquery, possibly with UNION, SELECT subquery, SELECT query, WITH, FROM, SELECT, SHOW CREATE QUOTA query, SHOW CREATE, SHOW [FULL] [TEMPORARY] TABLES|DATABASES|CLUSTERS|CLUSTER|MERGES 'name' [[NOT] [I]LIKE 'str'] [LIMIT expr], SHOW, SHOW COLUMNS query, SHOW ENGINES query, SHOW ENGINES, SHOW FUNCTIONS query, SHOW FUNCTIONS, SHOW INDEXES query, SHOW SETTING query, SHOW SETTING, EXISTS or SHOW CREATE query, EXISTS, DESCRIBE FILESYSTEM CACHE query, DESCRIBE, DESC, DESCRIBE query, SHOW PROCESSLIST query, SHOW PROCESSLIST, CREATE TABLE or ATTACH TABLE query, CREATE, ATTACH, REPLACE, CREATE DATABASE query, CREATE VIEW query, CREATE DICTIONARY, CREATE LIVE VIEW query, CREATE WINDOW VIEW query, ALTER query, ALTER TABLE, ALTER TEMPORARY TABLE, ALTER DATABASE, RENAME query, RENAME DATABASE, RENAME TABLE, EXCHANGE TABLES, RENAME DICTIONARY, EXCHANGE DICTIONARIES, RENAME, DROP query, DROP, DETACH, TRUNCATE, UNDROP query, UNDROP, CHECK ALL TABLES, CHECK TABLE, KILL QUERY query, KILL, OPTIMIZE query, OPTIMIZE TABLE, WATCH query, WATCH, SHOW ACCESS query, SHOW ACCESS, ShowAccessEntitiesQuery, SHOW GRANTS query, SHOW GRANTS, SHOW PRIVILEGES query, SHOW PRIVILEGES, BACKUP or RESTORE query, BACKUP, RESTORE, INSERT query, INSERT INTO, USE query, USE, SET ROLE or SET DEFAULT ROLE query, SET ROLE DEFAULT, SET ROLE, SET DEFAULT ROLE, SET query, SET, SYSTEM query, SYSTEM, CREATE USER or ALTER USER query, ALTER USER, CREATE USER, CREATE ROLE or ALTER ROLE query, ALTER ROLE, CREATE ROLE, CREATE QUOTA or ALTER QUOTA query, ALTER QUOTA, CREATE QUOTA, CREATE ROW POLICY or ALTER ROW POLICY query, ALTER POLICY, ALTER ROW POLICY, CREATE POLICY, CREATE ROW POLICY, CREATE SETTINGS PROFILE or ALTER SETTINGS PROFILE query, ALTER SETTINGS PROFILE, ALTER PROFILE, CREATE SETTINGS PROFILE, CREATE PROFILE, CREATE FUNCTION query, DROP FUNCTION query, CREATE WORKLOAD query, DROP WORKLOAD query, CREATE RESOURCE query, DROP RESOURCE query, CREATE NAMED COLLECTION, DROP NAMED COLLECTION query, Alter NAMED COLLECTION query, ALTER, CREATE INDEX query, DROP INDEX query, DROP access entity query, MOVE access entity query, MOVE, GRANT or REVOKE query, REVOKE, GRANT, CHECK GRANT, CHECK GRANT, EXTERNAL DDL query, EXTERNAL DDL FROM, TCL query, BEGIN TRANSACTION, START TRANSACTION, COMMIT, ROLLBACK, SET TRANSACTION SNAPSHOT, Delete query, DELETE, Update query, UPDATE. (SYNTAX_ERROR) (version 25.7.5.34 (official build))\n"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id UInt32, name String) ENGINE = Memory"`
-	return select1Want, mcpSelect1Want, failInvocationWant, createTableStatement
+	nullWant := `[{"id":4,"name":""}]`
+	return select1Want, mcpSelect1Want, failInvocationWant, createTableStatement, nullWant
 }
 
 func TestClickHouseSQLTool(t *testing.T) {
@@ -868,29 +954,29 @@ func createMockSource(t *testing.T, pool *sql.DB) sources.Source {
 	return source
 }
 
-// GetClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql kind
-func GetClickHouseSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// getClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql kind
+func getClickHouseSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String) ENGINE = Memory", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, ?)", tableName)
-	paramStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? AND name = ?", tableName)
+	paramStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?", tableName)
 	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName)
 	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?", tableName)
 	arrayStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN (?) AND name IN (?)", tableName)
-	params := []any{1, "Alice", 2, "Bob", 3, "Sid", 4, "RandomName"}
+	params := []any{1, "Alice", 2, "Bob", 3, "Sid", 4, nil}
 	return createStatement, insertStatement, paramStatement, idParamStatement, nameParamStatement, arrayStatement, params
 }
 
-// GetClickHouseSQLAuthToolInfo returns statements and param of my-auth-tool for clickhouse-sql kind
-func GetClickHouseSQLAuthToolInfo(tableName string) (string, string, string, []any) {
+// getClickHouseSQLAuthToolInfo returns statements and param of my-auth-tool for clickhouse-sql kind
+func getClickHouseSQLAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String, email String) ENGINE = Memory", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (?, ?, ?), (?, ?, ?)", tableName)
 	authStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?", tableName)
-	params := []any{1, "Alice", "test@google.com", 2, "Bob", "bob@example.com"}
+	params := []any{1, "Alice", tests.ServiceAccountEmail, 2, "jane", "janedoe@gmail.com"}
 	return createStatement, insertStatement, authStatement, params
 }
 
-// GetClickHouseSQLTmplToolStatement returns statements and param for template parameter test cases for clickhouse-sql kind
-func GetClickHouseSQLTmplToolStatement() (string, string) {
+// getClickHouseSQLTmplToolStatement returns statements and param for template parameter test cases for clickhouse-sql kind
+func getClickHouseSQLTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
 	return tmplSelectCombined, tmplSelectFilterCombined
@@ -898,7 +984,7 @@ func GetClickHouseSQLTmplToolStatement() (string, string) {
 
 // SetupClickHouseSQLTable creates and inserts data into a table of tool
 // compatible with clickhouse-sql tool
-func SetupClickHouseSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+func setupClickHouseSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
 	err := pool.PingContext(ctx)
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
