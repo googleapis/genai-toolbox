@@ -29,6 +29,7 @@ The return type is an array of maps, each map is formatted like:
     "description": "explore description",
     "label": "explore label",
     "group_label": "group label"
+}
 ```
 ## Example
 
