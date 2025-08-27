@@ -149,10 +149,10 @@ func TestClickHouse(t *testing.T) {
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := GetClickHouseWants()
+	select1Want, mcpSelect1Want, failInvocationWant, createTableStatement := GetClickHouseWants()
 	tests.RunToolInvokeTest(t, select1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunMCPToolCallMethod(t, failInvocationWant)
+	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
@@ -251,11 +251,12 @@ func TestClickHouseBasicConnection(t *testing.T) {
 	t.Logf("✅ ClickHouse basic connection test completed successfully")
 }
 
-func GetClickHouseWants() (string, string, string) {
+func GetClickHouseWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":[{\"1\":1}]}]}}`
 	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: code: 62, message: Syntax error: failed at position 1 (line 1, col 1): SELEC 1;. Expected one of: EXPLAIN, SELECT, INSERT, DELETE, UPDATE, CREATE, ALTER, DROP, RENAME, SET, OPTIMIZE, USE, EXISTS, SHOW, DESCRIBE, DESC, WITH, SYSTEM, KILL, WATCH, CHECK"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id UInt32, name String) ENGINE = Memory"`
-	return select1Want, failInvocationWant, createTableStatement
+	return select1Want, mcpSelect1Want, failInvocationWant, createTableStatement
 }
 
 func TestClickHouseSQLTool(t *testing.T) {
