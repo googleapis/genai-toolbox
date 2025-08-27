@@ -47,7 +47,8 @@ a self-signed ssl certificate for the Looker server. Anything other than "true"
 will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
-assigned by the looker server.
+assigned by the looker server. If you are using Looker OAuth you don't need
+these settings
 
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}
@@ -60,9 +61,9 @@ instead of hardcoding your secrets into the configuration file.
 | -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
 | kind                 |  string  |     true     | Must be "looker".                                                                         |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
-| client_id            |  string  |     true     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |     true     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |     true     | Whether to check the ssl certificate of the server.                                       |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
