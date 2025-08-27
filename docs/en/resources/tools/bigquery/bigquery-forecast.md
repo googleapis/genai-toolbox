@@ -15,7 +15,14 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-forecast` constructs and executes a `SELECT * FROM AI.FORECAST(...)` query based on the provided parameters:
+`bigquery-forecast` constructs and executes a `SELECT * FROM AI.FORECAST(...)` query. Its behavior changes based on the source configuration:
+
+- **Without `allowed_datasets` restriction:** The tool can use any table or query for the `history_data` parameter.
+- **With `allowed_datasets` restriction:** The tool verifies that the `history_data` parameter only accesses tables within the allowed datasets.
+  - If `history_data` is a table ID, the tool checks if the table's dataset is in the allowed list.
+  - If `history_data` is a query, the tool performs a dry run to analyze the query and rejects it if it accesses any table outside the allowed list.
+
+The tool uses the following parameters:
 
 - **history_data** (string, required): This specifies the source of the historical time series data. It can be either a fully qualified BigQuery table ID (e.g., my-project.my_dataset.my_table) or a SQL query that returns the data.
 - **timestamp_col** (string, required): The name of the column in your history_data that contains the timestamps.
