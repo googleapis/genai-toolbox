@@ -40,27 +40,30 @@ func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, 
 }
 
 func GetLookerSDK(config *rtl.ApiSettings, accessToken tools.AccessToken) *v4.LookerSDK {
-	authSession := rtl.NewAuthSession(*config)
 
 	if accessToken != "" {
+		// Configure base transport with TLS
 		transport := &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: !config.VerifySsl,
 			},
 		}
 
+		// Build transport for end user token
 		newTransport := &transportWithAuthHeader{
 			Base:      transport,
 			AuthToken: accessToken,
 		}
 
-		authSession = &rtl.AuthSession{
+		// return SDK with new Transport
+		return v4.NewLookerSDK(&rtl.AuthSession{
 			Config: *config,
 			Client: http.Client{Transport: newTransport},
-		}
+		})
 	}
 
-	return v4.NewLookerSDK(authSession)
+	// Return SDK with transport initialized from client_id/client_secret
+	return v4.NewLookerSDK(rtl.NewAuthSession(*config))
 }
 
 const (
