@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 )
 
 // RunToolGet runs the tool get endpoint
@@ -253,6 +254,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		nullWant:                 "null",
 		supportOptionalNullParam: true,
 		supportArrayParam:        true,
+		supportClientAuth:        false,
 	}
 
 	// Apply provided options
@@ -264,6 +266,12 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
 	}
 
 	// Test tool invoke endpoint
@@ -387,6 +395,32 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
 			enabled:        true,
 			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name:           "Invoke my-client-auth-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": accessToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-client-auth-tool without auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+
+			name:           "Invoke my-client-auth-tool with invalid auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantStatusCode: http.StatusUnauthorized,
 		},
@@ -792,6 +826,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 	// Default values for MCPTestConfig
 	configs := &MCPTestConfig{
 		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+		supportClientAuth:      false,
 	}
 
 	// Apply provided options
@@ -800,6 +835,12 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 	}
 
 	sessionId := RunInitialize(t, "2024-11-05")
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -908,6 +949,63 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant string, options ...McpTes
 			},
 			wantStatusCode: http.StatusUnauthorized,
 			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: `authRequired` is set for the target Tool but isn't supported through MCP Tool call: unauthorized\"}}",
+		},
+
+		{
+			name:          "MCP Invoke my-client-auth-tool",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusOK,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
+		},
+		{
+			name:          "MCP Invoke my-client-auth-tool without access token",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusUnauthorized,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
+		},
+		{
+			name:          "MCP Invoke my-client-auth-tool with invalid access token",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:          "MCP Invoke my-fail-tool",

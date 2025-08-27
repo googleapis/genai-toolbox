@@ -16,7 +16,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
 	github.com/cenkalti/backoff/v5 v5.0.3
-	github.com/couchbase/gocb/v2 v2.10.1
+	github.com/couchbase/gocb/v2 v2.11.0
 	github.com/couchbase/tools-common/http v1.0.9
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-chi/chi/v5 v5.2.2
@@ -31,7 +31,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/json-iterator/go v1.1.12
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
-	github.com/microsoft/go-mssqldb v1.9.2
+	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.2
 	github.com/redis/go-redis/v9 v9.12.1
@@ -88,7 +88,7 @@ require (
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
-	github.com/couchbase/gocbcore/v10 v10.7.1 // indirect
+	github.com/couchbase/gocbcore/v10 v10.8.0 // indirect
 	github.com/couchbase/gocbcoreps v0.1.3 // indirect
 	github.com/couchbase/goprotostellar v1.0.2 // indirect
 	github.com/couchbase/tools-common/errors v1.0.0 // indirect
@@ -153,7 +153,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.36.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.62.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0 // indirect
 	go.opentelemetry.io/contrib/propagators/aws v1.37.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.37.0 // indirect

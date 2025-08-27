@@ -166,8 +166,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest())
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest(), tests.EnableClientAuthTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, tests.EnableMcpClientAuthTest())
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithCreateColArray(createColArray),
 		tests.WithDdlWant(ddlWant),
@@ -468,7 +468,13 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 			map[string]any{"name": "bool_array", "type": "array", "description": "an array of boolean values", "items": map[string]any{"name": "item", "type": "boolean", "description": "desc"}},
 		},
 	}
-
+	tools["my-client-auth-tool"] = map[string]any{
+		"kind":           "bigquery-sql",
+		"source":         "my-instance",
+		"description":    "Tool to test client authorization.",
+		"useClientOAuth": true,
+		"statement":      "SELECT 1",
+	}
 	config["tools"] = tools
 	return config
 }

@@ -167,6 +167,20 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract OAuth access token from the "Authorization" header (currently for
+	// BigQuery end-user credentials usage only)
+	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
+
+	// Check if this specific tool requires the standard authorization header
+	if tool.RequiresClientAuthorization() {
+		if accessToken == "" {
+			err = fmt.Errorf("tool requires client authorization but access token is missing from the request header")
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+			return
+		}
+	}
+
 	// Tool authentication
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
@@ -224,10 +238,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
-
-	// Extract OAuth access token from the "Authorization" header (currently for
-	// BigQuery end-user credentials usage only)
-	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	res, err := tool.Invoke(ctx, params, accessToken)
 

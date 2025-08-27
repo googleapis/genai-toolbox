@@ -404,6 +404,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract OAuth access token from the "Authorization" header (currently for
+	// BigQuery end-user credentials usage only)
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)
@@ -440,10 +442,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	if rpcResponse, ok := res.(jsonrpc.JSONRPCError); ok {
 		code := rpcResponse.Error.Code
-		switch {
-		case code == jsonrpc.INTERNAL_ERROR:
+		switch code {
+		case jsonrpc.INTERNAL_ERROR:
 			w.WriteHeader(http.StatusInternalServerError)
-		case code == jsonrpc.INVALID_REQUEST:
+		case jsonrpc.INVALID_REQUEST:
 			errStr := err.Error()
 			if errors.Is(err, tools.ErrUnauthorized) {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -515,6 +517,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			err = fmt.Errorf("toolset does not exist")
 			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
+
 		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), body, accessToken)
 		return "", res, err
 	}
