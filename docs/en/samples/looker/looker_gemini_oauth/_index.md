@@ -132,5 +132,5 @@ The details of the config are beyond the scope of this document, but will be
 familiar to your system administrators.
 
 To use the shared service, just change the `localhost:5000` in the `httpUrl` in
-`~/.gemini/settings.json` to the host name and possible the port of the shared
+`~/.gemini/settings.json` to the host name and possibly the port of the shared
 service.
