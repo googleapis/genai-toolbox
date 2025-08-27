@@ -10,8 +10,8 @@
 ### Features
 
 * Add capability to set default for environment variable in config ([#1248](https://github.com/googleapis/genai-toolbox/issues/1248)) ([5bcd52e](https://github.com/googleapis/genai-toolbox/commit/5bcd52e7dcd0773ded723585f4abe29d044e1540))
-* **firebird:** Add Firebird SQL 2.5+ source and tool support ([#1011](https://github.com/googleapis/genai-toolbox/issues/1011)) ([4f6b806](https://github.com/googleapis/genai-toolbox/commit/4f6b806de947efc4e12bdb50dff7781aedb7b966))
-* **oceanbase:** Add oceanbase Source and Tool  ([#895](https://github.com/googleapis/genai-toolbox/issues/895)) ([6fc4982](https://github.com/googleapis/genai-toolbox/commit/6fc49826d43f46c84028e752ebebddf3d94b3d13))
+* **firebird:** Add Firebird SQL 2.5+ source and tool ([#1011](https://github.com/googleapis/genai-toolbox/issues/1011)) ([4f6b806](https://github.com/googleapis/genai-toolbox/commit/4f6b806de947efc4e12bdb50dff7781aedb7b966))
+* **oceanbase:** Add Oceanbase source and tool  ([#895](https://github.com/googleapis/genai-toolbox/issues/895)) ([6fc4982](https://github.com/googleapis/genai-toolbox/commit/6fc49826d43f46c84028e752ebebddf3d94b3d13))
 * **server/mcp:** Support `ping` mechanism ([#1178](https://github.com/googleapis/genai-toolbox/issues/1178)) ([5dcc66c](https://github.com/googleapis/genai-toolbox/commit/5dcc66c84fa72c75ec50a9ac5198018212ec2979))
 * **server:** Fail-fast on environment variable substitution ([#1177](https://github.com/googleapis/genai-toolbox/issues/1177)) ([212aaba](https://github.com/googleapis/genai-toolbox/commit/212aaba74c8b431de8a5f7b9822a0af4afcaaa0e))
 * **server:** Implement Tool call auth error propagation ([#1235](https://github.com/googleapis/genai-toolbox/issues/1235)) ([b94a021](https://github.com/googleapis/genai-toolbox/commit/b94a021ca11c6637cf8038449483b5e75f2012b3))
