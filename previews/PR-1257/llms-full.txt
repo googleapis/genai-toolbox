@@ -9699,6 +9699,10 @@ In this section, we will download Toolbox and run the Toolbox server.
    browser where you will confirm that you want to access Looker with your
    account.
 
+   ![Authorizing](./authorize.png)
+
+   ![Authenticated](./authenticated.png)
+
 1. Use Gemini-CLI with your tools.
 
 ## Using Toolbox as a Shared Service
