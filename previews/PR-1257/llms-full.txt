@@ -9670,7 +9670,7 @@ In this section, we will download Toolbox and run the Toolbox server.
 
 ## Step 3: Configure Gemini-CLI
 
-1. Edit the file `~/.gemini/settings.json`. Add the following substituting your
+1. Edit the file `~/.gemini/settings.json`. Add the following, substituting your
    Looker server host name for `looker.example.com`.
 
     ```json
@@ -9688,8 +9688,8 @@ In this section, we will download Toolbox and run the Toolbox server.
     }
     ```
 
-    The `authorizationUrl` should point to url you use to access Looker via the
-    web ui. The `tokenUrl` should point to the url you use to access Looker via
+    The `authorizationUrl` should point to the URL you use to access Looker via the
+    web UI. The `tokenUrl` should point to the URL you use to access Looker via
     the API. In some cases you will need to use the port number `:19999` after
     the host name but before the `/api/token` part.
 
