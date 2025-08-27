@@ -840,7 +840,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	accessToken, err := sources.GetIAMAccessToken(t.Context())
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
-    }
+	}
 
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {

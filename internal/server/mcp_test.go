@@ -66,12 +66,6 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
-var tool4InputSchema = map[string]any{
-	"type":       "object",
-	"properties": map[string]any{},
-	"required":   []any{},
-}
-
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
 	toolsMap, toolsets := setUpResources(t, mockTools)

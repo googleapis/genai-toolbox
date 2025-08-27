@@ -93,6 +93,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
+	// Get access token
+	accessToken := tools.AccessToken(header.Get("Authorization"))
+
 	// Check if this specific tool requires the standard authorization header
 	if tool.RequiresClientAuthorization() {
 		if accessToken == "" {
@@ -155,9 +158,6 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
-
-	// Get access token
-	accessToken := tools.AccessToken(header.Get("Authorization"))
 
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, params, accessToken)
