@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYaml(t *testing.T) {
+func TestParseFromYamlCassandra(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -65,7 +65,7 @@ func TestParseFromYaml(t *testing.T) {
 	}
 }
 
-func TestFailParseFromYaml(t *testing.T) {
+func TestFailParseFromYamlCassandra(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
