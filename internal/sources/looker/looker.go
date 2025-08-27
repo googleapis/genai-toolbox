@@ -24,7 +24,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
-	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 const SourceKind string = "looker"
@@ -119,7 +118,6 @@ type Source struct {
 	Name               string `yaml:"name"`
 	Kind               string `yaml:"kind"`
 	Timeout            string `yaml:"timeout"`
-	Client             *v4.LookerSDK
 	ApiSettings        *rtl.ApiSettings
 	ShowHiddenModels   bool `yaml:"show_hidden_models"`
 	ShowHiddenExplores bool `yaml:"show_hidden_explores"`
