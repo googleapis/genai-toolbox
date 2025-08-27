@@ -40,7 +40,14 @@ infrastructure to set up or manage, letting you focus on finding meaningful
 insights using GoogleSQL and taking advantage of flexible pricing models
 across on-demand and flat-rate options.&lt;/p>
 &lt;p>If you are new to BigQuery, you can try to
-&lt;a href="https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line">load and query data with the bq tool&lt;/a>.&lt;/p></description></item><item><title>bigquery-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/bigquery/bigquery-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/bigquery/bigquery-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;a href="https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line">load and query data with the bq tool&lt;/a>.&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about your data in natural language.&lt;/p>
+&lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history for context)
+and references to specific BigQuery tables, and sends them to a stateless conversational API.&lt;/p>
+&lt;p>The API uses a GenAI agent to understand the question, generate and execute SQL queries
+and Python code, and formulate an answer. This function returns a detailed, sequential
+log of this entire process, which includes any generated SQL or Python code, the data
+retrieved, and the final text answer.&lt;/p></description></item><item><title>bigquery-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/bigquery/bigquery-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/bigquery/bigquery-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-execute-sql&lt;/code> tool executes a SQL statement against BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -1658,37 +1665,7 @@ in a given model in the source.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> It takes two parameters, the model_name looked up from get_models and the
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> explore_name looked up from get_explores.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;looker-get-dimensions&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>looker-get-explores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-explores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-explores/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>looker-get-explores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-explores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-explores/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-explores&lt;/code> tool returns all explores
 for a given model from the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -1756,37 +1733,7 @@ in a given model in the source.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> It takes two parameters, the model_name looked up from get_models and the
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> explore_name looked up from get_explores.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;looker-get-filters&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>looker-get-looks</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-looks/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-looks/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>looker-get-looks</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-looks/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-looks/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-get-looks&lt;/code> tool searches for a saved Look by
 name or description.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -1868,37 +1815,7 @@ in a given model in the source.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> It takes two parameters, the model_name looked up from get_models and the
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> explore_name looked up from get_explores.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;looker-get-measures&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>looker-get-models</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-models/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-models/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>looker-get-models</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-models/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-get-models/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-models&lt;/code> tool returns all the models in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -1963,37 +1880,7 @@ in a given model in the source.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> It takes two parameters, the model_name looked up from get_models and the
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> explore_name looked up from get_explores.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;looker-get-parameters&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-make-dashboard&lt;/code> creates a dashboard in the user&amp;rsquo;s
 Looker personal folder.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -3500,11 +3387,14 @@ PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item
 &lt;li>&lt;strong>BigQuery User&lt;/strong> (&lt;code>roles/bigquery.user&lt;/code>) to execute queries and view metadata.&lt;/li>
 &lt;li>&lt;strong>BigQuery Metadata Viewer&lt;/strong> (&lt;code>roles/bigquery.metadataViewer&lt;/code>) to view all datasets.&lt;/li>
 &lt;li>&lt;strong>BigQuery Data Editor&lt;/strong> (&lt;code>roles/bigquery.dataEditor&lt;/code>) to create or modify datasets and tables.&lt;/li>
+&lt;li>&lt;strong>Gemini for Google Cloud&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>) to use the conversational analytics API.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
+&lt;li>&lt;code>ask_data_insights&lt;/code>: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the &lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview">Conversational Analytics API documentation&lt;/a>.&lt;/li>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL statement.&lt;/li>
+&lt;li>&lt;code>forecast&lt;/code>: Use this tool to forecast time series data.&lt;/li>
 &lt;li>&lt;code>get_dataset_info&lt;/code>: Gets dataset metadata.&lt;/li>
 &lt;li>&lt;code>get_table_info&lt;/code>: Gets table metadata.&lt;/li>
 &lt;li>&lt;code>list_dataset_ids&lt;/code>: Lists datasets.&lt;/li>
@@ -5201,10 +5091,7 @@ have multiple files, you can tell toolbox which to load with the &lt;code>--tool
 etc., you could use environment variables instead with the format &lt;code>${ENV_NAME}&lt;/code>.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="sources">Sources&lt;/h3>
-&lt;p>The &lt;code>sources&lt;/code> section of your &lt;code>tools.yaml&lt;/code> defines what data sources your
-Toolbox should have access to. Most tools will have at least one source to
-execute against.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>A default value can be specified like &lt;code>${ENV_NAME:default}&lt;/code>.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1244/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB
 Admin API operation status endpoint until the operation is finished, using
 exponential backoff.&lt;/p>
