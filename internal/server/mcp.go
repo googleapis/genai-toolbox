@@ -332,6 +332,8 @@ func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // httpHandler handles all mcp messages.
 func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
