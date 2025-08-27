@@ -1,5 +1,5 @@
 ---
-title: "ClickHouse Tools"
+title: "ClickHouse"
 type: docs
 weight: 1
 description: >
