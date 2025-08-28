@@ -28,8 +28,8 @@ import (
 
 func TestToolsetEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := setUpResources(t, nil, nil, mockTools)
+	r, shutdown := setUpServer(t, "api", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -125,8 +125,8 @@ func TestToolsetEndpoint(t *testing.T) {
 
 func TestToolGetEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := setUpResources(t, nil, nil, mockTools)
+	r, shutdown := setUpServer(t, "api", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -213,8 +213,8 @@ func TestToolGetEndpoint(t *testing.T) {
 
 func TestToolInvokeEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool4, tool5}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := setUpResources(t, nil, nil, mockTools)
+	r, shutdown := setUpServer(t, "api", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()

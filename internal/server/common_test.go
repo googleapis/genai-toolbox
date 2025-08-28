@@ -24,7 +24,9 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -129,7 +131,17 @@ var tool5 = MockTool{
 }
 
 // setUpResources setups resources to test against
-func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, map[string]tools.Toolset) {
+func setUpResources(t *testing.T, mockSources []MockSource, mockAuthServices []MockAuthService, mockTools []MockTool) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset) {
+	sourcesMap := make(map[string]sources.Source)
+	for _, s := range mockSources {
+		sourcesMap[s.name] = s
+	}
+
+	authServicesMap := make(map[string]auth.AuthService)
+	for _, a := range mockAuthServices {
+		authServicesMap[a.name] = a
+	}
+
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -151,11 +163,11 @@ func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, 
 		}
 		toolsets[name] = m
 	}
-	return toolsMap, toolsets
+	return sourcesMap, authServicesMap, toolsMap, toolsets
 }
 
 // setUpServer create a new server with tools and toolsets that are given
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (chi.Router, func()) {
+func setUpServer(t *testing.T, router string, sources map[string]sources.Source, authServices map[string]auth.AuthService, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -175,7 +187,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, tools, toolsets)
+	resourceManager := NewResourceManager(sources, authServices, tools, toolsets)
 
 	server := Server{
 		version:         fakeVersionString,
@@ -196,6 +208,11 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		r, err = mcpRouter(&server)
 		if err != nil {
 			t.Fatalf("unable to initialize mcp router: %s", err)
+		}
+	case "admin":
+		r, err = adminRouter(&server)
+		if err != nil {
+			t.Fatalf("unable to initialize admin router: %s", err)
 		}
 	default:
 		t.Fatalf("unknown router")

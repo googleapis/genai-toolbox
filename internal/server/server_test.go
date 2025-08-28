@@ -20,6 +20,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -150,6 +151,26 @@ func TestUpdateServer(t *testing.T) {
 	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
+	}
+
+	gotSourcesMap := s.ResourceMgr.GetSourcesMap()
+	if !reflect.DeepEqual(gotSourcesMap, newSources) {
+		t.Errorf("error retrieving sources map: got %+v, want %+v", gotSourcesMap, newSources)
+	}
+
+	gotAuthServiceMap := s.ResourceMgr.GetAuthServiceMap()
+	if !reflect.DeepEqual(gotAuthServiceMap, newAuth) {
+		t.Errorf("error retrieving auth servies map: got %+v, want %+v", gotAuthServiceMap, newAuth)
+	}
+
+	gotToolsMap := s.ResourceMgr.GetToolsMap()
+	if !reflect.DeepEqual(gotToolsMap, newTools) {
+		t.Errorf("error retrieving tools map: got %+v, want %+v", gotToolsMap, newTools)
+	}
+
+	gotToolsetsMap := s.ResourceMgr.GetToolsetsMap()
+	if !reflect.DeepEqual(gotToolsetsMap, newToolsets) {
+		t.Errorf("error retrieving toolsets map: got %+v, want %+v", gotToolsetsMap, newToolsets)
 	}
 
 	gotSource, _ := s.ResourceMgr.GetSource("example-source")
