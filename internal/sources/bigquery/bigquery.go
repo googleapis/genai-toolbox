@@ -53,10 +53,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Name           string `yaml:"name" validate:"required"`
+	Kind           string `yaml:"kind" validate:"required"`
+	Project        string `yaml:"project" validate:"required"`
+	Location       string `yaml:"location"`
+	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -65,10 +66,18 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	// Initializes a BigQuery Google SQL source
-	client, restService, tokenSource, clientCreator, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
-	if err != nil {
-		return nil, err
+	var client *bigqueryapi.Client
+	var restService *bigqueryrestapi.Service
+	var tokenSource oauth2.TokenSource
+	var clientCreator BigqueryClientCreator
+
+	if !r.UseClientOAuth {
+		// Initializes a BigQuery Google SQL source
+		var err error
+		client, restService, tokenSource, clientCreator, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	s := &Source{
@@ -79,6 +88,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		TokenSource:        tokenSource,
 		MaxQueryResultRows: 50,
 		ClientCreator:      clientCreator,
+		UseClientOAuth:     r.UseClientOAuth,
 	}
 	return s, nil
 
@@ -95,6 +105,7 @@ type Source struct {
 	TokenSource        oauth2.TokenSource
 	MaxQueryResultRows int
 	ClientCreator      BigqueryClientCreator
+	UseClientOAuth     bool
 }
 
 func (s *Source) SourceKind() string {
@@ -108,6 +119,10 @@ func (s *Source) BigQueryClient() *bigqueryapi.Client {
 
 func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
+}
+
+func (s *Source) BigQueryUseClientOAuth() bool {
+	return s.UseClientOAuth
 }
 
 func (s *Source) BigQueryTokenSource() oauth2.TokenSource {

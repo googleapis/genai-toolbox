@@ -50,6 +50,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	BigQueryUseClientOAuth() bool
 }
 
 // validate compatible sources are still compatible
@@ -105,17 +106,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:               cfg.Name,
 		Kind:               kind,
 		AuthRequired:       cfg.AuthRequired,
-		UseClientOAuth:     cfg.UseClientOAuth,
 		Parameters:         cfg.Parameters,
 		TemplateParameters: cfg.TemplateParameters,
 		AllParams:          allParameters,
 
-		Statement:     cfg.Statement,
-		Client:        s.BigQueryClient(),
-		RestService:   s.BigQueryRestService(),
-		ClientCreator: s.BigQueryClientCreator(),
-		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:   mcpManifest,
+		Statement:      cfg.Statement,
+		UseClientOAuth: s.BigQueryUseClientOAuth(),
+		Client:         s.BigQueryClient(),
+		RestService:    s.BigQueryRestService(),
+		ClientCreator:  s.BigQueryClientCreator(),
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:    mcpManifest,
 	}
 	return t, nil
 }

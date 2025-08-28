@@ -133,6 +133,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 	toolsFile = addBigQuerySqlToolConfig(t, toolsFile, dataTypeToolStmt, arrayDataTypeToolStmt)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
@@ -440,6 +441,20 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
+func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]any {
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+	sources["my-client-auth-source"] = map[string]any{
+		"kind":                   BigquerySourceKind,
+		"project":                BigqueryProject,
+		"useClientAuthorization": true,
+	}
+	config["sources"] = sources
+	return config
+}
+
 func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement, arrayToolStatement string) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
@@ -470,11 +485,10 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		},
 	}
 	tools["my-client-auth-tool"] = map[string]any{
-		"kind":           "bigquery-sql",
-		"source":         "my-instance",
-		"description":    "Tool to test client authorization.",
-		"useClientOAuth": true,
-		"statement":      "SELECT 1",
+		"kind":        "bigquery-sql",
+		"source":      "my-client-auth-source",
+		"description": "Tool to test client authorization.",
+		"statement":   "SELECT 1",
 	}
 	config["tools"] = tools
 	return config
