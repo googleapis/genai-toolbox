@@ -161,13 +161,14 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	dataInsightsWant := `(?s)Schema Resolved.*Retrieval Query.*SQL Generated.*Answer`
 	// Partial message; the full error message is too long.
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"f0_\":1}"}]}}`
 	createColArray := `["id INT64", "name STRING", "age INT64"]`
 	selectEmptyWant := `"The query returned 0 rows."`
 
 	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest(), tests.EnableClientAuthTest())
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, tests.EnableMcpClientAuthTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want, tests.EnableMcpClientAuthTest())
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithCreateColArray(createColArray),
 		tests.WithDdlWant(ddlWant),
