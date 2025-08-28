@@ -7960,7 +7960,7 @@ AlloyDB AI NL Tool.
 
 
 
-# AlloyDBPG
+# AlloyDBPostgres
 Tools that work with AlloyDB Postgres Sources.
 
 
