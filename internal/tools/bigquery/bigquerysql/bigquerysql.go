@@ -23,6 +23,7 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
@@ -48,6 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 }
 
 // validate compatible sources are still compatible
@@ -62,6 +64,7 @@ type Config struct {
 	Description        string           `yaml:"description" validate:"required"`
 	Statement          string           `yaml:"statement" validate:"required"`
 	AuthRequired       []string         `yaml:"authRequired"`
+	UseClientOAuth     bool             `yaml:"useClientOAuth"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 }
@@ -101,15 +104,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Name:               cfg.Name,
 		Kind:               kind,
+		AuthRequired:       cfg.AuthRequired,
+		UseClientOAuth:     cfg.UseClientOAuth,
 		Parameters:         cfg.Parameters,
 		TemplateParameters: cfg.TemplateParameters,
 		AllParams:          allParameters,
-		Statement:          cfg.Statement,
-		AuthRequired:       cfg.AuthRequired,
-		Client:             s.BigQueryClient(),
-		RestService:        s.BigQueryRestService(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+
+		Statement:     cfg.Statement,
+		Client:        s.BigQueryClient(),
+		RestService:   s.BigQueryRestService(),
+		ClientCreator: s.BigQueryClientCreator(),
+		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:   mcpManifest,
 	}
 	return t, nil
 }
@@ -121,14 +127,17 @@ type Tool struct {
 	Name               string           `yaml:"name"`
 	Kind               string           `yaml:"kind"`
 	AuthRequired       []string         `yaml:"authRequired"`
+	UseClientOAuth     bool             `yaml:"useClientOAuth"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 	AllParams          tools.Parameters `yaml:"allParams"`
-	Statement          string
-	Client             *bigqueryapi.Client
-	RestService        *bigqueryrestapi.Service
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
+
+	Statement     string
+	Client        *bigqueryapi.Client
+	RestService   *bigqueryrestapi.Service
+	ClientCreator bigqueryds.BigqueryClientCreator
+	manifest      tools.Manifest
+	mcpManifest   tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -208,11 +217,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		lowLevelParams = append(lowLevelParams, lowLevelParam)
 	}
 
-	query := t.Client.Query(newStatement)
+	bqClient := t.Client
+	restService := t.RestService
+	var query *bigqueryapi.Query
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		bqClient, restService, err = t.ClientCreator(accessToken)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
+	query = bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
 	query.Location = t.Client.Location
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	dryRunJob, err := dryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		// This is a fallback check in case the switch logic was bypassed.
 		return nil, fmt.Errorf("final query validation failed: %w", err)
@@ -274,6 +295,10 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
 }
 
 func BQTypeStringFromToolType(toolType string) (string, error) {
