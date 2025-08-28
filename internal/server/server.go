@@ -337,6 +337,11 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		}
 		r.Mount("/ui", webR)
 	}
+	adminR, err := adminRouter(s)
+	if err != nil {
+		return nil, err
+	}
+	r.Mount("/admin", adminR)
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
