@@ -184,7 +184,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolb
     {
       "servers": {
         "mssql": {
-            "command": "./PATH/TO/toolbox",
+          "command": "./PATH/TO/toolbox",
             "args": ["--prebuilt","mssql","--stdio"],
             "env": {
               "MSSQL_HOST": "",
