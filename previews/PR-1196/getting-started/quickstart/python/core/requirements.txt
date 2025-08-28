@@ -1,3 +1,0 @@
-google-genai>=0.6.0
-toolbox-core>=0.5.0
-pytest>=7.0.0
