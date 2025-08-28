@@ -56,11 +56,14 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**     | **type** | **required** | **description**                                                                           |
-| ------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
-| kind          |  string  |     true     | Must be "looker".                                                                         |
-| base_url      |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
-| client_id     |  string  |     true     | The client id assigned by Looker.                                                         |
-| client_secret |  string  |     true     | The client secret assigned by Looker.                                                     |
-| verify_ssl    |  string  |     true     | Whether to check the ssl certificate of the server.                                       |
-| timeout       |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
+| **field**            | **type** | **required** | **description**                                                                           |
+| -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
+| kind                 |  string  |     true     | Must be "looker".                                                                         |
+| base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
+| client_id            |  string  |     true     | The client id assigned by Looker.                                                         |
+| client_secret        |  string  |     true     | The client secret assigned by Looker.                                                     |
+| verify_ssl           |  string  |     true     | Whether to check the ssl certificate of the server.                                       |
+| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
+| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
+| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
+| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
