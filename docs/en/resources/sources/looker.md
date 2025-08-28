@@ -65,6 +65,7 @@ instead of hardcoding your secrets into the configuration file.
 | client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
 | verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |

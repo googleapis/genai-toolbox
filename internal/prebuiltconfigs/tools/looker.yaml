@@ -6,6 +6,7 @@ sources:
         client_secret: ${LOOKER_CLIENT_SECRET:}
         verify_ssl: ${LOOKER_VERIFY_SSL:true}
         timeout: 600s
+        use_client_oauth: ${LOOKER_USE_CLIENT_OAUTH:false}
         show_hidden_models: ${LOOKER_SHOW_HIDDEN_MODELS:true}
         show_hidden_explores: ${LOOKER_SHOW_HIDDEN_EXPLORES:true}
         show_hidden_fields: ${LOOKER_SHOW_HIDDEN_FIELDS:true}

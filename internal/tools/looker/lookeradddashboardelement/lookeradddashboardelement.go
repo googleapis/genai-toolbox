@@ -93,11 +93,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -111,13 +113,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	UseClientOAuth bool
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	AuthRequired   []string         `yaml:"authRequired"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
 var (
@@ -145,10 +149,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	qrespFields := "id"
 
-	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
+
 	qresp, err := sdk.CreateQuery(*wq, qrespFields, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making create query request: %s", err)
+		return nil, fmt.Errorf("error making create query request: %w", err)
 	}
 
 	wde := v4.WriteDashboardElement{
@@ -172,7 +180,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	resp, err := sdk.CreateDashboardElement(req, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making create dashboard element request: %s", err)
+		return nil, fmt.Errorf("error making create dashboard element request: %w", err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
@@ -200,5 +208,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }

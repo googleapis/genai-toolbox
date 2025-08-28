@@ -24,6 +24,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 const SourceKind string = "looker"
@@ -42,6 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		Name:               name,
 		SslVerification:    true,
 		Timeout:            "600s",
+		UseClientOAuth:     false,
 		ShowHiddenModels:   true,
 		ShowHiddenExplores: true,
 		ShowHiddenFields:   true,
@@ -59,6 +61,7 @@ type Config struct {
 	ClientId           string `yaml:"client_id" validate:"required"`
 	ClientSecret       string `yaml:"client_secret" validate:"required"`
 	SslVerification    bool   `yaml:"verify_ssl"`
+	UseClientOAuth     bool   `yaml:"use_client_oauth"`
 	Timeout            string `yaml:"timeout"`
 	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
 	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
@@ -103,11 +106,25 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Name:               r.Name,
 		Kind:               SourceKind,
 		Timeout:            r.Timeout,
+		UseClientOAuth:     r.UseClientOAuth,
 		ApiSettings:        &cfg,
 		ShowHiddenModels:   r.ShowHiddenModels,
 		ShowHiddenExplores: r.ShowHiddenExplores,
 		ShowHiddenFields:   r.ShowHiddenFields,
 	}
+
+	if !r.UseClientOAuth {
+		if r.ClientId == "" || r.ClientSecret == "" {
+			return nil, fmt.Errorf("client_id and client_secret need to be specified")
+		}
+		s.Client = v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+		resp, err := s.Client.Me("", s.ApiSettings)
+		if err != nil {
+			return nil, fmt.Errorf("incorrect settings: %w", err)
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("logged in as %s %s", *resp.FirstName, *resp.LastName))
+	}
+
 	return s, nil
 
 }
@@ -118,7 +135,9 @@ type Source struct {
 	Name               string `yaml:"name"`
 	Kind               string `yaml:"kind"`
 	Timeout            string `yaml:"timeout"`
+	Client             *v4.LookerSDK
 	ApiSettings        *rtl.ApiSettings
+	UseClientOAuth     bool `yaml:"use_client_oauth"`
 	ShowHiddenModels   bool `yaml:"show_hidden_models"`
 	ShowHiddenExplores bool `yaml:"show_hidden_explores"`
 	ShowHiddenFields   bool `yaml:"show_hidden_fields"`

@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 const kind string = "looker-get-explores"
@@ -82,11 +83,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -103,6 +106,8 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name               string `yaml:"name"`
 	Kind               string `yaml:"kind"`
+	UseClientOAuth     bool
+	Client             *v4.LookerSDK
 	ApiSettings        *rtl.ApiSettings
 	AuthRequired       []string         `yaml:"authRequired"`
 	Parameters         tools.Parameters `yaml:"parameters"`
@@ -122,7 +127,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
 	}
 
-	sdk := lookercommon.GetLookerSDK(t.ApiSettings, accessToken)
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	resp, err := sdk.LookmlModel(model, "explores(name,description,label,group_label,hidden)", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_explores request: %s", err)
@@ -172,5 +180,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }

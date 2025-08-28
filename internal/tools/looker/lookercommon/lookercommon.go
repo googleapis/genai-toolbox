@@ -39,30 +39,36 @@ func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, 
 	return t.Base.RoundTrip(req)
 }
 
-func GetLookerSDK(config *rtl.ApiSettings, accessToken tools.AccessToken) *v4.LookerSDK {
+func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.LookerSDK, accessToken tools.AccessToken) (*v4.LookerSDK, error) {
 
-	if config.ClientId != "" && config.ClientSecret != "" {
-		// Return SDK with transport initialized from client_id/client_secret
-		return v4.NewLookerSDK(rtl.NewAuthSession(*config))
-	}
-	// Configure base transport with TLS
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: !config.VerifySsl,
-		},
+	if useClientOAuth {
+		if accessToken == "" {
+			return nil, fmt.Errorf("no access token supplied with request")
+		}
+		// Configure base transport with TLS
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !config.VerifySsl,
+			},
+		}
+
+		// Build transport for end user token
+		newTransport := &transportWithAuthHeader{
+			Base:      transport,
+			AuthToken: accessToken,
+		}
+
+		// return SDK with new Transport
+		return v4.NewLookerSDK(&rtl.AuthSession{
+			Config: *config,
+			Client: http.Client{Transport: newTransport},
+		}), nil
 	}
 
-	// Build transport for end user token
-	newTransport := &transportWithAuthHeader{
-		Base:      transport,
-		AuthToken: accessToken,
+	if client == nil {
+		return nil, fmt.Errorf("client id or client secret not valid")
 	}
-
-	// return SDK with new Transport
-	return v4.NewLookerSDK(&rtl.AuthSession{
-		Config: *config,
-		Client: http.Client{Transport: newTransport},
-	})
+	return client, nil
 }
 
 const (
