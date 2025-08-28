@@ -12,7 +12,7 @@ require (
 	cloud.google.com/go/dataplex v1.26.0
 	cloud.google.com/go/firestore v1.18.0
 	cloud.google.com/go/spanner v1.84.1
-	github.com/ClickHouse/clickhouse-go/v2 v2.36.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.40.1
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
 	github.com/cenkalti/backoff/v5 v5.0.3
@@ -55,7 +55,7 @@ require (
 )
 
 require (
-	github.com/ClickHouse/ch-go v0.66.0 // indirect
+	github.com/ClickHouse/ch-go v0.67.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
