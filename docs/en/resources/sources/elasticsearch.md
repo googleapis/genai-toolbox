@@ -29,17 +29,8 @@ See the [official documentation](https://www.elastic.co/guide/en/elasticsearch/r
 
 ## Available Tools
 
-- [`elasticsearch-search`](../tools/elasticsearch/elasticsearch-search.md)
-  Search for documents in an index.
-
 - [`elasticsearch-esql`](../tools/elasticsearch/elasticsearch-esql.md)
   Execute ES|QL queries.
-
-- [`elasticsearch-list-indices`](../tools/elasticsearch/elasticsearch-list-indices.md)
-  List all indices in the cluster.
-
-- [`elasticsearch-get-mappings`](../tools/elasticsearch/elasticsearch-get-mappings.md)
-  Get the mapping of a specific index.
 
 ## Requirements
 
