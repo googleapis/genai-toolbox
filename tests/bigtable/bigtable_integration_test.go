@@ -116,23 +116,27 @@ func TestBigtableToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
+	// Get configs for tests
 	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
 	select1Want := "[{\"$col1\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
-	invokeParamWant, _, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	invokeIdNullWant := `[{"id":4,"name":""}]`
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	myToolById4Want := `[{"id":4,"name":""}]`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"$col1\":1}"}]}}`
+	nameFieldArray := `["CAST(cf['name'] AS string) as name"]`
+	nameColFilter := "CAST(cf['name'] AS string)"
 
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithIgnoreDdl(),
-		tests.WithIgnoreInsert(),
-		tests.WithReplaceNameFieldArray(`["CAST(cf['name'] AS string) as name"]`),
-		tests.WithReplaceNameColFilter("CAST(cf['name'] AS string)"),
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want,
+		tests.WithMyToolById4Want(myToolById4Want),
 	)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
+		tests.WithNameFieldArray(nameFieldArray),
+		tests.WithNameColFilter(nameColFilter),
+		tests.DisableDdlTest(),
+		tests.DisableInsertTest(),
+	)
 }
 
 func convertToBytes(v int) []byte {

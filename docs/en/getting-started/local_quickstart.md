@@ -18,13 +18,14 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
+
 
 ## Step 3: Connect your agent to Toolbox
 

@@ -222,12 +222,12 @@ func isValidDocumentPath(path string) bool {
 
 // splitPath splits a path by '/' while handling empty segments correctly
 func splitPath(path string) []string {
-    rawSegments := strings.Split(path, "/")
-    var segments []string
-     for _, s := range rawSegments {
-         if s != "" {
-             segments = append(segments, s)
-         }
-     }
-     return segments
- }
+	rawSegments := strings.Split(path, "/")
+	var segments []string
+	for _, s := range rawSegments {
+		if s != "" {
+			segments = append(segments, s)
+		}
+	}
+	return segments
+}

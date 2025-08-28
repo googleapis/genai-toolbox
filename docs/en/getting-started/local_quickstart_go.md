@@ -25,6 +25,7 @@ This guide assumes you have already done the following:
 ## Step 2: Install and configure Toolbox
 {{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
+
 ## Step 3: Connect your agent to Toolbox
 
 In this section, we will write and run an agent that will load the Tools
@@ -522,6 +523,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"fmt
 
 	"github.com/googleapis/mcp-toolbox-sdk-go/core"
 	openai "github.com/openai/openai-go"
@@ -651,7 +653,7 @@ func main() {
 
 		params.Messages = append(params.Messages, openai.AssistantMessage(query))
 
-		println("\n", completion.Choices[0].Message.Content)
+		fmt.println("\n", completion.Choices[0].Message.Content)
 
 	}
 

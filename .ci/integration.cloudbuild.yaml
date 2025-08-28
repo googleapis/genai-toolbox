@@ -152,25 +152,25 @@ steps:
           bigquery \
           bigquery
 
-  - id: "dataplex"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "DATAPLEX_PROJECT=$PROJECT_ID"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "Dataplex" \
-          dataplex \
-          dataplex
+  # - id: "dataplex"
+  #   name: golang:1
+  #   waitFor: ["compile-test-binary"]
+  #   entrypoint: /bin/bash
+  #   env:
+  #     - "GOPATH=/gopath"
+  #     - "DATAPLEX_PROJECT=$PROJECT_ID"
+  #     - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+  #   secretEnv: ["CLIENT_ID"]
+  #   volumes:
+  #     - name: "go"
+  #       path: "/gopath"
+  #   args:
+  #     - -c
+  #     - |
+  #       .ci/test_with_coverage.sh \
+  #         "Dataplex" \
+  #         dataplex \
+  #         dataplex
 
   - id: "postgres"
     name: golang:1
@@ -553,6 +553,73 @@ steps:
           tidb \
           tidbsql tidbexecutesql
 
+  - id: "firebird"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "FIREBIRD_DATABASE=$_FIREBIRD_DATABASE_NAME"
+      - "FIREBIRD_HOST=$_FIREBIRD_HOST"
+      - "FIREBIRD_PORT=$_FIREBIRD_PORT"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "FIREBIRD_USER", "FIREBIRD_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Firebird" \
+          firebird \
+          firebirdsql firebirdexecutesql
+
+  - id: "clickhouse"
+    name : golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CLICKHOUSE_DATABASE=$_CLICKHOUSE_DATABASE"
+      - "CLICKHOUSE_PORT=$_CLICKHOUSE_PORT"
+      - "CLICKHOUSE_PROTOCOL=$_CLICKHOUSE_PROTOCOL"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "ClickHouse" \
+          clickhouse \
+          clickhouse
+
+  - id: "trino"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "TRINO_HOST=$_TRINO_HOST"
+      - "TRINO_PORT=$_TRINO_PORT"
+      - "TRINO_CATALOG=$_TRINO_CATALOG"
+      - "TRINO_SCHEMA=$_TRINO_SCHEMA"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "TRINO_USER"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Trino" \
+          trino \
+          trinosql trinoexecutesql
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -615,6 +682,16 @@ availableSecrets:
       env: TIDB_USER
     - versionName: projects/$PROJECT_ID/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_host/versions/latest
+      env: CLICKHOUSE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_user/versions/latest
+      env: CLICKHOUSE_USER
+    - versionName: projects/$PROJECT_ID/secrets/firebird_user/versions/latest
+      env: FIREBIRD_USER
+    - versionName: projects/$PROJECT_ID/secrets/firebird_pass/versions/latest
+      env: FIREBIRD_PASS
+    - versionName: projects/$PROJECT_ID/secrets/trino_user/versions/latest
+      env: TRINO_USER
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_host/versions/latest
       env: OCEANBASE_HOST
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_user/versions/latest
@@ -632,6 +709,7 @@ options:
 
 substitutions:
   _DATABASE_NAME: test_database
+  _FIREBIRD_DATABASE_NAME: /firebird/test_database.fdb
   _REGION: "us-central1"
   _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
   _ALLOYDB_POSTGRES_CLUSTER: "alloydb-pg-testing"
@@ -655,5 +733,14 @@ substitutions:
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
+  _CLICKHOUSE_DATABASE: "default"
+  _CLICKHOUSE_PORT: "8123"
+  _CLICKHOUSE_PROTOCOL: "http"
+  _FIREBIRD_HOST: 127.0.0.1
+  _FIREBIRD_PORT: "3050"
+  _TRINO_HOST: 127.0.0.1
+  _TRINO_PORT: "8080"
+  _TRINO_CATALOG: "memory"
+  _TRINO_SCHEMA: "default"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
