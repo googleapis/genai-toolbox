@@ -15,9 +15,13 @@
 package cloudsqlpg
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -32,14 +36,15 @@ import (
 )
 
 var (
-	CloudSQLPostgresSourceKind = "cloud-sql-postgres"
-	CloudSQLPostgresToolKind   = "postgres-sql"
-	CloudSQLPostgresProject    = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
-	CloudSQLPostgresRegion     = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
-	CloudSQLPostgresInstance   = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
-	CloudSQLPostgresDatabase   = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
-	CloudSQLPostgresUser       = os.Getenv("CLOUD_SQL_POSTGRES_USER")
-	CloudSQLPostgresPass       = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
+	CloudSQLPostgresSourceKind         = "cloud-sql-postgres"
+	CloudSQLPostgresToolKind           = "postgres-sql"
+	CloudSQLPostgresListTablesToolKind = "cloudsql-pg-list-tables"
+	CloudSQLPostgresProject            = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
+	CloudSQLPostgresRegion             = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
+	CloudSQLPostgresInstance           = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
+	CloudSQLPostgresDatabase           = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
+	CloudSQLPostgresUser               = os.Getenv("CLOUD_SQL_POSTGRES_USER")
+	CloudSQLPostgresPass               = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
 )
 
 func getCloudSQLPgVars(t *testing.T) map[string]any {
@@ -67,6 +72,16 @@ func getCloudSQLPgVars(t *testing.T) map[string]any {
 		"user":     CloudSQLPostgresUser,
 		"password": CloudSQLPostgresPass,
 	}
+}
+
+func addToolConfig(t *testing.T, config map[string]any, toolName string, toolConfig map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools[toolName] = toolConfig
+	config["tools"] = tools
+	return config
 }
 
 // Copied over from cloud_sql_pg.go
@@ -135,6 +150,12 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	toolsFile = addToolConfig(t, toolsFile, "list_tables", map[string]any{
+		"kind":        CloudSQLPostgresListTablesToolKind,
+		"source":      "my-instance", 
+		"description": "Lists tables in the database.",
+	})
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -158,7 +179,210 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run specific CloudSQLPg tool tests
+	runCloudSQLPgListTablesTest(t, tableNameParam, tableNameAuth)
 }
+
+func runCloudSQLPgListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		isErr         bool
+		validation    func(*testing.T, []byte)
+	}{
+		{
+			name:        "invoke list_tables detailed output",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			isErr:       false,
+			validation: func(t *testing.T, body []byte) {
+				var result []map[string]any
+				if err := json.Unmarshal(body, &result); err != nil {
+					t.Fatalf("failed to unmarshal response: %s", err)
+				}
+				if len(result) < 2 {
+					t.Fatalf("expected at least 2 tables, got %d", len(result))
+				}
+				foundTables := map[string]bool{}
+				for _, item := range result {
+					details := item["object_details"].(map[string]any)
+					foundTables[details["object_name"].(string)] = true
+				}
+				for _, expected := range []string{tableNameParam, tableNameAuth} {
+					if !foundTables[expected] {
+						t.Errorf("expected to find table %q, but it was missing", expected)
+					}
+				}
+			},
+		},
+		{
+			name:        "invoke list_tables simple output",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			isErr:       false,
+			validation: func(t *testing.T, body []byte) {
+				var result []map[string]any
+				if err := json.Unmarshal(body, &result); err != nil {
+					t.Fatalf("failed to unmarshal response: %s", err)
+				}
+				details := result[0]["object_details"].(map[string]any)
+				if _, ok := details["name"]; !ok {
+					t.Error("expected 'name' field in simple output")
+				}
+				if _, ok := details["columns"]; ok {
+					t.Error("did not expect 'columns' field in simple output")
+				}
+			},
+		},
+		{
+			name:        "invoke list_tables with multiple table names",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
+			isErr:       false,
+			validation: func(t *testing.T, body []byte) {
+				var result []map[string]any
+				if err := json.Unmarshal(body, &result); err != nil {
+					t.Fatalf("failed to unmarshal response: %s", err)
+				}
+				if len(result) != 2 {
+					t.Fatalf("expected exactly 2 tables, got %d", len(result))
+				}
+			},
+		},
+		{
+			name:        "invoke list_tables with non-existent table",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
+			isErr:       false,
+			validation: func(t *testing.T, body []byte) {
+				var result []map[string]any
+				if err := json.Unmarshal(body, &result); err != nil {
+					t.Fatalf("failed to unmarshal response: %s", err)
+				}
+				if len(result) != 0 {
+					t.Fatalf("expected 0 tables for a non-existent table, got %d", len(result))
+				}
+			},
+		},
+		{
+			name:        "invoke list_tables with one existing and one non-existent table",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
+			isErr:       false,
+			validation: func(t *testing.T, body []byte) {
+				var result []map[string]any
+				if err := json.Unmarshal(body, &result); err != nil {
+					t.Fatalf("failed to unmarshal response: %s", err)
+				}
+				if len(result) != 1 {
+					t.Fatalf("expected 1 table, got %d", len(result))
+				}
+				details := result[0]["object_details"].(map[string]any)
+				if details["object_name"] != tableNameParam {
+					t.Errorf("expected table %q, got %q", tableNameParam, details["object_name"])
+				}
+			},
+		},
+		{
+			name:        "invoke list_tables with a table name and simple output",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
+			isErr:       false,
+			validation: func(t *testing.T, body []byte) {
+				var result []map[string]any
+				if err := json.Unmarshal(body, &result); err != nil {
+					t.Fatalf("failed to unmarshal response: %s", err)
+				}
+				if len(result) != 1 {
+					t.Fatalf("expected 1 table, got %d", len(result))
+				}
+				details := result[0]["object_details"].(map[string]any)
+				if details["name"] != tableNameAuth {
+					t.Errorf("expected table name %q, got %q", tableNameAuth, details["name"])
+				}
+				if _, ok := details["columns"]; ok {
+					t.Error("did not expect 'columns' field in simple output")
+				}
+			},
+		},
+		{
+			name:        "invoke list_tables with invalid output format",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
+			isErr:       true,
+			validation: nil,
+		},
+		{
+			name:        "invoke list_tables with missing table_names parameter",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			isErr:       true,
+			validation: nil,
+		},
+		{
+			name:        "invoke list_tables with malformed table_names parameter",
+			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
+			isErr:       true,
+			validation: nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+			if tc.isErr {
+				t.Fatal("expected an error, but got status 200")
+			}
+
+			var bodyWrapper map[string]json.RawMessage
+			respBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("error reading response body: %s", err)
+			}
+
+			if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
+				t.Fatalf("error parsing response wrapper: %s", err)
+			}
+
+			resultJSON, ok := bodyWrapper["result"]
+			if !ok {
+				t.Fatal("unable to find result in response body")
+			}
+
+			var resultString string
+			if err := json.Unmarshal(resultJSON, &resultString); err != nil {
+				t.Fatalf("result is not a JSON-encoded string: %s", err)
+			}
+
+			if tc.validation != nil {
+				tc.validation(t, []byte(resultString))
+			}
+		})
+	}
+}	
 
 // Test connection with different IP type
 func TestCloudSQLPgIpConnection(t *testing.T) {
