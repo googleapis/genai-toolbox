@@ -48,6 +48,27 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with allowed datasets",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					allowed_datasets:
+						- my_dataset
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:            "my-instance",
+					Kind:            bigquery.SourceKind,
+					Project:         "my-project",
+					Location:        "us",
+					AllowedDatasets: []string{"my_dataset"},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

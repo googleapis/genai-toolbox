@@ -36,11 +36,14 @@ avoiding full table scans or complex filters.
 
 ## Available Tools
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
+- `bigquery-conversational-analytics`  
+  Allows conversational interaction with a BigQuery source.
 
 - [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
   Execute structured queries using parameters.
+
+- `bigquery-forecast`  
+  Forecasts time series data in BigQuery.
 
 - [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
   Retrieve metadata for a specific dataset.
@@ -53,6 +56,9 @@ avoiding full table scans or complex filters.
 
 - [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
   List tables in a given dataset.
+
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
 
 ### Pre-built Configurations
 
@@ -104,6 +110,11 @@ sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # allowed_datasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -114,6 +125,10 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     useClientOAuth: true
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # allowed_datasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 ## Reference
@@ -123,4 +138,5 @@ sources:
 | kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
 | project        |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                                                                                                           |
 | location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| allowed_datasets  | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
 | useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |

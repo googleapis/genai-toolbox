@@ -20,6 +20,11 @@ and Python code, and formulate an answer. This function returns a detailed, sequ
 log of this entire process, which includes any generated SQL or Python code, the data 
 retrieved, and the final text answer.
 
+When the `allowed_datasets` parameter is configured in the `bigquery` source, this tool 
+will enforce that all tables provided in the `table_references` parameter belong to one 
+of the datasets in the allowed list. If any table is from a dataset that is not in the
+list, the tool will return an error.
+
 **Note**: This tool requires additional setup in your project. Please refer to the 
 official [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview)
 for instructions.

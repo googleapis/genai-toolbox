@@ -15,9 +15,20 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-execute-sql` takes a required `sql` input parameter and runs the SQL
-statement against the configured `source`. It also supports an optional `dry_run`
-parameter to validate a query without executing it.
+`bigquery-execute-sql` executes a GoogleSQL statement. It takes an `sql`
+parameter for the query string and an optional `dry_run` parameter to validate
+the query without running it. Its behavior changes based on the source
+configuration:
+
+- **Without `datasets` restriction:** The tool can execute any valid GoogleSQL
+  query.
+- **With `datasets` restriction:** The tool performs a dry run to analyze the query.
+  It will reject the query if it attempts to access any table outside the
+  allowed `datasets` list. To enforce this restriction, the following operations
+  are also disallowed:
+  - **Dataset-level operations** (e.g., `CREATE SCHEMA`, `ALTER SCHEMA`).
+  - **Unanalyzable operations** where the accessed tables cannot be determined
+    statically (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`, `CALL`).
 
 ## Example
 
