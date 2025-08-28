@@ -80,6 +80,12 @@ npm install @google/genai
 
 {{< /tab >}}
 
+{{< tab header="GoogleGenAI" lang="js" >}}
+
+{{< include "quickstart/js/genAI/quickstart.js" >}}
+
+{{< /tab >}}
+
 {{< /tabpane >}}
 
 1. Run your agent, and observe the results:
