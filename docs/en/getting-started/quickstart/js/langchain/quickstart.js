@@ -24,7 +24,7 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-async function runApplication() {
+async function main() {
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash",
   });
@@ -71,6 +71,4 @@ async function runApplication() {
   }
 }
 
-runApplication()
-  .catch(console.error)
-  .finally(() => console.log("\nApplication finished."));
+main();
