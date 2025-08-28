@@ -6,67 +6,18 @@ sources:
     apikey: ${ELASTICSEARCH_APIKEY}
 
 tools:
-  list_indices:
-    kind: elasticsearch-list-indices
-    source: elasticsearch-source
-    description: List all indices in the cluster.
-    timeout: 30
-    parameters:
-      - name: indices
-        type: array
-        description: The indices to list.
-        default:
-            - "*"
-        items:
-          name: index
-          type: string
-          description: The name of the index.
-  get_index_mappings:
-    kind: elasticsearch-get-mappings
-    source: elasticsearch-source
-    description: Get the mapping of a specific index.
-    parameters:
-      - name: indices
-        type: array
-        description: The indices to get the mapping for.
-        default:
-            - "*"
-        items:
-          name: index
-          type: string
-          description: The name of the index.
   execute_esql_query:
     kind: elasticsearch-esql
     source: elasticsearch-source
     description: Use this tool to execute ES|QL queries.
     query: |
       FROM *
-      | SORT ?sort_field desc
+      | LIMIT ?limit
     parameters:
-      - name: sort_field
-        type: string
-        description: The field to sort by.
-        required: true
-  search_documents:
-    kind: elasticsearch-search
-    source: elasticsearch-source
-    description: Use this tool to search for documents in an index.
-    parameters:
-      - name: index
-        type: string
-        description: The index to search in.
-    templateParameters:
-      - name: count
+      - name: limit
         type: integer
-        description: The number of documents to return.
-        default: 10
-    query: |
-      {
-        "query": {
-          "match_all": {}
-        },
-        "size": {{ .count }}
-      }
+        description: Limit the number of results returned.
+        required: true
 
 toolsets:
   elasticsearch-tools:
