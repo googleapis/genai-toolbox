@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/alloydbconn v1.15.5
 	cloud.google.com/go/bigquery v1.69.0
 	cloud.google.com/go/bigtable v1.38.0
-	cloud.google.com/go/cloudsqlconn v1.18.0
+	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.26.0
 	cloud.google.com/go/firestore v1.18.0
 	cloud.google.com/go/spanner v1.84.1
