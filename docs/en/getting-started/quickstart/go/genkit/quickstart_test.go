@@ -13,14 +13,12 @@ func TestAgentOutputAndKeywords(t *testing.T) {
 		t.Skip("Skipping integration test: GOOGLE_API_KEY environment variable is not set.")
 	}
 
-	t.Log("Compiling quickstart.go...")
 	buildCmd := exec.Command("go", "build", "-o", "quickstart_test_binary", ".")
 	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to compile quickstart.go: %v", err)
+		t.Fatalf("FAIL: Failed to compile quickstart.go: %v", err)
 	}
 	defer os.Remove("quickstart_test_binary")
 
-	t.Log("Running test binary...")
 	cmd := exec.Command("./quickstart_test_binary")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -29,35 +27,34 @@ func TestAgentOutputAndKeywords(t *testing.T) {
 	err := cmd.Run()
 	actualOutput := stdout.String()
 
-	t.Logf("--- SCRIPT OUTPUT ---\n%s", actualOutput)
-	if stderr.Len() > 0 {
-		t.Logf("--- SCRIPT STDERR ---\n%s", stderr.String())
-	}
-
 	if err != nil {
-		t.Fatalf("Script execution failed with error: %v", err)
+		t.Fatalf("FAIL: Script execution failed with error: %v\n--- STDERR ---\n%s", err, stderr.String())
 	}
-	if len(actualOutput) == 0 {
-		t.Fatal("Script ran successfully but produced no output.")
-	}
-	t.Log("Primary assertion passed: Script ran successfully and produced output.")
 
-	t.Log("--- Checking for essential keywords ---")
+	if len(actualOutput) == 0 {
+		t.Fatal("FAIL: Script ran successfully but produced no output.")
+	}
+
 	goldenFile, err := os.ReadFile("../../golden.txt")
 	if err != nil {
-		t.Logf("Warning: Could not read golden.txt to check for keywords: %v", err)
-		return
+		t.Fatalf("FAIL: Could not read golden.txt to check for keywords: %v", err)
 	}
 
 	keywords := strings.Split(string(goldenFile), "\n")
+	var missingKeywords []string
+
+	outputLower := strings.ToLower(actualOutput)
 	for _, keyword := range keywords {
-		if keyword == "" {
+		kw := strings.TrimSpace(keyword)
+		if kw == "" {
 			continue
 		}
-		if strings.Contains(actualOutput, keyword) {
-			t.Logf("Keyword check: Found keyword '%s' in output.", keyword)
-		} else {
-			t.Logf("Keyword check: Did not find keyword '%s' in output.", keyword)
+		if !strings.Contains(outputLower, strings.ToLower(kw)) {
+			missingKeywords = append(missingKeywords, kw)
 		}
+	}
+
+	if len(missingKeywords) > 0 {
+		t.Fatalf("FAIL: The following keywords were missing from the output: [%s]", strings.Join(missingKeywords, ", "))
 	}
 }
