@@ -132,7 +132,7 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, err := lookercommon.ExtractLookerFieldProperties(ctx, &tc.fields)
+			got, err := lookercommon.ExtractLookerFieldProperties(ctx, &tc.fields, true)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -150,7 +150,7 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	got, err := lookercommon.ExtractLookerFieldProperties(ctx, nil)
+	got, err := lookercommon.ExtractLookerFieldProperties(ctx, nil, true)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

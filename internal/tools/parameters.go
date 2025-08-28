@@ -107,7 +107,7 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 		}
 		return v, nil
 	}
-	return nil, fmt.Errorf("missing or invalid authentication header")
+	return nil, fmt.Errorf("missing or invalid authentication header: %w", ErrUnauthorized)
 }
 
 // CheckParamRequired checks if a parameter is required based on the required and default field.
