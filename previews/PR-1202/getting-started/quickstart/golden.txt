@@ -1,6 +1,0 @@
-Hilton Basel
-Hyatt Regency
-booked
-booking
-cancelled
-confirmed

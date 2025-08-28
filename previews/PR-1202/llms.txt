@@ -9,11 +9,11 @@
 How to get started with Toolbox.
 - [Introduction](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/introduction/): An introduction to MCP Toolbox for Databases.
 - [Python Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/local_quickstart/): How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
-- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
+- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 - [Go Quickstart (Local)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/local_quickstart_go/): How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
 - [Quickstart (MCP)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/mcp_quickstart/): How to get started running Toolbox locally with MCP Inspector.
 - [Configuration](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/configure/): How to configure Toolbox's tools.yaml file.
-- [](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/quickstart/shared/cloud_setup/): - [](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/quickstart/shared/configure_toolbox/): - [](https://googleapis.github.io/genai-toolbox/previews/PR-1202/getting-started/quickstart/shared/database_setup/): 
+
 ### Concepts
 
 Some core concepts in Toolbox
@@ -49,12 +49,14 @@ List of reference documentation for resources in Toolbox.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for  demanding transactional workloads.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/bigquery/): BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/bigtable/): Bigtable is a low-latency NoSQL database service for machine learning, operational analytics, and user-facing operations. It's a wide-column, key-value store that can scale to billions of rows and thousands of columns. With Bigtable, you can replicate your data to regions across the world for high availability and data resiliency.
+  - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/clickhouse/): ClickHouse is an open-source, OLTP database.
   - [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/cloud-sql-mysql/): Cloud SQL for MySQL is a fully-managed database service for MySQL.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
   - [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/cloud-sql-mssql/): Cloud SQL for SQL Server is a fully-managed database service for SQL Server.
   - [couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
+  - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/firebird/): Firebird is a powerful, cross-platform, and open-source relational database.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/looker/): Looker is a business intelligence tool that also provides a semantic layer.
@@ -68,14 +70,17 @@ List of reference documentation for resources in Toolbox.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
+  - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/bigtable/): Tools that work with Bigtable Sources.
+  - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/dgraph/): Tools that work with Dgraph Sources.
+  - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/firebird/): Tools that work with Firebird Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/firestore/): Tools that work with Firestore Sources.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/http/): Tools that work with HTTP Sources.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/looker/): Tools that work with Looker Sources.
@@ -89,19 +94,22 @@ List of reference documentation for resources in Toolbox.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/sqlite/): Tools that work with SQLite Sources.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/tidb/): Tools that work with TiDB Sources, such as TiDB Cloud and self-hosted TiDB.
+  - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1202/resources/tools/valkey/): Tools that work with Valkey Sources.
 
 ### Samples
 
 Samples and guides for using Toolbox.
+- [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/alloydb/): How to get started with Toolbox using AlloyDB.
+  - [Quickstart (MCP with AlloyDB)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/alloydb/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
+  - [Getting started with alloydb-ai-nl tool](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/alloydb/ai-nl/): An end to end tutorial for building an ADK agent using the AlloyDB AI NL tool.
 - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/bigquery/): How to get started with Toolbox using BigQuery.
   - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.
 - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/looker/): How to get started with Toolbox using Looker.
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
-- [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1202/samples/alloydb/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
 
 ### About
 
@@ -111,3 +119,9 @@ A list of other information related to Toolbox.
 
 Client SDKs to connect to the MCP Toolbox server.
 - [Go SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1202/sdks/go-sdk/): Go lang client SDK- [JS SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1202/sdks/js-sdk/): Javascript client SDK- [Python SDK](https://googleapis.github.io/genai-toolbox/previews/PR-1202/sdks/python-sdk/): Python client SDK
+### Reference
+
+This section contains reference documentation.
+- [CLI](https://googleapis.github.io/genai-toolbox/previews/PR-1202/reference/cli/): This page describes the `toolbox` command-line options.
+- [Prebuilt Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1202/reference/prebuilt-tools/): This page lists all the prebuilt tools available.
+
