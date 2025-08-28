@@ -2,8 +2,8 @@ sources:
     looker-source:
         kind: looker
         base_url: ${LOOKER_BASE_URL}
-        client_id: ${LOOKER_CLIENT_ID:""}
-        client_secret: ${LOOKER_CLIENT_SECRET:""}
+        client_id: ${LOOKER_CLIENT_ID:}
+        client_secret: ${LOOKER_CLIENT_SECRET:}
         verify_ssl: ${LOOKER_VERIFY_SSL:true}
         timeout: 600s
         show_hidden_models: ${LOOKER_SHOW_HIDDEN_MODELS:true}
