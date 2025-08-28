@@ -15,7 +15,7 @@ tools:
         description: Use this tool to execute sql.
 
     list_tables:
-        kind: postgres-sql
+        kind: cloudsql-pg-list-tables
         source: cloudsql-pg-source
         description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
