@@ -7975,7 +7975,7 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
-# CloudSQLPg
+# CloudSQLPostgres
 Tools that work with CloudSQL Postgres Sources.
 
 
