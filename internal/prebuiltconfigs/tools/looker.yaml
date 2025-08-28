@@ -38,6 +38,11 @@ tools:
           It takes two parameters, the model_name looked up from get_models and the
           explore_name looked up from get_explores.
 
+          If this returns a suggestions field for a dimension, the contents of suggestions
+          can be used as filters for this field. If this returns a suggest_explore and
+          suggest_dimension, a query against that explore and dimension can be used to find
+          valid filters for this field.
+
     get_measures:
         kind: looker-get-measures
         source: looker-source
@@ -47,6 +52,11 @@ tools:
 
           It takes two parameters, the model_name looked up from get_models and the
           explore_name looked up from get_explores.
+
+          If this returns a suggestions field for a measure, the contents of suggestions
+          can be used as filters for this field. If this returns a suggest_explore and
+          suggest_dimension, a query against that explore and dimension can be used to find
+          valid filters for this field.
 
     get_filters:
         kind: looker-get-filters
