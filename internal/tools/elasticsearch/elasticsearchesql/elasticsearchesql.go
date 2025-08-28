@@ -133,7 +133,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 	bodyStruct := struct {
 		Query  string           `json:"query"`
-		Params []map[string]any `json:"params"`
+		Params []map[string]any `json:"params,omitempty"`
 	}{
 		Query:  t.Query,
 		Params: make([]map[string]any, 0, len(params)),
