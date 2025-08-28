@@ -4,6 +4,14 @@ sources:
     project: ${BIGQUERY_PROJECT}
 
 tools:
+  ask_data_insights:
+    kind: bigquery-conversational-analytics
+    source: bigquery-source
+    description: |
+      Use this tool to perform data analysis, get insights,
+      or answer complex questions about the contents of specific
+      BigQuery tables.
+
   execute_sql:
     kind: bigquery-execute-sql
     source: bigquery-source
@@ -36,6 +44,7 @@ tools:
 
 toolsets:
   bigquery-database-tools:
+    - ask_data_insights
     - execute_sql
     - forecast
     - get_dataset_info
