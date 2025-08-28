@@ -447,9 +447,9 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		t.Fatalf("unable to get sources from config")
 	}
 	sources["my-client-auth-source"] = map[string]any{
-		"kind":                   BigquerySourceKind,
-		"project":                BigqueryProject,
-		"useClientAuthorization": true,
+		"kind":           BigquerySourceKind,
+		"project":        BigqueryProject,
+		"useClientOAuth": true,
 	}
 	config["sources"] = sources
 	return config
