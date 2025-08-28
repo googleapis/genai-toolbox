@@ -12,100 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
+import assert from "assert/strict";
+import { main as runAgent } from "./quickstart.js";
 
-const SCRIPT_TO_TEST = path.resolve("./quickstart.js");
 const GOLDEN_FILE_PATH = path.resolve("../../golden.txt");
 
-function runScript() {
-  console.log("    quickstart_test.js:--: Running quickstart.js...");
-  return new Promise((resolve, reject) => {
-    const child = spawn("node", [SCRIPT_TO_TEST]);
-    let output = "";
-    let errorOutput = "";
+async function runTests() {
+  const capturedOutput = [];
+  const originalLog = console.log;
+  console.log = (msg) => {
+    capturedOutput.push(msg);
+  };
 
-    child.stdout.on("data", (data) => {
-      output += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      errorOutput += data.toString();
-    });
-
-    child.on("close", (code) => {
-      console.log(
-        `    quickstart_test.js:--: --- SCRIPT OUTPUT ---\n${output}`
-      );
-      if (errorOutput) {
-        console.log(
-          `    quickstart_test.js:--: --- SCRIPT STDERR ---\n${errorOutput}`
-        );
-      }
-      if (code !== 0) {
-        const errorMessage = `Script execution failed with error: exit code ${code}\n--- STDERR ---\n${errorOutput}`;
-        reject(new Error(errorMessage));
-      } else {
-        resolve(output);
-      }
-    });
-  });
-}
-
-function validateOutput(actualOutput) {
-  if (actualOutput.length === 0) {
-    throw new Error("Script ran successfully but produced no output.");
-  }
-  console.log(
-    "    quickstart_test.js:--: Primary assertion passed: Script ran successfully and produced output."
-  );
-
-  console.log(
-    "    quickstart_test.js:--: --- Checking for essential keywords from golden.txt ---"
-  );
   try {
+    await runAgent();
+    const actualOutput = capturedOutput.join("\n");
+    console.log = originalLog;
+
+    assert.ok(
+      actualOutput.length > 0,
+      "Assertion Failed: Script ran successfully but produced no output."
+    );
+
     const goldenFile = fs.readFileSync(GOLDEN_FILE_PATH, "utf8");
     const keywords = goldenFile.split("\n").filter((kw) => kw.trim() !== "");
+    const missingKeywords = [];
 
     for (const keyword of keywords) {
-      if (actualOutput.includes(keyword)) {
-        console.log(
-          `    quickstart_test.js:--: Keyword check: Found keyword '${keyword}' in output.`
-        );
-      } else {
-        console.log(
-          `    quickstart_test.js:--: Keyword check: Did not find keyword '${keyword}' in output.`
-        );
+      if (!actualOutput.toLowerCase().includes(keyword.toLowerCase())) {
+        missingKeywords.push(keyword);
       }
     }
-  } catch (err) {
-    console.log(
-      `    quickstart_test.js:--: Warning: Could not read golden.txt to check for keywords: ${err.message}`
+
+    assert.ok(
+      missingKeywords.length === 0,
+      `Assertion Failed: The following keywords were missing from the output: [${missingKeywords.join(", ")}]`
     );
-  }
-}
 
-async function runTests() {
-  const testName = "TestAgentOutputAndKeywords";
-  console.log(`=== RUN   ${testName}`);
-  const startTime = process.hrtime.bigint();
-
-  try {
-    const actualOutput = await runScript();
-    validateOutput(actualOutput);
-
-    const endTime = process.hrtime.bigint();
-    const duration = (Number(endTime - startTime) / 1e9).toFixed(2);
-    console.log(`--- PASS: ${testName} (${duration}s)`);
-    console.log("PASS");
     process.exit(0);
   } catch (error) {
-    const endTime = process.hrtime.bigint();
-    const duration = (Number(endTime - startTime) / 1e9).toFixed(2);
-    console.error(`\n--- FAIL: ${testName} (${duration}s)`);
-    console.error(`    quickstart_test.js:--: ${error.message}`);
-    console.log("FAIL");
+    console.log = originalLog;
+    console.error(error.message);
     process.exit(1);
   }
 }
