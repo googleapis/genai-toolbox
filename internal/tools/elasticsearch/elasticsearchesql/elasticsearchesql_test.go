@@ -58,33 +58,32 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 			},
 		},
 		{
-			desc: "search with customizable sort parameter",
+			desc: "search with customizable limit parameter",
 			in: `
 			tools:
 				example_tool:
 					kind: elasticsearch-esql
 					source: my-elasticsearch-instance
-					description: Elasticsearch ES|QL tool with customizable sort
+					description: Elasticsearch ES|QL tool with customizable limit
 					parameters:
-						- name: sort
-						  type: string
-						  description: Sort order for the query
+						- name: limit
+						  type: integer
+						  description: Limit the number of results
 					query: |
 					  FROM my-index
-					  | KEEP first_name, last_name
-					  | SORT last_name ?sort_order
+					  | LIMIT ?limit
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
 					Kind:         "elasticsearch-esql",
 					Source:       "my-elasticsearch-instance",
-					Description:  "Elasticsearch ES|QL tool with customizable sort",
+					Description:  "Elasticsearch ES|QL tool with customizable limit",
 					AuthRequired: []string{},
 					Parameters: tools.Parameters{
-						tools.NewStringParameter("sort", "Sort order for the query"),
+						tools.NewIntParameter("limit", "Limit the number of results"),
 					},
-					Query: "FROM my-index\n| KEEP first_name, last_name\n| SORT last_name ?sort_order\n",
+					Query: "FROM my-index\n| LIMIT ?limit\n",
 				},
 			},
 		},
