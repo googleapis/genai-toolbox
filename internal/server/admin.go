@@ -15,6 +15,9 @@
 package server
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -28,5 +31,44 @@ func adminRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
+	r.Get("/{resource}", func(w http.ResponseWriter, r *http.Request) { adminGetHandler(s, w, r) })
+
 	return r, nil
+}
+
+// adminGetHandler handles requests for a list of specific resource
+func adminGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	resource := chi.URLParam(r, "resource")
+
+	var resourceList []string
+	switch resource {
+	case "source":
+		sourcesMap := s.ResourceMgr.GetSourcesMap()
+		for n := range sourcesMap {
+			resourceList = append(resourceList, n)
+		}
+	case "authservice":
+		authServicesMap := s.ResourceMgr.GetAuthServiceMap()
+		for n := range authServicesMap {
+			resourceList = append(resourceList, n)
+		}
+	case "tool":
+		toolsMap := s.ResourceMgr.GetToolsMap()
+		for n := range toolsMap {
+			resourceList = append(resourceList, n)
+		}
+	case "toolset":
+		toolsetsMap := s.ResourceMgr.GetToolsetsMap()
+		for n := range toolsetsMap {
+			resourceList = append(resourceList, n)
+		}
+	default:
+		err := fmt.Errorf(`invalid resource %s, please provide one of "source", "authservice", "tool", or "toolset"`, resource)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+        return
+	}
+
+    render.JSON(w, r, resourceList)
 }

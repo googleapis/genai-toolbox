@@ -111,6 +111,12 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 	r.toolsets = toolsetsMap
 }
 
+func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.sources
+}
+
 func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -121,6 +127,12 @@ func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.tools
+}
+
+func (r *ResourceManager) GetToolsetsMap() map[string]tools.Toolset {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.toolsets
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (

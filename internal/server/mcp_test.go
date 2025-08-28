@@ -27,8 +27,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -68,8 +70,8 @@ var tool3InputSchema = map[string]any{
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := setUpResources(t, nil, nil, mockTools)
+	r, shutdown := setUpServer(t, "mcp", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -337,8 +339,8 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := setUpResources(t, nil, nil, mockTools)
+	r, shutdown := setUpServer(t, "mcp", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -743,8 +745,8 @@ func TestMcpEndpoint(t *testing.T) {
 }
 
 func TestInvalidProtocolVersionHeader(t *testing.T) {
-	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := map[string]sources.Source{}, map[string]auth.AuthService{}, map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -770,8 +772,8 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 }
 
 func TestDeleteEndpoint(t *testing.T) {
-	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := map[string]sources.Source{}, map[string]auth.AuthService{}, map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -786,8 +788,8 @@ func TestDeleteEndpoint(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
-	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	sourcesMap, asMap, toolsMap, toolsets := map[string]sources.Source{}, map[string]auth.AuthService{}, map[string]tools.Tool{}, map[string]tools.Toolset{}
+	r, shutdown := setUpServer(t, "mcp", sourcesMap, asMap, toolsMap, toolsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -810,7 +812,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -925,7 +927,7 @@ func TestStdioSession(t *testing.T) {
 	defer cancel()
 
 	mockTools := []MockTool{tool1, tool2, tool3}
-	toolsMap, toolsets := setUpResources(t, mockTools)
+	sourcesMap, asMap, toolsMap, toolsets := setUpResources(t, nil, nil, mockTools)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
@@ -955,7 +957,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, toolsMap, toolsets)
+	resourceManager := NewResourceManager(sourcesMap, asMap, toolsMap, toolsets)
 
 	server := &Server{
 		version:         fakeVersionString,
