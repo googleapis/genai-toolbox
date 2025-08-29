@@ -21,7 +21,4 @@ tools:
 
 toolsets:
   elasticsearch-tools:
-    - list_indices
-    - get_index_mappings
     - execute_esql_query
-    - search_documents
