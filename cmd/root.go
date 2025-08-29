@@ -52,6 +52,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylisttableids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpglisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
