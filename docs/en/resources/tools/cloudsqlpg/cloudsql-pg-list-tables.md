@@ -31,4 +31,4 @@ tools:
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be "cloudsql-pg-list-tables".                                                               |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
