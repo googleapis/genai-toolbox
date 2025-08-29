@@ -50,7 +50,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
-	BigQueryUseClientOAuth() bool
+	UseClientAuthorization() bool
 }
 
 // validate compatible sources are still compatible
@@ -111,7 +111,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AllParams:          allParameters,
 
 		Statement:      cfg.Statement,
-		UseClientOAuth: s.BigQueryUseClientOAuth(),
+		UseClientOAuth: s.UseClientAuthorization(),
 		Client:         s.BigQueryClient(),
 		RestService:    s.BigQueryRestService(),
 		ClientCreator:  s.BigQueryClientCreator(),

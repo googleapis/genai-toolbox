@@ -126,7 +126,7 @@ func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
 }
 
-func (s *Source) BigQueryUseClientOAuth() bool {
+func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
 }
 
