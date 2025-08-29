@@ -139,6 +139,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if v.Name != nil {
 			vMap["name"] = *v.Name
 		}
+		if v.Description != nil {
+			vMap["description"] = *v.Description
+		}
 		if v.Label != nil {
 			vMap["label"] = *v.Label
 		}
