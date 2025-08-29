@@ -306,7 +306,10 @@ func runCloudSQLMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth 
 				}
 				detailsStr := result[0]["object_details"].(string)
 				var details map[string]any
-				json.Unmarshal([]byte(detailsStr), &details)
+
+				if err := json.Unmarshal([]byte(detailsStr), &details); err != nil {
+					t.Fatalf("failed to unmarshal object_details JSON string: %s", err)
+				}
 
 				if details["object_name"] != tableNameParam {
 					t.Errorf("expected table %q, got %q", tableNameParam, details["object_name"])
@@ -328,8 +331,11 @@ func runCloudSQLMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth 
 				}
 				detailsStr := result[0]["object_details"].(string)
 				var details map[string]any
-				json.Unmarshal([]byte(detailsStr), &details)
-				
+
+				if err := json.Unmarshal([]byte(detailsStr), &details); err != nil {
+					t.Fatalf("failed to unmarshal object_details JSON string: %s", err)
+				}
+
 				if details["name"] != tableNameAuth {
 					t.Errorf("expected table name %q, got %q", tableNameAuth, details["name"])
 				}
