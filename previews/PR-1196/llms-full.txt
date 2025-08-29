@@ -1211,14 +1211,13 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
-{{< snippet "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
+{{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
-{{< snippet "quickstart/shared/database_setup.md" "database_setup" >}}
+{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
-{{< snippet "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
-
+{{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -5699,8 +5698,8 @@ sources:
 | **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
 |----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
-| project        |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                                                                                                           |
-| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| project        |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                               |
+| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
 | useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
 
 
