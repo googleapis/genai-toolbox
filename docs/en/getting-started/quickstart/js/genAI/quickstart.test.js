@@ -12,24 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { describe, test, before, after } from "node:test";
+import assert from "node:assert/strict";
 import fs from "fs";
 import path from "path";
-import assert from "assert/strict";
 import { main as runAgent } from "./quickstart.js";
 
 const GOLDEN_FILE_PATH = path.resolve("../../golden.txt");
 
-async function runTests() {
-  const capturedOutput = [];
-  const originalLog = console.log;
-  console.log = (msg) => {
-    capturedOutput.push(msg);
-  };
+describe("LangChain Quickstart Agent", () => {
+  let capturedOutput = [];
+  let originalLog;
 
-  try {
+  before(() => {
+    originalLog = console.log;
+    console.log = (msg) => {
+      capturedOutput.push(msg);
+    };
+  });
+
+  after(() => {
+    console.log = originalLog;
+  });
+
+  test("should run to completion", async () => {
     await runAgent();
     const actualOutput = capturedOutput.join("\n");
-    console.log = originalLog;
 
     assert.ok(
       actualOutput.length > 0,
@@ -50,13 +58,6 @@ async function runTests() {
       missingKeywords.length === 0,
       `Assertion Failed: The following keywords were missing from the output: [${missingKeywords.join(", ")}]`
     );
+  });
+});
 
-    process.exit(0);
-  } catch (error) {
-    console.log = originalLog;
-    console.error(error.message);
-    process.exit(1);
-  }
-}
-
-runTests();

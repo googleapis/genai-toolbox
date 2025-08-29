@@ -5,7 +5,7 @@
   "main": "quickstart.js",
   "type": "module",
   "scripts": {
-    "test": "node quickstart_test.js"
+    "test": "node --test"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.16.0",
