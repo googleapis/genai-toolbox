@@ -620,6 +620,26 @@ steps:
           trino \
           trinosql trinoexecutesql
 
+  - id: "elasticsearch"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "ELASTICSEARCH_URL=$_ELASTICSEARCH_URL"
+      - "ELASTICSEARCH_API_KEY=$_ELASTICSEARCH_API_KEY"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Elasticsearch" \
+          elasticsearch \
+          elasticsearch elasticsearchesql
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
