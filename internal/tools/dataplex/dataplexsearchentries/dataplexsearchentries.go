@@ -125,7 +125,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	orderBy, _ := paramsMap["orderBy"].(string)
 
 	req := &dataplexpb.SearchEntriesRequest{
-	Query:          query,
+		Query:          query,
 		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
 		PageSize:       pageSize,
 		OrderBy:        orderBy,

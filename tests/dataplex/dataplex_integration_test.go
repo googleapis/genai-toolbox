@@ -16,19 +16,9 @@ package dataplex
 
 import (
 	"bytes"
-	bigqueryapi "cloud.google.com/go/bigquery"
-	dataplex "cloud.google.com/go/dataplex/apiv1"
-	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/googleapi"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 	"io"
 	"net/http"
 	"os"
@@ -36,6 +26,17 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	bigqueryapi "cloud.google.com/go/bigquery"
+	dataplex "cloud.google.com/go/dataplex/apiv1"
+	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/tests"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
 var (
