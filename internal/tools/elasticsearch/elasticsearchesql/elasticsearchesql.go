@@ -121,7 +121,7 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	}, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var cancel context.CancelFunc
 	if t.Timeout > 0 {
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
@@ -185,4 +185,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }
