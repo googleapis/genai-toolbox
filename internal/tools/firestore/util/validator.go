@@ -67,18 +67,16 @@ func validatePath(path string, pathType PathType) error {
 		return fmt.Errorf("path must be relative (e.g., '%s'), not absolute (matching pattern: ^projects/[^/]+/databases/[^/]+/documents/)", example)
 	}
 
-	// Split the path and validate segments.
-	// Use a regex split to handle multiple consecutive slashes and leading/trailing slashes,
-	// which would result in empty segments from strings.Split.
-	validSegments := regexp.MustCompile("/+").Split(path, -1)
+	// Split the path using strings.Split to preserve empty segments
+	segments := strings.Split(path, "/")
 
 	// Check for empty result
-	if len(validSegments) == 0 {
+	if len(segments) == 0 {
 		return fmt.Errorf("%s path cannot be empty or contain only slashes", pathTypeName)
 	}
 
 	// Check segment count based on path type
-	segmentCount := len(validSegments)
+	segmentCount := len(segments)
 	if pathType == CollectionPath && segmentCount%2 == 0 {
 		// Collection paths must have an odd number of segments
 		return fmt.Errorf("invalid collection path: must have an odd number of segments (e.g., 'collection' or 'collection/doc/subcollection'), got %d segments", segmentCount)
@@ -88,7 +86,7 @@ func validatePath(path string, pathType PathType) error {
 	}
 
 	// Validate each segment
-	for i, segment := range validSegments {
+	for i, segment := range segments {
 		isCollectionSegment := (i % 2) == 0
 		if err := validateSegment(segment, isCollectionSegment); err != nil {
 			return fmt.Errorf("invalid segment at position %d (%s): %w", i+1, segment, err)
@@ -110,9 +108,9 @@ func validateSegment(segment string, isCollection bool) error {
 		return fmt.Errorf("segment cannot be empty")
 	}
 
-	// Check for forward slashes
-	if strings.Contains(segment, "/") {
-		return fmt.Errorf("segment cannot contain forward slashes")
+	// Check for whitespace-only segment
+	if strings.TrimSpace(segment) == "" {
+		return fmt.Errorf("segment cannot be only whitespace")
 	}
 
 	// Check for single or double period

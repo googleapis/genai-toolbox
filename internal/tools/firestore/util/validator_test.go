@@ -74,6 +74,30 @@ func TestValidateCollectionPath(t *testing.T) {
 			wantErr: true,
 			errMsg:  "segment cannot be '.'",
 		},
+		{
+			name:    "double slashes",
+			path:    "users//posts",
+			wantErr: true,
+			errMsg:  "segment cannot be empty",
+		},
+		{
+			name:    "trailing slash",
+			path:    "users/",
+			wantErr: true,
+			errMsg:  "must have an odd number of segments",
+		},
+		{
+			name:    "whitespace only segment",
+			path:    "users/   /posts",
+			wantErr: true,
+			errMsg:  "segment cannot be only whitespace",
+		},
+		{
+			name:    "tab whitespace segment",
+			path:    "users/\t/posts",
+			wantErr: true,
+			errMsg:  "segment cannot be only whitespace",
+		},
 	}
 
 	for _, tt := range tests {
@@ -148,6 +172,30 @@ func TestValidateDocumentPath(t *testing.T) {
 			path:    "users/..",
 			wantErr: true,
 			errMsg:  "segment cannot be '.'",
+		},
+		{
+			name:    "double slashes in document path",
+			path:    "users//user123",
+			wantErr: true,
+			errMsg:  "must have an even number of segments",
+		},
+		{
+			name:    "trailing slash document",
+			path:    "users/user123/",
+			wantErr: true,
+			errMsg:  "must have an even number of segments",
+		},
+		{
+			name:    "whitespace only document ID",
+			path:    "users/   ",
+			wantErr: true,
+			errMsg:  "segment cannot be only whitespace",
+		},
+		{
+			name:    "whitespace in middle segment",
+			path:    "users/user123/posts/ \t ",
+			wantErr: true,
+			errMsg:  "segment cannot be only whitespace",
 		},
 	}
 
