@@ -16,20 +16,12 @@ package dataplex
 
 import (
 	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"regexp"
-	"strings"
-	"testing"
-	"time"
-
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplex "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -37,6 +29,13 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"io"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
+	"testing"
+	"time"
 )
 
 var (
@@ -367,7 +366,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			name:           "Success - Entry Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent:%s\"}", tableName, datasetName))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "dataplex_entry",
@@ -376,7 +375,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			name:           "Success with Authorization - Entry Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-entries-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent:%s\"}", tableName, datasetName))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "dataplex_entry",
@@ -385,7 +384,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-entries-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent:%s\"}", tableName, datasetName))),
 			wantStatusCode: 401,
 			expectResult:   false,
 			wantContentKey: "dataplex_entry",
@@ -394,7 +393,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-entries-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent=%s\"}", tableName, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent:%s\"}", tableName, datasetName))),
 			wantStatusCode: 401,
 			expectResult:   false,
 			wantContentKey: "dataplex_entry",
@@ -403,7 +402,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			name:           "Failure - Entry Not Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"query":"displayname=\"\" system=bigquery parent=\"\""}`)),
+			requestBody:    bytes.NewBuffer([]byte(`{"query":"displayname=\"\" system=bigquery parent:\"\""}`)),
 			wantStatusCode: 200,
 			expectResult:   false,
 			wantContentKey: "",
@@ -648,7 +647,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			name:           "Success - Aspect Type Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-aspect-types-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name=%s_aspectType\"}", aspectTypeId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name:%s_aspectType\"}", aspectTypeId))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "metadata_template",
@@ -657,7 +656,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			name:           "Success - Aspect Type Found with Authorization",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-aspect-types-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name=%s_aspectType\"}", aspectTypeId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name:%s_aspectType\"}", aspectTypeId))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "metadata_template",
@@ -666,7 +665,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			name:           "Failure - Aspect Type Not Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-aspect-types-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`"{\"query\":\"name=_aspectType\"}"`)),
+			requestBody:    bytes.NewBuffer([]byte(`"{\"query\":\"name:_aspectType\"}"`)),
 			wantStatusCode: 400,
 			expectResult:   false,
 		},
@@ -674,7 +673,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-aspect-types-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name=%s_aspectType\"}", aspectTypeId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name:%s_aspectType\"}", aspectTypeId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 		},
@@ -682,7 +681,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			name:           "Failure - No Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-aspect-types-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name=%s_aspectType\"}", aspectTypeId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"name:%s_aspectType\"}", aspectTypeId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 		},
