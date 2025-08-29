@@ -26,6 +26,7 @@ This guide assumes you have already done the following:
 ## Step 2: Install and configure Toolbox
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
+
 ## Step 3: Connect your agent to Toolbox
 
 In this section, we will write and run an agent that will load the Tools
