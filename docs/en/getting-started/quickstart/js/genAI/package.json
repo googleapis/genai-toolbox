@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "quickstart.js",
+  "type": "module",
   "scripts": {
     "test": "node quickstart_test.js"
   },
