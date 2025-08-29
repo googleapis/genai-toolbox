@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.14.0](https://github.com/googleapis/genai-toolbox/compare/v0.13.0...v0.14.0) (2025-08-29)
+
+
+### Features
+
+* **clickhouse:** Add ClickHouse Source and Tools ([#1088](https://github.com/googleapis/genai-toolbox/issues/1088)) ([75a04a5](https://github.com/googleapis/genai-toolbox/commit/75a04a55dd2259bed72fe95119a7a51a906c0b21))
+* **server/mcp:** Support toolbox auth in mcp ([#1140](https://github.com/googleapis/genai-toolbox/issues/1140)) ([ca353e0](https://github.com/googleapis/genai-toolbox/commit/ca353e0b66fedc00e9110df57db18632aef49018))
+* **tools/looker:** Add description for looker-get-models tool ([#1266](https://github.com/googleapis/genai-toolbox/issues/1266)) ([89af3a4](https://github.com/googleapis/genai-toolbox/commit/89af3a4ca332f029615b2a739d1f6cd50519638d))
+
+
+### Bug Fixes
+
+* **bigquery:** Move `useClientOAuth` config from tool to source ([#1279](https://github.com/googleapis/genai-toolbox/issues/1279)) ([8d20a48](https://github.com/googleapis/genai-toolbox/commit/8d20a48f13bcda853d41bdf80a162de12b076d1b))
+* Update env var to allow empty string ([#1260](https://github.com/googleapis/genai-toolbox/issues/1260)) ([03aa9fa](https://github.com/googleapis/genai-toolbox/commit/03aa9fabacda06f860c9f178485126bddb7d5782))
+
 ## [0.13.0](https://github.com/googleapis/genai-toolbox/compare/v0.12.0...v0.13.0) (2025-08-27)
 
 ### ⚠ BREAKING CHANGES
