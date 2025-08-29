@@ -1,0 +1,98 @@
+sources:
+  sqlite-source:
+    kind: sqlite
+    database: ${SQLITE_DATABASE}
+tools:
+  execute_sql:
+    kind: sqlite-execute-sql
+    source: sqlite-source
+    description: Use this tool to execute SQL.
+  list_tables:
+    kind: sqlite-sql
+    source: sqlite-source
+    description: "Lists SQLite tables. Use 'output_format' ('simple'/'detailed') and 'table_names' (comma-separated or empty) to control output."
+    statement: |
+      WITH table_columns AS (
+        SELECT
+          m.name AS table_name,
+          json_group_array(json_object('column_name', ti.name, 'data_type', ti.type, 'ordinal_position', ti.cid, 'is_not_nullable', ti."notnull" = 1, 'column_default', ti.dflt_value, 'is_primary_key', ti.pk > 0)) AS details
+        FROM sqlite_master AS m, pragma_table_info(m.name) AS ti
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
+        GROUP BY m.name
+      ),
+      table_constraints AS (
+        SELECT
+          table_name,
+          json_group_array(json(details)) AS details
+        FROM (
+          SELECT m.name AS table_name, json_object('constraint_name', 'PRIMARY', 'constraint_type', 'PRIMARY KEY', 'constraint_columns', json_group_array(T.name)) AS details
+          FROM sqlite_master AS m, pragma_table_info(m.name) AS T
+          WHERE m.type = 'table' AND T.pk > 0
+          GROUP BY m.name
+          HAVING COUNT(T.name) > 0
+          UNION ALL
+          SELECT m.name, json_object('constraint_name', 'fk_' || m.name || '_' || F.id, 'constraint_type', 'FOREIGN KEY', 'constraint_columns', json_group_array(F."from"), 'foreign_key_referenced_table', F."table", 'foreign_key_referenced_columns', json_group_array(F."to"))
+          FROM sqlite_master AS m, pragma_foreign_key_list(m.name) AS F
+          WHERE m.type = 'table'
+          GROUP BY m.name, F.id
+          UNION ALL
+          SELECT m.name, json_object('constraint_name', I.name, 'constraint_type', 'UNIQUE', 'constraint_columns', (SELECT json_group_array(C.name) FROM pragma_index_info(I.name) AS C ORDER BY C.seqno))
+          FROM sqlite_master AS m, pragma_index_list(m.name) AS I
+          WHERE m.type = 'table' AND I."unique" = 1 AND I.origin != 'pk'
+        )
+        GROUP BY table_name
+      ),
+      table_indexes AS (
+        SELECT
+          m.name AS table_name,
+          json_group_array(json_object('index_name', il.name, 'is_unique', il."unique" = 1, 'is_primary', il.origin = 'pk', 'index_columns', (SELECT json_group_array(ii.name) FROM pragma_index_info(il.name) AS ii))) AS details
+        FROM sqlite_master AS m, pragma_index_list(m.name) AS il
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
+        GROUP BY m.name
+      ),
+      table_triggers AS (
+        SELECT
+          tbl_name AS table_name,
+          json_group_array(json_object('trigger_name', name, 'trigger_definition', sql)) AS details
+        FROM sqlite_master
+        WHERE type = 'trigger'
+        GROUP BY tbl_name
+      )
+      SELECT
+        CASE
+          WHEN '{{.output_format}}' = 'simple' THEN json_object('name', m.name)
+          ELSE json_object(
+            'schema_name', 'main',
+            'object_name', m.name,
+            'object_type', m.type,
+            'columns', json(COALESCE(tc.details, '[]')),
+            'constraints', json(COALESCE(tcons.details, '[]')),
+            'indexes', json(COALESCE(ti.details, '[]')),
+            'triggers', json(COALESCE(tt.details, '[]'))
+          )
+        END AS object_details
+      FROM
+        sqlite_master AS m
+      LEFT JOIN table_columns tc ON m.name = tc.table_name
+      LEFT JOIN table_constraints tcons ON m.name = tcons.table_name
+      LEFT JOIN table_indexes ti ON m.name = ti.table_name
+      LEFT JOIN table_triggers tt ON m.name = tt.table_name
+      WHERE
+        m.type = 'table'
+        AND m.name NOT LIKE 'sqlite_%'
+        {{if .table_names}}
+        AND instr(',' || '{{.table_names}}' || ',', ',' || m.name || ',') > 0
+        {{end}};
+    templateParameters:
+      - name: output_format
+        type: string
+        description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
+        default: "detailed"
+      - name: table_names
+        type: string
+        description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+        default: ""
+toolsets:
+  sqlite-database-tools:
+    - execute_sql
+    - list_tables
