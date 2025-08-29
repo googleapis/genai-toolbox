@@ -35,7 +35,7 @@ describe("LangChain Quickstart Agent", () => {
     console.log = originalLog;
   });
 
-  test("should run to completion", async () => {
+  test("Assert", async () => {
     await runAgent();
     const actualOutput = capturedOutput.join("\n");
 
