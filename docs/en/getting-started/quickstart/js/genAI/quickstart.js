@@ -35,7 +35,7 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
     return typeMap[zodTypeName] || 'string';
 }
 
-async function main() {
+export async function main() {
    
     const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
     const toolboxTools = await toolboxClient.loadToolset("my-toolset");
