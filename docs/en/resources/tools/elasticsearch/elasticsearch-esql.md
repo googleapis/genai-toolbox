@@ -13,7 +13,7 @@ Execute ES|QL queries.
 This tool allows you to execute ES|QL queries against your Elasticsearch
 cluster. You can use this to perform complex searches and aggregations.
 
-See the [official documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-query-api.html) for more information.
+See the [official documentation](https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started) for more information.
 
 ## Example
 
@@ -26,20 +26,20 @@ tools:
     query: |
       FROM my-index
       | KEEP *
-      | SORT ?field desc
+      | LIMIT ?limit
     parameters:
-      - name: field
-        type: string
-        description: The field to sort by.
+      - name: limit
+        type: integer
+        description: Limit the number of results.
         required: true
 ```
 
 ## Parameters
 
-| **name**   | **type** | **required** | **description**                                                                                                                                     |
-|------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| query      |  string  |     true     | The field to sort by.                                                                                                                               |
-| format | string | false | The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.                                        |
-| timeout | integer |    false     | The timeout for the query in seconds. Default is 60 (1 minute).                                                                                     |
+| **name**   | **type** | **required** | **description**                                                                                                                                    |
+|------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| query      |  string  |     true     | The ES\|QL query to run.                                                                                                                           |
+| format     | string | false | The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.                                       |
+| timeout    | integer |    false     | The timeout for the query in seconds. Default is 60 (1 minute).                                                                                    |
 | parameters | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the ES\|QL query.<br/>Only supports “string”, “integer”, “float”, “boolean”. |
 
