@@ -40,49 +40,18 @@ import (
 )
 
 // getTrinoSource returns a test Trino source
-// This requires environment variables to be set for a test Trino instance
+// The database instance should be available for tests
 func getTrinoSource(t *testing.T) sources.Source {
 	t.Helper()
 
-	// Check if we should skip integration tests
-	if os.Getenv("SKIP_INTEGRATION_TESTS") != "" {
-		t.Skip("Skipping integration test: SKIP_INTEGRATION_TESTS is set")
-	}
-
-	// Check for required environment variables
-	host := os.Getenv("TRINO_TEST_HOST")
-	if host == "" {
-		t.Skip("Skipping integration test: TRINO_TEST_HOST not set")
-	}
-
-	port := os.Getenv("TRINO_TEST_PORT")
-	if port == "" {
-		port = "8080" // default Trino port
-	}
-
-	catalog := os.Getenv("TRINO_TEST_CATALOG")
-	if catalog == "" {
-		catalog = "memory" // default test catalog
-	}
-
-	schema := os.Getenv("TRINO_TEST_SCHEMA")
-	if schema == "" {
-		schema = "default"
-	}
-
-	user := os.Getenv("TRINO_TEST_USER")
-	if user == "" {
-		user = "test"
-	}
-
-	// Create Trino source config
+	// Create Trino source config for testing
 	config := trino.Config{
 		Name:    "test-trino",
-		Host:    host,
-		Port:    port,
-		Catalog: catalog,
-		Schema:  schema,
-		User:    user,
+		Host:    "localhost",
+		Port:    "8080",
+		Catalog: "memory",
+		Schema:  "default",
+		User:    "test",
 	}
 
 	ctx := context.Background()
@@ -709,23 +678,7 @@ func TestTrinoSQL(t *testing.T) {
 	}
 }
 
-// Helper function to check if Trino is available
-func isTrinoAvailable() bool {
-	return os.Getenv("TRINO_TEST_HOST") != ""
-}
-
-// TestMain allows us to skip all tests if Trino is not available
+// TestMain runs the integration tests
 func TestMain(m *testing.M) {
-	if !isTrinoAvailable() {
-		fmt.Println("Trino integration tests skipped: TRINO_TEST_HOST not set")
-		fmt.Println("To run integration tests, set the following environment variables:")
-		fmt.Println("  TRINO_TEST_HOST=<trino-host>")
-		fmt.Println("  TRINO_TEST_PORT=<trino-port> (default: 8080)")
-		fmt.Println("  TRINO_TEST_CATALOG=<catalog> (default: memory)")
-		fmt.Println("  TRINO_TEST_SCHEMA=<schema> (default: default)")
-		fmt.Println("  TRINO_TEST_USER=<user> (default: test)")
-		os.Exit(0)
-	}
-
 	os.Exit(m.Run())
 }

@@ -11,23 +11,7 @@ You need a running Trino instance accessible from your test environment. This ca
 - A Trino Docker container
 - A remote Trino cluster
 
-### Environment Variables
-
-Set the following environment variables before running the tests:
-
-```bash
-# Required
-export TRINO_TEST_HOST=localhost          # Trino host
-
-# Optional (with defaults)
-export TRINO_TEST_PORT=8080              # Trino port (default: 8080)
-export TRINO_TEST_CATALOG=memory         # Catalog to use (default: memory)
-export TRINO_TEST_SCHEMA=default         # Schema to use (default: default)
-export TRINO_TEST_USER=test              # User name (default: test)
-
-# Skip integration tests
-export SKIP_INTEGRATION_TESTS=1          # Set to skip all integration tests
-```
+The tests are configured to connect to `localhost:8080` with default settings.
 
 ### Running Tests
 
@@ -61,13 +45,7 @@ docker run -d \
 # Wait for Trino to be ready
 sleep 10
 
-# Run tests
-export TRINO_TEST_HOST=localhost
-export TRINO_TEST_PORT=8080
-export TRINO_TEST_CATALOG=memory
-export TRINO_TEST_SCHEMA=default
-export TRINO_TEST_USER=test
-
+# Run tests (no environment variables needed)
 go test -v -tags=integration ./internal/tools/trino/...
 
 # Clean up
@@ -103,7 +81,7 @@ All test tables are automatically cleaned up after tests complete.
 1. **Connection Issues**
    - Verify Trino is running: `curl http://localhost:8080/v1/info`
    - Check network connectivity
-   - Ensure correct host/port in environment variables
+   - Ensure Trino is accessible on localhost:8080
 
 2. **Permission Issues**
    - Ensure the test user has CREATE/DROP table permissions
@@ -137,12 +115,6 @@ services:
     depends_on:
       trino:
         condition: service_healthy
-    environment:
-      TRINO_TEST_HOST: trino
-      TRINO_TEST_PORT: 8080
-      TRINO_TEST_CATALOG: memory
-      TRINO_TEST_SCHEMA: default
-      TRINO_TEST_USER: test
     command: go test -v -tags=integration ./internal/tools/trino/...
 ```
 
