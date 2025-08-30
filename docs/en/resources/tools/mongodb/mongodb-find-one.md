@@ -64,5 +64,3 @@ tools:
 | filterParams   | list     | true         | A list of parameter objects that define the variables used in the `filterPayload`.                                                           |
 | projectPayload | string   | false        | An optional MongoDB projection document to specify which fields to include (1) or exclude (0) in the result.                                 |
 | projectParams  | list     | false        | A list of parameter objects for the `projectPayload`.                                                                                        |
-| sortPayload    | string   | false        | An optional MongoDB sort document. Useful for selecting which document to return if the filter matches multiple (e.g., get the most recent). |
-| sortParams     | list     | false        | A list of parameter objects for the `sortPayload`.                                                                                           |
