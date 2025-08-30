@@ -17,7 +17,6 @@ package mysqlsql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -25,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
 const kind string = "mysql-sql"
@@ -178,21 +178,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 				continue
 			}
 
-			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
-			// we'll need to cast it back to string
-			switch colTypes[i].DatabaseTypeName() {
-			case "JSON":
-				// unmarshal JSON data before storing to prevent double marshaling
-				var unmarshaledData any
-				err := json.Unmarshal(val.([]byte), &unmarshaledData)
-				if err != nil {
-					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
-				}
-				vMap[name] = unmarshaledData
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(val.([]byte))
-			default:
-				vMap[name] = val
+			vMap[name], err = mysqlcommon.ConvertToType(colTypes[i], val)
+			if err != nil {
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
 			}
 		}
 		out = append(out, vMap)
@@ -219,4 +207,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

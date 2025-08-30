@@ -65,22 +65,39 @@ Connect your IDE to BigQuery using Toolbox.
 
 BigQuery uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to BigQuery resources like projects, datasets, and tables.
-Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize
-and authenticate when interacting with [BigQuery][bigquery-docs].
 
-In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the correct IAM permissions for the queries
-you intend to run. Common roles include `roles/bigquery.user` (which includes
-permissions to run jobs and read data) or `roles/bigquery.dataViewer`. See
-[Introduction to BigQuery IAM][grant-permissions] for more information on
-applying IAM permissions and roles to an identity.
+### Authentication via Application Default Credentials (ADC)
+
+By **default**, Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
+
+When using this method, you need to ensure the IAM identity associated with your
+ADC (such as a service account) has the correct permissions for the queries you
+intend to run. Common roles include `roles/bigquery.user` (which includes
+permissions to run jobs and read data) or `roles/bigbigquery.dataViewer`.
+Follow this [guide][set-adc] to set up your ADC.
+
+### Authentication via User's OAuth Access Token
+
+If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
+OAuth access token for authentication. This token is parsed from the
+`Authorization` header passed in with the tool invocation request. This method
+allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
+client or the end-user.
+
+When using this on-behalf-of authentication, you must ensure that the
+identity used has been granted the correct IAM permissions. Currently,
+this option is only supported by the following BigQuery tools:
+
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
 
 [iam-overview]: https://cloud.google.com/bigquery/docs/access-control
 [adc]: https://cloud.google.com/docs/authentication#adc
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[grant-permissions]: https://cloud.google.com/bigquery/docs/access-control
 
 ## Example
+
+Initialize a BigQuery source that uses ADC:
 
 ```yaml
 sources:
@@ -89,10 +106,21 @@ sources:
     project: "my-project-id"
 ```
 
+Initialize a BigQuery source that uses the client's access token:
+
+```yaml
+sources:
+  my-bigquery-client-auth-source:
+    kind: "bigquery"
+    project: "my-project-id"
+    useClientOAuth: true
+```
+
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                               |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigquery".                                                           |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
-| location  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
+|----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
+| project        |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                               |
+| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
+| useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |

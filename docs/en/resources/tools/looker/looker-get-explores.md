@@ -21,6 +21,16 @@ It's compatible with the following sources:
 `looker-get-explores` accepts one parameter, the
 `model` id.
 
+The return type is an array of maps, each map is formatted like:
+
+```json
+{
+    "name": "explore name",
+    "description": "explore description",
+    "label": "explore label",
+    "group_label": "group label"
+}
+```
 ## Example
 
 ```yaml

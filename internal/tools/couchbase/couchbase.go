@@ -174,3 +174,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 func (t Tool) Authorized(verifiedAuthSources []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthSources)
 }
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}

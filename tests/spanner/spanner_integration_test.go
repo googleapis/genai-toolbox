@@ -148,27 +148,32 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
+	// Get configs for tests
 	select1Want := "[{\"\":\"1\"}]"
-	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	invokeIdNullWant := `[{"id":"4","name":null}]`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	nullWant := "null"
-	failInvocationWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
+	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
+	toolInvokeMyToolById4Want := `[{"id":"4","name":null}]`
+	mcpMyFailToolWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"\":\"1\"}"}]}}`
+	tmplSelectAllWwant := "[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"},{\"age\":\"100\",\"id\":\"2\",\"name\":\"Alice\"}]"
+	tmplSelectId1Want := "[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"}]"
 
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want,
+		tests.WithMyToolId3NameAliceWant(invokeParamWant),
+		tests.WithMyToolById4Want(toolInvokeMyToolById4Want),
+	)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want, tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant))
+	tests.RunToolInvokeWithTemplateParameters(
+		t, tableNameTemplateParam,
+		tests.WithSelectAllWant(tmplSelectAllWwant),
+		tests.WithTmplSelectId1Want(tmplSelectId1Want),
+		tests.DisableDdlTest(),
+	)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
-
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
-		tests.WithIgnoreDdl(),
-		tests.WithSelectAllWant("[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"},{\"age\":\"100\",\"id\":\"2\",\"name\":\"Alice\"}]"),
-		tests.WithSelect1Want("[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"}]"),
-	)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 }
 
 // getSpannerToolInfo returns statements and param for my-tool for spanner-sql kind
