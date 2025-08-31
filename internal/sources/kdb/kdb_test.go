@@ -131,4 +131,3 @@ func TestFailParseFromYaml(t *testing.T) {
 		})
 	}
 }
-

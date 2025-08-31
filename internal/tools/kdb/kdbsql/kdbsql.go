@@ -137,7 +137,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 	sliceParams := newParams.AsSlice()
-	
+
 	kdbParams := make([]*kdbgo.K, len(sliceParams))
 	for i, p := range sliceParams {
 		kdbParams[i] = &kdbgo.K{Type: kdbgo.XT, Data: p}
