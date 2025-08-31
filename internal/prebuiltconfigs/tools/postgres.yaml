@@ -6,6 +6,8 @@ sources:
         database: ${POSTGRES_DATABASE}
         user: ${POSTGRES_USER}
         password: ${POSTGRES_PASSWORD}
+        queryParams:
+            sslmode: ${POSTGRES_SSLMODE}
 
 tools:
     execute_sql:

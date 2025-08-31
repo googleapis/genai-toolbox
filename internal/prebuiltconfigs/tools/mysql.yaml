@@ -6,6 +6,9 @@ sources:
     database: ${MYSQL_DATABASE}
     user: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
+    # TLS mode (preferred, skip-verify, true, false…). If the env var is empty, non-TLS is used.
+    queryParams:
+      tls: ${MYSQL_TLS}
     queryTimeout: 30s # Optional
 tools:
   execute_sql:
