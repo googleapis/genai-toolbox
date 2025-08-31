@@ -36,6 +36,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.2
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/cobra v1.9.1
+	github.com/sv/kdbgo v0.20.0
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.328.0
 	github.com/valkey-io/valkey-go v1.0.64
@@ -137,6 +138,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/nakagami/chacha20 v0.1.0 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
+	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
