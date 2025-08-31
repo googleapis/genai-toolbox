@@ -18,12 +18,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strings"
+	"sort"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/exp/maps"
 )
 
 const SourceKind string = "postgres"
@@ -46,13 +47,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name        string            `yaml:"name" validate:"required"`
-	Kind        string            `yaml:"kind" validate:"required"`
-	Host        string            `yaml:"host" validate:"required"`
-	Port        string            `yaml:"port" validate:"required"`
-	User        string            `yaml:"user" validate:"required"`
-	Password    string            `yaml:"password" validate:"required"`
-	Database    string            `yaml:"database" validate:"required"`
+	Name     string `yaml:"name" validate:"required"`
+	Kind     string `yaml:"kind" validate:"required"`
+	Host     string `yaml:"host" validate:"required"`
+	Port     string `yaml:"port" validate:"required"`
+	User     string `yaml:"user" validate:"required"`
+	Password string `yaml:"password" validate:"required"`
+	Database string `yaml:"database" validate:"required"`
+	// SSLMode is a shortcut for the sslmode query parameter (disable, require, verify-full …).
+	// If provided it is added to QueryParams unless the user already set sslmode explicitly.
+	SSLMode     string            `yaml:"sslmode"`
 	QueryParams map[string]string `yaml:"queryParams"`
 }
 
@@ -61,7 +65,15 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams)
+	qp := maps.Clone(r.QueryParams)
+	if r.SSLMode != "" {
+		// Do not overwrite if user already specified sslmode in QueryParams
+		if _, ok := qp["sslmode"]; !ok {
+			qp["sslmode"] = r.SSLMode
+		}
+	}
+
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, qp)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -117,9 +129,19 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 }
 
 func ConvertParamMapToRawQuery(queryParams map[string]string) string {
-	queryArray := []string{}
-	for k, v := range queryParams {
-		queryArray = append(queryArray, fmt.Sprintf("%s=%s", k, v))
+	if len(queryParams) == 0 {
+		return ""
 	}
-	return strings.Join(queryArray, "&")
+	keys := make([]string, 0, len(queryParams))
+	for k := range queryParams {
+		if queryParams[k] != "" {
+			keys = append(keys, k)
+		}
+	}
+	sort.Strings(keys)
+	values := url.Values{}
+	for _, k := range keys {
+		values.Set(k, queryParams[k])
+	}
+	return values.Encode()
 }
