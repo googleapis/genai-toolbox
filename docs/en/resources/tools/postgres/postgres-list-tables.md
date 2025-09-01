@@ -10,10 +10,15 @@ aliases:
 
 ## About
 
-The `postgres-list-tables` tool retrieves schema information for all or specified tables in a Postgres database.
-It's compatible with [postgres](../../sources/postgres.md) source.
+The `postgres-list-tables` tool retrieves schema information for all or specified tables in a Postgres database. It's compatible with any of the following sources:
 
-`postgres-list-tables` lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to `simple` which will return only the table names or `detailed` which is the default.
+- [alloydb-postgres](../../sources/alloydb-pg.md)
+- [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
+- [postgres](../../sources/postgres.md)
+
+`postgres-list-tables` lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). The tool takes the following input parameters:
+	* `table_names` (optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas.
+	* `output_format` (optional): Indicate the output format of table schema. `simple` will return only the table names, `detailed` will return the full table information. Default: `detailed`.
 
 ## Example
 

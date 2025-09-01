@@ -20,10 +20,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/url"
 	"net/http"
+	"net/url"
 	"os"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -35,14 +37,14 @@ import (
 )
 
 var (
-	PostgresSourceKind = "postgres"
-	PostgresToolKind   = "postgres-sql"
+	PostgresSourceKind         = "postgres"
+	PostgresToolKind           = "postgres-sql"
 	PostgresListTablesToolKind = "postgres-list-tables"
-	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
-	PostgresHost       = os.Getenv("POSTGRES_HOST")
-	PostgresPort       = os.Getenv("POSTGRES_PORT")
-	PostgresUser       = os.Getenv("POSTGRES_USER")
-	PostgresPass       = os.Getenv("POSTGRES_PASS")
+	PostgresDatabase           = os.Getenv("POSTGRES_DATABASE")
+	PostgresHost               = os.Getenv("POSTGRES_HOST")
+	PostgresPort               = os.Getenv("POSTGRES_PORT")
+	PostgresUser               = os.Getenv("POSTGRES_USER")
+	PostgresPass               = os.Getenv("POSTGRES_PASS")
 )
 
 func getPostgresVars(t *testing.T) map[string]any {
@@ -69,12 +71,16 @@ func getPostgresVars(t *testing.T) map[string]any {
 	}
 }
 
-func addToolConfig(t *testing.T, config map[string]any, toolName string, toolConfig map[string]any) map[string]any {
+func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
-	tools[toolName] = toolConfig
+	tools["list_tables"] = map[string]any{
+		"kind":        PostgresListTablesToolKind,
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
 	config["tools"] = tools
 	return config
 }
@@ -129,11 +135,7 @@ func TestPostgres(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
-	toolsFile = addToolConfig(t, toolsFile, "list_tables", map[string]any{
-		"kind":        PostgresListTablesToolKind,
-		"source":      "my-instance", 
-		"description": "Lists tables in the database.",
-	})
+	toolsFile = addPrebuiltToolConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -164,149 +166,105 @@ func TestPostgres(t *testing.T) {
 }
 
 func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
+	// TableNameParam columns to construct want
+	paramTableColumns := fmt.Sprintf(`[
+		{"data_type": "integer", "column_name": "id", "column_default": "nextval('%s_id_seq'::regclass)", "is_not_nullable": true, "ordinal_position": 1, "column_comment": null},
+		{"data_type": "text", "column_name": "name", "column_default": null, "is_not_nullable": false, "ordinal_position": 2, "column_comment": null}
+	]`, tableNameParam)
+
+	// TableNameAuth columns to construct want
+	authTableColumns := fmt.Sprintf(`[
+		{"data_type": "integer", "column_name": "id", "column_default": "nextval('%s_id_seq'::regclass)", "is_not_nullable": true, "ordinal_position": 1, "column_comment": null},
+		{"data_type": "text", "column_name": "name", "column_default": null, "is_not_nullable": false, "ordinal_position": 2, "column_comment": null},
+		{"data_type": "text", "column_name": "email", "column_default": null, "is_not_nullable": false, "ordinal_position": 3, "column_comment": null}
+	]`, tableNameAuth)
+
+	const (
+		// Template to construct detailed output want
+		detailedObjectTemplate = `{
+			"object_name": "%[1]s", "schema_name": "public",
+			"object_details": {
+				"owner": "mytestuser", "comment": null,
+				"indexes": [{"is_primary": true, "is_unique": true, "index_name": "%[1]s_pkey", "index_method": "btree", "index_columns": ["id"], "index_definition": "CREATE UNIQUE INDEX %[1]s_pkey ON public.%[1]s USING btree (id)"}],
+				"triggers": [], "columns": %s, "object_name": "%[1]s", "object_type": "TABLE", "schema_name": "public",
+				"constraints": [{"constraint_name": "%[1]s_pkey", "constraint_type": "PRIMARY KEY", "constraint_columns": ["id"], "constraint_definition": "PRIMARY KEY (id)", "foreign_key_referenced_table": null, "foreign_key_referenced_columns": null}]
+			}
+		}`
+
+		// Template to construct simple output want
+		simpleObjectTemplate = `{"object_name":"%s", "schema_name":"public", "object_details":{"name":"%s"}}`
+	)
+
+	// Helper to build json for detailed want
+	getDetailedWant := func(tableName, columnJSON string) string {
+		return fmt.Sprintf(detailedObjectTemplate, tableName, columnJSON)
+	}
+
+	// Helper to build template for simple want
+	getSimpleWant := func(tableName string) string {
+		return fmt.Sprintf(simpleObjectTemplate, tableName, tableName)
+	}
+
 	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		isErr         bool
-		validation    func(*testing.T, []byte)
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           string
 	}{
 		{
-			name:        "invoke list_tables detailed output",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"table_names": ""}`)),
-			isErr:       false,
-			validation: func(t *testing.T, body []byte) {
-				var result []map[string]any
-				if err := json.Unmarshal(body, &result); err != nil {
-					t.Fatalf("failed to unmarshal response: %s", err)
-				}
-				if len(result) < 2 {
-					t.Fatalf("expected at least 2 tables, got %d", len(result))
-				}
-				foundTables := map[string]bool{}
-				for _, item := range result {
-					details := item["object_details"].(map[string]any)
-					foundTables[details["object_name"].(string)] = true
-				}
-				for _, expected := range []string{tableNameParam, tableNameAuth} {
-					if !foundTables[expected] {
-						t.Errorf("expected to find table %q, but it was missing", expected)
-					}
-				}
-			},
+			name:           "invoke list_tables detailed output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
-			name:        "invoke list_tables simple output",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
-			isErr:       false,
-			validation: func(t *testing.T, body []byte) {
-				var result []map[string]any
-				if err := json.Unmarshal(body, &result); err != nil {
-					t.Fatalf("failed to unmarshal response: %s", err)
-				}
-				details := result[0]["object_details"].(map[string]any)
-				if _, ok := details["name"]; !ok {
-					t.Error("expected 'name' field in simple output")
-				}
-				if _, ok := details["columns"]; ok {
-					t.Error("did not expect 'columns' field in simple output")
-				}
-			},
+			name:           "invoke list_tables simple output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
 		},
 		{
-			name:        "invoke list_tables with invalid output format",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
-			isErr:       true,
-			validation: nil,
+			name:           "invoke list_tables with invalid output format",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "invoke list_tables with missing table_names parameter",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			isErr:       true,
-			validation: nil,
+			name:           "invoke list_tables with malformed table_names parameter",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "invoke list_tables with malformed table_names parameter",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
-			isErr:       true,
-			validation: nil,
+			name:           "invoke list_tables with multiple table names",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
-			name:        "invoke list_tables with multiple table names",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
-			isErr:       false,
-			validation: func(t *testing.T, body []byte) {
-				var result []map[string]any
-				if err := json.Unmarshal(body, &result); err != nil {
-					t.Fatalf("failed to unmarshal response: %s", err)
-				}
-				if len(result) != 2 {
-					t.Fatalf("expected exactly 2 tables, got %d", len(result))
-				}
-			},
+			name:           "invoke list_tables with non-existent table",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           `null`,
 		},
 		{
-			name:        "invoke list_tables with non-existent table",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
-			isErr:       false,
-			validation: func(t *testing.T, body []byte) {
-				var result []map[string]any
-				if err := json.Unmarshal(body, &result); err != nil {
-					t.Fatalf("failed to unmarshal response: %s", err)
-				}
-				if len(result) != 0 {
-					t.Fatalf("expected 0 tables for a non-existent table, got %d", len(result))
-				}
-			},
+			name:           "invoke list_tables with one existing and one non-existent table",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
-			name:        "invoke list_tables with one existing and one non-existent table",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
-			isErr:       false,
-			validation: func(t *testing.T, body []byte) {
-				var result []map[string]any
-				if err := json.Unmarshal(body, &result); err != nil {
-					t.Fatalf("failed to unmarshal response: %s", err)
-				}
-				if len(result) != 1 {
-					t.Fatalf("expected 1 table, got %d", len(result))
-				}
-				details := result[0]["object_details"].(map[string]any)
-				if details["object_name"] != tableNameParam {
-					t.Errorf("expected table %q, got %q", tableNameParam, details["object_name"])
-				}
-			},
-		},
-		{
-			name:        "invoke list_tables with a table name and simple output",
-			api:         "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
-			isErr:       false,
-			validation: func(t *testing.T, body []byte) {
-				var result []map[string]any
-				if err := json.Unmarshal(body, &result); err != nil {
-					t.Fatalf("failed to unmarshal response: %s", err)
-				}
-				if len(result) != 1 {
-					t.Fatalf("expected 1 table, got %d", len(result))
-				}
-				details := result[0]["object_details"].(map[string]any)
-				if details["name"] != tableNameAuth {
-					t.Errorf("expected table name %q, got %q", tableNameAuth, details["name"])
-				}
-				if _, ok := details["columns"]; ok {
-					t.Error("did not expect 'columns' field in simple output")
-				}
-			},
+			name:           "invoke list_tables with a table name and simple output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -316,48 +274,57 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
 			defer resp.Body.Close()
 
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
+			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
-			if tc.isErr {
-				t.Fatal("expected an error, but got status 200")
-			}
 
-			var bodyWrapper map[string]json.RawMessage
-			respBytes, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("error reading response body: %s", err)
-			}
+			if tc.wantStatusCode == http.StatusOK {
+				var bodyWrapper map[string]json.RawMessage
+				respBytes, err := io.ReadAll(resp.Body)
+				if err != nil {
+					t.Fatalf("error reading response body: %s", err)
+				}
 
-			if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
-				t.Fatalf("error parsing response wrapper: %s", err)
-			}
+				if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
+					t.Fatalf("error parsing response wrapper: %s, body: %s", err, string(respBytes))
+				}
 
-			resultJSON, ok := bodyWrapper["result"]
-			if !ok {
-				t.Fatal("unable to find result in response body")
-			}
+				resultJSON, ok := bodyWrapper["result"]
+				if !ok {
+					t.Fatal("unable to find 'result' in response body")
+				}
 
-			var resultString string
-			if err := json.Unmarshal(resultJSON, &resultString); err != nil {
-				t.Fatalf("result is not a JSON-encoded string: %s", err)
-			}
+				var resultString string
+				if err := json.Unmarshal(resultJSON, &resultString); err != nil {
+					t.Fatalf("'result' is not a JSON-encoded string: %s", err)
+				}
 
-			if tc.validation != nil {
-				tc.validation(t, []byte(resultString))
+				var got, want []any
+
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal actual result string: %v", err)
+				}
+				if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+					t.Fatalf("failed to unmarshal expected want string: %v", err)
+				}
+
+				sort.SliceStable(got, func(i, j int) bool {
+					return fmt.Sprintf("%v", got[i]) < fmt.Sprintf("%v", got[j])
+				})
+				sort.SliceStable(want, func(i, j int) bool {
+					return fmt.Sprintf("%v", want[i]) < fmt.Sprintf("%v", want[j])
+				})
+
+				if !reflect.DeepEqual(got, want) {
+					t.Errorf("Unexpected result: got  %#v, want: %#v", got, want)
+				}
 			}
 		})
 	}

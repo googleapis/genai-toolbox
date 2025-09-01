@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -124,7 +126,11 @@ type compatibleSource interface {
 }
 
 // validate compatible sources are still compatible
+var _ compatibleSource = &alloydbpg.Source{}
+var _ compatibleSource = &cloudsqlpg.Source{}
 var _ compatibleSource = &postgres.Source{}
+
+var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -151,11 +157,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, postgres.SourceKind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("table_names", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
+		tools.NewStringParameterWithDefault("table_names", "", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
 		tools.NewStringParameterWithDefault("output_format", "detailed", "Optional: Use 'simple' for names only or 'detailed' for full info."),
 	}
 	paramManifest := allParameters.Manifest()
@@ -199,7 +205,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	tableNames, ok := paramsMap["table_names"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", tableNames)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", tableNames)
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
     if outputFormat != "simple" && outputFormat != "detailed" {
