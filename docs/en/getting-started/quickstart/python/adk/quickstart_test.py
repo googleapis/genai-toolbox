@@ -21,12 +21,6 @@ def golden_keywords():
 class TestADKExecution:
     """Test ADK framework execution and output validation."""
 
-    @pytest.fixture(autouse=True)
-    def check_prerequisites(self):
-        """Check for required environment variables."""
-        if not os.getenv("GOOGLE_API_KEY"):
-            pytest.skip("GOOGLE_API_KEY environment variable is not set.")
-
     @pytest.fixture(scope="function")
     def script_output(self, capsys):
         """Run the quickstart function and return its output."""
