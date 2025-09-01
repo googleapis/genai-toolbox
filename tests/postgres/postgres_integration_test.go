@@ -182,14 +182,14 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 	const (
 		// Template to construct detailed output want
 		detailedObjectTemplate = `{
-			"object_name": "%[1]s", "schema_name": "public",
-			"object_details": {
-				"owner": "mytestuser", "comment": null,
-				"indexes": [{"is_primary": true, "is_unique": true, "index_name": "%[1]s_pkey", "index_method": "btree", "index_columns": ["id"], "index_definition": "CREATE UNIQUE INDEX %[1]s_pkey ON public.%[1]s USING btree (id)"}],
-				"triggers": [], "columns": %s, "object_name": "%[1]s", "object_type": "TABLE", "schema_name": "public",
-				"constraints": [{"constraint_name": "%[1]s_pkey", "constraint_type": "PRIMARY KEY", "constraint_columns": ["id"], "constraint_definition": "PRIMARY KEY (id)", "foreign_key_referenced_table": null, "foreign_key_referenced_columns": null}]
-			}
-		}`
+            "object_name": "%[1]s", "schema_name": "public",
+            "object_details": {
+                "owner": "%[3]s", "comment": null,
+                "indexes": [{"is_primary": true, "is_unique": true, "index_name": "%[1]s_pkey", "index_method": "btree", "index_columns": ["id"], "index_definition": "CREATE UNIQUE INDEX %[1]s_pkey ON public.%[1]s USING btree (id)"}],
+                "triggers": [], "columns": %[2]s, "object_name": "%[1]s", "object_type": "TABLE", "schema_name": "public",
+                "constraints": [{"constraint_name": "%[1]s_pkey", "constraint_type": "PRIMARY KEY", "constraint_columns": ["id"], "constraint_definition": "PRIMARY KEY (id)", "foreign_key_referenced_table": null, "foreign_key_referenced_columns": null}]
+            }
+        }`
 
 		// Template to construct simple output want
 		simpleObjectTemplate = `{"object_name":"%s", "schema_name":"public", "object_details":{"name":"%s"}}`
@@ -197,7 +197,7 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 
 	// Helper to build json for detailed want
 	getDetailedWant := func(tableName, columnJSON string) string {
-		return fmt.Sprintf(detailedObjectTemplate, tableName, columnJSON)
+		return fmt.Sprintf(detailedObjectTemplate, tableName, columnJSON, PostgresUser)
 	}
 
 	// Helper to build template for simple want
