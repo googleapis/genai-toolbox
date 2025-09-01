@@ -1232,6 +1232,7 @@ func TestPrebuiltTools(t *testing.T) {
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
+	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
@@ -1263,6 +1264,13 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("ALLOYDB_POSTGRES_DATABASE", "your_alloydb_db")
 	t.Setenv("ALLOYDB_POSTGRES_USER", "your_alloydb_user")
 	t.Setenv("ALLOYDB_POSTGRES_PASSWORD", "your_alloydb_password")
+
+	t.Setenv("CLICKHOUSE_PROTOCOL", "your_clickhouse_protocol")
+	t.Setenv("CLICKHOUSE_DATABASE", "your_clickhouse_database")
+	t.Setenv("CLICKHOUSE_PASSWORD", "your_clickhouse_password")
+	t.Setenv("CLICKHOUSE_USER", "your_clickhouse_user")
+	t.Setenv("CLICKHOUSE_HOST", "your_clickhosue_host")
+	t.Setenv("CLICKHOUSE_PORT", "8123")
 
 	t.Setenv("CLOUD_SQL_POSTGRES_PROJECT", "your_pg_project")
 	t.Setenv("CLOUD_SQL_POSTGRES_INSTANCE", "your_pg_instance")
@@ -1346,6 +1354,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"bigquery-database-tools": tools.ToolsetConfig{
 					Name:      "bigquery-database-tools",
 					ToolNames: []string{"ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+				},
+			},
+		},
+		{
+			name: "clickhouse prebuilt tools",
+			in:   clickhouse_config,
+			wantToolset: server.ToolsetConfigs{
+				"clickhouse-database-tools": tools.ToolsetConfig{
+					Name:      "clickhouse-database-tools",
+					ToolNames: []string{"execute_sql"},
 				},
 			},
 		},

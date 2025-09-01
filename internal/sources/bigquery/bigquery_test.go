@@ -41,10 +41,31 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
-					Name:     "my-instance",
-					Kind:     bigquery.SourceKind,
-					Project:  "my-project",
-					Location: "us",
+					Name:           "my-instance",
+					Kind:           bigquery.SourceKind,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: false,
+				},
+			},
+		},
+		{
+			desc: "use client auth example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					useClientOAuth: true
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Kind:           bigquery.SourceKind,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: true,
 				},
 			},
 		},
