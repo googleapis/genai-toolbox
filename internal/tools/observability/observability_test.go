@@ -1,0 +1,91 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package observability
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+)
+
+func TestTool_Invoke(t *testing.T) {
+	t.Parallel()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/projects/test-project/location/global/prometheus/api/v1/query" {
+			t.Errorf("unexpected path: got %q", r.URL.Path)
+		}
+		if r.URL.Query().Get("query") != "up" {
+			t.Errorf("unexpected query: got %q", r.URL.Query().Get("query"))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[]}}`))
+	}))
+	defer server.Close()
+
+	creds := &google.Credentials{
+		ProjectID: "test-project",
+		TokenSource: oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: "test-token",
+		}),
+	}
+
+	tool := Tool{
+		Name:        "observability",
+		Kind:        "observability",
+		Description: "a test tool",
+		Params:      tools.Parameters{},
+	}
+
+	params := tools.ParamValues{
+		{Name: "projectID", Value: "test-project"},
+		{Name: "query", Value: "up"},
+	}
+
+	ctx := context.Background()
+	// This is a bit of a hack to inject our mock credentials.
+	// The alternative is to refactor the code to allow for dependency injection.
+	googleFindDefaultCredentials = func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
+		return creds, nil
+	}
+	defer func() {
+		googleFindDefaultCredentials = google.FindDefaultCredentials
+	}()
+
+	// Another hack to inject the mock server url.
+	monitoringEndpoint = server.URL
+
+	got, err := tool.Invoke(ctx, params, "")
+	if err != nil {
+		t.Fatalf("Invoke() error = %v", err)
+	}
+
+	want := map[string]any{
+		"status": "success",
+		"data": map[string]any{
+			"resultType": "vector",
+			"result":     []any{},
+		},
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Invoke() mismatch (-want +got):\n%s", diff)
+	}
+}

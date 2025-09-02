@@ -15,6 +15,7 @@
 package prebuiltconfigs
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -33,6 +34,7 @@ var expectedToolSources = []string{
 	"looker",
 	"mssql",
 	"mysql",
+	"observability",
 	"oceanbase",
 	"postgres",
 	"spanner-postgres",
@@ -42,6 +44,8 @@ var expectedToolSources = []string{
 func TestGetPrebuiltSources(t *testing.T) {
 	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
 		sources := GetPrebuiltSources()
+		sort.Strings(sources)
+		sort.Strings(expectedToolSources)
 		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
 		}
@@ -74,6 +78,8 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 
 		t.Log(expectedKeys)
 		t.Log(keys)
+		sort.Strings(expectedKeys)
+		sort.Strings(keys)
 
 		if diff := cmp.Diff(expectedKeys, keys); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
