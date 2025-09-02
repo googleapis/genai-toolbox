@@ -31,10 +31,6 @@ class TestADKExecution:
         """Test that the script runs and produces no stderr."""
         assert script_output.err == "", f"Script produced stderr: {script_output.err}"
 
-    def test_script_produces_output(self, script_output):
-        """Test that the script produces some output to stdout."""
-        assert script_output.out.strip(), "Script produced no stdout"
-
     def test_keywords_in_output(self, script_output, golden_keywords):
         """Test that expected keywords are present in the script's output."""
         output = script_output.out
