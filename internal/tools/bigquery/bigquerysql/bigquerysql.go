@@ -65,7 +65,6 @@ type Config struct {
 	Description        string           `yaml:"description" validate:"required"`
 	Statement          string           `yaml:"statement" validate:"required"`
 	AuthRequired       []string         `yaml:"authRequired"`
-	UseClientOAuth     bool             `yaml:"useClientOAuth"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 }
@@ -128,17 +127,17 @@ type Tool struct {
 	Name               string           `yaml:"name"`
 	Kind               string           `yaml:"kind"`
 	AuthRequired       []string         `yaml:"authRequired"`
-	UseClientOAuth     bool             `yaml:"useClientOAuth"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 	AllParams          tools.Parameters `yaml:"allParams"`
 
-	Statement     string
-	Client        *bigqueryapi.Client
-	RestService   *bigqueryrestapi.Service
-	ClientCreator bigqueryds.BigqueryClientCreator
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Statement      string
+	UseClientOAuth bool
+	Client         *bigqueryapi.Client
+	RestService    *bigqueryrestapi.Service
+	ClientCreator  bigqueryds.BigqueryClientCreator
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
