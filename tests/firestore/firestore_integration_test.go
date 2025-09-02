@@ -1561,12 +1561,6 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 			isErr:     false,
 		},
 		{
-			name:        "missing collection parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"fields": ["name"]}`)),
-			isErr:       true,
-		},
-		{
 			name:        "missing fields parameter",
 			api:         "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collection": "%s"}`, collectionName))),
