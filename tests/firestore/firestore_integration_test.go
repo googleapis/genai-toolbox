@@ -131,6 +131,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	// Run specific Firestore tool tests
 	runFirestoreGetDocumentsTest(t, docPath1, docPath2)
 	runFirestoreQueryCollectionTest(t, testCollectionName)
+	runFirestoreQueryCollectionParameterizableTest(t, testCollectionName)
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
 	runFirestoreAddDocumentsTest(t, testCollectionName)
 	runFirestoreUpdateDocumentTest(t, testCollectionName, testDocID1)
@@ -561,6 +562,45 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"kind":        "firestore-query-collection",
 			"source":      "my-instance",
 			"description": "Query a Firestore collection",
+		},
+		"firestore-query-param": map[string]any{
+			"kind":        "firestore-query-collection-parameterizable",
+			"source":      "my-instance",
+			"description": "Query a Firestore collection with parameterizable filters",
+			"collectionPath": "{{.collection}}",
+			"filters": `{
+				"or": [
+					{"field": "age", "op": "{{.operator}}", "value": {"integerValue": "{{.ageValue}}"}},
+					{"field": "name", "op": "==", "value": {"stringValue": "{{.nameValue}}"}}
+				]
+			}`,
+			"limit": 10,
+			"parameters": []map[string]any{
+				{
+					"name":        "collection",
+					"type":        "string",
+					"description": "Collection to query",
+					"required":    true,
+				},
+				{
+					"name":        "operator",
+					"type":        "string",
+					"description": "Comparison operator",
+					"required":    true,
+				},
+				{
+					"name":        "ageValue",
+					"type":        "string",
+					"description": "Age value to compare",
+					"required":    true,
+				},
+				{
+					"name":        "nameValue",
+					"type":        "string",
+					"description": "Name value to match",
+					"required":    true,
+				},
+			},
 		},
 		"firestore-get-rules": map[string]any{
 			"kind":        "firestore-get-rules",
@@ -1351,6 +1391,116 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 
 			if !strings.Contains(got, tc.want) {
 				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runFirestoreQueryCollectionParameterizableTest(t *testing.T, collectionName string) {
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		wantRegex   string
+		isErr       bool
+	}{
+		{
+			name: "query with parameterized filters - age greater than",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"operator": ">",
+				"ageValue": "25",
+				"nameValue": "NonExistent"
+			}`, collectionName))),
+			wantRegex: `"name":"Alice".*"age":30.*"name":"Charlie".*"age":35`,
+			isErr:     false,
+		},
+		{
+			name: "query with parameterized filters - exact name match",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"operator": "<",
+				"ageValue": "0",
+				"nameValue": "Bob"
+			}`, collectionName))),
+			wantRegex: `"name":"Bob".*"age":25`,
+			isErr:     false,
+		},
+		{
+			name: "query with parameterized filters - age less than or equal",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"operator": "<=",
+				"ageValue": "30",
+				"nameValue": "NonExistent"
+			}`, collectionName))),
+			wantRegex: `"name":"Bob".*"age":25.*"name":"Alice".*"age":30`,
+			isErr:     false,
+		},
+		{
+			name:        "missing required parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"collection": "test", "operator": ">"}`)),
+			isErr:       true,
+		},
+		{
+			name: "query non-existent collection with parameters",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{
+				"collection": "non-existent-collection",
+				"operator": "==",
+				"ageValue": "30",
+				"nameValue": "Test"
+			}`)),
+			wantRegex: `^\[\]$`, // Empty array
+			isErr:     false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if tc.wantRegex != "" {
+				matched, err := regexp.MatchString(tc.wantRegex, got)
+				if err != nil {
+					t.Fatalf("invalid regex pattern: %v", err)
+				}
+				if !matched {
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+				}
 			}
 		})
 	}
