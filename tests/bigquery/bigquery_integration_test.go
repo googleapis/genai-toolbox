@@ -29,6 +29,7 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"golang.org/x/oauth2/google"
@@ -359,6 +360,11 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
+	tools["my-client-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "bigquery-execute-sql",
+		"source":      "my-client-auth-source",
+		"description": "Tool to execute sql",
+	}
 	tools["my-forecast-tool"] = map[string]any{
 		"kind":        "bigquery-forecast",
 		"source":      "my-instance",
@@ -501,6 +507,12 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -592,6 +604,28 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-exec-sql-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-client-auth-exec-sql-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+
+			name:          "Invoke my-client-auth-exec-sql-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 	}
