@@ -355,16 +355,14 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if client have `Mcp-Session-Id` header
-	// if `Mcp-Session-Id` header is set, we are using v2025-03-26 or later
-	// since previous version doesn't use this header. 
-	// Any versions later than v2025-03-26 would have the `MCP-Protocol-Version` 
-	// header. So the protocol version will be overridden in the subsequent code block.
+	// `Mcp-Session-Id` is only set for v2025-03-26 in Toolbox
 	headerSessionId := r.Header.Get("Mcp-Session-Id")
 	if headerSessionId != "" {
 		protocolVersion = v20250326.PROTOCOL_VERSION
 	}
-
+	
 	// check if client have `MCP-Protocol-Version` header
+	// Only supported for v2025-06-18+.
 	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
 	if headerProtocolVersion != "" {
 		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
