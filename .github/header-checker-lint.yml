@@ -20,3 +20,5 @@ sourceFileExtensions:
   - 'go'
   - 'yaml'
   - 'yml'
+ignoreFiles:
+  - 'docs/en/getting-started/quickstart/**'
