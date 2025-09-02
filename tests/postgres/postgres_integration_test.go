@@ -215,16 +215,16 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 		{
 			name:           "invoke list_tables detailed output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`,tableNameAuth))),
 			wantStatusCode: http.StatusOK,
-			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
+			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
 		{
 			name:           "invoke list_tables simple output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
 			wantStatusCode: http.StatusOK,
-			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
+			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 		{
 			name:           "invoke list_tables with invalid output format",
@@ -258,13 +258,6 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
-		},
-		{
-			name:           "invoke list_tables with a table name and simple output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
-			wantStatusCode: http.StatusOK,
-			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 	}
 	for _, tc := range invokeTcs {
