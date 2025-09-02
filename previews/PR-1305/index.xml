@@ -1479,25 +1479,25 @@ structure:&lt;/p></description></item><item><title>firestore-query-collection-pa
  &lt;td>&lt;code>select&lt;/code>&lt;/td>
  &lt;td>array&lt;/td>
  &lt;td>No&lt;/td>
- &lt;td>Fields to select from documents&lt;/td>
+ &lt;td>Fields to select from documents(supports templates - string or array)&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>orderBy&lt;/code>&lt;/td>
  &lt;td>object&lt;/td>
  &lt;td>No&lt;/td>
- &lt;td>Ordering configuration with &lt;code>field&lt;/code> and &lt;code>direction&lt;/code>&lt;/td>
+ &lt;td>Ordering configuration with &lt;code>field&lt;/code> and &lt;code>direction&lt;/code>(supports templates for the value of field or direction)&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>limit&lt;/code>&lt;/td>
  &lt;td>integer&lt;/td>
  &lt;td>No&lt;/td>
- &lt;td>Maximum number of documents to return (default: 100)&lt;/td>
+ &lt;td>Maximum number of documents to return (default: 100) (supports templates)&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>analyzeQuery&lt;/code>&lt;/td>
  &lt;td>boolean&lt;/td>
  &lt;td>No&lt;/td>
- &lt;td>Whether to analyze query performance (default: false)&lt;/td>
+ &lt;td>Whether to analyze query performance (default: false) (supports templates)&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>parameters&lt;/code>&lt;/td>
