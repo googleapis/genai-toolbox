@@ -55,7 +55,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryTokenSource() oauth2.TokenSource
+	BigQueryProject() string
+	BigQueryLocation() string
 	GetMaxQueryResultRows() int
+	UseClientAuthorization() bool
 }
 
 type BQTableReference struct {
@@ -145,9 +148,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Name:               cfg.Name,
 		Kind:               kind,
+		Project:            s.BigQueryProject(),
+		Location:           s.BigQueryLocation(),
 		Parameters:         parameters,
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
+		UseClientOAuth:     s.UseClientAuthorization(),
 		TokenSource:        s.BigQueryTokenSource(),
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
@@ -160,10 +166,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
+	Name           string           `yaml:"name"`
+	Kind           string           `yaml:"kind"`
+	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+
+	Project            string
+	Location           string
 	Client             *bigqueryapi.Client
 	TokenSource        oauth2.TokenSource
 	manifest           tools.Manifest
@@ -177,9 +187,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("authentication error: found credentials but they are missing a valid token source")
 	}
 
+	// Get token from ADC
 	token, err := t.TokenSource.Token()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token from credentials: %w", err)
+	}
+
+	// Get token from the current request
+	tokenStr := token.AccessToken
+	if t.UseClientOAuth {
+		tokenStr = string(accessToken)
 	}
 
 	// Extract parameters from the map
@@ -197,15 +214,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// Construct URL, headers, and payload
-	projectID := t.Client.Project()
-	location := t.Client.Location
+	projectID := t.Project
+	location := t.Location
 	if location == "" {
 		location = "us"
 	}
 	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", token.AccessToken),
+		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
 		"Content-Type":  "application/json",
 	}
 

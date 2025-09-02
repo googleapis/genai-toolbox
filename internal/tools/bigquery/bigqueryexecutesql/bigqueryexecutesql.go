@@ -176,7 +176,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	statementType := dryRunJob.Statistics.Query.StatementType
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
-	query.Location = t.Client.Location
+	query.Location = bqClient.Location
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)

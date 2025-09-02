@@ -88,6 +88,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	s := &Source{
 		Name:               r.Name,
 		Kind:               SourceKind,
+		Project:            r.Project,
+		Location:           r.Location,
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
@@ -105,6 +107,8 @@ type Source struct {
 	// BigQuery Google SQL struct with client
 	Name               string `yaml:"name"`
 	Kind               string `yaml:"kind"`
+	Project            string
+	Location           string
 	Client             *bigqueryapi.Client
 	RestService        *bigqueryrestapi.Service
 	TokenSource        oauth2.TokenSource
@@ -128,6 +132,14 @@ func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 
 func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
+}
+
+func (s *Source) BigQueryProject() string {
+	return s.Project
+}
+
+func (s *Source) BigQueryLocation() string {
+	return s.Location
 }
 
 func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
