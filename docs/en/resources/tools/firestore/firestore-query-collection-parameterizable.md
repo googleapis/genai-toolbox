@@ -119,10 +119,10 @@ tools:
 | `description` | string | Yes | Description of what this tool does |
 | `collectionPath` | string | Yes | Path to the collection (supports templates) |
 | `filters` | string | No | JSON string defining query filters (supports templates) |
-| `select` | array | No | Fields to select from documents |
-| `orderBy` | object | No | Ordering configuration with `field` and `direction` |
-| `limit` | integer | No | Maximum number of documents to return (default: 100) |
-| `analyzeQuery` | boolean | No | Whether to analyze query performance (default: false) |
+| `select` | array | No | Fields to select from documents(supports templates - string or array) |
+| `orderBy` | object | No | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
+| `limit` | integer | No | Maximum number of documents to return (default: 100) (supports templates) |
+| `analyzeQuery` | boolean | No | Whether to analyze query performance (default: false) (supports templates) |
 | `parameters` | array | Yes | Parameter definitions for template substitution |
 
 ### Runtime Parameters
@@ -400,7 +400,6 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 - Maximum of 100 filters per query (configurable)
 - Template parameters must be properly escaped in JSON contexts
 - Complex nested queries may require composite indexes
-- OR queries have specific Firestore limitations
 
 ## See Also
 
