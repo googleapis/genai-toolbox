@@ -35,7 +35,7 @@ const SourceKind string = "bigquery"
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 func init() {
 	if !sources.Register(SourceKind, newConfig) {
@@ -188,6 +188,7 @@ func initBigQueryConnectionWithOAuthToken(
 	name string,
 	userAgent string,
 	tokenString tools.AccessToken,
+	wantRestService bool,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -204,13 +205,16 @@ func initBigQueryConnectionWithOAuthToken(
 	}
 	client.Location = location
 
-	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+	if wantRestService {
+		// Initialize the low-level BigQuery REST service using the same credentials
+		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+		}
+		return client, restService, nil
 	}
 
-	return client, restService, nil
+	return client, nil, nil
 }
 
 // newBigQueryClientCreator sets the project parameters for the init helper
@@ -222,13 +226,13 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
-) (func(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
+) (func(tools.AccessToken, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return func(tokenString tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString)
+	return func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
 	}, nil
 }
