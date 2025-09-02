@@ -421,12 +421,18 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 				return nil, fmt.Errorf(errSelectFieldParseFailed, err)
 			}
 			if processed != "" {
-				// The processed field might be a comma-separated list
-				if strings.Contains(processed, ",") {
-					fields := strings.Split(processed, ",")
+				// The processed field might be an array format [a b c] or comma-separated list
+				trimmedProcessed := strings.TrimSpace(processed)
+				
+				// Check if it's in array format [a b c]
+				if strings.HasPrefix(trimmedProcessed, "[") && strings.HasSuffix(trimmedProcessed, "]") {
+					// Remove brackets and split by spaces
+					arrayContent := strings.TrimPrefix(trimmedProcessed, "[")
+					arrayContent = strings.TrimSuffix(arrayContent, "]")
+					fields := strings.Fields(arrayContent) // Fields splits by any whitespace
 					for _, f := range fields {
-						if trimmed := strings.TrimSpace(f); trimmed != "" {
-							selectFields = append(selectFields, trimmed)
+						if f != "" {
+							selectFields = append(selectFields, f)
 						}
 					}
 				} else {
