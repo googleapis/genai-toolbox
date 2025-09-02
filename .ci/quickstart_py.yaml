@@ -1,0 +1,75 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This Cloud Build pipeline runs the Python quickstart tests.
+# It fetches the config from Secret Manager, starts the pre-built toolbox
+# container, and then executes the Python test script.
+
+substitutions:
+  _GCP_PROJECT: "your-gcp-project-id"
+  _CLOUD_SQL_INSTANCE: "your-cloud-sql-instance-connection-name"
+  _DATABASE_NAME: "your-database-name"
+  _DB_USER: "your-database-user"
+  _TOOLS_YAML_SECRET: "name-of-secret-for-tools-yaml"
+
+steps:
+  # Step 1: Fetch the tools.yaml config from Secret Manager into a config/ directory.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'fetch-config'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        mkdir config
+        gcloud secrets versions access latest --secret=${_TOOLS_YAML_SECRET} --project=${_GCP_PROJECT} > config/tools.yaml
+
+  # Step 2: Start the toolbox server as a Docker container on the build network.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'start-server'
+    args:
+      - 'run'
+      - '-d' # Run in detached mode
+      - '--name=toolbox' # Give the container a name so it can be addressed by hostname
+      - '--network=cloudbuild' # Connect to the default bridge network for communication between steps
+      - '-v=/workspace/config:/config' # Mount the config directory
+      - 'us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest'
+      - 'toolbox'
+      - '--tools-file'
+      - '/config/tools.yaml'
+      - '--address'
+      - '0.0.0.0'
+    waitFor: ['fetch-config']
+
+  # Step 3: Wait for the server to initialize.
+  - name: 'ubuntu'
+    id: 'wait-for-server'
+    entrypoint: 'bash'
+    args: ['-c', 'echo "Waiting for server to initialize..."; sleep 10']
+    waitFor: ['start-server']
+
+  # Step 4: Run the Python quickstart test script.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'run-tests'
+    entrypoint: 'bash'
+    args: ['.ci/quickstart_py.sh']
+    env:
+      - 'GCP_PROJECT=${_GCP_PROJECT}'
+      - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
+      - 'DATABASE_NAME=${_DATABASE_NAME}'
+      - 'DB_USER=${_DB_USER}'
+      - 'TOOLBOX_HOST=toolbox' # Pass the toolbox hostname to the test script
+    waitFor: ['wait-for-server']
+
+# Set a timeout for the build.
+timeout: 1200s # 20 minutes
