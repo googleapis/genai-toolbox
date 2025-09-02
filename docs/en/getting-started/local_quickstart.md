@@ -22,7 +22,6 @@ This guide assumes you have already done the following:
 
 ## Step 1: Set up your database
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
-{{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
