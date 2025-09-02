@@ -38,16 +38,6 @@ const (
 	maxFilterLength = 100 // Maximum filters to prevent abuse
 )
 
-// Parameter keys
-const (
-	collectionPathKey = "collectionPath"
-	filtersKey        = "filters"
-	selectKey         = "select"
-	orderByKey        = "orderBy"
-	limitKey          = "limit"
-	analyzeQueryKey   = "analyzeQuery"
-)
-
 // Firestore operators
 var validOperators = map[string]bool{
 	"<":                  true,

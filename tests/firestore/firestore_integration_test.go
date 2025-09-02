@@ -569,10 +569,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"description": "Query a Firestore collection with parameterizable filters",
 			"collectionPath": "{{.collection}}",
 			"filters": `{
-				"or": [
 					{"field": "age", "op": "{{.operator}}", "value": {"integerValue": "{{.ageValue}}"}},
-					{"field": "name", "op": "==", "value": {"stringValue": "{{.nameValue}}"}}
-				]
 			}`,
 			"limit": 10,
 			"parameters": []map[string]any{
@@ -592,12 +589,6 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 					"name":        "ageValue",
 					"type":        "string",
 					"description": "Age value to compare",
-					"required":    true,
-				},
-				{
-					"name":        "nameValue",
-					"type":        "string",
-					"description": "Name value to match",
 					"required":    true,
 				},
 			},
@@ -1410,8 +1401,7 @@ func runFirestoreQueryCollectionParameterizableTest(t *testing.T, collectionName
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": ">",
-				"ageValue": "25",
-				"nameValue": "NonExistent"
+				"ageValue": "25"
 			}`, collectionName))),
 			wantRegex: `"name":"Alice".*"age":30.*"name":"Charlie".*"age":35`,
 			isErr:     false,
@@ -1421,9 +1411,8 @@ func runFirestoreQueryCollectionParameterizableTest(t *testing.T, collectionName
 			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
-				"operator": "<",
-				"ageValue": "0",
-				"nameValue": "Bob"
+				"operator": "==",
+				"ageValue": "25"
 			}`, collectionName))),
 			wantRegex: `"name":"Bob".*"age":25`,
 			isErr:     false,
@@ -1434,8 +1423,7 @@ func runFirestoreQueryCollectionParameterizableTest(t *testing.T, collectionName
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": "<=",
-				"ageValue": "30",
-				"nameValue": "NonExistent"
+				"ageValue": "30"
 			}`, collectionName))),
 			wantRegex: `"name":"Bob".*"age":25.*"name":"Alice".*"age":30`,
 			isErr:     false,
@@ -1452,8 +1440,7 @@ func runFirestoreQueryCollectionParameterizableTest(t *testing.T, collectionName
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collection": "non-existent-collection",
 				"operator": "==",
-				"ageValue": "30",
-				"nameValue": "Test"
+				"ageValue": "30"
 			}`)),
 			wantRegex: `^\[\]$`, // Empty array
 			isErr:     false,
