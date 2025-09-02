@@ -302,7 +302,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud SQL List Instance" \
           cloudsql \
-          cloudsqllistinstance
+          cloudsql/cloudsqllistinstance
 
   - id: "mysql"
     name: golang:1
