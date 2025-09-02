@@ -147,7 +147,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 						"field":     "{{.sortField}}",
 						"direction": "DESCENDING",
 					},
-					Limit:        50,
+					Limit:        "50",
 					AuthRequired: []string{},
 					Parameters: tools.Parameters{
 						tools.NewStringParameterWithRequired("sortField", "Field to sort by", true),
@@ -213,7 +213,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
   ]
 }
 `,
-					AnalyzeQuery: true,
+					AnalyzeQuery: "true",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
 					Parameters: tools.Parameters{
 						tools.NewStringParameterWithRequired("collection", "Collection name to query", true),
@@ -431,7 +431,7 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 				"field":     "createdAt",
 				"direction": "{{.sortOrder}}",
 			},
-			Limit:        20,
+			Limit:        "20",
 			AuthRequired: []string{},
 			Parameters: tools.Parameters{
 				tools.NewStringParameterWithRequired("userId", "User ID whose posts to query", true),
@@ -468,7 +468,7 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
   ]
 }
 `,
-			AnalyzeQuery: true,
+			AnalyzeQuery: "true",
 			AuthRequired: []string{"finance-auth"},
 			Parameters: tools.Parameters{
 				tools.NewStringParameterWithRequired("accountId", "Account ID for transactions", true),

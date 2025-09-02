@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -34,8 +35,6 @@ import (
 const (
 	kind            = "firestore-query-collection-parameterizable"
 	defaultLimit    = 100
-	defaultAnalyze  = false
-	maxFilterLength = 100 // Maximum filters to prevent abuse
 )
 
 // Firestore operators
@@ -54,16 +53,17 @@ var validOperators = map[string]bool{
 
 // Error messages
 const (
-	errMissingCollectionPath = "invalid or missing '%s' parameter"
-	errInvalidFilters        = "invalid '%s' parameter; expected a JSON string"
 	errFilterParseFailed     = "failed to parse filters: %w"
 	errInvalidOperator       = "unsupported operator: %s. Valid operators are: %v"
 	errMissingFilterValue    = "no value specified for filter on field '%s'"
 	errOrderByParseFailed    = "failed to parse orderBy: %w"
 	errQueryExecutionFailed  = "failed to execute query: %w"
-	errTooManyFilters        = "too many filters provided: %d (maximum: %d)"
 	errTemplateParseFailed   = "failed to parse template: %w"
 	errTemplateExecFailed    = "failed to execute template: %w"
+	errLimitParseFailed      = "failed to parse limit value '%s': %w"
+	errAnalyzeQueryParseFailed = "failed to parse analyzeQuery value '%s': expected 'true' or 'false'"
+	errOrderByFieldEmpty     = "orderBy field cannot be empty after template processing"
+	errSelectFieldParseFailed = "failed to parse select field: %w"
 )
 
 func init() {
@@ -103,8 +103,8 @@ type Config struct {
 	Filters        string           `yaml:"filters"`        // JSON string template
 	Select         []string         `yaml:"select"`         // Fields to select
 	OrderBy        map[string]any   `yaml:"orderBy"`        // Order by configuration
-	Limit          int              `yaml:"limit"`
-	AnalyzeQuery   bool             `yaml:"analyzeQuery"`
+	Limit          string           `yaml:"limit"`          // Limit template (can be a number or template)
+	AnalyzeQuery   string           `yaml:"analyzeQuery"`   // Analyze query template (can be "true", "false", or template)
 	
 	// Parameters for template substitution
 	Parameters tools.Parameters `yaml:"parameters"`
@@ -133,8 +133,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Set default limit if not specified
-	if cfg.Limit == 0 {
-		cfg.Limit = defaultLimit
+	if cfg.Limit == "" {
+		cfg.Limit = fmt.Sprintf("%d", defaultLimit)
 	}
 
 	// Create MCP manifest
@@ -146,19 +146,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		AuthRequired:   cfg.AuthRequired,
-		Client:         s.FirestoreClient(),
-		CollectionPath: cfg.CollectionPath,
+		Name:            cfg.Name,
+		Kind:            kind,
+		AuthRequired:    cfg.AuthRequired,
+		Client:          s.FirestoreClient(),
+		CollectionPath:  cfg.CollectionPath,
 		FiltersTemplate: cfg.Filters,
-		Select:         cfg.Select,
-		OrderBy:        cfg.OrderBy,
-		Limit:          cfg.Limit,
-		AnalyzeQuery:   cfg.AnalyzeQuery,
-		Parameters:     cfg.Parameters,
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Select:          cfg.Select,
+		OrderBy:         cfg.OrderBy,
+		LimitTemplate:   cfg.Limit,
+		AnalyzeQueryTemplate: cfg.AnalyzeQuery,
+		Parameters:      cfg.Parameters,
+		manifest:        tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:     mcpManifest,
 	}
 	return t, nil
 }
@@ -172,14 +172,14 @@ type Tool struct {
 	Kind         string           `yaml:"kind"`
 	AuthRequired []string         `yaml:"authRequired"`
 	
-	Client          *firestoreapi.Client
-	CollectionPath  string
-	FiltersTemplate string
-	Select          []string
-	OrderBy         map[string]any
-	Limit           int
-	AnalyzeQuery    bool
-	Parameters      tools.Parameters
+	Client               *firestoreapi.Client
+	CollectionPath       string
+	FiltersTemplate      string
+	Select               []string
+	OrderBy              map[string]any
+	LimitTemplate        string
+	AnalyzeQueryTemplate string
+	Parameters           tools.Parameters
 	
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -268,8 +268,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
+	// Process analyzeQuery once for execution
+	analyzeQuery, err := t.processAnalyzeQuery(paramsMap)
+	if err != nil {
+		return nil, err
+	}
+	
 	// Execute the query and return results
-	return t.executeQuery(ctx, query, t.AnalyzeQuery)
+	return t.executeQuery(ctx, query, analyzeQuery)
 }
 
 // processTemplate applies Go template substitution to a string
@@ -313,28 +319,34 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 	}
 
 	// Process select fields
-	selectFields := t.processSelectFields(params)
+	selectFields, err := t.processSelectFields(params)
+	if err != nil {
+		return nil, err
+	}
 	if len(selectFields) > 0 {
 		query = query.Select(selectFields...)
 	}
 
 	// Process and apply ordering
-	orderBy := t.processOrderBy(params)
+	orderBy, err := t.processOrderBy(params)
+	if err != nil {
+		return nil, err
+	}
 	if orderBy != nil {
 		query = query.OrderBy(orderBy.Field, orderBy.GetDirection())
 	}
 
-	// Apply limit (can be overridden by parameter)
-	limit := t.Limit
-	if limitParam, ok := params["limit"].(int); ok {
-		limit = limitParam
+	// Process and apply limit
+	limit, err := t.processLimit(params)
+	if err != nil {
+		return nil, err
 	}
 	query = query.Limit(limit)
 
-	// Apply analyze options
-	analyzeQuery := t.AnalyzeQuery
-	if analyzeParam, ok := params["analyzeQuery"].(bool); ok {
-		analyzeQuery = analyzeParam
+	// Process and apply analyze options
+	analyzeQuery, err := t.processAnalyzeQuery(params)
+	if err != nil {
+		return nil, err
 	}
 	if analyzeQuery {
 		query = query.WithRunOptions(firestoreapi.ExplainOptions{
@@ -397,7 +409,7 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 }
 
 // processSelectFields processes the select fields with parameter substitution
-func (t Tool) processSelectFields(params map[string]any) []string {
+func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	var selectFields []string
 	
 	// Process configured select fields with template substitution
@@ -405,7 +417,10 @@ func (t Tool) processSelectFields(params map[string]any) []string {
 		// Check if it's a template
 		if strings.Contains(field, "{{") {
 			processed, err := t.processTemplate("selectField", field, params)
-			if err == nil && processed != "" {
+			if err != nil {
+				return nil, fmt.Errorf(errSelectFieldParseFailed, err)
+			}
+			if processed != "" {
 				// The processed field might be a comma-separated list
 				if strings.Contains(processed, ",") {
 					fields := strings.Split(processed, ",")
@@ -423,13 +438,13 @@ func (t Tool) processSelectFields(params map[string]any) []string {
 		}
 	}
 	
-	return selectFields
+	return selectFields, nil
 }
 
 // processOrderBy processes the orderBy configuration with parameter substitution
-func (t Tool) processOrderBy(params map[string]any) *OrderByConfig {
+func (t Tool) processOrderBy(params map[string]any) (*OrderByConfig, error) {
 	if t.OrderBy == nil {
-		return nil
+		return nil, nil
 	}
 	
 	orderBy := &OrderByConfig{}
@@ -439,9 +454,10 @@ func (t Tool) processOrderBy(params map[string]any) *OrderByConfig {
 		// Check if it's a template
 		if strings.Contains(field, "{{") {
 			processed, err := t.processTemplate("orderByField", field, params)
-			if err == nil {
-				orderBy.Field = processed
+			if err != nil {
+				return nil, fmt.Errorf(errOrderByParseFailed, err)
 			}
+			orderBy.Field = processed
 		} else {
 			orderBy.Field = field
 		}
@@ -452,19 +468,80 @@ func (t Tool) processOrderBy(params map[string]any) *OrderByConfig {
 		// Check if it's a template
 		if strings.Contains(direction, "{{") {
 			processed, err := t.processTemplate("orderByDirection", direction, params)
-			if err == nil {
-				orderBy.Direction = processed
+			if err != nil {
+				return nil, fmt.Errorf(errOrderByParseFailed, err)
 			}
+			orderBy.Direction = processed
 		} else {
 			orderBy.Direction = direction
 		}
 	}
 	
 	if orderBy.Field == "" {
-		return nil
+		return nil, nil
 	}
 	
-	return orderBy
+	return orderBy, nil
+}
+
+// processLimit processes the limit field with parameter substitution
+func (t Tool) processLimit(params map[string]any) (int, error) {
+	limit := defaultLimit
+	if t.LimitTemplate != "" {
+		var processedValue string
+		
+		// Check if it's a template
+		if strings.Contains(t.LimitTemplate, "{{") {
+			processed, err := t.processTemplate("limit", t.LimitTemplate, params)
+			if err != nil {
+				return 0, fmt.Errorf(errLimitParseFailed, t.LimitTemplate, err)
+			}
+			processedValue = processed
+		} else {
+			processedValue = t.LimitTemplate
+		}
+		
+		// Try to parse as integer
+		if processedValue != "" {
+			parsedLimit, err := strconv.Atoi(processedValue)
+			if err != nil {
+				return 0, fmt.Errorf(errLimitParseFailed, processedValue, err)
+			}
+			limit = parsedLimit
+		}
+	}
+	return limit, nil
+}
+
+// processAnalyzeQuery processes the analyzeQuery field with parameter substitution
+func (t Tool) processAnalyzeQuery(params map[string]any) (bool, error) {
+	if t.AnalyzeQueryTemplate == "" {
+		return false, nil
+	}
+	
+	var processedValue string
+	
+	// Check if it's a template
+	if strings.Contains(t.AnalyzeQueryTemplate, "{{") {
+		processed, err := t.processTemplate("analyzeQuery", t.AnalyzeQueryTemplate, params)
+		if err != nil {
+			return false, fmt.Errorf("failed to process analyzeQuery template: %w", err)
+		}
+		processedValue = processed
+	} else {
+		processedValue = t.AnalyzeQueryTemplate
+	}
+	
+	// Parse as boolean
+	if processedValue != "" {
+		lowerValue := strings.ToLower(strings.TrimSpace(processedValue))
+		if lowerValue != "true" && lowerValue != "false" {
+			return false, fmt.Errorf(errAnalyzeQueryParseFailed, processedValue)
+		}
+		return lowerValue == "true", nil
+	}
+	
+	return false, nil
 }
 
 // executeQuery runs the query and formats the results
