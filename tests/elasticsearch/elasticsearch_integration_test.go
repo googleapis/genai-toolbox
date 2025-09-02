@@ -37,18 +37,20 @@ import (
 
 var (
 	ElasticsearchSourceKind = "elasticsearch"
-	EsAddress               = os.Getenv("ELASTICSEARCH_URL")
-	EsApiKey                = os.Getenv("ELASTICSEARCH_API_KEY")
+	EsAddress               = os.Getenv("ELASTICSEARCH_HOST")
+	EsUser                  = os.Getenv("ELASTICSEARCH_USER")
+	EsPass                  = os.Getenv("ELASTICSEARCH_PASS")
 )
 
 func getElasticsearchVars(t *testing.T) map[string]any {
 	if EsAddress == "" {
-		t.Fatal("'ELASTICSEARCH_URL' not set")
+		t.Fatal("'ELASTICSEARCH_HOST' not set")
 	}
 	return map[string]any{
 		"kind":      ElasticsearchSourceKind,
 		"addresses": []string{EsAddress},
-		"apikey":    EsApiKey,
+		"user":      EsUser,
+		"password":  EsPass,
 	}
 }
 
@@ -104,7 +106,8 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	esClient, err := elasticsearch.NewBaseClient(elasticsearch.Config{
 		Addresses: []string{EsAddress},
-		APIKey:    EsApiKey,
+		Username:  EsUser,
+		Password:  EsPass,
 	})
 	if err != nil {
 		t.Fatalf("error creating the Elasticsearch client: %s", err)
