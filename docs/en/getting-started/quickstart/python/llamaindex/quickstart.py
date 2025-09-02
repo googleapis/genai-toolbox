@@ -30,7 +30,7 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-async def main():
+async def run_application():
 
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
@@ -61,4 +61,4 @@ async def main():
             print(f"---- {query} ----")
             print(str(response))
 
-asyncio.run(main())
+asyncio.run(run_application())
