@@ -400,25 +400,26 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 func (t Tool) processSelectFields(params map[string]any) []string {
 	var selectFields []string
 	
-	// Start with configured select fields
-	selectFields = append(selectFields, t.Select...)
-	
-	// Check if there's a select parameter
-	if selectParam, ok := params["select"]; ok {
-		switch v := selectParam.(type) {
-		case string:
-			// Single field to add
-			selectFields = append(selectFields, v)
-		case []string:
-			// Multiple fields to add
-			selectFields = append(selectFields, v...)
-		case []interface{}:
-			// Convert interface slice to string slice
-			for _, field := range v {
-				if str, ok := field.(string); ok {
-					selectFields = append(selectFields, str)
+	// Process configured select fields with template substitution
+	for _, field := range t.Select {
+		// Check if it's a template
+		if strings.Contains(field, "{{") {
+			processed, err := t.processTemplate("selectField", field, params)
+			if err == nil && processed != "" {
+				// The processed field might be a comma-separated list
+				if strings.Contains(processed, ",") {
+					fields := strings.Split(processed, ",")
+					for _, f := range fields {
+						if trimmed := strings.TrimSpace(f); trimmed != "" {
+							selectFields = append(selectFields, trimmed)
+						}
+					}
+				} else {
+					selectFields = append(selectFields, processed)
 				}
 			}
+		} else {
+			selectFields = append(selectFields, field)
 		}
 	}
 	

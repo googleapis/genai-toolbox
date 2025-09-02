@@ -1,9 +1,11 @@
 ---
 title: "firestore-query-collection-parameterizable"
-linkTitle: "firestore-query-collection-parameterizable"
+type: docs
 weight: 1
 description: >
   Query a Firestore collection with parameterizable filters and Firestore native JSON value types
+aliases:
+- /resources/tools/firestore-query-collection-parameterizable
 ---
 
 ## Overview

@@ -569,7 +569,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"description": "Query a Firestore collection with parameterizable filters",
 			"collectionPath": "{{.collection}}",
 			"filters": `{
-					"field": "age", "op": "{{.operator}}", "value": {"integerValue": "{{.ageValue}}"},
+					"field": "age", "op": "{{.operator}}", "value": {"integerValue": "{{.ageValue}}"}
 			}`,
 			"limit": 10,
 			"parameters": []map[string]any{
