@@ -18,8 +18,6 @@ This guide assumes you have already done the following:
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 ### Cloud Setup (Optional)
-<!-- [START cloud_setup] -->
-### Cloud Setup (Optional)
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database

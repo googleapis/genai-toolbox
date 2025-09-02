@@ -29,7 +29,7 @@ queries = [
     "My check in dates for my booking would be from April 10, 2024 to April 19, 2024.",
 ]
 
-async def main():
+async def run_application():
     async with ToolboxClient("http://127.0.0.1:5000") as toolbox_client:
 
         # The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use
@@ -105,4 +105,4 @@ async def main():
             history.append(final_model_response_content)
             print(response2.text)
 
-asyncio.run(main())
+asyncio.run(run_application())

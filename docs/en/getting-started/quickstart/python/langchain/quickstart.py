@@ -31,7 +31,7 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-async def main():
+async def run_application():
     # TODO(developer): replace this with another model if needed
     model = ChatVertexAI(model_name="gemini-2.0-flash-001")
     # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
