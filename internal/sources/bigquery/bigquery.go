@@ -56,12 +56,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
-	// Temporarily disable this field from being loaded from YAML
-	// Until all codes checked in.
+	Name            string   `yaml:"name" validate:"required"`
+	Kind            string   `yaml:"kind" validate:"required"`
+	Project         string   `yaml:"project" validate:"required"`
+	Location        string   `yaml:"location"`
 	AllowedDatasets []string `yaml:"allowedDatasets"`
 	UseClientOAuth  bool     `yaml:"useClientOAuth"`
 }
