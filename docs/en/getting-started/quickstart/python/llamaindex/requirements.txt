@@ -1,4 +1,4 @@
-llama-index>=0.10.0
-llama-index-llms-google-genai>=0.1.0
-toolbox-llamaindex>=0.5.0
-pytest>=7.0.0
+llama-index==0.10.0
+llama-index-llms-google-genai==0.1.0
+toolbox-llamaindex==0.5.0
+pytest==7.0.0
