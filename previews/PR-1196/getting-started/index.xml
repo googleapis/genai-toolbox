@@ -7,6 +7,8 @@ your preferred virtual environment tool for managing dependencies e.g. [venv][in
 &lt;li>Installed [PostgreSQL 16+ and the &lt;code>psql&lt;/code> client][install-postgres].&lt;/li>
 &lt;/ol>
 &lt;h3 id="cloud-setup-optional">Cloud Setup (Optional)&lt;/h3>
+&lt;!-- [START cloud_setup] -->
+&lt;h3 id="cloud-setup-optional-1">Cloud Setup (Optional)&lt;/h3>
 
 
 
@@ -145,10 +147,7 @@ your preferred virtual environment tool for managing dependencies e.g. [venv][in
 
  &lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using
 &lt;code>vertexai=True&lt;/code> or a Google GenAI model), follow these one-time setup steps for
-local development:&lt;/p>
-&lt;ol>
-&lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p></description></item><item><title>JS Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1196/getting-started/local_quickstart_js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1196/getting-started/local_quickstart_js/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+local development:&lt;/p></description></item><item><title>JS Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1196/getting-started/local_quickstart_js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1196/getting-started/local_quickstart_js/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>Installed &lt;a href="https://nodejs.org/">Node.js (v18 or higher)&lt;/a>.&lt;/li>
