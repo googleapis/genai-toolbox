@@ -17,6 +17,8 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
@@ -27,6 +29,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -53,11 +56,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
-	Project        string `yaml:"project" validate:"required"`
-	Location       string `yaml:"location"`
-	UseClientOAuth bool   `yaml:"useClientOAuth"`
+	Name     string `yaml:"name" validate:"required"`
+	Kind     string `yaml:"kind" validate:"required"`
+	Project  string `yaml:"project" validate:"required"`
+	Location string `yaml:"location"`
+	// Temporarily disable this field from being loaded from YAML
+	// Until all codes checked in.
+	AllowedDatasets []string `yaml:"allowedDatasets"`
+	UseClientOAuth  bool     `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -85,6 +91,37 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		}
 	}
 
+	allowedDatasets := make(map[string]struct{})
+	// Get full id of allowed datasets and verify they exist.
+	if len(r.AllowedDatasets) > 0 {
+		for _, allowed := range r.AllowedDatasets {
+			var projectID, datasetID, allowedFullID string
+			if strings.Contains(allowed, ".") {
+				parts := strings.Split(allowed, ".")
+				if len(parts) != 2 {
+					return nil, fmt.Errorf("invalid allowedDataset format: %q, expected 'project.dataset' or 'dataset'", allowed)
+				}
+				projectID = parts[0]
+				datasetID = parts[1]
+				allowedFullID = allowed
+			} else {
+				projectID = client.Project()
+				datasetID = allowed
+				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
+			}
+
+			dataset := client.DatasetInProject(projectID, datasetID)
+			_, err := dataset.Metadata(ctx)
+			if err != nil {
+				if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+					return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+				}
+				return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
+			}
+			allowedDatasets[allowedFullID] = struct{}{}
+		}
+	}
+
 	s := &Source{
 		Name:               r.Name,
 		Kind:               SourceKind,
@@ -93,6 +130,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		TokenSource:        tokenSource,
 		MaxQueryResultRows: 50,
 		ClientCreator:      clientCreator,
+		AllowedDatasets:    allowedDatasets,
 		UseClientOAuth:     r.UseClientOAuth,
 	}
 	return s, nil
@@ -110,6 +148,7 @@ type Source struct {
 	TokenSource        oauth2.TokenSource
 	MaxQueryResultRows int
 	ClientCreator      BigqueryClientCreator
+	AllowedDatasets    map[string]struct{}
 	UseClientOAuth     bool
 }
 
@@ -140,6 +179,29 @@ func (s *Source) GetMaxQueryResultRows() int {
 
 func (s *Source) BigQueryClientCreator() BigqueryClientCreator {
 	return s.ClientCreator
+}
+
+func (s *Source) BigQueryAllowedDatasets() []string {
+	if len(s.AllowedDatasets) == 0 {
+		return nil
+	}
+	datasets := make([]string, 0, len(s.AllowedDatasets))
+	for d := range s.AllowedDatasets {
+		datasets = append(datasets, d)
+	}
+	return datasets
+}
+
+// IsDatasetAllowed checks if a given dataset is accessible based on the source's configuration.
+func (s *Source) IsDatasetAllowed(projectID, datasetID string) bool {
+	// If the normalized map is empty, it means no restrictions were configured.
+	if len(s.AllowedDatasets) == 0 {
+		return true
+	}
+
+	targetDataset := fmt.Sprintf("%s.%s", projectID, datasetID)
+	_, ok := s.AllowedDatasets[targetDataset]
+	return ok
 }
 
 func initBigQueryConnection(
