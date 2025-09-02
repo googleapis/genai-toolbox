@@ -31,7 +31,6 @@ queries = [
 ]
 
 async def run_application():
-
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-2.0-flash-001",
