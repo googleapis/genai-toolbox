@@ -284,6 +284,26 @@ steps:
           cloudsqlmysql \
           mysql
 
+  - id: "cloudsqllistinstance"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CLOUD_SQL_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cloud SQL List Instance" \
+          cloudsql \
+          cloudsqllistinstance
+
   - id: "mysql"
     name: golang:1
     waitFor: ["compile-test-binary"]
