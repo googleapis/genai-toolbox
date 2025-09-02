@@ -42,6 +42,9 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        # Optional TLS and other driver parameters. For example, enable preferred TLS:
+        queryParams:
+            tls: preferred
         queryTimeout: 30s # Optional: query timeout duration
 ```
 
@@ -61,3 +64,4 @@ instead of hardcoding your secrets into the configuration file.
 | user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
 | password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
 | queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
