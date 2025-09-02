@@ -614,7 +614,9 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 					"description": "Fields to select",
 					"required":    true,
 					"items": map[string]any{
+						"name" : "field",
 						"type": "string",
+						"description":"field",
 					},
 				},
 			},
