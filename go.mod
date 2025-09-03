@@ -7,7 +7,7 @@ toolchain go1.25.0
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
 	cloud.google.com/go/bigquery v1.69.0
-	cloud.google.com/go/bigtable v1.38.0
+	cloud.google.com/go/bigtable v1.39.0
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.26.0
 	cloud.google.com/go/firestore v1.18.0
@@ -33,7 +33,7 @@ require (
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.2
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.3
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
@@ -70,7 +70,7 @@ require (
 
 require (
 	cel.dev/expr v0.24.0 // indirect
-	cloud.google.com/go v0.121.4 // indirect
+	cloud.google.com/go v0.121.6 // indirect
 	cloud.google.com/go/alloydb v1.18.0 // indirect
 	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
