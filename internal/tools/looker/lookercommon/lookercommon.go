@@ -72,10 +72,10 @@ func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.Looke
 }
 
 const (
-	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,synonyms,tags,hidden))"
-	FiltersFields    = "fields(filters(name,type,label,label_short,description,synonyms,tags,hidden))"
-	MeasuresFields   = "fields(measures(name,type,label,label_short,description,synonyms,tags,hidden))"
-	ParametersFields = "fields(parameters(name,type,label,label_short,description,synonyms,tags,hidden))"
+	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
+	FiltersFields    = "fields(filters(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
+	MeasuresFields   = "fields(measures(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
+	ParametersFields = "fields(parameters(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
 )
 
 // ExtractLookerFieldProperties extracts common properties from Looker field objects.
@@ -118,11 +118,20 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 		if v.Description != nil {
 			vMap["description"] = *v.Description
 		}
-		if v.Tags != nil {
+		if v.Tags != nil && len(*v.Tags) > 0 {
 			vMap["tags"] = *v.Tags
 		}
-		if v.Synonyms != nil {
+		if v.Synonyms != nil && len(*v.Synonyms) > 0 {
 			vMap["synonyms"] = *v.Synonyms
+		}
+		if v.Suggestable != nil && *v.Suggestable {
+			if v.Suggestions != nil && len(*v.Suggestions) > 0 {
+				vMap["suggestions"] = *v.Suggestions
+			}
+			if v.SuggestExplore != nil && v.SuggestDimension != nil {
+				vMap["suggest_explore"] = *v.SuggestExplore
+				vMap["suggest_dimension"] = *v.SuggestDimension
+			}
 		}
 		logger.DebugContext(ctx, "Converted to %v\n", vMap)
 		data = append(data, vMap)
