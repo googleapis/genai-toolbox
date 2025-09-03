@@ -71,3 +71,6 @@ availableSecrets:
     env: 'GOOGLE_API_KEY'
 
 timeout: 1200s
+
+options:
+  logging: CLOUD_LOGGING_ONLY
