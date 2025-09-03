@@ -36,7 +36,6 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
 }
 
 export async function main() {
-   
     const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
     const toolboxTools = await toolboxClient.loadToolset("my-toolset");
     
