@@ -22,7 +22,7 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-async function main() {
+export async function main() {
   const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
 
   const ai = genkit({
