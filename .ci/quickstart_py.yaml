@@ -34,7 +34,7 @@ steps:
         docker run -d --name=toolbox --network=cloudbuild \
           -v /workspace/config/tools.yaml:/config/tools.yaml \
           '${_TOOLBOX_IMAGE}' \
-          toolbox --tools-file /config/tools.yaml --address 0.0.0.0
+          toolbox --tools-file /config/tools.yaml --address 0.0.0.0 # Uses default port 5000
 
         echo "Docker run command issued. Waiting 5 seconds..."
         sleep 5
@@ -63,8 +63,9 @@ steps:
         apt-get update && apt-get install -y netcat-openbsd
 
         for i in $(seq 1 30); do
-          if nc -z -w 2 toolbox 8080; then
-             echo "Server port 8080 is open!";
+          # *** CORRECTED PORT HERE ***
+          if nc -z -w 2 toolbox 5000; then
+             echo "Server port 5000 is open!";
              exit 0;
           fi
           echo "Attempt $i/30: Server not ready yet, waiting 3 seconds...";
@@ -87,6 +88,7 @@ steps:
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
       - 'TOOLBOX_HOST=toolbox'
+      - 'TOOLBOX_PORT=5000'
     secretEnv: ['GOOGLE_API_KEY']
     waitFor: ['wait-for-server']
 
