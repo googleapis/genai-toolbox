@@ -6,8 +6,9 @@ sources:
         cluster: ${ALLOYDB_POSTGRES_CLUSTER}
         instance: ${ALLOYDB_POSTGRES_INSTANCE}
         database: ${ALLOYDB_POSTGRES_DATABASE}
-        user: ${ALLOYDB_POSTGRES_USER}
-        password: ${ALLOYDB_POSTGRES_PASSWORD}
+        user: ${ALLOYDB_POSTGRES_USER:}
+        password: ${ALLOYDB_POSTGRES_PASSWORD:}
+        ipType: ${ALLOYDB_POSTGRES_IP_TYPE:public}
 
 tools:
     execute_sql:
@@ -92,7 +93,7 @@ tools:
                         'constraints', COALESCE((SELECT json_agg(json_build_object('constraint_name',cons.constraint_name,'constraint_type',cons.constraint_type,'constraint_definition',cons.constraint_definition,'constraint_columns',cons.constraint_columns,'foreign_key_referenced_table',cons.foreign_key_referenced_table,'foreign_key_referenced_columns',cons.foreign_key_referenced_columns)) FROM constraints_info cons WHERE cons.table_oid = ti.table_oid), '[]'::json),
                         'indexes', COALESCE((SELECT json_agg(json_build_object('index_name',ii.index_name,'index_definition',ii.index_definition,'is_unique',ii.is_unique,'is_primary',ii.is_primary,'index_method',ii.index_method,'index_columns',ii.index_columns)) FROM indexes_info ii WHERE ii.table_oid = ti.table_oid), '[]'::json),
                         'triggers', COALESCE((SELECT json_agg(json_build_object('trigger_name',tri.trigger_name,'trigger_definition',tri.trigger_definition,'trigger_enabled_state',tri.trigger_enabled_state)) FROM triggers_info tri WHERE tri.table_oid = ti.table_oid), '[]'::json)
-                    ) 
+                    )
                 END AS object_details
             FROM table_info ti ORDER BY ti.schema_name, ti.table_name;
         parameters:
