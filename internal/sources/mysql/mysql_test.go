@@ -22,7 +22,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
@@ -219,7 +219,7 @@ func TestFailInitialization(t *testing.T) {
 		Password:     "pass",
 		QueryTimeout: "abc", // invalid duration
 	}
-	_, err := cfg.Initialize(context.Background(), trace.NewNoopTracerProvider().Tracer("test"))
+	_, err := cfg.Initialize(context.Background(), noop.NewTracerProvider().Tracer("test"))
 	if err == nil {
 		t.Fatalf("expected error for invalid queryTimeout, got nil")
 	}
