@@ -15,38 +15,65 @@ steps:
     args:
       - -c
       - |
-        # Create a directory for the config if it doesn't exist
+        set -ex # Exit on error, print commands
+
+        # Create a directory for the config
         mkdir -p /workspace/config
 
-        # Write the secret content from the environment variable to a file in the workspace
-        # Use $$ to escape $ for Cloud Build, so bash sees the env var
+        # Write the secret content from the environment variable to a file
+        if [ -z "$$TOOLS_YAML_CONTENT" ]; then
+          echo "Error: TOOLS_YAML_CONTENT is not set."
+          exit 1
+        fi
         echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
+        echo "--- tools.yaml content ---"
+        cat /workspace/config/tools.yaml
+        echo "--- end of tools.yaml ---"
 
-        # Bind-mount the created tools.yaml file from the step's workspace into the toolbox container
+        # Start the toolbox container
         docker run -d --name=toolbox --network=cloudbuild \
           -v /workspace/config/tools.yaml:/config/tools.yaml \
           '${_TOOLBOX_IMAGE}' \
           toolbox --tools-file /config/tools.yaml --address 0.0.0.0
-    secretEnv: ['TOOLS_YAML_CONTENT'] # Make the secret content available as TOOLS_YAML_CONTENT env var
 
-  - name: 'alpine'
+        echo "Docker run command issued. Waiting 5 seconds..."
+        sleep 5
+        echo "--- Docker container status ---"
+        docker ps -a
+    secretEnv: ['TOOLS_YAML_CONTENT']
+
+  - name: 'gcr.io/cloud-builders/docker' # Use image with Docker CLI
     id: 'wait-for-server'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
       - -c
       - |
+        set -ex # Exit on error, print commands
         echo "Waiting for server to initialize...";
-        apk add --no-cache netcat-openbsd;
+
+        # Check if the toolbox container is running
+        if ! docker ps | grep -w toolbox; then
+          echo "Error: toolbox container is not running or has exited!"
+          docker logs toolbox || echo "Failed to get toolbox logs."
+          exit 1
+        fi
+        echo "toolbox container is running."
+
+        # Install netcat in this docker image
+        apt-get update && apt-get install -y netcat-openbsd
+
         for i in $(seq 1 30); do
           if nc -z -w 2 toolbox 8080; then
              echo "Server port 8080 is open!";
              exit 0;
           fi
-          echo "Attempt $i/30: Server not ready yet, waiting 2 seconds...";
-          sleep 2;
+          echo "Attempt $i/30: Server not ready yet, waiting 3 seconds...";
+          sleep 3;
         done;
+
         echo "Server did not start in time!";
-        docker logs toolbox;
+        echo "--- toolbox container logs ---"
+        docker logs toolbox || echo "Failed to get toolbox logs."
         exit 1;
     waitFor: ['start-server']
 
@@ -60,7 +87,7 @@ steps:
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
       - 'TOOLBOX_HOST=toolbox'
-    secretEnv: ['GOOGLE_API_KEY'] 
+    secretEnv: ['GOOGLE_API_KEY']
     waitFor: ['wait-for-server']
 
 availableSecrets:
