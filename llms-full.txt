@@ -2507,12 +2507,14 @@ Connect your IDE to Cloud SQL for SQL Server using Toolbox.
 # Firestore using MCP
 Connect your IDE to Firestore using Toolbox.
 
+
 <html>
   <head>
     <link rel="canonical" href="https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
     <meta http-equiv="refresh" content="0;url=https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
   </head>
 </html>
+
 
 # Looker using MCP
 Connect your IDE to Looker using Toolbox.
@@ -2747,7 +2749,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "looker-toolbox": {
           "command": "./PATH/TO/toolbox",
           "args": ["--stdio", "--prebuilt", "looker"],
@@ -3003,7 +3005,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","mysql","--stdio"],
@@ -3323,7 +3325,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "postgres": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","postgres","--stdio"],
@@ -3630,19 +3632,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-    "mcp" : {
-        "servers": {
-        "cloud-sql-sqlserver": {
-            "command": "./PATH/TO/toolbox",
-            "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
-            "env": {
-              "MSSQL_HOST": "",
-              "MSSQL_PORT": "",
-              "MSSQL_DATABASE": "",
-              "MSSQL_USER": "",
-              "MSSQL_PASSWORD": ""
-            }
-         }
+      "servers": {
+        "mssql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -3735,6 +3735,7 @@ The following tools are available to the LLM:
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
+
 
 # Connect via MCP Client
 How to connect to Toolbox from a MCP Client.
