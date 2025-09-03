@@ -89,12 +89,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -108,14 +109,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	UseClientOAuth bool
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	AuthRequired   []string         `yaml:"authRequired"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -133,8 +135,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	visConfig := paramsMap["vis_config"].(map[string]any)
 	wq.VisConfig = &visConfig
 
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	respFields := "id,slug,share_url,expanded_share_url"
-	resp, err := t.Client.CreateQuery(*wq, respFields, t.ApiSettings)
+	resp, err := sdk.CreateQuery(*wq, respFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making query request: %s", err)
 	}
@@ -172,4 +178,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
 }

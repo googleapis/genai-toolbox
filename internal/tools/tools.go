@@ -16,6 +16,7 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -71,6 +72,7 @@ type Tool interface {
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
+	RequiresClientAuthorization() bool
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
@@ -89,6 +91,8 @@ type McpManifest struct {
 	// A JSON Schema object defining the expected parameters for the tool.
 	InputSchema McpToolsSchema `json:"inputSchema,omitempty"`
 }
+
+var ErrUnauthorized = errors.New("unauthorized")
 
 // Helper function that returns if a tool invocation request is authorized
 func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) bool {

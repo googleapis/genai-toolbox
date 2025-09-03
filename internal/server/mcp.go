@@ -19,9 +19,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -142,7 +144,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			}
 			return err
 		}
-		v, res, err := processMcpMessage(ctx, []byte(line), s.server, s.protocol, "", "")
+		v, res, err := processMcpMessage(ctx, []byte(line), s.server, s.protocol, "", nil)
 		if err != nil {
 			// errors during the processing of message will generate a valid MCP Error response.
 			// server can continue to run.
@@ -330,6 +332,8 @@ func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // httpHandler handles all mcp messages.
 func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
@@ -402,18 +406,17 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
+	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, r.Header)
+	if err != nil {
+		s.logger.DebugContext(ctx, fmt.Errorf("error processing message: %w", err).Error())
+	}
 
-	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, accessToken)
 	// notifications will return empty string
 	if res == nil {
 		// Notifications do not expect a response
 		// Toolbox doesn't do anything with notifications yet
 		w.WriteHeader(http.StatusAccepted)
 		return
-	}
-	if err != nil {
-		s.logger.DebugContext(ctx, err.Error())
 	}
 
 	// for v20250326, add the `Mcp-Session-Id` header
@@ -434,13 +437,29 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			s.logger.DebugContext(ctx, "unable to add to event queue")
 		}
 	}
+	if rpcResponse, ok := res.(jsonrpc.JSONRPCError); ok {
+		code := rpcResponse.Error.Code
+		switch code {
+		case jsonrpc.INTERNAL_ERROR:
+			w.WriteHeader(http.StatusInternalServerError)
+		case jsonrpc.INVALID_REQUEST:
+			errStr := err.Error()
+			if errors.Is(err, tools.ErrUnauthorized) {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if strings.Contains(errStr, "Error 401") {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if strings.Contains(errStr, "Error 403") {
+				w.WriteHeader(http.StatusForbidden)
+			}
+		}
+	}
 
 	// send HTTP response
 	render.JSON(w, r, res)
 }
 
 // processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, accessToken tools.AccessToken) (string, any, error) {
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, header http.Header) (string, any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -495,7 +514,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			err = fmt.Errorf("toolset does not exist")
 			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), body, accessToken)
+		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), s.ResourceMgr.GetAuthServiceMap(), body, header)
 		return "", res, err
 	}
 }

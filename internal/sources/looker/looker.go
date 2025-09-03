@@ -39,7 +39,15 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, SslVerification: "true", Timeout: "600s"} // Default Ssl,timeout
+	actual := Config{
+		Name:               name,
+		SslVerification:    true,
+		Timeout:            "600s",
+		UseClientOAuth:     false,
+		ShowHiddenModels:   true,
+		ShowHiddenExplores: true,
+		ShowHiddenFields:   true,
+	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -47,13 +55,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name            string `yaml:"name" validate:"required"`
-	Kind            string `yaml:"kind" validate:"required"`
-	BaseURL         string `yaml:"base_url" validate:"required"`
-	ClientId        string `yaml:"client_id" validate:"required"`
-	ClientSecret    string `yaml:"client_secret" validate:"required"`
-	SslVerification string `yaml:"verify_ssl"`
-	Timeout         string `yaml:"timeout"`
+	Name               string `yaml:"name" validate:"required"`
+	Kind               string `yaml:"kind" validate:"required"`
+	BaseURL            string `yaml:"base_url" validate:"required"`
+	ClientId           string `yaml:"client_id" validate:"required"`
+	ClientSecret       string `yaml:"client_secret" validate:"required"`
+	SslVerification    bool   `yaml:"verify_ssl"`
+	UseClientOAuth     bool   `yaml:"use_client_oauth"`
+	Timeout            string `yaml:"timeout"`
+	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
+	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
+	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -77,33 +89,42 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to parse Timeout string as time.Duration: %s", err)
 	}
 
-	if r.SslVerification != "true" {
+	if !r.SslVerification {
 		logger.WarnContext(ctx, "Insecure HTTP is enabled for Looker source %s. TLS certificate verification is skipped.\n", r.Name)
 	}
 	cfg := rtl.ApiSettings{
 		AgentTag:     userAgent,
 		BaseUrl:      r.BaseURL,
 		ApiVersion:   "4.0",
-		VerifySsl:    (r.SslVerification == "true"),
+		VerifySsl:    r.SslVerification,
 		Timeout:      int32(duration.Seconds()),
 		ClientId:     r.ClientId,
 		ClientSecret: r.ClientSecret,
 	}
 
-	sdk := v4.NewLookerSDK(rtl.NewAuthSession(cfg))
-	me, err := sdk.Me("", &cfg)
-	if err != nil {
-		return nil, fmt.Errorf("unable to log in: %s", err)
-	}
-	logger.DebugContext(ctx, fmt.Sprintf("logged in as user %v %v.\n", *me.FirstName, *me.LastName))
-
 	s := &Source{
-		Name:        r.Name,
-		Kind:        SourceKind,
-		Timeout:     r.Timeout,
-		Client:      sdk,
-		ApiSettings: &cfg,
+		Name:               r.Name,
+		Kind:               SourceKind,
+		Timeout:            r.Timeout,
+		UseClientOAuth:     r.UseClientOAuth,
+		ApiSettings:        &cfg,
+		ShowHiddenModels:   r.ShowHiddenModels,
+		ShowHiddenExplores: r.ShowHiddenExplores,
+		ShowHiddenFields:   r.ShowHiddenFields,
 	}
+
+	if !r.UseClientOAuth {
+		if r.ClientId == "" || r.ClientSecret == "" {
+			return nil, fmt.Errorf("client_id and client_secret need to be specified")
+		}
+		s.Client = v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+		resp, err := s.Client.Me("", s.ApiSettings)
+		if err != nil {
+			return nil, fmt.Errorf("incorrect settings: %w", err)
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("logged in as %s %s", *resp.FirstName, *resp.LastName))
+	}
+
 	return s, nil
 
 }
@@ -111,11 +132,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name        string `yaml:"name"`
-	Kind        string `yaml:"kind"`
-	Timeout     string `yaml:"timeout"`
-	Client      *v4.LookerSDK
-	ApiSettings *rtl.ApiSettings
+	Name               string `yaml:"name"`
+	Kind               string `yaml:"kind"`
+	Timeout            string `yaml:"timeout"`
+	Client             *v4.LookerSDK
+	ApiSettings        *rtl.ApiSettings
+	UseClientOAuth     bool `yaml:"use_client_oauth"`
+	ShowHiddenModels   bool `yaml:"show_hidden_models"`
+	ShowHiddenExplores bool `yaml:"show_hidden_explores"`
+	ShowHiddenFields   bool `yaml:"show_hidden_fields"`
 }
 
 func (s *Source) SourceKind() string {

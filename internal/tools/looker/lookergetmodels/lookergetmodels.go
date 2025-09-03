@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -81,18 +82,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
+		mcpManifest:      mcpManifest,
+		ShowHiddenModels: s.ShowHiddenModels,
 	}, nil
 }
 
@@ -100,14 +103,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name             string `yaml:"name"`
+	Kind             string `yaml:"kind"`
+	UseClientOAuth   bool
+	Client           *v4.LookerSDK
+	ApiSettings      *rtl.ApiSettings
+	AuthRequired     []string         `yaml:"authRequired"`
+	Parameters       tools.Parameters `yaml:"parameters"`
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
+	ShowHiddenModels bool
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -117,15 +122,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	excludeEmpty := false
-	excludeHidden := false
+	excludeHidden := !t.ShowHiddenModels
 	includeInternal := true
 
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	req := v4.RequestAllLookmlModels{
 		ExcludeEmpty:    &excludeEmpty,
 		ExcludeHidden:   &excludeHidden,
 		IncludeInternal: &includeInternal,
 	}
-	resp, err := t.Client.AllLookmlModels(req, t.ApiSettings)
+	resp, err := sdk.AllLookmlModels(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_models request: %s", err)
 	}
@@ -159,4 +168,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
 }

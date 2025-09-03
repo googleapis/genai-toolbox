@@ -121,6 +121,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	select1Want := "[{\"$col1\":1}]"
 	myToolById4Want := `[{"id":4,"name":""}]`
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"$col1\":1}"}]}}`
 	nameFieldArray := `["CAST(cf['name'] AS string) as name"]`
 	nameColFilter := "CAST(cf['name'] AS string)"
 
@@ -129,7 +130,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolById4Want(myToolById4Want),
 	)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithNameFieldArray(nameFieldArray),
 		tests.WithNameColFilter(nameColFilter),

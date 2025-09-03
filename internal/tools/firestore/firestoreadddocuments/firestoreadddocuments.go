@@ -85,7 +85,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create parameters
 	collectionPathParameter := tools.NewStringParameter(
 		collectionPathKey,
-		"The path of the collection where the document will be added to",
+		"The relative path of the collection where the document will be added to (e.g., 'users' or 'users/userId/posts'). Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'",
 	)
 
 	documentDataParameter := tools.NewMapParameter(
@@ -159,6 +159,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", collectionPathKey)
 	}
 
+	// Validate collection path
+	if err := util.ValidateCollectionPath(collectionPath); err != nil {
+		return nil, fmt.Errorf("invalid collection path: %w", err)
+	}
+
 	// Get document data
 	documentDataRaw, ok := mapParams[documentDataKey]
 	if !ok {
@@ -217,4 +222,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

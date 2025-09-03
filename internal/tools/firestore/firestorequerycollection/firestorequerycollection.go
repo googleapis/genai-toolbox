@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
 )
 
 // Constants for tool configuration
@@ -152,7 +153,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 func createParameters() tools.Parameters {
 	collectionPathParameter := tools.NewStringParameter(
 		collectionPathKey,
-		"The path to the Firestore collection to query",
+		"The relative path to the Firestore collection to query (e.g., 'users' or 'users/userId/posts'). Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'",
 	)
 
 	filtersDescription := `Array of filter objects to apply to the query. Each filter is a JSON string with:
@@ -301,6 +302,11 @@ func (t Tool) parseQueryParameters(params tools.ParamValues) (*queryParameters, 
 	collectionPath, ok := mapParams[collectionPathKey].(string)
 	if !ok || collectionPath == "" {
 		return nil, fmt.Errorf(errMissingCollectionPath, collectionPathKey)
+	}
+
+	// Validate collection path
+	if err := util.ValidateCollectionPath(collectionPath); err != nil {
+		return nil, fmt.Errorf("invalid collection path: %w", err)
 	}
 
 	result := &queryParameters{
@@ -526,4 +532,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 // Authorized checks if the tool is authorized based on verified auth services
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }
