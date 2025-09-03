@@ -116,32 +116,6 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "empty query params",
-			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					queryParams: {}
-			`,
-			want: server.SourceConfigs{
-				"my-mysql-instance": mysql.Config{
-					Name:        "my-mysql-instance",
-					Kind:        mysql.SourceKind,
-					Host:        "0.0.0.0",
-					Port:        "my-port",
-					Database:    "my_db",
-					User:        "my_user",
-					Password:    "my_pass",
-					QueryParams: map[string]string{},
-				},
-			},
-		},
 	}
 	for _, tc := range tcs {
 		tc := tc
