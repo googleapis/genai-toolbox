@@ -28,35 +28,12 @@
  &lt;link rel="canonical" href="https://cloud.google.com/sql/docs/sqlserver/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/sql/docs/sqlserver/pre-built-tools-with-mcp-toolbox"/>
  &lt;/head>
-&lt;/html></description></item><item><title>Firestore using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
-an open protocol for connecting Large Language Models (LLMs) to data sources
-like Firestore. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
-to expose your developer assistant tools to a Firestore instance:&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Visual Studio Code&lt;/a> (Copilot)&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;h2 id="set-up-firestore">Set up Firestore&lt;/h2>
-&lt;ol>
-&lt;li>
-&lt;p>Create or select a Google Cloud project.&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">Create a new
-project&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects">Select an existing
-project&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>
-&lt;p>&lt;a href="https://console.cloud.google.com/apis/library/firestore.googleapis.com">Enable the Firestore
-API&lt;/a>
-for your project.&lt;/p></description></item><item><title>Looker using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/looker_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/looker_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+&lt;/html></description></item><item><title>Firestore using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/firestore_mcp/</guid><description>&lt;html>
+ &lt;head>
+ &lt;link rel="canonical" href="https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
+ &lt;/head>
+&lt;/html></description></item><item><title>Looker using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/looker_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1257/how-to/connect-ide/looker_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
 to expose your developer assistant tools to a Looker instance:&lt;/p>
