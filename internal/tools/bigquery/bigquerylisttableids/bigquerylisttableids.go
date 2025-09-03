@@ -160,12 +160,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
 	}
 
-	// Handle fully-qualified dataset ID in the dataset parameter.
-	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
-		projectId = parts[0]
-		datasetId = parts[1]
-	}
-
 	if !t.IsDatasetAllowed(projectId, datasetId) {
 		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
 	}

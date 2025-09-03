@@ -189,7 +189,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 }
 
-func testBigQueryToolWithDatasetRestriction(t *testing.T) {
+func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -200,24 +200,37 @@ func testBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Create two datasets, one allowed, one not.
 	baseName := strings.ReplaceAll(uuid.New().String(), "-", "")
-	allowedDatasetName := fmt.Sprintf("allowed_dataset_%s", baseName)
+	allowedDatasetName1 := fmt.Sprintf("allowed_dataset_1_%s", baseName)
+	allowedDatasetName2 := fmt.Sprintf("allowed_dataset_2_%s", baseName)
 	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", baseName)
-	allowedTableName := "allowed_table"
+	allowedTableName1 := "allowed_table_1"
+	allowedTableName2 := "allowed_table_2"
 	disallowedTableName := "disallowed_table"
-	allowedForecastTableName := "allowed_forecast_table"
+	allowedForecastTableName1 := "allowed_forecast_table_1"
+	allowedForecastTableName2 := "allowed_forecast_table_2"
 	disallowedForecastTableName := "disallowed_forecast_table"
 
 	// Setup allowed table
-	allowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName, allowedTableName)
-	createAllowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam)
-	teardownAllowed := setupBigQueryTable(t, ctx, client, createAllowedTableStmt, "", allowedDatasetName, allowedTableNameParam, nil)
-	defer teardownAllowed(t)
+	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
+	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
+	teardownAllowed1 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
+	defer teardownAllowed1(t)
+
+	allowedTableNameParam2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedTableName2)
+	createAllowedTableStmt2 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam2)
+	teardownAllowed2 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
+	defer teardownAllowed2(t)
 
 	// Setup allowed forecast table
-	allowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName, allowedForecastTableName)
-	createForecastStmt, insertForecastStmt, forecastParams := getBigQueryForecastToolInfo(allowedForecastTableFullName)
-	teardownAllowedForecast := setupBigQueryTable(t, ctx, client, createForecastStmt, insertForecastStmt, allowedDatasetName, allowedForecastTableFullName, forecastParams)
-	defer teardownAllowedForecast(t)
+	allowedForecastTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedForecastTableName1)
+	createForecastStmt1, insertForecastStmt1, forecastParams1 := getBigQueryForecastToolInfo(allowedForecastTableFullName1)
+	teardownAllowedForecast1 := setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
+	defer teardownAllowedForecast1(t)
+
+	allowedForecastTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedForecastTableName2)
+	createForecastStmt2, insertForecastStmt2, forecastParams2 := getBigQueryForecastToolInfo(allowedForecastTableFullName2)
+	teardownAllowedForecast2 := setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
+	defer teardownAllowedForecast2(t)
 
 	// Setup disallowed table
 	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
@@ -233,7 +246,7 @@ func testBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Configure source with dataset restriction.
 	sourceConfig := getBigQueryVars(t)
-	sourceConfig["allowedDatasets"] = []string{allowedDatasetName}
+	sourceConfig["allowedDatasets"] = []string{allowedDatasetName1, allowedDatasetName2}
 
 	// Configure tool
 	toolsConfig := map[string]any{
@@ -268,7 +281,8 @@ func testBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Run tests
-	runListTableIdsWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName, allowedForecastTableName)
+	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
+	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
