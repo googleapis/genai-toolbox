@@ -5,65 +5,73 @@ substitutions:
   _DB_USER: "your-database-user"
   _TOOLS_YAML_SECRET: "name-of-secret-for-tools-yaml"
   _API_KEY_SECRET: "quickstart_testing_api_key"
-  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:v1.0.0"
+  _DB_PASS_SECRET: "quickstart-testing-pg-pass"
+  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest"
   _GCP_PROJECT_NUMBER: "your-project-number"
 
 steps:
+  # Step 0: Start Cloud SQL Auth Proxy
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'start-proxy'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        set -x
+        docker run -d --name=cloudsqlproxy --network=cloudbuild \
+          gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
+          /cloud_sql_proxy \
+          -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432
+        echo "Cloud SQL Proxy container started"
+        sleep 5 # Give proxy time to fully start
+
+  # Step 1: Prepare config and Start the toolbox server
   - name: 'gcr.io/cloud-builders/docker'
     id: 'start-server'
     entrypoint: 'bash'
     args:
       - -c
       - |
-        set -ex # Exit on error, print commands
+        set -ex
 
-        # Create a directory for the config
         mkdir -p /workspace/config
 
-        # Write the secret content from the environment variable to a file
         if [ -z "$$TOOLS_YAML_CONTENT" ]; then
           echo "Error: TOOLS_YAML_CONTENT is not set."
           exit 1
         fi
-        echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
-        echo "--- tools.yaml content ---"
-        cat /workspace/config/tools.yaml
-        echo "--- end of tools.yaml ---"
 
-        # Start the toolbox container
+        # Start the toolbox container, connected to the proxy network
+        # Inject DB_PASSWORD for the toolbox application to use
         docker run -d --name=toolbox --network=cloudbuild \
           -v /workspace/config/tools.yaml:/config/tools.yaml \
+          -e DB_PASSWORD="$${DB_PASSWORD}" \
           '${_TOOLBOX_IMAGE}' \
-          toolbox --tools-file /config/tools.yaml --address 0.0.0.0 # Uses default port 5000
+          toolbox --tools-file /config/tools.yaml --address 0.0.0.0
 
-        echo "Docker run command issued. Waiting 5 seconds..."
+        echo "Docker run command for toolbox issued."
         sleep 5
-        echo "--- Docker container status ---"
         docker ps -a
-    secretEnv: ['TOOLS_YAML_CONTENT']
+    secretEnv: ['TOOLS_YAML_CONTENT', 'DB_PASSWORD']
+    waitFor: ['start-proxy']
 
-  - name: 'gcr.io/cloud-builders/docker' # Use image with Docker CLI
+  # Step 2: Wait for Toolbox Server
+  - name: 'gcr.io/cloud-builders/docker'
     id: 'wait-for-server'
     entrypoint: 'bash'
     args:
       - -c
       - |
-        set -ex # Exit on error, print commands
+        set -ex
         echo "Waiting for server to initialize...";
-
-        # Check if the toolbox container is running
         if ! docker ps | grep -w toolbox; then
           echo "Error: toolbox container is not running or has exited!"
           docker logs toolbox || echo "Failed to get toolbox logs."
           exit 1
         fi
         echo "toolbox container is running."
-
-        # Install netcat in this docker image
         apt-get update && apt-get install -y netcat-openbsd
-
         for i in $(seq 1 30); do
-          # *** CORRECTED PORT HERE ***
           if nc -z -w 2 toolbox 5000; then
              echo "Server port 5000 is open!";
              exit 0;
@@ -71,25 +79,26 @@ steps:
           echo "Attempt $i/30: Server not ready yet, waiting 3 seconds...";
           sleep 3;
         done;
-
         echo "Server did not start in time!";
-        echo "--- toolbox container logs ---"
         docker logs toolbox || echo "Failed to get toolbox logs."
         exit 1;
     waitFor: ['start-server']
 
+  # Step 3: Run the Python quickstart test script
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'run-tests'
     entrypoint: 'bash'
     args: ['.ci/quickstart_py.sh']
     env:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
-      - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
       - 'TOOLBOX_HOST=toolbox'
       - 'TOOLBOX_PORT=5000'
-    secretEnv: ['GOOGLE_API_KEY']
+      - 'PGHOST=cloudsqlproxy'
+      - 'PGPORT=5432'
+      - 'PGPASSWORD=$${DB_PASSWORD}'
+    secretEnv: ['GOOGLE_API_KEY', 'DB_PASSWORD']
     waitFor: ['wait-for-server']
 
 availableSecrets:
@@ -98,6 +107,8 @@ availableSecrets:
     env: 'TOOLS_YAML_CONTENT'
   - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
     env: 'GOOGLE_API_KEY'
+  - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
+    env: 'DB_PASSWORD'
 
 timeout: 1200s
 
