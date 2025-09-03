@@ -85,7 +85,7 @@ func getAlloyDBToolsConfig() map[string]any {
 	}
 }
 
-func TestAlloyDBAdminToolEndpoints(t *testing.T) {
+func TestAlloyDBToolEndpoints(t *testing.T) {
 	vars := getAlloyDBVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
