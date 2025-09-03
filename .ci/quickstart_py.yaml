@@ -1,0 +1,73 @@
+substitutions:
+  _GCP_PROJECT: "your-gcp-project-id"
+  _CLOUD_SQL_INSTANCE: "your-cloud-sql-instance-connection-name"
+  _DATABASE_NAME: "your-database-name"
+  _DB_USER: "your-database-user"
+  _TOOLS_YAML_SECRET: "name-of-secret-for-tools-yaml"
+  _API_KEY_SECRET: "quickstart_testing_api_key"
+  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:v1.0.0"
+  _GCP_PROJECT_NUMBER: "107716898620"
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'start-server'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        # Create a directory for the config if it doesn't exist
+        mkdir -p /workspace/config
+
+        # Write the secret content from the environment variable to a file in the workspace
+        # Use $$ to escape $ for Cloud Build, so bash sees the env var
+        echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
+
+        # Bind-mount the created tools.yaml file from the step's workspace into the toolbox container
+        docker run -d --name=toolbox --network=cloudbuild \
+          -v /workspace/config/tools.yaml:/config/tools.yaml \
+          '${_TOOLBOX_IMAGE}' \
+          toolbox --tools-file /config/tools.yaml --address 0.0.0.0
+    secretEnv: ['TOOLS_YAML_CONTENT'] # Make the secret content available as TOOLS_YAML_CONTENT env var
+
+  - name: 'alpine'
+    id: 'wait-for-server'
+    entrypoint: 'sh'
+    args:
+      - -c
+      - |
+        echo "Waiting for server to initialize...";
+        apk add --no-cache netcat-openbsd;
+        for i in $(seq 1 30); do
+          if nc -z -w 2 toolbox 8080; then
+             echo "Server port 8080 is open!";
+             exit 0;
+          fi
+          echo "Attempt $i/30: Server not ready yet, waiting 2 seconds...";
+          sleep 2;
+        done;
+        echo "Server did not start in time!";
+        docker logs toolbox;
+        exit 1;
+    waitFor: ['start-server']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'run-tests'
+    entrypoint: 'bash'
+    args: ['.ci/quickstart_py.sh']
+    env:
+      - 'GCP_PROJECT=${_GCP_PROJECT}'
+      - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
+      - 'DATABASE_NAME=${_DATABASE_NAME}'
+      - 'DB_USER=${_DB_USER}'
+      - 'TOOLBOX_HOST=toolbox'
+    secretEnv: ['GOOGLE_API_KEY'] 
+    waitFor: ['wait-for-server']
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/latest
+    env: 'TOOLS_YAML_CONTENT'
+  - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
+    env: 'GOOGLE_API_KEY'
+
+timeout: 1200s
