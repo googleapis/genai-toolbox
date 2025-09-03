@@ -6,7 +6,7 @@ substitutions:
   _TOOLS_YAML_SECRET: "name-of-secret-for-tools-yaml"
   _API_KEY_SECRET: "quickstart_testing_api_key"
   _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:v1.0.0"
-  _GCP_PROJECT_NUMBER: "107716898620"
+  _GCP_PROJECT_NUMBER: "your-project-number"
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
