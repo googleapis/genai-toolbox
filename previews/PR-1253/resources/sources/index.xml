@@ -32,7 +32,26 @@ key-value store that can scale to billions of rows and thousands of columns.
 With Bigtable, you can replicate your data to regions across the world for high
 availability and data resiliency.&lt;/p>
 &lt;p>If you are new to Bigtable, you can try to &lt;a href="https://cloud.google.com/bigtable/docs/create-instance-write-data-cbt-cli">create an instance and write data
-with the cbt CLI&lt;/a>.&lt;/p></description></item><item><title>Cloud SQL for MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/sources/cloud-sql-mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/sources/cloud-sql-mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+with the cbt CLI&lt;/a>.&lt;/p></description></item><item><title>ClickHouse</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/sources/clickhouse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/sources/clickhouse/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://clickhouse.com/docs">ClickHouse&lt;/a> is a fast, open-source, column-oriented database&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/tools/clickhouse/clickhouse-execute-sql/">&lt;code>clickhouse-execute-sql&lt;/code>&lt;/a>&lt;br>
+Execute parameterized SQL queries in ClickHouse with query logging.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/tools/clickhouse/clickhouse-sql/">&lt;code>clickhouse-sql&lt;/code>&lt;/a>&lt;br>
+Execute SQL queries as prepared statements in ClickHouse.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source uses standard ClickHouse authentication. You will need to &lt;a href="https://clickhouse.com/docs/en/sql-reference/statements/create/user">create a
+ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app">ClickHouse Cloud&lt;/a>) to connect to the database with. The user
+should have appropriate permissions for the operations you plan to perform.&lt;/p>
+&lt;h3 id="network-access">Network Access&lt;/h3>
+&lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>Cloud SQL for MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/sources/cloud-sql-mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1253/resources/sources/cloud-sql-mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/mysql">Cloud SQL for MySQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your MySQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -514,6 +533,9 @@ MySQL user&lt;/a> to login to the database with.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my_db&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c"># Optional TLS and other driver parameters. For example, enable preferred TLS:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c"># queryParams:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c"># tls: preferred&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">queryTimeout: 30s # Optional&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">query timeout duration&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;style type="text/css">
  
