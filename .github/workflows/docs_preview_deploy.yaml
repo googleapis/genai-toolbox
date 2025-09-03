@@ -49,6 +49,23 @@ jobs:
       group: "preview-${{ github.event.number }}"
       cancel-in-progress: true
     steps:
+      - name: Remove PR label
+        if: "${{ github.event.action == 'labeled' && github.event.label.name == 'docs: deploy-preview' }}"
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                name: 'docs: deploy-preview',
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number
+              });
+            } catch (e) {
+              console.log('Failed to remove label. Another job may have already removed it!');
+            }
+
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           # Checkout the PR's HEAD commit (supports forks).
