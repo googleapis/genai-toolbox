@@ -215,8 +215,8 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 }
 
-// TestInitializeInvalidQueryTimeout verifies that an invalid QueryTimeout string is rejected during initialization without attempting a DB connection.
-func TestInitializeInvalidQueryTimeout(t *testing.T) {
+// TestFailInitialization test error during initialization without attempting a DB connection.
+func TestFailInitialization(t *testing.T) {
 	t.Parallel()
 
 	cfg := mysql.Config{
