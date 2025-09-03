@@ -15,14 +15,61 @@ package lookercommon
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	rtl "github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/thlib/go-timezone-local/tzlocal"
 )
+
+// Make types for RoundTripper
+type transportWithAuthHeader struct {
+	Base      http.RoundTripper
+	AuthToken tools.AccessToken
+}
+
+func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("x-looker-appid", "go-sdk")
+	req.Header.Set("Authorization", string(t.AuthToken))
+	return t.Base.RoundTrip(req)
+}
+
+func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.LookerSDK, accessToken tools.AccessToken) (*v4.LookerSDK, error) {
+
+	if useClientOAuth {
+		if accessToken == "" {
+			return nil, fmt.Errorf("no access token supplied with request")
+		}
+		// Configure base transport with TLS
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !config.VerifySsl,
+			},
+		}
+
+		// Build transport for end user token
+		newTransport := &transportWithAuthHeader{
+			Base:      transport,
+			AuthToken: accessToken,
+		}
+
+		// return SDK with new Transport
+		return v4.NewLookerSDK(&rtl.AuthSession{
+			Config: *config,
+			Client: http.Client{Transport: newTransport},
+		}), nil
+	}
+
+	if client == nil {
+		return nil, fmt.Errorf("client id or client secret not valid")
+	}
+	return client, nil
+}
 
 const (
 	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
