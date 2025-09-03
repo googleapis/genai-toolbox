@@ -458,7 +458,7 @@ Core</button></li></ul><div class=tab-content id=tabs-6-content><div class="tab-
 </span></span><span class=line><span class=cl>    <span class=s2>&#34;My check in dates would be from April 10, 2024 to April 19, 2024.&#34;</span><span class=p>,</span>
 </span></span><span class=line><span class=cl><span class=p>]</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>run_application</span><span class=p>():</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>main</span><span class=p>():</span>
 </span></span><span class=line><span class=cl>    <span class=c1># TODO(developer): replace this with another model if needed</span>
 </span></span><span class=line><span class=cl>    <span class=n>model</span> <span class=o>=</span> <span class=n>ChatVertexAI</span><span class=p>(</span><span class=n>model_name</span><span class=o>=</span><span class=s2>&#34;gemini-2.0-flash-001&#34;</span><span class=p>)</span>
 </span></span><span class=line><span class=cl>    <span class=c1># model = ChatGoogleGenerativeAI(model=&#34;gemini-2.0-flash-001&#34;)</span>
@@ -476,7 +476,7 @@ Core</button></li></ul><div class=tab-content id=tabs-6-content><div class="tab-
 </span></span><span class=line><span class=cl>            <span class=n>response</span> <span class=o>=</span> <span class=n>agent</span><span class=o>.</span><span class=n>invoke</span><span class=p>(</span><span class=n>inputs</span><span class=p>,</span> <span class=n>stream_mode</span><span class=o>=</span><span class=s2>&#34;values&#34;</span><span class=p>,</span> <span class=n>config</span><span class=o>=</span><span class=n>config</span><span class=p>)</span>
 </span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=n>response</span><span class=p>[</span><span class=s2>&#34;messages&#34;</span><span class=p>][</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>content</span><span class=p>)</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>run_application</span><span class=p>())</span></span></span></code></pre></div></div><div class="tab-pane fade" id=tabs-06-02 role=tabpanel aria-labelled-by=tabs-06-02-tab tabindex=6><div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>import</span> <span class=nn>asyncio</span>
+</span></span><span class=line><span class=cl><span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>main</span><span class=p>())</span></span></span></code></pre></div></div><div class="tab-pane fade" id=tabs-06-02 role=tabpanel aria-labelled-by=tabs-06-02-tab tabindex=6><div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>import</span> <span class=nn>asyncio</span>
 </span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span>
 </span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>llama_index.core.agent.workflow</span> <span class=kn>import</span> <span class=n>AgentWorkflow</span>
@@ -508,7 +508,7 @@ Core</button></li></ul><div class=tab-content id=tabs-6-content><div class="tab-
 </span></span><span class=line><span class=cl>    <span class=s2>&#34;My check in dates would be from April 10, 2024 to April 19, 2024.&#34;</span><span class=p>,</span>
 </span></span><span class=line><span class=cl><span class=p>]</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>run_application</span><span class=p>():</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>main</span><span class=p>():</span>
 </span></span><span class=line><span class=cl>    <span class=c1># TODO(developer): replace this with another model if needed</span>
 </span></span><span class=line><span class=cl>    <span class=n>llm</span> <span class=o>=</span> <span class=n>GoogleGenAI</span><span class=p>(</span>
 </span></span><span class=line><span class=cl>        <span class=n>model</span><span class=o>=</span><span class=s2>&#34;gemini-2.0-flash-001&#34;</span><span class=p>,</span>
@@ -538,7 +538,7 @@ Core</button></li></ul><div class=tab-content id=tabs-6-content><div class="tab-
 </span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;---- </span><span class=si>{</span><span class=n>query</span><span class=si>}</span><span class=s2> ----&#34;</span><span class=p>)</span>
 </span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=nb>str</span><span class=p>(</span><span class=n>response</span><span class=p>))</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>run_application</span><span class=p>())</span></span></span></code></pre></div></div><div class="tab-pane fade" id=tabs-06-03 role=tabpanel aria-labelled-by=tabs-06-03-tab tabindex=6><div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>import</span> <span class=nn>asyncio</span>
+</span></span><span class=line><span class=cl><span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>main</span><span class=p>())</span></span></span></code></pre></div></div><div class="tab-pane fade" id=tabs-06-03 role=tabpanel aria-labelled-by=tabs-06-03-tab tabindex=6><div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>import</span> <span class=nn>asyncio</span>
 </span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>google</span> <span class=kn>import</span> <span class=n>genai</span>
 </span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>google.genai.types</span> <span class=kn>import</span> <span class=p>(</span>
@@ -569,7 +569,7 @@ Core</button></li></ul><div class=tab-content id=tabs-6-content><div class="tab-
 </span></span><span class=line><span class=cl>    <span class=s2>&#34;My check in dates for my booking would be from April 10, 2024 to April 19, 2024.&#34;</span><span class=p>,</span>
 </span></span><span class=line><span class=cl><span class=p>]</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>run_application</span><span class=p>():</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>main</span><span class=p>():</span>
 </span></span><span class=line><span class=cl>    <span class=k>async</span> <span class=k>with</span> <span class=n>ToolboxClient</span><span class=p>(</span><span class=s2>&#34;http://127.0.0.1:5000&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>toolbox_client</span><span class=p>:</span>
 </span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>        <span class=c1># The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use</span>
@@ -645,7 +645,7 @@ Core</button></li></ul><div class=tab-content id=tabs-6-content><div class="tab-
 </span></span><span class=line><span class=cl>            <span class=n>history</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>final_model_response_content</span><span class=p>)</span>
 </span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=n>response2</span><span class=o>.</span><span class=n>text</span><span class=p>)</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>run_application</span><span class=p>())</span></span></span></code></pre></div></div></div></p><ul class="nav nav-tabs" id=tabs-7 role=tablist><li class=nav-item><button class="nav-link active" id=tabs-07-00-tab data-bs-toggle=tab data-bs-target=#tabs-07-00 role=tab data-td-tp-persist=adk aria-controls=tabs-07-00 aria-selected=true>
+</span></span><span class=line><span class=cl><span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>main</span><span class=p>())</span></span></span></code></pre></div></div></div></p><ul class="nav nav-tabs" id=tabs-7 role=tablist><li class=nav-item><button class="nav-link active" id=tabs-07-00-tab data-bs-toggle=tab data-bs-target=#tabs-07-00 role=tab data-td-tp-persist=adk aria-controls=tabs-07-00 aria-selected=true>
 ADK</button></li><li class=nav-item><button class=nav-link id=tabs-07-01-tab data-bs-toggle=tab data-bs-target=#tabs-07-01 role=tab data-td-tp-persist=langchain aria-controls=tabs-07-01 aria-selected=false>
 Langchain</button></li><li class=nav-item><button class=nav-link id=tabs-07-02-tab data-bs-toggle=tab data-bs-target=#tabs-07-02 role=tab data-td-tp-persist=llamaindex aria-controls=tabs-07-02 aria-selected=false>
 LlamaIndex</button></li><li class=nav-item><button class=nav-link id=tabs-07-03-tab data-bs-toggle=tab data-bs-target=#tabs-07-03 role=tab data-td-tp-persist=core aria-controls=tabs-07-03 aria-selected=false>
