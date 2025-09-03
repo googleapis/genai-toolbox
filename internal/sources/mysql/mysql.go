@@ -55,9 +55,6 @@ type Config struct {
 	Password     string `yaml:"password" validate:"required"`
 	Database     string `yaml:"database" validate:"required"`
 	QueryTimeout string `yaml:"queryTimeout"`
-	// QueryParams passes arbitrary key/value pairs to the driver DSN
-	// (e.g. tls=preferred, tls=skip-verify), enabling TLS configuration
-	// without changing the code.
 	QueryParams map[string]string `yaml:"queryParams"`
 }
 
