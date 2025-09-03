@@ -152,25 +152,25 @@ steps:
           bigquery \
           bigquery
 
-  # - id: "dataplex"
-  #   name: golang:1
-  #   waitFor: ["compile-test-binary"]
-  #   entrypoint: /bin/bash
-  #   env:
-  #     - "GOPATH=/gopath"
-  #     - "DATAPLEX_PROJECT=$PROJECT_ID"
-  #     - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-  #   secretEnv: ["CLIENT_ID"]
-  #   volumes:
-  #     - name: "go"
-  #       path: "/gopath"
-  #   args:
-  #     - -c
-  #     - |
-  #       .ci/test_with_coverage.sh \
-  #         "Dataplex" \
-  #         dataplex \
-  #         dataplex
+  - id: "dataplex"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "DATAPLEX_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Dataplex" \
+          dataplex \
+          dataplex
 
   - id: "postgres"
     name: golang:1
@@ -464,7 +464,7 @@ steps:
           "OceanBase" \
           oceanbase \
           oceanbase
-          
+
   - id: "firestore"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -575,6 +575,28 @@ steps:
           firebird \
           firebirdsql firebirdexecutesql
 
+  - id: "clickhouse"
+    name : golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CLICKHOUSE_DATABASE=$_CLICKHOUSE_DATABASE"
+      - "CLICKHOUSE_PORT=$_CLICKHOUSE_PORT"
+      - "CLICKHOUSE_PROTOCOL=$_CLICKHOUSE_PROTOCOL"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "ClickHouse" \
+          clickhouse \
+          clickhouse
+
   - id: "trino"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -660,6 +682,10 @@ availableSecrets:
       env: TIDB_USER
     - versionName: projects/$PROJECT_ID/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_host/versions/latest
+      env: CLICKHOUSE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_user/versions/latest
+      env: CLICKHOUSE_USER
     - versionName: projects/$PROJECT_ID/secrets/firebird_user/versions/latest
       env: FIREBIRD_USER
     - versionName: projects/$PROJECT_ID/secrets/firebird_pass/versions/latest
@@ -707,6 +733,9 @@ substitutions:
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
+  _CLICKHOUSE_DATABASE: "default"
+  _CLICKHOUSE_PORT: "8123"
+  _CLICKHOUSE_PROTOCOL: "http"
   _FIREBIRD_HOST: 127.0.0.1
   _FIREBIRD_PORT: "3050"
   _TRINO_HOST: 127.0.0.1

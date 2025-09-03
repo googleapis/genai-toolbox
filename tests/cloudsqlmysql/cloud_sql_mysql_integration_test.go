@@ -146,12 +146,12 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, mcpMyFailToolWant, createTableStatement := tests.GetMySQLWants()
+	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetMySQLWants()
 
 	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
