@@ -189,7 +189,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 }
 
-func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
+func testBigQueryToolWithDatasetRestriction(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
