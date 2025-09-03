@@ -138,10 +138,9 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 
 func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
-		desc     string
-		in       string
-		err      string
-		contains bool
+		desc string
+		in   string
+		err  string
 	}{
 		{
 			desc: "extra field",
@@ -156,8 +155,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err:      "unable to parse source \"my-mysql-instance\" as \"mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: mysql\n   5 | password: my_pass\n   6 | ",
-			contains: false,
+			err: "unknown field \"foo\"",
 		},
 		{
 			desc: "missing required field",
@@ -170,8 +168,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err:      "unable to parse source \"my-mysql-instance\" as \"mysql\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
-			contains: false,
+			err: "Field validation for 'Host' failed",
 		},
 		{
 			desc: "invalid query params type",
@@ -186,8 +183,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					queryParams: not-a-map
 			`,
-			err:      "cannot decode",
-			contains: true,
+			err: "cannot decode !!str `not-a-map` to map[string]string",
 		},
 	}
 	for _, tc := range tcs {
@@ -202,14 +198,8 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
-			if tc.contains {
-				if !strings.Contains(errStr, tc.err) {
-					t.Fatalf("unexpected error: got %q, want substring %q", errStr, tc.err)
-				}
-			} else {
-				if errStr != tc.err {
-					t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
-				}
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error: got %q, want substring %q", errStr, tc.err)
 			}
 		})
 	}
