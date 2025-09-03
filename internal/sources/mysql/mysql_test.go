@@ -183,7 +183,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					queryParams: not-a-map
 			`,
-			err: "cannot decode !!str `not-a-map` to map[string]string",
+			err: "string was used where mapping is expected",
 		},
 	}
 	for _, tc := range tcs {
