@@ -221,7 +221,7 @@ func TestFailInitialization(t *testing.T) {
 
 	cfg := mysql.Config{
 		Name:         "instance",
-		Kind:         mysql.SourceKind,
+		Kind:         "mysql",
 		Host:         "localhost",
 		Port:         "3306",
 		Database:     "db",
