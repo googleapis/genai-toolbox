@@ -43,8 +43,8 @@ sources:
         user: ${USER_NAME}
         password: ${PASSWORD}
         # Optional TLS and other driver parameters. For example, enable preferred TLS:
-        queryParams:
-            tls: preferred
+        # queryParams:
+        #     tls: preferred
         queryTimeout: 30s # Optional: query timeout duration
 ```
 
