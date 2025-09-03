@@ -3,17 +3,20 @@
 set -e
 set -u
 
-
 # --- Configuration ---
 : "${GCP_PROJECT:?Error: GCP_PROJECT environment variable not set.}"
-: "${CLOUD_SQL_INSTANCE:?Error: CLOUD_SQL_INSTANCE environment variable not set.}"
 : "${DATABASE_NAME:?Error: DATABASE_NAME environment variable not set.}"
 : "${DB_USER:?Error: DB_USER environment variable not set.}"
 : "${GOOGLE_API_KEY:?Error: GOOGLE_API_KEY environment variable not set.}"
+: "${PGHOST:?Error: PGHOST environment variable not set.}"
+: "${PGPORT:?Error: PGPORT environment variable not set.}"
+: "${PGPASSWORD:?Error: PGPASSWORD environment variable not set.}"
 
 TABLE_NAME="hotels"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 
+echo "Google API Key is set (fist 4 chars): $(echo "${GOOGLE_API_KEY}" | head -c 4)"
+export PGPASSWORD
 
 if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
   echo "Error: Quickstart directory not found at '$QUICKSTART_PYTHON_DIR'"
@@ -32,11 +35,9 @@ for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
 
     cleanup_orch() {
       echo "--- Cleaning up for $ORCH_NAME ---"
-
       echo "Dropping temporary table '$TABLE_NAME' for $ORCH_NAME..."
-      gcloud sql connect "$CLOUD_SQL_INSTANCE" --project="$GCP_PROJECT" --user="$DB_USER" --database="$DATABASE_NAME" --quiet <<< "DROP TABLE IF EXISTS $TABLE_NAME;"
+      psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
 
-      # The venv is created inside the orchestrator directory.
       if [ -d ".venv" ]; then
           echo "Removing virtual environment for $ORCH_NAME..."
           rm -rf ".venv"
@@ -46,13 +47,10 @@ for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
     trap cleanup_orch EXIT
 
     echo "--- Processing orchestrator: $ORCH_NAME ---"
-    
-    # Change into the orchestrator's directory.
     cd "$ORCH_DIR"
 
-    # 1. Database Setup for this orchestrator
     echo "Creating temporary table '$TABLE_NAME' for $ORCH_NAME..."
-    gcloud sql connect "$CLOUD_SQL_INSTANCE" --project="$GCP_PROJECT" --user="$DB_USER" --database="$DATABASE_NAME" --quiet <<EOF
+    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR NOT NULL,
@@ -78,13 +76,11 @@ VALUES
 EOF
     echo "Table '$TABLE_NAME' created and data inserted."
 
-    # 2. Virtual Environment Creation
     VENV_DIR=".venv"
     echo "Creating Python virtual environment in '$(pwd)/$VENV_DIR'..."
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
 
-    # 3. Dependency Installation
     echo "Installing dependencies for $ORCH_NAME..."
     if [ -f "requirements.txt" ]; then
       pip install -r requirements.txt
@@ -92,12 +88,10 @@ EOF
       echo "Warning: requirements.txt not found. Skipping."
     fi
 
-    # 4. Test Execution
     echo "Running tests for $ORCH_NAME..."
     pytest
 
     echo "--- Finished processing $ORCH_NAME ---"
-    # Cleanup for this orchestrator will be triggered by the trap on subshell exit.
   )
 done
 
