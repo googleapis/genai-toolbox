@@ -121,8 +121,8 @@
 &lt;li>&lt;code>ALLOYDB_POSTGRES_CLUSTER&lt;/code>: The ID of your AlloyDB cluster.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_INSTANCE&lt;/code>: The ID of your AlloyDB instance.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: The database username. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: The IP type i.e. &amp;ldquo;Public
 or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
