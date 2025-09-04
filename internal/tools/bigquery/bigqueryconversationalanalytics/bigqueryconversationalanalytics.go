@@ -182,21 +182,25 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	var tokenStr string
+
 	// Get credentials for the API call
-	if t.TokenSource == nil {
-		return nil, fmt.Errorf("authentication error: found credentials but they are missing a valid token source")
-	}
-
-	// Get token from ADC
-	token, err := t.TokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get token from credentials: %w", err)
-	}
-
-	// Get token from the current request
-	tokenStr := token.AccessToken
 	if t.UseClientOAuth {
+		// Use client-side access token
+		if accessToken == "" {
+			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header")
+		}
 		tokenStr = string(accessToken)
+	} else {
+		// Use ADC
+		if t.TokenSource == nil {
+			return nil, fmt.Errorf("ADC is missing a valid token source")
+		}
+		token, err := t.TokenSource.Token()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get token from ADC: %w", err)
+		}
+		tokenStr = token.AccessToken
 	}
 
 	// Extract parameters from the map
