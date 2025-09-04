@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/oceanbase"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
 const kind string = "oceanbase-sql"
@@ -126,7 +127,7 @@ type Tool struct {
 }
 
 // Invoke executes the SQL statement with the provided parameters.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -176,13 +177,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 				continue
 			}
 
-			// oceanbase driver returns []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
-			// we'll need to cast it back to string
-			switch colTypes[i].DatabaseTypeName() {
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(val.([]byte))
-			default:
-				vMap[name] = val
+			// oceanbase uses mysql driver
+			vMap[name], err = mysqlcommon.ConvertToType(colTypes[i], val)
+			if err != nil {
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
 			}
 		}
 		out = append(out, vMap)
@@ -213,4 +211,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 // Authorized checks if the tool is authorized for the given auth services.
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

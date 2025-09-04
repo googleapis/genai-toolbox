@@ -11,6 +11,7 @@ an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox]
 to expose your developer assistant tools to a Looker instance:
 
+* [Gemini-CLI][gemini-cli]
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
 * [Visual Studio Code][vscode] (Copilot)
@@ -19,6 +20,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Claude code][claudecode]
 
 [toolbox]: https://github.com/googleapis/genai-toolbox
+[gemini-cli]: #configure-your-mcp-client
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
 [vscode]: #configure-your-mcp-client
@@ -46,19 +48,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -78,6 +80,36 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolb
 ## Configure your MCP Client
 
 {{< tabpane text=true >}}
+{{% tab header="Gemini-CLI" lang="en" %}}
+
+1. Install [Gemini-CLI](https://github.com/google-gemini/gemini-cli#install-globally-with-npm).
+1. Create a directory `.gemini` in your home directory if it doesn't exist.
+1. Create the file `.gemini/settings.json` if it doesn't exist.
+1. Add the following configuration, or add the mcpServers stanza if you already
+   have a `settings.json` with content. Replace the path to the toolbox
+   executable and the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "looker-toolbox": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--stdio", "--prebuilt", "looker"],
+          "env": {
+            "LOOKER_BASE_URL": "https://looker.example.com",
+            "LOOKER_CLIENT_ID": "",
+            "LOOKER_CLIENT_SECRET": "",
+            "LOOKER_VERIFY_SSL": "true"
+          }
+        }
+      }
+    }
+    ```
+
+1. Start Gemini-CLI with the `gemini` command and use the command `/mcp` to see
+   the configured MCP tools.
+{{% /tab %}}
+
 {{% tab header="Claude code" lang="en" %}}
 
 1. Install [Claude
@@ -203,7 +235,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "looker-toolbox": {
           "command": "./PATH/TO/toolbox",
           "args": ["--stdio", "--prebuilt", "looker"],
@@ -269,6 +301,9 @@ The following tools are available to the LLM:
 1. **get_looks**: Return the saved Looks that match a title or description
 1. **run_look**: Run a saved Look and return the data
 1. **make_look**: Create a saved Look in Looker and return the URL
+1. **get_dashboards**: Return the saved dashboards that match a title or description
+1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
+1. **add_dashboard_element**: Add a tile to a dashboard
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

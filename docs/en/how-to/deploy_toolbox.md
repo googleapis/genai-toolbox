@@ -103,6 +103,14 @@ section.
     ```bash
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
+{{< notice note >}}  
+**The `$PORT` Environment Variable**  
+Google Cloud Run dictates the port your application must listen on by setting the
+`$PORT` environment variable inside your container. This value defaults to
+**8080**. Your application's `--port` argument **must** be set to listen on this
+port. If there is a mismatch, the container will fail to start and the
+deployment will time out.  
+{{< /notice >}}
 
 1. Deploy Toolbox to Cloud Run using the following command:
 
@@ -197,3 +205,22 @@ func main() {
 
 
 Now, you can use this client to connect to the deployed Cloud Run instance!
+
+## Troubleshooting
+
+{{< notice note >}}  
+For any deployment or runtime error, the best first step is to check the logs for your service in the Google Cloud Console's Cloud Run section. They often contain the specific error message needed to diagnose the problem.  
+{{< /notice >}}
+
+* **Deployment Fails with "Container failed to start":** This is almost always
+    caused by a port mismatch. Ensure your container's `--port` argument is set to
+    `8080` to match the `$PORT` environment variable provided by Cloud Run.
+
+* **Client Receives Permission Denied Error (401 or 403):** If your client application (e.g., your local SDK) gets a `401 Unauthorized` or `403 Forbidden` error when trying to call your Cloud Run service, it means the client is not properly authenticated as an invoker.
+    * Ensure the user or service account calling the service has the **Cloud Run Invoker** (`roles/run.invoker`) IAM role.
+    * If running locally, make sure your Application Default Credentials are set up correctly by running `gcloud auth application-default login`.
+
+* **Service Fails to Access Secrets (in logs):** If your application starts but the logs show errors like "permission denied" when trying to access Secret Manager, it means the Toolbox service account is missing permissions.
+    * Ensure the `toolbox-identity` service account has the **Secret Manager Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
+
+

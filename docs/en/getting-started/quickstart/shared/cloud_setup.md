@@ -1,3 +1,4 @@
+<!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START cloud_setup] -->
 If you plan to use **Google Cloud’s Vertex AI** with your agent (e.g., using
 `vertexai=True` or a Google GenAI model), follow these one-time setup steps for
