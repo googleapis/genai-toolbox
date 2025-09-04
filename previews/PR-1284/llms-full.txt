@@ -2508,331 +2508,12 @@ Connect your IDE to Cloud SQL for SQL Server using Toolbox.
 Connect your IDE to Firestore using Toolbox.
 
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
-an open protocol for connecting Large Language Models (LLMs) to data sources
-like Firestore. This guide covers how to use [MCP Toolbox for Databases][toolbox]
-to expose your developer assistant tools to a Firestore instance:
-
-* [Cursor][cursor]
-* [Windsurf][windsurf] (Codium)
-* [Visual Studio Code][vscode] (Copilot)
-* [Cline][cline]  (VS Code extension)
-* [Claude desktop][claudedesktop]
-* [Claude code][claudecode]
-* [Gemini CLI][geminicli]
-* [Gemini Code Assist][geminicodeassist]
-
-[toolbox]: https://github.com/googleapis/genai-toolbox
-[cursor]: #configure-your-mcp-client
-[windsurf]: #configure-your-mcp-client
-[vscode]: #configure-your-mcp-client
-[cline]: #configure-your-mcp-client
-[claudedesktop]: #configure-your-mcp-client
-[claudecode]: #configure-your-mcp-client
-[geminicli]: #configure-your-mcp-client
-[geminicodeassist]: #configure-your-mcp-client
-
-## Set up Firestore
-
-1. Create or select a Google Cloud project.
-
-    * [Create a new
-      project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
-    * [Select an existing
-      project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects)
-
-1. [Enable the Firestore
-   API](https://console.cloud.google.com/apis/library/firestore.googleapis.com)
-   for your project.
-
-1. [Create a Firestore
-   database](https://cloud.google.com/firestore/docs/create-database-web-mobile-client-library)
-   if you haven't already.
-
-1. Set up authentication for your local environment.
-
-    * [Install gcloud CLI](https://cloud.google.com/sdk/docs/install)
-    * Run `gcloud auth application-default login` to authenticate
-
-## Install MCP Toolbox
-
-1. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
-   to your OS and CPU architecture. You are required to use Toolbox version
-   V0.10.0+:
-
-   <!-- {x-release-please-start-version} -->
-   {{< tabpane persist=header >}}
-{{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
-{{< /tab >}}
-
-{{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
-{{< /tab >}}
-
-{{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
-{{< /tab >}}
-
-{{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox
-{{< /tab >}}
-{{< /tabpane >}}
-    <!-- {x-release-please-end} -->
-
-1. Make the binary executable:
-
-    ```bash
-    chmod +x toolbox
-    ```
-
-1. Verify the installation:
-
-    ```bash
-    ./toolbox --version
-    ```
-
-## Configure your MCP Client
-
-{{< tabpane text=true >}}
-{{% tab header="Claude code" lang="en" %}}
-
-1. Install [Claude
-   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-1. Create a `.mcp.json` file in your project root if it doesn't exist.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. Restart Claude code to apply the new configuration.
-{{% /tab %}}
-
-{{% tab header="Claude desktop" lang="en" %}}
-
-1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-1. Under the Developer tab, tap Edit Config to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. Restart Claude desktop.
-1. From the new chat screen, you should see a hammer (MCP) icon appear with the
-   new MCP server available.
-{{% /tab %}}
-
-{{% tab header="Cline" lang="en" %}}
-
-1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap
-   the **MCP Servers** icon.
-1. Tap Configure MCP Servers to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. You should see a green active status after the server is successfully
-   connected.
-{{% /tab %}}
-
-{{% tab header="Cursor" lang="en" %}}
-
-1. Create a `.cursor` directory in your project root if it doesn't exist.
-1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
-   Settings > MCP**. You should see a green active status after the server is
-   successfully connected.
-{{% /tab %}}
-
-{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
-
-1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
-   create a `.vscode` directory in your project root if it doesn't exist.
-1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-{{% /tab %}}
-
-{{% tab header="Windsurf" lang="en" %}}
-
-1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
-   Cascade assistant.
-1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-
-    ```
-
-{{% /tab %}}
-{{% tab header="Gemini CLI" lang="en" %}}
-
-1. Install the [Gemini
-   CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1. In your working directory, create a folder named `.gemini`. Within it, create
-   a `settings.json` file.
-1. Add the following configuration, replace the environment variables with your
-   values, and then save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-
-    ```
-
-{{% /tab %}}
-{{% tab header="Gemini Code Assist" lang="en" %}}
-
-1. Install the [Gemini Code
-   Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
-   extension in Visual Studio Code.
-1. Enable Agent Mode in Gemini Code Assist chat.
-1. In your working directory, create a folder named `.gemini`. Within it, create
-   a `settings.json` file.
-1. Add the following configuration, replace the environment variables with your
-   values, and then save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-
-    ```
-
-{{% /tab %}}
-{{< /tabpane >}}
-
-## Use Tools
-
-Your AI tool is now connected to Firestore using MCP. Try asking your AI
-assistant to list collections, get documents, query collections, or manage
-security rules.
-
-The following tools are available to the LLM:
-
-1. **firestore-get-documents**: Gets multiple documents from Firestore by their
-   paths
-1. **firestore-list-collections**: List Firestore collections for a given parent
-   path
-1. **firestore-delete-documents**: Delete multiple documents from Firestore
-1. **firestore-query-collection**: Query documents from a collection with
-   filtering, ordering, and limit options
-1. **firestore-get-rules**: Retrieves the active Firestore security rules for
-   the current project
-1. **firestore-validate-rules**: Validates Firestore security rules syntax and
-   errors
-
-{{< notice note >}}
-Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
-will adapt to the tools available, so this shouldn't affect most users.
-{{< /notice >}}
+<html>
+  <head>
+    <link rel="canonical" href="https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
+    <meta http-equiv="refresh" content="0;url=https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
+  </head>
+</html>
 
 
 # Looker using MCP
@@ -3068,7 +2749,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "looker-toolbox": {
           "command": "./PATH/TO/toolbox",
           "args": ["--stdio", "--prebuilt", "looker"],
@@ -3324,7 +3005,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","mysql","--stdio"],
@@ -3644,7 +3325,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "postgres": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","postgres","--stdio"],
@@ -3951,19 +3632,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-    "mcp" : {
-        "servers": {
-        "cloud-sql-sqlserver": {
-            "command": "./PATH/TO/toolbox",
-            "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
-            "env": {
-              "MSSQL_HOST": "",
-              "MSSQL_PORT": "",
-              "MSSQL_DATABASE": "",
-              "MSSQL_USER": "",
-              "MSSQL_PASSWORD": ""
-            }
-         }
+      "servers": {
+        "mssql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -4056,6 +3735,7 @@ The following tools are available to the LLM:
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
+
 
 # Connect via MCP Client
 How to connect to Toolbox from a MCP Client.
@@ -5612,11 +5292,14 @@ avoiding full table scans or complex filters.
 
 ## Available Tools
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
+- [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
+  Allows conversational interaction with a BigQuery source.
 
 - [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
   Execute structured queries using parameters.
+
+- [`bigquery-forecast`](../tools/bigquery/bigquery-forecast.md)
+  Forecasts time series data in BigQuery.
 
 - [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
   Retrieve metadata for a specific dataset.
@@ -5629,6 +5312,9 @@ avoiding full table scans or complex filters.
 
 - [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
   List tables in a given dataset.
+
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
 
 ### Pre-built Configurations
 
@@ -5680,6 +5366,7 @@ sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -5690,6 +5377,7 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     useClientOAuth: true
+    # location: "US" # Optional: Specifies the location for query jobs.
 ```
 
 ## Reference
@@ -6886,7 +6574,8 @@ a self-signed ssl certificate for the Looker server. Anything other than "true"
 will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
-assigned by the looker server.
+assigned by the looker server. If you are using Looker OAuth you don't need
+these settings
 
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}
@@ -6899,10 +6588,11 @@ instead of hardcoding your secrets into the configuration file.
 | -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
 | kind                 |  string  |     true     | Must be "looker".                                                                         |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
-| client_id            |  string  |     true     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |     true     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |     true     | Whether to check the ssl certificate of the server.                                       |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
@@ -6977,6 +6667,9 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        # Optional TLS and other driver parameters. For example, enable preferred TLS:
+        # queryParams:
+        #     tls: preferred
         queryTimeout: 30s # Optional: query timeout duration
 ```
 
@@ -6996,6 +6689,7 @@ instead of hardcoding your secrets into the configuration file.
 | user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
 | password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
 | queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
 
 
 # Neo4j
@@ -9387,6 +9081,144 @@ In this section, we will download Toolbox, configure our tools in a
 # Looker
 How to get started with Toolbox using Looker.
 
+
+
+# Gemini-CLI and OAuth
+How to connect to Looker from Gemini-CLI with end-user credentials
+
+
+## Overview
+
+Gemini-CLI can be configured to get an OAuth token from Looker, then send this
+token to MCP Toolbox as part of the request. MCP Toolbox can then use this token
+to authentincate with Looker. This means that there is no need to get a Looker
+Client ID and Client Secret. This also means that MCP Toolbox can be set up as a
+shared resource.
+
+This configuration requires Toolbox v0.14.0 or later.
+
+## Step 1: Register the OAuth App in Looker
+
+You first need to register the OAuth application. Refer to the documentation
+[here](https://cloud.google.com/looker/docs/api-cors#registering_an_oauth_client_application).
+You may need to ask an administrator to do this for you.
+
+1. Go to the API Explorer application, locate "Register OAuth App", and press
+   the "Run It" button.
+1. Set the `client_guid` to "gemini-cli".
+1. Set the `redirect_uri` to "http://localhost:7777/oauth/callback".
+1. The `display_name` and `description` can be "Gemini-CLI" or anything
+   meaningful.
+1. Set `enabled` to "true".
+1. Check the box confirming that you understand this API will change data.
+1. Click the "Run" button.
+
+    ![OAuth Registration](./registration.png)
+
+## Step 2: Install and configure Toolbox
+
+In this section, we will download Toolbox and run the Toolbox server.
+
+1. Download the latest version of Toolbox as a binary:
+
+    {{< notice tip >}}
+   Select the
+   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+   corresponding to your OS and CPU architecture.
+    {{< /notice >}}
+    <!-- {x-release-please-start-version} -->
+    ```bash
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    ```
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Create a file `looker_env` with the settings for your
+   Looker instance.
+
+   ```bash
+    export LOOKER_BASE_URL=https://looker.example.com
+    export LOOKER_VERIFY_SSL=true
+   ```
+
+   In some instances you may need to append `:19999` to
+   the LOOKER_BASE_URL.
+
+1. Load the looker_env file into your environment.
+
+   ```bash
+   source looker_env
+   ```
+
+1. Run the Toolbox server using the prebuilt Looker tools.
+
+    ```bash
+    ./toolbox --prebuilt looker
+    ```
+
+    The toolbox server will begin listening on localhost port 5000. Leave it
+    running and continue in another terminal.
+
+    Later, when it is time to shut everything down, you can quit the toolbox
+    server with Ctrl-C in this terminal window.
+
+## Step 3: Configure Gemini-CLI
+
+1. Edit the file `~/.gemini/settings.json`. Add the following, substituting your
+   Looker server host name for `looker.example.com`.
+
+    ```json
+    "mcpServers": {
+        "looker": {
+            "httpUrl": "http://localhost:5000/mcp",
+            "oauth": {
+                "enabled": true,
+                "clientId": "gemini-cli",
+                "authorizationUrl": "https://looker.example.com/auth",
+                "tokenUrl": "https://looker.example.com/api/token",
+                "scopes": ["cors_api"]
+            }
+        }
+    }
+    ```
+
+    The `authorizationUrl` should point to the URL you use to access Looker via the
+    web UI. The `tokenUrl` should point to the URL you use to access Looker via
+    the API. In some cases you will need to use the port number `:19999` after
+    the host name but before the `/api/token` part.
+
+1. Start Gemini-CLI.
+
+1. Authenticate with the command `/mcp auth looker`. Gemini-CLI will open up a
+   browser where you will confirm that you want to access Looker with your
+   account.
+
+   ![Authorizing](./authorize.png)
+
+   ![Authenticated](./authenticated.png)
+
+1. Use Gemini-CLI with your tools.
+
+## Using Toolbox as a Shared Service
+
+Toolbox can be run on another server as a shared service accessed by multiple
+users. We strongly recommend running toolbox behind a web proxy such as `nginx`
+which will provide SSL encryption. Google Cloud Run is another good way to run
+toolbox. You will connect to a service like `https://toolbox.example.com/mcp`.
+The proxy server will handle the SSL encryption and certificates. Then it will
+foward the requests to `http://localhost:5000/mcp` running in that environment.
+The details of the config are beyond the scope of this document, but will be
+familiar to your system administrators.
+
+To use the shared service, just change the `localhost:5000` in the `httpUrl` in
+`~/.gemini/settings.json` to the host name and possibly the port of the shared
+service.
 
 
 # Quickstart (MCP with Looker and Gemini-CLI)
