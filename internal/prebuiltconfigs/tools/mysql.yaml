@@ -24,7 +24,7 @@ sources:
     # Provide a YAML-encoded map in MYSQL_QUERY_PARAMS, for example:
     #   export MYSQL_QUERY_PARAMS="{tls: preferred, charset: utf8mb4}"
     # When the variable is empty/undefined, queryParams will be treated as nil.
-    queryParams: ${MYSQL_QUERY_PARAMS}
+    queryParams: ${MYSQL_QUERY_PARAMS:}
     queryTimeout: 30s # Optional
 tools:
   execute_sql:
