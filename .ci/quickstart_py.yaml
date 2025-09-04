@@ -6,7 +6,7 @@ substitutions:
   _TOOLS_YAML_SECRET: "quickstart-testing"
   _API_KEY_SECRET: "quickstart_testing_api_key"
   _DB_PASS_SECRET: "quickstart-testing-pg-pass"
-  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest" # Pin to version
+  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest"
   _GCP_PROJECT_NUMBER: "107716898620"
 
 steps:
