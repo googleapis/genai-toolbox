@@ -81,8 +81,6 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					},
 					ProjectPayload: "{ name: 1, age: 1 }\n",
 					ProjectParams:  tools.Parameters{},
-					SortPayload:    "{ timestamp: -1 }\n",
-					SortParams:     tools.Parameters{},
 				},
 			},
 		},

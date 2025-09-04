@@ -57,8 +57,6 @@ type Config struct {
 	FilterParams   tools.Parameters `yaml:"filterParams" validate:"required"`
 	ProjectPayload string           `yaml:"projectPayload"`
 	ProjectParams  tools.Parameters `yaml:"projectParams"`
-	SortPayload    string           `yaml:"sortPayload"`
-	SortParams     tools.Parameters `yaml:"sortParams"`
 }
 
 // validate interface
@@ -82,7 +80,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
+	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams)
 
 	// Verify no duplicate parameter names
 	err := tools.CheckDuplicateParameters(allParameters)
@@ -114,8 +112,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		FilterParams:   cfg.FilterParams,
 		ProjectPayload: cfg.ProjectPayload,
 		ProjectParams:  cfg.ProjectParams,
-		SortPayload:    cfg.SortPayload,
-		SortParams:     cfg.SortParams,
 		AllParams:      allParameters,
 		database:       s.Client.Database(cfg.Database),
 		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
@@ -136,8 +132,6 @@ type Tool struct {
 	FilterParams   tools.Parameters `yaml:"filterParams"`
 	ProjectPayload string           `yaml:"projectPayload"`
 	ProjectParams  tools.Parameters `yaml:"projectParams"`
-	SortPayload    string           `yaml:"sortPayload"`
-	SortParams     tools.Parameters `yaml:"sortParams"`
 	AllParams      tools.Parameters `yaml:"allParams"`
 
 	database    *mongo.Database
@@ -145,33 +139,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMap map[string]any) (*options.FindOneOptions, error) {
-	opts := options.FindOne()
-
-	sort := bson.M{}
-	for _, p := range sortParameters {
-		sort[p.GetName()] = paramsMap[p.GetName()]
-	}
-	opts = opts.SetSort(sort)
-
-	if len(projectPayload) == 0 {
-		return opts, nil
-	}
-
-	result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("error populating project payload: %s", err)
-	}
-
-	var projection any
-	err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
-	}
-	opts = opts.SetProjection(projection)
-
-	return opts, nil
-}
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
@@ -182,9 +149,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
 
-	opts, err := getOptions(t.SortParams, t.ProjectPayload, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("error populating options: %s", err)
+	opts := options.FindOne()
+	if len(t.ProjectPayload) > 0 {
+		result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", t.ProjectPayload, paramsMap)
+		if err != nil {
+			return nil, fmt.Errorf("error populating project payload: %s", err)
+		}
+		var projection any
+		err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling projection: %s", err)
+		}
+		opts = opts.SetProjection(projection)
 	}
 
 	var filter = bson.D{}
