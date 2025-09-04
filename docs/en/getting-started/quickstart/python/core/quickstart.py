@@ -70,6 +70,7 @@ async def main():
             )
             history.append(response.candidates[0].content)
             function_response_parts = []
+
             if response.function_calls:
                 for function_call in response.function_calls:
                     fn_name = function_call.name
@@ -111,4 +112,5 @@ async def main():
             else:
                 print(response.text)
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
