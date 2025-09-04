@@ -6,11 +6,11 @@ substitutions:
   _TOOLS_YAML_SECRET: "quickstart-testing"
   _API_KEY_SECRET: "quickstart_testing_api_key"
   _DB_PASS_SECRET: "quickstart-testing-pg-pass"
-  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest" # Pin to version
-  _GCP_PROJECT_NUMBER: "107716898620"
+  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest" 
+  _GCP_PROJECT_NUMBER: "your-project-number"
 
 steps:
-  # Step 0: Start Cloud SQL Auth Proxy
+  # Step 0: Start Cloud SQL Auth Proxy for the .ci/quickstart_py.sh script
   - name: 'gcr.io/cloud-builders/docker'
     id: 'start-proxy'
     entrypoint: 'bash'
@@ -21,18 +21,9 @@ steps:
         docker run -d --name=cloudsqlproxy --network=cloudbuild \
           gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
           /cloud_sql_proxy \
-            -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
-            -log-level debug
-        echo "Cloud SQL Proxy container starting..."
-        sleep 10
-
-        if ! docker ps | grep -w cloudsqlproxy; then
-          echo "Error: Cloud SQL Proxy failed to stay running!"
-          docker logs cloudsqlproxy || echo "Failed to get proxy logs."
-          exit 1
-        else
-          echo "Cloud SQL Proxy appears to be running."
-        fi
+            -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432
+        echo "Cloud SQL Proxy container starting for test script..."
+        sleep 5
 
   # Step 1: Prepare config and Start the toolbox server
   - name: 'gcr.io/cloud-builders/docker'
@@ -55,17 +46,15 @@ steps:
         cat /workspace/config/tools.yaml
         echo "--- end of tools.yaml ---"
 
-        # Start the toolbox container
         docker run -d --name=toolbox --network=cloudbuild \
-          -v /workspace/config/tools.yaml:/config/tools.yaml \
-          -e DB_PASSWORD="$${DB_PASSWORD}" \
+          -v /workspace/config:/config \
           '${_TOOLBOX_IMAGE}' \
-          bash -c "mkdir -p /config && /toolbox toolbox --tools-file /config/tools.yaml --address 0.0.0.0"
+          toolbox --tools-file /config/tools.yaml --address 0.0.0.0
 
         echo "Docker run command for toolbox issued."
-        sleep 5
+        sleep 10
         docker ps -a
-    secretEnv: ['TOOLS_YAML_CONTENT', 'DB_PASSWORD']
+    secretEnv: ['TOOLS_YAML_CONTENT']
     waitFor: ['start-proxy']
 
   # Step 2: Wait for Toolbox Server
