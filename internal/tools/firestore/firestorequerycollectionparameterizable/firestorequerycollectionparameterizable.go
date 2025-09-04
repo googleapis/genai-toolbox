@@ -63,7 +63,6 @@ const (
 	errLimitParseFailed      = "failed to parse limit value '%s': %w"
 	errAnalyzeQueryTemplateParseFailed      = "failed to parse analyzeQuery template value '%s': %w"
 	errAnalyzeQueryParseFailed = "failed to parse analyzeQuery value '%s': expected 'true' or 'false'"
-	errOrderByFieldEmpty     = "orderBy field cannot be empty after template processing"
 	errSelectFieldParseFailed = "failed to parse select field: %w"
 )
 
@@ -186,13 +185,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-// FilterConfig represents a filter for the query #TODO- might want to remove this
-type FilterConfig struct {
-	Field string      `json:"field"`
-	Op    string      `json:"op"`
-	Value interface{} `json:"value"`
-}
-
 // SimplifiedFilter represents the simplified filter format
 type SimplifiedFilter struct {
 	And   []SimplifiedFilter `json:"and,omitempty"`
@@ -200,27 +192,6 @@ type SimplifiedFilter struct {
 	Field string             `json:"field,omitempty"`
 	Op    string             `json:"op,omitempty"`
 	Value interface{}        `json:"value,omitempty"`
-}
-
-// Validate checks if the filter configuration is valid
-func (f *FilterConfig) Validate() error {
-	if f.Field == "" {
-		return fmt.Errorf("filter field cannot be empty")
-	}
-
-	if !validOperators[f.Op] {
-		ops := make([]string, 0, len(validOperators))
-		for op := range validOperators {
-			ops = append(ops, op)
-		}
-		return fmt.Errorf(errInvalidOperator, f.Op, ops)
-	}
-
-	if f.Value == nil {
-		return fmt.Errorf(errMissingFilterValue, f.Field)
-	}
-
-	return nil
 }
 
 // OrderByConfig represents ordering configuration
