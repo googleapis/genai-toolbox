@@ -611,6 +611,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
+			want:          "[{\"f0_\":1}]",
 			isErr:         false,
 		},
 		{
