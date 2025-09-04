@@ -43,6 +43,7 @@ import (
 
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygetdatasetinfo"
@@ -51,6 +52,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylisttableids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
@@ -120,6 +123,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
@@ -265,8 +269,9 @@ type ToolsFile struct {
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
+// also support ${ENV_NAME:default_value}.
 func parseEnv(input string) (string, error) {
-	re := regexp.MustCompile(`\$\{(\w+)\}`)
+	re := regexp.MustCompile(`\$\{(\w+)(:(\w*))?\}`)
 
 	var err error
 	output := re.ReplaceAllStringFunc(input, func(match string) string {
@@ -276,6 +281,9 @@ func parseEnv(input string) (string, error) {
 		variableName := parts[1]
 		if value, found := os.LookupEnv(variableName); found {
 			return value
+		}
+		if parts[2] != "" {
+			return parts[3]
 		}
 		err = fmt.Errorf("environment variable not found: %q", variableName)
 		return ""
@@ -830,7 +838,7 @@ func run(cmd *Command) error {
 		}
 		cmd.logger.InfoContext(ctx, "Server ready to serve!")
 		if cmd.cfg.UI {
-			cmd.logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://localhost:%d/ui", cmd.cfg.Port))
+			cmd.logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://%s:%d/ui", cmd.cfg.Address, cmd.cfg.Port))
 		}
 
 		go func() {

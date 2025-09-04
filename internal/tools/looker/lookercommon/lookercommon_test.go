@@ -31,6 +31,8 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 
 	// Helper function to create string pointers
 	stringPtr := func(s string) *string { return &s }
+	stringArrayPtr := func(s []string) *[]string { return &s }
+	boolPtr := func(b bool) *bool { return &b }
 
 	tcs := []struct {
 		desc   string
@@ -41,20 +43,27 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 			desc: "field with all properties including description",
 			fields: []v4.LookmlModelExploreField{
 				{
-					Name:        stringPtr("dimension_name"),
-					Type:        stringPtr("string"),
-					Label:       stringPtr("Dimension Label"),
-					LabelShort:  stringPtr("Dim Label"),
-					Description: stringPtr("This is a dimension description"),
+					Name:             stringPtr("dimension_name"),
+					Type:             stringPtr("string"),
+					Label:            stringPtr("Dimension Label"),
+					LabelShort:       stringPtr("Dim Label"),
+					Description:      stringPtr("This is a dimension description"),
+					Suggestable:      boolPtr(true),
+					SuggestExplore:   stringPtr("explore"),
+					SuggestDimension: stringPtr("dimension"),
+					Suggestions:      stringArrayPtr([]string{"foo", "bar", "baz"}),
 				},
 			},
 			want: []any{
 				map[string]any{
-					"name":        "dimension_name",
-					"type":        "string",
-					"label":       "Dimension Label",
-					"label_short": "Dim Label",
-					"description": "This is a dimension description",
+					"name":              "dimension_name",
+					"type":              "string",
+					"label":             "Dimension Label",
+					"label_short":       "Dim Label",
+					"description":       "This is a dimension description",
+					"suggest_explore":   "explore",
+					"suggest_dimension": "dimension",
+					"suggestions":       []string{"foo", "bar", "baz"},
 				},
 			},
 		},
@@ -132,7 +141,7 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, err := lookercommon.ExtractLookerFieldProperties(ctx, &tc.fields)
+			got, err := lookercommon.ExtractLookerFieldProperties(ctx, &tc.fields, true)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -150,7 +159,7 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	got, err := lookercommon.ExtractLookerFieldProperties(ctx, nil)
+	got, err := lookercommon.ExtractLookerFieldProperties(ctx, nil, true)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
