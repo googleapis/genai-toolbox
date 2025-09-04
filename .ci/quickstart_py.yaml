@@ -6,7 +6,7 @@ substitutions:
   _TOOLS_YAML_SECRET: "quickstart-testing"
   _API_KEY_SECRET: "quickstart_testing_api_key"
   _DB_PASS_SECRET: "quickstart-testing-pg-pass"
-  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest"
+  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest" # Pin to version
   _GCP_PROJECT_NUMBER: "107716898620"
 
 steps:
@@ -24,7 +24,7 @@ steps:
             -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
             -log-level debug
         echo "Cloud SQL Proxy container starting..."
-        sleep 10 # Increased wait time for proxy to stabilize or fail
+        sleep 10
 
         if ! docker ps | grep -w cloudsqlproxy; then
           echo "Error: Cloud SQL Proxy failed to stay running!"
@@ -50,18 +50,17 @@ steps:
           exit 1
         fi
 
-        # *** Restored writing the secret to a file ***
         echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
         echo "--- tools.yaml content ---"
         cat /workspace/config/tools.yaml
         echo "--- end of tools.yaml ---"
 
-        # Start the toolbox container, connected to the proxy network
+        # Start the toolbox container
         docker run -d --name=toolbox --network=cloudbuild \
-          -v /workspace/config:/config \
+          -v /workspace/config/tools.yaml:/config/tools.yaml \
           -e DB_PASSWORD="$${DB_PASSWORD}" \
           '${_TOOLBOX_IMAGE}' \
-          toolbox --tools-file /config/tools.yaml --address 0.0.0.0
+          bash -c "mkdir -p /config && /toolbox toolbox --tools-file /config/tools.yaml --address 0.0.0.0"
 
         echo "Docker run command for toolbox issued."
         sleep 5
