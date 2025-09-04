@@ -182,7 +182,7 @@ The tool supports all Firestore native JSON value types:
 | Type | Format | Example |
 |------|--------|---------|
 | String | `{"stringValue": "text"}` | `{"stringValue": "{{.name}}"}` |
-| Integer | `{"integerValue": "123"}` or `{"integerValue": 123}` | `{"integerValue": "{{.age}}"}` |
+| Integer | `{"integerValue": "123"}` or `{"integerValue": 123}` | `{"integerValue": "{{.age}}"}` or `{"integerValue": {{.age}}}` |
 | Double | `{"doubleValue": 45.67}` | `{"doubleValue": {{.price}}}` |
 | Boolean | `{"booleanValue": true}` | `{"booleanValue": {{.active}}}` |
 | Null | `{"nullValue": null}` | `{"nullValue": null}` |
