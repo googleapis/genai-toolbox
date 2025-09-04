@@ -54,8 +54,7 @@ are inactive for more than 30 days may be closed.
 Please create an
 [issue](https://github.com/googleapis/genai-toolbox/issues) before
 implementation to ensure we can accept the contribution and no duplicated work. This issue
-should include an overview of the API design. 
-If you have any questions, reach out on our
+should include an overview of the API design. If you have any questions, reach out on our
 [Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team.  
 
 > [!NOTE]
