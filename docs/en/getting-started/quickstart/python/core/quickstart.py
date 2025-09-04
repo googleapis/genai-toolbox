@@ -48,7 +48,7 @@ async def run_application():
         genai_tools = [
             Tool(
                 function_declarations=[
-                    FunctionDeclaration.from_callable(callable=tool)
+                    FunctionDeclaration.from_callable(tool)
                 ]
             )
             for tool in toolbox_tools
