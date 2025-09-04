@@ -1,19 +1,21 @@
+import asyncio
+import os
+
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
 from google.genai import types
-from toolbox_core import ToolboxSyncClient
-
-import asyncio
-import os
+from toolbox_core import ToolboxSyncClient # Corrected import
 
 # TODO(developer): replace this with your Google API key
-
-os.environ['GOOGLE_API_KEY'] = 'your-api-key'
+os.environ['GOOGLE_API_KEY']
 
 async def main():
-  with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
+  host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
+  toolbox_url = f"http://{host}:5000"
+
+  with ToolboxSyncClient(toolbox_url) as toolbox_client:
 
       prompt = """
         You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -35,7 +37,7 @@ async def main():
 
       session_service = InMemorySessionService()
       artifacts_service = InMemoryArtifactService()
-      session = await session_service.create_session(
+      session = session_service.create_session(
           state={}, app_name='hotel_agent', user_id='123'
       )
       runner = Runner(
