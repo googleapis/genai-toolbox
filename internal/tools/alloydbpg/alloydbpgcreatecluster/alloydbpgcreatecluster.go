@@ -118,32 +118,32 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
     if !ok || project == "" {
-        return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a non-empty string", project)
+        return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
     }
 
     clusterID, ok := paramsMap["clusterId"].(string)
     if !ok || clusterID == "" {
-        return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a non-empty string", clusterID)
+        return nil, fmt.Errorf("invalid or missing 'clusterId' parameter; expected a non-empty string")
     }
 
     password, ok := paramsMap["password"].(string)
     if !ok || password == "" {
-        return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a non-empty string", password)
+        return nil, fmt.Errorf("invalid or missing 'password' parameter; expected a non-empty string")
     }
 
 	location, ok := paramsMap["location"].(string)
     if !ok {
-        return nil, fmt.Errorf("invalid '%s' parameter; expected a string", location)
+        return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
     }
 
     network, ok := paramsMap["network"].(string)
     if !ok {
-        return nil, fmt.Errorf("invalid '%s' parameter; expected a string", network)
+        return nil, fmt.Errorf("invalid 'network' parameter; expected a string")
     }
 
     user, ok := paramsMap["user"].(string)
     if !ok {
-        return nil, fmt.Errorf("invalid '%s' parameter; expected a string", user)
+        return nil, fmt.Errorf("invalid 'user' parameter; expected a string")
     }
 
 	urlString := fmt.Sprintf("%s/v1/projects/%s/locations/%s/clusters?clusterId=%s", t.BaseURL, project, location, clusterID)

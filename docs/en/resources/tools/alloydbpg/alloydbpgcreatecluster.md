@@ -19,6 +19,8 @@ The tool takes the following input parameters:
 	* `user` (optional): The name for the initial superuser. Default: `postgres`. The initial database will always be named 'postgres'.
     * `password` : A secure password for the initial 'postgres' user or the custom user provided.
 
+> **Note**
+> This tool does not have a `source`.
 ## Example
 
 ```yaml

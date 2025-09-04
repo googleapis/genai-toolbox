@@ -51,6 +51,67 @@ func TestParseFromYaml(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with auth required",
+			in: `
+			tools:
+				create-my-cluster-auth:
+					kind: alloydb-pg-create-cluster
+					description: some description
+					authRequired: 
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"create-my-cluster-auth": alloydbpgcreatecluster.Config{
+					Name:         "create-my-cluster-auth",
+					Kind:         "alloydb-pg-create-cluster",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+				},
+			},
+		},
+		{
+			desc: "with base url",
+			in: `
+			tools:
+				create-my-cluster-baseurl:
+					kind: alloydb-pg-create-cluster
+					description: some description
+					baseURL: "https://example.com"
+			`,
+			want: server.ToolConfigs{
+				"create-my-cluster-baseurl": alloydbpgcreatecluster.Config{
+					Name:         "create-my-cluster-baseurl",
+					Kind:         "alloydb-pg-create-cluster",
+					Description:  "some description",
+					BaseURL:      "https://example.com",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "with auth and base url",
+			in: `
+			tools:
+				create-my-cluster-all:
+					kind: alloydb-pg-create-cluster
+					description: some description
+					authRequired: 
+						- my-google-auth-service
+						- other-auth-service
+					baseURL: "https://example.com"
+			`,
+			want: server.ToolConfigs{
+				"create-my-cluster-all": alloydbpgcreatecluster.Config{
+					Name:         "create-my-cluster-all",
+					Kind:         "alloydb-pg-create-cluster",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					BaseURL:      "https://example.com",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

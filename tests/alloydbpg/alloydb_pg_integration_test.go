@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"sync"
@@ -32,6 +31,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/alloydbconn"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -340,14 +340,14 @@ func TestAlloyDBPgCreateCluster(t *testing.T) {
 		requestBody    string
 		wantStatusCode int
 		mockResponse   mockResponse 
-		wantResult     map[string]any
+		want     map[string]any
 	}{
 		{
 			name:           "create cluster success",
 			requestBody:    fmt.Sprintf(`{"project": "%s", "location": "%s", "clusterId": "test", "password": "p"}`, "test-project", "test-location"),
 			wantStatusCode: http.StatusOK,
 			mockResponse:   mockResponse{statusCode: http.StatusOK, body: `{"done":false,"metadata":{"@type":"type.googleapis.com/google.cloud.alloydb.v1.OperationMetadata","apiVersion":"v1","createTime":"2025-09-04T05:38:38.055667814Z","requestedCancellation":false,"target":"projects/test-project/locations/test-location/clusters/test-create-cluster","verb":"create"},"name":"projects/test-project/locations/test-location/operations/test-operation"}`},
-			wantResult:     map[string]any{"done": false, "metadata": map[string]any{"@type": "type.googleapis.com/google.cloud.alloydb.v1.OperationMetadata", "apiVersion": "v1", "createTime": "2025-09-04T05:38:38.055667814Z", "requestedCancellation": false, "target": "projects/test-project/locations/test-location/clusters/test-create-cluster", "verb": "create"}, "name": "projects/test-project/locations/test-location/operations/test-operation"},
+			want:     map[string]any{"done": false, "metadata": map[string]any{"@type": "type.googleapis.com/google.cloud.alloydb.v1.OperationMetadata", "apiVersion": "v1", "createTime": "2025-09-04T05:38:38.055667814Z", "requestedCancellation": false, "target": "projects/test-project/locations/test-location/clusters/test-create-cluster", "verb": "create"}, "name": "projects/test-project/locations/test-location/operations/test-operation"},
 		},
 		{
 			name:           "create cluster failure",
@@ -362,7 +362,7 @@ func TestAlloyDBPgCreateCluster(t *testing.T) {
 			mockResponse:   mockResponse{statusCode: http.StatusBadRequest, body: ""},
 		},
 		{
-			name:           "fcreate cluster with missing clusterId",
+			name:           "create cluster with missing clusterId",
 			requestBody:    `{"project": "p1", "location": "l1", "password": "p1"}`,
 			wantStatusCode: http.StatusBadRequest,
 			mockResponse:   mockResponse{statusCode: http.StatusBadRequest, body: ""},
@@ -396,7 +396,7 @@ func TestAlloyDBPgCreateCluster(t *testing.T) {
 				t.Fatalf("expected status %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
 			}
 
-			if tc.wantResult != nil {
+			if tc.want != nil {
 				var result struct {
 					Result string `json:"result"`
 				}
@@ -409,8 +409,8 @@ func TestAlloyDBPgCreateCluster(t *testing.T) {
 					t.Fatalf("failed to unmarshal nested result: %v", err)
 				}
 
-				if !reflect.DeepEqual(got, tc.wantResult) {
-					t.Fatalf("unexpected result: got %+v, want %+v", got, tc.wantResult)
+				if diff := cmp.Diff(got, tc.want); diff != "" {
+					t.Fatalf("got %v, want %v", got, tc.want)
 				}
 			}
 		})
