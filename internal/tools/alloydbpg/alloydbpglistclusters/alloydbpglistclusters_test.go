@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistclusters_test
+package alloydbpglistclusters_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydblistclusters "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
+	alloydbpglistclusters "github.com/googleapis/genai-toolbox/internal/tools/alloydbpg/alloydbpglistclusters"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -39,13 +39,13 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				list-my-clusters:
-					kind: alloydb-list-clusters
+					kind: alloydb-pg-list-clusters
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"list-my-clusters": alloydblistclusters.Config{
+				"list-my-clusters": alloydbpglistclusters.Config{
 					Name:         "list-my-clusters",
-					Kind:         "alloydb-list-clusters",
+					Kind:         "alloydb-pg-list-clusters",
 					Description:  "some description",
 					AuthRequired: []string{},
 				},

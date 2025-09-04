@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistclusters
+package alloydbpglistclusters
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const kind string = "alloydb-list-clusters"
+const kind string = "alloydb-pg-list-clusters"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

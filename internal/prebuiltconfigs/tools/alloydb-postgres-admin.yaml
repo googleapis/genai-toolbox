@@ -129,7 +129,7 @@ tools:
         description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
         default: ""
   alloydb-list-clusters:
-      kind: alloydb-list-clusters
+      kind: alloydb-pg-list-clusters
       description: "Lists all AlloyDB clusters in a given project and location."
   alloydb-list-instances:
     kind: http
