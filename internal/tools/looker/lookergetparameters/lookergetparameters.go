@@ -82,12 +82,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -104,6 +105,7 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name             string `yaml:"name"`
 	Kind             string `yaml:"kind"`
+	UseClientOAuth   bool
 	Client           *v4.LookerSDK
 	ApiSettings      *rtl.ApiSettings
 	AuthRequired     []string         `yaml:"authRequired"`
@@ -124,12 +126,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	fields := lookercommon.ParametersFields
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	req := v4.RequestLookmlModelExplore{
 		LookmlModelName: *model,
 		ExploreName:     *explore,
 		Fields:          &fields,
 	}
-	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
+	resp, err := sdk.LookmlModelExplore(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_parameters request: %w", err)
 	}
@@ -164,5 +170,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }
