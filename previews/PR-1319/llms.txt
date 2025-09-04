@@ -73,8 +73,8 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
-  - [AlloyDB](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/alloydb/): AlloyDB Control Plane Tools.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
+  - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/alloydbpg/): Tools that work with AlloyDB Postgres Sources.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
@@ -109,6 +109,7 @@ Samples and guides for using Toolbox.
   - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1319/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1319/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.
 - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1319/samples/looker/): How to get started with Toolbox using Looker.
+  - [Gemini-CLI and OAuth](https://googleapis.github.io/genai-toolbox/previews/PR-1319/samples/looker/looker_gemini_oauth/): How to connect to Looker from Gemini-CLI with end-user credentials
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-1319/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-1319/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
 
