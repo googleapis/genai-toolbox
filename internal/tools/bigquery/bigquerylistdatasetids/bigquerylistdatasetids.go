@@ -44,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
+	BigQueryProject() string
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
@@ -82,7 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project to list dataset ids.")
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), "The Google Cloud project to list dataset ids.")
 
 	parameters := tools.Parameters{projectParameter}
 

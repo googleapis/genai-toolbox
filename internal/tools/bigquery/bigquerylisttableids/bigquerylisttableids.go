@@ -47,6 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	BigQueryProject() string
 	UseClientAuthorization() bool
 }
 
@@ -83,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), "The Google Cloud project ID containing the dataset.")
 	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to list table ids.")
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
@@ -157,7 +158,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("failed to iterate through tables in dataset %s.%s: %w", t.Client.Project(), datasetId, err)
+			return nil, fmt.Errorf("failed to iterate through tables in dataset %s.%s: %w", bqClient.Project(), datasetId, err)
 		}
 
 		// Remove leading and trailing quotes

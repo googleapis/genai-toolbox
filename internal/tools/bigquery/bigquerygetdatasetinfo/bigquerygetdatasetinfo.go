@@ -44,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
+	BigQueryProject() string
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
@@ -82,7 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project ID containing the dataset.")
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), "The Google Cloud project ID containing the dataset.")
 	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to get metadata information.")
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
@@ -150,7 +151,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	metadata, err := dsHandle.Metadata(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, t.Client.Project(), err)
+		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, bqClient.Project(), err)
 	}
 
 	return metadata, nil

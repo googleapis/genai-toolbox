@@ -73,7 +73,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -436,9 +436,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-list-table-ids",
 		"source":      "my-client-auth-source",
 		"description": "Tool to list table within a dataset",
-		"authRequired": []string{
-			"my-google-auth",
-		},
 	}
 	tools["my-get-table-info-tool"] = map[string]any{
 		"kind":        "bigquery-get-table-info",
@@ -1235,14 +1232,14 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 		},
 		{
 			name:          "Invoke my-client-auth-get-dataset-info-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dataset-ids-tool/invoke",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-info-tool/invoke",
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          datasetInfoWant,
 			isErr:         false,
 		},
 		{
-			name:          "Invokemy-client-auth-get-dataset-info-tool without auth token",
+			name:          "Invoke my-client-auth-get-dataset-info-tool without auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-info-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
