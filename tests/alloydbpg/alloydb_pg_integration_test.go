@@ -297,7 +297,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(h.response.statusCode)
-	w.Write([]byte(h.response.body))
+	if _, err := w.Write([]byte(h.response.body)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *handler) setResponse(res mockResponse) {
