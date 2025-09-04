@@ -205,7 +205,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	tableNames, ok := paramsMap["table_names"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", tableNames)
+		return nil, fmt.Errorf("invalid 'table_names' parameter; expected a string")
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
     if outputFormat != "simple" && outputFormat != "detailed" {
