@@ -56,7 +56,8 @@ steps:
           exit 1
         fi
 
-        # Start the toolbox container
+        echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
+        
         docker run -d --name=toolbox --network=cloudbuild \
           -v /workspace/config:/config \
           '${_TOOLBOX_IMAGE}' \
