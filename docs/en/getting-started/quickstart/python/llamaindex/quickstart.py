@@ -46,7 +46,9 @@ async def main():
     # )
 
     # Load the tools from the Toolbox server
-    async with ToolboxClient("http://127.0.0.1:5000") as client:
+    host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
+    toolbox_url = f"http://{host}:5000"
+    async with ToolboxClient(toolbox_url) as toolbox_client:
         tools = await client.aload_toolset()
 
         agent = AgentWorkflow.from_tools_or_functions(
