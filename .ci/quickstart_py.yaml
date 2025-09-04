@@ -106,25 +106,10 @@ steps:
       - -c
       - |
         set -ex
-        # Install psql client
-        apt-get update && apt-get install -y postgresql-client
+        apt-get update && apt-get install -y postgresql-client python3-venv
         chmod +x .ci/quickstart_py.sh
-
-        # *** DEBUG PASSWORD ENV VAR ***
-        if [ -z "$${DB_PASSWORD}" ]; then
-          echo "Error: DB_PASSWORD is NOT set."
-        else
-          echo "DB_PASSWORD is set."
-          PW_LEN=$(echo -n "$${DB_PASSWORD}" | wc -c)
-          echo "DB_PASSWORD length: $${PW_LEN}"
-          FIRST_CHAR=$(echo -n "$${DB_PASSWORD}" | head -c 1)
-          LAST_CHAR=$(echo -n "$${DB_PASSWORD}" | tail -c 1)
-          echo "DB_PASSWORD starts with: $${FIRST_CHAR}, ends with: $${LAST_CHAR}"
-        fi
         export PGPASSWORD="$${DB_PASSWORD}"
-        # *** END DEBUG ***
-
-        # Run the script
+        export GOOGLE_API_KEY="$${GOOGLE_API_KEY}"
         .ci/quickstart_py.sh
     env:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
@@ -134,7 +119,6 @@ steps:
       - 'TOOLBOX_PORT=5000'
       - 'PGHOST=cloudsqlproxy'
       - 'PGPORT=5432'
-      # PGPASSWORD is set in the script from DB_PASSWORD
     secretEnv: ['GOOGLE_API_KEY', 'DB_PASSWORD']
     waitFor: ['wait-for-server']
 
