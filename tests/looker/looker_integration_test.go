@@ -150,9 +150,10 @@ func TestLooker(t *testing.T) {
 	tests.RunToolGetTestByName(t, "get_models",
 		map[string]any{
 			"get_models": map[string]any{
-				"description":  "Simple tool to test end to end functionality.",
-				"authRequired": []any{},
-				"parameters":   []any{},
+				"description":    "Simple tool to test end to end functionality.",
+				"authRequired":   []any{},
+				"parameters":     []any{},
+				"useClientOAuth": false,
 			},
 		},
 	)
@@ -170,14 +171,16 @@ func TestLooker(t *testing.T) {
 						"type":        "string",
 					},
 				},
+				"useClientOAuth": false,
 			},
 		},
 	)
 	tests.RunToolGetTestByName(t, "get_dimensions",
 		map[string]any{
 			"get_dimensions": map[string]any{
-				"description":  "Simple tool to test end to end functionality.",
-				"authRequired": []any{},
+				"description":    "Simple tool to test end to end functionality.",
+				"authRequired":   []any{},
+				"useClientOAuth": false,
 				"parameters": []any{
 					map[string]any{
 						"authSources": []any{},
@@ -200,8 +203,9 @@ func TestLooker(t *testing.T) {
 	tests.RunToolGetTestByName(t, "get_measures",
 		map[string]any{
 			"get_measures": map[string]any{
-				"description":  "Simple tool to test end to end functionality.",
-				"authRequired": []any{},
+				"description":    "Simple tool to test end to end functionality.",
+				"authRequired":   []any{},
+				"useClientOAuth": false,
 				"parameters": []any{
 					map[string]any{
 						"authSources": []any{},

@@ -102,8 +102,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Statement:          cfg.Statement,
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigtableClient(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		manifest: tools.Manifest{
+			Description:    cfg.Description,
+			Parameters:     paramManifest,
+			AuthRequired:   cfg.AuthRequired,
+			UseClientOAuth: false},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }

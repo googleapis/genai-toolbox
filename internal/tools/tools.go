@@ -77,9 +77,10 @@ type Tool interface {
 
 // Manifest is the representation of tools sent to Client SDKs.
 type Manifest struct {
-	Description  string              `json:"description"`
-	Parameters   []ParameterManifest `json:"parameters"`
-	AuthRequired []string            `json:"authRequired"`
+	Description    string              `json:"description"`
+	Parameters     []ParameterManifest `json:"parameters"`
+	AuthRequired   []string            `json:"authRequired"`
+	UseClientOAuth bool                `json:"useClientOAuth"`
 }
 
 // Definition for a tool the MCP client can call.

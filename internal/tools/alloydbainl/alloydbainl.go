@@ -133,7 +133,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		NLConfig:     cfg.NLConfig,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.PostgresPool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired, UseClientOAuth: false},
 		mcpManifest:  mcpManifest,
 	}
 
