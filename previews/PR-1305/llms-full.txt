@@ -806,380 +806,26 @@ npm install @google/genai
     {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
 
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ToolboxClient } from "@toolbox-sdk/core";
-import { tool } from "@langchain/core/tools";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { MemorySaver } from "@langchain/langgraph";
-
-// Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
-
-const prompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-async function main() {
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
-  });
-
-  const client = new ToolboxClient("http://127.0.0.1:5000");
-  const toolboxTools = await client.loadToolset("my-toolset");
-
-  // Define the basics of the tool: name, description, schema and core logic
-  const getTool = (toolboxTool) => tool(toolboxTool, {
-    name: toolboxTool.getName(),
-    description: toolboxTool.getDescription(),
-    schema: toolboxTool.getParamSchema()
-  });
-  const tools = toolboxTools.map(getTool);
-
-  const agent = createReactAgent({
-    llm: model,
-    tools: tools,
-    checkpointer: new MemorySaver(),
-    systemPrompt: prompt,
-  });
-
-  const langGraphConfig = {
-    configurable: {
-        thread_id: "test-thread",
-    },
-  };
-
-  for (const query of queries) {
-    const agentOutput = await agent.invoke(
-    {
-        messages: [
-        {
-            role: "user",
-            content: query,
-        },
-        ],
-        verbose: true,
-    },
-    langGraphConfig
-    );
-    const response = agentOutput.messages[agentOutput.messages.length - 1].content;
-    console.log(response);
-  }
-}
-
-main();
+{{< include "quickstart/js/langchain/quickstart.js" >}}
 
 {{< /tab >}}
 
 {{< tab header="GenkitJS" lang="js" >}}
 
-import { ToolboxClient } from "@toolbox-sdk/core";
-import { genkit } from "genkit";
-import { googleAI } from '@genkit-ai/googleai';
+{{< include "quickstart/js/genkit/quickstart.js" >}}
 
-// Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-async function main() {
-  const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
-
-  const ai = genkit({
-    plugins: [
-      googleAI({
-        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
-      })
-    ],
-    model: googleAI.model('gemini-2.0-flash'),
-  });
-
-  const toolboxTools = await toolboxClient.loadToolset("my-toolset");
-  const toolMap = Object.fromEntries(
-    toolboxTools.map((tool) => {
-      const definedTool = ai.defineTool(
-        {
-          name: tool.getName(),
-          description: tool.getDescription(),
-          inputSchema: tool.getParamSchema(),
-        },
-        tool
-      );
-      return [tool.getName(), definedTool];
-    })
-  );
-  const tools = Object.values(toolMap);
-
-  let conversationHistory = [{ role: "system", content: [{ text: systemPrompt }] }];
-
-  for (const query of queries) {
-    conversationHistory.push({ role: "user", content: [{ text: query }] });
-    const response = await ai.generate({
-      messages: conversationHistory,
-      tools: tools,
-    });
-    conversationHistory.push(response.message);
-
-    const toolRequests = response.toolRequests;
-    if (toolRequests?.length > 0) {
-      // Execute tools concurrently and collect their responses.
-      const toolResponses = await Promise.all(
-        toolRequests.map(async (call) => {
-          try {
-            const toolOutput = await toolMap[call.name].invoke(call.input);
-            return { role: "tool", content: [{ toolResponse: { name: call.name, output: toolOutput } }] };
-          } catch (e) {
-            console.error(`Error executing tool ${call.name}:`, e);
-            return { role: "tool", content: [{ toolResponse: { name: call.name, output: { error: e.message } } }] };
-          }
-        })
-      );
-
-      conversationHistory.push(...toolResponses);
-
-      // Call the AI again with the tool results.
-      response = await ai.generate({ messages: conversationHistory, tools });
-      conversationHistory.push(response.message);
-    }
-
-    console.log(response.text);
-  }
-}
-
-main();
 {{< /tab >}}
 
 {{< tab header="LlamaIndex" lang="js" >}}
 
-import { gemini, GEMINI_MODEL } from "@llamaindex/google";
-import { agent } from "@llamaindex/workflow";
-import { createMemory, staticBlock, tool } from "llamaindex";
-import { ToolboxClient } from "@toolbox-sdk/core";
-
-const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-process.env.GOOGLE_API_KEY = 'your-api-key'; // Replace it with your API key
-
-const prompt = `
-
-You're a helpful hotel assistant. You handle hotel searching, booking and cancellations.
-When the user searches for a hotel, mention its name, id, location and price tier.
-Always mention hotel ids while performing any searches â€” this is very important for operations.
-For any bookings or cancellations, please provide the appropriate confirmation.
-Update check-in or check-out dates if mentioned by the user.
-Don't ask for confirmations from the user.
-
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-async function main() {
-  // Connect to MCP Toolbox
-  const client = new ToolboxClient(TOOLBOX_URL);
-  const toolboxTools = await client.loadToolset("my-toolset");
-  const tools = toolboxTools.map((toolboxTool) => {
-    return tool({
-      name: toolboxTool.getName(),
-      description: toolboxTool.getDescription(),
-      parameters: toolboxTool.getParamSchema(),
-      execute: toolboxTool,
-    });
-  });
-
-  // Initialize LLM
-  const llm = gemini({
-    model: GEMINI_MODEL.GEMINI_2_0_FLASH,
-    apiKey: process.env.GOOGLE_API_KEY,
-  });
-
-  const memory = createMemory({
-    memoryBlocks: [
-      staticBlock({
-        content: prompt,
-      }),
-    ],
-  });
-
-  // Create the Agent
-  const myAgent = agent({
-    tools: tools,
-    llm,
-    memory,
-    systemPrompt: prompt,
-  });
-
-  for (const query of queries) {
-    const result = await myAgent.run(query);
-    const output = result.data.result;
-
-    console.log(`\nUser: ${query}`);
-    if (typeof output === "string") {
-      console.log(output.trim());
-    } else if (typeof output === "object" && "text" in output) {
-      console.log(output.text.trim());
-    } else {
-      console.log(JSON.stringify(output));
-    }
-  }
-  //You may observe some extra logs during execution due to the run method provided by Llama.
-  console.log("Agent run finished.");
-}
-
-main();
+{{< include "quickstart/js/llamaindex/quickstart.js" >}}
 
 {{< /tab >}}
 
 {{< tab header="GoogleGenAI" lang="js" >}}
-import { GoogleGenAI } from "@google/genai";
-import { ToolboxClient } from "@toolbox-sdk/core";
 
+{{< include "quickstart/js/genAI/quickstart.js" >}}
 
-const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-const GOOGLE_API_KEY = 'enter your api here'; // Replace it with your API key
-
-const prompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, you MUST use the available tools to find information. Mention its name, id,
-location and price tier. Always mention hotel id while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-function mapZodTypeToOpenAPIType(zodTypeName) {
-
-    console.log(zodTypeName)
-    const typeMap = {
-        'ZodString': 'string',
-        'ZodNumber': 'number',
-        'ZodBoolean': 'boolean',
-        'ZodArray': 'array',
-        'ZodObject': 'object',
-    };
-    return typeMap[zodTypeName] || 'string';
-}
-
-async function main() {
-   
-    const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
-    const toolboxTools = await toolboxClient.loadToolset("my-toolset");
-    
-    const geminiTools = [{
-        functionDeclarations: toolboxTools.map(tool => {
-            
-            const schema = tool.getParamSchema();
-            const properties = {};
-            const required = [];
-
-         
-            for (const [key, param] of Object.entries(schema.shape)) {
-                properties[key] = {
-                        type: mapZodTypeToOpenAPIType(param.constructor.name),
-                        description: param.description || '',
-                    };
-                required.push(key)
-                }
-            
-            return {
-                name: tool.getName(),
-                description: tool.getDescription(),
-                parameters: { type: 'object', properties, required },
-            };
-        })
-    }];
-
-
-    const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
-    
-    const chat = genAI.chats.create({
-        model: "gemini-2.5-flash",
-        config: {
-            systemInstruction: prompt,
-            tools: geminiTools,
-        }
-    });
-
-    for (const query of queries) {
-        
-        let currentResult = await chat.sendMessage({ message: query });
-        
-        let finalResponseGiven = false
-        while (!finalResponseGiven) {
-            
-            const response = currentResult;
-            const functionCalls = response.functionCalls || [];
-
-            if (functionCalls.length === 0) {
-                console.log(response.text)
-                finalResponseGiven = true;
-            } else {
-                const toolResponses = [];
-                for (const call of functionCalls) {
-                    const toolName = call.name
-                    const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
-                    
-                    if (toolToExecute) {
-                        try {
-                            const functionResult = await toolToExecute(call.args);
-                            toolResponses.push({
-                                functionResponse: { name: call.name, response: { result: functionResult } }
-                            });
-                        } catch (e) {
-                            console.error(`Error executing tool '${toolName}':`, e);
-                            toolResponses.push({
-                                functionResponse: { name: call.name, response: { error: e.message } }
-                            });
-                        }
-                    }
-                }
-                
-                currentResult = await chat.sendMessage({ message: toolResponses });
-            }
-        }
-        
-    }
-}
-
-main();
 {{< /tab >}}
 
 {{< /tabpane >}}
@@ -2507,12 +2153,14 @@ Connect your IDE to Cloud SQL for SQL Server using Toolbox.
 # Firestore using MCP
 Connect your IDE to Firestore using Toolbox.
 
+
 <html>
   <head>
     <link rel="canonical" href="https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
     <meta http-equiv="refresh" content="0;url=https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
   </head>
 </html>
+
 
 # Looker using MCP
 Connect your IDE to Looker using Toolbox.
@@ -2747,7 +2395,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "looker-toolbox": {
           "command": "./PATH/TO/toolbox",
           "args": ["--stdio", "--prebuilt", "looker"],
@@ -3003,7 +2651,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","mysql","--stdio"],
@@ -3323,7 +2971,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "postgres": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","postgres","--stdio"],
@@ -3630,19 +3278,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-    "mcp" : {
-        "servers": {
-        "cloud-sql-sqlserver": {
-            "command": "./PATH/TO/toolbox",
-            "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
-            "env": {
-              "MSSQL_HOST": "",
-              "MSSQL_PORT": "",
-              "MSSQL_DATABASE": "",
-              "MSSQL_USER": "",
-              "MSSQL_PASSWORD": ""
-            }
-         }
+      "servers": {
+        "mssql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -3735,6 +3381,7 @@ The following tools are available to the LLM:
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
+
 
 # Connect via MCP Client
 How to connect to Toolbox from a MCP Client.
@@ -6573,7 +6220,8 @@ a self-signed ssl certificate for the Looker server. Anything other than "true"
 will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
-assigned by the looker server.
+assigned by the looker server. If you are using Looker OAuth you don't need
+these settings
 
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}
@@ -6586,10 +6234,11 @@ instead of hardcoding your secrets into the configuration file.
 | -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
 | kind                 |  string  |     true     | Must be "looker".                                                                         |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
-| client_id            |  string  |     true     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |     true     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |     true     | Whether to check the ssl certificate of the server.                                       |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
@@ -6664,6 +6313,9 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        # Optional TLS and other driver parameters. For example, enable preferred TLS:
+        # queryParams:
+        #     tls: preferred
         queryTimeout: 30s # Optional: query timeout duration
 ```
 
@@ -6683,6 +6335,7 @@ instead of hardcoding your secrets into the configuration file.
 | user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
 | password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
 | queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
 
 
 # Neo4j
@@ -9074,6 +8727,144 @@ In this section, we will download Toolbox, configure our tools in a
 # Looker
 How to get started with Toolbox using Looker.
 
+
+
+# Gemini-CLI and OAuth
+How to connect to Looker from Gemini-CLI with end-user credentials
+
+
+## Overview
+
+Gemini-CLI can be configured to get an OAuth token from Looker, then send this
+token to MCP Toolbox as part of the request. MCP Toolbox can then use this token
+to authentincate with Looker. This means that there is no need to get a Looker
+Client ID and Client Secret. This also means that MCP Toolbox can be set up as a
+shared resource.
+
+This configuration requires Toolbox v0.14.0 or later.
+
+## Step 1: Register the OAuth App in Looker
+
+You first need to register the OAuth application. Refer to the documentation
+[here](https://cloud.google.com/looker/docs/api-cors#registering_an_oauth_client_application).
+You may need to ask an administrator to do this for you.
+
+1. Go to the API Explorer application, locate "Register OAuth App", and press
+   the "Run It" button.
+1. Set the `client_guid` to "gemini-cli".
+1. Set the `redirect_uri` to "http://localhost:7777/oauth/callback".
+1. The `display_name` and `description` can be "Gemini-CLI" or anything
+   meaningful.
+1. Set `enabled` to "true".
+1. Check the box confirming that you understand this API will change data.
+1. Click the "Run" button.
+
+    ![OAuth Registration](./registration.png)
+
+## Step 2: Install and configure Toolbox
+
+In this section, we will download Toolbox and run the Toolbox server.
+
+1. Download the latest version of Toolbox as a binary:
+
+    {{< notice tip >}}
+   Select the
+   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+   corresponding to your OS and CPU architecture.
+    {{< /notice >}}
+    <!-- {x-release-please-start-version} -->
+    ```bash
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    ```
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Create a file `looker_env` with the settings for your
+   Looker instance.
+
+   ```bash
+    export LOOKER_BASE_URL=https://looker.example.com
+    export LOOKER_VERIFY_SSL=true
+   ```
+
+   In some instances you may need to append `:19999` to
+   the LOOKER_BASE_URL.
+
+1. Load the looker_env file into your environment.
+
+   ```bash
+   source looker_env
+   ```
+
+1. Run the Toolbox server using the prebuilt Looker tools.
+
+    ```bash
+    ./toolbox --prebuilt looker
+    ```
+
+    The toolbox server will begin listening on localhost port 5000. Leave it
+    running and continue in another terminal.
+
+    Later, when it is time to shut everything down, you can quit the toolbox
+    server with Ctrl-C in this terminal window.
+
+## Step 3: Configure Gemini-CLI
+
+1. Edit the file `~/.gemini/settings.json`. Add the following, substituting your
+   Looker server host name for `looker.example.com`.
+
+    ```json
+    "mcpServers": {
+        "looker": {
+            "httpUrl": "http://localhost:5000/mcp",
+            "oauth": {
+                "enabled": true,
+                "clientId": "gemini-cli",
+                "authorizationUrl": "https://looker.example.com/auth",
+                "tokenUrl": "https://looker.example.com/api/token",
+                "scopes": ["cors_api"]
+            }
+        }
+    }
+    ```
+
+    The `authorizationUrl` should point to the URL you use to access Looker via the
+    web UI. The `tokenUrl` should point to the URL you use to access Looker via
+    the API. In some cases you will need to use the port number `:19999` after
+    the host name but before the `/api/token` part.
+
+1. Start Gemini-CLI.
+
+1. Authenticate with the command `/mcp auth looker`. Gemini-CLI will open up a
+   browser where you will confirm that you want to access Looker with your
+   account.
+
+   ![Authorizing](./authorize.png)
+
+   ![Authenticated](./authenticated.png)
+
+1. Use Gemini-CLI with your tools.
+
+## Using Toolbox as a Shared Service
+
+Toolbox can be run on another server as a shared service accessed by multiple
+users. We strongly recommend running toolbox behind a web proxy such as `nginx`
+which will provide SSL encryption. Google Cloud Run is another good way to run
+toolbox. You will connect to a service like `https://toolbox.example.com/mcp`.
+The proxy server will handle the SSL encryption and certificates. Then it will
+foward the requests to `http://localhost:5000/mcp` running in that environment.
+The details of the config are beyond the scope of this document, but will be
+familiar to your system administrators.
+
+To use the shared service, just change the `localhost:5000` in the `httpUrl` in
+`~/.gemini/settings.json` to the host name and possibly the port of the shared
+service.
 
 
 # Quickstart (MCP with Looker and Gemini-CLI)
