@@ -29,7 +29,7 @@ queries = [
     "My check in dates for my booking would be from April 10, 2024 to April 19, 2024.",
 ]
 
-async def run_application():
+async def main():
     host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
     toolbox_url = f"http://{host}:5000"
     async with ToolboxClient(toolbox_url) as toolbox_client:
@@ -111,4 +111,4 @@ async def run_application():
             else:
                 print(response.text)
 
-asyncio.run(run_application())
+asyncio.run(main())
