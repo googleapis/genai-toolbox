@@ -57,6 +57,9 @@ implementation to ensure we can accept the contribution and no duplicated work.
 If you have any questions, reach out on our
 [Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team.  
 
+> [!NOTE]
+> New tools can be added for [pre-existing data sources](https://github.com/googleapis/genai-toolbox/tree/main/internal/sources). However, any new database source should also include at least one new tool type.
+
 ### Adding a New Database Source
 
 We recommend looking at an [example source
