@@ -10,7 +10,7 @@ substitutions:
   _GCP_PROJECT_NUMBER: "your-project-number"
 
 steps:
-  # Step 0: Start Cloud SQL Auth Proxy for the .ci/quickstart_py.sh script
+  # Step 0: Start Cloud SQL Auth Proxy
   - name: 'gcr.io/cloud-builders/docker'
     id: 'start-proxy'
     entrypoint: 'bash'
@@ -18,12 +18,27 @@ steps:
       - -c
       - |
         set -x
+        # Start the proxy
         docker run -d --name=cloudsqlproxy --network=cloudbuild \
           gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
           /cloud_sql_proxy \
-            -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432
-        echo "Cloud SQL Proxy container starting for test script..."
-        sleep 5
+            -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
+            -log-level debug
+        echo "Cloud SQL Proxy container starting..."
+        sleep 10 # Wait for potential errors
+
+        echo "--- Cloud SQL Proxy status ---"
+        docker ps -a | grep cloudsqlproxy || echo "Proxy container not found in ps -a"
+        echo "--- Cloud SQL Proxy logs ---"
+        docker logs cloudsqlproxy || echo "Failed to get proxy logs - container likely failed to start."
+
+        # Fail the build if the proxy is not running
+        if ! docker ps | grep -w cloudsqlproxy; then
+          echo "Error: Cloud SQL Proxy is not running!"
+          exit 1
+        else
+          echo "Cloud SQL Proxy appears to be running."
+        fi
 
   # Step 1: Prepare config and Start the toolbox server
   - name: 'gcr.io/cloud-builders/docker'
@@ -42,9 +57,6 @@ steps:
         fi
 
         echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
-        echo "--- tools.yaml content ---"
-        cat /workspace/config/tools.yaml
-        echo "--- end of tools.yaml ---"
 
         docker run -d --name=toolbox --network=cloudbuild \
           -v /workspace/config:/config \
@@ -52,8 +64,8 @@ steps:
           toolbox --tools-file /config/tools.yaml --address 0.0.0.0
 
         echo "Docker run command for toolbox issued."
-        sleep 10
-        docker ps -a
+        sleep 5
+        docker ps -a | grep toolbox
     secretEnv: ['TOOLS_YAML_CONTENT']
     waitFor: ['start-proxy']
 
@@ -90,7 +102,14 @@ steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'run-tests'
     entrypoint: 'bash'
-    args: ['.ci/quickstart_py.sh']
+    args:
+      - -c
+      - |
+        set -ex
+        # Install psql client
+        apt-get update && apt-get install -y postgresql-client
+        # Run the script
+        .ci/quickstart_py.sh
     env:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
