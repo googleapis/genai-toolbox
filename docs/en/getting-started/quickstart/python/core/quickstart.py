@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from google import genai
 from google.genai.types import (
@@ -41,7 +42,7 @@ async def run_application():
         # provided wrapper packages, which handle framework-specific boilerplate.
         toolbox_tools = await toolbox_client.load_toolset("my-toolset")
         genai_client = genai.Client(
-            vertexai=True, project="project-id", location="us-central1"
+            vertexai=True, project=os.environ.get("GCP_PROJECT"), location="us-central1"
         )
 
         genai_tools = [
