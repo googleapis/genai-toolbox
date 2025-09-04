@@ -41,7 +41,7 @@ async def main():
     host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
     toolbox_url = f"http://{host}:5000"
     async with ToolboxClient(toolbox_url) as toolbox_client:
-        tools = await client.aload_toolset()
+        tools = await toolbox_client.aload_toolset()
 
         agent = create_react_agent(model, tools, checkpointer=MemorySaver())
 
