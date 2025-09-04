@@ -9,7 +9,7 @@ from google.genai import types
 from toolbox_core import ToolboxSyncClient # Corrected import
 
 # TODO(developer): replace this with your Google API key
-os.environ['GOOGLE_API_KEY'] = 'your-api-key'
+os.environ['GOOGLE_API_KEY']
 
 async def main():
   host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
