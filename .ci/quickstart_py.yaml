@@ -23,17 +23,22 @@ steps:
         docker run -d --name=cloudsqlproxy --network=cloudbuild \
           gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
           /cloud_sql_proxy \
-            -instances=${CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
+            -instances=$${CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
             -verbose
         echo "Cloud SQL Proxy container starting..."
         sleep 10
 
+        echo "--- Cloud SQL Proxy status ---"
+        docker ps -a | grep cloudsqlproxy || true
+        echo "--- Cloud SQL Proxy logs ---"
+        docker logs cloudsqlproxy || echo "Failed to get proxy logs."
+
         if ! docker ps | grep -w cloudsqlproxy; then
           echo "Error: Cloud SQL Proxy failed to stay running!"
-          docker logs cloudsqlproxy || echo "Failed to get proxy logs."
           exit 1
+        else
+          echo "Cloud SQL Proxy appears to be running."
         fi
-        echo "Cloud SQL Proxy appears to be running."
 
   # Step 1: Prepare config and Start the toolbox server
   - name: 'gcr.io/cloud-builders/docker'
@@ -51,11 +56,7 @@ steps:
           exit 1
         fi
 
-        echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
-        echo "--- tools.yaml content written ---"
-
         # Start the toolbox container
-        # *** CORRECTED VOLUME MOUNT ***
         docker run -d --name=toolbox --network=cloudbuild \
           -v /workspace/config:/config \
           '${_TOOLBOX_IMAGE}' \
