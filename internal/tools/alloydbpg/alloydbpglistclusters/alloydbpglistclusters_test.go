@@ -51,6 +51,67 @@ func TestParseFromYaml(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with auth required",
+			in: `
+			tools:
+				list-my-clusters-auth:
+					kind: alloydb-pg-list-clusters
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"list-my-clusters-auth": alloydbpglistclusters.Config{
+					Name:         "list-my-clusters-auth",
+					Kind:         "alloydb-pg-list-clusters",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+				},
+			},
+		},
+		{
+			desc: "with base url",
+			in: `
+			tools:
+				list-my-clusters-baseurl:
+					kind: alloydb-pg-list-clusters
+					description: some description
+					baseURL: "https://example.com"
+			`,
+			want: server.ToolConfigs{
+				"list-my-clusters-baseurl": alloydbpglistclusters.Config{
+					Name:         "list-my-clusters-baseurl",
+					Kind:         "alloydb-pg-list-clusters",
+					Description:  "some description",
+					BaseURL:      "https://example.com",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "with auth and base url",
+			in: `
+			tools:
+				list-my-clusters-all:
+					kind: alloydb-pg-list-clusters
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+					baseURL: "https://example.com"
+			`,
+			want: server.ToolConfigs{
+				"list-my-clusters-all": alloydbpglistclusters.Config{
+					Name:         "list-my-clusters-all",
+					Kind:         "alloydb-pg-list-clusters",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					BaseURL:      "https://example.com",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

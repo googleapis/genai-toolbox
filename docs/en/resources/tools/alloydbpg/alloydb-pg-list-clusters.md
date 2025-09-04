@@ -16,6 +16,9 @@ The `alloydb-pg-list-clusters` tool retrieves AlloyDB cluster information for al
 	* `project` : The GCP project ID to list clusters for.
 	* `location` (optional): The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations. Default: `"-"`.
 
+> **Note**
+> This tool does not have a `source`.
+
 ## Example
 
 ```yaml

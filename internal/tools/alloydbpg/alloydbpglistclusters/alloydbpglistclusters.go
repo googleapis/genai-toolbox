@@ -115,11 +115,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", project)
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
 	location, ok := paramsMap["location"].(string)
     if !ok {
-		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", location)
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/clusters", project, location)
