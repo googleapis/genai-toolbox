@@ -1155,8 +1155,8 @@ github.com/nakagami/firebirdsql v0.9.15 h1:Mf05jaFI8+kjy6sBstsAu76zOkJ44AGd6cpAp
 github.com/nakagami/firebirdsql v0.9.15/go.mod h1:bZKRs3rpHAjJgXAoc9YiPobTz3R22i41Zjo+llIS2B0=
 github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdhx/f4=
 github.com/ncruces/go-strftime v0.1.9/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
-github.com/neo4j/neo4j-go-driver/v5 v5.28.2 h1:uG7nMK0zS/a/iSWMZgCIY40SfYzWBc6uSrMONhiIS0U=
-github.com/neo4j/neo4j-go-driver/v5 v5.28.2/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
+github.com/neo4j/neo4j-go-driver/v5 v5.28.3 h1:OHP/vzX0oZ2YUY5DnGUp7QY21BIpOzw+Pp+Dga8zYl4=
+github.com/neo4j/neo4j-go-driver/v5 v5.28.3/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/onsi/gomega v1.36.2 h1:koNYke6TVk6ZmnyHrCXba/T/MoLBXFjeC1PtvYgw0A8=
 github.com/onsi/gomega v1.36.2/go.mod h1:DdwyADRjrc825LhMEkD76cHR5+pUnjhUN8GlHlRPHzY=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
