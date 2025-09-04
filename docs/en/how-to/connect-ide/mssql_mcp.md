@@ -182,19 +182,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-    "mcp" : {
-        "servers": {
-        "cloud-sql-sqlserver": {
-            "command": "./PATH/TO/toolbox",
-            "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
-            "env": {
-              "MSSQL_HOST": "",
-              "MSSQL_PORT": "",
-              "MSSQL_DATABASE": "",
-              "MSSQL_USER": "",
-              "MSSQL_PASSWORD": ""
-            }
-         }
+      "servers": {
+        "mssql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
         }
       }
     }
