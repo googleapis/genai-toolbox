@@ -32,7 +32,7 @@ SQLite has the following notable characteristics:
 
 ### Pre-built Configurations
 
-- [Spanner using MCP](../../how-to/connect-ide/sqlite_mcp.md)  
+- [SQLite using MCP](../../how-to/connect-ide/sqlite_mcp.md)  
 Connect your IDE to SQlite using Toolbox.
 
 ## Requirements
