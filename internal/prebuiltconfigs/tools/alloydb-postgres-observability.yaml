@@ -1,14 +1,6 @@
-sources:
-  monitoring-api-source:
-    kind: http
-    baseUrl: https://monitoring.googleapis.com
-    headers:
-      Content-Type: application/json
-
 tools:
   alloydb-system-metrics:
     kind: observability
-    source: monitoring-api-source
     description: "Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance using a PromQL query. Take projectID, clusterID and instanceID from the user for which the metrics timeseries data needs to be fetched."
     params:
       - name: projectID
@@ -92,7 +84,6 @@ tools:
 
   alloydb-query-metrics:
     kind: observability
-    source: monitoring-api-source
     description: "Fetches query level cloudmonitoring data (timeseries metrics) for queries running in AlloyDB instance using a PromQL query. Take projectID, clusterID and instanceID from the user for which the metrics timeseries data needs to be fetched."
     params:
       - name: projectID
@@ -116,7 +107,7 @@ tools:
           7. Count streams: `count(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
           8. Percentile with groupby on instanceid, clusterid: `quantile by ("instance_id","cluster_id")(0.99,avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","cluster_id"="my-cluster","instance_id"="my-instance"}[5m]))`
 
-          Available Metrics List: metricname. description. monitored resource. labels. aggregate is the aggregated values for all query stats, Use aggregate metrics if query id is not provided. For perquery metrics do not fetch querystring unless specified by user specifically. Have the aggregation on query hash to avoid fetching the querystring.
+          Available Metrics List: metricname. description. monitored resource. labels. aggregate is the aggregated values for all query stats, Use aggregate metrics if query id is not provided. For perquery metrics do not fetch querystring unless specified by user specifically. Have the aggregation on query hash to avoid fetching the querystring. Do not use latency metrics for anything.
           1. `alloydb.googleapis.com/database/postgresql/insights/aggregate/latencies`: Aggregated query latency distribution. `alloydb.googleapis.com/Database`. `user`, `client_addr`.
           2. `alloydb.googleapis.com/database/postgresql/insights/aggregate/execution_time`: Accumulated aggregated query execution time since the last sample. `alloydb.googleapis.com/Database`. `user`, `client_addr`.
           3. `alloydb.googleapis.com/database/postgresql/insights/aggregate/io_time`: Accumulated aggregated IO time since the last sample. `alloydb.googleapis.com/Database`. `user`, `client_addr`, `io_type`.
@@ -139,6 +130,6 @@ tools:
         required: true
 
 toolsets:
-  observability-tools:
+  alloydb-postgres-observability-tools:
     - alloydb-system-metrics
     - alloydb-query-metrics

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package observability
+package cloudmonitoring
 
 import (
 	"context"
@@ -48,8 +48,8 @@ func TestTool_Invoke(t *testing.T) {
 	}
 
 	tool := Tool{
-		Name:        "observability",
-		Kind:        "observability",
+		Name:        "cloudmonitoring",
+		Kind:        "cloudmonitoring",
 		Description: "a test tool",
 		Params:      tools.Parameters{},
 	}

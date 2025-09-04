@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package observability_integration_test
+package cloudmonitoring_integration_test
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/observability"
+	"github.com/googleapis/genai-toolbox/internal/tools/observability/cloudmonitoring"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -48,18 +48,18 @@ func TestTool_Invoke(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := &observability.Tool{
-		Name:        "test-observability",
-		Kind:        "observability",
-		Description: "Test Observability Tool",
+	tool := &cloudmonitoring.Tool{
+		Name:        "test-cloudmonitoring",
+		Kind:        "cloudmonitoring",
+		Description: "Test Cloudmonitoring Tool",
 		Params:      tools.Parameters{},
 	}
 
 	// Set the monitoring endpoint to the mock server
-	observability.SetMonitoringEndpoint(server.URL)
+	cloudmonitoring.SetMonitoringEndpoint(server.URL)
 
 	// Mock the google.FindDefaultCredentials function
-	observability.SetGoogleFindDefaultCredentials(func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
+	cloudmonitoring.SetGoogleFindDefaultCredentials(func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
 		return &google.Credentials{
 			TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test-token"}),
 		},
@@ -101,18 +101,18 @@ func TestTool_Invoke_Error(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := &observability.Tool{
-		Name:        "test-observability",
-		Kind:        "observability",
-		Description: "Test Observability Tool",
+	tool := &cloudmonitoring.Tool{
+		Name:        "test-cloudmonitoring",
+		Kind:        "cloudmonitoring",
+		Description: "Test Cloudmonitoring Tool",
 		Params:      tools.Parameters{},
 	}
 
 	// Set the monitoring endpoint to the mock server
-	observability.SetMonitoringEndpoint(server.URL)
+	cloudmonitoring.SetMonitoringEndpoint(server.URL)
 
 	// Mock the google.FindDefaultCredentials function
-	observability.SetGoogleFindDefaultCredentials(func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
+	cloudmonitoring.SetGoogleFindDefaultCredentials(func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
 		return &google.Credentials{
 			TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test-token"}),
 		},

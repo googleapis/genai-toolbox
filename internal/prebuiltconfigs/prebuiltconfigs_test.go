@@ -34,7 +34,7 @@ var expectedToolSources = []string{
 	"looker",
 	"mssql",
 	"mysql",
-	"observability",
+	"alloydb-postgres-observability",
 	"oceanbase",
 	"postgres",
 	"spanner-postgres",

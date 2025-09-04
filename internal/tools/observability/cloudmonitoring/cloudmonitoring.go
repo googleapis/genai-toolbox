@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package observability
+package cloudmonitoring
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func SetGoogleFindDefaultCredentials(f func(ctx context.Context, scopes ...strin
 	googleFindDefaultCredentials = f
 }
 
-const kind string = "observability"
+const kind string = "cloudmonitoring"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -61,7 +61,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	Params       tools.Parameters `yaml:"params"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -144,7 +143,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed: %s", resp.Status)
+		return nil, fmt.Errorf("request failed: %s, body: %s", resp.Status, string(body))
 	}
 
 	if len(body) == 0 {
