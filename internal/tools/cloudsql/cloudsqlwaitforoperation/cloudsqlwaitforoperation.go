@@ -31,9 +31,9 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const kind string = "cloudsql-wait-for-operation"
+const kind string = "cloud-sql-wait-for-operation"
 
-var cloudSQLConnectionMessageTemplate = `Your CloudSQL resource is ready.
+var cloudSQLConnectionMessageTemplate = `Your Cloud SQL resource is ready.
 
 To connect, please configure your environment. The method depends on how you are running the toolbox:
 
@@ -358,7 +358,7 @@ func (t Tool) generateCloudSQLConnectionMessage(opResponse map[string]any) (stri
 		return "", false
 	}
 
-	tmpl, err := template.New("cloudsql-connection").Parse(cloudSQLConnectionMessageTemplate)
+	tmpl, err := template.New("cloud-sql-connection").Parse(cloudSQLConnectionMessageTemplate)
 	if err != nil {
 		return fmt.Sprintf("template parsing error: %v", err), false
 	}

@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	cloudsqlWaitToolKind = "cloudsql-wait-for-operation"
+	cloudsqlWaitToolKind = "cloud-sql-wait-for-operation"
 )
 
 type cloudsqlOperation struct {
@@ -164,7 +164,7 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 			name:          "successful operation",
 			toolName:      "wait-for-op1",
 			body:          `{"project": "p1", "operation": "op1"}`,
-			want:          "Your CloudSQL resource is ready",
+			want:          "Your Cloud SQL resource is ready",
 			wantSubstring: true,
 		},
 		{
