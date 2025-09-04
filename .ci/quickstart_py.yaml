@@ -22,7 +22,7 @@ steps:
           gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
           /cloud_sql_proxy \
             -instances=${_CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
-            -log-level debug
+            -verbose
         echo "Cloud SQL Proxy container starting..."
         sleep 10
 
