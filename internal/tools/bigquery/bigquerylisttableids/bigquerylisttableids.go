@@ -17,6 +17,7 @@ package bigquerylisttableids
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
@@ -98,11 +99,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
 			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
 		} else {
-			datasetIDs := []string{}
+			projectIDs := make(map[string]bool)
+			datasetIDsByProject := make(map[string][]string)
 			for _, ds := range allowedDatasets {
-				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+				parts := strings.Split(ds, ".")
+				project := parts[0]
+				dataset := parts[1]
+				projectIDs[project] = true
+				datasetIDsByProject[project] = append(datasetIDsByProject[project], fmt.Sprintf("`%s`", dataset))
 			}
-			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
+
+			var datasetDescriptions []string
+			for project, datasets := range datasetIDsByProject {
+				sort.Strings(datasets)
+				datasetList := strings.Join(datasets, ", ")
+				datasetDescriptions = append(datasetDescriptions, fmt.Sprintf("%s from project `%s`", datasetList, project))
+			}
+
+			var projectIDList []string
+			for p := range projectIDs {
+				projectIDList = append(projectIDList, fmt.Sprintf("`%s`", p))
+			}
+			projectDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(projectIDList, ", "))
+			datasetDescription += fmt.Sprintf(" Must be one of the allowed datasets: %s.", strings.Join(datasetDescriptions, ", "))
 			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
 		}
 	} else {
