@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -81,12 +82,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -103,6 +105,7 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name             string `yaml:"name"`
 	Kind             string `yaml:"kind"`
+	UseClientOAuth   bool
 	Client           *v4.LookerSDK
 	ApiSettings      *rtl.ApiSettings
 	AuthRequired     []string         `yaml:"authRequired"`
@@ -122,12 +125,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	excludeHidden := !t.ShowHiddenModels
 	includeInternal := true
 
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	req := v4.RequestAllLookmlModels{
 		ExcludeEmpty:    &excludeEmpty,
 		ExcludeHidden:   &excludeHidden,
 		IncludeInternal: &includeInternal,
 	}
-	resp, err := t.Client.AllLookmlModels(req, t.ApiSettings)
+	resp, err := sdk.AllLookmlModels(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_models request: %s", err)
 	}
@@ -164,5 +171,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }
