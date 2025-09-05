@@ -13,8 +13,8 @@
 # limitations under the License.
 
 tools:
-  alloydb-system-metrics:
-    kind: observability
+  alloydb-postgresql-system-metrics:
+    kind: cloudmonitoring
     description: "Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance using a PromQL query. Take projectID, clusterID and instanceID from the user for which the metrics timeseries data needs to be fetched."
     params:
       - name: projectID
@@ -96,8 +96,8 @@ tools:
         type: string
         required: true
 
-  alloydb-query-metrics:
-    kind: observability
+  alloydb-postgresql-query-metrics:
+    kind: cloudmonitoring
     description: "Fetches query level cloudmonitoring data (timeseries metrics) for queries running in AlloyDB instance using a PromQL query. Take projectID, clusterID and instanceID from the user for which the metrics timeseries data needs to be fetched."
     params:
       - name: projectID
@@ -145,5 +145,5 @@ tools:
 
 toolsets:
   alloydb-postgres-observability-tools:
-    - alloydb-system-metrics
-    - alloydb-query-metrics
+    - alloydb-postgresql-system-metrics
+    - alloydb-postgresql-query-metrics

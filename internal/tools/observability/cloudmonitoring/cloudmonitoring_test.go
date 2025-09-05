@@ -36,7 +36,9 @@ func TestTool_Invoke(t *testing.T) {
 			t.Errorf("unexpected query: got %q", r.URL.Query().Get("query"))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[]}}`))
+		if _, err := w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[]}}`)); err != nil {
+			t.Fatalf("w.Write() err = %v", err)
+		}
 	}))
 	defer server.Close()
 
