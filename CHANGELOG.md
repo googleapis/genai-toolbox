@@ -5,6 +5,7 @@
 
 ### ⚠ BREAKING CHANGES
 
+* **bigquery:** Move `useClientOAuth` config from tool to source ([#1279](https://github.com/googleapis/genai-toolbox/issues/1279)) ([8d20a48](https://github.com/googleapis/genai-toolbox/commit/8d20a48f13bcda853d41bdf80a162de12b076d1b))
 * **tools/bigquerysql:** remove `useClientOAuth` from tools config ([#1312](https://github.com/googleapis/genai-toolbox/issues/1312))
 
 ### Features
@@ -21,18 +22,11 @@
 
 ### Bug Fixes
 
-* **bigquery:** Move `useClientOAuth` config from tool to source ([#1279](https://github.com/googleapis/genai-toolbox/issues/1279)) ([8d20a48](https://github.com/googleapis/genai-toolbox/commit/8d20a48f13bcda853d41bdf80a162de12b076d1b))
 * Do not print usage on runtime error ([#1315](https://github.com/googleapis/genai-toolbox/issues/1315)) ([afba7a5](https://github.com/googleapis/genai-toolbox/commit/afba7a57cdd4fe7c1b0741dbf8f8c78b14a68089))
-* **looker:** Fix Looker client OAuth check ([#1338](https://github.com/googleapis/genai-toolbox/issues/1338)) ([36225aa](https://github.com/googleapis/genai-toolbox/commit/36225aa6db7f8426ad87930866530fde4e9bf0cd))
-* **tools/bigquerysql:** Remove `useClientOAuth` from tools config ([#1312](https://github.com/googleapis/genai-toolbox/issues/1312)) ([21085ef](https://github.com/googleapis/genai-toolbox/commit/21085ef4224ae829cc6c53d58768743177301945))
-* **tools/firestore:** Add document/collection path validation ([#1229](https://github.com/googleapis/genai-toolbox/issues/1229)) ([14c2249](https://github.com/googleapis/genai-toolbox/commit/14c224939a2f9bb349fa00a7d5227877198530c2))
-* **tools/oceanbase:** Fix encoded text with mysql driver ([#1283](https://github.com/googleapis/genai-toolbox/issues/1283)) ([d16f89f](https://github.com/googleapis/genai-toolbox/commit/d16f89fbb6e49c03998f114ef7dc2b584b5e4967)), closes [#1161](https://github.com/googleapis/genai-toolbox/issues/1161)
 * Update env var to allow empty string ([#1260](https://github.com/googleapis/genai-toolbox/issues/1260)) ([03aa9fa](https://github.com/googleapis/genai-toolbox/commit/03aa9fabacda06f860c9f178485126bddb7d5782))
-
-
-### Miscellaneous Chores
-
-* Release 0.14.0 ([#1341](https://github.com/googleapis/genai-toolbox/issues/1341)) ([430a97d](https://github.com/googleapis/genai-toolbox/commit/430a97d6972c08d7bc0f3ad816cabd6babd45f28))
+* **tools/firestore:** Add document/collection path validation ([#1229](https://github.com/googleapis/genai-toolbox/issues/1229)) ([14c2249](https://github.com/googleapis/genai-toolbox/commit/14c224939a2f9bb349fa00a7d5227877198530c2))
+* **tools/looker-get-dashboards:** Fix Looker client OAuth check ([#1338](https://github.com/googleapis/genai-toolbox/issues/1338)) ([36225aa](https://github.com/googleapis/genai-toolbox/commit/36225aa6db7f8426ad87930866530fde4e9bf0cd))
+* **tools/oceanbase:** Fix encoded text with mysql driver ([#1283](https://github.com/googleapis/genai-toolbox/issues/1283)) ([d16f89f](https://github.com/googleapis/genai-toolbox/commit/d16f89fbb6e49c03998f114ef7dc2b584b5e4967)), closes [#1161](https://github.com/googleapis/genai-toolbox/issues/1161)
 
 ## [0.13.0](https://github.com/googleapis/genai-toolbox/compare/v0.12.0...v0.13.0) (2025-08-27)
 
