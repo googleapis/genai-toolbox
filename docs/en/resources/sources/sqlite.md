@@ -26,6 +26,14 @@ SQLite has the following notable characteristics:
 
 - [`sqlite-sql`](../tools/sqlite/sqlite-sql.md)  
   Run SQL queries against a local SQLite database.
+  
+- [`sqlite-execute-sql`](../tools/sqlite/sqlite-execute-sql.md)  
+  Run parameterized SQL statements in SQlite.
+
+### Pre-built Configurations
+
+- [SQLite using MCP](../../how-to/connect-ide/sqlite_mcp.md)  
+Connect your IDE to SQlite using Toolbox.
 
 ## Requirements
 
