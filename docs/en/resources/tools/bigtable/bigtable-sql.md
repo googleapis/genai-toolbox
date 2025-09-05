@@ -102,7 +102,7 @@ tools:
 
 | **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
 |--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                   string                         |     true     | Must be "bigtable-sql".                                                                                                                    |
+| type               |                   string                         |     true     | Must be "bigtable-sql".                                                                                                                    |
 | source             |                   string                         |     true     | Name of the source the SQL should execute on.                                                                                              |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute on.                                                                                                               |

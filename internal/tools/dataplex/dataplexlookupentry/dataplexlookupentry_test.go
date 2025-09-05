@@ -47,7 +47,7 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dataplexlookupentry.Config{
 					Name:         "example_tool",
-					Kind:         "dataplex-lookup-entry",
+					Type:         "dataplex-lookup-entry",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -84,7 +84,7 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dataplexlookupentry.Config{
 					Name:         "example_tool",
-					Kind:         "dataplex-lookup-entry",
+					Type:         "dataplex-lookup-entry",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

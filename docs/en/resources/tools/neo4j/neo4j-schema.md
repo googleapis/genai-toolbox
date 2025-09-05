@@ -36,7 +36,7 @@ tools:
 ## Reference
 | **field**           | **type**   | **required** | **description**                                                                                 |
 |---------------------|:----------:|:------------:|-------------------------------------------------------------------------------------------------|
-| kind                | string     |     true     | Must be `neo4j-schema`.                                                                         |
+| type                | string     |     true     | Must be `neo4j-schema`.                                                                         |
 | source              | string     |     true     | Name of the source the schema should be extracted from.                                         |
 | description         | string     |     true     | Description of the tool that is passed to the LLM.                                              |
 | cacheExpireMinutes  | integer    |    false     | Cache expiration time in minutes. Defaults to 60.                                               |

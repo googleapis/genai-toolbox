@@ -46,7 +46,7 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -74,7 +74,7 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -102,7 +102,7 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",

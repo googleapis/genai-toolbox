@@ -61,7 +61,7 @@ func TestParseFromYamlMySQL(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mysqlsql.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-sql",
+					Type:         "mysql-sql",
 					Source:       "my-mysql-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -139,7 +139,7 @@ func TestParseFromYamlWithTemplateParamsMySQL(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mysqlsql.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-sql",
+					Type:         "mysql-sql",
 					Source:       "my-mysql-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

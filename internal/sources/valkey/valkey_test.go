@@ -44,7 +44,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
-					Kind:         valkey.SourceKind,
+					Type:         valkey.SourceType,
 					Address:      []string{"127.0.0.1"},
 					Username:     "",
 					Password:     "",
@@ -71,7 +71,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
-					Kind:         valkey.SourceKind,
+					Type:         valkey.SourceType,
 					Address:      []string{"127.0.0.1"},
 					Username:     "user",
 					Password:     "pass",

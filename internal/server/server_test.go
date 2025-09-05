@@ -137,7 +137,7 @@ func TestUpdateServer(t *testing.T) {
 	newSources := map[string]sources.Source{
 		"example-source": &alloydbpg.Source{
 			Name: "example-alloydb-source",
-			Kind: "alloydb-postgres",
+			Type: "alloydb-postgres",
 		},
 	}
 	newAuth := map[string]auth.AuthService{"example-auth": nil}

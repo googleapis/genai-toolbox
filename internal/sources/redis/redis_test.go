@@ -43,7 +43,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-redis-instance": redis.Config{
 					Name:           "my-redis-instance",
-					Kind:           redis.SourceKind,
+					Type:           redis.SourceType,
 					Address:        []string{"127.0.0.1"},
 					ClusterEnabled: false,
 					UseGCPIAM:      false,
@@ -66,7 +66,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-redis-instance": redis.Config{
 					Name:           "my-redis-instance",
-					Kind:           redis.SourceKind,
+					Type:           redis.SourceType,
 					Address:        []string{"127.0.0.1"},
 					Password:       "my-pass",
 					Database:       1,

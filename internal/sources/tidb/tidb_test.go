@@ -45,7 +45,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-tidb-instance": tidb.Config{
 					Name:     "my-tidb-instance",
-					Kind:     tidb.SourceKind,
+					Type:     tidb.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -71,7 +71,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-tidb-cloud": tidb.Config{
 					Name:     "my-tidb-cloud",
-					Kind:     tidb.SourceKind,
+					Type:     tidb.SourceType,
 					Host:     "gateway01.us-west-2.prod.aws.tidbcloud.com",
 					Port:     "4000",
 					Database: "test_db",
@@ -96,7 +96,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-tidb-cloud": tidb.Config{
 					Name:     "my-tidb-cloud",
-					Kind:     tidb.SourceKind,
+					Type:     tidb.SourceType,
 					Host:     "gateway01.us-west-2.prod.aws.tidbcloud.com",
 					Port:     "4000",
 					Database: "test_db",

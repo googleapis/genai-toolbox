@@ -26,11 +26,11 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-const kind string = "neo4j-execute-cypher"
+const toolType string = "neo4j-execute-cypher"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -50,11 +50,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &neo4jsc.Source{}
 
-var compatibleSources = [...]string{neo4jsc.SourceKind}
+var compatibleSources = [...]string{neo4jsc.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	ReadOnly     bool     `yaml:"readOnly"`
@@ -64,8 +64,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -79,7 +79,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	var s compatibleSource
 	s, ok = rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	cypherParameter := tools.NewStringParameter("cypher", "The cypher to execute.")
@@ -94,7 +94,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Type:         toolType,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		ReadOnly:     cfg.ReadOnly,
@@ -112,7 +112,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
+	Type         string           `yaml:"type"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
 	ReadOnly     bool             `yaml:"readOnly"`

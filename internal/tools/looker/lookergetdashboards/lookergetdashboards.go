@@ -28,11 +28,11 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-get-dashboards"
+const toolType string = "looker-get-dashboards"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -55,8 +55,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -69,7 +69,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*lookersrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be `looker`", toolType)
 	}
 
 	titleParameter := tools.NewStringParameterWithDefault("title", "", "The title of the dashboard.")
@@ -92,7 +92,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	return Tool{
 		Name:           cfg.Name,
-		Kind:           kind,
+		Type:           toolType,
 		Parameters:     parameters,
 		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientOAuth,
@@ -112,7 +112,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name           string `yaml:"name"`
-	Kind           string `yaml:"kind"`
+	Type           string `yaml:"type"`
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings

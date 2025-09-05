@@ -24,11 +24,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "wait"
+const toolType string = "wait"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -42,7 +42,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	Timeout      string   `yaml:"timeout" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -50,8 +50,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
@@ -66,7 +66,7 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 
 	t := Tool{
 		Name:        cfg.Name,
-		Kind:        kind,
+		Type:        toolType,
 		Parameters:  parameters,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -79,7 +79,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name        string
-	Kind        string
+	Type        string
 	Parameters  tools.Parameters
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest

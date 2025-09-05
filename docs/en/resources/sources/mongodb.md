@@ -28,5 +28,5 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                   |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mongodb".                                                |
+| type      |  string  |     true     | Must be "mongodb".                                                |
 | uri       |  string  |     true     | connection string to connect to MongoDB                           |

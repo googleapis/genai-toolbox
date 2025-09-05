@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	CloudSQLPostgresSourceKind = "cloud-sql-postgres"
-	CloudSQLPostgresToolKind   = "postgres-sql"
+	CloudSQLPostgresSourceType = "cloud-sql-postgres"
+	CloudSQLPostgresToolType   = "postgres-sql"
 	CloudSQLPostgresProject    = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
 	CloudSQLPostgresRegion     = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
 	CloudSQLPostgresInstance   = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
@@ -59,7 +59,7 @@ func getCloudSQLPgVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     CloudSQLPostgresSourceKind,
+		"kind":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -130,10 +130,10 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLPostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLPostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -180,7 +180,7 @@ func TestCloudSQLPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLPostgresToolType)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
@@ -194,7 +194,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     CloudSQLPostgresSourceKind,
+		"kind":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -203,7 +203,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     CloudSQLPostgresSourceKind,
+		"kind":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -212,7 +212,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     CloudSQLPostgresSourceKind,
+		"kind":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -241,7 +241,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLPostgresToolType)
 			if err != nil {
 				if tc.isErr {
 					return

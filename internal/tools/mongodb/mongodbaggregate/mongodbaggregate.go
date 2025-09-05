@@ -28,11 +28,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "mongodb-aggregate"
+const toolType string = "mongodb-aggregate"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	Name            string           `yaml:"name" validate:"required"`
-	Kind            string           `yaml:"kind" validate:"required"`
+	Type            string           `yaml:"kind" validate:"required"`
 	Source          string           `yaml:"source" validate:"required"`
 	AuthRequired    []string         `yaml:"authRequired" validate:"required"`
 	Description     string           `yaml:"description" validate:"required"`
@@ -61,8 +61,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -75,7 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*mongosrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be `mongodb`", toolType)
 	}
 
 	// Create a slice for all parameters
@@ -98,7 +98,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	return Tool{
 		Name:            cfg.Name,
-		Kind:            kind,
+		Type:            toolType,
 		AuthRequired:    cfg.AuthRequired,
 		Collection:      cfg.Collection,
 		PipelinePayload: cfg.PipelinePayload,
@@ -117,7 +117,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name            string           `yaml:"name"`
-	Kind            string           `yaml:"kind"`
+	Type            string           `yaml:"type"`
 	Description     string           `yaml:"description"`
 	AuthRequired    []string         `yaml:"authRequired"`
 	Collection      string           `yaml:"collection"`

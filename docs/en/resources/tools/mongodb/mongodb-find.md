@@ -18,7 +18,7 @@ results (**sorting**), and restricting the number of documents returned
 
 The tool returns a JSON array of the documents found.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -62,7 +62,7 @@ tools:
 
 | **field**      | **type** | **required** | **description**                                                                                                             |
 |:---------------|:---------|:-------------|:----------------------------------------------------------------------------------------------------------------------------|
-| kind           | string   | true         | Must be `mongodb-find`.                                                                                                     |
+| type           | string   | true         | Must be `mongodb-find`.                                                                                                     |
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                    |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                        |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                  |

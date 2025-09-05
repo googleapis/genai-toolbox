@@ -26,11 +26,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "dataplex-search-entries"
+const toolType string = "dataplex-search-entries"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -50,11 +50,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &dataplexds.Source{}
 
-var compatibleSources = [...]string{dataplexds.SourceKind}
+var compatibleSources = [...]string{dataplexds.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -63,8 +63,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -76,7 +76,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
@@ -92,7 +92,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	t := Tool{
 		Name:          cfg.Name,
-		Kind:          kind,
+		Type:          toolType,
 		Parameters:    parameters,
 		AuthRequired:  cfg.AuthRequired,
 		CatalogClient: s.CatalogClient(),
@@ -109,7 +109,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 type Tool struct {
 	Name          string
-	Kind          string
+	Type          string
 	Parameters    tools.Parameters
 	AuthRequired  []string
 	CatalogClient *dataplexapi.CatalogClient

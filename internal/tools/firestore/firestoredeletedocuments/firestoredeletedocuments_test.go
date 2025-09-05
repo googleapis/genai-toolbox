@@ -46,7 +46,7 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 			want: server.ToolConfigs{
 				"delete_docs_tool": firestoredeletedocuments.Config{
 					Name:         "delete_docs_tool",
-					Kind:         "firestore-delete-documents",
+					Type:         "firestore-delete-documents",
 					Source:       "my-firestore-instance",
 					Description:  "Delete documents from Firestore by paths",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_delete_docs": firestoredeletedocuments.Config{
 					Name:         "secure_delete_docs",
-					Kind:         "firestore-delete-documents",
+					Type:         "firestore-delete-documents",
 					Source:       "prod-firestore",
 					Description:  "Delete documents with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -121,21 +121,21 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"delete_user_docs": firestoredeletedocuments.Config{
 			Name:         "delete_user_docs",
-			Kind:         "firestore-delete-documents",
+			Type:         "firestore-delete-documents",
 			Source:       "users-firestore",
 			Description:  "Delete user documents",
 			AuthRequired: []string{"user-auth"},
 		},
 		"delete_product_docs": firestoredeletedocuments.Config{
 			Name:         "delete_product_docs",
-			Kind:         "firestore-delete-documents",
+			Type:         "firestore-delete-documents",
 			Source:       "products-firestore",
 			Description:  "Delete product documents",
 			AuthRequired: []string{},
 		},
 		"delete_order_docs": firestoredeletedocuments.Config{
 			Name:         "delete_order_docs",
-			Kind:         "firestore-delete-documents",
+			Type:         "firestore-delete-documents",
 			Source:       "orders-firestore",
 			Description:  "Delete order documents",
 			AuthRequired: []string{"user-auth", "admin-auth"},

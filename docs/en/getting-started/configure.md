@@ -51,7 +51,7 @@ For more details on configuring different types of sources, see the
 ### Tools
 
 The `tools` section of your `tools.yaml` defines the actions your agent can
-take: what kind of tool it is, which source(s) it affects, what parameters it
+take: what type of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
 ```yaml

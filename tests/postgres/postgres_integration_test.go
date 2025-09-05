@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	PostgresSourceKind = "postgres"
-	PostgresToolKind   = "postgres-sql"
+	PostgresSourceType = "postgres"
+	PostgresToolType   = "postgres-sql"
 	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
 	PostgresHost       = os.Getenv("POSTGRES_HOST")
 	PostgresPort       = os.Getenv("POSTGRES_PORT")
@@ -55,7 +55,7 @@ func getPostgresVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     PostgresSourceKind,
+		"kind":     PostgresSourceType,
 		"host":     PostgresHost,
 		"port":     PostgresPort,
 		"database": PostgresDatabase,
@@ -109,10 +109,10 @@ func TestPostgres(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

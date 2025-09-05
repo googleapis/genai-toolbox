@@ -49,7 +49,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mssqlexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "mssql-execute-sql",
+					Type:         "mssql-execute-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

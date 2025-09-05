@@ -57,7 +57,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mongodbdeletemany.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-delete-many",
+					Type:          "mongodb-delete-many",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",

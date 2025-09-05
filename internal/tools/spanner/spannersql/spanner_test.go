@@ -53,7 +53,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -83,7 +83,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -153,7 +153,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -187,7 +187,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

@@ -27,14 +27,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "http"
+const SourceType string = "http"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -48,7 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name                   string            `yaml:"name" validate:"required"`
-	Kind                   string            `yaml:"kind" validate:"required"`
+	Type                   string            `yaml:"kind" validate:"required"`
 	BaseURL                string            `yaml:"baseUrl"`
 	Timeout                string            `yaml:"timeout"`
 	DefaultHeaders         map[string]string `yaml:"headers"`
@@ -56,8 +56,8 @@ type Config struct {
 	DisableSslVerification bool              `yaml:"disableSslVerification"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize initializes an HTTP Source instance.
@@ -107,7 +107,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:           r.Name,
-		Kind:           SourceKind,
+		Type:           SourceType,
 		BaseURL:        r.BaseURL,
 		DefaultHeaders: r.DefaultHeaders,
 		QueryParams:    r.QueryParams,
@@ -121,13 +121,13 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Name           string            `yaml:"name"`
-	Kind           string            `yaml:"kind"`
+	Type           string            `yaml:"type"`
 	BaseURL        string            `yaml:"baseUrl"`
 	DefaultHeaders map[string]string `yaml:"headers"`
 	QueryParams    map[string]string `yaml:"queryParams"`
 	Client         *http.Client
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }

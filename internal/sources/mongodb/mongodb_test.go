@@ -41,7 +41,7 @@ func TestParseFromYamlMongoDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"mongo-db": mongodb.Config{
 					Name: "mongo-db",
-					Kind: mongodb.SourceKind,
+					Type: mongodb.SourceType,
 					Uri:  "mongodb+srv://username:password@host/dbname",
 				},
 			},

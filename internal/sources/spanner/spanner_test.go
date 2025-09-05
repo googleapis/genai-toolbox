@@ -44,7 +44,7 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-spanner-instance": spanner.Config{
 					Name:     "my-spanner-instance",
-					Kind:     spanner.SourceKind,
+					Type:     spanner.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 					Dialect:  "googlesql",
@@ -66,7 +66,7 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-spanner-instance": spanner.Config{
 					Name:     "my-spanner-instance",
-					Kind:     spanner.SourceKind,
+					Type:     spanner.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 					Dialect:  "googlesql",
@@ -88,7 +88,7 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-spanner-instance": spanner.Config{
 					Name:     "my-spanner-instance",
-					Kind:     spanner.SourceKind,
+					Type:     spanner.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 					Dialect:  "postgresql",

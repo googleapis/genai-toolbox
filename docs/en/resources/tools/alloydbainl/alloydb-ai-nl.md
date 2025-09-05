@@ -105,7 +105,7 @@ tools:
 
 | **field**          |                  **type**                  | **required** | **description**                                                          |
 |--------------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------|
-| kind               |                   string                   |     true     | Must be "alloydb-ai-nl".                                                 |
+| type               |                   string                   |     true     | Must be "alloydb-ai-nl".                                                 |
 | source             |                   string                   |     true     | Name of the AlloyDB source the natural language query should execute on. |
 | description        |                   string                   |     true     | Description of the tool that is passed to the LLM.                       |
 | nlConfig           |                   string                   |     true     | The name of the  `nl_config` in AlloyDB                                  |

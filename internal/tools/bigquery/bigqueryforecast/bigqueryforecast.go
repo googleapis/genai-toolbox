@@ -29,11 +29,11 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-const kind string = "bigquery-forecast"
+const toolType string = "bigquery-forecast"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -55,11 +55,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &bigqueryds.Source{}
 
-var compatibleSources = [...]string{bigqueryds.SourceKind}
+var compatibleSources = [...]string{bigqueryds.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -68,8 +68,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -82,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	historyDataParameter := tools.NewStringParameter("history_data",
@@ -107,7 +107,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:           cfg.Name,
-		Kind:           kind,
+		Type:           toolType,
 		Parameters:     parameters,
 		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientAuthorization(),
@@ -125,7 +125,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
+	Type           string           `yaml:"type"`
 	AuthRequired   []string         `yaml:"authRequired"`
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
@@ -214,7 +214,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", toolType, sql)
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of

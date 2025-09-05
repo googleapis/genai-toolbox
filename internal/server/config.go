@@ -119,7 +119,7 @@ var _ yaml.InterfaceUnmarshalerContext = &SourceConfigs{}
 
 func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(SourceConfigs)
-	// Parse the 'kind' fields for each source
+	// Parse the 'type' fields for each source
 	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
@@ -132,11 +132,11 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
 
-		kind, ok := v["kind"]
+		sourceType, ok := v["kind"]
 		if !ok {
 			return fmt.Errorf("missing 'kind' field for source %q", name)
 		}
-		kindStr, ok := kind.(string)
+		typeStr, ok := sourceType.(string)
 		if !ok {
 			return fmt.Errorf("invalid 'kind' field for source %q (must be a string)", name)
 		}
@@ -146,7 +146,7 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 			return fmt.Errorf("error creating YAML decoder for source %q: %w", name, err)
 		}
 
-		sourceConfig, err := sources.DecodeConfig(ctx, kindStr, name, yamlDecoder)
+		sourceConfig, err := sources.DecodeConfig(ctx, typeStr, name, yamlDecoder)
 		if err != nil {
 			return err
 		}
@@ -163,7 +163,7 @@ var _ yaml.InterfaceUnmarshalerContext = &AuthServiceConfigs{}
 
 func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(AuthServiceConfigs)
-	// Parse the 'kind' fields for each authService
+	// Parse the 'type' fields for each authService
 	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
@@ -175,7 +175,7 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
 
-		kind, ok := v["kind"]
+		asType, ok := v["kind"]
 		if !ok {
 			return fmt.Errorf("missing 'kind' field for %q", name)
 		}
@@ -184,15 +184,15 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 		if err != nil {
 			return fmt.Errorf("error creating decoder: %w", err)
 		}
-		switch kind {
-		case google.AuthServiceKind:
+		switch asType {
+		case google.AuthServiceType:
 			actual := google.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+				return fmt.Errorf("unable to parse as %q: %w", asType, err)
 			}
 			(*c)[name] = actual
 		default:
-			return fmt.Errorf("%q is not a valid kind of auth source", kind)
+			return fmt.Errorf("%q is not a valid kind of auth source", asType)
 		}
 	}
 	return nil
@@ -206,7 +206,7 @@ var _ yaml.InterfaceUnmarshalerContext = &ToolConfigs{}
 
 func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	*c = make(ToolConfigs)
-	// Parse the 'kind' fields for each source
+	// Parse the 'type' fields for each source
 	var raw map[string]util.DelayedUnmarshaler
 	if err := unmarshal(&raw); err != nil {
 		return err
@@ -228,11 +228,11 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			v["authRequired"] = []string{}
 		}
 
-		kindVal, ok := v["kind"]
+		typeVal, ok := v["kind"]
 		if !ok {
 			return fmt.Errorf("missing 'kind' field for tool %q", name)
 		}
-		kindStr, ok := kindVal.(string)
+		typeStr, ok := typeVal.(string)
 		if !ok {
 			return fmt.Errorf("invalid 'kind' field for tool %q (must be a string)", name)
 		}
@@ -242,7 +242,7 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
 		}
 
-		toolCfg, err := tools.DecodeConfig(ctx, kindStr, name, yamlDecoder)
+		toolCfg, err := tools.DecodeConfig(ctx, typeStr, name, yamlDecoder)
 		if err != nil {
 			return err
 		}

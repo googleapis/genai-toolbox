@@ -30,7 +30,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const kind string = "alloydb-wait-for-operation"
+const toolType string = "alloydb-wait-for-operation"
 
 var alloyDBConnectionMessageTemplate = `Your AlloyDB resource is ready.
 
@@ -76,8 +76,8 @@ Please refer to the official documentation for guidance on deploying the toolbox
 `
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -92,7 +92,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 // Config defines the configuration for the wait-for-operation tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 	BaseURL      string   `yaml:"baseURL"`
@@ -107,9 +107,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of the tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of the tool.
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 // Initialize initializes the tool from the configuration.
@@ -169,7 +169,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Type:         toolType,
 		BaseURL:      baseURL,
 		AuthRequired: cfg.AuthRequired,
 		Client:       &http.Client{},
@@ -186,7 +186,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool represents the wait-for-operation tool.
 type Tool struct {
 	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
+	Type         string   `yaml:"type"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 

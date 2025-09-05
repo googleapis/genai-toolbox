@@ -34,6 +34,6 @@ tools:
 
 | **field**   |    **type**    | **required** | **description**                                            |
 |-------------|:--------------:|:------------:|------------------------------------------------------------|
-| kind        |     string     |     true     | Must be "firestore-get-documents".                         |
+| type        |     string     |     true     | Must be "firestore-get-documents".                         |
 | source      |     string     |     true     | Name of the Firestore source to retrieve documents from.   |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.         |

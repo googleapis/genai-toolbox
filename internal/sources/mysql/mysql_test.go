@@ -50,7 +50,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mysql-instance": mysql.Config{
 					Name:     "my-mysql-instance",
-					Kind:     mysql.SourceKind,
+					Type:     mysql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -75,7 +75,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mysql-instance": mysql.Config{
 					Name:         "my-mysql-instance",
-					Kind:         mysql.SourceKind,
+					Type:         mysql.SourceType,
 					Host:         "0.0.0.0",
 					Port:         "my-port",
 					Database:     "my_db",
@@ -103,7 +103,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mysql-instance": mysql.Config{
 					Name:     "my-mysql-instance",
-					Kind:     mysql.SourceKind,
+					Type:     mysql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -211,7 +211,7 @@ func TestFailInitialization(t *testing.T) {
 
 	cfg := mysql.Config{
 		Name:         "instance",
-		Kind:         "mysql",
+		Type:         "mysql",
 		Host:         "localhost",
 		Port:         "3306",
 		Database:     "db",

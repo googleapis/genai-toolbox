@@ -24,11 +24,11 @@ import (
 	"github.com/valkey-io/valkey-go"
 )
 
-const kind string = "valkey"
+const toolType string = "valkey"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -47,11 +47,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &valkeysrc.Source{}
 
-var compatibleSources = [...]string{valkeysrc.SourceKind, valkeysrc.SourceKind}
+var compatibleSources = [...]string{valkeysrc.SourceType, valkeysrc.SourceType}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
+	Type         string           `yaml:"kind" validate:"required"`
 	Source       string           `yaml:"source" validate:"required"`
 	Description  string           `yaml:"description" validate:"required"`
 	Commands     [][]string       `yaml:"commands" validate:"required"`
@@ -62,8 +62,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -76,7 +76,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -88,7 +88,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Type:         toolType,
 		Parameters:   cfg.Parameters,
 		Commands:     cfg.Commands,
 		AuthRequired: cfg.AuthRequired,
@@ -104,7 +104,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
+	Type         string           `yaml:"type"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 

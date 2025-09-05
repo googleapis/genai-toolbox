@@ -31,7 +31,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const kind string = "bigquery-conversational-analytics"
+const toolType string = "bigquery-conversational-analytics"
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
@@ -39,8 +39,8 @@ const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 3. **NO CHARTS:** You are STRICTLY FORBIDDEN from generating any charts, graphs, images, or any other form of visualization.`
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -103,11 +103,11 @@ type CAPayload struct {
 // validate compatible sources are still compatible
 var _ compatibleSource = &bigqueryds.Source{}
 
-var compatibleSources = [...]string{bigqueryds.SourceKind}
+var compatibleSources = [...]string{bigqueryds.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -116,8 +116,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -130,7 +130,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	userQueryParameter := tools.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
@@ -147,7 +147,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:               cfg.Name,
-		Kind:               kind,
+		Type:               toolType,
 		Project:            s.BigQueryProject(),
 		Location:           s.BigQueryLocation(),
 		Parameters:         parameters,
@@ -167,7 +167,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
+	Type           string           `yaml:"type"`
 	AuthRequired   []string         `yaml:"authRequired"`
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`

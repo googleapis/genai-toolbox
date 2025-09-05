@@ -44,7 +44,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              |     **type**      | **required** | **description**                                                                                                                    |
 |------------------------|:-----------------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------|
-| kind                   |      string       |     true     | Must be "http".                                                                                                                    |
+| type                   |      string       |     true     | Must be "http".                                                                                                                    |
 | baseUrl                |      string       |     true     | The base URL for the HTTP requests (e.g., `https://api.example.com`).                                                              |
 | timeout                |      string       |    false     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples). Defaults to 30s. |
 | headers                | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                   |

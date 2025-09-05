@@ -33,34 +33,34 @@ var toolRegistry = make(map[string]ToolConfigFactory)
 
 // Register allows individual tool packages to register their configuration
 // factory function. This is typically called from an init() function in the
-// tool's package. It associates a 'kind' string with a function that can
+// tool's package. It associates a 'type' string with a function that can
 // produce the specific ToolConfig type. It returns true if the registration was
-// successful, and false if a tool with the same kind was already registered.
-func Register(kind string, factory ToolConfigFactory) bool {
-	if _, exists := toolRegistry[kind]; exists {
-		// Tool with this kind already exists, do not overwrite.
+// successful, and false if a tool with the same type was already registered.
+func Register(resourceType string, factory ToolConfigFactory) bool {
+	if _, exists := toolRegistry[resourceType]; exists {
+		// Tool with this type already exists, do not overwrite.
 		return false
 	}
-	toolRegistry[kind] = factory
+	toolRegistry[resourceType] = factory
 	return true
 }
 
-// DecodeConfig looks up the registered factory for the given kind and uses it
+// DecodeConfig looks up the registered factory for the given type and uses it
 // to decode the tool configuration.
-func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
-	factory, found := toolRegistry[kind]
+func DecodeConfig(ctx context.Context, resourceType string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
+	factory, found := toolRegistry[resourceType]
 	if !found {
-		return nil, fmt.Errorf("unknown tool kind: %q", kind)
+		return nil, fmt.Errorf("unknown tool type: %q", resourceType)
 	}
 	toolConfig, err := factory(ctx, name, decoder)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse tool %q as kind %q: %w", name, kind, err)
+		return nil, fmt.Errorf("unable to parse tool %q as kind %q: %w", name, resourceType, err)
 	}
 	return toolConfig, nil
 }
 
 type ToolConfig interface {
-	ToolConfigKind() string
+	ToolConfigType() string
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 

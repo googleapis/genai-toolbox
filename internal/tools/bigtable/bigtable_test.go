@@ -53,7 +53,7 @@ func TestParseFromYamlBigtable(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigtable.Config{
 					Name:         "example_tool",
-					Kind:         "bigtable-sql",
+					Type:         "bigtable-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -122,7 +122,7 @@ func TestParseFromYamlWithTemplateBigtable(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigtable.Config{
 					Name:         "example_tool",
-					Kind:         "bigtable-sql",
+					Type:         "bigtable-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

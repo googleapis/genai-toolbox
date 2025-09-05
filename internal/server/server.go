@@ -148,7 +148,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/init",
-				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
+				trace.WithAttributes(attribute.String("source_type", sc.SourceConfigType())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
@@ -172,7 +172,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/auth/init",
-				trace.WithAttributes(attribute.String("auth_kind", sc.AuthServiceConfigKind())),
+				trace.WithAttributes(attribute.String("auth_type", sc.AuthServiceConfigType())),
 				trace.WithAttributes(attribute.String("auth_name", name)),
 			)
 			defer span.End()
@@ -196,7 +196,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/tool/init",
-				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
+				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()

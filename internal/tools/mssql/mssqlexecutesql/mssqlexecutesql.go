@@ -27,11 +27,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-const kind string = "mssql-execute-sql"
+const toolType string = "mssql-execute-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -51,11 +51,11 @@ type compatibleSource interface {
 var _ compatibleSource = &cloudsqlmssql.Source{}
 var _ compatibleSource = &mssql.Source{}
 
-var compatibleSources = [...]string{cloudsqlmssql.SourceKind, mssql.SourceKind}
+var compatibleSources = [...]string{cloudsqlmssql.SourceType, mssql.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -64,8 +64,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -78,7 +78,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
@@ -93,7 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Type:         toolType,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.MSSQLDB(),
@@ -108,7 +108,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
+	Type         string           `yaml:"type"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
@@ -129,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", toolType, sql)
 
 	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {

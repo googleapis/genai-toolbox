@@ -33,8 +33,8 @@ import (
 )
 
 var (
-	MongoDbSourceKind   = "mongodb"
-	MongoDbToolKind     = "mongodb-find"
+	MongoDbSourceType   = "mongodb"
+	MongoDbToolType     = "mongodb-find"
 	MongoDbUri          = os.Getenv("MONGODB_URI")
 	MongoDbDatabase     = os.Getenv("MONGODB_DATABASE")
 	ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
@@ -48,7 +48,7 @@ func getMongoDBVars(t *testing.T) map[string]any {
 		t.Fatal("'MongoDbDatabase' not set")
 	}
 	return map[string]any{
-		"kind": MongoDbSourceKind,
+		"kind": MongoDbSourceType,
 		"uri":  MongoDbUri,
 	}
 }
@@ -83,7 +83,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := getMongoDBToolsConfig(sourceConfig, MongoDbToolKind)
+	toolsFile := getMongoDBToolsConfig(sourceConfig, MongoDbToolType)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -475,7 +475,7 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 
 }
 
-func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+func getMongoDBToolsConfig(sourceConfig map[string]any, toolType string) map[string]any {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
@@ -498,7 +498,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":       MongoDbDatabase,
 			},
 			"my-tool": map[string]any{
-				"kind":          toolKind,
+				"kind":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
@@ -520,7 +520,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":       MongoDbDatabase,
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":          toolKind,
+				"kind":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
@@ -537,7 +537,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":       MongoDbDatabase,
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":          toolKind,
+				"kind":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
@@ -555,7 +555,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":       MongoDbDatabase,
 			},
 			"my-array-tool": map[string]any{
-				"kind":          toolKind,
+				"kind":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with array.",
 				"authRequired":  []string{},
@@ -576,7 +576,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":       MongoDbDatabase,
 			},
 			"my-auth-tool": map[string]any{
-				"kind":          toolKind,
+				"kind":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test authenticated parameters.",
 				"authRequired":  []string{},
@@ -599,7 +599,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":       MongoDbDatabase,
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"authRequired": []string{
@@ -611,7 +611,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":      MongoDbDatabase,
 			},
 			"my-fail-tool": map[string]any{
-				"kind":          toolKind,
+				"kind":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test statement with incorrect syntax.",
 				"authRequired":  []string{},

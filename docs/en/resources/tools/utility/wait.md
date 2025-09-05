@@ -35,6 +35,6 @@ tools:
 
 | **field**   |    **type**    | **required** | **description**                                       |
 |-------------|:--------------:|:------------:|-------------------------------------------------------|
-| kind        |     string     |     true     | Must be "wait".                                       |
+| type        |     string     |     true     | Must be "wait".                                       |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.    |
 | timeout     |     string     |     true     | The default duration the tool can wait for.           |

@@ -53,7 +53,7 @@ func TestParseFromYamlOceanBaseSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": oceanbasesql.Config{
 					Name:         "example_tool",
-					Kind:         "oceanbase-sql",
+					Type:         "oceanbase-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "select * from t where id = ?",

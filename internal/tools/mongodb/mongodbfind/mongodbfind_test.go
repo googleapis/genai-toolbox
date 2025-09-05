@@ -63,7 +63,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mongodbfind.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-find",
+					Type:          "mongodb-find",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",

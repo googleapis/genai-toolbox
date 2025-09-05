@@ -26,11 +26,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
-const kind string = "oceanbase-execute-sql"
+const toolType string = "oceanbase-execute-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -41,11 +41,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &oceanbase.Source{}
 
-var compatibleSources = [...]string{oceanbase.SourceKind}
+var compatibleSources = [...]string{oceanbase.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -62,8 +62,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -76,7 +76,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
@@ -91,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Type:         toolType,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.OceanBasePool(),
@@ -106,7 +106,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
+	Type         string           `yaml:"type"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 

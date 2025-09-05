@@ -28,14 +28,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "cloud-sql-mssql"
+const SourceType string = "cloud-sql-mssql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -50,7 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Cloud SQL MSSQL configs
 	Name      string         `yaml:"name" validate:"required"`
-	Kind      string         `yaml:"kind" validate:"required"`
+	Type      string         `yaml:"kind" validate:"required"`
 	Project   string         `yaml:"project" validate:"required"`
 	Region    string         `yaml:"region" validate:"required"`
 	Instance  string         `yaml:"instance" validate:"required"`
@@ -61,9 +61,9 @@ type Config struct {
 	Database  string         `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns Cloud SQL MSSQL source type
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -81,7 +81,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: SourceKind,
+		Type: SourceType,
 		Db:   db,
 	}
 	return s, nil
@@ -92,13 +92,13 @@ var _ sources.Source = &Source{}
 type Source struct {
 	// Cloud SQL MSSQL struct with connection pool
 	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Type string `yaml:"type"`
 	Db   *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns Cloud SQL MSSQL source type
+	return SourceType
 }
 
 func (s *Source) MSSQLDB() *sql.DB {
@@ -108,7 +108,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 
 func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// Create dsn

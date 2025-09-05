@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	Neo4jSourceKind = "neo4j"
+	Neo4jSourceType = "neo4j"
 	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
 	Neo4jUri        = os.Getenv("NEO4J_URI")
 	Neo4jUser       = os.Getenv("NEO4J_USER")
@@ -56,7 +56,7 @@ func getNeo4jVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     Neo4jSourceKind,
+		"kind":     Neo4jSourceType,
 		"uri":      Neo4jUri,
 		"database": Neo4jDatabase,
 		"user":     Neo4jUser,

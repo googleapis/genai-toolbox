@@ -46,7 +46,7 @@ func TestParseFromYamlDataplexSearchEntries(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dataplexsearchentries.Config{
 					Name:         "example_tool",
-					Kind:         "dataplex-search-entries",
+					Type:         "dataplex-search-entries",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

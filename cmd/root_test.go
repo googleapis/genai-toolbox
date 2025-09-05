@@ -496,7 +496,7 @@ func TestParseToolFile(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -509,7 +509,7 @@ func TestParseToolFile(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:        "example_tool",
-						Kind:        "postgres-sql",
+						Type:        "postgres-sql",
 						Source:      "my-pg-instance",
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
@@ -615,7 +615,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -628,19 +628,19 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "other-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         "postgres-sql",
+						Type:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -714,7 +714,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -727,19 +727,19 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				AuthSources: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "other-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         "postgres-sql",
+						Type:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -815,7 +815,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -828,19 +828,19 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "other-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         "postgres-sql",
+						Type:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -972,7 +972,7 @@ func TestEnvVarReplacement(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-http-instance": httpsrc.Config{
 						Name:           "my-http-instance",
-						Kind:           httpsrc.SourceKind,
+						Type:           httpsrc.SourceType,
 						BaseURL:        "http://test_server/",
 						Timeout:        "10s",
 						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
@@ -982,19 +982,19 @@ func TestEnvVarReplacement(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "ACTUAL_CLIENT_ID",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "ACTUAL_CLIENT_ID_2",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
 						Name:         "example_tool",
-						Kind:         "http",
+						Type:         "http",
 						Source:       "my-instance",
 						Method:       "GET",
 						Path:         "search?name=alice&pet=cat",

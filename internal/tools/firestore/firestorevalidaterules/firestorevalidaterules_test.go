@@ -46,7 +46,7 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 			want: server.ToolConfigs{
 				"validate_rules_tool": firestorevalidaterules.Config{
 					Name:         "validate_rules_tool",
-					Kind:         "firestore-validate-rules",
+					Type:         "firestore-validate-rules",
 					Source:       "my-firestore-instance",
 					Description:  "Validate Firestore security rules",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_validate_rules": firestorevalidaterules.Config{
 					Name:         "secure_validate_rules",
-					Kind:         "firestore-validate-rules",
+					Type:         "firestore-validate-rules",
 					Source:       "prod-firestore",
 					Description:  "Validate rules with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -121,21 +121,21 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"validate_dev_rules": firestorevalidaterules.Config{
 			Name:         "validate_dev_rules",
-			Kind:         "firestore-validate-rules",
+			Type:         "firestore-validate-rules",
 			Source:       "dev-firestore",
 			Description:  "Validate development environment rules",
 			AuthRequired: []string{"dev-auth"},
 		},
 		"validate_staging_rules": firestorevalidaterules.Config{
 			Name:         "validate_staging_rules",
-			Kind:         "firestore-validate-rules",
+			Type:         "firestore-validate-rules",
 			Source:       "staging-firestore",
 			Description:  "Validate staging environment rules",
 			AuthRequired: []string{},
 		},
 		"validate_prod_rules": firestorevalidaterules.Config{
 			Name:         "validate_prod_rules",
-			Kind:         "firestore-validate-rules",
+			Type:         "firestore-validate-rules",
 			Source:       "prod-firestore",
 			Description:  "Validate production environment rules",
 			AuthRequired: []string{"prod-auth", "admin-auth"},

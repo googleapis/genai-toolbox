@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	FirestoreSourceKind = "firestore"
+	FirestoreSourceType = "firestore"
 	FirestoreProject    = os.Getenv("FIRESTORE_PROJECT")
 	FirestoreDatabase   = os.Getenv("FIRESTORE_DATABASE") // Optional, defaults to "(default)"
 )
@@ -48,7 +48,7 @@ func getFirestoreVars(t *testing.T) map[string]any {
 	}
 
 	vars := map[string]any{
-		"kind":    FirestoreSourceKind,
+		"kind":    FirestoreSourceType,
 		"project": FirestoreProject,
 	}
 

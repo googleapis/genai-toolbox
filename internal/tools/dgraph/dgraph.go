@@ -25,11 +25,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "dgraph-dql"
+const toolType string = "dgraph-dql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -48,11 +48,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &dgraph.Source{}
 
-var compatibleSources = [...]string{dgraph.SourceKind}
+var compatibleSources = [...]string{dgraph.SourceType}
 
 type Config struct {
 	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
+	Type         string           `yaml:"kind" validate:"required"`
 	Source       string           `yaml:"source" validate:"required"`
 	Description  string           `yaml:"description" validate:"required"`
 	Statement    string           `yaml:"statement" validate:"required"`
@@ -65,8 +65,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -79,7 +79,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -91,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Name:         cfg.Name,
-		Kind:         kind,
+		Type:         toolType,
 		Parameters:   cfg.Parameters,
 		Statement:    cfg.Statement,
 		AuthRequired: cfg.AuthRequired,
@@ -109,7 +109,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
+	Type         string           `yaml:"type"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
 	DgraphClient *dgraph.DgraphClient

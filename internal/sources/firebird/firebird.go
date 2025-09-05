@@ -25,13 +25,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "firebird"
+const SourceType string = "firebird"
 
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -45,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"kind" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
@@ -53,8 +53,8 @@ type Config struct {
 	Database string `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -70,7 +70,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: SourceKind,
+		Type: SourceType,
 		Db:   pool,
 	}
 	return s, nil
@@ -80,12 +80,12 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Type string `yaml:"type"`
 	Db   *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) FirebirdDB() *sql.DB {
@@ -93,7 +93,7 @@ func (s *Source) FirebirdDB() *sql.DB {
 }
 
 func initFirebirdConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
-	_, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	_, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// urlExample := "user:password@host:port/path/to/database.fdb"

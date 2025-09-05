@@ -22,7 +22,7 @@ array of documents produced by the final stage of the pipeline.
 A `readOnly` flag can be set to `true` as a safety measure to ensure the
 pipeline does not contain any write stages (like `$out` or `$merge`).
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -70,7 +70,7 @@ tools:
 
 | **field**       | **type** | **required** | **description**                                                                                                |
 |:----------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------------------|
-| kind            | string   | true         | Must be `mongodb-aggregate`.                                                                                   |
+| type            | string   | true         | Must be `mongodb-aggregate`.                                                                                   |
 | source          | string   | true         | The name of the `mongodb` source to use.                                                                       |
 | description     | string   | true         | A description of the tool that is passed to the LLM.                                                           |
 | database        | string   | true         | The name of the MongoDB database containing the collection.                                                    |

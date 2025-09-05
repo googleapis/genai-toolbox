@@ -55,7 +55,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                                                                                                            |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mssql".                                                                                                                                                                           |
+| type      |  string  |     true     | Must be "mssql".                                                                                                                                                                           |
 | host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                                                                                               |
 | port      |  string  |     true     | Port to connect to (e.g. "1433").                                                                                                                                                          |
 | database  |  string  |     true     | Name of the SQL Server database to connect to (e.g. "my_db").                                                                                                                              |

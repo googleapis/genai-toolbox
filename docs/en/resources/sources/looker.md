@@ -59,7 +59,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**            | **type** | **required** | **description**                                                                           |
 | -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
-| kind                 |  string  |     true     | Must be "looker".                                                                         |
+| type                 |  string  |     true     | Must be "looker".                                                                         |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
 | client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
 | client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |

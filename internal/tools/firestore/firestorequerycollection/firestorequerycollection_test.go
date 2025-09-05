@@ -46,7 +46,7 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 			want: server.ToolConfigs{
 				"query_users_tool": firestorequerycollection.Config{
 					Name:         "query_users_tool",
-					Kind:         "firestore-query-collection",
+					Type:         "firestore-query-collection",
 					Source:       "my-firestore-instance",
 					Description:  "Query users collection with filters and ordering",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_query_tool": firestorequerycollection.Config{
 					Name:         "secure_query_tool",
-					Kind:         "firestore-query-collection",
+					Type:         "firestore-query-collection",
 					Source:       "prod-firestore",
 					Description:  "Query collections with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -121,21 +121,21 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"query_users": firestorequerycollection.Config{
 			Name:         "query_users",
-			Kind:         "firestore-query-collection",
+			Type:         "firestore-query-collection",
 			Source:       "users-firestore",
 			Description:  "Query user documents with filtering",
 			AuthRequired: []string{"user-auth"},
 		},
 		"query_products": firestorequerycollection.Config{
 			Name:         "query_products",
-			Kind:         "firestore-query-collection",
+			Type:         "firestore-query-collection",
 			Source:       "products-firestore",
 			Description:  "Query product catalog",
 			AuthRequired: []string{},
 		},
 		"query_orders": firestorequerycollection.Config{
 			Name:         "query_orders",
-			Kind:         "firestore-query-collection",
+			Type:         "firestore-query-collection",
 			Source:       "orders-firestore",
 			Description:  "Query customer orders with complex filters",
 			AuthRequired: []string{"user-auth", "admin-auth"},

@@ -46,7 +46,7 @@ func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigqueryexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-execute-sql",
+					Type:         "bigquery-execute-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

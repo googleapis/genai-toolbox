@@ -35,8 +35,8 @@ import (
 )
 
 var (
-	BigtableSourceKind = "bigtable"
-	BigtableToolKind   = "bigtable-sql"
+	BigtableSourceType = "bigtable"
+	BigtableToolType   = "bigtable-sql"
 	BigtableProject    = os.Getenv("BIGTABLE_PROJECT")
 	BigtableInstance   = os.Getenv("BIGTABLE_INSTANCE")
 )
@@ -50,7 +50,7 @@ func getBigtableVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     BigtableSourceKind,
+		"kind":     BigtableSourceType,
 		"project":  BigtableProject,
 		"instance": BigtableInstance,
 	}
@@ -99,7 +99,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	defer teardownTableTmpl(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolKind, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolType, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
