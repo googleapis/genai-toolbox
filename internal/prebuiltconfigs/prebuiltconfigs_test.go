@@ -30,6 +30,7 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres",
 	"dataplex",
 	"firestore",
+	"hana",
 	"looker",
 	"mssql",
 	"mysql",
@@ -51,7 +52,25 @@ func TestGetPrebuiltSources(t *testing.T) {
 
 func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
-	expectedKeys := expectedToolSources
+	expectedKeys := []string{
+		"alloydb-postgres-admin",
+		"alloydb-postgres",
+		"bigquery",
+		"clickhouse",
+		"cloud-sql-mssql",
+		"cloud-sql-mysql",
+		"cloud-sql-postgres",
+		"dataplex",
+		"firestore",
+		"hana",
+		"looker",
+		"mssql",
+		"mysql",
+		"oceanbase",
+		"postgres",
+		"spanner-postgres",
+		"spanner",
+	}
 	t.Run(test_name, func(t *testing.T) {
 		configsMap, keys, err := loadPrebuiltToolYAMLs()
 		if err != nil {
@@ -98,6 +117,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	hana_config, _ := Get("hana")
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
@@ -142,6 +162,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(spannerpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+	}
+	if len(hana_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch hana prebuilt tools yaml")
 	}
 }
 
