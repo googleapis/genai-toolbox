@@ -1,0 +1,23 @@
+sources:
+  neo4j-source:
+    kind: neo4j
+    uri: ${NEO4J_URI}
+    database: ${NEO4J_DATABASE}
+    user: ${NEO4J_USERNAME}
+    password: ${NEO4J_PASSWORD}
+
+tools:
+  execute_cypher:
+    kind: neo4j-execute-cypher
+    source: neo4j-source
+    description: Use this tool to execute Cypher queries.
+
+  schema:
+    kind: neo4j-schema
+    source: neo4j-source
+    description: Use this tool to get the database schema.
+
+toolsets:
+  neo4j-database-tools:
+    - execute_cypher
+    - schema
