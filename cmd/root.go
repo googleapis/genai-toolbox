@@ -53,6 +53,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
