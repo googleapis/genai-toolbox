@@ -511,6 +511,29 @@ steps:
           "Looker" \
           looker \
           looker
+    
+  - id: "mindsdb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "MINDSDB_PORT=$_MINDSDB_PORT"
+      - "MINDSDB_DATABASE=$_MINDSDB_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "MYSQL_PORT=$_MYSQL_PORT"
+      - "MYSQL_DATABASE=$_DATABASE_NAME"
+    secretEnv: ["MINDSDB_HOST", "MINDSDB_USER", "MINDSDB_PASS", "CLIENT_ID", "MINDSDB_MYSQL_USER", "MINDSDB_MYSQL_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "MindsDB" \
+          mindsdb \
+          mindsdb
 
   - id: "alloydbwaitforoperation"
     name: golang:1
@@ -698,6 +721,17 @@ availableSecrets:
       env: OCEANBASE_USER
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_pass/versions/latest
       env: OCEANBASE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_host/versions/latest
+      env: MINDSDB_HOST
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_user/versions/latest
+      env: MINDSDB_USER
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_pass/versions/latest
+      env: MINDSDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_mysql_user/versions/latest
+      env: MINDSDB_MYSQL_USER
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_mysql_pass/versions/latest
+      env: MINDSDB_MYSQL_PASS
+    
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -744,3 +778,5 @@ substitutions:
   _TRINO_SCHEMA: "default"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
+  _MINDSDB_PORT: "47335"
+  _MINDSDB_DATABASE: "mindsdb_test"

@@ -1244,6 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1313,11 +1314,16 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("MSSQL_USER", "your_mssql_user")
 	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
 
+	t.Setenv("MINDSDB_HOST", "localhost")
+	t.Setenv("MINDSDB_PORT", "47334")
+	t.Setenv("MINDSDB_DATABASE", "your_mindsdb_db")
+	t.Setenv("MINDSDB_USER", "your_mindsdb_user")
+	t.Setenv("MINDSDB_PASS", "your_mindsdb_password")
+
 	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
-
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1474,6 +1480,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-postgres-database-tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "mindsdb prebuilt tools",
+			in:   mindsdb_config,
+			wantToolset: server.ToolsetConfigs{
+				"mindsdb-tools": tools.ToolsetConfig{
+					Name:      "mindsdb-tools",
+					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
 				},
 			},
 		},

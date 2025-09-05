@@ -24,6 +24,11 @@ type InvokeTestConfig struct {
 	supportOptionalNullParam bool
 	supportArrayParam        bool
 	supportClientAuth        bool
+	// MindsDB-specific overrides
+	mindsDBParameterValidationOverride bool
+	mindsDBAuthOverride                bool
+	mindsDBExpectedParameterResponse   string
+	mindsDBExpectedAuthResponse        string
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
@@ -84,6 +89,11 @@ func EnableClientAuthTest() InvokeTestOption {
 type MCPTestConfig struct {
 	myToolId3NameAliceWant string
 	supportClientAuth      bool
+	// MindsDB-specific MCP overrides
+	mindsDBMCPParameterValidationOverride bool
+	mindsDBMCPAuthOverride                bool
+	mindsDBMCPExpectedParameterResponse   string
+	mindsDBMCPExpectedAuthResponse        string
 }
 
 type McpTestOption func(*MCPTestConfig)
@@ -219,5 +229,39 @@ func DisableDdlTest() TemplateParamOption {
 func DisableInsertTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.supportInsert = false
+	}
+}
+
+// MindsDB-specific option functions
+
+// WithMindsDBParameterValidationOverride enables MindsDB-specific parameter validation overrides
+func WithMindsDBParameterValidationOverride() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.mindsDBParameterValidationOverride = true
+		c.mindsDBExpectedParameterResponse = `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`
+	}
+}
+
+// WithMindsDBAuthOverride enables MindsDB-specific auth overrides
+func WithMindsDBAuthOverride() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.mindsDBAuthOverride = true
+		c.mindsDBExpectedAuthResponse = `null`
+	}
+}
+
+// WithMindsDBMCPParameterValidationOverride enables MindsDB-specific MCP parameter validation overrides
+func WithMindsDBMCPParameterValidationOverride() McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.mindsDBMCPParameterValidationOverride = true
+		c.mindsDBMCPExpectedParameterResponse = `"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]`
+	}
+}
+
+// WithMindsDBMCPAuthOverride enables MindsDB-specific MCP auth overrides
+func WithMindsDBMCPAuthOverride() McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.mindsDBMCPAuthOverride = true
+		c.mindsDBMCPExpectedAuthResponse = `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[]}}`
 	}
 }
