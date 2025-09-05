@@ -81,7 +81,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**   | **type** | **required** | **description**                                                                    |
 |-------------|:--------:|:------------:|------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "clickhouse".                                                              |
+| type        |  string  |     true     | Must be "clickhouse".                                                              |
 | host        |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "clickhouse.example.com") |
 | port        |  string  |     true     | Port to connect to (e.g. "8443" for HTTPS, "8123" for HTTP)                     |
 | database    |  string  |     true     | Name of the ClickHouse database to connect to (e.g. "my_database").              |

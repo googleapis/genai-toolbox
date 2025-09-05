@@ -28,14 +28,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "alloydb-postgres"
+const SourceType string = "alloydb-postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string         `yaml:"name" validate:"required"`
-	Kind     string         `yaml:"kind" validate:"required"`
+	Type     string         `yaml:"kind" validate:"required"`
 	Project  string         `yaml:"project" validate:"required"`
 	Region   string         `yaml:"region" validate:"required"`
 	Cluster  string         `yaml:"cluster" validate:"required"`
@@ -60,8 +60,8 @@ type Config struct {
 	Database string         `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -77,7 +77,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name: r.Name,
-		Kind: SourceKind,
+		Type: SourceType,
 		Pool: pool,
 	}
 	return s, nil
@@ -87,12 +87,12 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Type string `yaml:"type"`
 	Pool *pgxpool.Pool
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
@@ -147,7 +147,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 
 func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	dsn, useIAM, err := getConnectionConfig(ctx, user, pass, dbname)

@@ -57,7 +57,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 | ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
-| kind         |  string  |     true     | Must be "mysql".                                                                                |
+| type         |  string  |     true     | Must be "mysql".                                                                                |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
 | database     |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                        |

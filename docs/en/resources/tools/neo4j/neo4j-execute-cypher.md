@@ -55,7 +55,7 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                 |
 |-------------|:------------------------------------------:|:------------:|-------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "neo4j-cypher".                                                                         |
+| type        |                   string                   |     true     | Must be "neo4j-cypher".                                                                         |
 | source      |                   string                   |     true     | Name of the source the Cypher query should execute on.                                          |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
 | readOnly    |                   boolean                  |     false    | If set to `true`, the tool will reject any write operations in the Cypher query. Default is `false`. |

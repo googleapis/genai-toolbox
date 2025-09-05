@@ -70,6 +70,6 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                               |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigtable".                                                           |
+| type      |  string  |     true     | Must be "bigtable".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | instance  |  string  |     true     | Name of the Bigtable instance.                                                |

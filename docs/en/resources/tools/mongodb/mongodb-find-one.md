@@ -18,7 +18,7 @@ returned. Otherwise, the selection is not guaranteed.
 The tool returns a single JSON object representing the document, wrapped in a
 JSON array.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -55,7 +55,7 @@ tools:
 
 | **field**      | **type** | **required** | **description**                                                                                                                              |
 |:---------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           | string   | true         | Must be `mongodb-find-one`.                                                                                                                  |
+| type           | string   | true         | Must be `mongodb-find-one`.                                                                                                                  |
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                                     |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                                         |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                                   |

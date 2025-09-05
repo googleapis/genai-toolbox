@@ -51,7 +51,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                        |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firebird".                                                    |
+| type      |  string  |     true     | Must be "firebird".                                                    |
 | host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
 | port      |  string  |     true     | Port to connect to (e.g. "3050")                                       |
 | database  |  string  |     true     | Path to the Firebird database file (e.g. "/var/lib/firebird/data/test.fdb"). |

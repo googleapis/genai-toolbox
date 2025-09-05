@@ -55,5 +55,5 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                  |
 |-----------|:--------:|:------------:|------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "google".                                                |
+| type      |  string  |     true     | Must be "google".                                                |
 | clientId  |  string  |     true     | Client ID of your application from registering your application. |

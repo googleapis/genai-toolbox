@@ -30,7 +30,7 @@ import (
 )
 
 // RunSourceConnection test for source connection
-func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind string) error {
+func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -43,7 +43,7 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",

@@ -61,7 +61,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": tidbsql.Config{
 					Name:         "example_tool",
-					Kind:         "tidb-sql",
+					Type:         "tidb-sql",
 					Source:       "my-tidb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -139,7 +139,7 @@ func TestParseFromYamlWithTemplateParamsTiDB(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": tidbsql.Config{
 					Name:         "example_tool",
-					Kind:         "tidb-sql",
+					Type:         "tidb-sql",
 					Source:       "my-tidb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

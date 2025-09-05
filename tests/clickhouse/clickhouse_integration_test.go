@@ -37,8 +37,8 @@ import (
 )
 
 var (
-	ClickHouseSourceKind = "clickhouse"
-	ClickHouseToolKind   = "clickhouse-sql"
+	ClickHouseSourceType = "clickhouse"
+	ClickHouseToolType   = "clickhouse-sql"
 	ClickHouseDatabase   = os.Getenv("CLICKHOUSE_DATABASE")
 	ClickHouseHost       = os.Getenv("CLICKHOUSE_HOST")
 	ClickHousePort       = os.Getenv("CLICKHOUSE_PORT")
@@ -66,7 +66,7 @@ func getClickHouseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     ClickHouseSourceKind,
+		"kind":     ClickHouseSourceType,
 		"host":     ClickHouseHost,
 		"port":     ClickHousePort,
 		"database": ClickHouseDatabase,
@@ -128,10 +128,10 @@ func TestClickHouse(t *testing.T) {
 	teardownTable2 := setupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
-	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addClickHouseExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getClickHouseSQLTmplToolStatement()
-	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined)
+	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolType, tmplSelectCombined, tmplSelectFilterCombined)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -180,7 +180,7 @@ func addClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[stri
 	return config
 }
 
-func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolType, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -188,7 +188,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 
 	// ClickHouse-specific template parameter tools with compatible syntax
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}}) ORDER BY id",
@@ -198,7 +198,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -209,7 +209,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}} ORDER BY id",
@@ -218,7 +218,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
@@ -230,7 +230,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}} ORDER BY id",
@@ -239,7 +239,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
@@ -253,7 +253,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
@@ -312,7 +312,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"kind":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -385,7 +385,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	t.Run("SimpleSelect", func(t *testing.T) {
 		toolConfig := clickhousesql.Config{
 			Name:        "test-select",
-			Kind:        "clickhouse-sql",
+			Type:        "clickhouse-sql",
 			Source:      "test-clickhouse",
 			Description: "Test select query",
 			Statement:   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
@@ -419,7 +419,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	t.Run("ParameterizedQuery", func(t *testing.T) {
 		toolConfig := clickhousesql.Config{
 			Name:        "test-param-query",
-			Kind:        "clickhouse-sql",
+			Type:        "clickhouse-sql",
 			Source:      "test-clickhouse",
 			Description: "Test parameterized query",
 			Statement:   fmt.Sprintf("SELECT * FROM %s WHERE age > ? ORDER BY id", tableName),
@@ -460,7 +460,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	t.Run("EmptyResult", func(t *testing.T) {
 		toolConfig := clickhousesql.Config{
 			Name:        "test-empty-result",
-			Kind:        "clickhouse-sql",
+			Type:        "clickhouse-sql",
 			Source:      "test-clickhouse",
 			Description: "Test query with no results",
 			Statement:   fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName),
@@ -501,7 +501,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	t.Run("InvalidSQL", func(t *testing.T) {
 		toolConfig := clickhousesql.Config{
 			Name:        "test-invalid-sql",
-			Kind:        "clickhouse-sql",
+			Type:        "clickhouse-sql",
 			Source:      "test-clickhouse",
 			Description: "Test invalid SQL",
 			Statement:   "SELEC * FROM nonexistent_table", // Typo in SELECT
@@ -546,7 +546,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	t.Run("CreateTable", func(t *testing.T) {
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-create-table",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test create table",
 		}
@@ -590,7 +590,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	t.Run("InsertData", func(t *testing.T) {
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-insert",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test insert data",
 		}
@@ -628,7 +628,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	t.Run("SelectData", func(t *testing.T) {
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-select",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test select data",
 		}
@@ -666,7 +666,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	t.Run("DropTable", func(t *testing.T) {
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-drop-table",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test drop table",
 		}
@@ -704,7 +704,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	t.Run("MissingSQL", func(t *testing.T) {
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-missing-sql",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test missing SQL parameter",
 		}
@@ -735,7 +735,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	t.Run("SQLInjectionAttempt", func(t *testing.T) {
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-sql-injection",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test SQL injection attempt",
 		}
@@ -786,7 +786,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 
 		toolConfig := clickhouseexecutesql.Config{
 			Name:        "test-long-query",
-			Kind:        "clickhouse-execute-sql",
+			Type:        "clickhouse-execute-sql",
 			Source:      "test-clickhouse",
 			Description: "Test very long query",
 		}
@@ -844,7 +844,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 
 		toolConfig := clickhousesql.Config{
 			Name:        "test-null-values",
-			Kind:        "clickhouse-sql",
+			Type:        "clickhouse-sql",
 			Source:      "test-clickhouse",
 			Description: "Test null values",
 			Statement:   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
@@ -885,7 +885,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 	t.Run("ConcurrentQueries", func(t *testing.T) {
 		toolConfig := clickhousesql.Config{
 			Name:        "test-concurrent",
-			Kind:        "clickhouse-sql",
+			Type:        "clickhouse-sql",
 			Source:      "test-clickhouse",
 			Description: "Test concurrent queries",
 			Statement:   "SELECT number FROM system.numbers LIMIT ?",

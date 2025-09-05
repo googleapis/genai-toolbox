@@ -57,7 +57,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": alloydbainl.Config{
 					Name:         "example_tool",
-					Kind:         "alloydb-ai-nl",
+					Type:         "alloydb-ai-nl",
 					Source:       "my-alloydb-instance",
 					Description:  "AlloyDB natural language query tool",
 					NLConfig:     "my_nl_config",
@@ -98,7 +98,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 			want: server.ToolConfigs{
 				"complex_tool": alloydbainl.Config{
 					Name:         "complex_tool",
-					Kind:         "alloydb-ai-nl",
+					Type:         "alloydb-ai-nl",
 					Source:       "my-alloydb-instance",
 					Description:  "AlloyDB natural language query tool with multiple parameters",
 					NLConfig:     "complex_nl_config",

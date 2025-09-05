@@ -30,7 +30,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "bigquery"
+const SourceType string = "bigquery"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -38,8 +38,8 @@ var _ sources.SourceConfig = Config{}
 type BigqueryClientCreator func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -54,15 +54,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// BigQuery configs
 	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
+	Type           string `yaml:"kind" validate:"required"`
 	Project        string `yaml:"project" validate:"required"`
 	Location       string `yaml:"location"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns BigQuery source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns BigQuery source type
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -87,7 +87,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:               r.Name,
-		Kind:               SourceKind,
+		Type:               SourceType,
 		Project:            r.Project,
 		Location:           r.Location,
 		Client:             client,
@@ -106,7 +106,7 @@ var _ sources.Source = &Source{}
 type Source struct {
 	// BigQuery Google SQL struct with client
 	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
+	Type               string `yaml:"type"`
 	Project            string
 	Location           string
 	Client             *bigqueryapi.Client
@@ -117,9 +117,9 @@ type Source struct {
 	UseClientOAuth     bool
 }
 
-func (s *Source) SourceKind() string {
-	// Returns BigQuery Google SQL source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns BigQuery Google SQL source type
+	return SourceType
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
@@ -161,7 +161,7 @@ func initBigQueryConnection(
 	project string,
 	location string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
@@ -202,7 +202,7 @@ func initBigQueryConnectionWithOAuthToken(
 	tokenString tools.AccessToken,
 	wantRestService bool,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 	// Construct token source
 	token := &oauth2.Token{

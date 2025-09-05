@@ -27,14 +27,14 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "dataplex"
+const SourceType string = "dataplex"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -49,13 +49,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Dataplex configs
 	Name    string `yaml:"name" validate:"required"`
-	Kind    string `yaml:"kind" validate:"required"`
+	Type    string `yaml:"kind" validate:"required"`
 	Project string `yaml:"project" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns Dataplex source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns Dataplex source type
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -66,7 +66,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 	s := &Source{
 		Name:    r.Name,
-		Kind:    SourceKind,
+		Type:    SourceType,
 		Client:  client,
 		Project: r.Project,
 	}
@@ -79,15 +79,15 @@ var _ sources.Source = &Source{}
 type Source struct {
 	// Source struct with Dataplex client
 	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
+	Type     string `yaml:"type"`
 	Client   *dataplexapi.CatalogClient
 	Project  string `yaml:"project"`
 	Location string `yaml:"location"`
 }
 
-func (s *Source) SourceKind() string {
-	// Returns Dataplex source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns Dataplex source type
+	return SourceType
 }
 
 func (s *Source) ProjectID() string {
@@ -104,7 +104,7 @@ func initDataplexConnection(
 	name string,
 	project string,
 ) (*dataplexapi.CatalogClient, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)

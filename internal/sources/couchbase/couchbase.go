@@ -27,14 +27,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "couchbase"
+const SourceType string = "couchbase"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -48,7 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name                 string `yaml:"name" validate:"required"`
-	Kind                 string `yaml:"kind" validate:"required"`
+	Type                 string `yaml:"kind" validate:"required"`
 	ConnectionString     string `yaml:"connectionString" validate:"required"`
 	Bucket               string `yaml:"bucket" validate:"required"`
 	Scope                string `yaml:"scope" validate:"required"`
@@ -64,8 +64,8 @@ type Config struct {
 	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -82,7 +82,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	scope := cluster.Bucket(r.Bucket).Scope(r.Scope)
 	s := &Source{
 		Name:                 r.Name,
-		Kind:                 SourceKind,
+		Type:                 SourceType,
 		QueryScanConsistency: r.QueryScanConsistency,
 		Scope:                scope,
 	}
@@ -93,13 +93,13 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Name                 string `yaml:"name"`
-	Kind                 string `yaml:"kind"`
+	Type                 string `yaml:"type"`
 	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
 	Scope                *gocb.Scope
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) CouchbaseScope() *gocb.Scope {

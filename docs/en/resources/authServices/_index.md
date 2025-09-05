@@ -28,7 +28,7 @@ The following configurations are placed at the top level of a `tools.yaml` file.
 {{< notice tip >}}
 If you are accessing Toolbox with multiple applications, each
  application should register their own Client ID even if they use the same
- "kind" of auth provider.
+ "type" of auth provider.
 {{< /notice >}}
 
 ```yaml
@@ -300,4 +300,4 @@ func main() {
 }
 ```
 
-## Kinds of Auth Services
+## Types of Auth Services

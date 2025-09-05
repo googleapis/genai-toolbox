@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	couchbaseSourceKind = "couchbase"
-	couchbaseToolKind   = "couchbase-sql"
+	couchbaseSourceType = "couchbase"
+	couchbaseToolType   = "couchbase-sql"
 )
 
 var (
@@ -58,7 +58,7 @@ func getCouchbaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":                 couchbaseSourceKind,
+		"kind":                 couchbaseSourceType,
 		"connectionString":     couchbaseConnection,
 		"bucket":               couchbaseBucket,
 		"scope":                couchbaseScope,
@@ -118,8 +118,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	defer teardownCollection3(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolType, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

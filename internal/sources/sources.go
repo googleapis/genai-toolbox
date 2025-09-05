@@ -29,47 +29,47 @@ type SourceConfigFactory func(ctx context.Context, name string, decoder *yaml.De
 
 var sourceRegistry = make(map[string]SourceConfigFactory)
 
-// Register registers a new source kind with its factory.
-// It returns false if the kind is already registered.
-func Register(kind string, factory SourceConfigFactory) bool {
-	if _, exists := sourceRegistry[kind]; exists {
-		// Source with this kind already exists, do not overwrite.
+// Register registers a new source type with its factory.
+// It returns false if the type is already registered.
+func Register(sourceType string, factory SourceConfigFactory) bool {
+	if _, exists := sourceRegistry[sourceType]; exists {
+		// Source with this type already exists, do not overwrite.
 		return false
 	}
-	sourceRegistry[kind] = factory
+	sourceRegistry[sourceType] = factory
 	return true
 }
 
-// DecodeConfig decodes a source configuration using the registered factory for the given kind.
-func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (SourceConfig, error) {
-	factory, found := sourceRegistry[kind]
+// DecodeConfig decodes a source configuration using the registered factory for the given type.
+func DecodeConfig(ctx context.Context, sourceType string, name string, decoder *yaml.Decoder) (SourceConfig, error) {
+	factory, found := sourceRegistry[sourceType]
 	if !found {
-		return nil, fmt.Errorf("unknown source kind: %q", kind)
+		return nil, fmt.Errorf("unknown source type: %q", sourceType)
 	}
 	sourceConfig, err := factory(ctx, name, decoder)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse source %q as %q: %w", name, kind, err)
+		return nil, fmt.Errorf("unable to parse source %q as %q: %w", name, sourceType, err)
 	}
 	return sourceConfig, err
 }
 
 // SourceConfig is the interface for configuring a source.
 type SourceConfig interface {
-	SourceConfigKind() string
+	SourceConfigType() string
 	Initialize(ctx context.Context, tracer trace.Tracer) (Source, error)
 }
 
 // Source is the interface for the source itself.
 type Source interface {
-	SourceKind() string
+	SourceType() string
 }
 
 // InitConnectionSpan adds a span for database pool connection initialization
-func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceKind, sourceName string) (context.Context, trace.Span) {
+func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceType, sourceName string) (context.Context, trace.Span) {
 	ctx, span := tracer.Start(
 		ctx,
 		"toolbox/server/source/connect",
-		trace.WithAttributes(attribute.String("source_kind", sourceKind)),
+		trace.WithAttributes(attribute.String("source_type", sourceType)),
 		trace.WithAttributes(attribute.String("source_name", sourceName)),
 	)
 	return ctx, span

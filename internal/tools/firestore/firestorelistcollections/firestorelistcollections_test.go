@@ -46,7 +46,7 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 			want: server.ToolConfigs{
 				"list_collections_tool": firestorelistcollections.Config{
 					Name:         "list_collections_tool",
-					Kind:         "firestore-list-collections",
+					Type:         "firestore-list-collections",
 					Source:       "my-firestore-instance",
 					Description:  "List collections in Firestore",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_list_collections": firestorelistcollections.Config{
 					Name:         "secure_list_collections",
-					Kind:         "firestore-list-collections",
+					Type:         "firestore-list-collections",
 					Source:       "prod-firestore",
 					Description:  "List collections with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -121,21 +121,21 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"list_user_collections": firestorelistcollections.Config{
 			Name:         "list_user_collections",
-			Kind:         "firestore-list-collections",
+			Type:         "firestore-list-collections",
 			Source:       "users-firestore",
 			Description:  "List user-related collections",
 			AuthRequired: []string{"user-auth"},
 		},
 		"list_product_collections": firestorelistcollections.Config{
 			Name:         "list_product_collections",
-			Kind:         "firestore-list-collections",
+			Type:         "firestore-list-collections",
 			Source:       "products-firestore",
 			Description:  "List product-related collections",
 			AuthRequired: []string{},
 		},
 		"list_admin_collections": firestorelistcollections.Config{
 			Name:         "list_admin_collections",
-			Kind:         "firestore-list-collections",
+			Type:         "firestore-list-collections",
 			Source:       "admin-firestore",
 			Description:  "List administrative collections",
 			AuthRequired: []string{"user-auth", "admin-auth"},

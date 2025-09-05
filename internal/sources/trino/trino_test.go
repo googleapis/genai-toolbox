@@ -150,7 +150,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-trino-instance": Config{
 					Name:    "my-trino-instance",
-					Kind:    SourceKind,
+					Type:    SourceType,
 					Host:    "localhost",
 					Port:    "8080",
 					User:    "testuser",
@@ -179,7 +179,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-trino-instance": Config{
 					Name:            "my-trino-instance",
-					Kind:            SourceKind,
+					Type:            SourceType,
 					Host:            "localhost",
 					Port:            "8443",
 					User:            "testuser",
@@ -207,7 +207,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-trino-anonymous": Config{
 					Name:    "my-trino-anonymous",
-					Kind:    SourceKind,
+					Type:    SourceType,
 					Host:    "localhost",
 					Port:    "8080",
 					Catalog: "hive",

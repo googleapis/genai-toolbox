@@ -27,14 +27,14 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const SourceKind string = "looker"
+const SourceType string = "looker"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -56,7 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name               string `yaml:"name" validate:"required"`
-	Kind               string `yaml:"kind" validate:"required"`
+	Type               string `yaml:"kind" validate:"required"`
 	BaseURL            string `yaml:"base_url" validate:"required"`
 	ClientId           string `yaml:"client_id" validate:"required"`
 	ClientSecret       string `yaml:"client_secret" validate:"required"`
@@ -68,8 +68,8 @@ type Config struct {
 	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize initializes a Looker Source instance.
@@ -104,7 +104,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Name:               r.Name,
-		Kind:               SourceKind,
+		Type:               SourceType,
 		Timeout:            r.Timeout,
 		UseClientOAuth:     r.UseClientOAuth,
 		ApiSettings:        &cfg,
@@ -133,7 +133,7 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
+	Type               string `yaml:"type"`
 	Timeout            string `yaml:"timeout"`
 	Client             *v4.LookerSDK
 	ApiSettings        *rtl.ApiSettings
@@ -143,6 +143,6 @@ type Source struct {
 	ShowHiddenFields   bool `yaml:"show_hidden_fields"`
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }

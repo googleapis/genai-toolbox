@@ -59,7 +59,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "dgraph".                                                                                |
+| type        |  string  |     true     | Must be "dgraph".                                                                                |
 | dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").               |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |

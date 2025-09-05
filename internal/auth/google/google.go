@@ -23,7 +23,7 @@ import (
 	"google.golang.org/api/idtoken"
 )
 
-const AuthServiceKind string = "google"
+const AuthServiceType string = "google"
 
 // validate interface
 var _ auth.AuthServiceConfig = Config{}
@@ -31,20 +31,20 @@ var _ auth.AuthServiceConfig = Config{}
 // Auth service configuration
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"kind" validate:"required"`
 	ClientID string `yaml:"clientId" validate:"required"`
 }
 
-// Returns the auth service kind
-func (cfg Config) AuthServiceConfigKind() string {
-	return AuthServiceKind
+// Returns the auth service type
+func (cfg Config) AuthServiceConfigType() string {
+	return AuthServiceType
 }
 
 // Initialize a Google auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
 	a := &AuthService{
 		Name:     cfg.Name,
-		Kind:     AuthServiceKind,
+		Type:     AuthServiceType,
 		ClientID: cfg.ClientID,
 	}
 	return a, nil
@@ -55,13 +55,13 @@ var _ auth.AuthService = AuthService{}
 // struct used to store auth service info
 type AuthService struct {
 	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
+	Type     string `yaml:"type"`
 	ClientID string `yaml:"clientId"`
 }
 
-// Returns the auth service kind
-func (a AuthService) AuthServiceKind() string {
-	return AuthServiceKind
+// Returns the auth service type
+func (a AuthService) AuthServiceType() string {
+	return AuthServiceType
 }
 
 // Returns the name of the auth service

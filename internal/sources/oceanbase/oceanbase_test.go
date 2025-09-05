@@ -46,7 +46,7 @@ func TestParseFromYamlOceanBase(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-oceanbase-instance": oceanbase.Config{
 					Name:     "my-oceanbase-instance",
-					Kind:     oceanbase.SourceKind,
+					Type:     oceanbase.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "2881",
 					Database: "ob_db",
@@ -71,7 +71,7 @@ func TestParseFromYamlOceanBase(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-oceanbase-instance": oceanbase.Config{
 					Name:         "my-oceanbase-instance",
-					Kind:         oceanbase.SourceKind,
+					Type:         oceanbase.SourceType,
 					Host:         "0.0.0.0",
 					Port:         "2881",
 					Database:     "ob_db",

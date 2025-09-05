@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	MySQLSourceKind = "mysql"
-	MySQLToolKind   = "mysql-sql"
+	MySQLSourceType = "mysql"
+	MySQLToolType   = "mysql-sql"
 	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
 	MySQLHost       = os.Getenv("MYSQL_HOST")
 	MySQLPort       = os.Getenv("MYSQL_PORT")
@@ -54,7 +54,7 @@ func getMySQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MySQLSourceKind,
+		"kind":     MySQLSourceType,
 		"host":     MySQLHost,
 		"port":     MySQLPort,
 		"database": MySQLDatabase,
@@ -103,10 +103,10 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MySQLToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MySQLToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

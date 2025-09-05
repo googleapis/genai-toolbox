@@ -49,7 +49,7 @@ func TestParseFromYamlWait(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": wait.Config{
 					Name:         "example_tool",
-					Kind:         "wait",
+					Type:         "wait",
 					Description:  "some description",
 					Timeout:      "10s",
 					AuthRequired: []string{"my-google-auth-service"},

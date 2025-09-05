@@ -76,7 +76,7 @@ tools:
 
 | **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
 |--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                   string                         |     true     | Must be "sqlite-sql".                                                                                                                      |
+| type               |                   string                         |     true     | Must be "sqlite-sql".                                                                                                                      |
 | source             |                   string                         |     true     | Name of the source the SQLite source configuration.                                                                                        |
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | The SQL statement to execute.                                                                                                              |

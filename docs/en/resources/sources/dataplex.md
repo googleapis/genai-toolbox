@@ -320,5 +320,5 @@ Logical operators are case-sensitive. `OR` and `AND` are acceptable whereas `or`
 
 | **field** | **type** | **required** | **description**                                                                  |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "dataplex".                                                              |
+| type      |  string  |     true     | Must be "dataplex".                                                              |
 | project   |  string  |     true     | ID of the GCP project used for quota and billing purposes (e.g. "my-project-id").|

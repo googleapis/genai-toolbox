@@ -26,10 +26,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-func TestConfigToolConfigKind(t *testing.T) {
+func TestConfigToolConfigType(t *testing.T) {
 	config := Config{}
-	if config.ToolConfigKind() != sqlKind {
-		t.Errorf("Expected %s, got %s", sqlKind, config.ToolConfigKind())
+	if config.ToolConfigType() != sqlType {
+		t.Errorf("Expected %s, got %s", sqlType, config.ToolConfigType())
 	}
 }
 
@@ -56,7 +56,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "clickhouse-sql",
+					Type:         "clickhouse-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT 1",
@@ -81,7 +81,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			want: server.ToolConfigs{
 				"param_tool": Config{
 					Name:        "param_tool",
-					Kind:        "clickhouse-sql",
+					Type:        "clickhouse-sql",
 					Source:      "test-source",
 					Description: "Test ClickHouse tool",
 					Statement:   "SELECT * FROM test_table WHERE id = $1",
@@ -112,7 +112,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 func TestSQLConfigInitializeValidSource(t *testing.T) {
 	config := Config{
 		Name:        "test-tool",
-		Kind:        sqlKind,
+		Type:        sqlType,
 		Source:      "test-clickhouse",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
@@ -144,7 +144,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 func TestSQLConfigInitializeMissingSource(t *testing.T) {
 	config := Config{
 		Name:        "test-tool",
-		Kind:        sqlKind,
+		Type:        sqlType,
 		Source:      "missing-source",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
@@ -167,14 +167,14 @@ func TestSQLConfigInitializeMissingSource(t *testing.T) {
 // mockIncompatibleSource is a mock source that doesn't implement the compatibleSource interface
 type mockIncompatibleSource struct{}
 
-func (m *mockIncompatibleSource) SourceKind() string {
+func (m *mockIncompatibleSource) SourceType() string {
 	return "mock"
 }
 
 func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 	config := Config{
 		Name:        "test-tool",
-		Kind:        sqlKind,
+		Type:        sqlType,
 		Source:      "incompatible-source",
 		Description: "Test tool",
 		Statement:   "SELECT 1",

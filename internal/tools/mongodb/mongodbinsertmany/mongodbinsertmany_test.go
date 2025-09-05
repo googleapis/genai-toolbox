@@ -51,7 +51,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mongodbinsertmany.Config{
 					Name:         "example_tool",
-					Kind:         "mongodb-insert-many",
+					Type:         "mongodb-insert-many",
 					Source:       "my-instance",
 					AuthRequired: []string{},
 					Database:     "test_db",

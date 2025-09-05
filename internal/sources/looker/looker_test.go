@@ -44,7 +44,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-looker-instance": looker.Config{
 					Name:               "my-looker-instance",
-					Kind:               looker.SourceKind,
+					Type:               looker.SourceType,
 					BaseURL:            "http://example.looker.com/",
 					ClientId:           "jasdl;k;tjl",
 					ClientSecret:       "sdakl;jgflkasdfkfg",

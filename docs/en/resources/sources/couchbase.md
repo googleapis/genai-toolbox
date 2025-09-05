@@ -37,7 +37,7 @@ For more details about alternate addresses and custom ports refer to [Managing C
 
 | **field**            | **type** | **required** | **description**                                         |
 |----------------------|:--------:|:------------:|---------------------------------------------------------|
-| kind                 | string   |    true      | Must be "couchbase".                                    |
+| type                 | string   |    true      | Must be "couchbase".                                    |
 | connectionString     | string   |    true      | Connection string for the Couchbase cluster.            |
 | bucket               | string   |    true      | Name of the bucket to connect to.                       |
 | scope                | string   |    true      | Name of the scope within the bucket.                    |

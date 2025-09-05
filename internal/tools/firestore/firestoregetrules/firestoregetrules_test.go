@@ -46,7 +46,7 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 			want: server.ToolConfigs{
 				"get_rules_tool": firestoregetrules.Config{
 					Name:         "get_rules_tool",
-					Kind:         "firestore-get-rules",
+					Type:         "firestore-get-rules",
 					Source:       "my-firestore-instance",
 					Description:  "Retrieves the active Firestore security rules for the current project",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_get_rules": firestoregetrules.Config{
 					Name:         "secure_get_rules",
-					Kind:         "firestore-get-rules",
+					Type:         "firestore-get-rules",
 					Source:       "prod-firestore",
 					Description:  "Get Firestore security rules with authentication",
 					AuthRequired: []string{"google-auth-service", "admin-service"},
@@ -121,21 +121,21 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"get_dev_rules": firestoregetrules.Config{
 			Name:         "get_dev_rules",
-			Kind:         "firestore-get-rules",
+			Type:         "firestore-get-rules",
 			Source:       "dev-firestore",
 			Description:  "Get development Firestore rules",
 			AuthRequired: []string{"dev-auth"},
 		},
 		"get_staging_rules": firestoregetrules.Config{
 			Name:         "get_staging_rules",
-			Kind:         "firestore-get-rules",
+			Type:         "firestore-get-rules",
 			Source:       "staging-firestore",
 			Description:  "Get staging Firestore rules",
 			AuthRequired: []string{},
 		},
 		"get_prod_rules": firestoregetrules.Config{
 			Name:         "get_prod_rules",
-			Kind:         "firestore-get-rules",
+			Type:         "firestore-get-rules",
 			Source:       "prod-firestore",
 			Description:  "Get production Firestore rules",
 			AuthRequired: []string{"prod-auth", "admin-auth"},

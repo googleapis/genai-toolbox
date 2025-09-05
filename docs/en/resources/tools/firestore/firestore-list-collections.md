@@ -37,6 +37,6 @@ tools:
 
 | **field**   |      **type**    | **required** | **description**                                        |
 |-------------|:----------------:|:------------:|--------------------------------------------------------|
-| kind        |      string      |     true     | Must be "firestore-list-collections".                  |
+| type        |      string      |     true     | Must be "firestore-list-collections".                  |
 | source      |      string      |     true     | Name of the Firestore source to list collections from. |
 | description |      string      |     true     | Description of the tool that is passed to the LLM.     |

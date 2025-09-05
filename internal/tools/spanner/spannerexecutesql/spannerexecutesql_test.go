@@ -46,7 +46,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-execute-sql",
+					Type:         "spanner-execute-sql",
 					Source:       "my-spanner-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -67,7 +67,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-execute-sql",
+					Type:         "spanner-execute-sql",
 					Source:       "my-spanner-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

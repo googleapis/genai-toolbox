@@ -115,7 +115,7 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                              |
 |-------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "dgraph-dql".                                                                        |
+| type        |                   string                   |     true     | Must be "dgraph-dql".                                                                        |
 | source      |                   string                   |     true     | Name of the source the dql query should execute on.                                          |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                           |
 | statement   |                   string                   |     true     | dql statement to execute                                                                     |

@@ -72,6 +72,6 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                                                          |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firestore".                                                                                     |
+| type      |  string  |     true     | Must be "firestore".                                                                                     |
 | project   |  string  |     true     | Id of the GCP project that contains the Firestore database (e.g. "my-project-id").                       |
 | database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |

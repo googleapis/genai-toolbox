@@ -28,7 +28,7 @@ import (
 )
 
 // GetToolsConfig returns a mock tools config file
-func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -42,13 +42,13 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1",
 			},
 			"my-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   paramToolStatement,
@@ -66,7 +66,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				},
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   idParamToolStmt,
@@ -79,7 +79,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				},
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   nameParamToolStmt,
@@ -93,7 +93,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				},
 			},
 			"my-array-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
 				"statement":   arrayToolStatement,
@@ -121,7 +121,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				},
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
@@ -141,7 +141,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"statement":   "SELECT 1",
@@ -150,7 +150,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				},
 			},
 			"my-fail-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test statement with incorrect syntax.",
 				"statement":   "SELEC 1;",
@@ -184,7 +184,7 @@ func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	return config
 }
 
-func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
+func AddTemplateParamConfig(t *testing.T, config map[string]any, toolType, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -196,7 +196,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 	}
 
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
@@ -206,7 +206,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Insert tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -217,7 +217,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   selectAll,
@@ -226,7 +226,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectCombined,
@@ -236,7 +236,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}} FROM {{.tableName}} ORDER BY id",
@@ -246,7 +246,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectFilterCombined,
@@ -257,7 +257,7 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		},
 	}
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE IF EXISTS {{.tableName}}",
@@ -525,7 +525,7 @@ func GetRedisValkeyWants() (string, string, string, string, string, string, stri
 	return select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpSelect1Want, mcpInvokeParamWant
 }
 
-func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolType string) map[string]any {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
@@ -538,13 +538,13 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"commands":    [][]string{{"PING"}},
 			},
 			"my-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"commands":    [][]string{{"HGETALL", "row1"}, {"HGETALL", "row3"}},
@@ -562,7 +562,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				},
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"commands":    [][]string{{"HGETALL", "row4"}},
@@ -575,7 +575,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				},
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"commands":    [][]string{{"GET", "null"}},
@@ -589,7 +589,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				},
 			},
 			"my-array-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
 				"commands":    [][]string{{"HGETALL", "row1"}, {"$cmdArray"}},
@@ -607,7 +607,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				},
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
@@ -627,7 +627,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"commands":    [][]string{{"PING"}},
@@ -636,7 +636,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				},
 			},
 			"my-fail-tool": map[string]any{
-				"kind":        toolKind,
+				"kind":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test statement with incorrect syntax.",
 				"commands":    [][]string{{"SELEC 1;"}},

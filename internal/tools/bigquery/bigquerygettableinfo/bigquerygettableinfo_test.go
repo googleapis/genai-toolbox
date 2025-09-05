@@ -46,7 +46,7 @@ func TestParseFromYamlBigQueryGetTableInfo(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerygettableinfo.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-get-table-info",
+					Type:         "bigquery-get-table-info",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -15,7 +15,7 @@ collection. It locates the document to be updated using a `filterPayload` and
 applies modifications defined in an `updatePayload`. If the filter matches
 multiple documents, only the first one found will be updated.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -59,7 +59,7 @@ tools:
 
 | **field**     | **type** | **required** | **description**                                                                                                                                                                                                                                   |
 |:--------------|:---------|:-------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind          | string   | true         | Must be `mongodb-update-one`.                                                                                                                                                                                                                     |
+| type          | string   | true         | Must be `mongodb-update-one`.                                                                                                                                                                                                                     |
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                                                                                                                                                          |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                                                                                                                                                              |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                                                                                                                                                       |

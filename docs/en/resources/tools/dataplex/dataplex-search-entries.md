@@ -59,6 +59,6 @@ tools:
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "dataplex-search-entries".                                                               |
+| type        |                   string                   |     true     | Must be "dataplex-search-entries".                                                               |
 | source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	LookerSourceKind   = "looker"
+	LookerSourceType   = "looker"
 	LookerBaseUrl      = os.Getenv("LOOKER_BASE_URL")
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
@@ -48,7 +48,7 @@ func getLookerVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":          LookerSourceKind,
+		"kind":          LookerSourceType,
 		"base_url":      LookerBaseUrl,
 		"verify_ssl":    (LookerVerifySsl == "true"),
 		"client_id":     LookerClientId,

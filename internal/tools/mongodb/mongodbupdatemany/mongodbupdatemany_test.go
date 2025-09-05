@@ -64,7 +64,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdatemany.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-update-many",
+					Type:          "mongodb-update-many",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",

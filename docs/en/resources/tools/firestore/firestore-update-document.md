@@ -63,7 +63,7 @@ When `updateMask` is provided, only the fields listed in the mask are updated. T
 
 | **field**   |     **type**   | **required** | **description**                                          |
 |-------------|:--------------:|:------------:|----------------------------------------------------------|
-| kind        |     string     |     true     | Must be "firestore-update-document".                     |
+| type        |     string     |     true     | Must be "firestore-update-document".                     |
 | source      |     string     |     true     | Name of the Firestore source to update documents in.     |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.       |
 

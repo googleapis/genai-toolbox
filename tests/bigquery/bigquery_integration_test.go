@@ -39,8 +39,8 @@ import (
 )
 
 var (
-	BigquerySourceKind = "bigquery"
-	BigqueryToolKind   = "bigquery-sql"
+	BigquerySourceType = "bigquery"
+	BigqueryToolType   = "bigquery-sql"
 	BigqueryProject    = os.Getenv("BIGQUERY_PROJECT")
 )
 
@@ -51,7 +51,7 @@ func getBigQueryVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":    BigquerySourceKind,
+		"kind":    BigquerySourceType,
 		"project": BigqueryProject,
 	}
 }
@@ -133,12 +133,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	defer teardownTable4(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 	toolsFile = addBigQuerySqlToolConfig(t, toolsFile, dataTypeToolStmt, arrayDataTypeToolStmt)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -483,7 +483,7 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		t.Fatalf("unable to get sources from config")
 	}
 	sources["my-client-auth-source"] = map[string]any{
-		"kind":           BigquerySourceKind,
+		"kind":           BigquerySourceType,
 		"project":        BigqueryProject,
 		"useClientOAuth": true,
 	}

@@ -50,7 +50,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
 					Name:         "example_tool",
-					Kind:         "couchbase-sql",
+					Type:         "couchbase-sql",
 					AuthRequired: []string{},
 					Source:       "my-couchbase-instance",
 					Description:  "some tool description",
@@ -118,7 +118,7 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
 					Name:         "example_tool",
-					Kind:         "couchbase-sql",
+					Type:         "couchbase-sql",
 					AuthRequired: []string{},
 					Source:       "my-couchbase-instance",
 					Description:  "some tool description",

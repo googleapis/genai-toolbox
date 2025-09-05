@@ -48,7 +48,7 @@ tools:
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-conversational-analytics".                                                     |
+| type        |                   string                   |     true     | Must be "bigquery-conversational-analytics".                                                     |
 | source      |                   string                   |     true     | Name of the source for chat.                                                    |
 | description |                   string                   |     true     | Description of the tool 
 that is passed to the LLM.                                               |

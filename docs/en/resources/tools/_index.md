@@ -259,4 +259,4 @@ tools:
         - other-auth-service
 ```
 
-## Kinds of tools
+## Types of tools

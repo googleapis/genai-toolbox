@@ -21,13 +21,13 @@ import (
 
 // AuthServiceConfig is the interface for configuring authentication services.
 type AuthServiceConfig interface {
-	AuthServiceConfigKind() string
+	AuthServiceConfigType() string
 	Initialize() (AuthService, error)
 }
 
 // AuthService is the interface for authentication services.
 type AuthService interface {
-	AuthServiceKind() string
+	AuthServiceType() string
 	GetName() string
 	GetClaimsFromHeader(context.Context, http.Header) (map[string]any, error)
 }

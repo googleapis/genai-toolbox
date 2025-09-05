@@ -50,7 +50,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
 					Name:         "example_tool",
-					Kind:         "dgraph-dql",
+					Type:         "dgraph-dql",
 					Source:       "my-dgraph-instance",
 					AuthRequired: []string{},
 					Description:  "some tool description",
@@ -74,7 +74,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
 					Name:         "example_tool",
-					Kind:         "dgraph-dql",
+					Type:         "dgraph-dql",
 					Source:       "my-dgraph-instance",
 					Description:  "some tool description",
 					AuthRequired: []string{},

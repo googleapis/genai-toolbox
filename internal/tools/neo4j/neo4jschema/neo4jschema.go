@@ -30,13 +30,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-// kind defines the unique identifier for this tool.
-const kind string = "neo4j-schema"
+// toolType defines the unique identifier for this tool.
+const toolType string = "neo4j-schema"
 
 // init registers the tool with the application's tool registry when the package is initialized.
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(toolType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", toolType))
 	}
 }
 
@@ -60,14 +60,14 @@ type compatibleSource interface {
 // Statically verify that our compatible source implementation is valid.
 var _ compatibleSource = &neo4jsc.Source{}
 
-// compatibleSources lists the kinds of sources that are compatible with this tool.
-var compatibleSources = [...]string{neo4jsc.SourceKind}
+// compatibleSources lists the types of sources that are compatible with this tool.
+var compatibleSources = [...]string{neo4jsc.SourceType}
 
 // Config holds the configuration settings for the Neo4j schema tool.
 // These settings are typically read from a YAML file.
 type Config struct {
 	Name               string   `yaml:"name" validate:"required"`
-	Kind               string   `yaml:"kind" validate:"required"`
+	Type               string   `yaml:"kind" validate:"required"`
 	Source             string   `yaml:"source" validate:"required"`
 	Description        string   `yaml:"description" validate:"required"`
 	AuthRequired       []string `yaml:"authRequired"`
@@ -77,9 +77,9 @@ type Config struct {
 // Statically verify that Config implements the tools.ToolConfig interface.
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of this tool configuration.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of this tool configuration.
+func (cfg Config) ToolConfigType() string {
+	return toolType
 }
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.
@@ -90,10 +90,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	// Verify the source is of a compatible kind.
+	// Verify the source is of a compatible type.
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", toolType, compatibleSources)
 	}
 
 	parameters := tools.Parameters{}
@@ -112,7 +112,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Finish tool setup by creating the Tool instance.
 	t := Tool{
 		Name:               cfg.Name,
-		Kind:               kind,
+		Type:               toolType,
 		AuthRequired:       cfg.AuthRequired,
 		Driver:             s.Neo4jDriver(),
 		Database:           s.Neo4jDatabase(),
@@ -131,7 +131,7 @@ var _ tools.Tool = Tool{}
 // It holds the Neo4j driver, database information, and a cache for the schema.
 type Tool struct {
 	Name               string   `yaml:"name"`
-	Kind               string   `yaml:"kind"`
+	Type               string   `yaml:"type"`
 	AuthRequired       []string `yaml:"authRequired"`
 	Driver             neo4j.DriverWithContext
 	Database           string

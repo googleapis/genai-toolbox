@@ -30,11 +30,11 @@ type compatibleSource interface {
 
 var compatibleSources = []string{"clickhouse"}
 
-const executeSQLKind string = "clickhouse-execute-sql"
+const executeSQLType string = "clickhouse-execute-sql"
 
 func init() {
-	if !tools.Register(executeSQLKind, newExecuteSQLConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", executeSQLKind))
+	if !tools.Register(executeSQLType, newExecuteSQLConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", executeSQLType))
 	}
 }
 
@@ -48,7 +48,7 @@ func newExecuteSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -56,8 +56,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return executeSQLKind
+func (cfg Config) ToolConfigType() string {
+	return executeSQLType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -68,7 +68,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", executeSQLKind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", executeSQLType, compatibleSources)
 	}
 
 	sqlParameter := tools.NewStringParameter("sql", "The SQL statement to execute.")
@@ -82,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	t := ExecuteSQLTool{
 		Name:         cfg.Name,
-		Kind:         executeSQLKind,
+		Type:         executeSQLType,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Pool:         s.ClickHousePool(),
@@ -96,7 +96,7 @@ var _ tools.Tool = ExecuteSQLTool{}
 
 type ExecuteSQLTool struct {
 	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
+	Type         string           `yaml:"type"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 

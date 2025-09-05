@@ -65,7 +65,7 @@ sources:
 
 | **field**    | **type** | **required** | **description**                                                                                                                  |
 |--------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "valkey".                                                                                                                |
+| type         |  string  |     true     | Must be "valkey".                                                                                                                |
 | address      | []string |     true     | Endpoints for the Valkey instance to connect to.                                                                                 |
 | username     |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Valkey, leave this field blank |
 | password     |  string  |    false     | Password for the Valkey instance                                                                                                 |

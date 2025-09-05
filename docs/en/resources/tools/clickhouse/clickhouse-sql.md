@@ -73,7 +73,7 @@ tools:
 
 | **field**          | **type**           | **required** | **description**                                           |
 |--------------------|:------------------:|:------------:|-----------------------------------------------------------|
-| kind               | string             | true         | Must be "clickhouse-sql".                                |
+| type               | string             | true         | Must be "clickhouse-sql".                                |
 | source             | string             | true         | Name of the ClickHouse source to execute SQL against.    |
 | description        | string             | true         | Description of the tool that is passed to the LLM.       |
 | statement          | string             | true         | The SQL statement template to execute.                    |

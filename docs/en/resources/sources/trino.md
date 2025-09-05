@@ -49,7 +49,7 @@ instead of hardcoding your secrets into the configuration file.
 
 |  **field**  |      **type**      | **required** | **description**                                                        |
 |-------------|:------------------:|:------------:|------------------------------------------------------------------------|
-| kind        |       string       |     true     | Must be "trino".                                                       |
+| type        |       string       |     true     | Must be "trino".                                                       |
 | host        |       string       |     true     | Trino coordinator hostname (e.g. "trino.example.com")                 |
 | port        |       string       |     true     | Trino coordinator port (e.g. "8080", "8443")                          |
 | user        |       string       |     false    | Username for authentication (e.g. "analyst"). Optional for anonymous access. |

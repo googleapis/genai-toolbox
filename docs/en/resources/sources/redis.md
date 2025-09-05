@@ -91,7 +91,7 @@ sources:
 
 | **field**      | **type** | **required** | **description**                                                                                                                 |
 |----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
+| type           |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
 | address        |  string  |     true     | Primary endpoint for the Memorystore Redis instance to connect to.                                                              |
 | username       |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank |
 | password       |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                            |

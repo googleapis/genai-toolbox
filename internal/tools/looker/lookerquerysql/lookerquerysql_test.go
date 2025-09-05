@@ -47,7 +47,7 @@ func TestParseFromYamlLookerQuerySql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-query-sql",
+					Type:         "looker-query-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

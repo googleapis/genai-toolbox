@@ -54,7 +54,7 @@ func TestParseFromYamlvalkey(t *testing.T) {
 			want: server.ToolConfigs{
 				"valkey_tool": valkey.Config{
 					Name:         "valkey_tool",
-					Kind:         "valkey",
+					Type:         "valkey",
 					Source:       "my-valkey-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -38,7 +38,7 @@ tools:
 
 | **field**   | **type** | **required** | **description**                                                                                                  |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
+| type        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
 | description |  string  |    true      | A description of the tool.                                                                                       |
 | delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |
 | maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                  |
