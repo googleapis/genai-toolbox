@@ -147,10 +147,10 @@ func TestClickHouse(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-    // Get configs for tests
+	// Get configs for tests
 	select1Want, mcpSelect1Want, mcpMyFailToolWant, createTableStatement, nilIdWant := getClickHouseWants()
 
-    // Run tests
+	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolById4Want(nilIdWant))
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
