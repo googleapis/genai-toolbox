@@ -53,8 +53,8 @@ type Config struct {
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
+	User     string         `yaml:"user" `
+	Password string         `yaml:"password" `
 	Database string         `yaml:"database" validate:"required"`
 }
 
