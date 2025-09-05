@@ -218,6 +218,9 @@ func NewCommand(opts ...Option) *Command {
 		o(cmd)
 	}
 
+	// Do not print Usage on runtime error
+	cmd.SilenceUsage = true
+
 	// Set server version
 	cmd.cfg.Version = versionString
 

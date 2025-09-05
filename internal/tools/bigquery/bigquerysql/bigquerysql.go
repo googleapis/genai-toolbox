@@ -219,17 +219,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	bqClient := t.Client
 	restService := t.RestService
-	var query *bigqueryapi.Query
 
 	// Initialize new client if using user OAuth token
 	if t.UseClientOAuth {
-		bqClient, restService, err = t.ClientCreator(accessToken)
+		bqClient, restService, err = t.ClientCreator(accessToken, true)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
 	}
 
-	query = bqClient.Query(newStatement)
+	query := bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
 
