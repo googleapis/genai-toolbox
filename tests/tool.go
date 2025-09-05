@@ -41,9 +41,10 @@ func RunToolGetTest(t *testing.T) {
 			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
 			want: map[string]any{
 				"my-simple-tool": map[string]any{
-					"description":  "Simple tool to test end to end functionality.",
-					"parameters":   []any{},
-					"authRequired": []any{},
+					"description":    "Simple tool to test end to end functionality.",
+					"parameters":     []any{},
+					"authRequired":   []any{},
+					"useClientOAuth": false,
 				},
 			},
 		},

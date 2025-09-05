@@ -114,8 +114,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Client:         s.BigQueryClient(),
 		RestService:    s.BigQueryRestService(),
 		ClientCreator:  s.BigQueryClientCreator(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		manifest: tools.Manifest{
+			Description:  cfg.Description,
+			Parameters:   paramManifest,
+			AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }

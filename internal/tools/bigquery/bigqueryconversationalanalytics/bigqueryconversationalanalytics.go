@@ -146,16 +146,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		Project:            s.BigQueryProject(),
-		Location:           s.BigQueryLocation(),
-		Parameters:         parameters,
-		AuthRequired:       cfg.AuthRequired,
-		Client:             s.BigQueryClient(),
-		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        s.BigQueryTokenSource(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		Name:           cfg.Name,
+		Kind:           kind,
+		Project:        s.BigQueryProject(),
+		Location:       s.BigQueryLocation(),
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		Client:         s.BigQueryClient(),
+		UseClientOAuth: s.UseClientAuthorization(),
+		TokenSource:    s.BigQueryTokenSource(),
+		manifest: tools.Manifest{
+			Description:    cfg.Description,
+			Parameters:     parameters.Manifest(),
+			AuthRequired:   cfg.AuthRequired,
+			UseClientOAuth: s.UseClientAuthorization()},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
 	}
