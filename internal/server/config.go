@@ -14,6 +14,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -111,162 +112,151 @@ func (s *StringLevel) Type() string {
 	return "stringLevel"
 }
 
+func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, ToolConfigs, ToolsetConfigs, error) {
+	// prepare configs map
+	sourceConfigs := make(SourceConfigs)
+	authServiceConfigs := make(AuthServiceConfigs)
+	toolConfigs := make(ToolConfigs)
+	toolsetConfigs := make(ToolsetConfigs)
+
+	decoder := yaml.NewDecoder(bytes.NewReader(raw))
+	// for loop to unmarshal documents with the `---` separator
+	for {
+		var resource map[string]any
+		if err := decoder.DecodeContext(ctx, &resource); err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			return nil, nil, nil, nil, fmt.Errorf("unable to parse kind: %s", err)
+		}
+		var kind, name string
+		var ok bool
+		if kind, ok = resource["kind"].(string); !ok {
+			return nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string")
+		}
+		if name, ok = resource["name"].(string); !ok {
+			return nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
+		}
+		// remove 'kind' from map for strict unmarshaling
+		delete(resource, "kind")
+
+		switch kind {
+		case "sources":
+			c, err := UnmarshalYAMLSourceConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			sourceConfigs[name] = c
+		case "authServices":
+			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			authServiceConfigs[name] = c
+		case "tools":
+			c, err := UnmarshalYAMLToolConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			toolConfigs[name] = c
+		case "toolsets":
+			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			toolsetConfigs[name] = c
+		default:
+			return nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
+		}
+	}
+	return sourceConfigs, authServiceConfigs, toolConfigs, toolsetConfigs, nil
+}
+
 // SourceConfigs is a type used to allow unmarshal of the data source config map
 type SourceConfigs map[string]sources.SourceConfig
 
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &SourceConfigs{}
-
-func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(SourceConfigs)
-	// Parse the 'type' fields for each source
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
+func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]any) (sources.SourceConfig, error) {
+	typeStr, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'name' field or it is not a string")
 	}
-
-	for name, u := range raw {
-		// Unmarshal to a general type that ensure it capture all fields
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
-		}
-
-		sourceType, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for source %q", name)
-		}
-		typeStr, ok := sourceType.(string)
-		if !ok {
-			return fmt.Errorf("invalid 'kind' field for source %q (must be a string)", name)
-		}
-
-		yamlDecoder, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating YAML decoder for source %q: %w", name, err)
-		}
-
-		sourceConfig, err := sources.DecodeConfig(ctx, typeStr, name, yamlDecoder)
-		if err != nil {
-			return err
-		}
-		(*c)[name] = sourceConfig
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}
-	return nil
+	sourceConfig, err := sources.DecodeConfig(ctx, typeStr, name, dec)
+	if err != nil {
+		return nil, err
+	}
+	return sourceConfig, nil
 }
 
 // AuthServiceConfigs is a type used to allow unmarshal of the data authService config map
 type AuthServiceConfigs map[string]auth.AuthServiceConfig
 
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &AuthServiceConfigs{}
-
-func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(AuthServiceConfigs)
-	// Parse the 'type' fields for each authService
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
+func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[string]any) (auth.AuthServiceConfig, error) {
+	typeStr, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'name' field or it is not a string")
 	}
 
-	for name, u := range raw {
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
-		}
-
-		asType, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for %q", name)
-		}
-
-		dec, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating decoder: %w", err)
-		}
-		switch asType {
-		case google.AuthServiceType:
-			actual := google.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", asType, err)
-			}
-			(*c)[name] = actual
-		default:
-			return fmt.Errorf("%q is not a valid kind of auth source", asType)
-		}
+	if typeStr != google.AuthServiceType {
+		return nil, fmt.Errorf("%s is not a valid type of auth source", typeStr)
 	}
-	return nil
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+	actual := google.Config{Name: name}
+	if err := dec.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+	}
+	return actual, nil
 }
 
 // ToolConfigs is a type used to allow unmarshal of the tool configs
 type ToolConfigs map[string]tools.ToolConfig
 
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &ToolConfigs{}
-
-func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(ToolConfigs)
-	// Parse the 'type' fields for each source
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
+func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any) (tools.ToolConfig, error) {
+	typeStr, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'name' field or it is not a string")
 	}
 
-	for name, u := range raw {
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
-		}
-
-		// `authRequired` and `useClientOAuth` cannot be specified together
-		if v["authRequired"] != nil && v["useClientOAuth"] == true {
-			return fmt.Errorf("`authRequired` and `useClientOAuth` are mutually exclusive. Choose only one authentication method")
-		}
-
-		// Make `authRequired` an empty list instead of nil for Tool manifest
-		if v["authRequired"] == nil {
-			v["authRequired"] = []string{}
-		}
-
-		typeVal, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for tool %q", name)
-		}
-		typeStr, ok := typeVal.(string)
-		if !ok {
-			return fmt.Errorf("invalid 'kind' field for tool %q (must be a string)", name)
-		}
-
-		yamlDecoder, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
-		}
-
-		toolCfg, err := tools.DecodeConfig(ctx, typeStr, name, yamlDecoder)
-		if err != nil {
-			return err
-		}
-		(*c)[name] = toolCfg
+	// `authRequired` and `useClientOAuth` cannot be specified together
+	if r["authRequired"] != nil && r["useClientOAuth"] == true {
+		return nil, fmt.Errorf("`authRequired` and `useClientOAuth` are mutually exclusive. Choose only one authentication method")
 	}
-	return nil
+
+	// Make `authRequired` an empty list instead of nil for Tool manifest
+	if r["authRequired"] == nil {
+		r["authRequired"] = []string{}
+	}
+
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+	toolCfg, err := tools.DecodeConfig(ctx, typeStr, name, dec)
+	if err != nil {
+		return nil, err
+	}
+	return toolCfg, nil
 }
 
 // ToolConfigs is a type used to allow unmarshal of the toolset configs
 type ToolsetConfigs map[string]tools.ToolsetConfig
 
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &ToolsetConfigs{}
-
-func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(ToolsetConfigs)
-
+func UnmarshalYAMLToolsetConfig(ctx context.Context, name string, r map[string]any) (tools.ToolsetConfig, error) {
+	var toolsetConfig tools.ToolsetConfig
+	justTools := map[string]any{"tools": r["tools"]}
+	dec, err := util.NewStrictDecoder(justTools)
+	if err != nil {
+		return toolsetConfig, fmt.Errorf("error creating decoder: %s", err)
+	}
 	var raw map[string][]string
-	if err := unmarshal(&raw); err != nil {
-		return err
+	if err := dec.DecodeContext(ctx, &raw); err != nil {
+		return toolsetConfig, fmt.Errorf("unable to unmarshal tools: %s", err)
 	}
-
-	for name, toolList := range raw {
-		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
-	}
-	return nil
+	return tools.ToolsetConfig{Name: name, ToolNames: raw["tools"]}, nil
 }
