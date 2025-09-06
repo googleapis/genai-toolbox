@@ -1,4 +1,23 @@
+# direnv
+.envrc
 
+# vscode
+.vscode/
+
+# idea
+.idea/
+
+# npm
+node_modules
+
+# hugo
+.hugo/public/
+.hugo/resources/_gen
+.hugo_build.lock
+
+# coverage
+.coverage
+
+# executable
 genai-toolbox
-main
 toolbox
