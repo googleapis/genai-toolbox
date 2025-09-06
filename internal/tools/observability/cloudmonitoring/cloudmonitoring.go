@@ -37,11 +37,6 @@ func SetMonitoringEndpoint(endpoint string) {
 	monitoringEndpoint = endpoint
 }
 
-// SetGoogleFindDefaultCredentials sets the google.FindDefaultCredentials function for testing purposes.
-func SetGoogleFindDefaultCredentials(f func(ctx context.Context, scopes ...string) (*google.Credentials, error)) {
-	googleFindDefaultCredentials = f
-}
-
 const kind string = "cloudmonitoring"
 
 func init() {
@@ -59,11 +54,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	Params       tools.Parameters `yaml:"params"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name             string   `yaml:"name" validate:"required"`
+	Kind             string   `yaml:"kind" validate:"required"`
+	Description      string   `yaml:"description" validate:"required"`
+	QueryDescription string   `yaml:"queryDescription"`
+	AuthRequired     []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -74,13 +69,23 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	queryDescription := "The PromQL query to execute based on the tool's description."
+	if cfg.QueryDescription != "" {
+		queryDescription = cfg.QueryDescription
+	}
+	// Define the parameters internally instead of from the config file.
+	allParameters := tools.Parameters{
+		tools.NewStringParameterWithRequired("projectID", "The ID of the Google Cloud project containing the AlloyDB cluster.", true),
+		tools.NewStringParameterWithRequired("query", queryDescription, true),
+	}
+
 	return Tool{
 		Name:        cfg.Name,
 		Kind:        kind,
 		Description: cfg.Description,
-		Params:      cfg.Params,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Params.Manifest()},
-		mcpManifest: tools.McpManifest{Name: cfg.Name, Description: cfg.Description, InputSchema: cfg.Params.McpManifest()},
+		Params:      allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest()},
+		mcpManifest: tools.McpManifest{Name: cfg.Name, Description: cfg.Description, InputSchema: allParameters.McpManifest()},
 	}, nil
 }
 
@@ -109,7 +114,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", monitoringEndpoint, projectID)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
