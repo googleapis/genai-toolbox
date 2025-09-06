@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadTools } from "./loadTools.js";
+import { renderToolList } from "./loadTools.js";
 
 /**
  * These functions runs after the browser finishes loading and parsing HTML structure.
@@ -28,5 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    loadTools(secondaryPanelContent, toolDisplayArea, DEFAULT_TOOLSET);
+    const fetchAndLoadTools = async () => {
+        try {
+            const response = await fetch(`/api/toolset/${DEFAULT_TOOLSET}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const apiResponse = await response.json();
+            const toolsetsToRender = [{ name: DEFAULT_TOOLSET, tools: apiResponse.tools }];
+            renderToolList(toolsetsToRender, secondaryPanelContent, toolDisplayArea);
+        } catch (error) {
+            console.error('Failed to load default toolset:', error);
+            secondaryPanelContent.innerHTML = `<p class="error">Failed to load tools: <pre><code>${error}</code></pre></p>`;
+        }
+    };
+
+    fetchAndLoadTools();
 });
