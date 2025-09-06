@@ -265,7 +265,6 @@ func NewCommand(opts ...Option) *Command {
 
 type ToolsFile struct {
 	Sources      server.SourceConfigs      `yaml:"sources"`
-	AuthSources  server.AuthServiceConfigs `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	AuthServices server.AuthServiceConfigs `yaml:"authServices"`
 	Tools        server.ToolConfigs        `yaml:"tools"`
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
@@ -374,8 +373,13 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	}
 	raw = []byte(output)
 
+	raw, err = convertToolsFile(ctx, raw)
+	if err != nil {
+		return toolsFile, fmt.Errorf("error converting tools file: %s", err)
+	}
+
 	// Parse contents
-	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
 		return toolsFile, err
 	}
@@ -402,15 +406,6 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Sources[name] = source
-			}
-		}
-
-		// Check for conflicts and merge authSources (deprecated, but still support)
-		for name, authSource := range file.AuthSources {
-			if _, exists := merged.AuthSources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("authSource '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.AuthSources[name] = authSource
 			}
 		}
 
@@ -869,11 +864,6 @@ func run(cmd *Command) error {
 	}
 
 	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
-	authSourceConfigs := toolsFile.AuthSources
-	if authSourceConfigs != nil {
-		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-		cmd.cfg.AuthServiceConfigs = authSourceConfigs
-	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
 	if err != nil {

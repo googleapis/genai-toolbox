@@ -723,6 +723,71 @@ func TestParseToolFile(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "basic example",
+			in: `
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			parameters:
+			- name: country
+			  type: string
+			  description: some description
+---
+			kind: toolsets
+			name: example_toolset
+			tools:
+			  - example_tool
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Type:     cloudsqlpgsrc.SourceType,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
+						User:     "my_user",
+						Password: "my_pass",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Type:        "postgres-sql",
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []tools.Parameter{
+							tools.NewStringParameter("country", "some description"),
+						},
+						AuthRequired: []string{},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
@@ -920,7 +985,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Password: "my_pass",
 					},
 				},
-				AuthSources: server.AuthServiceConfigs{
+				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
 						Type:     google.AuthServiceType,
