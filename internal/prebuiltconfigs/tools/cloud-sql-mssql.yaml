@@ -8,6 +8,7 @@ sources:
         ipAddress: ${CLOUD_SQL_MSSQL_IP_ADDRESS}
         user: ${CLOUD_SQL_MSSQL_USER}
         password: ${CLOUD_SQL_MSSQL_PASSWORD}
+        ipType: ${CLOUD_SQL_MSSQL_IP_TYPE:public}
 tools:
     execute_sql:
         kind: mssql-execute-sql

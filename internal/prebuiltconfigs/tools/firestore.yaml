@@ -2,7 +2,7 @@ sources:
   firestore-source:
     kind: firestore
     project: ${FIRESTORE_PROJECT}
-    database: ${FIRESTORE_DATABASE}
+    database: ${FIRESTORE_DATABASE:}
 
 tools:
   firestore-get-documents:
@@ -13,26 +13,26 @@ tools:
     kind: firestore-add-documents
     source: firestore-source
     description: |
-     Adds a new document to a Firestore collection. Please follow the best practices :
-      1. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
-      2. Integer values can be strings in the documentData: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
-      3. Use returnData sparingly: Only set to true when you need to verify the exact data that was written
-      4. Validate data before sending: Ensure your data matches Firestore's native JSON format
-      5. Handle timestamps properly: Use RFC3339 format for timestamp strings
-      6. Base64 encode binary data: Binary data must be base64 encoded in the bytesValue field
-      7. Consider security rules: Ensure your Firestore security rules allow document creation in the target collection
+      Adds a new document to a Firestore collection. Please follow the best practices :
+       1. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
+       2. Integer values can be strings in the documentData: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
+       3. Use returnData sparingly: Only set to true when you need to verify the exact data that was written
+       4. Validate data before sending: Ensure your data matches Firestore's native JSON format
+       5. Handle timestamps properly: Use RFC3339 format for timestamp strings
+       6. Base64 encode binary data: Binary data must be base64 encoded in the bytesValue field
+       7. Consider security rules: Ensure your Firestore security rules allow document creation in the target collection
   firestore-update-document:
     kind: firestore-update-document
     source: firestore-source
     description: |
-     Updates an existing document in Firestore. Supports both full document updates and selective field updates using an update mask. Please follow the best practices:
-      1. Use update masks for precision: When you only need to update specific fields, use the updateMask parameter to avoid unintended changes
-      2. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
-      3. Delete fields using update mask: To delete fields, include them in the updateMask but omit them from documentData
-      4. Integer values can be strings: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
-      5. Use returnData sparingly: Only set to true when you need to verify the exact data after the update
-      6. Handle timestamps properly: Use RFC3339 format for timestamp strings
-      7. Consider security rules: Ensure your Firestore security rules allow document updates
+      Updates an existing document in Firestore. Supports both full document updates and selective field updates using an update mask. Please follow the best practices:
+       1. Use update masks for precision: When you only need to update specific fields, use the updateMask parameter to avoid unintended changes
+       2. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
+       3. Delete fields using update mask: To delete fields, include them in the updateMask but omit them from documentData
+       4. Integer values can be strings: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
+       5. Use returnData sparingly: Only set to true when you need to verify the exact data after the update
+       6. Handle timestamps properly: Use RFC3339 format for timestamp strings
+       7. Consider security rules: Ensure your Firestore security rules allow document updates
   firestore-list-collections:
     kind: firestore-list-collections
     source: firestore-source
@@ -44,8 +44,8 @@ tools:
   firestore-query-collection:
     kind: firestore-query-collection
     source: firestore-source
-    description: | 
-      Retrieves one or more Firestore documents from a collection in a database in the current project by a collection with a full document path. 
+    description: |
+      Retrieves one or more Firestore documents from a collection in a database in the current project by a collection with a full document path.
       Use this if you know the exact path of a collection and the filtering clause you would like for the document.
   firestore-get-rules:
     kind: firestore-get-rules
