@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -291,6 +292,76 @@ func parseEnv(input string) (string, error) {
 		return ""
 	})
 	return output, err
+}
+
+func convertToolsFile(ctx context.Context, raw []byte) ([]byte, error) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	keysToCheck := []string{"sources", "authServices", "authSources", "tools", "toolsets"}
+	var input map[string]any
+	if err := yaml.Unmarshal(raw, &input); err != nil {
+		return nil, fmt.Errorf("error unmarshaling tools file: %s", err)
+	}
+
+	// convert to tools file v2
+	var toolsFileV1 bool
+	var buf bytes.Buffer
+	for _, kind := range keysToCheck {
+		resource, ok := input[kind]
+		if !ok {
+			// if this is skipped for all keys, the tools file is in v2
+			continue
+		}
+		toolsFileV1 = true
+		// convert `authSources` to `authServices`
+		if kind == "authSources" {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
+			kind = "authServices"
+		}
+		r, ok := resource.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("'%s' is not a map", kind)
+		}
+
+		for name, d := range r {
+			buf.WriteString(fmt.Sprintf("kind: %s\n", kind))
+			buf.WriteString(fmt.Sprintf("name: %s\n", name))
+
+			if kind == "toolsets" {
+				b, err := yaml.Marshal(d)
+				if err != nil {
+					return nil, fmt.Errorf("error marshaling: %s", err)
+				}
+				buf.WriteString(fmt.Sprintf("tools:\n%s", b))
+			} else {
+				fields, ok := d.(map[string]any)
+				if !ok {
+					return nil, fmt.Errorf("fields for %s is not a map", name)
+				}
+				// Copy all existing fields, renaming 'kind' to 'type'.
+				buf.WriteString(fmt.Sprintf("type: %s\n", fields["kind"]))
+				for key, value := range fields {
+					if key == "kind" {
+						continue
+					}
+					o := map[string]any{key: value}
+					b, err := yaml.Marshal(o)
+					if err != nil {
+						return nil, fmt.Errorf("error marshaling: %s", err)
+					}
+					buf.Write(b)
+				}
+			}
+			buf.WriteString("---\n")
+		}
+	}
+	if !toolsFileV1 {
+		return raw, nil
+	}
+	return buf.Bytes(), nil
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
