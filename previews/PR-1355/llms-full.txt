@@ -9368,8 +9368,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
-    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
     *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
@@ -9508,6 +9508,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
+    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db connection string.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
