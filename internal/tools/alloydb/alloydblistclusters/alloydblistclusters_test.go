@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbpglistclusters_test
+package alloydblistclusters_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbpglistclusters "github.com/googleapis/genai-toolbox/internal/tools/alloydbpg/alloydbpglistclusters"
+	alloydblistclusters "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -39,13 +39,13 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				list-my-clusters:
-					kind: alloydb-pg-list-clusters
+					kind: alloydb-list-clusters
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"list-my-clusters": alloydbpglistclusters.Config{
+				"list-my-clusters": alloydblistclusters.Config{
 					Name:         "list-my-clusters",
-					Kind:         "alloydb-pg-list-clusters",
+					Kind:         "alloydb-list-clusters",
 					Description:  "some description",
 					AuthRequired: []string{},
 				},
@@ -56,16 +56,16 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				list-my-clusters-auth:
-					kind: alloydb-pg-list-clusters
+					kind: alloydb-list-clusters
 					description: some description
 					authRequired:
 						- my-google-auth-service
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"list-my-clusters-auth": alloydbpglistclusters.Config{
+				"list-my-clusters-auth": alloydblistclusters.Config{
 					Name:         "list-my-clusters-auth",
-					Kind:         "alloydb-pg-list-clusters",
+					Kind:         "alloydb-list-clusters",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
@@ -76,14 +76,14 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				list-my-clusters-baseurl:
-					kind: alloydb-pg-list-clusters
+					kind: alloydb-list-clusters
 					description: some description
 					baseURL: "https://example.com"
 			`,
 			want: server.ToolConfigs{
-				"list-my-clusters-baseurl": alloydbpglistclusters.Config{
+				"list-my-clusters-baseurl": alloydblistclusters.Config{
 					Name:         "list-my-clusters-baseurl",
-					Kind:         "alloydb-pg-list-clusters",
+					Kind:         "alloydb-list-clusters",
 					Description:  "some description",
 					BaseURL:      "https://example.com",
 					AuthRequired: []string{},
@@ -95,7 +95,7 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				list-my-clusters-all:
-					kind: alloydb-pg-list-clusters
+					kind: alloydb-list-clusters
 					description: some description
 					authRequired:
 						- my-google-auth-service
@@ -103,9 +103,9 @@ func TestParseFromYaml(t *testing.T) {
 					baseURL: "https://example.com"
 			`,
 			want: server.ToolConfigs{
-				"list-my-clusters-all": alloydbpglistclusters.Config{
+				"list-my-clusters-all": alloydblistclusters.Config{
 					Name:         "list-my-clusters-all",
-					Kind:         "alloydb-pg-list-clusters",
+					Kind:         "alloydb-list-clusters",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					BaseURL:      "https://example.com",

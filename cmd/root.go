@@ -43,7 +43,7 @@ import (
 
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbpg/alloydbpglistclusters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
