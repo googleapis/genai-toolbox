@@ -89,7 +89,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.13.0
+export VERSION=0.14.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -100,7 +100,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.13.0
+export VERSION=0.14.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -118,7 +118,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.13.0
+go install github.com/googleapis/genai-toolbox@v0.14.0
 ```
 
 {{% /tab %}}
@@ -1621,7 +1621,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -2208,19 +2208,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2506,19 +2506,19 @@ Connect your IDE to MySQL using Toolbox.
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2810,19 +2810,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3133,19 +3133,19 @@ Connect your IDE to SQL Server using Toolbox.
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -7541,7 +7541,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.11.0"
+    export VERSION="0.14.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -7952,7 +7952,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -8586,7 +8586,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -8904,7 +8904,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9014,7 +9014,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9302,8 +9302,10 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
+    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
