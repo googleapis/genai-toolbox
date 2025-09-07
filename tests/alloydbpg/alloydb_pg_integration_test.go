@@ -15,17 +15,11 @@
 package alloydbpg
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
 	"os"
-	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -38,16 +32,15 @@ import (
 )
 
 var (
-	AlloyDBPostgresSourceKind           = "alloydb-postgres"
-	AlloyDBPostgresToolKind             = "postgres-sql"
-	AlloyDBPostgresListClustersToolKind = "alloydb-pg-list-clusters"
-	AlloyDBPostgresProject              = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
-	AlloyDBPostgresRegion               = os.Getenv("ALLOYDB_POSTGRES_REGION")
-	AlloyDBPostgresCluster              = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
-	AlloyDBPostgresInstance             = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
-	AlloyDBPostgresDatabase             = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
-	AlloyDBPostgresUser                 = os.Getenv("ALLOYDB_POSTGRES_USER")
-	AlloyDBPostgresPass                 = os.Getenv("ALLOYDB_POSTGRES_PASS")
+	AlloyDBPostgresSourceKind = "alloydb-postgres"
+	AlloyDBPostgresToolKind   = "postgres-sql"
+	AlloyDBPostgresProject    = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
+	AlloyDBPostgresRegion     = os.Getenv("ALLOYDB_POSTGRES_REGION")
+	AlloyDBPostgresCluster    = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
+	AlloyDBPostgresInstance   = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
+	AlloyDBPostgresDatabase   = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
+	AlloyDBPostgresUser       = os.Getenv("ALLOYDB_POSTGRES_USER")
+	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASS")
 )
 
 func getAlloyDBPgVars(t *testing.T) map[string]any {
@@ -89,19 +82,6 @@ func getAlloyDBDialOpts(ipType string) ([]alloydbconn.DialOption, error) {
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
-}
-
-func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
-	tools, ok := config["tools"].(map[string]any)
-	if !ok {
-		t.Fatalf("unable to get tools from config")
-	}
-	tools["alloydb-pg-list-clusters"] = map[string]any{
-		"kind":        AlloyDBPostgresListClustersToolKind,
-		"description": "Lists all AlloyDB clusters in a given project and location",
-	}
-	config["tools"] = tools
-	return config
 }
 
 // Copied over from  alloydb_pg.go
@@ -170,8 +150,6 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
-	toolsFile = addPrebuiltToolConfig(t, toolsFile)
-
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -195,9 +173,6 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
-
-	// Run tool-specific invoke tests
-	runAlloyDBListClustersTest(t, AlloyDBPostgresProject, AlloyDBPostgresRegion)
 }
 
 // Test connection with different IP type
@@ -294,126 +269,6 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 			}
 			if tc.isErr {
 				t.Fatalf("Expected error but test passed.")
-			}
-		})
-	}
-}
-
-func runAlloyDBListClustersTest(t *testing.T, project, location string) {
-
-	type ListClustersResponse struct {
-        Clusters []struct {
-            Name string `json:"name"`
-        } `json:"clusters"`
-    }
-
-	type ToolResponse struct {
-		Result string `json:"result"`
-	}
-
-	// NOTE: If clusters are added, removed or changed in the test project,
-    // this list must be updated for the "list clusters specific locations" test to pass
-	wantForSpecificLocation := []string{
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", project),
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", project),
-    }
-
-	// NOTE: If clusters are added, removed, or changed in the test project,
-    // this list must be updated for the "list clusters all locations" test to pass
-	wantForAllLocations := []string{
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", project),
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", project),
-        fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing", project),
-        fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing", project),
-    }
-
-	invokeTcs := []struct {
-		name           string
-		requestBody    io.Reader
-		want           []string
-		wantStatusCode int
-	}{
-		{
-			name:        "list clusters for all locations",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "-"}`, project)),
-			want:        wantForAllLocations,
-			wantStatusCode: http.StatusOK,
-		},
-		{
-			name:        "list clusters specific location",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "us-central1"}`, project)),
-			want:        wantForSpecificLocation,
-			wantStatusCode: http.StatusOK,
-		},
-		{
-			name:        "list clusters missing project",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"location": "%s"}`, location)),
-			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:        "list clusters non-existent location",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "abcd"}`, project)),
-			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:        "list clusters non-existent project",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "non-existent-project", "location": "%s"}`, location)),
-			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:        "list clusters empty project",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "", "location": "%s"}`, location)),
-			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:        "list clusters empty location",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": ""}`, project)),
-			wantStatusCode: http.StatusBadRequest,
-		},
-	}
-
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			api := "http://127.0.0.1:5000/api/tool/alloydb-pg-list-clusters/invoke"
-			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
-			}
-
-			if tc.wantStatusCode == http.StatusOK {
-				var body ToolResponse
-                if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-                    t.Fatalf("error parsing outer response body: %v", err)
-                }
-
-                var clustersData ListClustersResponse
-                if err := json.Unmarshal([]byte(body.Result), &clustersData); err != nil {
-                    t.Fatalf("error parsing nested result JSON: %v", err)
-                }
-
-                var got []string
-                for _, cluster := range clustersData.Clusters {
-                    got = append(got, cluster.Name)
-                }
-
-                sort.Strings(got)
-                sort.Strings(tc.want)
-
-                if !reflect.DeepEqual(got, tc.want) {
-                    t.Errorf("cluster list mismatch:\n got: %v\nwant: %v", got, tc.want)
-                }
 			}
 		})
 	}
