@@ -74,7 +74,7 @@ List of reference documentation for resources in Toolbox.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
-  - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/alloydbpg/): Tools that work with AlloyDB Postgres Sources.
+  - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/alloydb/): Tools that work with AlloyDB Postgres Sources.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1319/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
