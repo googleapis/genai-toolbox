@@ -19,8 +19,10 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
+    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.

@@ -31,7 +31,7 @@ queries = [
     "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ]
 
-async def run_application():
+async def main():
     # TODO(developer): replace this with another model if needed
     model = ChatVertexAI(model_name="gemini-2.0-flash-001")
     # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
@@ -49,4 +49,4 @@ async def run_application():
             response = agent.invoke(inputs, stream_mode="values", config=config)
             print(response["messages"][-1].content)
 
-asyncio.run(run_application())
+asyncio.run(main())
