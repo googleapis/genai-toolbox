@@ -23,6 +23,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"golang.org/x/oauth2/google"
 )
@@ -45,11 +46,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the list-instances tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL string `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
+	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface
@@ -62,6 +64,15 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("source %q not found", cfg.Source)
+	}
+
+	s, ok := rawS.(*alloydbadmin.Source)
+	if !ok {
+		return nil, fmt.Errorf("source %q is not of kind %q", kind, alloydbadmin.SourceKind)
+	}
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("projectId", "The GCP project ID to list instances for."),
 		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')"),
@@ -88,7 +99,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		BaseURL:      baseURL,
 		AuthRequired: cfg.AuthRequired,
-		Client:       &http.Client{},
+		Client:       s.Client,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
