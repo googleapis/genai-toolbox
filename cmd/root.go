@@ -119,6 +119,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
