@@ -213,7 +213,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
   ]
 }
 `,
-					AnalyzeQuery: "true",
+					AnalyzeQuery: true,
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
 					Parameters: tools.Parameters{
 						tools.NewStringParameterWithRequired("collection", "Collection name to query", true),
@@ -468,7 +468,7 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
   ]
 }
 `,
-			AnalyzeQuery: "true",
+			AnalyzeQuery: true,
 			AuthRequired: []string{"finance-auth"},
 			Parameters: tools.Parameters{
 				tools.NewStringParameterWithRequired("accountId", "Account ID for transactions", true),

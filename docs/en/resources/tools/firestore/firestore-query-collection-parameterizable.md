@@ -18,7 +18,7 @@ The `firestore-query-collection-parameterizable` tool allows you to query Firest
 - **Native JSON Value Types**: Support for Firestore's typed values (stringValue, integerValue, doubleValue, etc.)
 - **Complex Filter Logic**: Support for AND/OR logical operators in filters
 - **Template Substitution**: Dynamic collection paths, filters, and ordering
-- **Query Analysis**: Optional query performance analysis with explain metrics
+- **Query Analysis**: Optional query performance analysis with explain metrics (non-parameterizable)
 
 ## Configuration
 
@@ -122,7 +122,7 @@ tools:
 | `select` | array | No | Fields to select from documents(supports templates - string or array) |
 | `orderBy` | object | No | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
 | `limit` | integer | No | Maximum number of documents to return (default: 100) (supports templates) |
-| `analyzeQuery` | boolean | No | Whether to analyze query performance (default: false) (supports templates) |
+| `analyzeQuery` | boolean | No | Whether to analyze query performance (default: false) |
 | `parameters` | array | Yes | Parameter definitions for template substitution |
 
 ### Runtime Parameters

@@ -61,8 +61,6 @@ const (
 	errTemplateParseFailed   = "failed to parse template: %w"
 	errTemplateExecFailed    = "failed to execute template: %w"
 	errLimitParseFailed      = "failed to parse limit value '%s': %w"
-	errAnalyzeQueryTemplateParseFailed      = "failed to parse analyzeQuery template value '%s': %w"
-	errAnalyzeQueryParseFailed = "failed to parse analyzeQuery value '%s': expected 'true' or 'false'"
 	errSelectFieldParseFailed = "failed to parse select field: %w"
 )
 
@@ -104,7 +102,7 @@ type Config struct {
 	Select         []string         `yaml:"select"`         // Fields to select
 	OrderBy        map[string]any   `yaml:"orderBy"`        // Order by configuration
 	Limit          string           `yaml:"limit"`          // Limit template (can be a number or template)
-	AnalyzeQuery   string           `yaml:"analyzeQuery"`   // Analyze query template (can be "true", "false", or template)
+	AnalyzeQuery   bool             `yaml:"analyzeQuery"`   // Analyze query (boolean, not parameterizable)
 	
 	// Parameters for template substitution
 	Parameters tools.Parameters `yaml:"parameters"`
@@ -155,7 +153,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		SelectTemplate:         cfg.Select,
 		OrderByTemplate:        cfg.OrderBy,
 		LimitTemplate:   		cfg.Limit,
-		AnalyzeQueryTemplate: 	cfg.AnalyzeQuery,
+		AnalyzeQuery: 	        cfg.AnalyzeQuery,
 		Parameters:      		cfg.Parameters,
 		manifest:        		tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:     		mcpManifest,
@@ -178,7 +176,7 @@ type Tool struct {
 	SelectTemplate          []string
 	OrderByTemplate         map[string]any
 	LimitTemplate        	string
-	AnalyzeQueryTemplate 	string
+	AnalyzeQuery 	        bool
 	Parameters           	tools.Parameters
 	
 	manifest    tools.Manifest
@@ -239,15 +237,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, err
 	}
-
-	// Process analyzeQuery once for execution
-	analyzeQuery, err := t.processAnalyzeQuery(paramsMap)
-	if err != nil {
-		return nil, err
-	}
 	
 	// Execute the query and return results
-	return t.executeQuery(ctx, query, analyzeQuery)
+	return t.executeQuery(ctx, query, t.AnalyzeQuery)
 }
 
 // processTemplate applies Go template substitution to a string
@@ -315,12 +307,8 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 	}
 	query = query.Limit(limit)
 
-	// Process and apply analyze options
-	analyzeQuery, err := t.processAnalyzeQuery(params)
-	if err != nil {
-		return nil, err
-	}
-	if analyzeQuery {
+	// Apply analyze options if enabled
+	if t.AnalyzeQuery {
 		query = query.WithRunOptions(firestoreapi.ExplainOptions{
 			Analyze: true,
 		})
@@ -492,37 +480,6 @@ func (t Tool) processLimit(params map[string]any) (int, error) {
 		}
 	}
 	return limit, nil
-}
-
-// processAnalyzeQuery processes the analyzeQuery field with parameter substitution
-func (t Tool) processAnalyzeQuery(params map[string]any) (bool, error) {
-	if t.AnalyzeQueryTemplate == "" {
-		return false, nil
-	}
-	
-	var processedValue string
-	
-	// Check if it's a template
-	if strings.Contains(t.AnalyzeQueryTemplate, "{{") {
-		processed, err := t.processTemplate("analyzeQuery", t.AnalyzeQueryTemplate, params)
-		if err != nil {
-			return false, fmt.Errorf(errAnalyzeQueryTemplateParseFailed, t.AnalyzeQueryTemplate, err)
-		}
-		processedValue = processed
-	} else {
-		processedValue = t.AnalyzeQueryTemplate
-	}
-	
-	// Parse as boolean
-	if processedValue != "" {
-		lowerValue := strings.ToLower(strings.TrimSpace(processedValue))
-		if lowerValue != "true" && lowerValue != "false" {
-			return false, fmt.Errorf(errAnalyzeQueryParseFailed, processedValue)
-		}
-		return lowerValue == "true", nil
-	}
-	
-	return false, nil
 }
 
 // executeQuery runs the query and formats the results
