@@ -1,12 +1,12 @@
 ---
-title: "cloudsql-wait-for-operation"
+title: "cloud-sql-wait-for-operation"
 type: docs
 weight: 10
 description: >
   Wait for a long-running Cloud SQL operation to complete.
 ---
 
-The `cloudsql-wait-for-operation` tool is a utility tool that waits for a
+The `cloud-sql-wait-for-operation` tool is a utility tool that waits for a
 long-running Cloud SQL operation to complete. It does this by polling the Cloud
 SQL Admin API operation status endpoint until the operation is finished, using
 exponential backoff.
@@ -26,7 +26,7 @@ This tool does not have a `source` and authenticates using the environment's
 ```yaml
 tools:
   cloudsql-operations-get:
-    kind: cloudsql-wait-for-operation
+    kind: cloud-sql-wait-for-operation
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
     delay: 1s
     maxDelay: 4m
@@ -38,7 +38,7 @@ tools:
 
 | **field**   | **type** | **required** | **description**                                                                                                  |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "cloudsql-wait-for-operation".                                                                           |
+| kind        |  string  |     true     | Must be "cloud-sql-wait-for-operation".                                                                           |
 | description |  string  |    true      | A description of the tool.                                                                                       |
 | delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |
 | maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                  |
