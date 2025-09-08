@@ -64,13 +64,15 @@ description: "Connect your IDE to Neo4j using Toolbox."
 
     {{< /tab >}}
     {{< /tabpane >}}
-    2.  Make the binary executable:
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
 
     ```bash
     chmod +x toolbox
     ```
 
-3.  Verify the installation:
+1. Verify the installation:
 
     ```bash
     ./toolbox --version
@@ -103,8 +105,8 @@ description: "Connect your IDE to Neo4j using Toolbox."
     ```
 
 4.  Restart Claude code to apply the new configuration.
-    {{% /tab %}}
-    {{% tab header="Claude desktop" lang="en" %}}
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
 
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 2.  Under the Developer tab, tap Edit Config to open the configuration file.
@@ -129,8 +131,8 @@ description: "Connect your IDE to Neo4j using Toolbox."
 
 4.  Restart Claude desktop.
 5.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
-    {{% /tab %}}
-    {{% tab header="Cline" lang="en" %}}
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
 
 1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
 2.  Tap Configure MCP Servers to open the configuration file.
@@ -154,8 +156,8 @@ description: "Connect your IDE to Neo4j using Toolbox."
     ```
 
 4.  You should see a green active status after the server is successfully connected.
-    {{% /tab %}}
-    {{% tab header="Cursor" lang="en" %}}
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
 
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
 2.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
@@ -179,8 +181,8 @@ description: "Connect your IDE to Neo4j using Toolbox."
     ```
 
 4.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
-    {{% /tab %}}
-    {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
 1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
 2.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
