@@ -129,23 +129,8 @@ tools:
           description: "The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations."
           default: "-"
   alloydb-list-instances:
-    kind: http
-    source: alloydb-api-source
-    method: GET
-    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/instances
+    kind: alloydb-list-instances
     description: "Lists all AlloyDB instances within a specific cluster."
-    pathParams:
-      - name: projectId
-        type: string
-        description: "The GCP project ID."
-      - name: locationId
-        type: string
-        description: "The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions."
-        default: "-"
-      - name: clusterId
-        type: string
-        description: "The ID of the cluster to list instances from. Use '-' to get results for all clusters."
-        default: "-"
   alloydb-list-users:
     kind: http
     source: alloydb-api-source
