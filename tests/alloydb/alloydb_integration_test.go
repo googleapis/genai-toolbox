@@ -62,16 +62,10 @@ func getAlloyDBVars(t *testing.T) map[string]string {
 
 func getAlloyDBToolsConfig() map[string]any {
 	return map[string]any{
-		"sources": map[string]any{
-			"alloydb-admin-source": map[string]any{
-				"kind": "alloydb-admin",
-			},
-		},
-		"tools": map[string]any{
+		"tools" : map[string]any{
 			// AlloyDB specific tools
 			"alloydb-list-instances": map[string]any{
 				"kind":        "alloydb-list-instances",
-				"source":      "alloydb-admin-source",
 				"description": "Lists all AlloyDB instances within a specific cluster.",
 			},
 		},

@@ -19,8 +19,6 @@ sources:
     headers:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
-  alloydb-admin-source:
-    kind: alloydb-admin
 tools:
   alloydb-create-cluster:
     kind: http
@@ -146,7 +144,6 @@ tools:
           default: "-"
   alloydb-list-instances:
     kind: alloydb-list-instances
-    source: alloydb-admin-source
     description: "Lists all AlloyDB instances within a specific cluster."
   alloydb-list-users:
     kind: http
