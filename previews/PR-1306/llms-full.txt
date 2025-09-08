@@ -6729,8 +6729,8 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
-# CloudSQL
-Tools that work with CloudSQL Control Plane. 
+# Cloud SQL
+Tools that work with Cloud SQL Control Plane. 
 
 
 
