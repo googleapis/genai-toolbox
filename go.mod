@@ -6,7 +6,7 @@ toolchain go1.25.1
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
-	cloud.google.com/go/bigquery v1.69.0
+	cloud.google.com/go/bigquery v1.70.0
 	cloud.google.com/go/bigtable v1.39.0
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.26.0
@@ -28,7 +28,7 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.5
+	github.com/jackc/pgx/v5 v5.7.6
 	github.com/json-iterator/go v1.1.12
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
 	github.com/microsoft/go-mssqldb v1.9.3
