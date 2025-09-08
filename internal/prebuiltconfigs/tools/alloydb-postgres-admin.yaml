@@ -21,7 +21,7 @@ sources:
       Content-Type: application/json
 tools:
   alloydb-create-cluster:
-    kind: alloydb-pg-create-cluster
+    kind: alloydb-create-cluster
     description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
   alloydb-operations-get:
     kind: alloydb-wait-for-operation

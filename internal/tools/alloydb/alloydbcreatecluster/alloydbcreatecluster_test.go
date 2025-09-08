@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbpgcreatecluster_test
+package alloydbcreatecluster_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbpgcreatecluster "github.com/googleapis/genai-toolbox/internal/tools/alloydbpg/alloydbpgcreatecluster"
+	alloydbcreatecluster "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -39,13 +39,13 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				create-my-cluster:
-					kind: alloydb-pg-create-cluster
+					kind: alloydb-create-cluster
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"create-my-cluster": alloydbpgcreatecluster.Config{
+				"create-my-cluster": alloydbcreatecluster.Config{
 					Name:         "create-my-cluster",
-					Kind:         "alloydb-pg-create-cluster",
+					Kind:         "alloydb-create-cluster",
 					Description:  "some description",
 					AuthRequired: []string{},
 				},
@@ -56,16 +56,16 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				create-my-cluster-auth:
-					kind: alloydb-pg-create-cluster
+					kind: alloydb-create-cluster
 					description: some description
 					authRequired: 
 						- my-google-auth-service
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"create-my-cluster-auth": alloydbpgcreatecluster.Config{
+				"create-my-cluster-auth": alloydbcreatecluster.Config{
 					Name:         "create-my-cluster-auth",
-					Kind:         "alloydb-pg-create-cluster",
+					Kind:         "alloydb-create-cluster",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
@@ -76,14 +76,14 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				create-my-cluster-baseurl:
-					kind: alloydb-pg-create-cluster
+					kind: alloydb-create-cluster
 					description: some description
 					baseURL: "https://example.com"
 			`,
 			want: server.ToolConfigs{
-				"create-my-cluster-baseurl": alloydbpgcreatecluster.Config{
+				"create-my-cluster-baseurl": alloydbcreatecluster.Config{
 					Name:         "create-my-cluster-baseurl",
-					Kind:         "alloydb-pg-create-cluster",
+					Kind:         "alloydb-create-cluster",
 					Description:  "some description",
 					BaseURL:      "https://example.com",
 					AuthRequired: []string{},
@@ -95,7 +95,7 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				create-my-cluster-all:
-					kind: alloydb-pg-create-cluster
+					kind: alloydb-create-cluster
 					description: some description
 					authRequired: 
 						- my-google-auth-service
@@ -103,9 +103,9 @@ func TestParseFromYaml(t *testing.T) {
 					baseURL: "https://example.com"
 			`,
 			want: server.ToolConfigs{
-				"create-my-cluster-all": alloydbpgcreatecluster.Config{
+				"create-my-cluster-all": alloydbcreatecluster.Config{
 					Name:         "create-my-cluster-all",
-					Kind:         "alloydb-pg-create-cluster",
+					Kind:         "alloydb-create-cluster",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					BaseURL:      "https://example.com",

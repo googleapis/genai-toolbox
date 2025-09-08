@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbpgcreatecluster
+package alloydbcreatecluster
 
 import (
 	"bytes"
@@ -28,7 +28,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const kind string = "alloydb-pg-create-cluster"
+const kind string = "alloydb-create-cluster"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -64,17 +64,17 @@ func (cfg Config) ToolConfigKind() string {
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("projectId", "The GCP project ID."),
+		tools.NewStringParameter("locationId", "The location to create the cluster in."),
 		tools.NewStringParameter("clusterId", "A unique ID for the AlloyDB cluster."),
 		tools.NewStringParameter("password", "A secure password for the initial user."),
-		tools.NewStringParameterWithDefault("location", "us-central1", "The location to create the cluster in. The default value is us-central1. If quota is exhausted then use other regions."),
 		tools.NewStringParameterWithDefault("network", "default", "The name of the VPC network to connect the cluster to (e.g., 'default')."),
 		tools.NewStringParameterWithDefault("user", "postgres", "The name for the initial superuser. Defaults to 'postgres' if not provided."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "clusterId", "password"}
+	inputSchema.Required = []string{"projectId", "locationId", "clusterId", "password"}
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
@@ -116,24 +116,24 @@ type Tool struct {
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	project, ok := paramsMap["project"].(string)
-    if !ok || project == "" {
-        return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
+	projectId, ok := paramsMap["projectId"].(string)
+    if !ok || projectId == "" {
+        return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a non-empty string")
     }
 
-    clusterID, ok := paramsMap["clusterId"].(string)
-    if !ok || clusterID == "" {
+	locationId, ok := paramsMap["locationId"].(string)
+    if !ok {
+        return nil, fmt.Errorf("iinvalid or missing 'locationId' parameter; expected a non-empty string")
+    }
+
+    clusterId, ok := paramsMap["clusterId"].(string)
+    if !ok || clusterId == "" {
         return nil, fmt.Errorf("invalid or missing 'clusterId' parameter; expected a non-empty string")
     }
 
     password, ok := paramsMap["password"].(string)
     if !ok || password == "" {
         return nil, fmt.Errorf("invalid or missing 'password' parameter; expected a non-empty string")
-    }
-
-	location, ok := paramsMap["location"].(string)
-    if !ok {
-        return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
     }
 
     network, ok := paramsMap["network"].(string)
@@ -146,11 +146,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
         return nil, fmt.Errorf("invalid 'user' parameter; expected a string")
     }
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/locations/%s/clusters?clusterId=%s", t.BaseURL, project, location, clusterID)
+	urlString := fmt.Sprintf("%s/v1/projects/%s/locations/%s/clusters?clusterId=%s", t.BaseURL, projectId, locationId, clusterId)
 
 	requestBodyMap := map[string]any{
 		"networkConfig": map[string]string{
-			"network": fmt.Sprintf("projects/%s/global/networks/%s", project, network),
+			"network": fmt.Sprintf("projects/%s/global/networks/%s", projectId, network),
 		},
 		"initialUser": map[string]string{
 			"password": password,
