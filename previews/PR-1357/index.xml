@@ -4332,19 +4332,7 @@ time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ld
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>AlloyDB Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/sources/alloydb-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/sources/alloydb-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs">AlloyDB for PostgreSQL&lt;/a> is a fully-managed, PostgreSQL-compatible
-database for demanding transactional workloads. It provides enterprise-grade
-performance and availability while maintaining 100% compatibility with
-open-source PostgreSQL.&lt;/p>
-&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides tools to perform tasks like creating and listing clusters, instances and users in your AlloyDB database.&lt;/p>
-&lt;p>If you are new to AlloyDB for PostgreSQL, you can &lt;a href="https://cloud.google.com/alloydb/docs/create-free-trial-cluster">create a free trial
-cluster&lt;/a>.&lt;/p>
-&lt;h2 id="available-tools">Available Tools&lt;/h2>
-&lt;ul>
-&lt;li>
-&lt;p>&lt;a href="../tools/alloydb/alloydb-list-clusters.md">&lt;code>alloydb-list-clusters&lt;/code>&lt;/a>&lt;br>
-Lists all AlloyDB clusters in a given project and location.&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1357/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1357/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
+ &lt;/span>Info&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1357/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1357/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>

@@ -72,7 +72,6 @@ List of reference documentation for resources in Toolbox.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
-  - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/sources/alloydb-admin/): The AlloyDB Admin source provides tools for managing AlloyDB for PostgreSQL database.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1357/resources/tools/alloydb/): Tools for AlloyDB PostgreSQL.
