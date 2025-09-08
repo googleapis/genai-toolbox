@@ -50,6 +50,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 					ClientSecret:       "sdakl;jgflkasdfkfg",
 					Timeout:            "600s",
 					SslVerification:    true,
+					UseClientOAuth:     false,
 					ShowHiddenModels:   true,
 					ShowHiddenExplores: true,
 					ShowHiddenFields:   true,
