@@ -800,10 +800,7 @@ database for demanding transactional workloads. It provides enterprise-grade
 performance and availability while maintaining 100% compatibility with
 open-source PostgreSQL.&lt;/p>
 &lt;p>The &lt;code>alloydb-admin&lt;/code> source provides tools to perform tasks like creating and listing clusters, instances and users in your AlloyDB database.&lt;/p>
+&lt;blockquote>
+&lt;p>Note: For data plane operations such as connecting to the database and executing queries, please use the &lt;code>alloydb-pg&lt;/code> source.&lt;/p>&lt;/blockquote>
 &lt;p>If you are new to AlloyDB for PostgreSQL, you can &lt;a href="https://cloud.google.com/alloydb/docs/create-free-trial-cluster">create a free trial
-cluster&lt;/a>.&lt;/p>
-&lt;h2 id="available-tools">Available Tools&lt;/h2>
-&lt;ul>
-&lt;li>
-&lt;p>&lt;a href="../tools/alloydb/alloydb-list-clusters.md">&lt;code>alloydb-list-clusters&lt;/code>&lt;/a>&lt;br>
-Lists all AlloyDB clusters in a given project and location.&lt;/p></description></item></channel></rss>
+cluster&lt;/a>.&lt;/p></description></item></channel></rss>
