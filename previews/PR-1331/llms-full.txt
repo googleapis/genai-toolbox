@@ -7301,7 +7301,7 @@ AlloyDB AI NL Tool.
 
 
 # AlloyDB for PostgreSQL
-Tools that work with AlloyDB Postgres Sources.
+Tools for AlloyDB PostgreSQL.
 
 
 

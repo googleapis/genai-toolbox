@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AlloyDB for PostgreSQL on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydbpg/</link><description>Recent content in AlloyDB for PostgreSQL on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydbpg/index.xml" rel="self" type="application/rss+xml"/><item><title>alloydb-pg-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydbpg/alloydbpgcreatecluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydbpg/alloydbpgcreatecluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-pg-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location.
-The tool takes the following input parameters:
-* &lt;code>project&lt;/code> : The GCP project ID where the cluster will be created.
-* &lt;code>clusterId&lt;/code>: A unique identifier for the new AlloyDB cluster.
-* &lt;code>location&lt;/code> (optional): The GCP location where the cluster will be created. Default: &lt;code>us-central1&lt;/code>.
-* &lt;code>network&lt;/code> (optional): The name of the VPC network to connect the cluster to. Default: &lt;code>default&lt;/code>.
-* &lt;code>user&lt;/code> (optional): The name for the initial superuser. Default: &lt;code>postgres&lt;/code>. The initial database will always be named &amp;lsquo;postgres&amp;rsquo;.
-* &lt;code>password&lt;/code> : A secure password for the initial &amp;lsquo;postgres&amp;rsquo; user or the custom user provided.&lt;/p></description></item></channel></rss>

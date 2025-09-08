@@ -32,15 +32,20 @@ layer.&lt;/p>
 application end user natural language questions. Natural language streamlines
 the development of generative AI applications by transferring the complexity
 of converting natural language to SQL from the application layer to the
-database layer.&lt;/p></description></item><item><title>alloydb-pg-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydbpg/alloydbpgcreatecluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydbpg/alloydbpgcreatecluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-pg-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location.
-The tool takes the following input parameters:
-* &lt;code>project&lt;/code> : The GCP project ID where the cluster will be created.
-* &lt;code>clusterId&lt;/code>: A unique identifier for the new AlloyDB cluster.
-* &lt;code>location&lt;/code> (optional): The GCP location where the cluster will be created. Default: &lt;code>us-central1&lt;/code>.
-* &lt;code>network&lt;/code> (optional): The name of the VPC network to connect the cluster to. Default: &lt;code>default&lt;/code>.
-* &lt;code>user&lt;/code> (optional): The name for the initial superuser. Default: &lt;code>postgres&lt;/code>. The initial database will always be named &amp;lsquo;postgres&amp;rsquo;.
-* &lt;code>password&lt;/code> : A secure password for the initial &amp;lsquo;postgres&amp;rsquo; user or the custom user provided.&lt;/p></description></item><item><title>BigQuery</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/bigquery/</guid><description>&lt;h1 id="bigquery-source">BigQuery Source&lt;/h1>
+database layer.&lt;/p></description></item><item><title>alloydb-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydbcreatecluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydbcreatecluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location.
+This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> within the specified VPC network.&lt;/p>
+&lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
+Before using, ensure the following on your GCP project:&lt;/p>
+&lt;ol>
+&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
+&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage the AlloyDB cluster.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>BigQuery</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/bigquery/</guid><description>&lt;h1 id="bigquery-source">BigQuery Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/bigquery/docs">BigQuery&lt;/a> is Google Cloud&amp;rsquo;s fully managed, petabyte-scale,
 and cost-effective analytics data warehouse that lets you run analytics
 over vast amounts of data in near real time. With BigQuery, there&amp;rsquo;s no
