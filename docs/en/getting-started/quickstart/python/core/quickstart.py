@@ -1,5 +1,5 @@
 import asyncio
-
+import os
 from google import genai
 from google.genai.types import (
     Content,
@@ -30,7 +30,10 @@ queries = [
 ]
 
 async def main():
-    async with ToolboxClient("http://127.0.0.1:5000") as toolbox_client:
+    host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
+    toolbox_url = f"http://{host}:5000"
+    async with ToolboxClient(toolbox_url) as toolbox_client:
+
 
         # The toolbox_tools list contains Python callables (functions/methods) designed for LLM tool-use
         # integration. While this example uses Google's genai client, these callables can be adapted for
@@ -39,7 +42,7 @@ async def main():
         # provided wrapper packages, which handle framework-specific boilerplate.
         toolbox_tools = await toolbox_client.load_toolset("my-toolset")
         genai_client = genai.Client(
-            vertexai=True, project="project-id", location="us-central1"
+            vertexai=True, project=os.environ.get("GCP_PROJECT","your-project-id"), location="us-central1"
         )
 
         genai_tools = [
