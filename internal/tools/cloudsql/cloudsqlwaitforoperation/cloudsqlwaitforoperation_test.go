@@ -40,6 +40,7 @@ func TestParseFromYaml(t *testing.T) {
 			tools:
 				wait-for-thing:
 					kind: cloud-sql-wait-for-operation
+					source: some-source
 					description: some description
 					delay: 1s
 					maxDelay: 5s
@@ -50,6 +51,7 @@ func TestParseFromYaml(t *testing.T) {
 				"wait-for-thing": cloudsqlwaitforoperation.Config{
 					Name:         "wait-for-thing",
 					Kind:         "cloud-sql-wait-for-operation",
+					Source:       "some-source",
 					Description:  "some description",
 					AuthRequired: []string{},
 					Delay:        "1s",

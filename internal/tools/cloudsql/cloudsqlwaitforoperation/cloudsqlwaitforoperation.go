@@ -27,6 +27,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"golang.org/x/oauth2/google"
 )
@@ -92,6 +93,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 	BaseURL      string   `yaml:"baseURL"`
@@ -113,6 +115,15 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	}
+
+	s, ok := rawS.(*httpsrc.Source)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
+	}
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The project ID"),
 		tools.NewStringParameter("operation", "The operation ID"),
@@ -170,7 +181,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		BaseURL:      baseURL,
 		AuthRequired: cfg.AuthRequired,
-		Client:       &http.Client{},
+		Client:       s.Client,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,

@@ -251,21 +251,30 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 
 func getCloudSQLWaitToolsConfig(baseURL string) map[string]any {
 	return map[string]any{
+		"sources": map[string]any{
+			"test-source": map[string]any{
+				"kind":    "http",
+				"baseUrl": baseURL,
+			},
+		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
 				"kind":         cloudsqlWaitToolKind,
+				"source":       "test-source",
 				"description":  "wait for op1",
 				"baseURL":      baseURL,
 				"authRequired": []string{},
 			},
 			"wait-for-op2": map[string]any{
 				"kind":         cloudsqlWaitToolKind,
+				"source":       "test-source",
 				"description":  "wait for op2",
 				"baseURL":      baseURL,
 				"authRequired": []string{},
 			},
 			"wait-for-op3": map[string]any{
 				"kind":         cloudsqlWaitToolKind,
+				"source":       "test-source",
 				"description":  "wait for op3",
 				"baseURL":      baseURL,
 				"authRequired": []string{},
