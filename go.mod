@@ -6,7 +6,7 @@ toolchain go1.25.1
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
-	cloud.google.com/go/bigquery v1.69.0
+	cloud.google.com/go/bigquery v1.70.0
 	cloud.google.com/go/bigtable v1.39.0
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.26.0
