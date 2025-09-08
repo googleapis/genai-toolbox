@@ -15,13 +15,11 @@
 package firestorequerycollectionparameterizable
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
-	"text/template"
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
@@ -54,9 +52,6 @@ var validOperators = map[string]bool{
 // Error messages
 const (
 	errFilterParseFailed     = "failed to parse filters: %w"
-	errInvalidOperator       = "unsupported operator: %s. Valid operators are: %v"
-	errMissingFilterValue    = "no value specified for filter on field '%s'"
-	errOrderByParseFailed    = "failed to parse orderBy: %w"
 	errQueryExecutionFailed  = "failed to execute query: %w"
 	errTemplateParseFailed   = "failed to parse template: %w"
 	errTemplateExecFailed    = "failed to execute template: %w"
@@ -227,7 +222,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	paramsMap := params.AsMap()
 	
 	// Process collection path with template substitution
-	collectionPath, err := t.processTemplate("collectionPath", t.CollectionPathTemplate, paramsMap)
+	collectionPath, err := tools.PopulateTemplate("collectionPath",t.CollectionPathTemplate, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process collection path: %w", err)
 	}
@@ -239,22 +234,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	
 	// Execute the query and return results
-	return t.executeQuery(ctx, query, t.AnalyzeQuery)
-}
-
-// processTemplate applies Go template substitution to a string
-func (t Tool) processTemplate(name, templateStr string, params map[string]any) (string, error) {
-	tmpl, err := template.New(name).Parse(templateStr)
-	if err != nil {
-		return "", fmt.Errorf(errTemplateParseFailed, err)
-	}
-	
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, params); err != nil {
-		return "", fmt.Errorf(errTemplateExecFailed, err)
-	}
-	
-	return buf.String(), nil
+	return t.executeQuery(ctx, query)
 }
 
 // buildQuery constructs the Firestore query from parameters
@@ -292,7 +272,7 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 	}
 
 	// Process and apply ordering
-	orderBy, err := t.processOrderBy(params)
+	orderBy, err := t.getOrderBy(params)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +281,7 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 	}
 
 	// Process and apply limit
-	limit, err := t.processLimit(params)
+	limit, err := t.getLimit(params)
 	if err != nil {
 		return nil, err
 	}
@@ -376,9 +356,9 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	for _, field := range t.SelectTemplate {
 		// Check if it's a template
 		if strings.Contains(field, "{{") {
-			processed, err := t.processTemplate("selectField", field, params)
+			processed, err := tools.PopulateTemplate("selectField", field, params)
 			if err != nil {
-				return nil, fmt.Errorf(errSelectFieldParseFailed, err)
+				return nil, err
 			}
 			if processed != "" {
 				// The processed field might be an array format [a b c] or a single value
@@ -407,8 +387,8 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	return selectFields, nil
 }
 
-// processOrderBy processes the orderBy configuration with parameter substitution
-func (t Tool) processOrderBy(params map[string]any) (*OrderByConfig, error) {
+// getOrderBy processes the orderBy configuration with parameter substitution
+func (t Tool) getOrderBy(params map[string]any) (*OrderByConfig, error) {
 	if t.OrderByTemplate == nil {
 		return nil, nil
 	}
@@ -416,14 +396,14 @@ func (t Tool) processOrderBy(params map[string]any) (*OrderByConfig, error) {
 	orderBy := &OrderByConfig{}
 	
 	// Process field
-	field, err := t.processOrderByTemplate("field", params)
+	field, err := t.getOrderByForKey("field", params)
 	if err != nil {
 		return nil, err
 	}
 	orderBy.Field = field
 	
 	// Process direction
-	direction, err := t.processOrderByTemplate("direction", params)
+	direction, err := t.getOrderByForKey("direction", params)
 	if err != nil {
 		return nil, err
 	}
@@ -436,40 +416,29 @@ func (t Tool) processOrderBy(params map[string]any) (*OrderByConfig, error) {
 	return orderBy, nil
 }
 
-func (t Tool) processOrderByTemplate(key string, params map[string]any) (string, error) {
-	var processedValue string
-	if value, ok := t.OrderByTemplate[key].(string); ok {
-		// Check if it's a template
-		if strings.Contains(value, "{{") {
-			processed, err := t.processTemplate(fmt.Sprintf("orderBy%s",key), value, params)
-			if err != nil {
-				return "", fmt.Errorf(errOrderByParseFailed, err)
-			}
-			processedValue = processed
-		} else {
-			processedValue = value
-		}
+func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error) {
+	value, ok := t.OrderByTemplate[key].(string)
+	if !ok {
+		return "", nil
 	}
+	
+	processedValue, err := tools.PopulateTemplate(fmt.Sprintf("orderBy%s", key), value, params)
+	if err != nil {
+		return "", err
+	}
+	
 	return processedValue, nil
 }
 
 // processLimit processes the limit field with parameter substitution
-func (t Tool) processLimit(params map[string]any) (int, error) {
+func (t Tool) getLimit(params map[string]any) (int, error) {
 	limit := defaultLimit
 	if t.LimitTemplate != "" {
-		var processedValue string
-		
-		// Check if it's a template
-		if strings.Contains(t.LimitTemplate, "{{") {
-			processed, err := t.processTemplate("limit", t.LimitTemplate, params)
-			if err != nil {
-				return 0, fmt.Errorf(errLimitParseFailed, t.LimitTemplate, err)
-			}
-			processedValue = processed
-		} else {
-			processedValue = t.LimitTemplate
+		processedValue, err := tools.PopulateTemplate("limit", t.LimitTemplate, params)
+		if err != nil {
+			return 0, err
 		}
-		
+
 		// Try to parse as integer
 		if processedValue != "" {
 			parsedLimit, err := strconv.Atoi(processedValue)
@@ -483,7 +452,7 @@ func (t Tool) processLimit(params map[string]any) (int, error) {
 }
 
 // executeQuery runs the query and formats the results
-func (t Tool) executeQuery(ctx context.Context, query *firestoreapi.Query, analyzeQuery bool) (any, error) {
+func (t Tool) executeQuery(ctx context.Context, query *firestoreapi.Query) (any, error) {
 	docIterator := query.Documents(ctx)
 	docs, err := docIterator.GetAll()
 	if err != nil {
@@ -504,7 +473,7 @@ func (t Tool) executeQuery(ctx context.Context, query *firestoreapi.Query, analy
 	}
 
 	// Return with explain metrics if requested
-	if analyzeQuery {
+	if t.AnalyzeQuery {
 		explainMetrics, err := t.getExplainMetrics(docIterator)
 		if err == nil && explainMetrics != nil {
 			response := QueryResponse{
