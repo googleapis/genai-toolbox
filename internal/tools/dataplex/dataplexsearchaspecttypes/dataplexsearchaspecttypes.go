@@ -99,9 +99,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		CatalogClient: s.CatalogClient(),
 		ProjectID:     s.ProjectID(),
 		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
-			AuthRequired: cfg.AuthRequired,
+			Description:    cfg.Description,
+			Parameters:     parameters.Manifest(),
+			AuthRequired:   cfg.AuthRequired,
+			UseClientOAuth: false,
 		},
 		mcpManifest: mcpManifest,
 	}

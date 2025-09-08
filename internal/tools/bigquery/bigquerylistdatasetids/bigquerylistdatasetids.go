@@ -102,8 +102,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth: s.UseClientAuthorization(),
 		ClientCreator:  s.BigQueryClientCreator(),
 		Client:         s.BigQueryClient(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		manifest: tools.Manifest{
+			Description:    cfg.Description,
+			Parameters:     parameters.Manifest(),
+			AuthRequired:   cfg.AuthRequired,
+			UseClientOAuth: s.UseClientAuthorization()},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }

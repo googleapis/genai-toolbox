@@ -104,8 +104,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Scope:                s.CouchbaseScope(),
 		QueryScanConsistency: s.CouchbaseQueryScanConsistency(),
 		AuthRequired:         cfg.AuthRequired,
-		manifest:             tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:          mcpManifest,
+		manifest: tools.Manifest{
+			Description:    cfg.Description,
+			Parameters:     paramManifest,
+			AuthRequired:   cfg.AuthRequired,
+			UseClientOAuth: false},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
