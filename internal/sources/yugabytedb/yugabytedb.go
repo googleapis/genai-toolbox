@@ -65,12 +65,12 @@ func (r Config) SourceConfigKind() string {
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	pool, err := initYugabyteDBConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.LoadBalance, r.TopologyKeys, r.YBServersRefreshInterval, r.FallBackToTopologyKeysOnly, r.FailedHostReconnectDelaySeconds)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create pool: %w", err)
+		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
 	err = pool.Ping(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to connect successfully: %w", err)
+		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
 	s := &Source{
@@ -120,7 +120,7 @@ func initYugabyteDBConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	}
 	pool, err := pgxpool.New(ctx, i)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create connection pool: %w", err)
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
 	return pool, nil

@@ -53,7 +53,7 @@ func getYBVars(t *testing.T) map[string]any {
 	case YBDB_PASS:
 		t.Fatal("'YUGABYTEDB_PASS' not set")
 	case YBDB_LB:
-		fmt.Sprintf("YUGABYTEDB_LOADBALANCE value not set. Setting default value: false")
+		fmt.Printf("YUGABYTEDB_LOADBALANCE value not set. Setting default value: false")
 		YBDB_LB = "false"
 	}
 
@@ -148,12 +148,10 @@ func TestYugabyteDB(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
+	select1Want, mcpMyFailToolWant, _, mcpSelect1Want := tests.GetPostgresWants()
 
-	select1Want := "[{\"?column?\":1}]"
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
