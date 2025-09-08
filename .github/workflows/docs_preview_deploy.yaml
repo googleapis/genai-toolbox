@@ -90,7 +90,7 @@ jobs:
           commit_message: "stage: PR-${{ github.event.number }}: ${{ github.event.head_commit.message }}"
 
       - name: Comment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             github.rest.issues.createComment({
