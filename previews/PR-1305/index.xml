@@ -1352,7 +1352,7 @@ structure:&lt;/p></description></item><item><title>firestore-query-collection-pa
 &lt;li>&lt;strong>Native JSON Value Types&lt;/strong>: Support for Firestore&amp;rsquo;s typed values (stringValue, integerValue, doubleValue, etc.)&lt;/li>
 &lt;li>&lt;strong>Complex Filter Logic&lt;/strong>: Support for AND/OR logical operators in filters&lt;/li>
 &lt;li>&lt;strong>Template Substitution&lt;/strong>: Dynamic collection paths, filters, and ordering&lt;/li>
-&lt;li>&lt;strong>Query Analysis&lt;/strong>: Optional query performance analysis with explain metrics&lt;/li>
+&lt;li>&lt;strong>Query Analysis&lt;/strong>: Optional query performance analysis with explain metrics (non-parameterizable)&lt;/li>
 &lt;/ul>
 &lt;h2 id="configuration">Configuration&lt;/h2>
 &lt;h3 id="basic-configuration">Basic Configuration&lt;/h3>
@@ -1497,7 +1497,7 @@ structure:&lt;/p></description></item><item><title>firestore-query-collection-pa
  &lt;td>&lt;code>analyzeQuery&lt;/code>&lt;/td>
  &lt;td>boolean&lt;/td>
  &lt;td>No&lt;/td>
- &lt;td>Whether to analyze query performance (default: false) (supports templates)&lt;/td>
+ &lt;td>Whether to analyze query performance (default: false)&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>parameters&lt;/code>&lt;/td>
