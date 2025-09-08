@@ -552,6 +552,29 @@ steps:
           "TiDB" \
           tidb \
           tidbsql tidbexecutesql
+  
+  - id: "snowflake"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SNOWFLAKE_ROLE=$_SNOWFLAKE_ROLE"
+      - "SNOWFLAKE_DATABASE=$_DATABASE_NAME"
+      - "SNOWFLAKE_WAREHOUSE=$_SNOWFLAKE_WAREHOUSE"
+      - "SNOWFLAKE_SCHEMA=$_SNOWFLAKE_SCHEMA" 
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS", "SNOWFLAKE_ACCOUNT"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Snowflake" \
+          snowflake \
+          snowflake
 
 availableSecrets:
   secretManager:
@@ -621,6 +644,12 @@ availableSecrets:
       env: OCEANBASE_USER
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_pass/versions/latest
       env: OCEANBASE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/snowflake_account/versions/latest
+      env: SNOWFLAKE_ACCOUNT
+    - versionName: projects/$PROJECT_ID/secrets/snowflake_user/versions/latest
+      env: SNOWFLAKE_USER
+    - versionName: projects/$PROJECT_ID/secrets/snowflake_pass/versions/latest
+      env: SNOWFLAKE_PASS
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -657,3 +686,6 @@ substitutions:
   _TIDB_PORT: "4000"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
+  _SNOWFLAKE_ROLE: "ACCOUNTADMIN"
+  _SNOWFLAKE_WAREHOUSE: "snowflake-wh"
+  _SNOWFLAKE_SCHEMA: "test"

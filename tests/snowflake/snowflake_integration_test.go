@@ -90,7 +90,7 @@ func initSnowflakeConnectionPool(account, user, password, database, schema, ware
 	dsn := fmt.Sprintf("%s:%s@%s/%s/%s?warehouse=%s&role=%s&protocol=https&timeout=60", user, password, account, database, schema, warehouse, role)
 	db, err := sqlx.Connect("snowflake", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create connection: %w", err)
+		return nil, fmt.Errorf("unable to create test DB connection: %w", err)
 	}
 
 	return db, nil
@@ -125,10 +125,10 @@ func TestSnowflake(t *testing.T) {
 
 	// Write config into a file and pass it to command
 
-toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
-toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
-tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
-toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
+	toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -157,18 +157,18 @@ toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSe
 // addSnowflakeExecuteSqlConfig gets the tools config for `snowflake-execute-sql`
 func addSnowflakeExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 
-tools, ok := config["tools"].(map[string]any)
+	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
 
-tools["my-exec-sql-tool"] = map[string]any{
+	tools["my-exec-sql-tool"] = map[string]any{
 		"kind":        "snowflake-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 
-tools["my-auth-exec-sql-tool"] = map[string]any{
+	tools["my-auth-exec-sql-tool"] = map[string]any{
 		"kind":        "snowflake-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
