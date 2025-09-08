@@ -16,6 +16,8 @@ open-source PostgreSQL.
 
 The `alloydb-admin` source provides tools to perform tasks like creating and listing clusters, instances and users in your AlloyDB database.
 
+> Note: For data plane operations such as connecting to the database and executing queries, please use the `alloydb-pg` source.
+
 If you are new to AlloyDB for PostgreSQL, you can [create a free trial
 cluster][alloydb-free-trial].
 
@@ -42,17 +44,10 @@ Create your AlloyDB database with MCP Toolbox.
 
 ### IAM Permissions
 
-The AlloyDB Admin source uses your [Application Default Credentials
-(ADC)][adc] to authorize administrative actions.
-
-In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the following IAM roles (or corresponding
+Ensure that the IAM identity has been given the following IAM roles (or corresponding
 permissions):
 
 - `roles/alloydb.admin`
-
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 
 ## Example
 
