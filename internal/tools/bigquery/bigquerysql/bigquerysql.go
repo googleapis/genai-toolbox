@@ -50,6 +50,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
 }
 
 // validate compatible sources are still compatible
@@ -64,7 +65,6 @@ type Config struct {
 	Description        string           `yaml:"description" validate:"required"`
 	Statement          string           `yaml:"statement" validate:"required"`
 	AuthRequired       []string         `yaml:"authRequired"`
-	UseClientOAuth     bool             `yaml:"useClientOAuth"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 }
@@ -105,17 +105,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:               cfg.Name,
 		Kind:               kind,
 		AuthRequired:       cfg.AuthRequired,
-		UseClientOAuth:     cfg.UseClientOAuth,
 		Parameters:         cfg.Parameters,
 		TemplateParameters: cfg.TemplateParameters,
 		AllParams:          allParameters,
 
-		Statement:     cfg.Statement,
-		Client:        s.BigQueryClient(),
-		RestService:   s.BigQueryRestService(),
-		ClientCreator: s.BigQueryClientCreator(),
-		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:   mcpManifest,
+		Statement:      cfg.Statement,
+		UseClientOAuth: s.UseClientAuthorization(),
+		Client:         s.BigQueryClient(),
+		RestService:    s.BigQueryRestService(),
+		ClientCreator:  s.BigQueryClientCreator(),
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:    mcpManifest,
 	}
 	return t, nil
 }
@@ -219,21 +219,20 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	bqClient := t.Client
 	restService := t.RestService
-	var query *bigqueryapi.Query
 
 	// Initialize new client if using user OAuth token
 	if t.UseClientOAuth {
-		bqClient, restService, err = t.ClientCreator(accessToken)
+		bqClient, restService, err = t.ClientCreator(accessToken, true)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
 	}
 
-	query = bqClient.Query(newStatement)
+	query := bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
-	query.Location = t.Client.Location
+	query.Location = bqClient.Location
 
-	dryRunJob, err := dryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	dryRunJob, err := dryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		// This is a fallback check in case the switch logic was bypassed.
 		return nil, fmt.Errorf("final query validation failed: %w", err)

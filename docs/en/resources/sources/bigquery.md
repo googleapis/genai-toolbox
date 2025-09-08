@@ -36,11 +36,14 @@ avoiding full table scans or complex filters.
 
 ## Available Tools
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
+- [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
+  Allows conversational interaction with a BigQuery source.
 
 - [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
   Execute structured queries using parameters.
+
+- [`bigquery-forecast`](../tools/bigquery/bigquery-forecast.md)
+  Forecasts time series data in BigQuery.
 
 - [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
   Retrieve metadata for a specific dataset.
@@ -53,6 +56,9 @@ avoiding full table scans or complex filters.
 
 - [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
   List tables in a given dataset.
+
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
 
 ### Pre-built Configurations
 
@@ -104,6 +110,7 @@ sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -114,6 +121,7 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     useClientOAuth: true
+    # location: "US" # Optional: Specifies the location for query jobs.
 ```
 
 ## Reference
@@ -121,6 +129,6 @@ sources:
 | **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
 |----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
-| project        |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                                                                                                                                           |
-| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| project        |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                               |
+| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
 | useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
