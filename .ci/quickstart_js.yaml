@@ -1,0 +1,144 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+substitutions:
+  _GCP_PROJECT: "toolbox-testing-438616"
+  _CLOUD_SQL_INSTANCE: "toolbox-testing-438616:us-central1:quickstart-testing"
+  _DATABASE_NAME: "toolbox_db"
+  _DB_USER: "postgres"
+  _TOOLS_YAML_SECRET: "quickstart-testing"
+  _API_KEY_SECRET: "quickstart_testing_api_key"
+  _DB_PASS_SECRET: "quickstart-testing-pg-pass"
+  _TOOLBOX_IMAGE: "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest" 
+  _GCP_PROJECT_NUMBER: "your-project-number"
+
+steps:
+  # Step 0: Start Cloud SQL Auth Proxy
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'start-proxy'
+    entrypoint: 'bash'
+    env:
+      - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
+    args:
+      - -c
+      - |
+        set -x
+        docker run -d --name=cloudsqlproxy --network=cloudbuild \
+          gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
+          /cloud_sql_proxy \
+            -instances=$${CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 \
+            -verbose
+        echo "Cloud SQL Proxy container starting..."
+        sleep 10
+        echo "--- Cloud SQL Proxy status ---"
+        docker ps -a | grep cloudsqlproxy || true
+        echo "--- Cloud SQL Proxy logs ---"
+        docker logs cloudsqlproxy || echo "Failed to get proxy logs."
+        if ! docker ps | grep -w cloudsqlproxy; then
+          echo "Error: Cloud SQL Proxy failed to stay running!"
+          exit 1
+        else
+          echo "Cloud SQL Proxy appears to be running."
+        fi
+  # Step 1: Prepare config and Start the toolbox server
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'start-server'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        set -ex
+        mkdir -p /workspace/config
+        if [ -z "$$TOOLS_YAML_CONTENT" ]; then
+          echo "Error: TOOLS_YAML_CONTENT is not set."
+          exit 1
+        fi
+        echo "$$TOOLS_YAML_CONTENT" > /workspace/config/tools.yaml
+        
+        docker run -d --name=toolbox --network=cloudbuild \
+          -v /workspace/config:/config \
+          '${_TOOLBOX_IMAGE}' \
+          toolbox --tools-file /config/tools.yaml --address 0.0.0.0
+        echo "Docker run command for toolbox issued."
+        sleep 10
+        docker ps -a | grep toolbox
+    secretEnv: ['TOOLS_YAML_CONTENT']
+    waitFor: ['start-proxy']
+
+  # Step 2: Wait for Toolbox Server
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'wait-for-server'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        set -ex
+        echo "Waiting for server to initialize...";
+        if ! docker ps | grep -w toolbox; then
+          echo "Error: toolbox container is not running or has exited!"
+          docker logs toolbox || echo "Failed to get toolbox logs."
+          exit 1
+        fi
+        echo "toolbox container is running."
+        apt-get update && apt-get install -y netcat-openbsd
+        for i in $(seq 1 30); do
+          if nc -z -w 2 toolbox 5000; then
+             echo "Server port 5000 is open!";
+             exit 0;
+          fi
+          echo "Attempt $i/30: Server not ready yet, waiting 3 seconds...";
+          sleep 3;
+        done;
+        echo "Server did not start in time!";
+        docker logs toolbox || echo "Failed to get toolbox logs."
+        exit 1;
+    waitFor: ['start-server']
+
+  # Step 3: Run the Python quickstart test script
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'run-tests'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        set -ex
+        apt-get update && apt-get install -y postgresql-client python3-venv
+        chmod +x .ci/quickstart_py.sh
+        export PGPASSWORD="$${DB_PASSWORD}"
+        export GOOGLE_API_KEY="$${GOOGLE_API_KEY}"
+        .ci/quickstart_py.sh
+    env:
+      - 'GCP_PROJECT=${_GCP_PROJECT}'
+      - 'DATABASE_NAME=${_DATABASE_NAME}'
+      - 'DB_USER=${_DB_USER}'
+      - 'TOOLBOX_HOST=toolbox'
+      - 'TOOLBOX_PORT=5000'
+      - 'PGHOST=cloudsqlproxy'
+      - 'PGPORT=5432'
+    secretEnv: ['GOOGLE_API_KEY', 'DB_PASSWORD']
+    waitFor: ['wait-for-server']
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/latest
+    env: 'TOOLS_YAML_CONTENT'
+  - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
+    env: 'GOOGLE_API_KEY'
+  - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
+    env: 'DB_PASSWORD'
+
+timeout: 1200s
+
+options:
+  logging: CLOUD_LOGGING_ONLY
