@@ -18,7 +18,7 @@ def golden_keywords():
 
 
 # --- Execution Tests ---
-class TestADKExecution:
+class TestCOREExecution:
     """Test ADK framework execution and output validation."""
 
     @pytest.fixture(scope="function")
