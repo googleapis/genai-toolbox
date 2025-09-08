@@ -103,7 +103,7 @@ steps:
         chmod +x .ci/quickstart_py.sh
         export PGPASSWORD="$${DB_PASSWORD}"
         export GOOGLE_API_KEY="$${GOOGLE_API_KEY}"
-        .ci/quickstart_py.sh
+        .ci/quickstart_js.sh
     env:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
