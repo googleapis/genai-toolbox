@@ -13,11 +13,14 @@ aliases:
 The `alloydb-list-clusters` tool retrieves AlloyDB cluster information for all or specified locations in a given project.
 
 `alloydb-list-clusters` tool lists the detailed information of AlloyDB cluster(cluster name, state, configuration, etc) for a given project and location. The tool takes the following input parameters:
-	* `project` : The GCP project ID to list clusters for.
-	* `location` (optional): The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations. Default: `"-"`.
-
+	
+| Parameter  | Type   | Description                                                                              | Required |
+| :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
+| `projectId`  | string | The GCP project ID to list clusters for.                                                 | Yes      |
+| `locationId` | string | The location to list clusters in (e.g., 'us-central1'). Use `-` for all locations. Default: `-`.| No       |
 > **Note**
-> This tool does not have a `source`.
+> This tool does not have a `source` and authenticates using the environment's
+[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
 
 ## Example
 

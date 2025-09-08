@@ -63,13 +63,13 @@ func (cfg Config) ToolConfigKind() string {
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID to list clusters for."),
-		tools.NewStringParameterWithDefault("location", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		tools.NewStringParameter("projectId", "The GCP project ID to list clusters for."),
+		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location"}
+	inputSchema.Required = []string{"projectId", "locationId"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -113,16 +113,16 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	project, ok := paramsMap["project"].(string)
+	projectId, ok := paramsMap["projectId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
 	}
-	location, ok := paramsMap["location"].(string)
+	locationId, ok := paramsMap["locationId"].(string)
     if !ok {
-		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
 	}
 
-	name := fmt.Sprintf("projects/%s/locations/%s/clusters", project, location)
+	name := fmt.Sprintf("projects/%s/locations/%s/clusters", projectId, locationId)
 	urlString := fmt.Sprintf("%s/v1/%s", t.BaseURL, name)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
