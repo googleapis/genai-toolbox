@@ -87,12 +87,8 @@ EOF
   python3 -m venv "$VENV_DIR"
   source "$VENV_DIR/bin/activate"
 
-  if [ -f "requirements.txt" ]; then
-    pip install -r "$ORCH_DIR/requirements.txt"
-  else
-    echo "Warning: requirements.txt not found. Skipping."
-  fi
-
+  pip install -r "$ORCH_DIR/requirements.txt"
+  
   echo "Running tests for $ORCH_NAME..."
   ORCH_NAME="$ORCH_NAME" pytest
 
