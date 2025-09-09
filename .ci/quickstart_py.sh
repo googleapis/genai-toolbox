@@ -7,7 +7,7 @@ TABLE_NAME="hotels"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
 
-apt-get update && apt-get install -y postgresql-client python3-venv curl
+apt-get update && apt-get install -y postgresql-client python3-venv curl wget
 
 if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
   exit 1
