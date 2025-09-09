@@ -34,7 +34,7 @@ async def main():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-2.0-flash-001",
-        vertexai_config={"project": "project-id", "location": "us-central1"},
+        vertexai_config={"project": os.environ.get("GCP_PROJECT", "project-id"), "location": "us-central1"},
     )
     # llm = GoogleGenAI(
     #     api_key=os.getenv("GOOGLE_API_KEY"),
