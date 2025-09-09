@@ -148,8 +148,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Cursor" lang="en" %}}
 
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
-2.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -168,13 +168,13 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     }
     ```
 
-4.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
 {{% /tab %}}
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
 1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
-2.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -198,8 +198,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Windsurf" lang="en" %}}
 
 1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
-2.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -221,8 +221,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Gemini CLI" lang="en" %}}
 
 1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-2.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-3.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
 
     ```json
     {
@@ -244,9 +244,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
 1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
-2.  Enable Agent Mode in Gemini Code Assist chat.
-3.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-4.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
 
     ```json
     {
