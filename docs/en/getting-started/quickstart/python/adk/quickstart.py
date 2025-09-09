@@ -35,7 +35,7 @@ async def main():
 
       session_service = InMemorySessionService()
       artifacts_service = InMemoryArtifactService()
-      session = session_service.create_session(
+      session = await session_service.create_session(
           state={}, app_name='hotel_agent', user_id='123'
       )
       runner = Runner(
