@@ -50,19 +50,14 @@ for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
-  # Use a subshell (...) to contain all actions for a single test run.
-  (
-    set -e
-    ORCH_NAME=$(basename "$ORCH_DIR")
-    
-    # Change into the main Python directory where the test file is
-    cd "$QUICKSTART_PYTHON_DIR"
+  set -e
+  ORCH_NAME=$(basename "$ORCH_DIR")
 
-    echo "--- Setting up test for $ORCH_NAME ---"
+  # Drop table before test
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
 
-    # Reset the database for this specific test suite
-    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
-    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
+  # Create table and insert data
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR NOT NULL,
@@ -86,16 +81,24 @@ VALUES
   (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
 EOF
 
-    # Create a local virtual environment
-    VENV_DIR=".venv"
-    python3 -m venv "$VENV_DIR"
-    source "$VENV_DIR/bin/activate"
+  # Create venv in python folder for each orchestrator
+  cd "$QUICKSTART_PYTHON_DIR"
+  VENV_DIR=".venv"
+  python3 -m venv "$VENV_DIR"
+  source "$VENV_DIR/bin/activate"
 
-    # Install dependencies from the correct requirements.txt file
-    pip install -r "$ORCH_NAME/requirements.txt"
+  if [ -f "requirements.txt" ]; then
+    pip install -r "$ORCH_DIR/requirements.txt"
+  else
+    echo "Warning: requirements.txt not found. Skipping."
+  fi
 
-    # Run the test, providing the required ORCH_NAME environment variable
-    echo "Running tests for $ORCH_NAME..."
-    ORCH_NAME="$ORCH_NAME" pytest
-  )
+  echo "Running tests for $ORCH_NAME..."
+  ORCH_NAME="$ORCH_NAME" pytest
+
+  # Deactivate and remove venv
+  deactivate || true
+  rm -rf "$VENV_DIR"
+
+  cd -
 done
