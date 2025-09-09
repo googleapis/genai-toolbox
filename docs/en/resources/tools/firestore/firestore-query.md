@@ -6,7 +6,6 @@ description: >
   Query a Firestore collection with parameterizable filters and Firestore native JSON value types
 aliases:
 - /resources/tools/firestore-query
-- /resources/tools/firestore-query-collection-parameterizable
 ---
 
 ## Overview
