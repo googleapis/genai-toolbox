@@ -3,26 +3,51 @@
 set -e
 set -u
 
-# --- Configuration ---
-: "${GCP_PROJECT:?Error: GCP_PROJECT environment variable not set.}"
-: "${DATABASE_NAME:?Error: DATABASE_NAME environment variable not set.}"
-: "${DB_USER:?Error: DB_USER environment variable not set.}"
-: "${GOOGLE_API_KEY:?Error: GOOGLE_API_KEY environment variable not set.}"
-: "${PGHOST:?Error: PGHOST environment variable not set.}"
-: "${PGPORT:?Error: PGPORT environment variable not set.}"
-: "${PGPASSWORD:?Error: PGPASSWORD environment variable not set.}"
-
 TABLE_NAME="hotels"
 QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/go"
+TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
+
+apt-get update && apt-get install -y postgresql-client curl wget
+
+if [ ! -d "$QUICKSTART_GO_DIR" ]; then
+  exit 1
+fi
 
 # To enable OpenAI sample testing in the future, uncomment the second line and remove the first.
 frameworks=("genAI" "genkit" "langchain")
 # frameworks=("genAI" "genkit" "langchain" "openAI")
 
-if [ ! -d "$QUICKSTART_GO_DIR" ]; then
-  echo "Error: Quickstart directory not found at '$QUICKSTART_GO_DIR'"
-  exit 1
-fi
+wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
+chmod +x /usr/local/bin/cloud-sql-proxy
+
+cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
+PROXY_PID=$!
+
+export PGHOST=127.0.0.1
+export PGPORT=5432
+export PGPASSWORD="$DB_PASSWORD"
+export GOOGLE_API_KEY="$GOOGLE_API_KEY"
+
+mkdir -p "${TOOLBOX_SETUP_DIR}"
+echo "${TOOLS_YAML_CONTENT}" > "${TOOLBOX_SETUP_DIR}/tools.yaml"
+if [ ! -f "${TOOLBOX_SETUP_DIR}/tools.yaml" ]; then echo "Failed to create tools.yaml"; exit 1; fi
+
+curl -L "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -o "${TOOLBOX_SETUP_DIR}/toolbox"
+chmod +x "${TOOLBOX_SETUP_DIR}/toolbox"
+if [ ! -f "${TOOLBOX_SETUP_DIR}/toolbox" ]; then echo "Failed to download toolbox"; exit 1; fi
+
+echo "--- Starting Toolbox Server ---"
+cd "${TOOLBOX_SETUP_DIR}"
+./toolbox --tools-file ./tools.yaml &
+TOOLBOX_PID=$!
+cd "/workspace"
+sleep 5
+
+cleanup_all() {
+  kill $TOOLBOX_PID || true
+  kill $PROXY_PID || true
+}
+trap cleanup_all EXIT
 
 for framework in "${frameworks[@]}"; do
     FW_DIR="${QUICKSTART_GO_DIR}/${framework}"
