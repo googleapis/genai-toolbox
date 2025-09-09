@@ -34,4 +34,4 @@ tools:
 toolsets:
   neo4j-database-tools:
     - execute_cypher
-    - schema
+    - get_schema
