@@ -35,7 +35,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			in: `
 			sources:
 				my-mysql-instance:
-					kind: cloud-sql-mysql
+					type: cloud-sql-mysql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -62,7 +62,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			in: `
 			sources:
 				my-mysql-instance:
-					kind: cloud-sql-mysql
+					type: cloud-sql-mysql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -90,7 +90,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			in: `
 			sources:
 				my-mysql-instance:
-					kind: cloud-sql-mysql
+					type: cloud-sql-mysql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -143,7 +143,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-mysql-instance:
-					kind: cloud-sql-mysql
+					type: cloud-sql-mysql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -159,7 +159,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-mysql-instance:
-					kind: cloud-sql-mysql
+					type: cloud-sql-mysql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -168,14 +168,14 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse source \"my-mysql-instance\" as \"cloud-sql-mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: cloud-sql-mysql\n   5 | password: my_pass\n   6 | ",
+			err: "unable to parse source \"my-mysql-instance\" as \"cloud-sql-mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | type: cloud-sql-mysql\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-mysql-instance:
-					kind: cloud-sql-mysql
+					type: cloud-sql-mysql
 					region: my-region
 					instance: my-instance
 					database: my_db

@@ -36,7 +36,7 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 			in: `
 			sources:
 				my-spanner-instance:
-					kind: spanner
+					type: spanner
 					project: my-project
 					instance: my-instance
 					database: my_db
@@ -57,7 +57,7 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 			in: `
 			sources:
 				my-spanner-instance:
-					kind: spanner
+					type: spanner
 					project: my-project
 					instance: my-instance
 					dialect: Googlesql 
@@ -79,7 +79,7 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 			in: `
 			sources:
 				my-spanner-instance:
-					kind: spanner
+					type: spanner
 					project: my-project
 					instance: my-instance
 					dialect: postgresql
@@ -126,7 +126,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-spanner-instance:
-					kind: spanner
+					type: spanner
 					project: my-project
 					instance: my-instance
 					dialect: fail
@@ -139,20 +139,20 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-spanner-instance:
-					kind: spanner
+					type: spanner
 					project: my-project
 					instance: my-instance
 					database: my_db
 					foo: bar
 			`,
-			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: spanner\n   5 | project: my-project",
+			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | type: spanner\n   5 | project: my-project",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-spanner-instance:
-					kind: spanner
+					type: spanner
 					project: my-project
 					instance: my-instance
 			`,

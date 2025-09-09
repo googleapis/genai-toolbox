@@ -36,7 +36,7 @@ func TestParseFromYamlSQLite(t *testing.T) {
 			in: `
             sources:
                 my-sqlite-db:
-                    kind: sqlite
+                    type: sqlite
                     database: /path/to/database.db
             `,
 			want: map[string]sources.SourceConfig{

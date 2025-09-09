@@ -35,7 +35,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			in: `
 			sources:
 				my-neo4j-instance:
-					kind: neo4j
+					type: neo4j
 					uri: neo4j+s://my-host:7687
 					database: my_db
 					user: my_user
@@ -82,21 +82,21 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-neo4j-instance:
-					kind: neo4j
+					type: neo4j
 					uri: neo4j+s://my-host:7687
 					database: my_db
 					user: my_user
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse source \"my-neo4j-instance\" as \"neo4j\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | kind: neo4j\n   4 | password: my_pass\n   5 | uri: neo4j+s://my-host:7687\n   6 | ",
+			err: "unable to parse source \"my-neo4j-instance\" as \"neo4j\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | type: neo4j\n   4 | password: my_pass\n   5 | uri: neo4j+s://my-host:7687\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-neo4j-instance:
-					kind: neo4j
+					type: neo4j
 					uri: neo4j+s://my-host:7687
 					database: my_db
 					user: my_user

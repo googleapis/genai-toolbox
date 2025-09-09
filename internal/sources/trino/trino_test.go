@@ -140,7 +140,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			in: `
 			sources:
 				my-trino-instance:
-					kind: trino
+					type: trino
 					host: localhost
 					port: "8080"
 					user: testuser
@@ -164,7 +164,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			in: `
 			sources:
 				my-trino-instance:
-					kind: trino
+					type: trino
 					host: localhost
 					port: "8443"
 					user: testuser
@@ -198,7 +198,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			in: `
 			sources:
 				my-trino-anonymous:
-					kind: trino
+					type: trino
 					host: localhost
 					port: "8080"
 					catalog: hive

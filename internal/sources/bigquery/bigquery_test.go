@@ -35,7 +35,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: bigquery
+					type: bigquery
 					project: my-project
 					location: us
 			`,
@@ -54,7 +54,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: bigquery
+					type: bigquery
 					project: my-project
 					location: us
 					useClientOAuth: true
@@ -99,19 +99,19 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: bigquery
+					type: bigquery
 					project: my-project
 					location: us
 					foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: bigquery\n   3 | location: us\n   4 | project: my-project",
+			err: "unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | type: bigquery\n   3 | location: us\n   4 | project: my-project",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-instance:
-					kind: bigquery
+					type: bigquery
 					location: us
 			`,
 			err: "unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",

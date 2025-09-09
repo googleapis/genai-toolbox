@@ -37,7 +37,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: valkey
+					type: valkey
 					address:
 					  - 127.0.0.1
 			`,
@@ -59,7 +59,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: valkey
+					type: valkey
 					address:
 					  - 127.0.0.1
 					database: 1
@@ -111,7 +111,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: valkey
+					type: valkey
 					project: my-project
 					address:
 					  - 127.0.0.1
@@ -125,7 +125,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: valkey
+					type: valkey
 					address:
 					  - 127.0.0.1
 					project: proj
@@ -138,7 +138,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-valkey-instance:
-					kind: valkey
+					type: valkey
 			`,
 			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},

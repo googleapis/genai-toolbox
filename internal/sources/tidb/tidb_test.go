@@ -35,7 +35,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			in: `
 			sources:
 				my-tidb-instance:
-					kind: tidb
+					type: tidb
 					host: 0.0.0.0
 					port: my-port
 					database: my_db
@@ -60,7 +60,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			in: `
 			sources:
 				my-tidb-cloud:
-					kind: tidb
+					type: tidb
 					host: gateway01.us-west-2.prod.aws.tidbcloud.com
 					port: 4000
 					database: test_db
@@ -86,7 +86,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			in: `
 			sources:
 				my-tidb-cloud:
-					kind: tidb
+					type: tidb
 					host: gateway01.us-west-2.prod.aws.tidbcloud.com
 					port: 4000
 					database: test_db
@@ -136,7 +136,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-tidb-instance:
-					kind: tidb
+					type: tidb
 					host: 0.0.0.0
 					port: my-port
 					database: my_db
@@ -145,14 +145,14 @@ func TestFailParseFromYaml(t *testing.T) {
 					ssl: false
 					foo: bar
 			`,
-			err: "unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: tidb\n   5 | password: my_pass\n   6 | ",
+			err: "unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | type: tidb\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-tidb-instance:
-					kind: tidb
+					type: tidb
 					port: my-port
 					database: my_db
 					user: my_user

@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string          `yaml:"name" validate:"required"`
-	Type     string          `yaml:"kind" validate:"required"`
+	Type     string          `yaml:"type" validate:"required"`
 	Project  string          `yaml:"project" validate:"required"`
 	Instance string          `yaml:"instance" validate:"required"`
 	Dialect  sources.Dialect `yaml:"dialect" validate:"required"`

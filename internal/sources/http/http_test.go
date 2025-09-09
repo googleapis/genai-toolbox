@@ -36,7 +36,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 			in: `
 			sources:
 				my-http-instance:
-					kind: http
+					type: http
 					baseUrl: http://test_server/
 			`,
 			want: map[string]sources.SourceConfig{
@@ -54,7 +54,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 			in: `
 			sources:
 				my-http-instance:
-					kind: http
+					type: http
 					baseUrl: http://test_server/
 					timeout: 10s
 					headers:
@@ -106,7 +106,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-http-instance:
-					kind: http
+					type: http
 					baseUrl: http://test_server/
 					timeout: 10s
 					headers:
@@ -115,7 +115,7 @@ func TestFailParseFromYaml(t *testing.T) {
 						api-key: test_api_key
 					project: test-project
 			`,
-			err: "unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s",
+			err: "unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | type: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s",
 		},
 		{
 			desc: "missing required field",
@@ -124,7 +124,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				my-http-instance:
 					baseUrl: http://test_server/
 			`,
-			err: "missing 'kind' field for source \"my-http-instance\"",
+			err: "missing 'type' field for source \"my-http-instance\"",
 		},
 	}
 	for _, tc := range tcs {

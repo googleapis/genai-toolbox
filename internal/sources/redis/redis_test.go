@@ -36,7 +36,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: redis
+					type: redis
 					address:
 					  - 127.0.0.1
 			`,
@@ -55,7 +55,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: redis
+					type: redis
 					address:
 					  - 127.0.0.1
 					password: my-pass
@@ -105,7 +105,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: redis
+					type: redis
 					project: my-project
 					address:
 					  - 127.0.0.1
@@ -119,7 +119,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: redis
+					type: redis
 					project: my-project
 					address:
 					  - 127.0.0.1
@@ -133,7 +133,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-redis-instance:
-					kind: redis
+					type: redis
 			`,
 			err: "unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},

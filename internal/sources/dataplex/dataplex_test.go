@@ -35,7 +35,7 @@ func TestParseFromYamlDataplex(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: dataplex
+					type: dataplex
 					project: my-project
 			`,
 			want: server.SourceConfigs{
@@ -76,18 +76,18 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: dataplex
+					type: dataplex
 					project: my-project
 					foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"dataplex\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: dataplex\n   3 | project: my-project",
+			err: "unable to parse source \"my-instance\" as \"dataplex\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | type: dataplex\n   3 | project: my-project",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-instance:
-					kind: dataplex
+					type: dataplex
 			`,
 			err: "unable to parse source \"my-instance\" as \"dataplex\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
