@@ -11,6 +11,16 @@ if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
   exit 1
 fi
 
+wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
+chmod +x /usr/local/bin/cloud-sql-proxy
+
+cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
+PROXY_PID=$!
+
+export PGHOST=127.0.0.1
+export PGPORT=5432
+
+
 apt-get update && apt-get install -y postgresql-client python3-venv netcat-openbsd curl
 
 mkdir -p "${TOOLBOX_SETUP_DIR}"
@@ -24,8 +34,16 @@ if [ ! -f "${TOOLBOX_SETUP_DIR}/toolbox" ]; then echo "Failed to download toolbo
 echo "--- Starting Toolbox Server ---"
 cd "${TOOLBOX_SETUP_DIR}"
 ./toolbox --tools-file ./tools.yaml &
+TOOLBOX_PID=$!
 cd "/workspace"
 sleep 5
+
+cleanup_all() {
+  kill $TOOLBOX_PID || true
+  kill $PROXY_PID || true
+}
+trap cleanup_all EXIT
+
 
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
