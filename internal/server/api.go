@@ -179,12 +179,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 			return
 		}
-		headerParts := strings.Split(string(accessToken), " ")
-		if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
-			http.Error(w, "Authorization header must be in the format 'Bearer <token>'", http.StatusUnauthorized)
-			return
-		}
-		accessToken = tools.AccessToken(headerParts[1])
 	}
 
 	// Tool authentication
