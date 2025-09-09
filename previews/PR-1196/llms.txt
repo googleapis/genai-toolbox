@@ -31,7 +31,7 @@ List of guides detailing how to do different things with Toolbox.
   - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/cloud_sql_mssql_mcp/): Connect your IDE to Cloud SQL for SQL Server using Toolbox.
   - [Firestore using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/firestore_mcp/): Connect your IDE to Firestore using Toolbox.
   - [Looker using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/looker_mcp/): Connect your IDE to Looker using Toolbox.
-  - [MySQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
+  - [MySQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [Neo4j using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/neo4j_mcp/): Connect your IDE to Neo4j using Toolbox.  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
   - [SQL Server using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect-ide/mssql_mcp/): Connect your IDE to SQL Server using Toolbox.- [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
 - [Toolbox UI](https://googleapis.github.io/genai-toolbox/previews/PR-1196/how-to/toolbox-ui/): How to effectively use Toolbox UI.
@@ -108,6 +108,7 @@ Samples and guides for using Toolbox.
   - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1196/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/previews/PR-1196/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.
 - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-1196/samples/looker/): How to get started with Toolbox using Looker.
+  - [Gemini-CLI and OAuth](https://googleapis.github.io/genai-toolbox/previews/PR-1196/samples/looker/looker_gemini_oauth/): How to connect to Looker from Gemini-CLI with end-user credentials
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-1196/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-1196/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
 

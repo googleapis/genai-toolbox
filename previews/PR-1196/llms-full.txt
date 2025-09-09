@@ -89,7 +89,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.13.0
+export VERSION=0.14.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -100,7 +100,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.13.0
+export VERSION=0.14.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -118,7 +118,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.13.0
+go install github.com/googleapis/genai-toolbox@v0.14.0
 ```
 
 {{% /tab %}}
@@ -806,380 +806,26 @@ npm install @google/genai
     {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
 
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ToolboxClient } from "@toolbox-sdk/core";
-import { tool } from "@langchain/core/tools";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { MemorySaver } from "@langchain/langgraph";
-
-// Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
-
-const prompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-async function main() {
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
-  });
-
-  const client = new ToolboxClient("http://127.0.0.1:5000");
-  const toolboxTools = await client.loadToolset("my-toolset");
-
-  // Define the basics of the tool: name, description, schema and core logic
-  const getTool = (toolboxTool) => tool(toolboxTool, {
-    name: toolboxTool.getName(),
-    description: toolboxTool.getDescription(),
-    schema: toolboxTool.getParamSchema()
-  });
-  const tools = toolboxTools.map(getTool);
-
-  const agent = createReactAgent({
-    llm: model,
-    tools: tools,
-    checkpointer: new MemorySaver(),
-    systemPrompt: prompt,
-  });
-
-  const langGraphConfig = {
-    configurable: {
-        thread_id: "test-thread",
-    },
-  };
-
-  for (const query of queries) {
-    const agentOutput = await agent.invoke(
-    {
-        messages: [
-        {
-            role: "user",
-            content: query,
-        },
-        ],
-        verbose: true,
-    },
-    langGraphConfig
-    );
-    const response = agentOutput.messages[agentOutput.messages.length - 1].content;
-    console.log(response);
-  }
-}
-
-main();
+{{< include "quickstart/js/langchain/quickstart.js" >}}
 
 {{< /tab >}}
 
 {{< tab header="GenkitJS" lang="js" >}}
 
-import { ToolboxClient } from "@toolbox-sdk/core";
-import { genkit } from "genkit";
-import { googleAI } from '@genkit-ai/googleai';
+{{< include "quickstart/js/genkit/quickstart.js" >}}
 
-// Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-async function main() {
-  const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
-
-  const ai = genkit({
-    plugins: [
-      googleAI({
-        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
-      })
-    ],
-    model: googleAI.model('gemini-2.0-flash'),
-  });
-
-  const toolboxTools = await toolboxClient.loadToolset("my-toolset");
-  const toolMap = Object.fromEntries(
-    toolboxTools.map((tool) => {
-      const definedTool = ai.defineTool(
-        {
-          name: tool.getName(),
-          description: tool.getDescription(),
-          inputSchema: tool.getParamSchema(),
-        },
-        tool
-      );
-      return [tool.getName(), definedTool];
-    })
-  );
-  const tools = Object.values(toolMap);
-
-  let conversationHistory = [{ role: "system", content: [{ text: systemPrompt }] }];
-
-  for (const query of queries) {
-    conversationHistory.push({ role: "user", content: [{ text: query }] });
-    const response = await ai.generate({
-      messages: conversationHistory,
-      tools: tools,
-    });
-    conversationHistory.push(response.message);
-
-    const toolRequests = response.toolRequests;
-    if (toolRequests?.length > 0) {
-      // Execute tools concurrently and collect their responses.
-      const toolResponses = await Promise.all(
-        toolRequests.map(async (call) => {
-          try {
-            const toolOutput = await toolMap[call.name].invoke(call.input);
-            return { role: "tool", content: [{ toolResponse: { name: call.name, output: toolOutput } }] };
-          } catch (e) {
-            console.error(`Error executing tool ${call.name}:`, e);
-            return { role: "tool", content: [{ toolResponse: { name: call.name, output: { error: e.message } } }] };
-          }
-        })
-      );
-
-      conversationHistory.push(...toolResponses);
-
-      // Call the AI again with the tool results.
-      response = await ai.generate({ messages: conversationHistory, tools });
-      conversationHistory.push(response.message);
-    }
-
-    console.log(response.text);
-  }
-}
-
-main();
 {{< /tab >}}
 
 {{< tab header="LlamaIndex" lang="js" >}}
 
-import { gemini, GEMINI_MODEL } from "@llamaindex/google";
-import { agent } from "@llamaindex/workflow";
-import { createMemory, staticBlock, tool } from "llamaindex";
-import { ToolboxClient } from "@toolbox-sdk/core";
-
-const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-process.env.GOOGLE_API_KEY = 'your-api-key'; // Replace it with your API key
-
-const prompt = `
-
-You're a helpful hotel assistant. You handle hotel searching, booking and cancellations.
-When the user searches for a hotel, mention its name, id, location and price tier.
-Always mention hotel ids while performing any searches â€” this is very important for operations.
-For any bookings or cancellations, please provide the appropriate confirmation.
-Update check-in or check-out dates if mentioned by the user.
-Don't ask for confirmations from the user.
-
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-async function main() {
-  // Connect to MCP Toolbox
-  const client = new ToolboxClient(TOOLBOX_URL);
-  const toolboxTools = await client.loadToolset("my-toolset");
-  const tools = toolboxTools.map((toolboxTool) => {
-    return tool({
-      name: toolboxTool.getName(),
-      description: toolboxTool.getDescription(),
-      parameters: toolboxTool.getParamSchema(),
-      execute: toolboxTool,
-    });
-  });
-
-  // Initialize LLM
-  const llm = gemini({
-    model: GEMINI_MODEL.GEMINI_2_0_FLASH,
-    apiKey: process.env.GOOGLE_API_KEY,
-  });
-
-  const memory = createMemory({
-    memoryBlocks: [
-      staticBlock({
-        content: prompt,
-      }),
-    ],
-  });
-
-  // Create the Agent
-  const myAgent = agent({
-    tools: tools,
-    llm,
-    memory,
-    systemPrompt: prompt,
-  });
-
-  for (const query of queries) {
-    const result = await myAgent.run(query);
-    const output = result.data.result;
-
-    console.log(`\nUser: ${query}`);
-    if (typeof output === "string") {
-      console.log(output.trim());
-    } else if (typeof output === "object" && "text" in output) {
-      console.log(output.text.trim());
-    } else {
-      console.log(JSON.stringify(output));
-    }
-  }
-  //You may observe some extra logs during execution due to the run method provided by Llama.
-  console.log("Agent run finished.");
-}
-
-main();
+{{< include "quickstart/js/llamaindex/quickstart.js" >}}
 
 {{< /tab >}}
 
 {{< tab header="GoogleGenAI" lang="js" >}}
-import { GoogleGenAI } from "@google/genai";
-import { ToolboxClient } from "@toolbox-sdk/core";
 
+{{< include "quickstart/js/genAI/quickstart.js" >}}
 
-const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-const GOOGLE_API_KEY = 'enter your api here'; // Replace it with your API key
-
-const prompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, you MUST use the available tools to find information. Mention its name, id,
-location and price tier. Always mention hotel id while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`;
-
-const queries = [
-  "Find hotels in Basel with Basel in its name.",
-  "Can you book the Hilton Basel for me?",
-  "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-  "My check in dates would be from April 10, 2024 to April 19, 2024.",
-];
-
-function mapZodTypeToOpenAPIType(zodTypeName) {
-
-    console.log(zodTypeName)
-    const typeMap = {
-        'ZodString': 'string',
-        'ZodNumber': 'number',
-        'ZodBoolean': 'boolean',
-        'ZodArray': 'array',
-        'ZodObject': 'object',
-    };
-    return typeMap[zodTypeName] || 'string';
-}
-
-async function main() {
-   
-    const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
-    const toolboxTools = await toolboxClient.loadToolset("my-toolset");
-    
-    const geminiTools = [{
-        functionDeclarations: toolboxTools.map(tool => {
-            
-            const schema = tool.getParamSchema();
-            const properties = {};
-            const required = [];
-
-         
-            for (const [key, param] of Object.entries(schema.shape)) {
-                properties[key] = {
-                        type: mapZodTypeToOpenAPIType(param.constructor.name),
-                        description: param.description || '',
-                    };
-                required.push(key)
-                }
-            
-            return {
-                name: tool.getName(),
-                description: tool.getDescription(),
-                parameters: { type: 'object', properties, required },
-            };
-        })
-    }];
-
-
-    const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
-    
-    const chat = genAI.chats.create({
-        model: "gemini-2.5-flash",
-        config: {
-            systemInstruction: prompt,
-            tools: geminiTools,
-        }
-    });
-
-    for (const query of queries) {
-        
-        let currentResult = await chat.sendMessage({ message: query });
-        
-        let finalResponseGiven = false
-        while (!finalResponseGiven) {
-            
-            const response = currentResult;
-            const functionCalls = response.functionCalls || [];
-
-            if (functionCalls.length === 0) {
-                console.log(response.text)
-                finalResponseGiven = true;
-            } else {
-                const toolResponses = [];
-                for (const call of functionCalls) {
-                    const toolName = call.name
-                    const toolToExecute = toolboxTools.find(t => t.getName() === toolName);
-                    
-                    if (toolToExecute) {
-                        try {
-                            const functionResult = await toolToExecute(call.args);
-                            toolResponses.push({
-                                functionResponse: { name: call.name, response: { result: functionResult } }
-                            });
-                        } catch (e) {
-                            console.error(`Error executing tool '${toolName}':`, e);
-                            toolResponses.push({
-                                functionResponse: { name: call.name, response: { error: e.message } }
-                            });
-                        }
-                    }
-                }
-                
-                currentResult = await chat.sendMessage({ message: toolResponses });
-            }
-        }
-        
-    }
-}
-
-main();
 {{< /tab >}}
 
 {{< /tabpane >}}
@@ -1242,614 +888,28 @@ from Toolbox.
     {{< tabpane persist=header >}}
 {{< tab header="LangChain Go" lang="go" >}}
 
-package main
+{{< include "quickstart/go/langchain/quickstart.go" >}}
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/llms/googleai"
-)
-
-// ConvertToLangchainTool converts a generic core.ToolboxTool into a LangChainGo llms.Tool.
-func ConvertToLangchainTool(toolboxTool *core.ToolboxTool) llms.Tool {
-
-	// Fetch the tool's input schema
-	inputschema, err := toolboxTool.InputSchema()
-	if err != nil {
-		return llms.Tool{}
-	}
-
-	var paramsSchema map[string]any
-	_ = json.Unmarshal(inputschema, &paramsSchema)
-
-	// Convert into LangChain's llms.Tool
-	return llms.Tool{
-		Type: "function",
-		Function: &llms.FunctionDefinition{
-			Name:        toolboxTool.Name(),
-			Description: toolboxTool.Description(),
-			Parameters:  paramsSchema,
-		},
-	}
-}
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it.",
-	"Please book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	genaiKey := os.Getenv("GOOGLE_API_KEY")
-	toolboxURL := "http://localhost:5000"
-	ctx := context.Background()
-
-	// Initialize the Google AI client (LLM).
-	llm, err := googleai.New(ctx, googleai.WithAPIKey(genaiKey), googleai.WithDefaultModel("gemini-1.5-flash"))
-	if err != nil {
-		log.Fatalf("Failed to create Google AI client: %v", err)
-	}
-
-	// Initialize the MCP Toolbox client.
-	toolboxClient, err := core.NewToolboxClient(toolboxURL)
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tool using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tools: %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
-
-	langchainTools := make([]llms.Tool, len(tools))
-	// Convert the loaded ToolboxTools into the format LangChainGo requires.
-	for i, tool := range tools {
-		langchainTools[i] = ConvertToLangchainTool(tool)
-		toolsMap[tool.Name()] = tool
-	}
-
-	// Start the conversation history.
-	messageHistory := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, systemPrompt),
-	}
-
-	for _, query := range queries {
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, query))
-
-		// Make the first call to the LLM, making it aware of the tool.
-		resp, err := llm.GenerateContent(ctx, messageHistory, llms.WithTools(langchainTools))
-		if err != nil {
-			log.Fatalf("LLM call failed: %v", err)
-		}
-		respChoice := resp.Choices[0]
-
-		assistantResponse := llms.TextParts(llms.ChatMessageTypeAI, respChoice.Content)
-		for _, tc := range respChoice.ToolCalls {
-			assistantResponse.Parts = append(assistantResponse.Parts, tc)
-		}
-		messageHistory = append(messageHistory, assistantResponse)
-
-		// Process each tool call requested by the model.
-		for _, tc := range respChoice.ToolCalls {
-			toolName := tc.FunctionCall.Name
-			tool := toolsMap[toolName]
-			var args map[string]any
-			if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
-				log.Fatalf("Failed to unmarshal arguments for tool '%s': %v", toolName, err)
-			}
-			toolResult, err := tool.Invoke(ctx, args)
-			if err != nil {
-				log.Fatalf("Failed to execute tool '%s': %v", toolName, err)
-			}
-			if toolResult == "" || toolResult == nil {
-				toolResult = "Operation completed successfully with no specific return value."
-			}
-
-			// Create the tool call response message and add it to the history.
-			toolResponse := llms.MessageContent{
-				Role: llms.ChatMessageTypeTool,
-				Parts: []llms.ContentPart{
-					llms.ToolCallResponse{
-						Name:    toolName,
-						Content: fmt.Sprintf("%v", toolResult),
-					},
-				},
-			}
-			messageHistory = append(messageHistory, toolResponse)
-		}
-		finalResp, err := llm.GenerateContent(ctx, messageHistory)
-		if err != nil {
-			log.Fatalf("Final LLM call failed after tool execution: %v", err)
-		}
-
-		// Add the final textual response from the LLM to the history
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeAI, finalResp.Choices[0].Content))
-
-		fmt.Println(finalResp.Choices[0].Content)
-
-	}
-
-}
 
 {{< /tab >}}
 
 {{< tab header="Genkit Go" lang="go" >}}
 
-package main
+{{< include "quickstart/go/genkit/quickstart.go" >}}
 
-import (
-	"context"
-	"fmt"
-	"log"
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	"github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
-
-	"github.com/firebase/genkit/go/ai"
-	"github.com/firebase/genkit/go/genkit"
-	"github.com/firebase/genkit/go/plugins/googlegenai"
-)
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	ctx := context.Background()
-
-	// Create Toolbox Client
-	toolboxClient, err := core.NewToolboxClient("http://127.0.0.1:5000")
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tools using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tools: %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	// Initialize Genkit
-	g, err := genkit.Init(ctx,
-		genkit.WithPlugins(&googlegenai.GoogleAI{}),
-		genkit.WithDefaultModel("googleai/gemini-1.5-flash"),
-	)
-	if err != nil {
-		log.Fatalf("Failed to init genkit: %v\n", err)
-	}
-
-	// Create a conversation history
-	conversationHistory := []*ai.Message{
-		ai.NewSystemTextMessage(systemPrompt),
-	}
-
-	// Convert your tool to a Genkit tool.
-	genkitTools := make([]ai.Tool, len(tools))
-	for i, tool := range tools {
-		newTool, err := tbgenkit.ToGenkitTool(tool, g)
-		if err != nil {
-			log.Fatalf("Failed to convert tool: %v\n", err)
-		}
-		genkitTools[i] = newTool
-	}
-
-	toolRefs := make([]ai.ToolRef, len(genkitTools))
-
-	for i, tool := range genkitTools {
-		toolRefs[i] = tool
-	}
-
-	for _, query := range queries {
-		conversationHistory = append(conversationHistory, ai.NewUserTextMessage(query))
-		response, err := genkit.Generate(ctx, g,
-			ai.WithMessages(conversationHistory...),
-			ai.WithTools(toolRefs...),
-			ai.WithReturnToolRequests(true),
-		)
-
-		if err != nil {
-			log.Fatalf("%v\n", err)
-		}
-		conversationHistory = append(conversationHistory, response.Message)
-
-		parts := []*ai.Part{}
-
-		for _, req := range response.ToolRequests() {
-			tool := genkit.LookupTool(g, req.Name)
-			if tool == nil {
-				log.Fatalf("tool %q not found", req.Name)
-			}
-
-			output, err := tool.RunRaw(ctx, req.Input)
-			if err != nil {
-				log.Fatalf("tool %q execution failed: %v", tool.Name(), err)
-			}
-
-			parts = append(parts,
-				ai.NewToolResponsePart(&ai.ToolResponse{
-					Name:   req.Name,
-					Ref:    req.Ref,
-					Output: output,
-				}))
-
-		}
-
-		if len(parts) > 0 {
-			resp, err := genkit.Generate(ctx, g,
-				ai.WithMessages(append(response.History(), ai.NewMessage(ai.RoleTool, nil, parts...))...),
-				ai.WithTools(toolRefs...),
-			)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("\n", resp.Text())
-			conversationHistory = append(conversationHistory, resp.Message)
-		} else {
-			fmt.Println("\n", response.Text())
-		}
-
-	}
-
-}
 
 {{< /tab >}}
 
 {{< tab header="Go GenAI" lang="go" >}}
 
-package main
-
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	"google.golang.org/genai"
-)
-
-// ConvertToGenaiTool translates a ToolboxTool into the genai.FunctionDeclaration format.
-func ConvertToGenaiTool(toolboxTool *core.ToolboxTool) *genai.Tool {
-
-	inputschema, err := toolboxTool.InputSchema()
-	if err != nil {
-		return &genai.Tool{}
-	}
-
-	var paramsSchema *genai.Schema
-	_ = json.Unmarshal(inputschema, &paramsSchema)
-	// First, create the function declaration.
-	funcDeclaration := &genai.FunctionDeclaration{
-		Name:        toolboxTool.Name(),
-		Description: toolboxTool.Description(),
-		Parameters:  paramsSchema,
-	}
-
-	// Then, wrap the function declaration in a genai.Tool struct.
-	return &genai.Tool{
-		FunctionDeclarations: []*genai.FunctionDeclaration{funcDeclaration},
-	}
-}
-
-func printResponse(resp *genai.GenerateContentResponse) {
-	for _, cand := range resp.Candidates {
-		if cand.Content != nil {
-			for _, part := range cand.Content.Parts {
-				fmt.Println(part.Text)
-			}
-		}
-	}
-}
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it.",
-	"Please book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	// Setup
-	ctx := context.Background()
-	apiKey := os.Getenv("GOOGLE_API_KEY")
-	toolboxURL := "http://localhost:5000"
-
-	// Initialize the Google GenAI client using the explicit ClientConfig.
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey: apiKey,
-	})
-	if err != nil {
-		log.Fatalf("Failed to create Google GenAI client: %v", err)
-	}
-
-	// Initialize the MCP Toolbox client.
-	toolboxClient, err := core.NewToolboxClient(toolboxURL)
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tool using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tools: %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	genAITools := make([]*genai.Tool, len(tools))
-	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
-
-	for i, tool := range tools {
-		genAITools[i] = ConvertToGenaiTool(tool)
-		toolsMap[tool.Name()] = tool
-	}
-
-	// Set up the generative model with the available tool.
-	modelName := "gemini-2.0-flash"
-
-	// Create the initial content prompt for the model.
-	messageHistory := []*genai.Content{
-		genai.NewContentFromText(systemPrompt, genai.RoleUser),
-	}
-	config := &genai.GenerateContentConfig{
-		Tools: genAITools,
-		ToolConfig: &genai.ToolConfig{
-			FunctionCallingConfig: &genai.FunctionCallingConfig{
-				Mode: genai.FunctionCallingConfigModeAny,
-			},
-		},
-	}
-
-	for _, query := range queries {
-
-		messageHistory = append(messageHistory, genai.NewContentFromText(query, genai.RoleUser))
-
-		genContentResp, err := client.Models.GenerateContent(ctx, modelName, messageHistory, config)
-		if err != nil {
-			log.Fatalf("LLM call failed for query '%s': %v", query, err)
-		}
-
-		if len(genContentResp.Candidates) > 0 && genContentResp.Candidates[0].Content != nil {
-			messageHistory = append(messageHistory, genContentResp.Candidates[0].Content)
-		}
-
-		functionCalls := genContentResp.FunctionCalls()
-
-		toolResponseParts := []*genai.Part{}
-
-		for _, fc := range functionCalls {
-
-			toolToInvoke, found := toolsMap[fc.Name]
-			if !found {
-				log.Fatalf("Tool '%s' not found in loaded tools map. Check toolset configuration.", fc.Name)
-			}
-
-			toolResult, invokeErr := toolToInvoke.Invoke(ctx, fc.Args)
-			if invokeErr != nil {
-				log.Fatalf("Failed to execute tool '%s': %v", fc.Name, invokeErr)
-			}
-
-			// Enhanced Tool Result Handling (retained to prevent nil issues)
-			toolResultString := ""
-			if toolResult != nil {
-				jsonBytes, marshalErr := json.Marshal(toolResult)
-				if marshalErr == nil {
-					toolResultString = string(jsonBytes)
-				} else {
-					toolResultString = fmt.Sprintf("%v", toolResult)
-				}
-			}
-
-			responseMap := map[string]any{"result": toolResultString}
-
-			toolResponseParts = append(toolResponseParts, genai.NewPartFromFunctionResponse(fc.Name, responseMap))
-		}
-		// Add all accumulated tool responses for this turn to the message history.
-		toolResponseContent := genai.NewContentFromParts(toolResponseParts, "function")
-		messageHistory = append(messageHistory, toolResponseContent)
-
-		finalResponse, err := client.Models.GenerateContent(ctx, modelName, messageHistory, &genai.GenerateContentConfig{})
-		if err != nil {
-			log.Fatalf("Error calling GenerateContent (with function result): %v", err)
-		}
-
-		printResponse(finalResponse)
-		// Add the final textual response from the LLM to the history
-		if len(finalResponse.Candidates) > 0 && finalResponse.Candidates[0].Content != nil {
-			messageHistory = append(messageHistory, finalResponse.Candidates[0].Content)
-		}
-	}
-}
+{{< include "quickstart/go/genAI/quickstart.go" >}}
 
 {{< /tab >}}
 
 {{< tab header="OpenAI Go" lang="go" >}}
 
-package main
+{{< include "quickstart/go/openAI/quickstart.go" >}}
 
-import (
-	"context"
-	"encoding/json"
-	"log"
-	"fmt
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	openai "github.com/openai/openai-go"
-)
-
-// ConvertToOpenAITool converts a ToolboxTool into the go-openai library's Tool format.
-func ConvertToOpenAITool(toolboxTool *core.ToolboxTool) openai.ChatCompletionToolParam {
-	// Get the input schema
-	jsonSchemaBytes, err := toolboxTool.InputSchema()
-	if err != nil {
-		return openai.ChatCompletionToolParam{}
-	}
-
-	// Unmarshal the JSON bytes into FunctionParameters
-	var paramsSchema openai.FunctionParameters
-	if err := json.Unmarshal(jsonSchemaBytes, &paramsSchema); err != nil {
-		return openai.ChatCompletionToolParam{}
-	}
-
-	// Create and return the final tool parameter struct.
-	return openai.ChatCompletionToolParam{
-		Function: openai.FunctionDefinitionParam{
-			Name:        toolboxTool.Name(),
-			Description: openai.String(toolboxTool.Description()),
-			Parameters:  paramsSchema,
-		},
-	}
-}
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	// Setup
-	ctx := context.Background()
-	toolboxURL := "http://localhost:5000"
-	openAIClient := openai.NewClient()
-
-	// Initialize the MCP Toolbox client.
-	toolboxClient, err := core.NewToolboxClient(toolboxURL)
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tools using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tool : %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	openAITools := make([]openai.ChatCompletionToolParam, len(tools))
-	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
-
-	for i, tool := range tools {
-		// Convert the Toolbox tool into the openAI FunctionDeclaration format.
-		openAITools[i] = ConvertToOpenAITool(tool)
-		// Add tool to a map for lookup later
-		toolsMap[tool.Name()] = tool
-
-	}
-
-	params := openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.SystemMessage(systemPrompt),
-		},
-		Tools: openAITools,
-		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
-	}
-
-	for _, query := range queries {
-
-		params.Messages = append(params.Messages, openai.UserMessage(query))
-
-		// Make initial chat completion request
-		completion, err := openAIClient.Chat.Completions.New(ctx, params)
-		if err != nil {
-			panic(err)
-		}
-
-		toolCalls := completion.Choices[0].Message.ToolCalls
-
-		// Return early if there are no tool calls
-		if len(toolCalls) == 0 {
-			log.Println("No function call")
-		}
-
-		// If there was a function call, continue the conversation
-		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
-		for _, toolCall := range toolCalls {
-
-			toolName := toolCall.Function.Name
-			toolToInvoke := toolsMap[toolName]
-
-			var args map[string]any
-			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-			if err != nil {
-				panic(err)
-			}
-
-			result, err := toolToInvoke.Invoke(ctx, args)
-			if err != nil {
-				log.Fatal("Could not invoke tool", err)
-			}
-
-			params.Messages = append(params.Messages, openai.ToolMessage(result.(string), toolCall.ID))
-		}
-
-		completion, err = openAIClient.Chat.Completions.New(ctx, params)
-		if err != nil {
-			panic(err)
-		}
-
-		params.Messages = append(params.Messages, openai.AssistantMessage(query))
-
-		fmt.println("\n", completion.Choices[0].Message.Content)
-
-	}
-
-}
 
 {{< /tab >}}
 {{< /tabpane >}}
@@ -1975,7 +1035,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -2508,331 +1568,12 @@ Connect your IDE to Cloud SQL for SQL Server using Toolbox.
 Connect your IDE to Firestore using Toolbox.
 
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
-an open protocol for connecting Large Language Models (LLMs) to data sources
-like Firestore. This guide covers how to use [MCP Toolbox for Databases][toolbox]
-to expose your developer assistant tools to a Firestore instance:
-
-* [Cursor][cursor]
-* [Windsurf][windsurf] (Codium)
-* [Visual Studio Code][vscode] (Copilot)
-* [Cline][cline]  (VS Code extension)
-* [Claude desktop][claudedesktop]
-* [Claude code][claudecode]
-* [Gemini CLI][geminicli]
-* [Gemini Code Assist][geminicodeassist]
-
-[toolbox]: https://github.com/googleapis/genai-toolbox
-[cursor]: #configure-your-mcp-client
-[windsurf]: #configure-your-mcp-client
-[vscode]: #configure-your-mcp-client
-[cline]: #configure-your-mcp-client
-[claudedesktop]: #configure-your-mcp-client
-[claudecode]: #configure-your-mcp-client
-[geminicli]: #configure-your-mcp-client
-[geminicodeassist]: #configure-your-mcp-client
-
-## Set up Firestore
-
-1. Create or select a Google Cloud project.
-
-    * [Create a new
-      project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
-    * [Select an existing
-      project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects)
-
-1. [Enable the Firestore
-   API](https://console.cloud.google.com/apis/library/firestore.googleapis.com)
-   for your project.
-
-1. [Create a Firestore
-   database](https://cloud.google.com/firestore/docs/create-database-web-mobile-client-library)
-   if you haven't already.
-
-1. Set up authentication for your local environment.
-
-    * [Install gcloud CLI](https://cloud.google.com/sdk/docs/install)
-    * Run `gcloud auth application-default login` to authenticate
-
-## Install MCP Toolbox
-
-1. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
-   to your OS and CPU architecture. You are required to use Toolbox version
-   V0.10.0+:
-
-   <!-- {x-release-please-start-version} -->
-   {{< tabpane persist=header >}}
-{{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
-{{< /tab >}}
-
-{{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
-{{< /tab >}}
-
-{{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
-{{< /tab >}}
-
-{{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox
-{{< /tab >}}
-{{< /tabpane >}}
-    <!-- {x-release-please-end} -->
-
-1. Make the binary executable:
-
-    ```bash
-    chmod +x toolbox
-    ```
-
-1. Verify the installation:
-
-    ```bash
-    ./toolbox --version
-    ```
-
-## Configure your MCP Client
-
-{{< tabpane text=true >}}
-{{% tab header="Claude code" lang="en" %}}
-
-1. Install [Claude
-   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-1. Create a `.mcp.json` file in your project root if it doesn't exist.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. Restart Claude code to apply the new configuration.
-{{% /tab %}}
-
-{{% tab header="Claude desktop" lang="en" %}}
-
-1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-1. Under the Developer tab, tap Edit Config to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. Restart Claude desktop.
-1. From the new chat screen, you should see a hammer (MCP) icon appear with the
-   new MCP server available.
-{{% /tab %}}
-
-{{% tab header="Cline" lang="en" %}}
-
-1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap
-   the **MCP Servers** icon.
-1. Tap Configure MCP Servers to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. You should see a green active status after the server is successfully
-   connected.
-{{% /tab %}}
-
-{{% tab header="Cursor" lang="en" %}}
-
-1. Create a `.cursor` directory in your project root if it doesn't exist.
-1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-1. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
-   Settings > MCP**. You should see a green active status after the server is
-   successfully connected.
-{{% /tab %}}
-
-{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
-
-1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
-   create a `.vscode` directory in your project root if it doesn't exist.
-1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-    ```
-
-{{% /tab %}}
-
-{{% tab header="Windsurf" lang="en" %}}
-
-1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
-   Cascade assistant.
-1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-
-    ```
-
-{{% /tab %}}
-{{% tab header="Gemini CLI" lang="en" %}}
-
-1. Install the [Gemini
-   CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1. In your working directory, create a folder named `.gemini`. Within it, create
-   a `settings.json` file.
-1. Add the following configuration, replace the environment variables with your
-   values, and then save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-
-    ```
-
-{{% /tab %}}
-{{% tab header="Gemini Code Assist" lang="en" %}}
-
-1. Install the [Gemini Code
-   Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
-   extension in Visual Studio Code.
-1. Enable Agent Mode in Gemini Code Assist chat.
-1. In your working directory, create a folder named `.gemini`. Within it, create
-   a `settings.json` file.
-1. Add the following configuration, replace the environment variables with your
-   values, and then save:
-
-    ```json
-    {
-      "mcpServers": {
-        "firestore": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","firestore","--stdio"],
-          "env": {
-            "FIRESTORE_PROJECT": "your-project-id",
-            "FIRESTORE_DATABASE": "(default)"
-          }
-        }
-      }
-    }
-
-    ```
-
-{{% /tab %}}
-{{< /tabpane >}}
-
-## Use Tools
-
-Your AI tool is now connected to Firestore using MCP. Try asking your AI
-assistant to list collections, get documents, query collections, or manage
-security rules.
-
-The following tools are available to the LLM:
-
-1. **firestore-get-documents**: Gets multiple documents from Firestore by their
-   paths
-1. **firestore-list-collections**: List Firestore collections for a given parent
-   path
-1. **firestore-delete-documents**: Delete multiple documents from Firestore
-1. **firestore-query-collection**: Query documents from a collection with
-   filtering, ordering, and limit options
-1. **firestore-get-rules**: Retrieves the active Firestore security rules for
-   the current project
-1. **firestore-validate-rules**: Validates Firestore security rules syntax and
-   errors
-
-{{< notice note >}}
-Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
-will adapt to the tools available, so this shouldn't affect most users.
-{{< /notice >}}
+<html>
+  <head>
+    <link rel="canonical" href="https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
+    <meta http-equiv="refresh" content="0;url=https://cloud.google.com/firestore/native/docs/connect-ide-using-mcp-toolbox"/>
+  </head>
+</html>
 
 
 # Looker using MCP
@@ -2881,19 +1622,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3068,7 +1809,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "looker-toolbox": {
           "command": "./PATH/TO/toolbox",
           "args": ["--stdio", "--prebuilt", "looker"],
@@ -3179,19 +1920,19 @@ Connect your IDE to MySQL using Toolbox.
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3324,7 +2065,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "mysql": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","mysql","--stdio"],
@@ -3429,6 +2170,285 @@ Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs w
 {{< /notice >}}
 
 
+# Neo4j using MCP
+Connect your IDE to Neo4j using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Neo4j instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a Neo4j instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+    "mcp" : {
+        "servers": {
+        "neo4j": {
+            "command": "./PATH/TO/toolbox",
+            "args": ["--prebuilt","neo4j","--stdio"],
+            "env": {
+              "NEO4J_URI": "",
+              "NEO4J_DATABASE": "",
+              "NEO4J_USERNAME": "",
+              "NEO4J_PASSWORD": ""
+            }
+         }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant to get the graph schema or execute Cypher statements.
+
+The following tools are available to the LLM:
+
+1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
 # PostgreSQL using MCP
 Connect your IDE to PostgreSQL using Toolbox.
 
@@ -3483,19 +2503,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3644,7 +2664,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-      "mcpServers": {
+      "servers": {
         "postgres": {
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","postgres","--stdio"],
@@ -3806,19 +2826,19 @@ Connect your IDE to SQL Server using Toolbox.
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3951,19 +2971,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/windows/amd64/toolb
 
     ```json
     {
-    "mcp" : {
-        "servers": {
-        "cloud-sql-sqlserver": {
-            "command": "./PATH/TO/toolbox",
-            "args": ["--prebuilt","cloud-sql-mssql","--stdio"],
-            "env": {
-              "MSSQL_HOST": "",
-              "MSSQL_PORT": "",
-              "MSSQL_DATABASE": "",
-              "MSSQL_USER": "",
-              "MSSQL_PASSWORD": ""
-            }
-         }
+      "servers": {
+        "mssql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mssql","--stdio"],
+          "env": {
+            "MSSQL_HOST": "",
+            "MSSQL_PORT": "",
+            "MSSQL_DATABASE": "",
+            "MSSQL_USER": "",
+            "MSSQL_PASSWORD": ""
+          }
         }
       }
     }
@@ -4056,6 +3074,7 @@ The following tools are available to the LLM:
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
+
 
 # Connect via MCP Client
 How to connect to Toolbox from a MCP Client.
@@ -6894,7 +5913,8 @@ a self-signed ssl certificate for the Looker server. Anything other than "true"
 will be interpreted as false.
 
 The client id and client secret are seemingly random character sequences
-assigned by the looker server.
+assigned by the looker server. If you are using Looker OAuth you don't need
+these settings
 
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}
@@ -6907,10 +5927,11 @@ instead of hardcoding your secrets into the configuration file.
 | -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
 | kind                 |  string  |     true     | Must be "looker".                                                                         |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
-| client_id            |  string  |     true     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |     true     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |     true     | Whether to check the ssl certificate of the server.                                       |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
@@ -6985,6 +6006,9 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        # Optional TLS and other driver parameters. For example, enable preferred TLS:
+        # queryParams:
+        #     tls: preferred
         queryTimeout: 30s # Optional: query timeout duration
 ```
 
@@ -7004,6 +6028,7 @@ instead of hardcoding your secrets into the configuration file.
 | user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
 | password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
 | queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
 
 
 # Neo4j
@@ -8204,7 +7229,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.11.0"
+    export VERSION="0.14.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -8615,7 +7640,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9249,7 +8274,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9397,6 +8422,144 @@ How to get started with Toolbox using Looker.
 
 
 
+# Gemini-CLI and OAuth
+How to connect to Looker from Gemini-CLI with end-user credentials
+
+
+## Overview
+
+Gemini-CLI can be configured to get an OAuth token from Looker, then send this
+token to MCP Toolbox as part of the request. MCP Toolbox can then use this token
+to authentincate with Looker. This means that there is no need to get a Looker
+Client ID and Client Secret. This also means that MCP Toolbox can be set up as a
+shared resource.
+
+This configuration requires Toolbox v0.14.0 or later.
+
+## Step 1: Register the OAuth App in Looker
+
+You first need to register the OAuth application. Refer to the documentation
+[here](https://cloud.google.com/looker/docs/api-cors#registering_an_oauth_client_application).
+You may need to ask an administrator to do this for you.
+
+1. Go to the API Explorer application, locate "Register OAuth App", and press
+   the "Run It" button.
+1. Set the `client_guid` to "gemini-cli".
+1. Set the `redirect_uri` to "http://localhost:7777/oauth/callback".
+1. The `display_name` and `description` can be "Gemini-CLI" or anything
+   meaningful.
+1. Set `enabled` to "true".
+1. Check the box confirming that you understand this API will change data.
+1. Click the "Run" button.
+
+    ![OAuth Registration](./registration.png)
+
+## Step 2: Install and configure Toolbox
+
+In this section, we will download Toolbox and run the Toolbox server.
+
+1. Download the latest version of Toolbox as a binary:
+
+    {{< notice tip >}}
+   Select the
+   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+   corresponding to your OS and CPU architecture.
+    {{< /notice >}}
+    <!-- {x-release-please-start-version} -->
+    ```bash
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    ```
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Create a file `looker_env` with the settings for your
+   Looker instance.
+
+   ```bash
+    export LOOKER_BASE_URL=https://looker.example.com
+    export LOOKER_VERIFY_SSL=true
+   ```
+
+   In some instances you may need to append `:19999` to
+   the LOOKER_BASE_URL.
+
+1. Load the looker_env file into your environment.
+
+   ```bash
+   source looker_env
+   ```
+
+1. Run the Toolbox server using the prebuilt Looker tools.
+
+    ```bash
+    ./toolbox --prebuilt looker
+    ```
+
+    The toolbox server will begin listening on localhost port 5000. Leave it
+    running and continue in another terminal.
+
+    Later, when it is time to shut everything down, you can quit the toolbox
+    server with Ctrl-C in this terminal window.
+
+## Step 3: Configure Gemini-CLI
+
+1. Edit the file `~/.gemini/settings.json`. Add the following, substituting your
+   Looker server host name for `looker.example.com`.
+
+    ```json
+    "mcpServers": {
+        "looker": {
+            "httpUrl": "http://localhost:5000/mcp",
+            "oauth": {
+                "enabled": true,
+                "clientId": "gemini-cli",
+                "authorizationUrl": "https://looker.example.com/auth",
+                "tokenUrl": "https://looker.example.com/api/token",
+                "scopes": ["cors_api"]
+            }
+        }
+    }
+    ```
+
+    The `authorizationUrl` should point to the URL you use to access Looker via the
+    web UI. The `tokenUrl` should point to the URL you use to access Looker via
+    the API. In some cases you will need to use the port number `:19999` after
+    the host name but before the `/api/token` part.
+
+1. Start Gemini-CLI.
+
+1. Authenticate with the command `/mcp auth looker`. Gemini-CLI will open up a
+   browser where you will confirm that you want to access Looker with your
+   account.
+
+   ![Authorizing](./authorize.png)
+
+   ![Authenticated](./authenticated.png)
+
+1. Use Gemini-CLI with your tools.
+
+## Using Toolbox as a Shared Service
+
+Toolbox can be run on another server as a shared service accessed by multiple
+users. We strongly recommend running toolbox behind a web proxy such as `nginx`
+which will provide SSL encryption. Google Cloud Run is another good way to run
+toolbox. You will connect to a service like `https://toolbox.example.com/mcp`.
+The proxy server will handle the SSL encryption and certificates. Then it will
+foward the requests to `http://localhost:5000/mcp` running in that environment.
+The details of the config are beyond the scope of this document, but will be
+familiar to your system administrators.
+
+To use the shared service, just change the `localhost:5000` in the `httpUrl` in
+`~/.gemini/settings.json` to the host name and possibly the port of the shared
+service.
+
+
 # Quickstart (MCP with Looker and Gemini-CLI)
 How to get started running Toolbox with Gemini-CLI and Looker as the source.
 
@@ -9429,7 +8592,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.13.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9539,7 +8702,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9827,8 +8990,10 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
+    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -10069,5 +9234,19 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## Neo4j
+
+*   `--prebuilt` value: `neo4j`
+*   **Environment Variables:**
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
+    *   `NEO4J_USERNAME`: The username for the Neo4j instance.
+    *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
 
 
