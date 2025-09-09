@@ -113,6 +113,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			var datasetDescriptions, projectIDList []string
 			for project, datasets := range datasetIDsByProject {
 				sort.Strings(datasets)
+				projectIDList = append(projectIDList, fmt.Sprintf("`%s`", p))
 				datasetList := strings.Join(datasets, ", ")
 				datasetDescriptions = append(datasetDescriptions, fmt.Sprintf("%s from project `%s`", datasetList, project))
 			}
