@@ -103,7 +103,7 @@ func PopulateTemplateWithFunc(templateName, templateString string, data map[stri
 	if funcMap != nil {
 		tmpl = tmpl.Funcs(funcMap)
 	}
-	
+
 	parsedTmpl, err := tmpl.Parse(templateString)
 	if err != nil {
 		return "", fmt.Errorf("error parsing template '%s': %w", templateName, err)

@@ -565,9 +565,9 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"description": "Query a Firestore collection",
 		},
 		"firestore-query-param": map[string]any{
-			"kind":        "firestore-query",
-			"source":      "my-instance",
-			"description": "Query a Firestore collection with parameterizable filters",
+			"kind":           "firestore-query",
+			"source":         "my-instance",
+			"description":    "Query a Firestore collection with parameterizable filters",
 			"collectionPath": "{{.collection}}",
 			"filters": `{
 					"field": "age", "op": "{{.operator}}", "value": {"integerValue": "{{.ageValue}}"}
@@ -595,12 +595,12 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			},
 		},
 		"firestore-query-select-array": map[string]any{
-			"kind":        "firestore-query",
-			"source":      "my-instance",
-			"description": "Query with array-based select fields",
+			"kind":           "firestore-query",
+			"source":         "my-instance",
+			"description":    "Query with array-based select fields",
 			"collectionPath": "{{.collection}}",
-			"select": []string{"{{.fields}}"},
-			"limit": 10,
+			"select":         []string{"{{.fields}}"},
+			"limit":          10,
 			"parameters": []map[string]any{
 				{
 					"name":        "collection",
@@ -614,9 +614,9 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 					"description": "Fields to select",
 					"required":    true,
 					"items": map[string]any{
-						"name" : "field",
-						"type": "string",
-						"description":"field",
+						"name":        "field",
+						"type":        "string",
+						"description": "field",
 					},
 				},
 			},
@@ -1523,12 +1523,12 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 
 func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		wantRegex   string
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantRegex      string
 		validateFields bool
-		isErr       bool
+		isErr          bool
 	}{
 		{
 			name: "query with array select fields - single field",
@@ -1537,9 +1537,9 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 				"collection": "%s",
 				"fields": ["name"]
 			}`, collectionName))),
-			wantRegex: `"name":"`,
+			wantRegex:      `"name":"`,
 			validateFields: true,
-			isErr:     false,
+			isErr:          false,
 		},
 		{
 			name: "query with array select fields - multiple fields",
@@ -1548,9 +1548,9 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 				"collection": "%s",
 				"fields": ["name", "age"]
 			}`, collectionName))),
-			wantRegex: `"name":".*"age":`,
+			wantRegex:      `"name":".*"age":`,
 			validateFields: true,
-			isErr:     false,
+			isErr:          false,
 		},
 		{
 			name: "query with empty array select fields",
