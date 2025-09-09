@@ -50,22 +50,14 @@ for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
-  (
-    set -e
-    ORCH_NAME=$(basename "$ORCH_DIR")
+  set -e
+  ORCH_NAME=$(basename "$ORCH_DIR")
 
-    cleanup_orch() {
-      psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+  # Drop table before test
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
 
-      if [ -d ".venv" ]; then
-          rm -rf ".venv"
-      fi
-    }
-    trap cleanup_orch EXIT
-
-    cd "$ORCH_DIR"
-
-    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
+  # Create table and insert data
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR NOT NULL,
@@ -89,18 +81,24 @@ VALUES
   (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
 EOF
 
-    VENV_DIR=".venv"
-    python3 -m venv "$VENV_DIR"
-    source "$VENV_DIR/bin/activate"
+  # Create venv in python folder for each orchestrator
+  cd "$QUICKSTART_PYTHON_DIR"
+  VENV_DIR=".venv"
+  python3 -m venv "$VENV_DIR"
+  source "$VENV_DIR/bin/activate"
 
-    if [ -f "requirements.txt" ]; then
-      pip install -r requirements.txt
-    else
-      echo "Warning: requirements.txt not found. Skipping."
-    fi
+  if [ -f "requirements.txt" ]; then
+    pip install -r "$ORCH_DIR/requirements.txt"
+  else
+    echo "Warning: requirements.txt not found. Skipping."
+  fi
 
-    echo "Running tests for $ORCH_NAME..."
-    pytest
+  echo "Running tests for $ORCH_NAME..."
+  ORCH_NAME="$ORCH_NAME" pytest
 
-  )
+  # Deactivate and remove venv
+  deactivate || true
+  rm -rf "$VENV_DIR"
+
+  cd -
 done
