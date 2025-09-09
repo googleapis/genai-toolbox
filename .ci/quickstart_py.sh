@@ -7,6 +7,8 @@ TABLE_NAME="hotels"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
 
+apt-get update && apt-get install -y postgresql-client python3-venv curl
+
 if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
   exit 1
 fi
@@ -19,9 +21,6 @@ PROXY_PID=$!
 
 export PGHOST=127.0.0.1
 export PGPORT=5432
-
-
-apt-get update && apt-get install -y postgresql-client python3-venv netcat-openbsd curl
 
 mkdir -p "${TOOLBOX_SETUP_DIR}"
 echo "${TOOLS_YAML_CONTENT}" > "${TOOLBOX_SETUP_DIR}/tools.yaml"
