@@ -31,7 +31,7 @@ steps:
       - |
         set -ex
         export VERSION=$(cat ./cmd/version.txt)
-        chmod +x .ci/quickstart_py.sh
+        chmod +x .ci/quickstart_js.sh
         .ci/quickstart_js.sh
     env:
       - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
