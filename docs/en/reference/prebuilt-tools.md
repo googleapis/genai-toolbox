@@ -19,8 +19,10 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user.
+    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -261,3 +263,17 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## Neo4j
+
+*   `--prebuilt` value: `neo4j`
+*   **Environment Variables:**
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
+    *   `NEO4J_USERNAME`: The username for the Neo4j instance.
+    *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.

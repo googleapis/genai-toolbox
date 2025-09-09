@@ -45,7 +45,10 @@ The response is a json array with the following elements:
   "label": "field label",
   "label_short": "field short label",
   "tags": ["tags", ...],
-  "synonyms": ["synonyms", ...]
+  "synonyms": ["synonyms", ...],
+  "suggestions": ["suggestion", ...],
+  "suggest_explore": "explore",
+  "suggest_dimension": "dimension"
 }
 ```
 

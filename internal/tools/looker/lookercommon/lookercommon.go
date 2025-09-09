@@ -15,20 +15,67 @@ package lookercommon
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	rtl "github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/thlib/go-timezone-local/tzlocal"
 )
 
+// Make types for RoundTripper
+type transportWithAuthHeader struct {
+	Base      http.RoundTripper
+	AuthToken tools.AccessToken
+}
+
+func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("x-looker-appid", "go-sdk")
+	req.Header.Set("Authorization", string(t.AuthToken))
+	return t.Base.RoundTrip(req)
+}
+
+func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.LookerSDK, accessToken tools.AccessToken) (*v4.LookerSDK, error) {
+
+	if useClientOAuth {
+		if accessToken == "" {
+			return nil, fmt.Errorf("no access token supplied with request")
+		}
+		// Configure base transport with TLS
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !config.VerifySsl,
+			},
+		}
+
+		// Build transport for end user token
+		newTransport := &transportWithAuthHeader{
+			Base:      transport,
+			AuthToken: accessToken,
+		}
+
+		// return SDK with new Transport
+		return v4.NewLookerSDK(&rtl.AuthSession{
+			Config: *config,
+			Client: http.Client{Transport: newTransport},
+		}), nil
+	}
+
+	if client == nil {
+		return nil, fmt.Errorf("client id or client secret not valid")
+	}
+	return client, nil
+}
+
 const (
-	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,synonyms,tags,hidden))"
-	FiltersFields    = "fields(filters(name,type,label,label_short,description,synonyms,tags,hidden))"
-	MeasuresFields   = "fields(measures(name,type,label,label_short,description,synonyms,tags,hidden))"
-	ParametersFields = "fields(parameters(name,type,label,label_short,description,synonyms,tags,hidden))"
+	DimensionsFields = "fields(dimensions(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
+	FiltersFields    = "fields(filters(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
+	MeasuresFields   = "fields(measures(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
+	ParametersFields = "fields(parameters(name,type,label,label_short,description,synonyms,tags,hidden,suggestable,suggestions,suggest_dimension,suggest_explore))"
 )
 
 // ExtractLookerFieldProperties extracts common properties from Looker field objects.
@@ -71,11 +118,20 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 		if v.Description != nil {
 			vMap["description"] = *v.Description
 		}
-		if v.Tags != nil {
+		if v.Tags != nil && len(*v.Tags) > 0 {
 			vMap["tags"] = *v.Tags
 		}
-		if v.Synonyms != nil {
+		if v.Synonyms != nil && len(*v.Synonyms) > 0 {
 			vMap["synonyms"] = *v.Synonyms
+		}
+		if v.Suggestable != nil && *v.Suggestable {
+			if v.Suggestions != nil && len(*v.Suggestions) > 0 {
+				vMap["suggestions"] = *v.Suggestions
+			}
+			if v.SuggestExplore != nil && v.SuggestDimension != nil {
+				vMap["suggest_explore"] = *v.SuggestExplore
+				vMap["suggest_dimension"] = *v.SuggestDimension
+			}
 		}
 		logger.DebugContext(ctx, "Converted to %v\n", vMap)
 		data = append(data, vMap)
