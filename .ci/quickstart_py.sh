@@ -42,8 +42,8 @@ sleep 5
 cleanup_all() {
   echo "--- Final cleanup: Shutting down processes and dropping table ---"
   kill $TOOLBOX_PID || true
-  kill $PROXY_PID || true
   psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+  kill $PROXY_PID || true
 }
 trap cleanup_all EXIT
 
