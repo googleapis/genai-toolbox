@@ -70,7 +70,7 @@ type AccessToken string
 func (token AccessToken) ParseBearerToken() (string, error) {
 	headerParts := strings.Split(string(token), " ")
 	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
-		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>: %w", ErrUnauthorized)
+		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>': %w", ErrUnauthorized)
 	}
 	return headerParts[1], nil
 }
