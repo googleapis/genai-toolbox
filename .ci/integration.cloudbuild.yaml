@@ -62,6 +62,23 @@ steps:
           postgressql \
           postgresexecutesql
 
+  - id: "alloydb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "AlloyDB" \
+          alloydb \
+          alloydb
+
   - id: "alloydb-pg"
     name: golang:1
     waitFor: ["compile-test-binary"]

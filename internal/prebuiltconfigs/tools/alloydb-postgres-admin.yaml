@@ -1,3 +1,17 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
   alloydb-api-source:
     kind: http
@@ -56,64 +70,9 @@ tools:
     multiplier: 2
     maxRetries: 10
   alloydb-create-instance:
-    kind: http
+    kind: alloydb-create-instance
     source: alloydb-api-source
-    method: POST
-    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/instances
     description: "Creates a new AlloyDB instance (PRIMARY, READ_POOL, or SECONDARY) within a cluster. This is a long-running operation. Take all parameters from user in one go. This will return operation id to be used by get operations tool."
-    pathParams:
-      - name: projectId
-        type: string
-        description: "The GCP project ID."
-      - name: locationId
-        type: string
-        description: "The location of the cluster (e.g., 'us-central1')."
-        default: us-central1
-      - name: clusterId
-        type: string
-        description: "The ID of the cluster to create the instance in."
-    queryParams:
-      - name: instanceId
-        type: string
-        description: "A unique ID for the new AlloyDB instance."
-    requestBody: |
-      {
-        "instanceType": "{{.instanceType}}",
-        {{- if .displayName }}
-        "displayName": "{{.displayName}}",
-        {{- end }}
-        {{- if eq .instanceType "READ_POOL" }}
-        "readPoolConfig": {
-          "nodeCount": {{.nodeCount}}
-        },
-        {{- end }}
-        {{- if eq .instanceType "SECONDARY" }}
-        "secondaryConfig": {
-          "primaryClusterName": "{{.primaryClusterName}}"
-        },
-        {{- end }}
-        "networkConfig": {
-          "enablePublicIp": true
-        },
-        "databaseFlags": {
-          "password.enforce_complexity": "on"
-        }
-      }
-    bodyParams:
-      - name: instanceType
-        type: string
-        description: "The type of instance to create. Required. Valid values are: PRIMARY, READ_POOL, SECONDARY."
-      - name: displayName
-        type: string
-        description: "An optional, user-friendly name for the instance."
-      - name: nodeCount
-        type: integer
-        description: "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1."
-        default: 1
-      - name: primaryClusterName
-        type: string
-        description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
-        default: ""
   alloydb-list-clusters:
       kind: http
       source: alloydb-api-source
