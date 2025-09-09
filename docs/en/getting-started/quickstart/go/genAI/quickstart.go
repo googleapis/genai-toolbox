@@ -66,7 +66,7 @@ func main() {
 	// Setup
 	ctx := context.Background()
 	apiKey := os.Getenv("GOOGLE_API_KEY")
-	toolboxURL := "http://localhost:5000"
+	toolboxURL := "http://127.0.0.1:5000"
 
 	// Initialize the Google GenAI client using the explicit ClientConfig.
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
