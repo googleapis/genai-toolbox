@@ -72,8 +72,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Claude code" lang="en" %}}
 
 1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-2.  Create a `.mcp.json` file in your project root if it doesn't exist.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
