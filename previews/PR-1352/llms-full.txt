@@ -2202,36 +2202,24 @@ Connect your IDE to Neo4j using Toolbox.
 
 1.  Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
 
-    {{< tabpane persist=header >}}
-    {{< tab header="linux/amd64" lang="bash" >}}
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
+{{< /tab >}}
 
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox](https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox)
-    ```
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
+{{< /tab >}}
 
-    {{< /tab >}}
-    {{< tab header="darwin/arm64" lang="bash" >}}
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
+{{< /tab >}}
 
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox](https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox)
-    ```
-
-    {{< /tab >}}
-    {{< tab header="darwin/amd64" lang="bash" >}}
-
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox](https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox)
-    ```
-
-    {{< /tab >}}
-    {{< tab header="windows/amd64" lang="bash" >}}
-
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe](https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe)
-    ```
-
-    {{< /tab >}}
-    {{< /tabpane >}}
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
 1. Make the binary executable:
@@ -2252,8 +2240,8 @@ Connect your IDE to Neo4j using Toolbox.
 {{% tab header="Claude code" lang="en" %}}
 
 1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-2.  Create a `.mcp.json` file in your project root if it doesn't exist.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -2272,13 +2260,13 @@ Connect your IDE to Neo4j using Toolbox.
     }
     ```
 
-4.  Restart Claude code to apply the new configuration.
+1.  Restart Claude code to apply the new configuration.
 {{% /tab %}}
 {{% tab header="Claude desktop" lang="en" %}}
 
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-2.  Under the Developer tab, tap Edit Config to open the configuration file.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -2297,14 +2285,14 @@ Connect your IDE to Neo4j using Toolbox.
     }
     ```
 
-4.  Restart Claude desktop.
-5.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
 1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
-2.  Tap Configure MCP Servers to open the configuration file.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -2323,7 +2311,7 @@ Connect your IDE to Neo4j using Toolbox.
     }
     ```
 
-4.  You should see a green active status after the server is successfully connected.
+1.  You should see a green active status after the server is successfully connected.
 {{% /tab %}}
 {{% tab header="Cursor" lang="en" %}}
 
@@ -2453,8 +2441,8 @@ Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant t
 
 The following tools are available to the LLM:
 
-1.  **schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
-2.  **execute_cypher**: executes any arbitrary Cypher statement.
+1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
@@ -9258,6 +9246,6 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **Database-level permissions** are required to execute Cypher queries.
 *   **Tools:**
     *   `execute_cypher`: Executes a Cypher query.
-    *   `schema`: Retrieves the schema of the Neo4j database.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
 
 
