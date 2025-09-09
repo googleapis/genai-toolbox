@@ -40,27 +40,23 @@ cd "/workspace"
 sleep 5
 
 cleanup_all() {
+  echo "--- Final cleanup: Shutting down processes and dropping table ---"
   kill $TOOLBOX_PID || true
   kill $PROXY_PID || true
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
 }
 trap cleanup_all EXIT
-
 
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
-  # Use a subshell (...) to contain all actions for a single test run.
   (
     set -e
     ORCH_NAME=$(basename "$ORCH_DIR")
-    
-    # Change into the main Python directory where the test file is
-    cd "$QUICKSTART_PYTHON_DIR"
+    cd "$ORCH_DIR"
 
-    echo "--- Setting up test for $ORCH_NAME ---"
-
-    # Reset the database for this specific test suite
+    echo "--- Setting up isolated test for $ORCH_NAME ---"
     psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
     psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
@@ -86,16 +82,13 @@ VALUES
   (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
 EOF
 
-    # Create a local virtual environment
     VENV_DIR=".venv"
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
 
-    # Install dependencies from the correct requirements.txt file
-    pip install -r "$ORCH_NAME/requirements.txt"
-
-    # Run the test, providing the required ORCH_NAME environment variable
+    pip install -r requirements.txt
     echo "Running tests for $ORCH_NAME..."
+    cd ..
     ORCH_NAME="$ORCH_NAME" pytest
   )
 done
