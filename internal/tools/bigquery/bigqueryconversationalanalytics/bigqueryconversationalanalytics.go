@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 const kind string = "bigquery-conversational-analytics"
@@ -54,7 +54,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSource() oauth2.TokenSource
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
@@ -154,7 +153,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        s.BigQueryTokenSource(),
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
@@ -175,7 +173,6 @@ type Tool struct {
 	Project            string
 	Location           string
 	Client             *bigqueryapi.Client
-	TokenSource        oauth2.TokenSource
 	manifest           tools.Manifest
 	mcpManifest        tools.McpManifest
 	MaxQueryResultRows int
@@ -196,11 +193,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
-		// Use ADC
-		if t.TokenSource == nil {
-			return nil, fmt.Errorf("ADC is missing a valid token source")
+		// Use ADC with cloud-platform scope for Gemini Data Analytics API
+		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get default token source with cloud-platform scope: %w", err)
 		}
-		token, err := t.TokenSource.Token()
+		token, err := tokenSource.Token()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get token from ADC: %w", err)
 		}
