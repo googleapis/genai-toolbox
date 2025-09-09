@@ -274,7 +274,7 @@ Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant t
 The following tools are available to the LLM:
 
 1.  **schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
-2.  **execute_cypher**: executes any arbitrary Cypher statement.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
