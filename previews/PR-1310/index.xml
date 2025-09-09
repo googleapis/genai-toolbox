@@ -715,7 +715,7 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
-Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL List Instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/cloudsql/cloudsqllistinstances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/cloudsql/cloudsqllistinstances/</guid><description>&lt;p>The &lt;code>cloud-sql-list-instances&lt;/code> tool lists all Cloud SQL instances in a specified
+Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL List Instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/cloudsql/cloudsqllistinstances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/cloudsql/cloudsqllistinstances/</guid><description>&lt;p>The &lt;code>cloud-sql-list-instances&lt;/code> tool lists all Cloud SQL instances in a specified
 Google Cloud project.&lt;/p>
 &lt;style type="text/css">
  
