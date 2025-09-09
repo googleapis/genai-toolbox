@@ -60,6 +60,9 @@ avoiding full table scans or complex filters.
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
   Run SQL queries directly against BigQuery datasets.
 
+- [`bigquery-search_catalog`](../tools/bigquery/bigquery-search_catalog.md)
+  List all entries in Dataplex Catalog (e.g. tables, views, models) that matches given user query.
+
 ### Pre-built Configurations
 
 - [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)  
