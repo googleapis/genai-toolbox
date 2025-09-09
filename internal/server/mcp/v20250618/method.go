@@ -101,6 +101,11 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		if accessToken == "" {
 			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), tools.ErrUnauthorized
 		}
+		headerParts := strings.Split(string(accessToken), " ")
+		if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "Authorization header must be in the format 'Bearer <token>", nil), tools.ErrUnauthorized
+		}
+		accessToken = tools.AccessToken(headerParts[1])
 	}
 
 	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
