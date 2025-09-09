@@ -144,6 +144,7 @@ tools:
           default: "-"
   alloydb-list-instances:
     kind: alloydb-list-instances
+    source: alloydb-api-source
     description: "Lists all AlloyDB instances within a specific cluster."
   alloydb-list-users:
     kind: http
