@@ -1,12 +1,10 @@
 ## Description
 
----
 > Should include a concise description of the changes (bug or feature), it's
 > impact, along with a summary of the solution
 
 ## PR Checklist
 
----
 > Thank you for opening a Pull Request! Before submitting your PR, there are a
 > few things you can do to make sure it goes smoothly:
 
