@@ -97,8 +97,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Claude desktop" lang="en" %}}
 
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-2.  Under the Developer tab, tap Edit Config to open the configuration file.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -117,8 +117,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     }
     ```
 
-4.  Restart Claude desktop.
-5.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
