@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package firestorequerycollectionparameterizable_test
+package firestorequery_test
 
 import (
 	"testing"
@@ -22,10 +22,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollectionparameterizable"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequery"
 )
 
-func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
+func TestParseFromYamlFirestoreQuery(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -40,7 +40,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 			in: `
 			tools:
 				query_users_tool:
-					kind: firestore-query-collection-parameterizable
+					kind: firestore-query
 					source: my-firestore-instance
 					description: Query users collection with parameterized path
 					collectionPath: "users/{{.userId}}/documents"
@@ -51,9 +51,9 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 						  required: true
 			`,
 			want: server.ToolConfigs{
-				"query_users_tool": firestorequerycollectionparameterizable.Config{
+				"query_users_tool": firestorequery.Config{
 					Name:           "query_users_tool",
-					Kind:           "firestore-query-collection-parameterizable",
+					Kind:           "firestore-query",
 					Source:         "my-firestore-instance",
 					Description:    "Query users collection with parameterized path",
 					CollectionPath: "users/{{.userId}}/documents",
@@ -69,7 +69,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 			in: `
 			tools:
 				query_products_tool:
-					kind: firestore-query-collection-parameterizable
+					kind: firestore-query
 					source: prod-firestore
 					description: Query products with dynamic filters
 					collectionPath: "products"
@@ -91,9 +91,9 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 						  required: true
 			`,
 			want: server.ToolConfigs{
-				"query_products_tool": firestorequerycollectionparameterizable.Config{
+				"query_products_tool": firestorequery.Config{
 					Name:           "query_products_tool",
-					Kind:           "firestore-query-collection-parameterizable",
+					Kind:           "firestore-query",
 					Source:         "prod-firestore",
 					Description:    "Query products with dynamic filters",
 					CollectionPath: "products",
@@ -117,7 +117,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 			in: `
 			tools:
 				query_orders_tool:
-					kind: firestore-query-collection-parameterizable
+					kind: firestore-query
 					source: orders-firestore
 					description: Query orders with field selection
 					collectionPath: "orders"
@@ -136,9 +136,9 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 						  required: true
 			`,
 			want: server.ToolConfigs{
-				"query_orders_tool": firestorequerycollectionparameterizable.Config{
+				"query_orders_tool": firestorequery.Config{
 					Name:           "query_orders_tool",
-					Kind:           "firestore-query-collection-parameterizable",
+					Kind:           "firestore-query",
 					Source:         "orders-firestore",
 					Description:    "Query orders with field selection",
 					CollectionPath: "orders",
@@ -160,7 +160,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 			in: `
 			tools:
 				secure_query_tool:
-					kind: firestore-query-collection-parameterizable
+					kind: firestore-query
 					source: secure-firestore
 					description: Query with authentication and complex filters
 					collectionPath: "{{.collection}}"
@@ -195,9 +195,9 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 						  default: 1
 			`,
 			want: server.ToolConfigs{
-				"secure_query_tool": firestorequerycollectionparameterizable.Config{
+				"secure_query_tool": firestorequery.Config{
 					Name:           "secure_query_tool",
-					Kind:           "firestore-query-collection-parameterizable",
+					Kind:           "firestore-query",
 					Source:         "secure-firestore",
 					Description:    "Query with authentication and complex filters",
 					CollectionPath: "{{.collection}}",
@@ -228,7 +228,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 			in: `
 			tools:
 				query_with_typed_values:
-					kind: firestore-query-collection-parameterizable
+					kind: firestore-query
 					source: typed-firestore
 					description: Query with Firestore native JSON value types
 					collectionPath: "countries"
@@ -271,9 +271,9 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 						  required: true
 			`,
 			want: server.ToolConfigs{
-				"query_with_typed_values": firestorequerycollectionparameterizable.Config{
+				"query_with_typed_values": firestorequery.Config{
 					Name:           "query_with_typed_values",
-					Kind:           "firestore-query-collection-parameterizable",
+					Kind:           "firestore-query",
 					Source:         "typed-firestore",
 					Description:    "Query with Firestore native JSON value types",
 					CollectionPath: "countries",
@@ -322,7 +322,7 @@ func TestParseFromYamlFirestoreQueryCollectionParameterizable(t *testing.T) {
 	}
 }
 
-func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
+func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -330,7 +330,7 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 	in := `
 	tools:
 		query_user_posts:
-			kind: firestore-query-collection-parameterizable
+			kind: firestore-query
 			source: social-firestore
 			description: Query user posts with filtering
 			collectionPath: "users/{{.userId}}/posts"
@@ -367,7 +367,7 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 				  description: Sort order (ASCENDING or DESCENDING)
 				  default: "DESCENDING"
 		query_inventory:
-			kind: firestore-query-collection-parameterizable
+			kind: firestore-query
 			source: inventory-firestore
 			description: Query inventory items
 			collectionPath: "warehouses/{{.warehouseId}}/inventory"
@@ -384,7 +384,7 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 				  description: Quantity threshold for low stock
 				  required: true
 		query_transactions:
-			kind: firestore-query-collection-parameterizable
+			kind: firestore-query
 			source: finance-firestore
 			description: Query financial transactions
 			collectionPath: "accounts/{{.accountId}}/transactions"
@@ -413,9 +413,9 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 				  default: 0
 	`
 	want := server.ToolConfigs{
-		"query_user_posts": firestorequerycollectionparameterizable.Config{
+		"query_user_posts": firestorequery.Config{
 			Name:           "query_user_posts",
-			Kind:           "firestore-query-collection-parameterizable",
+			Kind:           "firestore-query",
 			Source:         "social-firestore",
 			Description:    "Query user posts with filtering",
 			CollectionPath: "users/{{.userId}}/posts",
@@ -440,9 +440,9 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 				tools.NewStringParameterWithDefault("sortOrder", "DESCENDING", "Sort order (ASCENDING or DESCENDING)"),
 			},
 		},
-		"query_inventory": firestorequerycollectionparameterizable.Config{
+		"query_inventory": firestorequery.Config{
 			Name:           "query_inventory",
-			Kind:           "firestore-query-collection-parameterizable",
+			Kind:           "firestore-query",
 			Source:         "inventory-firestore",
 			Description:    "Query inventory items",
 			CollectionPath: "warehouses/{{.warehouseId}}/inventory",
@@ -455,9 +455,9 @@ func TestParseFromYamlMultipleParameterizableTools(t *testing.T) {
 				tools.NewIntParameterWithRequired("threshold", "Quantity threshold for low stock", true),
 			},
 		},
-		"query_transactions": firestorequerycollectionparameterizable.Config{
+		"query_transactions": firestorequery.Config{
 			Name:           "query_transactions",
-			Kind:           "firestore-query-collection-parameterizable",
+			Kind:           "firestore-query",
 			Source:         "finance-firestore",
 			Description:    "Query financial transactions",
 			CollectionPath: "accounts/{{.accountId}}/transactions",

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package firestorequerycollectionparameterizable
+package firestorequery
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 
 // Constants for tool configuration
 const (
-	kind            = "firestore-query-collection-parameterizable"
+	kind            = "firestore-query"
 	defaultLimit    = 100
 )
 
@@ -83,7 +83,7 @@ var _ compatibleSource = &firestoreds.Source{}
 
 var compatibleSources = [...]string{firestoreds.SourceKind}
 
-// Config represents the configuration for the Firestore query collection parameterizable tool
+// Config represents the configuration for the Firestore query tool
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -159,7 +159,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // validate interface
 var _ tools.Tool = Tool{}
 
-// Tool represents the Firestore query collection parameterizable tool
+// Tool represents the Firestore query tool
 type Tool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`

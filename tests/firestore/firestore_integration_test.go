@@ -131,7 +131,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	// Run specific Firestore tool tests
 	runFirestoreGetDocumentsTest(t, docPath1, docPath2)
 	runFirestoreQueryCollectionTest(t, testCollectionName)
-	runFirestoreQueryCollectionParameterizableTest(t, testCollectionName)
+	runFirestoreQueryTest(t, testCollectionName)
 	runFirestoreQuerySelectArrayTest(t, testCollectionName)
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
 	runFirestoreAddDocumentsTest(t, testCollectionName)
@@ -565,7 +565,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"description": "Query a Firestore collection",
 		},
 		"firestore-query-param": map[string]any{
-			"kind":        "firestore-query-collection-parameterizable",
+			"kind":        "firestore-query",
 			"source":      "my-instance",
 			"description": "Query a Firestore collection with parameterizable filters",
 			"collectionPath": "{{.collection}}",
@@ -595,7 +595,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			},
 		},
 		"firestore-query-select-array": map[string]any{
-			"kind":        "firestore-query-collection-parameterizable",
+			"kind":        "firestore-query",
 			"source":      "my-instance",
 			"description": "Query with array-based select fields",
 			"collectionPath": "{{.collection}}",
@@ -1415,7 +1415,7 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 	}
 }
 
-func runFirestoreQueryCollectionParameterizableTest(t *testing.T, collectionName string) {
+func runFirestoreQueryTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
 		name        string
 		api         string

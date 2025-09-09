@@ -1,20 +1,24 @@
 ---
-title: "firestore-query-collection-parameterizable"
+title: "firestore-query"
 type: docs
 weight: 1
 description: >
   Query a Firestore collection with parameterizable filters and Firestore native JSON value types
 aliases:
+- /resources/tools/firestore-query
 - /resources/tools/firestore-query-collection-parameterizable
 ---
 
 ## Overview
 
-The `firestore-query-collection-parameterizable` tool allows you to query Firestore collections with dynamic, parameterizable filters that support Firestore's native JSON value types. This tool is particularly useful when you need to create reusable query templates with parameters that can be substituted at runtime.
+The `firestore-query` tool allows you to query Firestore collections with dynamic, parameterizable filters that support Firestore's native JSON value types. This tool is designed for querying single collection, which is the standard pattern in Firestore. The collection path itself can be parameterized, making it flexible for various use cases. This tool is particularly useful when you need to create reusable query templates with parameters that can be substituted at runtime.
+
+**Developer Note**: This tool serves as the general querying foundation that developers can use to create custom tools with specific query patterns.
 
 ## Key Features
 
 - **Parameterizable Queries**: Use Go template syntax to create dynamic queries
+- **Dynamic Collection Paths**: The collection path can be parameterized for flexibility
 - **Native JSON Value Types**: Support for Firestore's typed values (stringValue, integerValue, doubleValue, etc.)
 - **Complex Filter Logic**: Support for AND/OR logical operators in filters
 - **Template Substitution**: Dynamic collection paths, filters, and ordering
@@ -27,7 +31,7 @@ The `firestore-query-collection-parameterizable` tool allows you to query Firest
 ```yaml
 tools:
   query_countries:
-    kind: firestore-query-collection-parameterizable
+    kind: firestore-query
     source: my-firestore-source
     description: Query countries with dynamic filters
     collectionPath: "countries"
@@ -49,7 +53,7 @@ tools:
 ```yaml
 tools:
   advanced_query:
-    kind: firestore-query-collection-parameterizable
+    kind: firestore-query
     source: my-firestore-source
     description: Advanced query with complex filters
     collectionPath: "{{.collection}}"
@@ -114,10 +118,10 @@ tools:
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `kind` | string | Yes | Must be `firestore-query-collection-parameterizable` |
+| `kind` | string | Yes | Must be `firestore-query` |
 | `source` | string | Yes | Name of the Firestore source to use |
 | `description` | string | Yes | Description of what this tool does |
-| `collectionPath` | string | Yes | Path to the collection (supports templates) |
+| `collectionPath` | string | Yes | Path to the collection to query (supports templates) |
 | `filters` | string | No | JSON string defining query filters (supports templates) |
 | `select` | array | No | Fields to select from documents(supports templates - string or array) |
 | `orderBy` | object | No | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
@@ -236,7 +240,7 @@ The tool supports all Firestore native JSON value types:
 ```yaml
 tools:
   user_documents:
-    kind: firestore-query-collection-parameterizable
+    kind: firestore-query
     source: my-firestore
     description: Query user-specific documents
     collectionPath: "users/{{.userId}}/documents"
@@ -262,7 +266,7 @@ tools:
 ```yaml
 tools:
   location_search:
-    kind: firestore-query-collection-parameterizable
+    kind: firestore-query
     source: my-firestore
     description: Search locations by area and population
     collectionPath: "cities"
@@ -298,7 +302,7 @@ tools:
 ```yaml
 tools:
   activity_log:
-    kind: firestore-query-collection-parameterizable
+    kind: firestore-query
     source: my-firestore
     description: Query activity logs within time range
     collectionPath: "logs"
@@ -395,8 +399,9 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 5. **Limit Results**: Always set a reasonable `limit` to prevent excessive data retrieval
 6. **Field Selection**: Use `select` to retrieve only necessary fields
 
-## Limitations
+## Technical Notes
 
+- Queries operate on a single collection (the standard Firestore pattern)
 - Maximum of 100 filters per query (configurable)
 - Template parameters must be properly escaped in JSON contexts
 - Complex nested queries may require composite indexes
