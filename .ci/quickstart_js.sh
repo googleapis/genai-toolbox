@@ -3,22 +3,49 @@
 set -e
 set -u
 
-# --- Configuration ---
-: "${GCP_PROJECT:?Error: GCP_PROJECT environment variable not set.}"
-: "${DATABASE_NAME:?Error: DATABASE_NAME environment variable not set.}"
-: "${DB_USER:?Error: DB_USER environment variable not set.}"
-: "${GOOGLE_API_KEY:?Error: GOOGLE_API_KEY environment variable not set.}"
-: "${PGHOST:?Error: PGHOST environment variable not set.}"
-: "${PGPORT:?Error: PGPORT environment variable not set.}"
-: "${PGPASSWORD:?Error: PGPASSWORD environment variable not set.}"
-
 TABLE_NAME="hotels"
 QUICKSTART_JS_DIR="docs/en/getting-started/quickstart/js"
+TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
+
+apt-get update && apt-get install -y postgresql-client wget
 
 if [ ! -d "$QUICKSTART_JS_DIR" ]; then
-  echo "Error: Quickstart directory not found at '$QUICKSTART_JS_DIR'"
   exit 1
 fi
+
+wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
+chmod +x /usr/local/bin/cloud-sql-proxy
+
+cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
+PROXY_PID=$!
+
+export PGHOST=127.0.0.1
+export PGPORT=5432
+export PGPASSWORD="$DB_PASSWORD"
+export GOOGLE_API_KEY="$GOOGLE_API_KEY"
+
+mkdir -p "${TOOLBOX_SETUP_DIR}"
+echo "${TOOLS_YAML_CONTENT}" > "${TOOLBOX_SETUP_DIR}/tools.yaml"
+if [ ! -f "${TOOLBOX_SETUP_DIR}/tools.yaml" ]; then echo "Failed to create tools.yaml"; exit 1; fi
+
+curl -L "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -o "${TOOLBOX_SETUP_DIR}/toolbox"
+chmod +x "${TOOLBOX_SETUP_DIR}/toolbox"
+if [ ! -f "${TOOLBOX_SETUP_DIR}/toolbox" ]; then echo "Failed to download toolbox"; exit 1; fi
+
+echo "--- Starting Toolbox Server ---"
+cd "${TOOLBOX_SETUP_DIR}"
+./toolbox --tools-file ./tools.yaml &
+TOOLBOX_PID=$!
+cd "/workspace"
+sleep 5
+
+cleanup_all() {
+  echo "--- Final cleanup: Shutting down processes and dropping table ---"
+  kill $TOOLBOX_PID || true
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+  kill $PROXY_PID || true
+}
+trap cleanup_all EXIT
 
 for FW_DIR in "$QUICKSTART_JS_DIR"/*/; do
   if [ ! -d "$FW_DIR" ]; then
@@ -35,7 +62,8 @@ for FW_DIR in "$QUICKSTART_JS_DIR"/*/; do
     trap cleanup_fw EXIT
 
     cd "$FW_DIR"
-
+    
+    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
     psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
