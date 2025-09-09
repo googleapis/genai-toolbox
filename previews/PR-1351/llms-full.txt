@@ -2170,6 +2170,285 @@ Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs w
 {{< /notice >}}
 
 
+# Neo4j using MCP
+Connect your IDE to Neo4j using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Neo4j instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a Neo4j instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+    "mcp" : {
+        "servers": {
+        "neo4j": {
+            "command": "./PATH/TO/toolbox",
+            "args": ["--prebuilt","neo4j","--stdio"],
+            "env": {
+              "NEO4J_URI": "",
+              "NEO4J_DATABASE": "",
+              "NEO4J_USERNAME": "",
+              "NEO4J_PASSWORD": ""
+            }
+         }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant to get the graph schema or execute Cypher statements.
+
+The following tools are available to the LLM:
+
+1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
 # PostgreSQL using MCP
 Connect your IDE to PostgreSQL using Toolbox.
 
@@ -6450,6 +6729,48 @@ sources:
 | disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                                                 |
 
 
+# YugabyteDB
+YugabyteDB is a high-performance, distributed SQL database. 
+
+
+## About
+
+[YugabyteDB][yugabytedb] is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.
+
+[yugabytedb]: https://www.yugabyte.com/
+
+## Example
+
+```yaml
+sources:
+    my-yb-source:
+        kind: yugabytedb
+        host: 127.0.0.1
+        port: 5433
+        database: yugabyte
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        loadBalance: true
+        topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
+```
+
+## Reference
+
+| **field**                         | **type** | **required** | **description**                                                        |
+|-----------------------------------|:--------:|:------------:|------------------------------------------------------------------------|
+| kind                              |  string  |     true     | Must be "yugabytedb".                                                    |
+| host                              |  string  |     true     | IP address to connect to.                           |
+| port                              |  integer  |     true     | Port to connect to. The default port is 5433.                                      |
+| database                          |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.           |
+| user                              |  string  |     true     | Name of the YugabyteDB user to connect as. The default user is yugabyte.          |
+| password                          |  string  |     true     | Password of the YugabyteDB user. The default password is yugabyte.                   |
+| loadBalance                      |  boolean  |     false     | If true, enable uniform load balancing. The default loadBalance value is false.                   |
+| topologyKeys                     |  string  |     false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default.                   |
+| ybServersRefreshInterval       |  integer  |     false     | The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.                    |
+| fallbackToTopologyKeysOnly    |  boolean  |     false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                    |
+| failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
+
+
 # Tools
 Tools define actions an agent can take -- such as reading and writing to a source.
 
@@ -6827,6 +7148,104 @@ Tools that provide utility.
 # Valkey
 Tools that work with Valkey Sources.
 
+
+
+# yugabytedb-sql
+A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
+
+
+## About
+
+A `yugabytedb-sql` tool executes a pre-defined SQL statement against a YugabyteDB
+database.
+
+The specified SQL statement is executed as a prepared statement,
+and specified parameters will inserted according to their position: e.g. `1`
+will be the first parameter specified, `$@` will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.
+
+## Example
+
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
+```yaml
+tools:
+ search_flights_by_number:
+    kind: yugabytedb-sql
+    source: my-yb-instance
+    statement: |
+      SELECT * FROM flights
+      WHERE airline = $1
+      AND flight_number = $2
+      LIMIT 10
+    description: |
+      Use this tool to get information for a specific flight.
+      Takes an airline code and flight number and returns info on the flight.
+      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+      A airline code is a code for an airline service consisting of two-character
+      airline designator and followed by flight number, which is 1 to 4 digit number.
+      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
+      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+      If the tool returns more than one option choose the date closes to today.
+      Example:
+      {{
+          "airline": "CY",
+          "flight_number": "888",
+      }}
+      Example:
+      {{
+          "airline": "DL",
+          "flight_number": "1234",
+      }}
+    parameters:
+      - name: airline
+        type: string
+        description: Airline unique 2 letter identifier
+      - name: flight_number
+        type: string
+        description: 1 to 4 digit number
+```
+
+### Example with Template Parameters
+
+> **Note:** This tool allows direct modifications to the SQL statement, including identifiers, column names,
+> and table names. **This makes it more vulnerable to SQL injections**. Using basic parameters 
+> only (see above) is recommended for performance and safety reasons. For more details, please
+> check [templateParameters](_index#template-parameters).
+
+```yaml
+tools:
+ list_table:
+    kind: yugabytedb-sql
+    source: my-yb-instance
+    statement: |
+      SELECT * FROM {{.tableName}}
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
+```
+
+## Reference
+
+| **field**           |                  **type**                                 | **required** | **description**                                                                                                                            |
+|---------------------|:---------------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                |                   string                                  |     true     | Must be "yugabytedb-sql".                                                                                                                    |
+| source              |                   string                                  |     true     | Name of the source the SQL should execute on.                                                                                              |
+| description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
+| parameters          | [parameters](_index#specifying-parameters)                |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters  |  [templateParameters](_index#template-parameters)         |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
 
 # Samples
@@ -8955,5 +9374,19 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## Neo4j
+
+*   `--prebuilt` value: `neo4j`
+*   **Environment Variables:**
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
+    *   `NEO4J_USERNAME`: The username for the Neo4j instance.
+    *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
 
 
