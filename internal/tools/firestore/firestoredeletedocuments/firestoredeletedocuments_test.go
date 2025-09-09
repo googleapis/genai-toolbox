@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 			in: `
 			tools:
 				delete_docs_tool:
-					kind: firestore-delete-documents
+					type: firestore-delete-documents
 					source: my-firestore-instance
 					description: Delete documents from Firestore by paths
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 			in: `
 			tools:
 				secure_delete_docs:
-					kind: firestore-delete-documents
+					type: firestore-delete-documents
 					source: prod-firestore
 					description: Delete documents with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		delete_user_docs:
-			kind: firestore-delete-documents
+			type: firestore-delete-documents
 			source: users-firestore
 			description: Delete user documents
 			authRequired:
 				- user-auth
 		delete_product_docs:
-			kind: firestore-delete-documents
+			type: firestore-delete-documents
 			source: products-firestore
 			description: Delete product documents
 		delete_order_docs:
-			kind: firestore-delete-documents
+			type: firestore-delete-documents
 			source: orders-firestore
 			description: Delete order documents
 			authRequired:

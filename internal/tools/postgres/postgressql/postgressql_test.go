@@ -40,7 +40,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: postgres-sql
+					type: postgres-sql
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -108,7 +108,7 @@ func TestParseFromYamlWithTemplateParamsPostgres(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: postgres-sql
+					type: postgres-sql
 					source: my-pg-instance
 					description: some description
 					statement: |

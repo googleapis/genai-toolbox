@@ -40,7 +40,7 @@ func TestParseFromYamlLookerMakeLook(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-make-look
+					type: looker-make-look
 					source: my-instance
 					description: some description
 				`,
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerMakeLook(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-make-look
+					type: looker-make-look
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-make-look\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-make-look\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as type \"looker-make-look\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | type: looker-make-look\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

@@ -42,7 +42,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-update-many
+					type: mongodb-update-many
 					source: my-instance
 					description: some description
 					database: test_db
@@ -128,7 +128,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-update-many
+					type: mongodb-update-many
 					source: my-instance
 					description: some description
 					collection: test_coll
@@ -146,7 +146,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 						  type: string
 						  description: the content in json
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-update-many"`,
+			err: `unable to parse tool "example_tool" as type "mongodb-update-many"`,
 		},
 	}
 	for _, tc := range tcs {

@@ -39,7 +39,7 @@ func TestParseFromYamlBigQueryForecast(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-forecast
+					type: bigquery-forecast
 					source: my-instance
 					description: some description
 			`,

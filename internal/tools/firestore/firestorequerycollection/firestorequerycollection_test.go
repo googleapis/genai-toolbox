@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 			in: `
 			tools:
 				query_users_tool:
-					kind: firestore-query-collection
+					type: firestore-query-collection
 					source: my-firestore-instance
 					description: Query users collection with filters and ordering
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 			in: `
 			tools:
 				secure_query_tool:
-					kind: firestore-query-collection
+					type: firestore-query-collection
 					source: prod-firestore
 					description: Query collections with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		query_users:
-			kind: firestore-query-collection
+			type: firestore-query-collection
 			source: users-firestore
 			description: Query user documents with filtering
 			authRequired:
 				- user-auth
 		query_products:
-			kind: firestore-query-collection
+			type: firestore-query-collection
 			source: products-firestore
 			description: Query product catalog
 		query_orders:
-			kind: firestore-query-collection
+			type: firestore-query-collection
 			source: orders-firestore
 			description: Query customer orders with complex filters
 			authRequired:

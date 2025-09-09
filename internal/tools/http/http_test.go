@@ -41,7 +41,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: http
+					type: http
 					source: my-instance
 					method: GET
 					description: some description
@@ -64,7 +64,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: http
+					type: http
 					source: my-instance
 					method: GET
 					path: "{{.pathParam}}?name=alice&pet=cat"
@@ -171,7 +171,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: http
+					type: http
 					source: my-instance
 					method: GOT
 					path: "search?name=alice&pet=cat"

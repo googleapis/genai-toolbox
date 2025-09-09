@@ -39,7 +39,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: spanner-execute-sql
+					type: spanner-execute-sql
 					source: my-spanner-instance
 					description: some description
 			`,
@@ -59,7 +59,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: spanner-execute-sql
+					type: spanner-execute-sql
 					source: my-spanner-instance
 					description: some description
 					readOnly: true

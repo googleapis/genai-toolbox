@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 			in: `
 			tools:
 				get_docs_tool:
-					kind: firestore-get-documents
+					type: firestore-get-documents
 					source: my-firestore-instance
 					description: Retrieve documents from Firestore by paths
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 			in: `
 			tools:
 				secure_get_docs:
-					kind: firestore-get-documents
+					type: firestore-get-documents
 					source: prod-firestore
 					description: Get documents with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		get_user_docs:
-			kind: firestore-get-documents
+			type: firestore-get-documents
 			source: users-firestore
 			description: Get user documents
 			authRequired:
 				- user-auth
 		get_product_docs:
-			kind: firestore-get-documents
+			type: firestore-get-documents
 			source: products-firestore
 			description: Get product documents
 		get_order_docs:
-			kind: firestore-get-documents
+			type: firestore-get-documents
 			source: orders-firestore
 			description: Get order documents
 			authRequired:

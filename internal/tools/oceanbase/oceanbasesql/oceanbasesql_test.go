@@ -41,7 +41,7 @@ func TestParseFromYamlOceanBaseSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: oceanbase-sql
+					type: oceanbase-sql
 					source: my-instance
 					description: some description
 					statement: select * from t where id = ?

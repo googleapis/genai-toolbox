@@ -40,7 +40,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: spanner-sql
+					type: spanner-sql
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -69,7 +69,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: spanner-sql
+					type: spanner-sql
 					source: my-pg-instance
 					description: some description
 					readOnly: true
@@ -129,7 +129,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: spanner-sql
+					type: spanner-sql
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -173,7 +173,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: spanner-sql
+					type: spanner-sql
 					source: my-pg-instance
 					description: some description
 					readOnly: true

@@ -40,7 +40,7 @@ func TestParseFromYamlSQLite(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: sqlite-sql
+					type: sqlite-sql
 					source: my-sqlite-instance
 					description: some description
 					statement: |
@@ -108,7 +108,7 @@ func TestParseFromYamlWithTemplateSqlite(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: sqlite-sql
+					type: sqlite-sql
 					source: my-sqlite-db
 					description: some description
 					statement: |

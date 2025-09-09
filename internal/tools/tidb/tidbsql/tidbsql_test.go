@@ -40,7 +40,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: tidb-sql
+					type: tidb-sql
 					source: my-tidb-instance
 					description: some description
 					statement: |
@@ -107,7 +107,7 @@ func TestParseFromYamlWithTemplateParamsTiDB(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: tidb-sql
+					type: tidb-sql
 					source: my-tidb-instance
 					description: some description
 					statement: |

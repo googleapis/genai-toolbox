@@ -48,7 +48,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: clickhouse-sql
+					type: clickhouse-sql
 					source: my-instance
 					description: some description
 					statement: SELECT 1
@@ -69,7 +69,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			in: `
 			tools:
 				param_tool:
-					kind: clickhouse-sql
+					type: clickhouse-sql
 					source: test-source
 					description: Test ClickHouse tool
 					statement: SELECT * FROM test_table WHERE id = $1

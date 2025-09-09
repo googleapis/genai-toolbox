@@ -39,7 +39,7 @@ func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-execute-sql
+					type: bigquery-execute-sql
 					source: my-instance
 					description: some description
 			`,

@@ -38,7 +38,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: neo4j-execute-cypher
+					type: neo4j-execute-cypher
 					source: my-neo4j-instance
 					description: some tool description
 					authRequired:
@@ -60,7 +60,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: neo4j-execute-cypher
+					type: neo4j-execute-cypher
 					source: my-neo4j-instance
 					description: some tool description
 					readOnly: true

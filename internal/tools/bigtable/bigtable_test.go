@@ -40,7 +40,7 @@ func TestParseFromYamlBigtable(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigtable-sql
+					type: bigtable-sql
 					source: my-pg-instance
 					description: some description
 					statement: |
@@ -98,7 +98,7 @@ func TestParseFromYamlWithTemplateBigtable(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigtable-sql
+					type: bigtable-sql
 					source: my-pg-instance
 					description: some description
 					statement: |

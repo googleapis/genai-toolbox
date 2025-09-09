@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 			in: `
 			tools:
 				validate_rules_tool:
-					kind: firestore-validate-rules
+					type: firestore-validate-rules
 					source: my-firestore-instance
 					description: Validate Firestore security rules
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 			in: `
 			tools:
 				secure_validate_rules:
-					kind: firestore-validate-rules
+					type: firestore-validate-rules
 					source: prod-firestore
 					description: Validate rules with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		validate_dev_rules:
-			kind: firestore-validate-rules
+			type: firestore-validate-rules
 			source: dev-firestore
 			description: Validate development environment rules
 			authRequired:
 				- dev-auth
 		validate_staging_rules:
-			kind: firestore-validate-rules
+			type: firestore-validate-rules
 			source: staging-firestore
 			description: Validate staging environment rules
 		validate_prod_rules:
-			kind: firestore-validate-rules
+			type: firestore-validate-rules
 			source: prod-firestore
 			description: Validate production environment rules
 			authRequired:

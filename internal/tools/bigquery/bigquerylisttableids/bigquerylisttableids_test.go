@@ -39,7 +39,7 @@ func TestParseFromYamlBigQueryListTableIds(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-list-table-ids
+					type: bigquery-list-table-ids
 					source: my-instance
 					description: some description
 			`,

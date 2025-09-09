@@ -37,7 +37,7 @@ func TestNewConfig(t *testing.T) {
 			name: "valid config",
 			yaml: `
 name: test-update-document
-kind: firestore-update-document
+type: firestore-update-document
 source: test-firestore
 description: Update a document in Firestore
 authRequired:
@@ -56,7 +56,7 @@ authRequired:
 			name: "minimal config",
 			yaml: `
 name: test-update-document
-kind: firestore-update-document
+type: firestore-update-document
 source: test-firestore
 description: Update a document
 `,
@@ -72,7 +72,7 @@ description: Update a document
 			name: "invalid yaml",
 			yaml: `
 name: test-update-document
-kind: [invalid
+type: [invalid
 `,
 			wantErr: true,
 		},

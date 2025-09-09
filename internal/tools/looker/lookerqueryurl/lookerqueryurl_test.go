@@ -40,7 +40,7 @@ func TestParseFromYamlLookerQueryUrl(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-query-url
+					type: looker-query-url
 					source: my-instance
 					description: some description
 				`,
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerQueryUrl(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-query-url
+					type: looker-query-url
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-query-url\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-query-url\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as type \"looker-query-url\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | type: looker-query-url\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

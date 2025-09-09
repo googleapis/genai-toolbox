@@ -39,7 +39,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mysql-execute-sql
+					type: mysql-execute-sql
 					source: my-instance
 					description: some description
 					authRequired:

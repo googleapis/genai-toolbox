@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 			in: `
 			tools:
 				get_rules_tool:
-					kind: firestore-get-rules
+					type: firestore-get-rules
 					source: my-firestore-instance
 					description: Retrieves the active Firestore security rules for the current project
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 			in: `
 			tools:
 				secure_get_rules:
-					kind: firestore-get-rules
+					type: firestore-get-rules
 					source: prod-firestore
 					description: Get Firestore security rules with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		get_dev_rules:
-			kind: firestore-get-rules
+			type: firestore-get-rules
 			source: dev-firestore
 			description: Get development Firestore rules
 			authRequired:
 				- dev-auth
 		get_staging_rules:
-			kind: firestore-get-rules
+			type: firestore-get-rules
 			source: staging-firestore
 			description: Get staging Firestore rules
 		get_prod_rules:
-			kind: firestore-get-rules
+			type: firestore-get-rules
 			source: prod-firestore
 			description: Get production Firestore rules
 			authRequired:

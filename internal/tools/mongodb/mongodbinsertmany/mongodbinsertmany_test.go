@@ -41,7 +41,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-insert-many
+					type: mongodb-insert-many
 					source: my-instance
 					description: some description
 					database: test_db
@@ -95,12 +95,12 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-insert-many
+					type: mongodb-insert-many
 					source: my-instance
 					description: some description
 					collection: test_coll
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-insert-many"`,
+			err: `unable to parse tool "example_tool" as type "mongodb-insert-many"`,
 		},
 	}
 	for _, tc := range tcs {

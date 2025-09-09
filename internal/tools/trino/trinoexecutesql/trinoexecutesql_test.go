@@ -39,7 +39,7 @@ func TestParseFromYamlTrinoExecuteSQL(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: trino-execute-sql
+					type: trino-execute-sql
 					source: my-trino-instance
 					description: some description
 					authRequired:

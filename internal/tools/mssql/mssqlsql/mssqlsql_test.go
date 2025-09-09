@@ -40,7 +40,7 @@ func TestParseFromYamlMssql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mssql-sql
+					type: mssql-sql
 					source: my-instance
 					description: some description
 					statement: |
@@ -107,7 +107,7 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mssql-sql
+					type: mssql-sql
 					source: my-instance
 					description: some description
 					statement: |

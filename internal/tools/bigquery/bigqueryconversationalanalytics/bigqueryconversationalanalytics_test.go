@@ -39,7 +39,7 @@ func TestParseFromYamlBigQueryConversationalAnalytics(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-conversational-analytics
+					type: bigquery-conversational-analytics
 					source: my-instance
 					description: some description
 			`,

@@ -54,7 +54,7 @@ func DecodeConfig(ctx context.Context, resourceType string, name string, decoder
 	}
 	toolConfig, err := factory(ctx, name, decoder)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse tool %q as kind %q: %w", name, resourceType, err)
+		return nil, fmt.Errorf("unable to parse tool %q as type %q: %w", name, resourceType, err)
 	}
 	return toolConfig, nil
 }
