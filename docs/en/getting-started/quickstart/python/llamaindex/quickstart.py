@@ -2,9 +2,13 @@ import asyncio
 import os
 
 from llama_index.core.agent.workflow import AgentWorkflow
+
 from llama_index.core.workflow import Context
+
 # TODO(developer): replace this with another import if needed
+
 from llama_index.llms.google_genai import GoogleGenAI
+
 # from llama_index.llms.anthropic import Anthropic
 
 from toolbox_llamaindex import ToolboxClient
@@ -30,7 +34,7 @@ async def main():
     # TODO(developer): replace this with another model if needed
     llm = GoogleGenAI(
         model="gemini-2.0-flash-001",
-        vertexai_config={"project": os.environ.get("GCP_PROJECT", "your-project-id"), "location": "us-central1"},
+        vertexai_config={"project": os.environ.get("GCP_PROJECT", "project-id"), "location": "us-central1"},
     )
     # llm = GoogleGenAI(
     #     api_key=os.getenv("GOOGLE_API_KEY"),
@@ -42,10 +46,8 @@ async def main():
     # )
 
     # Load the tools from the Toolbox server
-    host = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
-    toolbox_url = f"http://{host}:5000"
-    async with ToolboxClient(toolbox_url) as toolbox_client:
-        tools = await toolbox_client.aload_toolset()
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
+        tools = await client.aload_toolset()
 
         agent = AgentWorkflow.from_tools_or_functions(
             tools,
