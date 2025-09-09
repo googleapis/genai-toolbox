@@ -102,7 +102,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
 			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
 		} else {
-			projectIDs := make(map[string]bool)
 			datasetIDsByProject := make(map[string][]string)
 			for _, ds := range allowedDatasets {
 				parts := strings.Split(ds, ".")
