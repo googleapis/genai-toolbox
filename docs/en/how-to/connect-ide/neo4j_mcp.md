@@ -123,8 +123,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% tab header="Cline" lang="en" %}}
 
 1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
-2.  Tap Configure MCP Servers to open the configuration file.
-3.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
 
     ```json
     {
@@ -143,7 +143,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     }
     ```
 
-4.  You should see a green active status after the server is successfully connected.
+1.  You should see a green active status after the server is successfully connected.
 {{% /tab %}}
 {{% tab header="Cursor" lang="en" %}}
 
