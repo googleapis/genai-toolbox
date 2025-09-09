@@ -23,8 +23,7 @@ if [ ! -f "${TOOLBOX_SETUP_DIR}/toolbox" ]; then echo "Failed to download toolbo
 
 echo "--- Starting Toolbox Server ---"
 cd "${TOOLBOX_SETUP_DIR}"
-./toolbox --tools-file ./tools.yaml --address "${TOOLBOX_HOST}" --port "${TOOLBOX_PORT}" &
-TOOLBOX_PID=$!
+./toolbox --tools-file ./tools.yaml 
 cd "/workspace"
 sleep 5
 
