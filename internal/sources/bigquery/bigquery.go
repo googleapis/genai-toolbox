@@ -17,8 +17,10 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
+	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -97,6 +99,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		ClientCreator:      clientCreator,
 		UseClientOAuth:     r.UseClientOAuth,
 	}
+	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 
 }
@@ -115,6 +118,7 @@ type Source struct {
 	MaxQueryResultRows int
 	ClientCreator      BigqueryClientCreator
 	UseClientOAuth     bool
+	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, error)
 }
 
 func (s *Source) SourceKind() string {
@@ -152,6 +156,28 @@ func (s *Source) GetMaxQueryResultRows() int {
 
 func (s *Source) BigQueryClientCreator() BigqueryClientCreator {
 	return s.ClientCreator
+}
+
+func (s *Source) MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, error) {
+	return s.makeDataplexCatalogClient
+}
+
+func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer) func() (*dataplexapi.CatalogClient, error) {
+	var once sync.Once
+	var client *dataplexapi.CatalogClient
+	var err error
+
+	return func() (*dataplexapi.CatalogClient, error) {
+		once.Do(func() {
+			c, e := initDataplexConnection(ctx, tracer, s.Name, s.Project)
+			if e != nil {
+				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
+				return
+			}
+			client = c
+		})
+		return client, err
+	}
 }
 
 func initBigQueryConnection(
@@ -247,4 +273,30 @@ func newBigQueryClientCreator(
 	return func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
 	}, nil
+}
+
+func initDataplexConnection(
+	ctx context.Context,
+	tracer trace.Tracer,
+	name string,
+	project string,
+) (*dataplexapi.CatalogClient, error) {
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	defer span.End()
+
+	cred, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+	}
+
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+	}
+	return client, nil
 }
