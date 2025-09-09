@@ -46,18 +46,23 @@ cleanup_all() {
 trap cleanup_all EXIT
 
 
-for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*; do
+for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
-  set -e
-  ORCH_NAME=$(basename "$ORCH_DIR")
+  # Use a subshell (...) to contain all actions for a single test run.
+  (
+    set -e
+    ORCH_NAME=$(basename "$ORCH_DIR")
+    
+    # Change into the main Python directory where the test file is
+    cd "$QUICKSTART_PYTHON_DIR"
 
-  # Drop table before test
-  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+    echo "--- Setting up test for $ORCH_NAME ---"
 
-  # Create table and insert data
-  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
+    # Reset the database for this specific test suite
+    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR NOT NULL,
@@ -81,20 +86,16 @@ VALUES
   (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
 EOF
 
-  # Create venv in python folder for each orchestrator
-  cd "$QUICKSTART_PYTHON_DIR"
-  VENV_DIR=".venv"
-  python3 -m venv "$VENV_DIR"
-  source "$VENV_DIR/bin/activate"
+    # Create a local virtual environment
+    VENV_DIR=".venv"
+    python3 -m venv "$VENV_DIR"
+    source "$VENV_DIR/bin/activate"
 
-  pip install -r "$ORCH_DIR/requirements.txt"
+    # Install dependencies from the correct requirements.txt file
+    pip install -r "$ORCH_NAME/requirements.txt"
 
-  echo "Running tests for $ORCH_NAME..."
-  ORCH_NAME="$ORCH_NAME" pytest
-
-  # Deactivate and remove venv
-  deactivate || true
-  rm -rf "$VENV_DIR"
-
-  cd -
+    # Run the test, providing the required ORCH_NAME environment variable
+    echo "Running tests for $ORCH_NAME..."
+    ORCH_NAME="$ORCH_NAME" pytest
+  )
 done
