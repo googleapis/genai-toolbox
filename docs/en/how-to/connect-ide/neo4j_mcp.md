@@ -32,7 +32,7 @@ description: "Connect your IDE to Neo4j using Toolbox."
 
 ## Install MCP Toolbox
 
-1.  Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
 
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
