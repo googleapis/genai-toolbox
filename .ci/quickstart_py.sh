@@ -21,6 +21,8 @@ PROXY_PID=$!
 
 export PGHOST=127.0.0.1
 export PGPORT=5432
+export PGPASSWORD="$DB_PASSWORD"
+export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 mkdir -p "${TOOLBOX_SETUP_DIR}"
 echo "${TOOLS_YAML_CONTENT}" > "${TOOLBOX_SETUP_DIR}/tools.yaml"
