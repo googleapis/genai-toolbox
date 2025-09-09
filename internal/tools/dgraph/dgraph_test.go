@@ -39,7 +39,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dgraph-dql
+					type: dgraph-dql
 					source: my-dgraph-instance
 					description: some tool description
 					isQuery: true
@@ -65,7 +65,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dgraph-dql
+					type: dgraph-dql
 					source: my-dgraph-instance
 					description: some tool description
 					statement: |

@@ -42,7 +42,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					type: mongodb-find
 					source: my-instance
 					description: some description
 					database: test_db
@@ -120,14 +120,14 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find
+					type: mongodb-find
 					source: my-instance
 					description: some description
 					collection: test_coll
 					filterPayload: |
 					  { name : {{json .name}} }
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-find"`,
+			err: `unable to parse tool "example_tool" as type "mongodb-find"`,
 		},
 	}
 	for _, tc := range tcs {

@@ -40,7 +40,7 @@ func TestParseFromYamlLookerMakeDashboard(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-make-dashboard
+					type: looker-make-dashboard
 					source: my-instance
 					description: some description
 				`,
@@ -88,12 +88,12 @@ func TestFailParseFromYamlMakeDashboard(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-make-dashboard
+					type: looker-make-dashboard
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-make-dashboard\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-make-dashboard\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as type \"looker-make-dashboard\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | type: looker-make-dashboard\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

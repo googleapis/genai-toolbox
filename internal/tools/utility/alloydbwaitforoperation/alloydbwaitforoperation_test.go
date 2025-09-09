@@ -39,7 +39,7 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				wait-for-thing:
-					kind: alloydb-wait-for-operation
+					type: alloydb-wait-for-operation
 					description: some description
 					delay: 1s
 					maxDelay: 5s

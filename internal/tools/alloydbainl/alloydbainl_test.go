@@ -40,7 +40,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: alloydb-ai-nl
+					type: alloydb-ai-nl
 					source: my-alloydb-instance
 					description: AlloyDB natural language query tool
 					nlConfig: 'my_nl_config'
@@ -74,7 +74,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 			in: `
 			tools:
 				complex_tool:
-					kind: alloydb-ai-nl
+					type: alloydb-ai-nl
 					source: my-alloydb-instance
 					description: AlloyDB natural language query tool with multiple parameters
 					nlConfig: 'complex_nl_config'

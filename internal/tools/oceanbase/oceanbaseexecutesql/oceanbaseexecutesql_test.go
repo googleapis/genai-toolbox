@@ -40,7 +40,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: oceanbase-execute-sql
+					type: oceanbase-execute-sql
 					source: my-instance
 					description: some description
 					authRequired:

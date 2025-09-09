@@ -39,7 +39,7 @@ func TestParseFromYamlBigQueryGetTableInfo(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-get-table-info
+					type: bigquery-get-table-info
 					source: my-instance
 					description: some description
 			`,

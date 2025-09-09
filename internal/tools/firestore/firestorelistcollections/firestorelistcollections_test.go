@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 			in: `
 			tools:
 				list_collections_tool:
-					kind: firestore-list-collections
+					type: firestore-list-collections
 					source: my-firestore-instance
 					description: List collections in Firestore
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 			in: `
 			tools:
 				secure_list_collections:
-					kind: firestore-list-collections
+					type: firestore-list-collections
 					source: prod-firestore
 					description: List collections with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		list_user_collections:
-			kind: firestore-list-collections
+			type: firestore-list-collections
 			source: users-firestore
 			description: List user-related collections
 			authRequired:
 				- user-auth
 		list_product_collections:
-			kind: firestore-list-collections
+			type: firestore-list-collections
 			source: products-firestore
 			description: List product-related collections
 		list_admin_collections:
-			kind: firestore-list-collections
+			type: firestore-list-collections
 			source: admin-firestore
 			description: List administrative collections
 			authRequired:

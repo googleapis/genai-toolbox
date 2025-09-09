@@ -40,7 +40,7 @@ func TestParseFromYamlFirebird(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: firebird-sql
+					type: firebird-sql
 					source: my-fdb-instance
 					description: some description
 					statement: |
@@ -108,7 +108,7 @@ func TestParseFromYamlWithTemplateParamsFirebird(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: firebird-sql
+					type: firebird-sql
 					source: my-fdb-instance
 					description: some description
 					statement: |

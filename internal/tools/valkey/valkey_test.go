@@ -40,7 +40,7 @@ func TestParseFromYamlvalkey(t *testing.T) {
 			in: `
 			tools:
 				valkey_tool:
-					kind: valkey
+					type: valkey
 					source: my-valkey-instance
 					description: some description
 					commands:

@@ -39,7 +39,7 @@ func TestParseFromYamlDataplexSearchAspectTypes(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dataplex-search-aspect-types
+					type: dataplex-search-aspect-types
 					source: my-instance
 					description: some description
 			`,

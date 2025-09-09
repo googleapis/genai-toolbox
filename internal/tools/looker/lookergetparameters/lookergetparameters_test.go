@@ -40,7 +40,7 @@ func TestParseFromYamlLookerGetParameters(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-get-parameters
+					type: looker-get-parameters
 					source: my-instance
 					description: some description
 				`,
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerGetParameters(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-get-parameters
+					type: looker-get-parameters
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-get-parameters\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-get-parameters\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as type \"looker-get-parameters\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | type: looker-get-parameters\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

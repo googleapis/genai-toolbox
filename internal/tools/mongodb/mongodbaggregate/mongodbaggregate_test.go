@@ -42,7 +42,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-aggregate
+					type: mongodb-aggregate
 					source: my-instance
 					description: some description
 					database: test_db
@@ -112,14 +112,14 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-aggregate
+					type: mongodb-aggregate
 					source: my-instance
 					description: some description
 					collection: test_coll
 					pipelinePayload: |
 					  [{ $match: { name : {{json .name}} }}]
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-aggregate"`,
+			err: `unable to parse tool "example_tool" as type "mongodb-aggregate"`,
 		},
 	}
 	for _, tc := range tcs {

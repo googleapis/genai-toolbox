@@ -40,7 +40,7 @@ func TestParseFromYamlLookerAddDashboardElement(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-add-dashboard-element
+					type: looker-add-dashboard-element
 					source: my-instance
 					description: some description
 				`,
@@ -88,12 +88,12 @@ func TestFailParseFromYamlLookerAddDashboardElement(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: looker-add-dashboard-element
+					type: looker-add-dashboard-element
 					source: my-instance
 					method: GOT
 					description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-add-dashboard-element\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-add-dashboard-element\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "unable to parse tool \"example_tool\" as type \"looker-add-dashboard-element\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | type: looker-add-dashboard-element\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

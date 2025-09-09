@@ -39,7 +39,7 @@ func TestParseFromYamlBigQueryGetDatasetInfo(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-get-dataset-info
+					type: bigquery-get-dataset-info
 					source: my-instance
 					description: some description
 			`,

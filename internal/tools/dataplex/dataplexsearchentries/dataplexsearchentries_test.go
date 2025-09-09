@@ -39,7 +39,7 @@ func TestParseFromYamlDataplexSearchEntries(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dataplex-search-entries
+					type: dataplex-search-entries
 					source: my-instance
 					description: some description
 			`,

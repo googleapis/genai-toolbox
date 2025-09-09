@@ -40,7 +40,7 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dataplex-lookup-entry
+					type: dataplex-lookup-entry
 					source: my-instance
 					description: some description
 			`,
@@ -59,7 +59,7 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dataplex-lookup-entry
+					type: dataplex-lookup-entry
 					source: my-instance
 					description: some description
 					parameters:

@@ -39,7 +39,7 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 			in: `
 			tools:
 				add_docs_tool:
-					kind: firestore-add-documents
+					type: firestore-add-documents
 					source: my-firestore-instance
 					description: Add documents to Firestore collections
 			`,
@@ -58,7 +58,7 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 			in: `
 			tools:
 				secure_add_docs:
-					kind: firestore-add-documents
+					type: firestore-add-documents
 					source: prod-firestore
 					description: Add documents with authentication
 					authRequired:
@@ -101,17 +101,17 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	in := `
 	tools:
 		add_user_docs:
-			kind: firestore-add-documents
+			type: firestore-add-documents
 			source: users-firestore
 			description: Add user documents
 			authRequired:
 				- user-auth
 		add_product_docs:
-			kind: firestore-add-documents
+			type: firestore-add-documents
 			source: products-firestore
 			description: Add product documents
 		add_order_docs:
-			kind: firestore-add-documents
+			type: firestore-add-documents
 			source: orders-firestore
 			description: Add order documents
 			authRequired:

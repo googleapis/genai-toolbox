@@ -37,7 +37,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: couchbase-sql
+					type: couchbase-sql
 					source: my-couchbase-instance
 					description: some tool description
 					statement: |
@@ -101,7 +101,7 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: couchbase-sql
+					type: couchbase-sql
 					source: my-couchbase-instance
 					description: some tool description
 					statement: |

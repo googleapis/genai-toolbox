@@ -40,7 +40,7 @@ func TestParseFromYamlWait(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: wait
+					type: wait
 					description: some description
 					timeout: 10s
 					authRequired:

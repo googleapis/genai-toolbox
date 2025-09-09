@@ -280,7 +280,6 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 	if !ok {
 		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
 	}
-
 	dec, err := util.NewStrictDecoder(p)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)

@@ -38,7 +38,7 @@ func TestParseFromYamlClickHouseExecuteSQL(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: clickhouse-execute-sql
+					type: clickhouse-execute-sql
 					source: my-instance
 					description: some description
 			`,

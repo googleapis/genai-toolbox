@@ -40,7 +40,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 			in: `
 			tools:
 				redis_tool:
-					kind: redis
+					type: redis
 					source: my-redis-instance
 					description: some description
 					commands:

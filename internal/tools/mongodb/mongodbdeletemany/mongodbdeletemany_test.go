@@ -42,7 +42,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-delete-many
+					type: mongodb-delete-many
 					source: my-instance
 					description: some description
 					database: test_db
@@ -110,14 +110,14 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-delete-many
+					type: mongodb-delete-many
 					source: my-instance
 					description: some description
 					collection: test_coll
 					filterPayload: |
 					  { name : {{json .name}} }
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-delete-many"`,
+			err: `unable to parse tool "example_tool" as type "mongodb-delete-many"`,
 		},
 	}
 	for _, tc := range tcs {

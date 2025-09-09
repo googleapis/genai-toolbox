@@ -40,7 +40,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-sql
+					type: bigquery-sql
 					source: my-instance
 					description: some description
 					statement: |
@@ -98,7 +98,7 @@ func TestParseFromYamlWithTemplateBigQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-sql
+					type: bigquery-sql
 					source: my-instance
 					description: some description
 					statement: |
