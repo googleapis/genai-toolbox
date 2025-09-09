@@ -66,6 +66,8 @@ for framework in "${frameworks[@]}"; do
     }
     trap cleanup_fw EXIT
 
+    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+
     cd "$FW_DIR"
 
     psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
