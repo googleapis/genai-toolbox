@@ -531,13 +531,12 @@ steps:
           utility \
           utility/alloydbwaitforoperation
 
-  - id: "cloudsqlwaitforoperation"
+  - id: "cloud-sql"
     name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "API_KEY=$(gcloud auth print-access-token)"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
@@ -548,7 +547,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud SQL Wait for Operation" \
           cloudsql \
-          cloudsql/cloudsqlwaitforoperation
+          cloudsql
 
   - id: "tidb"
     name: golang:1
