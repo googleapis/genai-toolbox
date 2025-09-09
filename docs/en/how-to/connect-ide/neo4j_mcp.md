@@ -92,7 +92,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     }
     ```
 
-4.  Restart Claude code to apply the new configuration.
+1.  Restart Claude code to apply the new configuration.
 {{% /tab %}}
 {{% tab header="Claude desktop" lang="en" %}}
 
