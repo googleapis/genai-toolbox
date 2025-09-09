@@ -1,5 +1,5 @@
 ---
-title: Cloud SQL List Instance
+title: Cloud SQL List Instances
 type: docs
 weight: 1
 description: "List Cloud SQL instances in a project.\n"
