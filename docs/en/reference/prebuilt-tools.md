@@ -276,4 +276,4 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **Database-level permissions** are required to execute Cypher queries.
 *   **Tools:**
     *   `execute_cypher`: Executes a Cypher query.
-    *   `schema`: Retrieves the schema of the Neo4j database.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
