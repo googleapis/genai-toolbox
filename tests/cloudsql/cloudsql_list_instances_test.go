@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -134,17 +134,27 @@ func TestListInstance(t *testing.T) {
 
 func getListInstanceToolsConfig(baseURL string) map[string]any {
 	return map[string]any{
+		"sources": map[string]any{
+			"my-cloud-sql-source": map[string]any{
+				"kind":    "http",
+				"baseUrl": baseURL,
+			},
+			"my-invalid-cloud-sql-source": map[string]any{
+				"kind":    "http",
+				"baseUrl": "http://invalid-url",
+			},
+		},
 		"tools": map[string]any{
 			"list-instances": map[string]any{
-				"kind":         "cloudsql-list-instance",
+				"kind":         "cloud-sql-list-instances",
 				"description":  "list instances",
-				"baseURL":      baseURL,
+				"source":       "my-cloud-sql-source",
 				"authRequired": []string{},
 			},
 			"list-instances-fail": map[string]any{
-				"kind":         "cloudsql-list-instance",
+				"kind":         "cloud-sql-list-instances",
 				"description":  "list instances",
-				"baseURL":      "http://invalid-url",
+				"source":       "my-invalid-cloud-sql-source",
 				"authRequired": []string{},
 			},
 		},

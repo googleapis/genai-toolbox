@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqllistinstance
+package cloudsqllistinstances
 
 import (
 	"context"
@@ -23,11 +23,12 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"golang.org/x/oauth2/google"
 )
 
-const kind string = "cloudsql-list-instance"
+const kind string = "cloud-sql-list-instances"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -47,9 +48,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface
@@ -62,6 +63,14 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	}
+	s, ok := rawS.(*httpsrc.Source)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
+	}
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The project ID"),
 	}
@@ -80,11 +89,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:         cfg.Name,
 		Kind:         kind,
 		AuthRequired: cfg.AuthRequired,
-		Client:       &http.Client{},
+		Client:       s.Client,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
-		BaseURL:      cfg.BaseURL,
+		BaseURL:      s.BaseURL,
 	}, nil
 }
 
@@ -94,7 +103,7 @@ type Tool struct {
 	Kind         string   `yaml:"kind"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string   `yaml:"baseURL"`
+	BaseURL      string
 
 	AllParams   tools.Parameters `yaml:"allParams"`
 	Client      *http.Client
@@ -112,9 +121,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	urlString := fmt.Sprintf("%s/v1/projects/%s/instances", t.BaseURL, project)
-	if t.BaseURL == "" {
-		urlString = fmt.Sprintf("https://sqladmin.googleapis.com/v1/projects/%s/instances", project)
-	}
 	req, err := http.NewRequest(http.MethodGet, urlString, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)

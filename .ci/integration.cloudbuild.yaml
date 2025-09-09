@@ -284,7 +284,7 @@ steps:
           cloudsqlmysql \
           mysql
 
-  - id: "cloudsqllistinstance"
+  - id: "cloud-sql"
     name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
@@ -300,9 +300,9 @@ steps:
       - -c
       - |
         .ci/test_with_coverage.sh \
-          "Cloud SQL List Instance" \
+          "Cloud SQL" \
           cloudsql \
-          cloudsql/cloudsqllistinstance
+          cloudsql
 
   - id: "mysql"
     name: golang:1

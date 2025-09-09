@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqllistinstance
+package cloudsqllistinstances
 
 import (
 	"testing"
@@ -38,15 +38,17 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				list-my-instances:
-					kind: cloudsql-list-instance
+					kind: cloud-sql-list-instances
 					description: some description
+					source: some-source
 			`,
 			want: server.ToolConfigs{
 				"list-my-instances": Config{
 					Name:         "list-my-instances",
-					Kind:         "cloudsql-list-instance",
+					Kind:         "cloud-sql-list-instances",
 					Description:  "some description",
 					AuthRequired: []string{},
+					Source:       "some-source",
 				},
 			},
 		},
