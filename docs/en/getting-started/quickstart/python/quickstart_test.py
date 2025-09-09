@@ -2,12 +2,21 @@ import os
 import pytest
 from pathlib import Path
 import asyncio
-from quickstart import main
+import sys
+import importlib.util
+
+ORCH_NAME = os.environ.get("ORCH_NAME")
+orch_dir = Path(__file__).parent / ORCH_NAME
+quickstart_path = orch_dir / "quickstart.py"
+spec = importlib.util.spec_from_file_location("quickstart", str(quickstart_path))
+quickstart = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(quickstart)
+
 
 @pytest.fixture(scope="module")
 def golden_keywords():
     """Loads expected keywords from the golden.txt file."""
-    golden_file_path = Path("../../golden.txt")
+    golden_file_path = Path("../golden.txt")
     if not golden_file_path.exists():
         pytest.fail(f"Golden file not found: {golden_file_path}")
     try:
@@ -18,13 +27,14 @@ def golden_keywords():
 
 
 # --- Execution Tests ---
-class TestLANGCHAINExecution:
-    """Test ADK framework execution and output validation."""
+class TestExecution:
+    """Test framework execution and output validation."""
+
 
     @pytest.fixture(scope="function")
     def script_output(self, capsys):
         """Run the quickstart function and return its output."""
-        asyncio.run(main())
+        asyncio.run(quickstart.main())
         return capsys.readouterr()
 
     def test_script_runs_without_errors(self, script_output):
