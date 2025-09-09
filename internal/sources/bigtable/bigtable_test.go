@@ -36,7 +36,7 @@ func TestParseFromYamlBigtableDb(t *testing.T) {
 			in: `
 			sources:
 				my-bigtable-instance:
-					kind: bigtable
+					type: bigtable
 					project: my-project
 					instance: my-instance
 			`,
@@ -79,19 +79,19 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-bigtable-instance:
-					kind: bigtable
+					type: bigtable
 					project: my-project
 					instance: my-instance
 					foo: bar
 			`,
-			err: "unable to parse source \"my-bigtable-instance\" as \"bigtable\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | instance: my-instance\n   3 | kind: bigtable\n   4 | project: my-project",
+			err: "unable to parse source \"my-bigtable-instance\" as \"bigtable\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | instance: my-instance\n   3 | type: bigtable\n   4 | project: my-project",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-bigtable-instance:
-					kind: bigtable
+					type: bigtable
 					project: my-project
 			`,
 			err: "unable to parse source \"my-bigtable-instance\" as \"bigtable\": Key: 'Config.Instance' Error:Field validation for 'Instance' failed on the 'required' tag",

@@ -35,7 +35,7 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: cloud-sql-mssql
+					type: cloud-sql-mssql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -89,7 +89,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: cloud-sql-mssql
+					type: cloud-sql-mssql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -106,7 +106,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-					kind: cloud-sql-mssql
+					type: cloud-sql-mssql
 					project: my-project
 					region: my-region
 					instance: my-instance
@@ -116,14 +116,14 @@ func TestFailParseFromYaml(t *testing.T) {
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | ipAddress: localhost\n   5 | kind: cloud-sql-mssql\n   6 | ",
+			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | ipAddress: localhost\n   5 | type: cloud-sql-mssql\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-instance:
-					kind: cloud-sql-mssql
+					type: cloud-sql-mssql
 					region: my-region
 					instance: my-instance
 					database: my_db

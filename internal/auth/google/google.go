@@ -31,7 +31,7 @@ var _ auth.AuthServiceConfig = Config{}
 // Auth service configuration
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	ClientID string `yaml:"clientId" validate:"required"`
 }
 

@@ -36,7 +36,7 @@ func TestParseFromYamlOceanBase(t *testing.T) {
 			in: `
 			sources:
 				my-oceanbase-instance:
-					kind: oceanbase
+					type: oceanbase
 					host: 0.0.0.0
 					port: 2881
 					database: ob_db
@@ -60,7 +60,7 @@ func TestParseFromYamlOceanBase(t *testing.T) {
 			in: `
 			sources:
 				my-oceanbase-instance:
-					kind: oceanbase
+					type: oceanbase
 					host: 0.0.0.0
 					port: 2881
 					database: ob_db
@@ -111,7 +111,7 @@ func TestFailParseFromYamlOceanBase(t *testing.T) {
 			in: `
 			sources:
 				my-oceanbase-instance:
-					kind: oceanbase
+					type: oceanbase
 					host: 0.0.0.0
 					port: 2881
 					database: ob_db
@@ -119,14 +119,14 @@ func TestFailParseFromYamlOceanBase(t *testing.T) {
 					password: ob_pass
 					foo: bar
 			`,
-			err: "unable to parse source \"my-oceanbase-instance\" as \"oceanbase\": [2:1] unknown field \"foo\"\n   1 | database: ob_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: oceanbase\n   5 | password: ob_pass\n   6 | ",
+			err: "unable to parse source \"my-oceanbase-instance\" as \"oceanbase\": [2:1] unknown field \"foo\"\n   1 | database: ob_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | type: oceanbase\n   5 | password: ob_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-oceanbase-instance:
-					kind: oceanbase
+					type: oceanbase
 					port: 2881
 					database: ob_db
 					user: ob_user

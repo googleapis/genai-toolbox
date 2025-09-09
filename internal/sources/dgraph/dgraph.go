@@ -66,7 +66,7 @@ type DgraphClient struct {
 
 type Config struct {
 	Name      string `yaml:"name" validate:"required"`
-	Type      string `yaml:"kind" validate:"required"`
+	Type      string `yaml:"type" validate:"required"`
 	DgraphUrl string `yaml:"dgraphUrl" validate:"required"`
 	User      string `yaml:"user"`
 	Password  string `yaml:"password"`

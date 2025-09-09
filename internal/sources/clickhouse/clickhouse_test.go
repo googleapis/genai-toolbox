@@ -42,7 +42,7 @@ func TestNewConfig(t *testing.T) {
 			name: "all fields specified",
 			yaml: `
 				name: test-clickhouse
-				kind: clickhouse
+				type: clickhouse
 				host: localhost
 				port: "8443"
 				user: default
@@ -67,7 +67,7 @@ func TestNewConfig(t *testing.T) {
 			name: "minimal configuration with defaults",
 			yaml: `
 				name: minimal-clickhouse
-				kind: clickhouse
+				type: clickhouse
 				host: 127.0.0.1
 				port: "8123"
 				user: testuser
@@ -89,7 +89,7 @@ func TestNewConfig(t *testing.T) {
 			name: "http protocol",
 			yaml: `
 				name: http-clickhouse
-				kind: clickhouse
+				type: clickhouse
 				host: clickhouse.example.com
 				port: "8123"
 				user: analytics
@@ -114,7 +114,7 @@ func TestNewConfig(t *testing.T) {
 			name: "https with secure connection",
 			yaml: `
 				name: secure-clickhouse
-				kind: clickhouse
+				type: clickhouse
 				host: secure.clickhouse.io
 				port: "8443"
 				user: secureuser
@@ -167,7 +167,7 @@ func TestNewConfigInvalidYAML(t *testing.T) {
 			name: "invalid yaml syntax",
 			yaml: `
 				name: test-clickhouse
-				kind: clickhouse
+				type: clickhouse
 				host: [invalid
 			`,
 			expectError: true,
@@ -176,7 +176,7 @@ func TestNewConfigInvalidYAML(t *testing.T) {
 			name: "missing required fields",
 			yaml: `
 				name: test-clickhouse
-				kind: clickhouse
+				type: clickhouse
 			`,
 			expectError: false,
 		},

@@ -35,7 +35,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			in: `
 			sources:
 				my-couchbase-instance:
-					kind: couchbase
+					type: couchbase
 					connectionString: localhost
 					username: Administrator
 					password: password
@@ -59,7 +59,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			in: `
 			sources:
 				my-couchbase-instance:
-					kind: couchbase
+					type: couchbase
 					connectionString: couchbases://localhost
 					bucket: travel-sample
 					scope: inventory
@@ -117,7 +117,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			sources:
 				my-couchbase-instance:
-					kind: couchbase
+					type: couchbase
 					connectionString: localhost
 					username: Administrator
 					password: password
@@ -125,14 +125,14 @@ func TestFailParseFromYaml(t *testing.T) {
 					scope: inventory
 					foo: bar
 			`,
-			err: "unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | kind: couchbase\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
+			err: "unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | type: couchbase\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-couchbase-instance:
-					kind: couchbase
+					type: couchbase
 					username: Administrator
 					password: password
 					bucket: travel-sample

@@ -36,7 +36,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 			in: `
 			sources:
 				my-looker-instance:
-					kind: looker
+					type: looker
 					base_url: http://example.looker.com/
 					client_id: jasdl;k;tjl
 					client_secret: sdakl;jgflkasdfkfg
@@ -86,20 +86,20 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 			in: `
 			sources:
 				my-looker-instance:
-					kind: looker
+					type: looker
 					base_url: http://example.looker.com/
 					client_id: jasdl;k;tjl
 					client_secret: sdakl;jgflkasdfkfg
 					project: test-project
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"project\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | kind: looker\n>  5 | project: test-project\n       ^\n",
+			err: "unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"project\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | type: looker\n>  5 | project: test-project\n       ^\n",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-looker-instance:
-					kind: looker
+					type: looker
 					base_url: http://example.looker.com/
 					client_id: jasdl;k;tjl
 			`,

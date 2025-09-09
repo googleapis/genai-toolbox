@@ -35,7 +35,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 			in: `
 			sources:
 				my-firestore:
-					kind: firestore
+					type: firestore
 					project: my-project
 			`,
 			want: server.SourceConfigs{
@@ -52,7 +52,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 			in: `
 			sources:
 				my-firestore:
-					kind: firestore
+					type: firestore
 					project: my-project
 					database: my-database
 			`,
@@ -94,18 +94,18 @@ func TestFailParseFromYamlFirestore(t *testing.T) {
 			in: `
 			sources:
 				my-firestore:
-					kind: firestore
+					type: firestore
 					project: my-project
 					foo: bar
 			`,
-			err: "unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: firestore\n   3 | project: my-project",
+			err: "unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | type: firestore\n   3 | project: my-project",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-firestore:
-					kind: firestore
+					type: firestore
 					database: my-database
 			`,
 			err: "unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
