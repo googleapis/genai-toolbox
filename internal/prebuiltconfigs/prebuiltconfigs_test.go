@@ -29,6 +29,7 @@ var expectedToolSources = []string{
 	"cloud-sql-mysql",
 	"cloud-sql-postgres",
 	"dataplex",
+	"elasticsearch",
 	"firestore",
 	"looker",
 	"mssql",

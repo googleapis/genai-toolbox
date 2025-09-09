@@ -1,0 +1,24 @@
+sources:
+  elasticsearch-source:
+    kind: elasticsearch
+    addresses:
+      - ${ELASTICSEARCH_HOST}
+    apikey: ${ELASTICSEARCH_APIKEY}
+
+tools:
+  execute_esql_query:
+    kind: elasticsearch-esql
+    source: elasticsearch-source
+    description: Use this tool to execute ES|QL queries.
+    query: |
+      FROM *
+      | LIMIT ?limit
+    parameters:
+      - name: limit
+        type: integer
+        description: Limit the number of results returned.
+        required: true
+
+toolsets:
+  elasticsearch-tools:
+    - execute_esql_query
