@@ -13,7 +13,7 @@
 # limitations under the License.
 
 substitutions:
-  _GCP_PROJECT: "toolbox-testing-438616"
+  _GCP_PROJECT: "your-project-id"
   _CLOUD_SQL_INSTANCE: "project-id:region:instance-name"
   _DATABASE_NAME: "db-name"
   _DB_USER: "db-user"
@@ -24,30 +24,25 @@ substitutions:
 
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'run-all-in-one'
+    id: 'run-psql-commands'
     entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        set -ex
+
+        export VERSION=$(cat ./cmd/version.txt)
+        chmod +x .ci/quickstart_py.sh
+        export GOOGLE_API_KEY="$${GOOGLE_API_KEY}"
+        export PGPASSWORD="$${DB_PASSWORD}"
+        .ci/quickstart_py.sh
+
     env:
       - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
     secretEnv: ['TOOLS_YAML_CONTENT', 'GOOGLE_API_KEY', 'DB_PASSWORD']
-    args:
-      - -c
-      - |
-        set -ex
-        export VERSION=$(cat ./cmd/version.txt)
-        docker run -d --name=cloudsqlproxy --network=cloudbuild \
-          gcr.io/cloudsql-docker/gce-proxy:1.33.10 \
-          /cloud_sql_proxy \
-            -instances=$${CLOUD_SQL_INSTANCE}=tcp:0.0.0.0:5432 -verbose
-        sleep 10
-
-        chmod +x .ci/quickstart_py.sh
-        export GOOGLE_API_KEY="$${GOOGLE_API_KEY}"
-        export PGPASSWORD="$${DB_PASSWORD}"
-        .ci/quickstart_py.sh
-
 
 availableSecrets:
   secretManager:
