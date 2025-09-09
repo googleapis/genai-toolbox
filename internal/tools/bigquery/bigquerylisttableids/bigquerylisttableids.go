@@ -113,12 +113,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			var datasetDescriptions, projectIDList []string
 			for project, datasets := range datasetIDsByProject {
 				sort.Strings(datasets)
-				projectIDList = append(projectIDList, fmt.Sprintf("`%s`", p))
+				projectIDList = append(projectIDList, fmt.Sprintf("`%s`", project))
 				datasetList := strings.Join(datasets, ", ")
 				datasetDescriptions = append(datasetDescriptions, fmt.Sprintf("%s from project `%s`", datasetList, project))
 			}
 			projectDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(projectIDList, ", "))
-			datasetDescription += fmt.Sprintf(" Must be one of the allowed datasets: %s.", strings.Join(datasetDescriptions, ", "))
+			datasetDescription += fmt.Sprintf(" Must be one of the allowed datasets: %s.", strings.Join(datasetDescriptions, "; "))
 			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
 		}
 	} else {
