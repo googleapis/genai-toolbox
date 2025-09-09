@@ -33,8 +33,6 @@ steps:
 
         export VERSION=$(cat ./cmd/version.txt)
         chmod +x .ci/quickstart_py.sh
-        export GOOGLE_API_KEY="$${GOOGLE_API_KEY}"
-        export PGPASSWORD="$${DB_PASSWORD}"
         .ci/quickstart_py.sh
 
     env:
