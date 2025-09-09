@@ -31,7 +31,7 @@ List of guides detailing how to do different things with Toolbox.
   - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/cloud_sql_mssql_mcp/): Connect your IDE to Cloud SQL for SQL Server using Toolbox.
   - [Firestore using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/firestore_mcp/): Connect your IDE to Firestore using Toolbox.
   - [Looker using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/looker_mcp/): Connect your IDE to Looker using Toolbox.
-  - [MySQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
+  - [MySQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [Neo4j using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/neo4j_mcp/): Connect your IDE to Neo4j using Toolbox.  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
   - [SQL Server using MCP](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect-ide/mssql_mcp/): Connect your IDE to SQL Server using Toolbox.- [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
 - [Toolbox UI](https://googleapis.github.io/genai-toolbox/previews/PR-1355/how-to/toolbox-ui/): How to effectively use Toolbox UI.
@@ -72,6 +72,7 @@ List of reference documentation for resources in Toolbox.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
+  - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/bigquery/): Tools that work with BigQuery Sources.
@@ -97,6 +98,7 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/valkey/): Tools that work with Valkey Sources.
+  - [yugabytedb-sql](https://googleapis.github.io/genai-toolbox/previews/PR-1355/resources/tools/yugabytedb-sql/): A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
 
 ### Samples
 

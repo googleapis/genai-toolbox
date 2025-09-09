@@ -502,4 +502,27 @@
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
+&lt;/ul>
+&lt;h2 id="neo4j">Neo4j&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>neo4j&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>NEO4J_URI&lt;/code>: The URI of the Neo4j instance (e.g., &lt;code>bolt://localhost:7687&lt;/code>).&lt;/li>
+&lt;li>&lt;code>NEO4J_DATABASE&lt;/code>: The name of the Neo4j database to connect to.&lt;/li>
+&lt;li>&lt;code>NEO4J_USERNAME&lt;/code>: The username for the Neo4j instance.&lt;/li>
+&lt;li>&lt;code>NEO4J_PASSWORD&lt;/code>: The password for the Neo4j instance.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Database-level permissions&lt;/strong> are required to execute Cypher queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_cypher&lt;/code>: Executes a Cypher query.&lt;/li>
+&lt;li>&lt;code>get_schema&lt;/code>: Retrieves the schema of the Neo4j database.&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ul></description></item></channel></rss>
