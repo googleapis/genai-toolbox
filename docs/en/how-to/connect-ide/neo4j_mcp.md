@@ -1,11 +1,11 @@
 ---
-title: SQL Server using MCP
+title: Neo4j using MCP
 type: docs
 weight: 2
-description: "Connect your IDE to SQL Server using Toolbox."
+description: "Connect your IDE to Neo4j using Toolbox."
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like SQL Server. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a SQL Server instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Neo4j instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -28,28 +28,28 @@ description: "Connect your IDE to SQL Server using Toolbox."
 
 ## Set up the database
 
-1.  [Create or select a SQL Server instance.](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+1.  [Create or select a Neo4j instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
 
 ## Install MCP Toolbox
 
-1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
 
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -78,15 +78,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -104,15 +103,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -131,15 +129,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -157,15 +154,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -182,17 +178,18 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 
     ```json
     {
-      "servers": {
-        "mssql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
-          "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
-          }
+    "mcp" : {
+        "servers": {
+        "neo4j": {
+            "command": "./PATH/TO/toolbox",
+            "args": ["--prebuilt","neo4j","--stdio"],
+            "env": {
+              "NEO4J_URI": "",
+              "NEO4J_DATABASE": "",
+              "NEO4J_USERNAME": "",
+              "NEO4J_PASSWORD": ""
+            }
+         }
         }
       }
     }
@@ -207,15 +204,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -231,15 +227,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -256,15 +251,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "sqlserver": {
+        "neo4j": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mssql","--stdio"],
+          "args": ["--prebuilt","neo4j","--stdio"],
           "env": {
-            "MSSQL_HOST": "",
-            "MSSQL_PORT": "",
-            "MSSQL_DATABASE": "",
-            "MSSQL_USER": "",
-            "MSSQL_PASSWORD": ""
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
           }
         }
       }
@@ -275,12 +269,12 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 
 ## Use Tools
 
-Your AI tool is now connected to SQL Server using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant to get the graph schema or execute Cypher statements.
 
 The following tools are available to the LLM:
 
-1.  **list_tables**: lists tables and descriptions
-1.  **execute_sql**: execute any SQL statement
+1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
