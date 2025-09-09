@@ -34,36 +34,24 @@ description: "Connect your IDE to Neo4j using Toolbox."
 
 1.  Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
 
-    {{< tabpane persist=header >}}
-    {{< tab header="linux/amd64" lang="bash" >}}
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
+{{< /tab >}}
 
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox](https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox)
-    ```
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
+{{< /tab >}}
 
-    {{< /tab >}}
-    {{< tab header="darwin/arm64" lang="bash" >}}
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
+{{< /tab >}}
 
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox](https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox)
-    ```
-
-    {{< /tab >}}
-    {{< tab header="darwin/amd64" lang="bash" >}}
-
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox](https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox)
-    ```
-
-    {{< /tab >}}
-    {{< tab header="windows/amd64" lang="bash" >}}
-
-    ```bash
-    curl -O [https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe](https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe)
-    ```
-
-    {{< /tab >}}
-    {{< /tabpane >}}
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
 1. Make the binary executable:
