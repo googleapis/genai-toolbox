@@ -14,42 +14,48 @@ set -u
 
 TABLE_NAME="hotels"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
-
-echo "Google API Key is set (fist 4 chars): $(echo "${GOOGLE_API_KEY}" | head -c 4)"
-export PGPASSWORD
+TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
 
 if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
-  echo "Error: Quickstart directory not found at '$QUICKSTART_PYTHON_DIR'"
   exit 1
 fi
 
-echo "--- Starting test run for Python orchestrators ---"
+apt-get update && apt-get install -y postgresql-client python3-venv netcat-openbsd curl
+
+mkdir -p "${TOOLBOX_SETUP_DIR}"
+echo "${TOOLS_YAML_CONTENT}" > "${TOOLBOX_SETUP_DIR}/tools.yaml"
+if [ ! -f "${TOOLBOX_SETUP_DIR}/tools.yaml" ]; then echo "Failed to create tools.yaml"; exit 1; fi
+
+curl -L "https://storage.googleapis.com/genai-toolbox/v${TOOLBOX_VERSION}/linux/amd64/toolbox" -o "${TOOLBOX_SETUP_DIR}/toolbox"
+chmod +x "${TOOLBOX_SETUP_DIR}/toolbox"
+if [ ! -f "${TOOLBOX_SETUP_DIR}/toolbox" ]; then echo "Failed to download toolbox"; exit 1; fi
+
+echo "--- Starting Toolbox Server ---"
+cd "${TOOLBOX_SETUP_DIR}"
+./toolbox --tools-file ./tools.yaml --address "${TOOLBOX_HOST}" --port "${TOOLBOX_PORT}" &
+TOOLBOX_PID=$!
+cd "/workspace"
+sleep 5
+
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
-
   (
     set -e
     ORCH_NAME=$(basename "$ORCH_DIR")
 
     cleanup_orch() {
-      echo "--- Cleaning up for $ORCH_NAME ---"
-      echo "Dropping temporary table '$TABLE_NAME' for $ORCH_NAME..."
       psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
 
       if [ -d ".venv" ]; then
-          echo "Removing virtual environment for $ORCH_NAME..."
           rm -rf ".venv"
       fi
-      echo "--- Cleanup for $ORCH_NAME complete ---"
     }
     trap cleanup_orch EXIT
 
-    echo "--- Processing orchestrator: $ORCH_NAME ---"
     cd "$ORCH_DIR"
 
-    echo "Creating temporary table '$TABLE_NAME' for $ORCH_NAME..."
     psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" <<EOF
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
@@ -74,14 +80,11 @@ VALUES
   (9, 'Courtyard Zurich', 'Zurich', 'Upscale', '2024-04-03', '2024-04-13', B'0'),
   (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
 EOF
-    echo "Table '$TABLE_NAME' created and data inserted."
 
     VENV_DIR=".venv"
-    echo "Creating Python virtual environment in '$(pwd)/$VENV_DIR'..."
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
 
-    echo "Installing dependencies for $ORCH_NAME..."
     if [ -f "requirements.txt" ]; then
       pip install -r requirements.txt
     else
@@ -91,8 +94,5 @@ EOF
     echo "Running tests for $ORCH_NAME..."
     pytest
 
-    echo "--- Finished processing $ORCH_NAME ---"
   )
 done
-
-echo "--- All Python quickstart tests completed ---"
