@@ -100,7 +100,7 @@ EOF
       echo "Warning: go.mod not found. Skipping."
     fi
 
-    go test ./...
+    go test -v ./...
 
   )
 done
