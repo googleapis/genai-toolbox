@@ -46,7 +46,7 @@ cleanup_all() {
 trap cleanup_all EXIT
 
 
-for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
+for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
@@ -87,7 +87,7 @@ EOF
   python3 -m venv "$VENV_DIR"
   source "$VENV_DIR/bin/activate"
 
-  pip install -r "$ORCH_DIRrequirements.txt"
+  pip install -r "$ORCH_DIR/requirements.txt"
 
   echo "Running tests for $ORCH_NAME..."
   ORCH_NAME="$ORCH_NAME" pytest
