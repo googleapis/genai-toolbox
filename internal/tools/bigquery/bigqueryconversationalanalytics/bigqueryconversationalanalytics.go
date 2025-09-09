@@ -183,14 +183,18 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var tokenStr string
+	var err error
 
 	// Get credentials for the API call
 	if t.UseClientOAuth {
 		// Use client-side access token
 		if accessToken == "" {
-			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header")
+			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", tools.ErrUnauthorized)
 		}
-		tokenStr = string(accessToken)
+		tokenStr, err = accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
 	} else {
 		// Use ADC
 		if t.TokenSource == nil {
