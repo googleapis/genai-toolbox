@@ -87,8 +87,8 @@ EOF
   python3 -m venv "$VENV_DIR"
   source "$VENV_DIR/bin/activate"
 
-  pip install -r "$ORCH_DIR/requirements.txt"
-  
+  pip install -r "$ORCH_DIRrequirements.txt"
+
   echo "Running tests for $ORCH_NAME..."
   ORCH_NAME="$ORCH_NAME" pytest
 
