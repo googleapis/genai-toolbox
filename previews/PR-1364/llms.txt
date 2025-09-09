@@ -72,6 +72,7 @@ List of reference documentation for resources in Toolbox.
   - [TiDB](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
+  - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/bigquery/): Tools that work with BigQuery Sources.
@@ -97,6 +98,7 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/valkey/): Tools that work with Valkey Sources.
+  - [yugabytedb-sql](https://googleapis.github.io/genai-toolbox/previews/PR-1364/resources/tools/yugabytedb-sql/): A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
 
 ### Samples
 
