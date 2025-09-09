@@ -107,7 +107,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 				parts := strings.Split(ds, ".")
 				project := parts[0]
 				dataset := parts[1]
-				projectIDs[project] = true
 				datasetIDsByProject[project] = append(datasetIDsByProject[project], fmt.Sprintf("`%s`", dataset))
 			}
 
