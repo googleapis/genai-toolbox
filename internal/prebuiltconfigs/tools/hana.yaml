@@ -1,0 +1,47 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+    hana-source:
+        kind: hana
+        host: ${HANA_HOST}
+        port: ${HANA_PORT}
+        database: ${HANA_DATABASE}
+        user: ${HANA_USER}
+        password: ${HANA_PASSWORD}
+
+tools:
+    execute_sql:
+        kind: hana-execute-sql
+        source: hana-source
+        description: Use this tool to execute arbitrary SQL against SAP HANA / Datasphere.
+
+    list_tables:
+        kind: hana-sql
+        source: hana-source
+        description: "Lists tables for a given schema in SAP HANA / Datasphere."
+        statement: |
+            SELECT TABLE_NAME
+              FROM TABLES
+             WHERE SCHEMA_NAME = {{.schema}}
+        parameters:
+            - name: schema
+              type: string
+              description: "Target schema name"
+              required: true
+
+toolsets:
+    hana-database-tools:
+        - execute_sql
+        - list_tables 
