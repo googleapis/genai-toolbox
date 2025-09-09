@@ -3,15 +3,6 @@
 set -e
 set -u
 
-# --- Configuration ---
-: "${GCP_PROJECT:?Error: GCP_PROJECT environment variable not set.}"
-: "${DATABASE_NAME:?Error: DATABASE_NAME environment variable not set.}"
-: "${DB_USER:?Error: DB_USER environment variable not set.}"
-: "${GOOGLE_API_KEY:?Error: GOOGLE_API_KEY environment variable not set.}"
-: "${PGHOST:?Error: PGHOST environment variable not set.}"
-: "${PGPORT:?Error: PGPORT environment variable not set.}"
-: "${PGPASSWORD:?Error: PGPASSWORD environment variable not set.}"
-
 TABLE_NAME="hotels"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
