@@ -67,6 +67,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreupdatedocument"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
@@ -116,6 +117,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"
 
 	"github.com/spf13/cobra"
 
@@ -145,6 +147,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/trino"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/yugabytedb"
 )
 
 var (
