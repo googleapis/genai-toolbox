@@ -71,7 +71,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	s, ok := rawS.(*httpsrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("Invalid source for %q tool: source kind must be `http`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
 	}
 
 	allParameters := tools.Parameters{
