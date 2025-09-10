@@ -2,12 +2,12 @@ module github.com/googleapis/genai-toolbox
 
 go 1.24.0
 
-toolchain go1.25.0
+toolchain go1.25.1
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
-	cloud.google.com/go/bigquery v1.69.0
-	cloud.google.com/go/bigtable v1.38.0
+	cloud.google.com/go/bigquery v1.70.0
+	cloud.google.com/go/bigtable v1.39.0
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.26.0
 	cloud.google.com/go/firestore v1.18.0
@@ -28,17 +28,18 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.5
+	github.com/jackc/pgx/v5 v5.7.6
 	github.com/json-iterator/go v1.1.12
 	github.com/looker-open-source/sdk-codegen/go v0.25.10
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.2
-	github.com/redis/go-redis/v9 v9.12.1
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.3
+	github.com/redis/go-redis/v9 v9.13.0
 	github.com/spf13/cobra v1.9.1
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.328.0
 	github.com/valkey-io/valkey-go v1.0.64
+	github.com/yugabyte/pgx/v5 v5.5.3-yb-5
 	go.mongodb.org/mongo-driver v1.17.4
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
 	go.opentelemetry.io/otel v1.37.0
@@ -48,7 +49,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.37.0
 	go.opentelemetry.io/otel/sdk/metric v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	google.golang.org/api v0.248.0
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1
 	modernc.org/sqlite v1.38.2
@@ -70,7 +71,7 @@ require (
 
 require (
 	cel.dev/expr v0.24.0 // indirect
-	cloud.google.com/go v0.121.4 // indirect
+	cloud.google.com/go v0.121.6 // indirect
 	cloud.google.com/go/alloydb v1.18.0 // indirect
 	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect

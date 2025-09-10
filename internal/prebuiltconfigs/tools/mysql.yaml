@@ -20,6 +20,11 @@ sources:
     database: ${MYSQL_DATABASE}
     user: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
+    # Optional: supply additional DSN parameters (e.g. TLS, charset) via env var.
+    # Provide a YAML-encoded map in MYSQL_QUERY_PARAMS, for example:
+    #   export MYSQL_QUERY_PARAMS="{tls: preferred, charset: utf8mb4}"
+    # When the variable is empty/undefined, queryParams will be treated as nil.
+    queryParams: ${MYSQL_QUERY_PARAMS:}
     queryTimeout: 30s # Optional
 tools:
   execute_sql:

@@ -21,7 +21,6 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
@@ -35,7 +34,7 @@ const SourceKind string = "bigquery"
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 func init() {
 	if !sources.Register(SourceKind, newConfig) {
@@ -53,10 +52,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Project  string `yaml:"project" validate:"required"`
-	Location string `yaml:"location"`
+	Name           string `yaml:"name" validate:"required"`
+	Kind           string `yaml:"kind" validate:"required"`
+	Project        string `yaml:"project" validate:"required"`
+	Location       string `yaml:"location"`
+	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -65,20 +65,36 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	// Initializes a BigQuery Google SQL source
-	client, restService, tokenSource, clientCreator, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
-	if err != nil {
-		return nil, err
+	var client *bigqueryapi.Client
+	var restService *bigqueryrestapi.Service
+	var tokenSource oauth2.TokenSource
+	var clientCreator BigqueryClientCreator
+	var err error
+
+	if r.UseClientOAuth {
+		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		if err != nil {
+			return nil, fmt.Errorf("error constructing client creator: %w", err)
+		}
+	} else {
+		// Initializes a BigQuery Google SQL source
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from ADC: %w", err)
+		}
 	}
 
 	s := &Source{
 		Name:               r.Name,
 		Kind:               SourceKind,
+		Project:            r.Project,
+		Location:           r.Location,
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
 		MaxQueryResultRows: 50,
 		ClientCreator:      clientCreator,
+		UseClientOAuth:     r.UseClientOAuth,
 	}
 	return s, nil
 
@@ -90,11 +106,14 @@ type Source struct {
 	// BigQuery Google SQL struct with client
 	Name               string `yaml:"name"`
 	Kind               string `yaml:"kind"`
+	Project            string
+	Location           string
 	Client             *bigqueryapi.Client
 	RestService        *bigqueryrestapi.Service
 	TokenSource        oauth2.TokenSource
 	MaxQueryResultRows int
 	ClientCreator      BigqueryClientCreator
+	UseClientOAuth     bool
 }
 
 func (s *Source) SourceKind() string {
@@ -108,6 +127,18 @@ func (s *Source) BigQueryClient() *bigqueryapi.Client {
 
 func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
+}
+
+func (s *Source) UseClientAuthorization() bool {
+	return s.UseClientOAuth
+}
+
+func (s *Source) BigQueryProject() string {
+	return s.Project
+}
+
+func (s *Source) BigQueryLocation() string {
+	return s.Location
 }
 
 func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
@@ -128,46 +159,50 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
-) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, BigqueryClientCreator, error) {
+) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Initialize the high-level BigQuery client
 	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
 	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
 	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}
 
-	clientCreator := newBigQueryClientCreator(ctx, project, location, userAgent)
-	return client, restService, cred.TokenSource, clientCreator, nil
+	return client, restService, cred.TokenSource, nil
 }
 
 // initBigQueryConnectionWithOAuthToken initialize a BigQuery client with an
 // OAuth access token.
 func initBigQueryConnectionWithOAuthToken(
 	ctx context.Context,
+	tracer trace.Tracer,
 	project string,
 	location string,
+	name string,
 	userAgent string,
-	tokenString tools.AccessToken,
+	tokenString string,
+	wantRestService bool,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	defer span.End()
 	// Construct token source
 	token := &oauth2.Token{
 		AccessToken: string(tokenString),
@@ -181,13 +216,16 @@ func initBigQueryConnectionWithOAuthToken(
 	}
 	client.Location = location
 
-	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+	if wantRestService {
+		// Initialize the low-level BigQuery REST service using the same credentials
+		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+		}
+		return client, restService, nil
 	}
 
-	return client, restService, nil
+	return client, nil, nil
 }
 
 // newBigQueryClientCreator sets the project parameters for the init helper
@@ -195,11 +233,17 @@ func initBigQueryConnectionWithOAuthToken(
 // create a BQ client.
 func newBigQueryClientCreator(
 	ctx context.Context,
+	tracer trace.Tracer,
 	project string,
 	location string,
-	userAgent string,
-) func(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	return func(tokenString tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, project, location, userAgent, tokenString)
+	name string,
+) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
 	}
+
+	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
+	}, nil
 }
