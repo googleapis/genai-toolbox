@@ -42,29 +42,23 @@ func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 				"my-alloydb-admin-instance": alloydbadmin.Config{
 					Name:                   "my-alloydb-admin-instance",
 					Kind:                   alloydbadmin.SourceKind,
-					Timeout:                "30s",
-					DisableSslVerification: false,
+					UseClientOAuth: false,
 				},
 			},
 		},
 		{
-			desc: "advanced example",
+			desc: "use client auth example",
 			in: `
 			sources:
 				my-alloydb-admin-instance:
 					kind: alloydb-admin
-					timeout: 10s
-					headers:
-						Custom-Header: custom
-					disableSslVerification: true
+					useClientOAuth: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-alloydb-admin-instance": alloydbadmin.Config{
 					Name:                   "my-alloydb-admin-instance",
 					Kind:                   alloydbadmin.SourceKind,
-					Timeout:                "10s",
-					DefaultHeaders:         map[string]string{"Custom-Header": "custom"},
-					DisableSslVerification: true,
+					UseClientOAuth: true,
 				},
 			},
 		},
@@ -98,19 +92,16 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				my-alloydb-admin-instance:
 					kind: alloydb-admin
-					timeout: 10s
-					headers:
-						Custom-Header: custom
 					project: test-project
 			`,
-			err: "unable to parse source \"my-alloydb-admin-instance\" as \"alloydb-admin\": [4:1] unknown field \"project\"\n   1 | headers:\n   2 |   Custom-Header: custom\n   3 | kind: alloydb-admin\n>  4 | project: test-project\n       ^\n   5 | timeout: 10s",
+			err: "unable to parse source \"my-alloydb-admin-instance\" as \"alloydb-admin\": [2:1] unknown field \"project\"\n   1 | kind: alloydb-admin\n>  2 | project: test-project\n       ^\n",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-alloydb-admin-instance:
-					timeout: 10s
+					useClientOAuth: true
 			`,
 			err: "missing 'kind' field for source \"my-alloydb-admin-instance\"",
 		},

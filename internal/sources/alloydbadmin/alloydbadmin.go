@@ -15,15 +15,16 @@ package alloydbadmin
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	alloydbrestapi "google.golang.org/api/alloydb/v1"
 )
 
 const SourceKind string = "alloydb-admin"
@@ -38,7 +39,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, Timeout: "30s"} // Default timeout
+	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -48,9 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name                   string            `yaml:"name" validate:"required"`
 	Kind                   string            `yaml:"kind" validate:"required"`
-	Timeout                string            `yaml:"timeout"`
-	DefaultHeaders         map[string]string `yaml:"headers"`
-	DisableSslVerification bool              `yaml:"disableSslVerification"`
+	UseClientOAuth         bool              `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -58,62 +57,61 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	duration, err := time.ParseDuration(r.Timeout)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse Timeout string as time.Duration: %s", err)
-	}
-
-	tr := &http.Transport{}
-
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
-	}
-
-	if r.DisableSslVerification {
-		tr.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-
-		logger.WarnContext(ctx, "Insecure HTTP is enabled for HTTP source %s. TLS certificate verification is skipped.\n", r.Name)
-	}
-
-	client := http.Client{
-		Timeout:   duration,
-		Transport: tr,
-	}
-
 	ua, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		fmt.Printf("Error in User Agent retrieval: %s", err)
 	}
-	if r.DefaultHeaders == nil {
-		r.DefaultHeaders = make(map[string]string)
+
+	var client *http.Client
+	if r.UseClientOAuth {
+		client = nil
+	} else {
+		// Use Application Default Credentials
+		creds, err := google.FindDefaultCredentials(ctx, alloydbrestapi.CloudPlatformScope)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find default credentials: %w", err)
+		}
+		client = oauth2.NewClient(ctx, creds.TokenSource)
 	}
-	if existingUA, ok := r.DefaultHeaders["User-Agent"]; ok {
-		ua = ua + " " + existingUA
-	}
-	r.DefaultHeaders["User-Agent"] = ua
 
 	s := &Source{
 		Name:           r.Name,
 		Kind:           SourceKind,
-		DefaultHeaders: r.DefaultHeaders,
-		Client:         &client,
+		BaseURL:        "https://alloydb.googleapis.com",
+		Client:         client,
+		UserAgent:      ua,
+		UseClientOAuth: r.UseClientOAuth,
 	}
-	return s, nil
 
+	return s, nil
 }
 
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name           string            `yaml:"name"`
-	Kind           string            `yaml:"kind"`
-	DefaultHeaders map[string]string `yaml:"headers"`
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	BaseURL        string
 	Client         *http.Client
+	UserAgent      string
+	UseClientOAuth bool
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
+	if s.UseClientOAuth {
+		if accessToken == "" {
+			return nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
+		}
+		token := &oauth2.Token{AccessToken: accessToken}
+		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
+	}
+	return s.Client, nil
+}
+
+func (s *Source) UseClientAuthorization() bool {
+	return s.UseClientOAuth
 }
