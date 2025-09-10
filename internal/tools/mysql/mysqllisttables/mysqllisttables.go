@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlmysqllisttables
+package mysqllisttables
 
 import (
 	"context"
@@ -22,11 +22,12 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+    "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
     "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
-const kind string = "cloud-sql-mysql-list-tables"
+const kind string = "mysql-list-tables"
 
 const listTablesStatement = `
     SELECT
@@ -202,6 +203,9 @@ type compatibleSource interface {
 
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudsqlmysql.Source{}
+var _ compatibleSource = &mysql.Source{}
+
+var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind}
 
 type Config struct {
 	Name               string           `yaml:"name" validate:"required"`
@@ -228,7 +232,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, cloudsqlmysql.SourceKind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
 	allParameters := tools.Parameters{

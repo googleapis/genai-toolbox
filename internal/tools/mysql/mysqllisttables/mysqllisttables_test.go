@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlmysqllisttables_test
+package mysqllisttables_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	cloudsqlmysqllisttables "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqllisttables"
+	mysqllisttables "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
 )
 
-func TestParseFromYamlCloudSQLMySQLListTables(t *testing.T) {
+func TestParseFromYamlMySQLListTables(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,18 +39,18 @@ func TestParseFromYamlCloudSQLMySQLListTables(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: cloud-sql-mysql-list-tables
-					source: my-cloud-sql-mysql-instance
+					kind: mysql-list-tables
+					source: my-mysql-instance
 					description: some description
 					authRequired:
 						- my-google-auth-service
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": cloudsqlmysqllisttables.Config{
+				"example_tool": mysqllisttables.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-sql-mysql-list-tables",
-					Source:       "my-cloud-sql-mysql-instance",
+					Kind:         "mysql-list-tables",
+					Source:       "my-mysql-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
