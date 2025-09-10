@@ -273,6 +273,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -841,6 +842,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	idToken, err := GetGoogleIdToken(ClientId)
 	if err != nil {
