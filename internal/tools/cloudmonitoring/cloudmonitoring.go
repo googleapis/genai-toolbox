@@ -28,7 +28,6 @@ import (
 )
 
 var (
-	googleFindDefaultCredentials = google.FindDefaultCredentials
 	monitoringEndpoint           = "https://monitoring.googleapis.com"
 )
 
@@ -37,12 +36,7 @@ func SetMonitoringEndpoint(endpoint string) {
 	monitoringEndpoint = endpoint
 }
 
-// SetGoogleFindDefaultCredentials sets the function to find default credentials for testing purposes.
-func SetGoogleFindDefaultCredentials(f func(ctx context.Context, scopes ...string) (*google.Credentials, error)) {
-	googleFindDefaultCredentials = f
-}
-
-const kind string = "cloudmonitoring-query-prometheus"
+const kind string = "cloud-monitoring-query-prometheus"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -126,14 +120,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	q.Add("query", query)
 	req.URL.RawQuery = q.Encode()
 
-	creds, err := googleFindDefaultCredentials(ctx, "https://www.googleapis.com/auth/monitoring.read")
-	if err != nil {
-		return nil, fmt.Errorf("failed to find default credentials: %w", err)
-	}
+	// creds, err := googleFindDefaultCredentials(ctx, "https://www.googleapis.com/auth/monitoring.read")
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to find default credentials: %w", err)
+	// }
 
-	token, err := creds.TokenSource.Token()
+	// token, err := creds.TokenSource.Token()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to get token: %w", err)
+	// }
+
+	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/monitoring.read")
 	if err != nil {
-		return nil, fmt.Errorf("failed to get token: %w", err)
+		return nil, fmt.Errorf("error creating token source: %w", err)
+	}
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving token: %w", err)
 	}
 
 	req.Header.Add("Authorization", "Bearer "+token.AccessToken)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudmonitoring_integration_test
+package cloud_monitoring_integration_test
 
 import (
 	"context"
@@ -24,8 +24,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 func TestTool_Invoke(t *testing.T) {
@@ -50,7 +48,7 @@ func TestTool_Invoke(t *testing.T) {
 	// Create a new observability tool
 	tool := &cloudmonitoring.Tool{
 		Name:        "test-cloudmonitoring",
-		Kind:        "cloudmonitoring-query-prometheus",
+		Kind:        "cloud-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
 		AllParams:      tools.Parameters{},
 		Client:     &http.Client{},
@@ -58,14 +56,6 @@ func TestTool_Invoke(t *testing.T) {
 
 	// Set the monitoring endpoint to the mock server
 	cloudmonitoring.SetMonitoringEndpoint(server.URL)
-
-	// Mock the google.FindDefaultCredentials function
-	cloudmonitoring.SetGoogleFindDefaultCredentials(func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
-		return &google.Credentials{
-			TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test-token"}),
-		},
-		nil
-	})
 
 	// Define the test parameters
 	params := tools.ParamValues{
@@ -104,7 +94,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	// Create a new observability tool
 	tool := &cloudmonitoring.Tool{
 		Name:        "test-cloudmonitoring",
-		Kind:        "cloudmonitoring-query-prometheus",
+		Kind:        "clou-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
 		AllParams:      tools.Parameters{},
 		Client:     &http.Client{},
@@ -112,14 +102,6 @@ func TestTool_Invoke_Error(t *testing.T) {
 
 	// Set the monitoring endpoint to the mock server
 	cloudmonitoring.SetMonitoringEndpoint(server.URL)
-
-	// Mock the google.FindDefaultCredentials function
-	cloudmonitoring.SetGoogleFindDefaultCredentials(func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
-		return &google.Credentials{
-			TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test-token"}),
-		},
-		nil
-	})
 
 	// Define the test parameters
 	params := tools.ParamValues{

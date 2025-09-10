@@ -22,8 +22,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 func TestTool_Invoke(t *testing.T) {
@@ -42,16 +40,9 @@ func TestTool_Invoke(t *testing.T) {
 	}))
 	defer server.Close()
 
-	creds := &google.Credentials{
-		ProjectID: "test-project",
-		TokenSource: oauth2.StaticTokenSource(&oauth2.Token{
-			AccessToken: "test-token",
-		}),
-	}
-
 	tool := Tool{
-		Name:        "cloudmonitoring-query-prometheus",
-		Kind:        "cloudmonitoring-query-prometheus",
+		Name:        "cloud-monitoring-query-prometheus",
+		Kind:        "cloud-monitoring-query-prometheus",
 		Description: "a test tool",
 		Client:     &http.Client{},
 		AllParams:      tools.Parameters{},
@@ -63,14 +54,6 @@ func TestTool_Invoke(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	// This is a bit of a hack to inject our mock credentials.
-	// The alternative is to refactor the code to allow for dependency injection.
-	googleFindDefaultCredentials = func(ctx context.Context, scopes ...string) (*google.Credentials, error) {
-		return creds, nil
-	}
-	defer func() {
-		googleFindDefaultCredentials = google.FindDefaultCredentials
-	}()
 
 	// Another hack to inject the mock server url.
 	monitoringEndpoint = server.URL

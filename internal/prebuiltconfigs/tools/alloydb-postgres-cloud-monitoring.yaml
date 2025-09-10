@@ -13,8 +13,8 @@
 # limitations under the License.
 
 tools:
-  alloydb-postgresql-system-metrics:
-    kind: cloudmonitoring-query-prometheus
+  alloydb-system-metrics:
+    kind: cloud-monitoring-query-prometheus
     description: |
       Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
       To use this tool, you must provide the Google Cloud `projectID` and a PromQL `query`.
@@ -70,8 +70,8 @@ tools:
       33. `alloydb.googleapis.com/instance/postgresql/wait_time`: Total elapsed wait time for each wait event in the instance. `alloydb.googleapis.com/Instance`. `cluster_id`, `instance_id`, `wait_event_type`, `wait_event_name`.
       34. `alloydb.googleapis.com/instance/postgres/transaction_count`: The number of committed and rolled back transactions across all serving nodes of the instance. `alloydb.googleapis.com/Instance`. `cluster_id`, `instance_id`.
 
-  alloydb-postgresql-query-metrics:
-    kind: cloudmonitoring-query-prometheus
+  alloydb-query-metrics:
+    kind: cloud-monitoring-query-prometheus
     description: |
       Fetches query level cloudmonitoring data (timeseries metrics) for queries running in an AlloyDB instance.
       To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
@@ -112,6 +112,6 @@ tools:
       18. `alloydb.googleapis.com/database/postgresql/insights/pertag/row_count`: The number of retrieved or affected rows since the last sample per tag. `alloydb.googleapis.com/Database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`.
 
 toolsets:
-  alloydb-postgres-cloudmonitoring-tools:
-    - alloydb-postgresql-system-metrics
-    - alloydb-postgresql-query-metrics
+  alloydb-postgres-cloud-monitoring-tools:
+    - alloydb-system-metrics
+    - alloydb-query-metrics
