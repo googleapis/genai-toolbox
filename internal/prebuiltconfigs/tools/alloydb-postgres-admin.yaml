@@ -22,6 +22,7 @@ sources:
 tools:
   alloydb-create-cluster:
     kind: alloydb-create-cluster
+    source: alloydb-api-source
     description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
   alloydb-operations-get:
     kind: alloydb-wait-for-operation

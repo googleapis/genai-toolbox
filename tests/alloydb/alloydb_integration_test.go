@@ -182,9 +182,16 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 
 func getAlloyDBCreateToolsConfig(baseURL string) map[string]any {
 	return map[string]any{
+		"sources": map[string]any{
+			"alloydb-admin-source": map[string]any{
+				"kind":    "http",
+				"baseUrl": baseURL,
+			},
+		},
 		"tools": map[string]any{
 			"alloydb-create-cluster": map[string]any{
 				"kind":        AlloyDBCreateClusterToolKind,
+				"source": "alloydb-admin-source",
 				"description": "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go.",
 				"baseURL":     baseURL,
 			},
