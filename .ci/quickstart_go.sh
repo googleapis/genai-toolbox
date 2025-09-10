@@ -13,7 +13,12 @@ if [ ! -d "$QUICKSTART_GO_DIR" ]; then
   exit 1
 fi
 
-# To enable OpenAI sample testing in the future, uncomment the second line and remove the first.
+# The "openAI" framework is temporarily excluded from the test run because a
+# valid API key is not yet available.
+#
+# To re-enable testing for this framework once an API key is configured,
+# comment out the first line and uncomment the second line below.
+
 frameworks=("genAI" "genkit" "langchain")
 # frameworks=("genAI" "genkit" "langchain" "openAI")
 
