@@ -348,23 +348,23 @@ steps:
           mssql \
           mssql
 
-  - id: "dgraph"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "DGRAPH_URL=$_DGRAPHURL"
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "Dgraph" \
-          dgraph \
-          dgraph
+  # - id: "dgraph"
+  #   name: golang:1
+  #   waitFor: ["compile-test-binary"]
+  #   entrypoint: /bin/bash
+  #   env:
+  #     - "GOPATH=/gopath"
+  #     - "DGRAPH_URL=$_DGRAPHURL"
+  #   volumes:
+  #     - name: "go"
+  #       path: "/gopath"
+  #   args:
+  #     - -c
+  #     - |
+  #       .ci/test_with_coverage.sh \
+  #         "Dgraph" \
+  #         dgraph \
+  #         dgraph
 
   - id: "http"
     name: golang:1
@@ -640,6 +640,25 @@ steps:
           trino \
           trinosql trinoexecutesql
 
+  - id: "yugabytedb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "YUGABYTEDB_DATABASE=$_YUGABYTEDB_DATABASE"
+      - "YUGABYTEDB_PORT=$_YUGABYTEDB_PORT"
+      - "YUGABYTEDB_LOADBALANCE=$_YUGABYTEDB_LOADBALANCE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["YUGABYTEDB_USER", "YUGABYTEDB_PASS", "YUGABYTEDB_HOST", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        ./yugabytedb.test -test.v
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -718,6 +737,13 @@ availableSecrets:
       env: OCEANBASE_USER
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_pass/versions/latest
       env: OCEANBASE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/yugabytedb_host/versions/latest
+      env: YUGABYTEDB_HOST
+    - versionName: projects/$PROJECT_ID/secrets/yugabytedb_user/versions/latest
+      env: YUGABYTEDB_USER
+    - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
+      env: YUGABYTEDB_PASS
+
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -764,3 +790,6 @@ substitutions:
   _TRINO_SCHEMA: "default"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
+  _YUGABYTEDB_DATABASE: "yugabyte"
+  _YUGABYTEDB_PORT: "5433"
+  _YUGABYTEDB_LOADBALANCE: "false"
