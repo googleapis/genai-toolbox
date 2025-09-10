@@ -130,6 +130,7 @@ tools:
         default: ""
   alloydb-list-clusters:
       kind: alloydb-list-clusters
+      source: alloydb-api-source
       description: "Lists all AlloyDB clusters in a given project and location."
   alloydb-list-instances:
     kind: http

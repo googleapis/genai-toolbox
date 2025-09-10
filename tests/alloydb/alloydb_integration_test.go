@@ -60,25 +60,35 @@ func getAlloyDBVars(t *testing.T) map[string]string {
 
 func getAlloyDBToolsConfig() map[string]any {
 	return map[string]any{
+		"sources": map[string]any{
+			"alloydb-admin-source": map[string]any{
+				"kind":    "http",
+				"baseUrl": "https://alloydb.googleapis.com",
+			},
+		},
 		"tools" : map[string]any{
 			// Tool for RunAlloyDBToolGetTest
 			"my-simple-tool": map[string]any{
 				"kind":        "alloydb-list-clusters",
+				"source":      "alloydb-admin-source",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			// Tool for MCP test
 			"my-param-tool": map[string]any{
 				"kind":        "alloydb-list-clusters",
+				"source":      "alloydb-admin-source",
 				"description": "Tool to list clusters",
 			},
 			// Tool for MCP test that fails
 			"my-fail-tool": map[string]any{
 				"kind":        "alloydb-list-clusters",
+				"source":      "alloydb-admin-source",
 				"description": "Tool that will fail",
 			},
 			// AlloyDB specific tools
 			"alloydb-list-clusters": map[string]any{
 				"kind":        "alloydb-list-clusters",
+				"source":      "alloydb-admin-source",
 				"description": "Lists all AlloyDB clusters in a given project and location.",
 			},
 		},

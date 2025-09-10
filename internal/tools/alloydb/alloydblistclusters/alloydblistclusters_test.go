@@ -40,12 +40,14 @@ func TestParseFromYaml(t *testing.T) {
 			tools:
 				list-my-clusters:
 					kind: alloydb-list-clusters
+					source: my-alloydb-admin-source
 					description: some description
 			`,
 			want: server.ToolConfigs{
 				"list-my-clusters": alloydblistclusters.Config{
 					Name:         "list-my-clusters",
 					Kind:         "alloydb-list-clusters",
+					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{},
 				},
@@ -57,6 +59,7 @@ func TestParseFromYaml(t *testing.T) {
 			tools:
 				list-my-clusters-auth:
 					kind: alloydb-list-clusters
+					source: my-alloydb-admin-source
 					description: some description
 					authRequired:
 						- my-google-auth-service
@@ -66,6 +69,7 @@ func TestParseFromYaml(t *testing.T) {
 				"list-my-clusters-auth": alloydblistclusters.Config{
 					Name:         "list-my-clusters-auth",
 					Kind:         "alloydb-list-clusters",
+					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
@@ -77,6 +81,7 @@ func TestParseFromYaml(t *testing.T) {
 			tools:
 				list-my-clusters-baseurl:
 					kind: alloydb-list-clusters
+					source: my-alloydb-admin-source
 					description: some description
 					baseURL: "https://example.com"
 			`,
@@ -84,6 +89,7 @@ func TestParseFromYaml(t *testing.T) {
 				"list-my-clusters-baseurl": alloydblistclusters.Config{
 					Name:         "list-my-clusters-baseurl",
 					Kind:         "alloydb-list-clusters",
+					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					BaseURL:      "https://example.com",
 					AuthRequired: []string{},
@@ -96,6 +102,7 @@ func TestParseFromYaml(t *testing.T) {
 			tools:
 				list-my-clusters-all:
 					kind: alloydb-list-clusters
+					source: my-alloydb-admin-source
 					description: some description
 					authRequired:
 						- my-google-auth-service
@@ -106,6 +113,7 @@ func TestParseFromYaml(t *testing.T) {
 				"list-my-clusters-all": alloydblistclusters.Config{
 					Name:         "list-my-clusters-all",
 					Kind:         "alloydb-list-clusters",
+					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					BaseURL:      "https://example.com",
