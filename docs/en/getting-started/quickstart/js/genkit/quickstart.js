@@ -28,7 +28,7 @@ export async function main() {
   const ai = genkit({
     plugins: [
       googleAI({
-        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+        apiKey: process.env.GEMINI_API_KEY || GOOGLE_API_KEY
       })
     ],
     model: googleAI.model('gemini-2.0-flash'),
