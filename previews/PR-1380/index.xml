@@ -4330,7 +4330,7 @@ time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ld
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>alloydb-create-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1380/resources/tools/alloydb/alloydbcreateuser/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1380/resources/tools/alloydb/alloydbcreateuser/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code> or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster.&lt;/p>
+&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code> or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1380/resources/sources/http/">http&lt;/a> source.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
@@ -4398,7 +4398,7 @@ Before using, ensure the following on your GCP project:&lt;/p>
 &lt;/table>
 &lt;blockquote>
 &lt;p>&lt;strong>Note&lt;/strong>
-This tool does not have a &lt;code>source&lt;/code> and authenticates using the environment&amp;rsquo;s
+This tool authenticates using the environment&amp;rsquo;s
 &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a>.&lt;/p></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1380/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1380/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
