@@ -21,7 +21,6 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
@@ -35,7 +34,7 @@ const SourceKind string = "bigquery"
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 func init() {
 	if !sources.Register(SourceKind, newConfig) {
@@ -199,7 +198,7 @@ func initBigQueryConnectionWithOAuthToken(
 	location string,
 	name string,
 	userAgent string,
-	tokenString tools.AccessToken,
+	tokenString string,
 	wantRestService bool,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
@@ -238,13 +237,13 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
-) (func(tools.AccessToken, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
+) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
 	}, nil
 }
