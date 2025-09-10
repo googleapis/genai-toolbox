@@ -256,47 +256,14 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-list-table-ids&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
-from which to list table IDs. It also optionally accepts a &lt;code>project&lt;/code> parameter to
-define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
-tool defaults to using the project defined in the source configuration.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_list_table_ids&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-list-table-ids&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get table metadata.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;bigquery-list-table-ids&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>bigquery-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/bigquery/bigquery-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/bigquery/bigquery-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>bigquery-list-table-ids&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>dataset&lt;/code>&lt;/strong> (required): Specifies the dataset from which to list table IDs.&lt;/li>
+&lt;li>&lt;strong>&lt;code>project&lt;/code>&lt;/strong> (optional): Defines the Google Cloud project ID. If not provided,
+the tool defaults to the project from the source configuration.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/bigquery/bigquery-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/bigquery/bigquery-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-sql&lt;/code> tool executes a pre-defined SQL statement. It&amp;rsquo;s compatible with
 the following sources:&lt;/p>
 &lt;ul>
@@ -1277,7 +1244,8 @@ all root-level collections in the database.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+&lt;/table></description></item><item><title>firestore-query</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/firestore/firestore-query/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/firestore/firestore-query/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>The &lt;code>firestore-query&lt;/code> tool allows you to query Firestore collections with dynamic, parameterizable filters that support Firestore&amp;rsquo;s native JSON value types. This tool is designed for querying single collection, which is the standard pattern in Firestore. The collection path itself can be parameterized, making it flexible for various use cases. This tool is particularly useful when you need to create reusable query templates with parameters that can be substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
 &lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
@@ -3435,10 +3403,9 @@ PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item
 &lt;li>&lt;code>ALLOYDB_POSTGRES_CLUSTER&lt;/code>: The ID of your AlloyDB cluster.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_INSTANCE&lt;/code>: The ID of your AlloyDB instance.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: The database username. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: The IP type i.e. &amp;ldquo;Public
-or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -3485,6 +3452,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>BIGQUERY_LOCATION&lt;/code>: (Optional) The dataset location.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -3542,8 +3510,9 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -3571,6 +3540,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_ADDRESS&lt;/code>: The IP address of the Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -3614,7 +3584,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>FIRESTORE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: The Firestore database ID.&lt;/li>
+&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: (Optional) The Firestore database ID. Defaults to &amp;ldquo;(default)&amp;rdquo;.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -3752,6 +3722,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
 &lt;li>&lt;code>POSTGRES_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>POSTGRES_QUERY_PARAMS&lt;/code>: (Optional) Raw query to be added to the db connection string.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -3811,6 +3782,29 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface for Spanner.&lt;/li>
 &lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL interface for Spanner.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="neo4j">Neo4j&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>neo4j&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>NEO4J_URI&lt;/code>: The URI of the Neo4j instance (e.g., &lt;code>bolt://localhost:7687&lt;/code>).&lt;/li>
+&lt;li>&lt;code>NEO4J_DATABASE&lt;/code>: The name of the Neo4j database to connect to.&lt;/li>
+&lt;li>&lt;code>NEO4J_USERNAME&lt;/code>: The username for the Neo4j instance.&lt;/li>
+&lt;li>&lt;code>NEO4J_PASSWORD&lt;/code>: The password for the Neo4j instance.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Database-level permissions&lt;/strong> are required to execute Cypher queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_cypher&lt;/code>: Executes a Cypher query.&lt;/li>
+&lt;li>&lt;code>get_schema&lt;/code>: Retrieves the schema of the Neo4j database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul></description></item><item><title>Quickstart (Local with BigQuery)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/samples/bigquery/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/samples/bigquery/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
@@ -4296,16 +4290,150 @@ time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ld
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>AlloyDB Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/alloydb-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/alloydb-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs">AlloyDB for PostgreSQL&lt;/a> is a fully-managed, PostgreSQL-compatible
-database for demanding transactional workloads. It provides enterprise-grade
-performance and availability while maintaining 100% compatibility with
-open-source PostgreSQL.&lt;/p>
-&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides tools to perform tasks like creating and listing clusters, instances and users in your AlloyDB database.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>YugabyteDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/yugabytedb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/yugabytedb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://www.yugabyte.com/">YugabyteDB&lt;/a> is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-yb-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">yugabytedb&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">host&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">127.0.0.1&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">port&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">5433&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">yugabyte&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">loadBalance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">topologyKeys&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud.region.zone1:1,cloud.region.zone2:2&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;yugabytedb&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>host&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>IP address to connect to.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>port&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Port to connect to. The default port is 5433.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>database&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the YugabyteDB database to connect to. The default database name is yugabyte.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>user&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the YugabyteDB user to connect as. The default user is yugabyte.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>password&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Password of the YugabyteDB user. The default password is yugabyte.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>loadBalance&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, enable uniform load balancing. The default loadBalance value is false.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>topologyKeys&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>ybServersRefreshInterval&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>fallbackToTopologyKeysOnly&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>failedHostReconnectDelaySecs&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>yugabytedb-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/yugabytedb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/tools/yugabytedb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>yugabytedb-sql&lt;/code> tool executes a pre-defined SQL statement against a YugabyteDB
+database.&lt;/p>
+&lt;p>The specified SQL statement is executed as a prepared statement,
+and specified parameters will inserted according to their position: e.g. &lt;code>1&lt;/code>
+will be the first parameter specified, &lt;code>$@&lt;/code> will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
-&lt;p>Note: For data plane operations such as connecting to the database and executing queries, please use the &lt;code>alloydb-pg&lt;/code> source.&lt;/p>&lt;/blockquote>
-&lt;p>If you are new to AlloyDB for PostgreSQL, you can &lt;a href="https://cloud.google.com/alloydb/docs/create-free-trial-cluster">create a free trial
-cluster&lt;/a>.&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>AlloyDB Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/alloydb-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/resources/sources/alloydb-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/alloydb/docs/reference/rest">Google AlloyDB API&lt;/a>. This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.&lt;/p>
+&lt;p>Authentication can be handled in two ways:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-alloydb-admin&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloy-admin&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-oauth-alloydb-admin&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">useClientOAuth&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;alloydb-admin&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>useClientOAuth&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code>false&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
@@ -4501,7 +4629,25 @@ listening at a different port, and you will need to use
 &lt;h2 id="install-mcp-toolbox">Install MCP Toolbox&lt;/h2>
 &lt;ol>
 &lt;li>
-&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:&lt;/p></description></item><item><title>PostgreSQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/postgres_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/postgres_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:&lt;/p></description></item><item><title>Neo4j using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your developer assistant tools to a Neo4j instance:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Visual Studio Code&lt;/a> (Copilot)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="set-up-the-database">Set up the database&lt;/h2>
+&lt;ol>
+&lt;li>&lt;a href="https://neo4j.com/cloud/platform/aura-graph-database/">Create or select a Neo4j instance.&lt;/a>&lt;/li>
+&lt;/ol>
+&lt;h2 id="install-mcp-toolbox">Install MCP Toolbox&lt;/h2>
+&lt;ol>
+&lt;li>
+&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:&lt;/p></description></item><item><title>PostgreSQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/postgres_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1369/how-to/connect-ide/postgres_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
 to expose your developer assistant tools to a Postgres instance:&lt;/p>
