@@ -1245,6 +1245,7 @@ func TestPrebuiltTools(t *testing.T) {
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
+	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1320,6 +1321,11 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
 
 	t.Setenv("SQLITE_DATABASE", "test.db")
+
+	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
+	t.Setenv("NEO4J_DATABASE", "neo4j")
+	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
+	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1487,6 +1493,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"sqlite-database-tools": tools.ToolsetConfig{
 					Name:      "sqlite-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "neo4j prebuilt tools",
+			in:   neo4jconfig,
+			wantToolset: server.ToolsetConfigs{
+				"neo4j-database-tools": tools.ToolsetConfig{
+					Name:      "neo4j-database-tools",
+					ToolNames: []string{"execute_cypher", "get_schema"},
 				},
 			},
 		},

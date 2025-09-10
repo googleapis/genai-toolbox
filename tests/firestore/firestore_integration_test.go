@@ -131,6 +131,8 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	// Run specific Firestore tool tests
 	runFirestoreGetDocumentsTest(t, docPath1, docPath2)
 	runFirestoreQueryCollectionTest(t, testCollectionName)
+	runFirestoreQueryTest(t, testCollectionName)
+	runFirestoreQuerySelectArrayTest(t, testCollectionName)
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
 	runFirestoreAddDocumentsTest(t, testCollectionName)
 	runFirestoreUpdateDocumentTest(t, testCollectionName, testDocID1)
@@ -561,6 +563,63 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"kind":        "firestore-query-collection",
 			"source":      "my-instance",
 			"description": "Query a Firestore collection",
+		},
+		"firestore-query-param": map[string]any{
+			"kind":           "firestore-query",
+			"source":         "my-instance",
+			"description":    "Query a Firestore collection with parameterizable filters",
+			"collectionPath": "{{.collection}}",
+			"filters": `{
+					"field": "age", "op": "{{.operator}}", "value": {"integerValue": "{{.ageValue}}"}
+			}`,
+			"limit": 10,
+			"parameters": []map[string]any{
+				{
+					"name":        "collection",
+					"type":        "string",
+					"description": "Collection to query",
+					"required":    true,
+				},
+				{
+					"name":        "operator",
+					"type":        "string",
+					"description": "Comparison operator",
+					"required":    true,
+				},
+				{
+					"name":        "ageValue",
+					"type":        "string",
+					"description": "Age value to compare",
+					"required":    true,
+				},
+			},
+		},
+		"firestore-query-select-array": map[string]any{
+			"kind":           "firestore-query",
+			"source":         "my-instance",
+			"description":    "Query with array-based select fields",
+			"collectionPath": "{{.collection}}",
+			"select":         []string{"{{.fields}}"},
+			"limit":          10,
+			"parameters": []map[string]any{
+				{
+					"name":        "collection",
+					"type":        "string",
+					"description": "Collection to query",
+					"required":    true,
+				},
+				{
+					"name":        "fields",
+					"type":        "array",
+					"description": "Fields to select",
+					"required":    true,
+					"items": map[string]any{
+						"name":        "field",
+						"type":        "string",
+						"description": "field",
+					},
+				},
+			},
 		},
 		"firestore-get-rules": map[string]any{
 			"kind":        "firestore-get-rules",
@@ -1356,6 +1415,246 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 	}
 }
 
+func runFirestoreQueryTest(t *testing.T, collectionName string) {
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		wantRegex   string
+		isErr       bool
+	}{
+		{
+			name: "query with parameterized filters - age greater than",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"operator": ">",
+				"ageValue": "25"
+			}`, collectionName))),
+			wantRegex: `"name":"Alice"`,
+			isErr:     false,
+		},
+		{
+			name: "query with parameterized filters - exact name match",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"operator": "==",
+				"ageValue": "25"
+			}`, collectionName))),
+			wantRegex: `"name":"Bob"`,
+			isErr:     false,
+		},
+		{
+			name: "query with parameterized filters - age less than or equal",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"operator": "<=",
+				"ageValue": "29"
+			}`, collectionName))),
+			wantRegex: `"name":"Bob"`,
+			isErr:     false,
+		},
+		{
+			name:        "missing required parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"collection": "test", "operator": ">"}`)),
+			isErr:       true,
+		},
+		{
+			name: "query non-existent collection with parameters",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{
+				"collection": "non-existent-collection",
+				"operator": "==",
+				"ageValue": "30"
+			}`)),
+			wantRegex: `^\[\]$`, // Empty array
+			isErr:     false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if tc.wantRegex != "" {
+				matched, err := regexp.MatchString(tc.wantRegex, got)
+				if err != nil {
+					t.Fatalf("invalid regex pattern: %v", err)
+				}
+				if !matched {
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+				}
+			}
+		})
+	}
+}
+
+func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantRegex      string
+		validateFields bool
+		isErr          bool
+	}{
+		{
+			name: "query with array select fields - single field",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"fields": ["name"]
+			}`, collectionName))),
+			wantRegex:      `"name":"`,
+			validateFields: true,
+			isErr:          false,
+		},
+		{
+			name: "query with array select fields - multiple fields",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"fields": ["name", "age"]
+			}`, collectionName))),
+			wantRegex:      `"name":".*"age":`,
+			validateFields: true,
+			isErr:          false,
+		},
+		{
+			name: "query with empty array select fields",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
+				"collection": "%s",
+				"fields": []
+			}`, collectionName))),
+			wantRegex: `\[.*\]`, // Should return documents with all fields
+			isErr:     false,
+		},
+		{
+			name:        "missing fields parameter",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collection": "%s"}`, collectionName))),
+			isErr:       true,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if tc.wantRegex != "" {
+				matched, err := regexp.MatchString(tc.wantRegex, got)
+				if err != nil {
+					t.Fatalf("invalid regex pattern: %v", err)
+				}
+				if !matched {
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
+				}
+			}
+
+			// Additional validation for field selection
+			if tc.validateFields {
+				// Parse the result to check if only selected fields are present
+				var results []map[string]interface{}
+				err = json.Unmarshal([]byte(got), &results)
+				if err != nil {
+					t.Fatalf("error parsing result as JSON array: %v", err)
+				}
+
+				// For single field test, ensure only 'name' field is present in data
+				if tc.name == "query with array select fields - single field" && len(results) > 0 {
+					for _, result := range results {
+						if data, ok := result["data"].(map[string]interface{}); ok {
+							if _, hasName := data["name"]; !hasName {
+								t.Fatalf("expected 'name' field in data, but not found")
+							}
+							// The 'age' field should not be present when only 'name' is selected
+							if _, hasAge := data["age"]; hasAge {
+								t.Fatalf("unexpected 'age' field in data when only 'name' was selected")
+							}
+						}
+					}
+				}
+
+				// For multiple fields test, ensure both fields are present
+				if tc.name == "query with array select fields - multiple fields" && len(results) > 0 {
+					for _, result := range results {
+						if data, ok := result["data"].(map[string]interface{}); ok {
+							if _, hasName := data["name"]; !hasName {
+								t.Fatalf("expected 'name' field in data, but not found")
+							}
+							if _, hasAge := data["age"]; !hasAge {
+								t.Fatalf("expected 'age' field in data, but not found")
+							}
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
 func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
 		name        string
@@ -1385,7 +1684,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				"orderBy": "{\"field\": \"age\", \"direction\": \"DESCENDING\"}",
 				"limit": 2
 			}`, collectionName))),
-			wantRegex: `"age":35.*"age":30`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
+			wantRegex: `"age":35.*"age":30`, // Should be ordered by age descending (Charlie=35, Alice=30)
 			isErr:     false,
 		},
 		{

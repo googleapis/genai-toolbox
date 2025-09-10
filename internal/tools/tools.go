@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -65,6 +66,14 @@ type ToolConfig interface {
 }
 
 type AccessToken string
+
+func (token AccessToken) ParseBearerToken() (string, error) {
+	headerParts := strings.Split(string(token), " ")
+	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
+		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>': %w", ErrUnauthorized)
+	}
+	return headerParts[1], nil
+}
 
 type Tool interface {
 	Invoke(context.Context, ParamValues, AccessToken) (any, error)
