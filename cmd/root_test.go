@@ -206,6 +206,72 @@ func TestServerConfigFlags(t *testing.T) {
 	}
 }
 
+func TestParseEnv(t *testing.T) {
+	tcs := []struct {
+		desc      string
+		env       map[string]string
+		in        string
+		want      string
+		err       bool
+		errString string
+	}{
+		{
+			desc:      "without default without env",
+			in:        "${FOO}",
+			want:      "",
+			err:       true,
+			errString: `environment variable not found: "FOO"`,
+		},
+		{
+			desc: "without default with env",
+			env: map[string]string{
+				"FOO": "bar",
+			},
+			in:   "${FOO}",
+			want: "bar",
+		},
+		{
+			desc: "with empty default",
+			in:   "${FOO:}",
+			want: "",
+		},
+		{
+			desc: "with default",
+			in:   "${FOO:bar}",
+			want: "bar",
+		},
+		{
+			desc: "with default with env",
+			env: map[string]string{
+				"FOO": "hello",
+			},
+			in:   "${FOO:bar}",
+			want: "hello",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.env != nil {
+				for k, v := range tc.env {
+					t.Setenv(k, v)
+				}
+			}
+			got, err := parseEnv(tc.in)
+			if tc.err {
+				if err == nil {
+					t.Fatalf("expected error not found")
+				}
+				if tc.errString != err.Error() {
+					t.Fatalf("incorrect error string: got %s, want %s", err, tc.errString)
+				}
+			}
+			if tc.want != got {
+				t.Fatalf("unexpected want: got %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestToolFileFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
@@ -820,13 +886,14 @@ func TestParseToolFileWithAuth(t *testing.T) {
 
 func TestEnvVarReplacement(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
-	os.Setenv("TestHeader", "ACTUAL_HEADER")
-	os.Setenv("API_KEY", "ACTUAL_API_KEY")
-	os.Setenv("clientId", "ACTUAL_CLIENT_ID")
-	os.Setenv("clientId2", "ACTUAL_CLIENT_ID_2")
-	os.Setenv("toolset_name", "ACTUAL_TOOLSET_NAME")
-	os.Setenv("cat_string", "cat")
-	os.Setenv("food_string", "food")
+	t.Setenv("TestHeader", "ACTUAL_HEADER")
+	t.Setenv("API_KEY", "ACTUAL_API_KEY")
+	t.Setenv("clientId", "ACTUAL_CLIENT_ID")
+	t.Setenv("clientId2", "ACTUAL_CLIENT_ID_2")
+	t.Setenv("toolset_name", "ACTUAL_TOOLSET_NAME")
+	t.Setenv("cat_string", "cat")
+	t.Setenv("food_string", "food")
+	t.Setenv("TestHeader", "ACTUAL_HEADER")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1161,9 +1228,11 @@ func TestSingleEdit(t *testing.T) {
 }
 
 func TestPrebuiltTools(t *testing.T) {
+	// Get prebuilt configs
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
+	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
@@ -1175,6 +1244,86 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+
+	// Set environment variables
+	t.Setenv("API_KEY", "your_api_key")
+
+	t.Setenv("BIGQUERY_PROJECT", "your_gcp_project_id")
+	t.Setenv("DATAPLEX_PROJECT", "your_gcp_project_id")
+	t.Setenv("FIRESTORE_PROJECT", "your_gcp_project_id")
+	t.Setenv("FIRESTORE_DATABASE", "your_firestore_db_name")
+
+	t.Setenv("SPANNER_PROJECT", "your_gcp_project_id")
+	t.Setenv("SPANNER_INSTANCE", "your_spanner_instance")
+	t.Setenv("SPANNER_DATABASE", "your_spanner_db")
+
+	t.Setenv("ALLOYDB_POSTGRES_PROJECT", "your_gcp_project_id")
+	t.Setenv("ALLOYDB_POSTGRES_REGION", "your_gcp_region")
+	t.Setenv("ALLOYDB_POSTGRES_CLUSTER", "your_alloydb_cluster")
+	t.Setenv("ALLOYDB_POSTGRES_INSTANCE", "your_alloydb_instance")
+	t.Setenv("ALLOYDB_POSTGRES_DATABASE", "your_alloydb_db")
+	t.Setenv("ALLOYDB_POSTGRES_USER", "your_alloydb_user")
+	t.Setenv("ALLOYDB_POSTGRES_PASSWORD", "your_alloydb_password")
+
+	t.Setenv("CLICKHOUSE_PROTOCOL", "your_clickhouse_protocol")
+	t.Setenv("CLICKHOUSE_DATABASE", "your_clickhouse_database")
+	t.Setenv("CLICKHOUSE_PASSWORD", "your_clickhouse_password")
+	t.Setenv("CLICKHOUSE_USER", "your_clickhouse_user")
+	t.Setenv("CLICKHOUSE_HOST", "your_clickhosue_host")
+	t.Setenv("CLICKHOUSE_PORT", "8123")
+
+	t.Setenv("CLOUD_SQL_POSTGRES_PROJECT", "your_pg_project")
+	t.Setenv("CLOUD_SQL_POSTGRES_INSTANCE", "your_pg_instance")
+	t.Setenv("CLOUD_SQL_POSTGRES_DATABASE", "your_pg_db")
+	t.Setenv("CLOUD_SQL_POSTGRES_REGION", "your_pg_region")
+	t.Setenv("CLOUD_SQL_POSTGRES_USER", "your_pg_user")
+	t.Setenv("CLOUD_SQL_POSTGRES_PASS", "your_pg_pass")
+
+	t.Setenv("CLOUD_SQL_MYSQL_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_SQL_MYSQL_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_SQL_MYSQL_INSTANCE", "your_instance")
+	t.Setenv("CLOUD_SQL_MYSQL_DATABASE", "your_cloudsql_mysql_db")
+	t.Setenv("CLOUD_SQL_MYSQL_USER", "your_cloudsql_mysql_user")
+	t.Setenv("CLOUD_SQL_MYSQL_PASSWORD", "your_cloudsql_mysql_password")
+
+	t.Setenv("CLOUD_SQL_MSSQL_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_SQL_MSSQL_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_SQL_MSSQL_INSTANCE", "your_cloudsql_mssql_instance")
+	t.Setenv("CLOUD_SQL_MSSQL_DATABASE", "your_cloudsql_mssql_db")
+	t.Setenv("CLOUD_SQL_MSSQL_IP_ADDRESS", "127.0.0.1")
+	t.Setenv("CLOUD_SQL_MSSQL_USER", "your_cloudsql_mssql_user")
+	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
+	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
+
+	t.Setenv("POSTGRES_HOST", "localhost")
+	t.Setenv("POSTGRES_PORT", "5432")
+	t.Setenv("POSTGRES_DATABASE", "your_postgres_db")
+	t.Setenv("POSTGRES_USER", "your_postgres_user")
+	t.Setenv("POSTGRES_PASSWORD", "your_postgres_password")
+
+	t.Setenv("MYSQL_HOST", "localhost")
+	t.Setenv("MYSQL_PORT", "3306")
+	t.Setenv("MYSQL_DATABASE", "your_mysql_db")
+	t.Setenv("MYSQL_USER", "your_mysql_user")
+	t.Setenv("MYSQL_PASSWORD", "your_mysql_password")
+
+	t.Setenv("MSSQL_HOST", "localhost")
+	t.Setenv("MSSQL_PORT", "1433")
+	t.Setenv("MSSQL_DATABASE", "your_mssql_db")
+	t.Setenv("MSSQL_USER", "your_mssql_user")
+	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
+
+	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
+	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
+	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
+	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
+	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
+	t.Setenv("NEO4J_DATABASE", "neo4j")
+	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
+	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
+
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1190,7 +1339,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb-postgres-admin-tools": tools.ToolsetConfig{
 					Name:      "alloydb-postgres-admin-tools",
-					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance"},
+					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance", "alloydb-list-clusters", "alloydb-list-instances", "alloydb-list-users", "alloydb-create-user"},
 				},
 			},
 		},
@@ -1210,7 +1359,17 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery-database-tools": tools.ToolsetConfig{
 					Name:      "bigquery-database-tools",
-					ToolNames: []string{"execute_sql", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+				},
+			},
+		},
+		{
+			name: "clickhouse prebuilt tools",
+			in:   clickhouse_config,
+			wantToolset: server.ToolsetConfigs{
+				"clickhouse-database-tools": tools.ToolsetConfig{
+					Name:      "clickhouse-database-tools",
+					ToolNames: []string{"execute_sql"},
 				},
 			},
 		},
@@ -1250,7 +1409,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"dataplex-tools": tools.ToolsetConfig{
 					Name:      "dataplex-tools",
-					ToolNames: []string{"dataplex_search_entries", "dataplex_lookup_entry"},
+					ToolNames: []string{"dataplex_search_entries", "dataplex_lookup_entry", "dataplex_search_aspect_types"},
 				},
 			},
 		},
@@ -1260,7 +1419,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"firestore-database-tools": tools.ToolsetConfig{
 					Name:      "firestore-database-tools",
-					ToolNames: []string{"firestore-get-documents", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
+					ToolNames: []string{"firestore-get-documents", "firestore-add-documents", "firestore-update-document", "firestore-list-collections", "firestore-delete-documents", "firestore-query-collection", "firestore-get-rules", "firestore-validate-rules"},
 				},
 			},
 		},
@@ -1321,6 +1480,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-postgres-database-tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "neo4j prebuilt tools",
+			in:   neo4jconfig,
+			wantToolset: server.ToolsetConfigs{
+				"neo4j-database-tools": tools.ToolsetConfig{
+					Name:      "neo4j-database-tools",
+					ToolNames: []string{"execute_cypher", "get_schema"},
 				},
 			},
 		},

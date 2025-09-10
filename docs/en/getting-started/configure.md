@@ -22,6 +22,11 @@ etc., you could use environment variables instead with the format `${ENV_NAME}`.
   user: ${USER_NAME}
   password: ${PASSWORD}
 ```
+A default value can be specified like `${ENV_NAME:default}`.
+
+```yaml
+  port: ${DB_PORT:3306}
+```
 
 ### Sources
 
@@ -45,7 +50,7 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of your `tools.yaml` define your the actions your agent can
+The `tools` section of your `tools.yaml` defines the actions your agent can
 take: what kind of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
@@ -76,7 +81,7 @@ toolsets:
   my_first_toolset:
     - my_first_tool
     - my_second_tool
-   my_second_toolset:
+  my_second_toolset:
     - my_second_tool
     - my_third_tool
 ```

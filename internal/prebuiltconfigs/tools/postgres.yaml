@@ -1,3 +1,16 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 sources:
     postgresql-source:
         kind: postgres
@@ -6,6 +19,7 @@ sources:
         database: ${POSTGRES_DATABASE}
         user: ${POSTGRES_USER}
         password: ${POSTGRES_PASSWORD}
+        queryParams: ${POSTGRES_QUERY_PARAMS:}
 
 tools:
     execute_sql:
@@ -71,26 +85,36 @@ tools:
             SELECT
                 ti.schema_name,
                 ti.table_name AS object_name,
-                json_build_object(
-                    'schema_name', ti.schema_name,
-                    'object_name', ti.table_name,
-                    'object_type', CASE ti.object_kind
-                                     WHEN 'r' THEN 'TABLE'
-                                     WHEN 'p' THEN 'PARTITIONED TABLE'
-                                     ELSE ti.object_kind::text -- Should not happen due to WHERE clause
-                                   END,
-                    'owner', ti.table_owner,
-                    'comment', ti.table_comment,
-                    'columns', COALESCE((SELECT json_agg(json_build_object('column_name',ci.column_name,'data_type',ci.data_type,'ordinal_position',ci.column_ordinal_position,'is_not_nullable',ci.is_not_nullable,'column_default',ci.column_default,'column_comment',ci.column_comment) ORDER BY ci.column_ordinal_position) FROM columns_info ci WHERE ci.table_oid = ti.table_oid), '[]'::json),
-                    'constraints', COALESCE((SELECT json_agg(json_build_object('constraint_name',cons.constraint_name,'constraint_type',cons.constraint_type,'constraint_definition',cons.constraint_definition,'constraint_columns',cons.constraint_columns,'foreign_key_referenced_table',cons.foreign_key_referenced_table,'foreign_key_referenced_columns',cons.foreign_key_referenced_columns)) FROM constraints_info cons WHERE cons.table_oid = ti.table_oid), '[]'::json),
-                    'indexes', COALESCE((SELECT json_agg(json_build_object('index_name',ii.index_name,'index_definition',ii.index_definition,'is_unique',ii.is_unique,'is_primary',ii.is_primary,'index_method',ii.index_method,'index_columns',ii.index_columns)) FROM indexes_info ii WHERE ii.table_oid = ti.table_oid), '[]'::json),
-                    'triggers', COALESCE((SELECT json_agg(json_build_object('trigger_name',tri.trigger_name,'trigger_definition',tri.trigger_definition,'trigger_enabled_state',tri.trigger_enabled_state)) FROM triggers_info tri WHERE tri.table_oid = ti.table_oid), '[]'::json)
-                ) AS object_details
+                CASE
+                  WHEN $2 = 'simple' THEN
+                      -- IF format is 'simple', return basic JSON
+                      json_build_object('name', ti.table_name)
+                  ELSE
+                    json_build_object(
+                        'schema_name', ti.schema_name,
+                        'object_name', ti.table_name,
+                        'object_type', CASE ti.object_kind
+                                        WHEN 'r' THEN 'TABLE'
+                                        WHEN 'p' THEN 'PARTITIONED TABLE'
+                                        ELSE ti.object_kind::text -- Should not happen due to WHERE clause
+                                    END,
+                        'owner', ti.table_owner,
+                        'comment', ti.table_comment,
+                        'columns', COALESCE((SELECT json_agg(json_build_object('column_name',ci.column_name,'data_type',ci.data_type,'ordinal_position',ci.column_ordinal_position,'is_not_nullable',ci.is_not_nullable,'column_default',ci.column_default,'column_comment',ci.column_comment) ORDER BY ci.column_ordinal_position) FROM columns_info ci WHERE ci.table_oid = ti.table_oid), '[]'::json),
+                        'constraints', COALESCE((SELECT json_agg(json_build_object('constraint_name',cons.constraint_name,'constraint_type',cons.constraint_type,'constraint_definition',cons.constraint_definition,'constraint_columns',cons.constraint_columns,'foreign_key_referenced_table',cons.foreign_key_referenced_table,'foreign_key_referenced_columns',cons.foreign_key_referenced_columns)) FROM constraints_info cons WHERE cons.table_oid = ti.table_oid), '[]'::json),
+                        'indexes', COALESCE((SELECT json_agg(json_build_object('index_name',ii.index_name,'index_definition',ii.index_definition,'is_unique',ii.is_unique,'is_primary',ii.is_primary,'index_method',ii.index_method,'index_columns',ii.index_columns)) FROM indexes_info ii WHERE ii.table_oid = ti.table_oid), '[]'::json),
+                        'triggers', COALESCE((SELECT json_agg(json_build_object('trigger_name',tri.trigger_name,'trigger_definition',tri.trigger_definition,'trigger_enabled_state',tri.trigger_enabled_state)) FROM triggers_info tri WHERE tri.table_oid = ti.table_oid), '[]'::json)
+                    )
+                END AS object_details
             FROM table_info ti ORDER BY ti.schema_name, ti.table_name;
         parameters:
             - name: table_names
               type: string
               description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+            - name: output_format
+              type: string
+              description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
+              default: "detailed"
 
 toolsets:
     postgres-database-tools:

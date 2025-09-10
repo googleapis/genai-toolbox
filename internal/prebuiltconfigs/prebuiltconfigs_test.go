@@ -20,24 +20,39 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var expectedToolSources = []string{
+	"alloydb-postgres-admin",
+	"alloydb-postgres",
+	"bigquery",
+	"clickhouse",
+	"cloud-sql-mssql",
+	"cloud-sql-mysql",
+	"cloud-sql-postgres",
+	"dataplex",
+	"firestore",
+	"looker",
+	"mssql",
+	"mysql",
+	"neo4j",
+	"oceanbase",
+	"postgres",
+	"spanner-postgres",
+	"spanner",
+}
+
+func TestGetPrebuiltSources(t *testing.T) {
+	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
+		sources := GetPrebuiltSources()
+		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
+			t.Fatalf("incorrect sources parse: diff %v", diff)
+		}
+
+	})
+}
+
 func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 	test_name := "test load prebuilt configs"
-	expectedKeys := []string{
-		"alloydb-postgres-admin",
-		"alloydb-postgres",
-		"bigquery",
-		"cloud-sql-mssql",
-		"cloud-sql-mysql",
-		"cloud-sql-postgres",
-		"dataplex",
-		"firestore",
-		"looker",
-		"mssql",
-		"mysql",
-		"postgres",
-		"spanner-postgres",
-		"spanner",
-	}
+	expectedKeys := expectedToolSources
 	t.Run(test_name, func(t *testing.T) {
 		configsMap, keys, err := loadPrebuiltToolYAMLs()
 		if err != nil {
@@ -72,6 +87,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
 	alloydb_config, _ := Get("alloydb-postgres")
 	bigquery_config, _ := Get("bigquery")
+	clickhouse_config, _ := Get("clickhouse")
 	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
 	cloudsqlmysql_config, _ := Get("cloud-sql-mysql")
 	cloudsqlmssql_config, _ := Get("cloud-sql-mssql")
@@ -79,9 +95,11 @@ func TestGetPrebuiltTool(t *testing.T) {
 	firestoreconfig, _ := Get("firestore")
 	mysql_config, _ := Get("mysql")
 	mssql_config, _ := Get("mssql")
+	oceanbase_config, _ := Get("oceanbase")
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	neo4jconfig, _ := Get("neo4j")
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
@@ -90,6 +108,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(bigquery_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch bigquery prebuilt tools yaml")
+	}
+	if len(clickhouse_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch clickhouse prebuilt tools yaml")
 	}
 	if len(cloudsqlpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql pg prebuilt tools yaml")
@@ -112,6 +133,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(mssql_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch mssql prebuilt tools yaml")
 	}
+	if len(oceanbase_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch oceanbase prebuilt tools yaml")
+	}
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
 	}
@@ -120,6 +144,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(spannerpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+	}
+	if len(neo4jconfig) <= 0 {
+		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
 	}
 }
 

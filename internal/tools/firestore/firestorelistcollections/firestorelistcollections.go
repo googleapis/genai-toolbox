@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
 )
 
 const kind string = "firestore-list-collections"
@@ -80,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	emptyString := ""
-	parentPathParameter := tools.NewStringParameterWithDefault(parentPathKey, emptyString, "Parent document path to list subcollections from. If not provided, lists root collections.")
+	parentPathParameter := tools.NewStringParameterWithDefault(parentPathKey, emptyString, "Relative parent document path to list subcollections from (e.g., 'users/userId'). If not provided, lists root collections. Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'")
 	parameters := tools.Parameters{parentPathParameter}
 
 	mcpManifest := tools.McpManifest{
@@ -116,7 +117,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 
 	var collectionRefs []*firestoreapi.CollectionRef
@@ -126,6 +127,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	parentPath, hasParent := mapParams[parentPathKey].(string)
 
 	if hasParent && parentPath != "" {
+		// Validate parent document path
+		if err := util.ValidateDocumentPath(parentPath); err != nil {
+			return nil, fmt.Errorf("invalid parent document path: %w", err)
+		}
+
 		// List subcollections of the specified document
 		docRef := t.Client.Doc(parentPath)
 		collectionRefs, err = docRef.Collections(ctx).GetAll()
@@ -172,4 +178,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }
