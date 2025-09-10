@@ -74,7 +74,10 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(c.TemplateParameters, c.Parameters)
+	allParameters, paramManifest, paramMcpManifest, err := tools.ProcessParameters(c.TemplateParameters, c.Parameters)
+	if err != nil {
+		return nil, err
+	}
 
 	mcpManifest := tools.McpManifest{
 		Name:        c.Name,
@@ -118,13 +121,18 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
+// RequiresClientAuthorization implements tools.Tool.
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
+}
+
 // Authorized implements tools.Tool.
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 // Invoke implements tools.Tool.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
