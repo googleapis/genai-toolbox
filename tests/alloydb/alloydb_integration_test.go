@@ -35,7 +35,7 @@ var (
 	AlloyDBProject  = os.Getenv("ALLOYDB_PROJECT")
 	AlloyDBLocation = os.Getenv("ALLOYDB_REGION")
 	AlloyDBCluster  = os.Getenv("ALLOYDB_CLUSTER")
-	AlloyDBUser     = os.Getenv("ALLOYDB_USER")
+	AlloyDBUser     = os.Getenv("ALLOYDB_POSTGRES_USER")
 )
 
 func getAlloyDBVars(t *testing.T) map[string]string {
