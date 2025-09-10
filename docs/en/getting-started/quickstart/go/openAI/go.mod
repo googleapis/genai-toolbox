@@ -4,7 +4,7 @@ go 1.24.6
 
 require (
 	github.com/googleapis/mcp-toolbox-sdk-go v0.2.0
-	github.com/openai/openai-go v1.12.0
+	github.com/openai/openai-go/v2 v2.4.0
 )
 
 require (
