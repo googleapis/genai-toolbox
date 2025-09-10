@@ -22,7 +22,7 @@ import (
 
 var expectedToolSources = []string{
 	"alloydb-postgres-admin",
-	"alloydb-postgres-cloud-monitoring",
+	"alloydb-postgres-observability",
 	"alloydb-postgres",
 	"bigquery",
 	"clickhouse",
@@ -86,7 +86,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 
 func TestGetPrebuiltTool(t *testing.T) {
 	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
-	alloydb_cloud_monitoring_config, _ := Get("alloydb-postgres-cloud-monitoring")
+	alloydb_observability_config, _ := Get("alloydb-postgres-observability")
 	alloydb_config, _ := Get("alloydb-postgres")
 	bigquery_config, _ := Get("bigquery")
 	clickhouse_config, _ := Get("clickhouse")
@@ -108,8 +108,8 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
-	if len(alloydb_cloud_monitoring_config) <= 0 {
-		t.Fatalf("unexpected error: could not fetch alloydb-postgres-cloud-monitoring prebuilt tools yaml")
+	if len(alloydb_observability_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb-observability prebuilt tools yaml")
 	}
 	if len(bigquery_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch bigquery prebuilt tools yaml")
