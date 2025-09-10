@@ -30,9 +30,9 @@ It's compatible with the following sources:
 
 `bigquery-conversational-analytics` accepts the following parameters:
 
-*   `user_query_with_context`: The user's question, potentially including conversation history and system 
+- **`user_query_with_context`:** The user's question, potentially including conversation history and system 
 instructions for context.
-*   `table_references`: A JSON string of a list of BigQuery tables to use as context. 
+- **`table_references`:** A JSON string of a list of BigQuery tables to use as context. 
 Each object in the list must contain `projectId`, `datasetId`, and `tableId`. Example: 
 `'[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'`
 
