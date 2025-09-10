@@ -59,6 +59,8 @@ type compatibleSource interface {
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 }
 
 type BQTableReference struct {
@@ -133,8 +135,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	tableRefsDescription := `A JSON string of a list of BigQuery tables to use as context. Each object in the list must contain 'projectId', 'datasetId', and 'tableId'. Example: '[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'.`
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		tableRefsDescription += fmt.Sprintf(" The tables must only be from datasets in the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
 	userQueryParameter := tools.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
-	tableRefsParameter := tools.NewStringParameter("table_references", `A JSON string of a list of BigQuery tables to use as context. Each object in the list must contain 'projectId', 'datasetId', and 'tableId'. Example: '[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'`)
+	tableRefsParameter := tools.NewStringParameter("table_references", tableRefsDescription)
 
 	parameters := tools.Parameters{userQueryParameter, tableRefsParameter}
 
@@ -158,6 +169,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
+		IsDatasetAllowed:   s.IsDatasetAllowed,
+		AllowedDatasets:    allowedDatasets,
 	}
 	return t, nil
 }
@@ -179,6 +192,8 @@ type Tool struct {
 	manifest           tools.Manifest
 	mcpManifest        tools.McpManifest
 	MaxQueryResultRows int
+	IsDatasetAllowed   func(projectID, datasetID string) bool
+	AllowedDatasets    []string
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -218,6 +233,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if tableRefsJSON != "" {
 		if err := json.Unmarshal([]byte(tableRefsJSON), &tableRefs); err != nil {
 			return nil, fmt.Errorf("failed to parse 'table_references' JSON string: %w", err)
+		}
+	}
+
+	if len(t.AllowedDatasets) > 0 {
+		for _, tableRef := range tableRefs {
+			if !t.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
+			}
 		}
 	}
 
