@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-The `alloydb-list-instances` tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project.
+The `alloydb-list-instances` tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project. It is compatible with [http](../../sources/http.md) source.
 
 `alloydb-list-instances` tool lists the detailed information of AlloyDB instances (instance name, type, IP address, state, configuration, etc) for a given project, cluster and location. The tool takes the following input parameters:
 	
@@ -20,7 +20,7 @@ The `alloydb-list-instances` tool retrieves AlloyDB instance information for all
 | `clusterId` | string | The ID of the cluster to list instances from. Use '-' to get results for all clusters. Default: `-`.| No       |
 | `locationId` | string | The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all locations. Default: `-`.| No       |
 > **Note**
-> This tool does not have a `source` and authenticates using the environment's
+> This tool authenticates using the environment's
 [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
 
 ## Example
@@ -29,10 +29,12 @@ The `alloydb-list-instances` tool retrieves AlloyDB instance information for all
 tools:
   alloydb_list_instances:
     kind: alloydb-list-instances
+    source: http-source
     description: Use this tool to list all AlloyDB instances for a given project, cluster and location.
 ```
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be alloydb-list-instances.                                                                  |                                               |
+| source      |                   string                   |     true     | The name of a http source.                                                                       |
 | description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
