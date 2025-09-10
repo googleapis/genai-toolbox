@@ -15,6 +15,7 @@
 package lookercommon_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -168,4 +169,49 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect result: diff %v", diff)
 	}
+}
+
+//type QueryApiClientContext struct {
+//	Name            string            `json:"name"`
+//	Attributes      map[string]string `json:"attributes,omitempty"`
+//	ExtraAttributes map[string]string `json:"extra_attributes,omitempty"`
+//}
+//
+//type RenderOptions struct {
+//	Format string `json:"format"`
+//}
+//
+//type RequestRunInlineQuery2 struct {
+//	Query             v4.WriteQuery         `json:"query"`
+//	RenderOpts        RenderOptions         `json:"render_options"`
+//	QueryApiClientCtx QueryApiClientContext `json:"query_api_client_context"`
+//}
+
+func TestRequestRunInlineQuery2(t *testing.T) {
+	fields := make([]string, 1)
+	fields[0] = "foo.bar"
+	wq := v4.WriteQuery{
+		Model:  "model",
+		View:   "explore",
+		Fields: &fields,
+	}
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: wq,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	json, err := json.Marshal(req2)
+	if err != nil {
+		t.Fatalf("Could not marshall req2 as json")
+	}
+	got := string(json)
+	want := `{"query":{"model":"model","view":"explore","fields":["foo.bar"]},"render_options":{"format":"json"},"query_api_client_context":{"name":"MCP Toolbox"}}`
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("incorrect result: diff %v", diff)
+	}
+
 }
