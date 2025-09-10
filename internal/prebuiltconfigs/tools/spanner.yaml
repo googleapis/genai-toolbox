@@ -35,7 +35,6 @@ tools:
   list_tables:
     kind: spanner-list-tables
     source: spanner-source
-    readOnly: true
     description: "Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
 toolsets:
