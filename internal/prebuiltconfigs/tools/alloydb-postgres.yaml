@@ -20,8 +20,9 @@ sources:
         cluster: ${ALLOYDB_POSTGRES_CLUSTER}
         instance: ${ALLOYDB_POSTGRES_INSTANCE}
         database: ${ALLOYDB_POSTGRES_DATABASE}
-        user: ${ALLOYDB_POSTGRES_USER}
-        password: ${ALLOYDB_POSTGRES_PASSWORD}
+        user: ${ALLOYDB_POSTGRES_USER:}
+        password: ${ALLOYDB_POSTGRES_PASSWORD:}
+        ipType: ${ALLOYDB_POSTGRES_IP_TYPE:public}
 
 tools:
     execute_sql:

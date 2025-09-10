@@ -20,6 +20,7 @@ sources:
         database: ${POSTGRES_DATABASE}
         user: ${POSTGRES_USER}
         password: ${POSTGRES_PASSWORD}
+        queryParams: ${POSTGRES_QUERY_PARAMS:}
 
 tools:
     execute_sql:
