@@ -278,7 +278,7 @@ type RenderOptions struct {
 type RequestRunInlineQuery2 struct {
 	Query             v4.WriteQuery         `json:"query"`
 	RenderOpts        RenderOptions         `json:"render_options"`
-	QueryApiClientCtx QueryApiClientContext `json:"queri_api_client_context"`
+	QueryApiClientCtx QueryApiClientContext `json:"query_api_client_context"`
 }
 
 func RunInlineQuery2(l *v4.LookerSDK, request RequestRunInlineQuery2, options *rtl.ApiSettings) (string, error) {
