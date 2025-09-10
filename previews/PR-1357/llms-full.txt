@@ -888,614 +888,28 @@ from Toolbox.
     {{< tabpane persist=header >}}
 {{< tab header="LangChain Go" lang="go" >}}
 
-package main
+{{< include "quickstart/go/langchain/quickstart.go" >}}
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/llms/googleai"
-)
-
-// ConvertToLangchainTool converts a generic core.ToolboxTool into a LangChainGo llms.Tool.
-func ConvertToLangchainTool(toolboxTool *core.ToolboxTool) llms.Tool {
-
-	// Fetch the tool's input schema
-	inputschema, err := toolboxTool.InputSchema()
-	if err != nil {
-		return llms.Tool{}
-	}
-
-	var paramsSchema map[string]any
-	_ = json.Unmarshal(inputschema, &paramsSchema)
-
-	// Convert into LangChain's llms.Tool
-	return llms.Tool{
-		Type: "function",
-		Function: &llms.FunctionDefinition{
-			Name:        toolboxTool.Name(),
-			Description: toolboxTool.Description(),
-			Parameters:  paramsSchema,
-		},
-	}
-}
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it.",
-	"Please book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	genaiKey := os.Getenv("GOOGLE_API_KEY")
-	toolboxURL := "http://localhost:5000"
-	ctx := context.Background()
-
-	// Initialize the Google AI client (LLM).
-	llm, err := googleai.New(ctx, googleai.WithAPIKey(genaiKey), googleai.WithDefaultModel("gemini-1.5-flash"))
-	if err != nil {
-		log.Fatalf("Failed to create Google AI client: %v", err)
-	}
-
-	// Initialize the MCP Toolbox client.
-	toolboxClient, err := core.NewToolboxClient(toolboxURL)
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tool using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tools: %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
-
-	langchainTools := make([]llms.Tool, len(tools))
-	// Convert the loaded ToolboxTools into the format LangChainGo requires.
-	for i, tool := range tools {
-		langchainTools[i] = ConvertToLangchainTool(tool)
-		toolsMap[tool.Name()] = tool
-	}
-
-	// Start the conversation history.
-	messageHistory := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, systemPrompt),
-	}
-
-	for _, query := range queries {
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, query))
-
-		// Make the first call to the LLM, making it aware of the tool.
-		resp, err := llm.GenerateContent(ctx, messageHistory, llms.WithTools(langchainTools))
-		if err != nil {
-			log.Fatalf("LLM call failed: %v", err)
-		}
-		respChoice := resp.Choices[0]
-
-		assistantResponse := llms.TextParts(llms.ChatMessageTypeAI, respChoice.Content)
-		for _, tc := range respChoice.ToolCalls {
-			assistantResponse.Parts = append(assistantResponse.Parts, tc)
-		}
-		messageHistory = append(messageHistory, assistantResponse)
-
-		// Process each tool call requested by the model.
-		for _, tc := range respChoice.ToolCalls {
-			toolName := tc.FunctionCall.Name
-			tool := toolsMap[toolName]
-			var args map[string]any
-			if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
-				log.Fatalf("Failed to unmarshal arguments for tool '%s': %v", toolName, err)
-			}
-			toolResult, err := tool.Invoke(ctx, args)
-			if err != nil {
-				log.Fatalf("Failed to execute tool '%s': %v", toolName, err)
-			}
-			if toolResult == "" || toolResult == nil {
-				toolResult = "Operation completed successfully with no specific return value."
-			}
-
-			// Create the tool call response message and add it to the history.
-			toolResponse := llms.MessageContent{
-				Role: llms.ChatMessageTypeTool,
-				Parts: []llms.ContentPart{
-					llms.ToolCallResponse{
-						Name:    toolName,
-						Content: fmt.Sprintf("%v", toolResult),
-					},
-				},
-			}
-			messageHistory = append(messageHistory, toolResponse)
-		}
-		finalResp, err := llm.GenerateContent(ctx, messageHistory)
-		if err != nil {
-			log.Fatalf("Final LLM call failed after tool execution: %v", err)
-		}
-
-		// Add the final textual response from the LLM to the history
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeAI, finalResp.Choices[0].Content))
-
-		fmt.Println(finalResp.Choices[0].Content)
-
-	}
-
-}
 
 {{< /tab >}}
 
 {{< tab header="Genkit Go" lang="go" >}}
 
-package main
+{{< include "quickstart/go/genkit/quickstart.go" >}}
 
-import (
-	"context"
-	"fmt"
-	"log"
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	"github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
-
-	"github.com/firebase/genkit/go/ai"
-	"github.com/firebase/genkit/go/genkit"
-	"github.com/firebase/genkit/go/plugins/googlegenai"
-)
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	ctx := context.Background()
-
-	// Create Toolbox Client
-	toolboxClient, err := core.NewToolboxClient("http://127.0.0.1:5000")
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tools using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tools: %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	// Initialize Genkit
-	g, err := genkit.Init(ctx,
-		genkit.WithPlugins(&googlegenai.GoogleAI{}),
-		genkit.WithDefaultModel("googleai/gemini-1.5-flash"),
-	)
-	if err != nil {
-		log.Fatalf("Failed to init genkit: %v\n", err)
-	}
-
-	// Create a conversation history
-	conversationHistory := []*ai.Message{
-		ai.NewSystemTextMessage(systemPrompt),
-	}
-
-	// Convert your tool to a Genkit tool.
-	genkitTools := make([]ai.Tool, len(tools))
-	for i, tool := range tools {
-		newTool, err := tbgenkit.ToGenkitTool(tool, g)
-		if err != nil {
-			log.Fatalf("Failed to convert tool: %v\n", err)
-		}
-		genkitTools[i] = newTool
-	}
-
-	toolRefs := make([]ai.ToolRef, len(genkitTools))
-
-	for i, tool := range genkitTools {
-		toolRefs[i] = tool
-	}
-
-	for _, query := range queries {
-		conversationHistory = append(conversationHistory, ai.NewUserTextMessage(query))
-		response, err := genkit.Generate(ctx, g,
-			ai.WithMessages(conversationHistory...),
-			ai.WithTools(toolRefs...),
-			ai.WithReturnToolRequests(true),
-		)
-
-		if err != nil {
-			log.Fatalf("%v\n", err)
-		}
-		conversationHistory = append(conversationHistory, response.Message)
-
-		parts := []*ai.Part{}
-
-		for _, req := range response.ToolRequests() {
-			tool := genkit.LookupTool(g, req.Name)
-			if tool == nil {
-				log.Fatalf("tool %q not found", req.Name)
-			}
-
-			output, err := tool.RunRaw(ctx, req.Input)
-			if err != nil {
-				log.Fatalf("tool %q execution failed: %v", tool.Name(), err)
-			}
-
-			parts = append(parts,
-				ai.NewToolResponsePart(&ai.ToolResponse{
-					Name:   req.Name,
-					Ref:    req.Ref,
-					Output: output,
-				}))
-
-		}
-
-		if len(parts) > 0 {
-			resp, err := genkit.Generate(ctx, g,
-				ai.WithMessages(append(response.History(), ai.NewMessage(ai.RoleTool, nil, parts...))...),
-				ai.WithTools(toolRefs...),
-			)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("\n", resp.Text())
-			conversationHistory = append(conversationHistory, resp.Message)
-		} else {
-			fmt.Println("\n", response.Text())
-		}
-
-	}
-
-}
 
 {{< /tab >}}
 
 {{< tab header="Go GenAI" lang="go" >}}
 
-package main
-
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	"google.golang.org/genai"
-)
-
-// ConvertToGenaiTool translates a ToolboxTool into the genai.FunctionDeclaration format.
-func ConvertToGenaiTool(toolboxTool *core.ToolboxTool) *genai.Tool {
-
-	inputschema, err := toolboxTool.InputSchema()
-	if err != nil {
-		return &genai.Tool{}
-	}
-
-	var paramsSchema *genai.Schema
-	_ = json.Unmarshal(inputschema, &paramsSchema)
-	// First, create the function declaration.
-	funcDeclaration := &genai.FunctionDeclaration{
-		Name:        toolboxTool.Name(),
-		Description: toolboxTool.Description(),
-		Parameters:  paramsSchema,
-	}
-
-	// Then, wrap the function declaration in a genai.Tool struct.
-	return &genai.Tool{
-		FunctionDeclarations: []*genai.FunctionDeclaration{funcDeclaration},
-	}
-}
-
-func printResponse(resp *genai.GenerateContentResponse) {
-	for _, cand := range resp.Candidates {
-		if cand.Content != nil {
-			for _, part := range cand.Content.Parts {
-				fmt.Println(part.Text)
-			}
-		}
-	}
-}
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it.",
-	"Please book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	// Setup
-	ctx := context.Background()
-	apiKey := os.Getenv("GOOGLE_API_KEY")
-	toolboxURL := "http://localhost:5000"
-
-	// Initialize the Google GenAI client using the explicit ClientConfig.
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey: apiKey,
-	})
-	if err != nil {
-		log.Fatalf("Failed to create Google GenAI client: %v", err)
-	}
-
-	// Initialize the MCP Toolbox client.
-	toolboxClient, err := core.NewToolboxClient(toolboxURL)
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tool using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tools: %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	genAITools := make([]*genai.Tool, len(tools))
-	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
-
-	for i, tool := range tools {
-		genAITools[i] = ConvertToGenaiTool(tool)
-		toolsMap[tool.Name()] = tool
-	}
-
-	// Set up the generative model with the available tool.
-	modelName := "gemini-2.0-flash"
-
-	// Create the initial content prompt for the model.
-	messageHistory := []*genai.Content{
-		genai.NewContentFromText(systemPrompt, genai.RoleUser),
-	}
-	config := &genai.GenerateContentConfig{
-		Tools: genAITools,
-		ToolConfig: &genai.ToolConfig{
-			FunctionCallingConfig: &genai.FunctionCallingConfig{
-				Mode: genai.FunctionCallingConfigModeAny,
-			},
-		},
-	}
-
-	for _, query := range queries {
-
-		messageHistory = append(messageHistory, genai.NewContentFromText(query, genai.RoleUser))
-
-		genContentResp, err := client.Models.GenerateContent(ctx, modelName, messageHistory, config)
-		if err != nil {
-			log.Fatalf("LLM call failed for query '%s': %v", query, err)
-		}
-
-		if len(genContentResp.Candidates) > 0 && genContentResp.Candidates[0].Content != nil {
-			messageHistory = append(messageHistory, genContentResp.Candidates[0].Content)
-		}
-
-		functionCalls := genContentResp.FunctionCalls()
-
-		toolResponseParts := []*genai.Part{}
-
-		for _, fc := range functionCalls {
-
-			toolToInvoke, found := toolsMap[fc.Name]
-			if !found {
-				log.Fatalf("Tool '%s' not found in loaded tools map. Check toolset configuration.", fc.Name)
-			}
-
-			toolResult, invokeErr := toolToInvoke.Invoke(ctx, fc.Args)
-			if invokeErr != nil {
-				log.Fatalf("Failed to execute tool '%s': %v", fc.Name, invokeErr)
-			}
-
-			// Enhanced Tool Result Handling (retained to prevent nil issues)
-			toolResultString := ""
-			if toolResult != nil {
-				jsonBytes, marshalErr := json.Marshal(toolResult)
-				if marshalErr == nil {
-					toolResultString = string(jsonBytes)
-				} else {
-					toolResultString = fmt.Sprintf("%v", toolResult)
-				}
-			}
-
-			responseMap := map[string]any{"result": toolResultString}
-
-			toolResponseParts = append(toolResponseParts, genai.NewPartFromFunctionResponse(fc.Name, responseMap))
-		}
-		// Add all accumulated tool responses for this turn to the message history.
-		toolResponseContent := genai.NewContentFromParts(toolResponseParts, "function")
-		messageHistory = append(messageHistory, toolResponseContent)
-
-		finalResponse, err := client.Models.GenerateContent(ctx, modelName, messageHistory, &genai.GenerateContentConfig{})
-		if err != nil {
-			log.Fatalf("Error calling GenerateContent (with function result): %v", err)
-		}
-
-		printResponse(finalResponse)
-		// Add the final textual response from the LLM to the history
-		if len(finalResponse.Candidates) > 0 && finalResponse.Candidates[0].Content != nil {
-			messageHistory = append(messageHistory, finalResponse.Candidates[0].Content)
-		}
-	}
-}
+{{< include "quickstart/go/genAI/quickstart.go" >}}
 
 {{< /tab >}}
 
 {{< tab header="OpenAI Go" lang="go" >}}
 
-package main
+{{< include "quickstart/go/openAI/quickstart.go" >}}
 
-import (
-	"context"
-	"encoding/json"
-	"log"
-	"fmt
-
-	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	openai "github.com/openai/openai-go"
-)
-
-// ConvertToOpenAITool converts a ToolboxTool into the go-openai library's Tool format.
-func ConvertToOpenAITool(toolboxTool *core.ToolboxTool) openai.ChatCompletionToolParam {
-	// Get the input schema
-	jsonSchemaBytes, err := toolboxTool.InputSchema()
-	if err != nil {
-		return openai.ChatCompletionToolParam{}
-	}
-
-	// Unmarshal the JSON bytes into FunctionParameters
-	var paramsSchema openai.FunctionParameters
-	if err := json.Unmarshal(jsonSchemaBytes, &paramsSchema); err != nil {
-		return openai.ChatCompletionToolParam{}
-	}
-
-	// Create and return the final tool parameter struct.
-	return openai.ChatCompletionToolParam{
-		Function: openai.FunctionDefinitionParam{
-			Name:        toolboxTool.Name(),
-			Description: openai.String(toolboxTool.Description()),
-			Parameters:  paramsSchema,
-		},
-	}
-}
-
-const systemPrompt = `
-You're a helpful hotel assistant. You handle hotel searching, booking, and
-cancellations. When the user searches for a hotel, mention its name, id,
-location and price tier. Always mention hotel ids while performing any
-searches. This is very important for any operations. For any bookings or
-cancellations, please provide the appropriate confirmation. Be sure to
-update checkin or checkout dates if mentioned by the user.
-Don't ask for confirmations from the user.
-`
-
-var queries = []string{
-	"Find hotels in Basel with Basel in its name.",
-	"Can you book the hotel Hilton Basel for me?",
-	"Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-	"My check in dates would be from April 10, 2024 to April 19, 2024.",
-}
-
-func main() {
-	// Setup
-	ctx := context.Background()
-	toolboxURL := "http://localhost:5000"
-	openAIClient := openai.NewClient()
-
-	// Initialize the MCP Toolbox client.
-	toolboxClient, err := core.NewToolboxClient(toolboxURL)
-	if err != nil {
-		log.Fatalf("Failed to create Toolbox client: %v", err)
-	}
-
-	// Load the tools using the MCP Toolbox SDK.
-	tools, err := toolboxClient.LoadToolset("my-toolset", ctx)
-	if err != nil {
-		log.Fatalf("Failed to load tool : %v\nMake sure your Toolbox server is running and the tool is configured.", err)
-	}
-
-	openAITools := make([]openai.ChatCompletionToolParam, len(tools))
-	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
-
-	for i, tool := range tools {
-		// Convert the Toolbox tool into the openAI FunctionDeclaration format.
-		openAITools[i] = ConvertToOpenAITool(tool)
-		// Add tool to a map for lookup later
-		toolsMap[tool.Name()] = tool
-
-	}
-
-	params := openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.SystemMessage(systemPrompt),
-		},
-		Tools: openAITools,
-		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
-	}
-
-	for _, query := range queries {
-
-		params.Messages = append(params.Messages, openai.UserMessage(query))
-
-		// Make initial chat completion request
-		completion, err := openAIClient.Chat.Completions.New(ctx, params)
-		if err != nil {
-			panic(err)
-		}
-
-		toolCalls := completion.Choices[0].Message.ToolCalls
-
-		// Return early if there are no tool calls
-		if len(toolCalls) == 0 {
-			log.Println("No function call")
-		}
-
-		// If there was a function call, continue the conversation
-		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
-		for _, toolCall := range toolCalls {
-
-			toolName := toolCall.Function.Name
-			toolToInvoke := toolsMap[toolName]
-
-			var args map[string]any
-			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-			if err != nil {
-				panic(err)
-			}
-
-			result, err := toolToInvoke.Invoke(ctx, args)
-			if err != nil {
-				log.Fatal("Could not invoke tool", err)
-			}
-
-			params.Messages = append(params.Messages, openai.ToolMessage(result.(string), toolCall.ID))
-		}
-
-		completion, err = openAIClient.Chat.Completions.New(ctx, params)
-		if err != nil {
-			panic(err)
-		}
-
-		params.Messages = append(params.Messages, openai.AssistantMessage(query))
-
-		fmt.println("\n", completion.Choices[0].Message.Content)
-
-	}
-
-}
 
 {{< /tab >}}
 {{< /tabpane >}}
@@ -2750,6 +2164,285 @@ The following tools are available to the LLM:
 
 1.  **list_tables**: lists tables and descriptions
 1.  **execute_sql**: execute any SQL statement
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
+# Neo4j using MCP
+Connect your IDE to Neo4j using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Neo4j instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a Neo4j instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+    "mcp" : {
+        "servers": {
+        "neo4j": {
+            "command": "./PATH/TO/toolbox",
+            "args": ["--prebuilt","neo4j","--stdio"],
+            "env": {
+              "NEO4J_URI": "",
+              "NEO4J_DATABASE": "",
+              "NEO4J_USERNAME": "",
+              "NEO4J_PASSWORD": ""
+            }
+         }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant to get the graph schema or execute Cypher statements.
+
+The following tools are available to the LLM:
+
+1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
@@ -7036,6 +6729,48 @@ sources:
 | disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                                                 |
 
 
+# YugabyteDB
+YugabyteDB is a high-performance, distributed SQL database. 
+
+
+## About
+
+[YugabyteDB][yugabytedb] is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.
+
+[yugabytedb]: https://www.yugabyte.com/
+
+## Example
+
+```yaml
+sources:
+    my-yb-source:
+        kind: yugabytedb
+        host: 127.0.0.1
+        port: 5433
+        database: yugabyte
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        loadBalance: true
+        topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
+```
+
+## Reference
+
+| **field**                         | **type** | **required** | **description**                                                        |
+|-----------------------------------|:--------:|:------------:|------------------------------------------------------------------------|
+| kind                              |  string  |     true     | Must be "yugabytedb".                                                    |
+| host                              |  string  |     true     | IP address to connect to.                           |
+| port                              |  integer  |     true     | Port to connect to. The default port is 5433.                                      |
+| database                          |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.           |
+| user                              |  string  |     true     | Name of the YugabyteDB user to connect as. The default user is yugabyte.          |
+| password                          |  string  |     true     | Password of the YugabyteDB user. The default password is yugabyte.                   |
+| loadBalance                      |  boolean  |     false     | If true, enable uniform load balancing. The default loadBalance value is false.                   |
+| topologyKeys                     |  string  |     false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default.                   |
+| ybServersRefreshInterval       |  integer  |     false     | The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.                    |
+| fallbackToTopologyKeysOnly    |  boolean  |     false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                    |
+| failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
+
+
 # Tools
 Tools define actions an agent can take -- such as reading and writing to a source.
 
@@ -7418,6 +7153,104 @@ Tools that provide utility.
 # Valkey
 Tools that work with Valkey Sources.
 
+
+
+# yugabytedb-sql
+A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
+
+
+## About
+
+A `yugabytedb-sql` tool executes a pre-defined SQL statement against a YugabyteDB
+database.
+
+The specified SQL statement is executed as a prepared statement,
+and specified parameters will inserted according to their position: e.g. `1`
+will be the first parameter specified, `$@` will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.
+
+## Example
+
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
+```yaml
+tools:
+ search_flights_by_number:
+    kind: yugabytedb-sql
+    source: my-yb-instance
+    statement: |
+      SELECT * FROM flights
+      WHERE airline = $1
+      AND flight_number = $2
+      LIMIT 10
+    description: |
+      Use this tool to get information for a specific flight.
+      Takes an airline code and flight number and returns info on the flight.
+      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+      A airline code is a code for an airline service consisting of two-character
+      airline designator and followed by flight number, which is 1 to 4 digit number.
+      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
+      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+      If the tool returns more than one option choose the date closes to today.
+      Example:
+      {{
+          "airline": "CY",
+          "flight_number": "888",
+      }}
+      Example:
+      {{
+          "airline": "DL",
+          "flight_number": "1234",
+      }}
+    parameters:
+      - name: airline
+        type: string
+        description: Airline unique 2 letter identifier
+      - name: flight_number
+        type: string
+        description: 1 to 4 digit number
+```
+
+### Example with Template Parameters
+
+> **Note:** This tool allows direct modifications to the SQL statement, including identifiers, column names,
+> and table names. **This makes it more vulnerable to SQL injections**. Using basic parameters 
+> only (see above) is recommended for performance and safety reasons. For more details, please
+> check [templateParameters](_index#template-parameters).
+
+```yaml
+tools:
+ list_table:
+    kind: yugabytedb-sql
+    source: my-yb-instance
+    statement: |
+      SELECT * FROM {{.tableName}}
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
+```
+
+## Reference
+
+| **field**           |                  **type**                                 | **required** | **description**                                                                                                                            |
+|---------------------|:---------------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                |                   string                                  |     true     | Must be "yugabytedb-sql".                                                                                                                    |
+| source              |                   string                                  |     true     | Name of the source the SQL should execute on.                                                                                              |
+| description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
+| parameters          | [parameters](_index#specifying-parameters)                |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters  |  [templateParameters](_index#template-parameters)         |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
 
 # Samples
@@ -9302,10 +9135,9 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
-     or "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9334,6 +9166,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `bigquery`
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
+    *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
     *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
@@ -9373,8 +9206,9 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
-    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9393,6 +9227,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9418,7 +9253,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
-    *   `FIRESTORE_DATABASE`: The Firestore database ID.
+    *   `FIRESTORE_DATABASE`: (Optional) The Firestore database ID. Defaults to "(default)".
 *   **Permissions:**
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
@@ -9511,6 +9346,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
+    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db connection string.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
@@ -9546,5 +9382,19 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## Neo4j
+
+*   `--prebuilt` value: `neo4j`
+*   **Environment Variables:**
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
+    *   `NEO4J_USERNAME`: The username for the Neo4j instance.
+    *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
 
 
