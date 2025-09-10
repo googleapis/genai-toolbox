@@ -74,7 +74,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			in: `
 			sources:
 				my-instance:
-				kind: bigquery
+					kind: bigquery
 					project: my-project
 					location: us
 					allowedDatasets:
