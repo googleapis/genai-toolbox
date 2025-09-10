@@ -16,11 +16,18 @@ import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "fs";
 import path from "path";
-import { main as runAgent } from "./quickstart.js";
+import { fileURLToPath } from "url";
 
-const GOLDEN_FILE_PATH = path.resolve("../../golden.txt");
+const ORCH_NAME = process.env.ORCH_NAME;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const orchDir = path.join(__dirname, ORCH_NAME);
+const quickstartPath = path.join(orchDir, "quickstart.js");
 
-describe("LangChain Quickstart Agent", () => {
+const { main: runAgent } = await import(quickstartPath);
+
+const GOLDEN_FILE_PATH = path.resolve(__dirname, "../golden.txt");
+
+describe(`${ORCH_NAME} Quickstart Agent`, () => {
   let capturedOutput = [];
   let originalLog;
 
@@ -36,6 +43,7 @@ describe("LangChain Quickstart Agent", () => {
   });
 
   test("Assert", async () => {
+    capturedOutput = [];
     await runAgent();
     const actualOutput = capturedOutput.join("\n");
 
