@@ -45,7 +45,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
+	BigQueryProject() string
 	BigQueryClient() *bigqueryapi.Client
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -123,6 +126,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:             kind,
 		Parameters:       parameters,
 		AuthRequired:     cfg.AuthRequired,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
 		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
@@ -135,12 +140,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name           string           `yaml:"name"`
+	Kind           string           `yaml:"kind"`
+	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
+	Parameters     tools.Parameters `yaml:"parameters"`
 
 	Client           *bigqueryapi.Client
+	ClientCreator    bigqueryds.BigqueryClientCreator
+	Statement        string
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
@@ -158,6 +166,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
 	}
 
+	bqClient := t.Client
+	var err error
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, _, err = t.ClientCreator(tokenStr, false)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
 	// Handle fully-qualified dataset ID in the dataset parameter.
 	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
 		projectId = parts[0]
@@ -168,7 +191,33 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
 	}
 
-	dsHandle := t.Client.DatasetInProject(projectId, datasetId)
+	dsHandle := bqClient.DatasetInProject(projectId, datasetId)
+
+	// Handle fully-qualified dataset ID in the dataset parameter.
+	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
+		projectId = parts[0]
+		datasetId = parts[1]
+	}
+
+	if !t.IsDatasetAllowed(projectId, datasetId) {
+		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
+	}
+
+	bqClient := t.Client
+	var err error
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, _, err = t.ClientCreator(tokenStr, false)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+	dsHandle := bqClient.DatasetInProject(projectId, datasetId)
 
 	metadata, err := dsHandle.Metadata(ctx)
 	if err != nil {
@@ -195,5 +244,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }

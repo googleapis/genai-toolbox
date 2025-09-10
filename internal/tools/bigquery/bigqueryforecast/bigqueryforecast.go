@@ -48,6 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -119,6 +121,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:             kind,
 		Parameters:       parameters,
 		AuthRequired:     cfg.AuthRequired,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
@@ -133,12 +137,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name             string           `yaml:"name"`
-	Kind             string           `yaml:"kind"`
-	AuthRequired     []string         `yaml:"authRequired"`
-	Parameters       tools.Parameters `yaml:"parameters"`
+	Name           string           `yaml:"name"`
+	Kind           string           `yaml:"kind"`
+	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+
 	Client           *bigqueryapi.Client
 	RestService      *bigqueryrestapi.Service
+	ClientCreator    bigqueryds.BigqueryClientCreator
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	AllowedDatasets  []string
 	manifest         tools.Manifest
@@ -242,9 +249,24 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			horizon => %d%s)`,
 		historyDataSource, dataCol, timestampCol, horizon, idColsArg)
 
+	bqClient := t.Client
+	var err error
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, _, err = t.ClientCreator(tokenStr, false)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
 	// JobStatistics.QueryStatistics.StatementType
-	query := t.Client.Query(sql)
-	query.Location = t.Client.Location
+	query := bqClient.Query(sql)
+	query.Location = bqClient.Location
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
@@ -302,7 +324,31 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
+}
+
+// dryRunQuery performs a dry run of the SQL query to validate it and get metadata.
+func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string) (*bigqueryrestapi.Job, error) {
+	useLegacySql := false
+	jobToInsert := &bigqueryrestapi.Job{
+		JobReference: &bigqueryrestapi.JobReference{
+			ProjectId: projectID,
+			Location:  location,
+		},
+		Configuration: &bigqueryrestapi.JobConfiguration{
+			DryRun: true,
+			Query: &bigqueryrestapi.JobConfigurationQuery{
+				Query:        sql,
+				UseLegacySql: &useLegacySql,
+			},
+		},
+	}
+
+	insertResponse, err := restService.Jobs.Insert(projectID, jobToInsert).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
+	}
+	return insertResponse, nil
 }
 
 // dryRunQuery performs a dry run of the SQL query to validate it and get metadata.

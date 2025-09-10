@@ -48,6 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -128,6 +130,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:             kind,
 		Parameters:       parameters,
 		AuthRequired:     cfg.AuthRequired,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
@@ -142,12 +146,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name             string           `yaml:"name"`
-	Kind             string           `yaml:"kind"`
-	AuthRequired     []string         `yaml:"authRequired"`
-	Parameters       tools.Parameters `yaml:"parameters"`
+	Name           string           `yaml:"name"`
+	Kind           string           `yaml:"kind"`
+	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+
 	Client           *bigqueryapi.Client
 	RestService      *bigqueryrestapi.Service
+	ClientCreator    bigqueryds.BigqueryClientCreator
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	AllowedDatasets  []string
 	manifest         tools.Manifest
@@ -165,7 +172,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, sql)
+	bqClient := t.Client
+	restService := t.RestService
+
+	var err error
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, true)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
+	dryRunJob, err := dryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
@@ -237,8 +260,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return "Dry run was requested, but no job information was returned.", nil
 	}
 
-	query := t.Client.Query(sql)
-	query.Location = t.Client.Location
+	query := bqClient.Query(sql)
+	query.Location = bqClient.Location
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
@@ -297,7 +320,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }
 
 // dryRunQuery performs a dry run of the SQL query to validate it and get metadata.

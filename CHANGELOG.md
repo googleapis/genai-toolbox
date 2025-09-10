@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.14.0](https://github.com/googleapis/genai-toolbox/compare/v0.13.0...v0.14.0) (2025-09-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **bigquery:** Move `useClientOAuth` config from tool to source ([#1279](https://github.com/googleapis/genai-toolbox/issues/1279)) ([8d20a48](https://github.com/googleapis/genai-toolbox/commit/8d20a48f13bcda853d41bdf80a162de12b076d1b))
+* **tools/bigquerysql:** remove `useClientOAuth` from tools config ([#1312](https://github.com/googleapis/genai-toolbox/issues/1312))
+
+### Features
+
+* **clickhouse:** Add ClickHouse Source and Tools ([#1088](https://github.com/googleapis/genai-toolbox/issues/1088)) ([75a04a5](https://github.com/googleapis/genai-toolbox/commit/75a04a55dd2259bed72fe95119a7a51a906c0b21))
+* **prebuilt/alloydb-postgres:** Support ipType and IAM users ([#1324](https://github.com/googleapis/genai-toolbox/issues/1324)) ([0b2121e](https://github.com/googleapis/genai-toolbox/commit/0b2121ea72eb81348dcd9c740a62ccd32e71fe37))
+* **server/mcp:** Support toolbox auth in mcp ([#1140](https://github.com/googleapis/genai-toolbox/issues/1140)) ([ca353e0](https://github.com/googleapis/genai-toolbox/commit/ca353e0b66fedc00e9110df57db18632aef49018))
+* **source/mysql:** Support `queryParams` in MySQL source ([#1299](https://github.com/googleapis/genai-toolbox/issues/1299)) ([3ae2526](https://github.com/googleapis/genai-toolbox/commit/3ae2526e0fe36b57b05a9b54f1d99f3fc68d9657))
+* **tools/bigquery:** Support end-user credential passthrough on multiple BQ tools ([#1314](https://github.com/googleapis/genai-toolbox/issues/1314)) ([88f4b30](https://github.com/googleapis/genai-toolbox/commit/88f4b3028df3b6a400936cdf8a035bf55021924c))
+* **tools/looker:** Add description for looker-get-models tool ([#1266](https://github.com/googleapis/genai-toolbox/issues/1266)) ([89af3a4](https://github.com/googleapis/genai-toolbox/commit/89af3a4ca332f029615b2a739d1f6cd50519638d))
+* **tools/looker:** Authenticate via end user credentials ([#1257](https://github.com/googleapis/genai-toolbox/issues/1257)) ([8755e3d](https://github.com/googleapis/genai-toolbox/commit/8755e3db3476abb35629b3cca9c78db7366757a4))
+* **tools/looker:** Report field suggestions to agent ([#1267](https://github.com/googleapis/genai-toolbox/issues/1267)) ([2cad82e](https://github.com/googleapis/genai-toolbox/commit/2cad82e5107566dd6c9b75e34e9976af63af0bb5))
+
+
+### Bug Fixes
+
+* Do not print usage on runtime error ([#1315](https://github.com/googleapis/genai-toolbox/issues/1315)) ([afba7a5](https://github.com/googleapis/genai-toolbox/commit/afba7a57cdd4fe7c1b0741dbf8f8c78b14a68089))
+* Update env var to allow empty string ([#1260](https://github.com/googleapis/genai-toolbox/issues/1260)) ([03aa9fa](https://github.com/googleapis/genai-toolbox/commit/03aa9fabacda06f860c9f178485126bddb7d5782))
+* **tools/firestore:** Add document/collection path validation ([#1229](https://github.com/googleapis/genai-toolbox/issues/1229)) ([14c2249](https://github.com/googleapis/genai-toolbox/commit/14c224939a2f9bb349fa00a7d5227877198530c2))
+* **tools/looker-get-dashboards:** Fix Looker client OAuth check ([#1338](https://github.com/googleapis/genai-toolbox/issues/1338)) ([36225aa](https://github.com/googleapis/genai-toolbox/commit/36225aa6db7f8426ad87930866530fde4e9bf0cd))
+* **tools/oceanbase:** Fix encoded text with mysql driver ([#1283](https://github.com/googleapis/genai-toolbox/issues/1283)) ([d16f89f](https://github.com/googleapis/genai-toolbox/commit/d16f89fbb6e49c03998f114ef7dc2b584b5e4967)), closes [#1161](https://github.com/googleapis/genai-toolbox/issues/1161)
+
+## [0.13.0](https://github.com/googleapis/genai-toolbox/compare/v0.12.0...v0.13.0) (2025-08-27)
+
+### ⚠ BREAKING CHANGES
+
+* **prebuilt/alloydb:** Add bearer token support for alloydb-wait-for-operation ([#1183](https://github.com/googleapis/genai-toolbox/issues/1183))
+
+
+### Features
+
+* Add capability to set default for environment variable in config ([#1248](https://github.com/googleapis/genai-toolbox/issues/1248)) ([5bcd52e](https://github.com/googleapis/genai-toolbox/commit/5bcd52e7dcd0773ded723585f4abe29d044e1540))
+* **firebird:** Add Firebird SQL 2.5+ source and tool ([#1011](https://github.com/googleapis/genai-toolbox/issues/1011)) ([4f6b806](https://github.com/googleapis/genai-toolbox/commit/4f6b806de947efc4e12bdb50dff7781aedb7b966))
+* **oceanbase:** Add Oceanbase source and tool  ([#895](https://github.com/googleapis/genai-toolbox/issues/895)) ([6fc4982](https://github.com/googleapis/genai-toolbox/commit/6fc49826d43f46c84028e752ebebddf3d94b3d13))
+* **server/mcp:** Support `ping` mechanism ([#1178](https://github.com/googleapis/genai-toolbox/issues/1178)) ([5dcc66c](https://github.com/googleapis/genai-toolbox/commit/5dcc66c84fa72c75ec50a9ac5198018212ec2979))
+* **server:** Fail-fast on environment variable substitution ([#1177](https://github.com/googleapis/genai-toolbox/issues/1177)) ([212aaba](https://github.com/googleapis/genai-toolbox/commit/212aaba74c8b431de8a5f7b9822a0af4afcaaa0e))
+* **server:** Implement Tool call auth error propagation ([#1235](https://github.com/googleapis/genai-toolbox/issues/1235)) ([b94a021](https://github.com/googleapis/genai-toolbox/commit/b94a021ca11c6637cf8038449483b5e75f2012b3))
+* **sources/bigquery:** Add support for user-credential passthrough  ([#1067](https://github.com/googleapis/genai-toolbox/issues/1067)) ([650e2e2](https://github.com/googleapis/genai-toolbox/commit/650e2e26f51bff75ce66343f64944d0a89a58b69))
+* **tool/looker:** Add support for `description` field in looker tool ([#1199](https://github.com/googleapis/genai-toolbox/issues/1199)) ([97f0dd2](https://github.com/googleapis/genai-toolbox/commit/97f0dd2acf26caf28ecad65abea8779c196a27f1))
+* **tools/bigquery-ask-data-insights:** Add bigquery `ask-data-insights` tool ([#932](https://github.com/googleapis/genai-toolbox/issues/932)) ([7651357](https://github.com/googleapis/genai-toolbox/commit/7651357d424a2b6656d8b6818cebc5c8a86ed053))
+* **tools/bigquery-forecast:** Add bigqueryforecast tool ([#1148](https://github.com/googleapis/genai-toolbox/issues/1148)) ([2ad0ccf](https://github.com/googleapis/genai-toolbox/commit/2ad0ccf83df542340087742468d6762f81eedee6))
+* **tools/firestore-add-documents:** Add firestore-add-documents tool ([#1107](https://github.com/googleapis/genai-toolbox/issues/1107)) ([ee4a70a](https://github.com/googleapis/genai-toolbox/commit/ee4a70a0e82b346b07b5b4c60dfa060da2273f50))
+* **tools/firestore-update-document:** Add firestore-update-document tool ([#1191](https://github.com/googleapis/genai-toolbox/issues/1191)) ([0010123](https://github.com/googleapis/genai-toolbox/commit/00101232a39c70288aac5715649c184858d351e3))
+* **tools/looker:** Control over whether hidden objects are surfaced ([#1222](https://github.com/googleapis/genai-toolbox/issues/1222)) ([bc91559](https://github.com/googleapis/genai-toolbox/commit/bc91559cc4e5b20385b84cc562b624fabf7e47a8))
+* **trino:** Add Trino source and tools ([#948](https://github.com/googleapis/genai-toolbox/issues/948)) ([7dd123b](https://github.com/googleapis/genai-toolbox/commit/7dd123b3d76b8eb2b74b5d960959c1f90684b37e))
+
+
+### Bug Fixes
+
+* **tools/looker:** Lookergetdashboards uses proper Authorized helper func ([#1255](https://github.com/googleapis/genai-toolbox/issues/1255)) ([00866bc](https://github.com/googleapis/genai-toolbox/commit/00866bc7fc33115c547213e60316ae889735fdbb))
+* **tools/mongodb-find-one:** ProjectPayload unmarshaling ([#1167](https://github.com/googleapis/genai-toolbox/issues/1167)) ([8ea6a98](https://github.com/googleapis/genai-toolbox/commit/8ea6a98bd9096ba97722e5f807366887e864004f))
+* **tools/mysql:** Fix encoded text for mysql ([#1161](https://github.com/googleapis/genai-toolbox/issues/1161)) ([a37cfa8](https://github.com/googleapis/genai-toolbox/commit/a37cfa841d151b9995d4fab73cfc5e4d30d2cc57)), closes [#840](https://github.com/googleapis/genai-toolbox/issues/840)
+
 ## [0.12.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.12.0) (2025-08-14)
 
 
