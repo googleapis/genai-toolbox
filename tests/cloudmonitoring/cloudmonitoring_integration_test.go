@@ -50,9 +50,10 @@ func TestTool_Invoke(t *testing.T) {
 	// Create a new observability tool
 	tool := &cloudmonitoring.Tool{
 		Name:        "test-cloudmonitoring",
-		Kind:        "cloudmonitoring",
+		Kind:        "cloudmonitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
-		Params:      tools.Parameters{},
+		AllParams:      tools.Parameters{},
+		Client:     &http.Client{},
 	}
 
 	// Set the monitoring endpoint to the mock server
@@ -68,7 +69,7 @@ func TestTool_Invoke(t *testing.T) {
 
 	// Define the test parameters
 	params := tools.ParamValues{
-		{Name: "projectID", Value: "test-project"},
+		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}
 
@@ -103,9 +104,10 @@ func TestTool_Invoke_Error(t *testing.T) {
 	// Create a new observability tool
 	tool := &cloudmonitoring.Tool{
 		Name:        "test-cloudmonitoring",
-		Kind:        "cloudmonitoring",
+		Kind:        "cloudmonitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
-		Params:      tools.Parameters{},
+		AllParams:      tools.Parameters{},
+		Client:     &http.Client{},
 	}
 
 	// Set the monitoring endpoint to the mock server
@@ -121,7 +123,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 
 	// Define the test parameters
 	params := tools.ParamValues{
-		{Name: "projectID", Value: "test-project"},
+		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}
 

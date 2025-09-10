@@ -112,6 +112,6 @@ tools:
       18. `alloydb.googleapis.com/database/postgresql/insights/pertag/row_count`: The number of retrieved or affected rows since the last sample per tag. `alloydb.googleapis.com/Database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`.
 
 toolsets:
-  alloydb-postgres-observability-tools:
+  alloydb-postgres-cloudmonitoring-tools:
     - alloydb-postgresql-system-metrics
     - alloydb-postgresql-query-metrics

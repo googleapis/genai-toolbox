@@ -37,6 +37,11 @@ func SetMonitoringEndpoint(endpoint string) {
 	monitoringEndpoint = endpoint
 }
 
+// SetGoogleFindDefaultCredentials sets the function to find default credentials for testing purposes.
+func SetGoogleFindDefaultCredentials(f func(ctx context.Context, scopes ...string) (*google.Credentials, error)) {
+	googleFindDefaultCredentials = f
+}
+
 const kind string = "cloudmonitoring-query-prometheus"
 
 func init() {
@@ -101,9 +106,9 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	projectID, ok := paramsMap["projectID"].(string)
+	projectID, ok := paramsMap["projectId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("projectID parameter not found or not a string")
+		return nil, fmt.Errorf("projectId parameter not found or not a string")
 	}
 	query, ok := paramsMap["query"].(string)
 	if !ok {

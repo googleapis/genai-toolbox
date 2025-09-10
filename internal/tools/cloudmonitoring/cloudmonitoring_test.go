@@ -53,11 +53,12 @@ func TestTool_Invoke(t *testing.T) {
 		Name:        "cloudmonitoring-query-prometheus",
 		Kind:        "cloudmonitoring-query-prometheus",
 		Description: "a test tool",
-		Params:      tools.Parameters{},
+		Client:     &http.Client{},
+		AllParams:      tools.Parameters{},
 	}
 
 	params := tools.ParamValues{
-		{Name: "projectID", Value: "test-project"},
+		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}
 

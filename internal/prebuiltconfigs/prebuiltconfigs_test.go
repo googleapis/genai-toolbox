@@ -15,7 +15,6 @@
 package prebuiltconfigs
 
 import (
-	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -23,6 +22,7 @@ import (
 
 var expectedToolSources = []string{
 	"alloydb-postgres-admin",
+	"alloydb-postgres-cloudmonitoring",
 	"alloydb-postgres",
 	"bigquery",
 	"clickhouse",
@@ -34,7 +34,6 @@ var expectedToolSources = []string{
 	"looker",
 	"mssql",
 	"mysql",
-	"alloydb-postgres-observability",
 	"oceanbase",
 	"postgres",
 	"spanner-postgres",
@@ -44,8 +43,6 @@ var expectedToolSources = []string{
 func TestGetPrebuiltSources(t *testing.T) {
 	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
 		sources := GetPrebuiltSources()
-		sort.Strings(sources)
-		sort.Strings(expectedToolSources)
 		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
 		}
@@ -78,8 +75,6 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 
 		t.Log(expectedKeys)
 		t.Log(keys)
-		sort.Strings(expectedKeys)
-		sort.Strings(keys)
 
 		if diff := cmp.Diff(expectedKeys, keys); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
@@ -90,6 +85,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 
 func TestGetPrebuiltTool(t *testing.T) {
 	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
+	alloydb_cloudmonitoring_config, _ := Get("alloydb-postgres-cloudmonitoring")
 	alloydb_config, _ := Get("alloydb-postgres")
 	bigquery_config, _ := Get("bigquery")
 	clickhouse_config, _ := Get("clickhouse")
@@ -109,6 +105,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+	}
+	if len(alloydb_cloudmonitoring_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb-postgres-cloudmonitoring prebuilt tools yaml")
 	}
 	if len(bigquery_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch bigquery prebuilt tools yaml")
