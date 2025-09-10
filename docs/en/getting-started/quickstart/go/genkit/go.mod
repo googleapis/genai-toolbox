@@ -3,7 +3,7 @@ module genkit-quickstart
 go 1.24.6
 
 require (
-	github.com/firebase/genkit/go v0.6.2
+	github.com/firebase/genkit/go v0.7.0
 	github.com/googleapis/mcp-toolbox-sdk-go v0.2.0
 )
 
