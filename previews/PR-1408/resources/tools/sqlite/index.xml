@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>SQLite on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1408/resources/tools/sqlite/</link><description>Recent content in SQLite on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1408/resources/tools/sqlite/index.xml" rel="self" type="application/rss+xml"/><item><title>sqlite-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1408/resources/tools/sqlite/sqlite-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1408/resources/tools/sqlite/sqlite-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>sqlite-sql&lt;/code> tool executes SQL statements against a SQLite database.
+It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1408/resources/sources/sqlite/">sqlite&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>SQLite uses the &lt;code>?&lt;/code> placeholder for parameters in SQL statements. Parameters are
+bound in the order they are provided.&lt;/p>
+&lt;p>The statement field supports any valid SQLite SQL statement, including &lt;code>SELECT&lt;/code>,
+&lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>DELETE&lt;/code>, &lt;code>CREATE/ALTER/DROP&lt;/code> table statements, and other
+DDL statements.&lt;/p>
+&lt;h3 id="example">Example&lt;/h3>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item></channel></rss>
