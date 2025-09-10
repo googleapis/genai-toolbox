@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-The `alloydb-create-user` tool creates a new database user (`ALLOYDB_BUILT_IN` or `ALLOYDB_IAM_USER`) within a specified cluster.
+The `alloydb-create-user` tool creates a new database user (`ALLOYDB_BUILT_IN` or `ALLOYDB_IAM_USER`) within a specified cluster. It is compatible with [http](../../sources/http.md) source.
 
 **Permissions & APIs Required:**
 Before using, ensure the following on your GCP project:
@@ -31,7 +31,7 @@ The tool takes the following input parameters:
 | `databaseRoles` | array(string) | Optional. A list of database roles to grant to the new user (e.g., `pg_read_all_data`). | No |
 
 > **Note**
-> This tool does not have a `source` and authenticates using the environment's
+> This tool authenticates using the environment's
 [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
 
 ## Example
@@ -40,10 +40,12 @@ The tool takes the following input parameters:
 tools:
   alloydb_create_user:
     kind: alloydb-create-user
+    source: http-source
     description: Use this tool to create a new database user for an AlloyDB cluster.
 ```
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be alloydb-create-user.                                                                  |                                               |
+| source      |                   string                   | true | The name of a http source. |
 | description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
