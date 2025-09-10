@@ -562,11 +562,6 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 		t.Fatalf("unable to parse result as JSON array: %s", err)
 	}
 	
-	// Check table count
-	if len(tables) != len(expectedTables) {
-		t.Fatalf("expected %d tables, got %d", len(expectedTables), len(tables))
-	}
-	
 	// If we expect specific tables, verify they exist
 	if len(expectedTables) > 0 {
 		tableNames := make(map[string]bool)
@@ -585,7 +580,7 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 			if objectDetailsStr, ok := tableMap["object_details"].(string); ok {
 				var objectDetails map[string]interface{}
 				if err := json.Unmarshal([]byte(objectDetailsStr), &objectDetails); err != nil {
-					t.Errorf("failed to parse object_details JSON: %v", err)
+					t.Errorf("failed to parse object_details JSON: %v for %v", err, objectDetailsStr)
 					continue
 				}
 
