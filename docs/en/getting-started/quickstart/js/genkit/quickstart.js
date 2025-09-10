@@ -3,7 +3,7 @@ import { genkit } from "genkit";
 import { googleAI } from '@genkit-ai/googleai';
 
 // Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const systemPrompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and

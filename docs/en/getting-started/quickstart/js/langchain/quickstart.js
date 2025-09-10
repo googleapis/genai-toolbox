@@ -5,7 +5,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver } from "@langchain/langgraph";
 
 // Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
