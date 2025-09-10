@@ -141,7 +141,7 @@ func getListInstanceToolsConfig(baseURL string) map[string]any {
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
 				"kind":    "http",
-				"baseUrl": "http://invalid-url",
+				"baseUrl": "http://127.0.0.1:1",
 			},
 		},
 		"tools": map[string]any{
