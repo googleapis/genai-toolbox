@@ -31,8 +31,8 @@ import (
 
 // Constants for tool configuration
 const (
-	kind            = "firestore-query"
-	defaultLimit    = 100
+	kind         = "firestore-query"
+	defaultLimit = 100
 )
 
 // Firestore operators
@@ -51,11 +51,11 @@ var validOperators = map[string]bool{
 
 // Error messages
 const (
-	errFilterParseFailed     = "failed to parse filters: %w"
-	errQueryExecutionFailed  = "failed to execute query: %w"
-	errTemplateParseFailed   = "failed to parse template: %w"
-	errTemplateExecFailed    = "failed to execute template: %w"
-	errLimitParseFailed      = "failed to parse limit value '%s': %w"
+	errFilterParseFailed      = "failed to parse filters: %w"
+	errQueryExecutionFailed   = "failed to execute query: %w"
+	errTemplateParseFailed    = "failed to parse template: %w"
+	errTemplateExecFailed     = "failed to execute template: %w"
+	errLimitParseFailed       = "failed to parse limit value '%s': %w"
 	errSelectFieldParseFailed = "failed to parse select field: %w"
 )
 
@@ -90,15 +90,15 @@ type Config struct {
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
-	
+
 	// Template fields
-	CollectionPath string           `yaml:"collectionPath" validate:"required"`
-	Filters        string           `yaml:"filters"`        // JSON string template
-	Select         []string         `yaml:"select"`         // Fields to select
-	OrderBy        map[string]any   `yaml:"orderBy"`        // Order by configuration
-	Limit          string           `yaml:"limit"`          // Limit template (can be a number or template)
-	AnalyzeQuery   bool             `yaml:"analyzeQuery"`   // Analyze query (boolean, not parameterizable)
-	
+	CollectionPath string         `yaml:"collectionPath" validate:"required"`
+	Filters        string         `yaml:"filters"`      // JSON string template
+	Select         []string       `yaml:"select"`       // Fields to select
+	OrderBy        map[string]any `yaml:"orderBy"`      // Order by configuration
+	Limit          string         `yaml:"limit"`        // Limit template (can be a number or template)
+	AnalyzeQuery   bool           `yaml:"analyzeQuery"` // Analyze query (boolean, not parameterizable)
+
 	// Parameters for template substitution
 	Parameters tools.Parameters `yaml:"parameters"`
 }
@@ -139,19 +139,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               	cfg.Name,
-		Kind:            		kind,
-		AuthRequired:    		cfg.AuthRequired,
-		Client:          		s.FirestoreClient(),
+		Name:                   cfg.Name,
+		Kind:                   kind,
+		AuthRequired:           cfg.AuthRequired,
+		Client:                 s.FirestoreClient(),
 		CollectionPathTemplate: cfg.CollectionPath,
-		FiltersTemplate: 		cfg.Filters,
+		FiltersTemplate:        cfg.Filters,
 		SelectTemplate:         cfg.Select,
 		OrderByTemplate:        cfg.OrderBy,
-		LimitTemplate:   		cfg.Limit,
-		AnalyzeQuery: 	        cfg.AnalyzeQuery,
-		Parameters:      		cfg.Parameters,
-		manifest:        		tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:     		mcpManifest,
+		LimitTemplate:          cfg.Limit,
+		AnalyzeQuery:           cfg.AnalyzeQuery,
+		Parameters:             cfg.Parameters,
+		manifest:               tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:            mcpManifest,
 	}
 	return t, nil
 }
@@ -161,19 +161,19 @@ var _ tools.Tool = Tool{}
 
 // Tool represents the Firestore query tool
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	
-	Client               	*firestoreapi.Client
-	CollectionPathTemplate  string
-	FiltersTemplate      	string
-	SelectTemplate          []string
-	OrderByTemplate         map[string]any
-	LimitTemplate        	string
-	AnalyzeQuery 	        bool
-	Parameters           	tools.Parameters
-	
+	Name         string   `yaml:"name"`
+	Kind         string   `yaml:"kind"`
+	AuthRequired []string `yaml:"authRequired"`
+
+	Client                 *firestoreapi.Client
+	CollectionPathTemplate string
+	FiltersTemplate        string
+	SelectTemplate         []string
+	OrderByTemplate        map[string]any
+	LimitTemplate          string
+	AnalyzeQuery           bool
+	Parameters             tools.Parameters
+
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -220,19 +220,19 @@ type QueryResponse struct {
 // Invoke executes the Firestore query based on the provided parameters
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	
+
 	// Process collection path with template substitution
-	collectionPath, err := tools.PopulateTemplate("collectionPath",t.CollectionPathTemplate, paramsMap)
+	collectionPath, err := tools.PopulateTemplate("collectionPath", t.CollectionPathTemplate, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process collection path: %w", err)
 	}
-	
+
 	// Build the query
 	query, err := t.buildQuery(collectionPath, paramsMap)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Execute the query and return results
 	return t.executeQuery(ctx, query)
 }
@@ -249,13 +249,13 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 		if err != nil {
 			return nil, fmt.Errorf("failed to process filters template: %w", err)
 		}
-		
+
 		// Parse the simplified filter format
 		var simplifiedFilter SimplifiedFilter
 		if err := json.Unmarshal([]byte(filtersJSON), &simplifiedFilter); err != nil {
 			return nil, fmt.Errorf(errFilterParseFailed, err)
 		}
-		
+
 		// Convert simplified filter to Firestore filter
 		if filter := t.convertToFirestoreFilter(simplifiedFilter); filter != nil {
 			query = query.WhereEntity(filter)
@@ -312,7 +312,7 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 		}
 		return nil
 	}
-	
+
 	// Handle OR filters
 	if len(filter.Or) > 0 {
 		filters := make([]firestoreapi.EntityFilter, 0, len(filter.Or))
@@ -326,7 +326,7 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 		}
 		return nil
 	}
-	
+
 	// Handle simple property filter
 	if filter.Field != "" && filter.Op != "" && filter.Value != nil {
 		if validOperators[filter.Op] {
@@ -336,7 +336,7 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 				// If conversion fails, use the original value
 				convertedValue = filter.Value
 			}
-			
+
 			return firestoreapi.PropertyFilter{
 				Path:     filter.Field,
 				Operator: filter.Op,
@@ -344,14 +344,14 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 			}
 		}
 	}
-	
+
 	return nil
 }
 
 // processSelectFields processes the select fields with parameter substitution
 func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	var selectFields []string
-	
+
 	// Process configured select fields with template substitution
 	for _, field := range t.SelectTemplate {
 		// Check if it's a template
@@ -363,7 +363,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 			if processed != "" {
 				// The processed field might be an array format [a b c] or a single value
 				trimmedProcessed := strings.TrimSpace(processed)
-				
+
 				// Check if it's in array format [a b c]
 				if strings.HasPrefix(trimmedProcessed, "[") && strings.HasSuffix(trimmedProcessed, "]") {
 					// Remove brackets and split by spaces
@@ -383,7 +383,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 			selectFields = append(selectFields, field)
 		}
 	}
-	
+
 	return selectFields, nil
 }
 
@@ -392,27 +392,27 @@ func (t Tool) getOrderBy(params map[string]any) (*OrderByConfig, error) {
 	if t.OrderByTemplate == nil {
 		return nil, nil
 	}
-	
+
 	orderBy := &OrderByConfig{}
-	
+
 	// Process field
 	field, err := t.getOrderByForKey("field", params)
 	if err != nil {
 		return nil, err
 	}
 	orderBy.Field = field
-	
+
 	// Process direction
 	direction, err := t.getOrderByForKey("direction", params)
 	if err != nil {
 		return nil, err
 	}
 	orderBy.Direction = direction
-	
+
 	if orderBy.Field == "" {
 		return nil, nil
 	}
-	
+
 	return orderBy, nil
 }
 
@@ -421,12 +421,12 @@ func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error
 	if !ok {
 		return "", nil
 	}
-	
+
 	processedValue, err := tools.PopulateTemplate(fmt.Sprintf("orderBy%s", key), value, params)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return processedValue, nil
 }
 
