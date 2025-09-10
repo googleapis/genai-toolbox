@@ -40,7 +40,7 @@ export async function main() {
   // Initialize LLM
   const llm = gemini({
     model: GEMINI_MODEL.GEMINI_2_0_FLASH,
-    apiKey: process.env.GOOGLE_API_KEY,
+    apiKey: GOOGLE_API_KEY,
   });
 
   const memory = createMemory({
