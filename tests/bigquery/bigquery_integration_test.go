@@ -251,89 +251,6 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Configure tool
 	toolsConfig := map[string]any{
-		"list-table-ids-restricted": map[string]any{
-			"kind":        "bigquery-list-table-ids",
-			"source":      "my-instance",
-			"description": "Tool to list table within a dataset",
-		},
-	}
-
-	// Create config file
-	config := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"tools": toolsConfig,
-	}
-
-	// Start server
-	cmd, cleanup, err := tests.StartCmd(ctx, config)
-	if err != nil {
-		t.Fatalf("command initialization returned an error: %s", err)
-	}
-	defer cleanup()
-
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
-	if err != nil {
-		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %s", err)
-	}
-
-	// Run tests
-	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
-	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
-}
-
-func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	client, err := initBigQueryConnection(BigqueryProject)
-	if err != nil {
-		t.Fatalf("unable to create BigQuery client: %s", err)
-	}
-
-	// Create two datasets, one allowed, one not.
-	baseName := strings.ReplaceAll(uuid.New().String(), "-", "")
-	allowedDatasetName := fmt.Sprintf("allowed_dataset_%s", baseName)
-	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", baseName)
-	allowedTableName := "allowed_table"
-	disallowedTableName := "disallowed_table"
-	allowedForecastTableName := "allowed_forecast_table"
-	disallowedForecastTableName := "disallowed_forecast_table"
-
-	// Setup allowed table
-	allowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName, allowedTableName)
-	createAllowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam)
-	teardownAllowed := setupBigQueryTable(t, ctx, client, createAllowedTableStmt, "", allowedDatasetName, allowedTableNameParam, nil)
-	defer teardownAllowed(t)
-
-	// Setup allowed forecast table
-	allowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName, allowedForecastTableName)
-	createForecastStmt, insertForecastStmt, forecastParams := getBigQueryForecastToolInfo(allowedForecastTableFullName)
-	teardownAllowedForecast := setupBigQueryTable(t, ctx, client, createForecastStmt, insertForecastStmt, allowedDatasetName, allowedForecastTableFullName, forecastParams)
-	defer teardownAllowedForecast(t)
-
-	// Setup disallowed table
-	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
-	createDisallowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", disallowedTableNameParam)
-	teardownDisallowed := setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
-	defer teardownDisallowed(t)
-
-	// Setup disallowed forecast table
-	disallowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedForecastTableName)
-	createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedForecastParams := getBigQueryForecastToolInfo(disallowedForecastTableFullName)
-	teardownDisallowedForecast := setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
-	defer teardownDisallowedForecast(t)
-
-	// Configure source with dataset restriction.
-	sourceConfig := getBigQueryVars(t)
-	sourceConfig["allowed_datasets"] = []string{allowedDatasetName}
-
-	// Configure tool
-	toolsConfig := map[string]any{
 		"list-dataset-ids-restricted": map[string]any{
 			"kind":        "bigquery-list-dataset-ids",
 			"source":      "my-instance",
@@ -395,13 +312,14 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Run tests
-	runListDatasetIdsWithRestriction(t, allowedDatasetName, disallowedDatasetName)
-	runListTableIdsWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName, allowedForecastTableName)
-	runGetDatasetInfoWithRestriction(t, allowedDatasetName, disallowedDatasetName)
-	runGetTableInfoWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName)
-	runExecuteSqlWithRestriction(t, allowedTableNameParam, disallowedTableNameParam)
-	runForecastWithRestriction(t, allowedForecastTableFullName, disallowedForecastTableFullName)
-	runConversationalAnalyticsWithRestriction(t, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName)
+	runListDatasetIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName)
+	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
+	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
+	runGetDatasetInfoWithRestriction(t, allowedDatasetName1, disallowedDatasetName)
+	runGetTableInfoWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
+	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
+	runForecastWithRestriction(t, allowedForecastTableFullName1, disallowedForecastTableFullName)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
 }
 
 func TestBigQueryToolWithNonExistentDataset(t *testing.T) {
@@ -1864,89 +1782,6 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 
 			if !strings.Contains(got, tc.want) {
 				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
-			}
-		})
-	}
-}
-
-func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName string, allowedTableNames ...string) {
-	sort.Strings(allowedTableNames)
-	var quotedNames []string
-	for _, name := range allowedTableNames {
-		quotedNames = append(quotedNames, fmt.Sprintf(`"%s"`, name))
-	}
-	wantResult := fmt.Sprintf(`[%s]`, strings.Join(quotedNames, ","))
-
-	testCases := []struct {
-		name           string
-		dataset        string
-		wantStatusCode int
-		wantInResult   string
-		wantInError    string
-	}{
-		{
-			name:           "invoke on allowed dataset",
-			dataset:        allowedDatasetName,
-			wantStatusCode: http.StatusOK,
-			wantInResult:   wantResult,
-		},
-		{
-			name:           "invoke on disallowed dataset",
-			dataset:        disallowedDatasetName,
-			wantStatusCode: http.StatusBadRequest, // Or the specific error code returned
-			wantInError:    fmt.Sprintf("access denied to dataset '%s'", disallowedDatasetName),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"dataset":"%s"}`, tc.dataset)))
-			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/list-table-ids-restricted/invoke", body)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
-			}
-
-			if tc.wantInResult != "" {
-				var respBody map[string]interface{}
-				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
-					t.Fatalf("error parsing response body: %v", err)
-				}
-				got, ok := respBody["result"].(string)
-				if !ok {
-					t.Fatalf("unable to find result in response body")
-				}
-
-				var gotSlice []string
-				if err := json.Unmarshal([]byte(got), &gotSlice); err != nil {
-					t.Fatalf("error unmarshalling result: %v", err)
-				}
-				sort.Strings(gotSlice)
-				sortedGotBytes, err := json.Marshal(gotSlice)
-				if err != nil {
-					t.Fatalf("error marshalling sorted result: %v", err)
-				}
-
-				if string(sortedGotBytes) != tc.wantInResult {
-					t.Errorf("unexpected result: got %q, want %q", string(sortedGotBytes), tc.wantInResult)
-				}
-			}
-
-			if tc.wantInError != "" {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				if !strings.Contains(string(bodyBytes), tc.wantInError) {
-					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
-				}
 			}
 		})
 	}
