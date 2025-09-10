@@ -152,8 +152,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 
 		// Set engine-specific defaults
-		switch {
-		case strings.HasPrefix(upperDBVersion, "SQLSERVER"):
+		if strings.HasPrefix(upperDBVersion, "SQLSERVER") {
 			if logicalEdition == "Production" {
 				settings["availabilityType"] = "REGIONAL"
 				settings["edition"] = "ENTERPRISE"
@@ -163,11 +162,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 				settings["edition"] = "ENTERPRISE"
 				settings["tier"] = "db-custom-2-8192" // 2vCPU, 8GB RAM
 			}
-		case strings.HasPrefix(upperDBVersion, "MYSQL"):
-			fallthrough // MySQL and Postgres have similar defaults
-		case strings.HasPrefix(upperDBVersion, "POSTGRES"):
-			fallthrough
-		default: // Default to Postgres/MySQL style defaults
+		} else { // Default to Postgres/MySQL style defaults
 			if logicalEdition == "Production" {
 				settings["availabilityType"] = "REGIONAL"
 				settings["edition"] = "ENTERPRISE_PLUS"
