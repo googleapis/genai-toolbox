@@ -50,8 +50,8 @@ func TestTool_Invoke(t *testing.T) {
 	}
 
 	tool := Tool{
-		Name:        "cloudmonitoring",
-		Kind:        "cloudmonitoring",
+		Name:        "cloudmonitoring-query-prometheus",
+		Kind:        "cloudmonitoring-query-prometheus",
 		Description: "a test tool",
 		Params:      tools.Parameters{},
 	}

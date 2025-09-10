@@ -14,9 +14,9 @@
 
 tools:
   alloydb-postgresql-system-metrics:
-    kind: cloudmonitoring
-    description: Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
-    queryDescription: |
+    kind: cloudmonitoring-query-prometheus
+    description: |
+      Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
       To use this tool, you must provide the Google Cloud `projectID` and a PromQL `query`.
 
       Generate the PromQL `query` for AlloyDB system metrics using the provided metrics and rules. Get labels like `cluster_id` and `instance_id` from the user's intent.
@@ -71,10 +71,10 @@ tools:
       34. `alloydb.googleapis.com/instance/postgres/transaction_count`: The number of committed and rolled back transactions across all serving nodes of the instance. `alloydb.googleapis.com/Instance`. `cluster_id`, `instance_id`.
 
   alloydb-postgresql-query-metrics:
-    kind: cloudmonitoring
-    description: Fetches query level cloudmonitoring data (timeseries metrics) for queries running in an AlloyDB instance.
-    queryDescription: |
-      To use this tool, you must provide the Google Cloud `projectID` and a PromQL `query`.
+    kind: cloudmonitoring-query-prometheus
+    description: |
+      Fetches query level cloudmonitoring data (timeseries metrics) for queries running in an AlloyDB instance.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
 
       Generate the PromQL `query` for AlloyDB query metrics using the provided metrics and rules. Get labels like `cluster_id`, `instance_id`, and `query_hash` from the user's intent. If `query_hash` is provided, use the per-query metrics.
 

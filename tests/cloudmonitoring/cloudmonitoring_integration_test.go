@@ -23,7 +23,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/observability/cloudmonitoring"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

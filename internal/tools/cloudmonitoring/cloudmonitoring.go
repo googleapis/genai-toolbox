@@ -37,7 +37,7 @@ func SetMonitoringEndpoint(endpoint string) {
 	monitoringEndpoint = endpoint
 }
 
-const kind string = "cloudmonitoring"
+const kind string = "cloudmonitoring-query-prometheus"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -69,21 +69,18 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	queryDescription := "The PromQL query to execute based on the tool's description."
-	if cfg.QueryDescription != "" {
-		queryDescription = cfg.QueryDescription
-	}
 	// Define the parameters internally instead of from the config file.
 	allParameters := tools.Parameters{
-		tools.NewStringParameterWithRequired("projectID", "The ID of the Google Cloud project containing the AlloyDB cluster.", true),
-		tools.NewStringParameterWithRequired("query", queryDescription, true),
+		tools.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
+		tools.NewStringParameterWithRequired("query", "The promql query to execute.", true),
 	}
 
 	return Tool{
 		Name:        cfg.Name,
 		Kind:        kind,
 		Description: cfg.Description,
-		Params:      allParameters,
+		AllParams:      allParameters,
+		Client:       &http.Client{},
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest()},
 		mcpManifest: tools.McpManifest{Name: cfg.Name, Description: cfg.Description, InputSchema: allParameters.McpManifest()},
 	}, nil
@@ -96,7 +93,8 @@ type Tool struct {
 	Name        string   `yaml:"name"`
 	Kind        string   `yaml:"kind"`
 	Description string   `yaml:"description"`
-	Params      tools.Parameters `yaml:"params"`
+	AllParams      tools.Parameters `yaml:"allParams"`
+	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -135,8 +133,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	req.Header.Add("Authorization", "Bearer "+token.AccessToken)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := t.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +152,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, nil
 	}
 
-	var result any
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal json: %w, body: %s", err, string(body))
 	}
@@ -164,7 +161,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Params, data, claims)
+	return tools.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
