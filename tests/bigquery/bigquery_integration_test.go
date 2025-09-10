@@ -301,6 +301,8 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Run tests
 	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
 	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
+	runForecastWithRestriction(t, allowedForecastTableFullName1, disallowedForecastTableFullName)
+	runForecastWithRestriction(t, allowedForecastTableFullName2, disallowedForecastTableFullName)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
