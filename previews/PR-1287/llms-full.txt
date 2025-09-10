@@ -7975,11 +7975,6 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
-# CloudSQLMySQL
-Tools that work with CloudSQL MySQL Sources.
-
-
-
 # Couchbase
 Tools that work with Couchbase Sources.
 

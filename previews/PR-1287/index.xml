@@ -715,10 +715,7 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
-Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>cloud-sql-mysql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/cloudsqlmysql/cloud-sql-mysql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/cloudsqlmysql/cloud-sql-mysql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-sql-mysql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a CloudSQL for MySQL database.
-It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a> source.&lt;/p>
-&lt;p>&lt;code>cloud-sql-mysql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the default.&lt;/p></description></item><item><title>Connect via MCP Client</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1287/how-to/connect_via_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1287/how-to/connect_via_mcp/</guid><description>&lt;h2 id="toolbox-sdks-vs-model-context-protocol-mcp">Toolbox SDKs vs Model Context Protocol (MCP)&lt;/h2>
+Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Connect via MCP Client</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1287/how-to/connect_via_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1287/how-to/connect_via_mcp/</guid><description>&lt;h2 id="toolbox-sdks-vs-model-context-protocol-mcp">Toolbox SDKs vs Model Context Protocol (MCP)&lt;/h2>
 &lt;p>Toolbox now supports connections via both the native Toolbox SDKs and via &lt;a href="https://modelcontextprotocol.io/">Model
 Context Protocol (MCP)&lt;/a>. However, Toolbox has
 several features which are not supported in the MCP specification (such as
@@ -3219,7 +3216,13 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>mysql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mysql/mysql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mysql/mysql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mysql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a MySQL database. It is compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the default.&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1287/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mysql-sql&lt;/code> tool executes a pre-defined SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
