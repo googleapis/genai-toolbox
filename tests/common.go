@@ -662,16 +662,16 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 		{
 			desc: "IPType Defaulting to Public",
 			in: `
-sources:
-  my-mysql-instance:
-    kind: cloud-sql-mysql
-    project: my-project
-    region: my-region
-    instance: my-instance
-    database: my_db
-    user: my_user
-    password: my_pass
-`,
+			sources:
+				my-mysql-instance:
+					kind: cloud-sql-mysql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
 			want: server.SourceConfigs{
 				"my-mysql-instance": cloudsqlmysql.Config{
 					Name:     "my-mysql-instance",
@@ -689,17 +689,17 @@ sources:
 		{
 			desc: "IPType Explicit Public",
 			in: `
-sources:
-  my-mysql-instance:
-    kind: cloud-sql-mysql
-    project: my-project
-    region: my-region
-    instance: my-instance
-    ipType: Public
-    database: my_db
-    user: my_user
-    password: my_pass
-`,
+			sources:
+				my-mysql-instance:
+					kind: cloud-sql-mysql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipType: Public
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
 			want: server.SourceConfigs{
 				"my-mysql-instance": cloudsqlmysql.Config{
 					Name:     "my-mysql-instance",
@@ -717,17 +717,17 @@ sources:
 		{
 			desc: "IPType Explicit Private",
 			in: `
-sources:
-  my-mysql-instance:
-    kind: cloud-sql-mysql
-    project: my-project
-    region: my-region
-    instance: my-instance
-    ipType: private
-    database: my_db
-    user: my_user
-    password: my_pass
-`,
+			sources:
+				my-mysql-instance:
+					kind: cloud-sql-mysql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipType: private 
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
 			want: server.SourceConfigs{
 				"my-mysql-instance": cloudsqlmysql.Config{
 					Name:     "my-mysql-instance",
