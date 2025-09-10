@@ -303,9 +303,9 @@ WITH table_info_cte AS (
           '"constraint_definition":',
             CASE TC.CONSTRAINT_TYPE
               WHEN 'CHECK' THEN CASE WHEN CC.CHECK_CLAUSE IS NULL THEN 'null' ELSE CONCAT('"', REPLACE(CC.CHECK_CLAUSE, '"', '\"'), '"') END
-              WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"', '\"'), ')', '"')
-              WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"', '\"'), ')', '"')
-              WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"', '\"'), ') REFERENCES ',
+              WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), '"', '\"'), ')', '"')
+              WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), '"', '\"'), ')', '"')
+              WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), '"', '\"'), ') REFERENCES ',
                                       COALESCE(REPLACE(RefKeyTable.TABLE_NAME, '"', '\"'), ''),
                                       ' (', REPLACE(array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ', '), '"', '\"'), ')', '"')
               ELSE 'null'
@@ -488,11 +488,11 @@ constraints_info_cte AS (
         '"constraint_definition":',
           CASE TC.CONSTRAINT_TYPE
             WHEN 'CHECK' THEN IF(CC.CHECK_CLAUSE IS NULL, 'null', CONCAT('"', CC.CHECK_CLAUSE, '"'))
-            WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), ')', '"')
-            WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), ')', '"')
-            WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), ') REFERENCES ',
+            WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', REPLACE(ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), '"', '\"'), ')', '"')
+            WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', REPLACE(ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), '"', '\"'), ')', '"')
+            WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', REPLACE(ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ', '), '"', '\"'), ') REFERENCES ',
                                     IFNULL(RefKeyTable.TABLE_NAME, ''),
-                                    ' (', ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ', '), ')', '"')
+                                    ' (', REPLACE(ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ', '), '"', '\"'), ')', '"')
             ELSE 'null'
           END, ',',
         '"constraint_columns":[', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ','), '],',
