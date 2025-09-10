@@ -222,7 +222,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	// Initialize new client if using user OAuth token
 	if t.UseClientOAuth {
-		bqClient, restService, err = t.ClientCreator(accessToken, true)
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, true)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}

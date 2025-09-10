@@ -87,18 +87,30 @@ func convertParamToJSON(param any) (string, error) {
 
 // PopulateTemplateWithJSON populate a Go template with a custom `json` array formatter
 func PopulateTemplateWithJSON(templateName, templateString string, data map[string]any) (string, error) {
-	funcMap := template.FuncMap{
+	return PopulateTemplateWithFunc(templateName, templateString, data, template.FuncMap{
 		"json": convertParamToJSON,
+	})
+}
+
+// PopulateTemplate populate a Go template with no custom formatters
+func PopulateTemplate(templateName, templateString string, data map[string]any) (string, error) {
+	return PopulateTemplateWithFunc(templateName, templateString, data, nil)
+}
+
+// PopulateTemplateWithFunc populate a Go template with provided functions
+func PopulateTemplateWithFunc(templateName, templateString string, data map[string]any, funcMap template.FuncMap) (string, error) {
+	tmpl := template.New(templateName)
+	if funcMap != nil {
+		tmpl = tmpl.Funcs(funcMap)
 	}
 
-	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateString)
+	parsedTmpl, err := tmpl.Parse(templateString)
 	if err != nil {
 		return "", fmt.Errorf("error parsing template '%s': %w", templateName, err)
 	}
 
 	var result bytes.Buffer
-	err = tmpl.Execute(&result, data)
-	if err != nil {
+	if err := parsedTmpl.Execute(&result, data); err != nil {
 		return "", fmt.Errorf("error executing template '%s': %w", templateName, err)
 	}
 	return result.String(), nil

@@ -1244,6 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1317,6 +1318,11 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
+	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
+	t.Setenv("NEO4J_DATABASE", "neo4j")
+	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
+	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1474,6 +1480,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-postgres-database-tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "neo4j prebuilt tools",
+			in:   neo4jconfig,
+			wantToolset: server.ToolsetConfigs{
+				"neo4j-database-tools": tools.ToolsetConfig{
+					Name:      "neo4j-database-tools",
+					ToolNames: []string{"execute_cypher", "get_schema"},
 				},
 			},
 		},
