@@ -303,11 +303,11 @@ WITH table_info_cte AS (
           '"constraint_definition":',
             CASE TC.CONSTRAINT_TYPE
               WHEN 'CHECK' THEN CASE WHEN CC.CHECK_CLAUSE IS NULL THEN 'null' ELSE CONCAT('"', REPLACE(CC.CHECK_CLAUSE, '"', '\"'), '"') END
-              WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
-              WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
-              WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ') REFERENCES ',
+              WHEN 'PRIMARY KEY' THEN CONCAT('"', 'PRIMARY KEY (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"', '\"'), ')', '"')
+              WHEN 'UNIQUE' THEN CONCAT('"', 'UNIQUE (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"', '\"'), ')', '"')
+              WHEN 'FOREIGN KEY' THEN CONCAT('"', 'FOREIGN KEY (', REPLACE(array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"', '\"'), ') REFERENCES ',
                                       COALESCE(REPLACE(RefKeyTable.TABLE_NAME, '"', '\"'), ''),
-                                      ' (', array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
+                                      ' (', REPLACE(array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ', '), '"', '\"'), ')', '"')
               ELSE 'null'
             END, ',',
           '"constraint_columns":[', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '],',
