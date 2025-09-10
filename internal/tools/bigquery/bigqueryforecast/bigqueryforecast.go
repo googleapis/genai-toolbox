@@ -25,6 +25,7 @@ import (
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	bqutil "github.com/googleapis/genai-toolbox/internal/util/bigquery"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -50,6 +51,8 @@ type compatibleSource interface {
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -85,8 +88,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	historyDataParameter := tools.NewStringParameter("history_data",
-		"The table id or the query of the history time series data.")
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	historyDataDescription := "The table id or the query of the history time series data."
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		historyDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
+
+	historyDataParameter := tools.NewStringParameter("history_data", historyDataDescription)
 	timestampColumnNameParameter := tools.NewStringParameter("timestamp_col",
 		"The name of the time series timestamp column.")
 	dataColumnNameParameter := tools.NewStringParameter("data_col",
@@ -106,16 +118,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
-		UseClientOAuth: s.UseClientAuthorization(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		Client:         s.BigQueryClient(),
-		RestService:    s.BigQueryRestService(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
+		Client:           s.BigQueryClient(),
+		RestService:      s.BigQueryRestService(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		AllowedDatasets:  allowedDatasets,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -130,11 +144,13 @@ type Tool struct {
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
 
-	Client        *bigqueryapi.Client
-	RestService   *bigqueryrestapi.Service
-	ClientCreator bigqueryds.BigqueryClientCreator
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Client           *bigqueryapi.Client
+	RestService      *bigqueryrestapi.Service
+	ClientCreator    bigqueryds.BigqueryClientCreator
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	AllowedDatasets  []string
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -175,8 +191,48 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
+		if len(t.AllowedDatasets) > 0 {
+			dryRunJob, err := bqutil.DryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, historyData, nil, nil)
+			if err != nil {
+				return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+			}
+			statementType := dryRunJob.Statistics.Query.StatementType
+			if statementType != "SELECT" {
+				return nil, fmt.Errorf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType)
+			}
+
+			queryStats := dryRunJob.Statistics.Query
+			if queryStats != nil {
+				for _, tableRef := range queryStats.ReferencedTables {
+					if !t.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
+						return nil, fmt.Errorf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId)
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("could not analyze query in history_data to validate against allowed datasets")
+			}
+		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
+		if len(t.AllowedDatasets) > 0 {
+			parts := strings.Split(historyData, ".")
+			var projectID, datasetID string
+
+			switch len(parts) {
+			case 3: // project.dataset.table
+				projectID = parts[0]
+				datasetID = parts[1]
+			case 2: // dataset.table
+				projectID = t.Client.Project()
+				datasetID = parts[0]
+			default:
+				return nil, fmt.Errorf("invalid table ID format for 'history_data': %q. Expected 'dataset.table' or 'project.dataset.table'", historyData)
+			}
+
+			if !t.IsDatasetAllowed(projectID, datasetID) {
+				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, historyData)
+			}
+		}
 		historyDataSource = fmt.Sprintf("TABLE `%s`", historyData)
 	}
 
