@@ -8,9 +8,9 @@ from toolbox_core import ToolboxSyncClient
 import asyncio
 import os
 
-# TODO(developer): replace this with your Google API key
+# TODO(developer): export your google api key in terminal
 
-os.environ['GOOGLE_API_KEY'] = 'your-api-key'
+os.environ['GOOGLE_API_KEY']
 
 async def main():
   with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
@@ -35,7 +35,7 @@ async def main():
 
       session_service = InMemorySessionService()
       artifacts_service = InMemoryArtifactService()
-      session = await session_service.create_session(
+      session = session_service.create_session(
           state={}, app_name='hotel_agent', user_id='123'
       )
       runner = Runner(
