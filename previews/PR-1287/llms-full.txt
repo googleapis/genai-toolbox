@@ -4492,6 +4492,9 @@ cluster][alloydb-free-trial].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in AlloyDB Postgres.
 
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
@@ -4920,6 +4923,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in Cloud SQL for MySQL.
 
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a Cloud SQL for MySQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)  
@@ -5031,6 +5037,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6025,6 +6034,9 @@ reliability, performance, and ease of use.
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in MySQL.
 
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a MySQL database.
+
 ## Requirements
 
 ### Database User
@@ -6213,6 +6225,9 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6809,6 +6824,36 @@ sources:
 | fallbackToTopologyKeysOnly    |  boolean  |     false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                    |
 | failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
 
+
+# AlloyDB Admin
+The "alloydb-admin" source provides a client for the AlloyDB API.
+
+
+## About
+
+The `alloydb-admin` source provides a client to interact with the [Google AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-alloydb-admin:
+        kind: alloy-admin
+
+    my-oauth-alloydb-admin:
+        kind: alloydb-admin
+        useClientOAuth: true
+```
+
+## Reference
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 # Tools
 Tools define actions an agent can take -- such as reading and writing to a source.
