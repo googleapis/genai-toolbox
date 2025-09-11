@@ -23,6 +23,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
 
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
