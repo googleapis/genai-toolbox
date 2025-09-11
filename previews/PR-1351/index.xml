@@ -680,18 +680,9 @@ Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
-&lt;/ul>
-&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/">Cloud SQL for Postgres using MCP&lt;/a>&lt;br>
-Connect your IDE to Cloud SQL for Postgres using Toolbox.&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
-&lt;p>By default, this source uses the &lt;a href="https://github.com/GoogleCloudPlatform/cloud-sql-go-connector">Cloud SQL Go Connector&lt;/a> to
-authorize and establish mTLS connections to your Cloud SQL instance. The Go
-connector uses your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize
-your connection to Cloud SQL.&lt;/p></description></item><item><title>Cloud SQL for SQL Server</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-mssql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-mssql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a PostgreSQL database.&lt;/p></description></item><item><title>Cloud SQL for SQL Server</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-mssql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-mssql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/sqlserver">Cloud SQL for SQL Server&lt;/a> is a managed database service that
 helps you set up, maintain, manage, and administer your SQL Server databases on
 Google Cloud.&lt;/p>
@@ -3418,7 +3409,16 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). The tool takes the following input parameters:
+* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas.
+* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -3443,6 +3443,10 @@ Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a PostgreSQL database.&lt;/p>
 &lt;/li>
 &lt;/ul>
 &lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
