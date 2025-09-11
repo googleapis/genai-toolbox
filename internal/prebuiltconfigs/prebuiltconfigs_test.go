@@ -22,6 +22,7 @@ import (
 
 var expectedToolSources = []string{
 	"alloydb-postgres-admin",
+	"alloydb-postgres-observability",
 	"alloydb-postgres",
 	"bigquery",
 	"clickhouse",
@@ -33,6 +34,7 @@ var expectedToolSources = []string{
 	"looker",
 	"mssql",
 	"mysql",
+	"neo4j",
 	"oceanbase",
 	"postgres",
 	"spanner-postgres",
@@ -84,6 +86,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 
 func TestGetPrebuiltTool(t *testing.T) {
 	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
+	alloydb_observability_config, _ := Get("alloydb-postgres-observability")
 	alloydb_config, _ := Get("alloydb-postgres")
 	bigquery_config, _ := Get("bigquery")
 	clickhouse_config, _ := Get("clickhouse")
@@ -98,11 +101,15 @@ func TestGetPrebuiltTool(t *testing.T) {
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	neo4jconfig, _ := Get("neo4j")
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+	}
+	if len(alloydb_observability_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb-observability prebuilt tools yaml")
 	}
 	if len(bigquery_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch bigquery prebuilt tools yaml")
@@ -142,6 +149,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(spannerpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+	}
+	if len(neo4jconfig) <= 0 {
+		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
 	}
 }
 
