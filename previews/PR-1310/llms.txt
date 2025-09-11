@@ -53,6 +53,7 @@ List of reference documentation for resources in Toolbox.
   - [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/cloud-sql-mysql/): Cloud SQL for MySQL is a fully-managed database service for MySQL.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
   - [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/cloud-sql-mssql/): Cloud SQL for SQL Server is a fully-managed database service for SQL Server.
+  - [Cloud SQL Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/cloud-sql-admin/): A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
   - [couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
@@ -73,6 +74,7 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
+  - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/alloydb-admin/): The "alloydb-admin" source provides a client for the AlloyDB API.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/bigquery/): Tools that work with BigQuery Sources.
