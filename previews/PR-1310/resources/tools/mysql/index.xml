@@ -46,7 +46,13 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>mysql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mysql/mysql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mysql/mysql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mysql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a MySQL database. It is compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the default.&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1310/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mysql-sql&lt;/code> tool executes a pre-defined SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
