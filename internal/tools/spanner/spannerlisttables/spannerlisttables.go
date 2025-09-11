@@ -310,9 +310,9 @@ WITH table_info_cte AS (
                                       ' (', array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ', '), ')', '"')
               ELSE 'null'
             END, ',',
-          '"constraint_columns":[', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '],',
+          '"constraint_columns":["', array_to_string(COALESCE(KeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"],',
           '"foreign_key_referenced_table":', CASE WHEN RefKeyTable.TABLE_NAME IS NULL THEN 'null' ELSE CONCAT('"', REPLACE(RefKeyTable.TABLE_NAME, '"', '\"'), '"') END, ',',
-          '"foreign_key_referenced_columns":[', array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ','), ']',
+          '"foreign_key_referenced_columns":["', array_to_string(COALESCE(RefKeyCols.column_names_json_list, ARRAY[]::text[]), ','), '"]',
           '}'
         ) ORDER BY TC.CONSTRAINT_NAME
       ) AS constraints_json_array_elements
@@ -495,9 +495,9 @@ constraints_info_cte AS (
                                     ' (', ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ', '), ')', '"')
             ELSE 'null'
           END, ',',
-        '"constraint_columns":[', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ','), '],',
+        '"constraint_columns":["', ARRAY_TO_STRING(COALESCE(KeyCols.column_names_json_list, []), ','), '"],',
         '"foreign_key_referenced_table":', IF(RefKeyTable.TABLE_NAME IS NULL, 'null', CONCAT('"', RefKeyTable.TABLE_NAME, '"')), ',',
-        '"foreign_key_referenced_columns":[', ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ','), ']',
+        '"foreign_key_referenced_columns":["', ARRAY_TO_STRING(COALESCE(RefKeyCols.column_names_json_list, []), ','), '"]',
         '}'
       ) ORDER BY TC.CONSTRAINT_NAME
     ) AS constraints_json_array_elements
