@@ -22,8 +22,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -37,6 +39,19 @@ import (
 var (
 	cloudsqlWaitToolKind = "cloud-sql-wait-for-operation"
 )
+
+type waitForOperationTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *waitForOperationTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
 type cloudsqlOperation struct {
 	Name          string `json:"name"`
@@ -128,16 +143,33 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 	server := httptest.NewServer(h)
 	defer server.Close()
 
-	h.operations["op1"].TargetLink = fmt.Sprintf("%s/v1/projects/p1/instances/i1/databases/d1", server.URL)
-	h.operations["op2"].TargetLink = fmt.Sprintf("%s/v1/projects/p1/instances/i2/databases/d2", server.URL)
-	h.operations["op3"].TargetLink = fmt.Sprintf("%s/v1/projects/p1/instances/i1", server.URL)
+	h.operations["op1"].TargetLink = "https://sqladmin.googleapis.com/v1/projects/p1/instances/i1/databases/d1"
+	h.operations["op2"].TargetLink = "https://sqladmin.googleapis.com/v1/projects/p1/instances/i2/databases/d2"
+	h.operations["op3"].TargetLink = "https://sqladmin.googleapis.com/v1/projects/p1/instances/i1"
+
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &waitForOperationTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+	t.Cleanup(func() {
+		http.DefaultClient.Transport = originalTransport
+	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	toolsFile := getCloudSQLWaitToolsConfig(server.URL)
+	toolsFile := getCloudSQLWaitToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -249,35 +281,28 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 	}
 }
 
-func getCloudSQLWaitToolsConfig(baseURL string) map[string]any {
+func getCloudSQLWaitToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
-			"test-source": map[string]any{
-				"kind":    "http",
-				"baseUrl": baseURL,
+			"my-cloud-sql-source": map[string]any{
+				"kind": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":         cloudsqlWaitToolKind,
-				"source":       "test-source",
-				"description":  "wait for op1",
-				"baseURL":      baseURL,
-				"authRequired": []string{},
+				"kind":        cloudsqlWaitToolKind,
+				"source":      "my-cloud-sql-source",
+				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":         cloudsqlWaitToolKind,
-				"source":       "test-source",
-				"description":  "wait for op2",
-				"baseURL":      baseURL,
-				"authRequired": []string{},
+				"kind":        cloudsqlWaitToolKind,
+				"source":      "my-cloud-sql-source",
+				"description": "wait for op2",
 			},
 			"wait-for-op3": map[string]any{
-				"kind":         cloudsqlWaitToolKind,
-				"source":       "test-source",
-				"description":  "wait for op3",
-				"baseURL":      baseURL,
-				"authRequired": []string{},
+				"kind":        cloudsqlWaitToolKind,
+				"source":      "my-cloud-sql-source",
+				"description": "wait for op3",
 			},
 		},
 	}

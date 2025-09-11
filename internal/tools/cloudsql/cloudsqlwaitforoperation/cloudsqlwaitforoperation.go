@@ -18,8 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"regexp"
 	"strings"
 	"text/template"
@@ -27,9 +25,10 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-wait-for-operation"
@@ -120,13 +119,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	s, ok := rawS.(*httpsrc.Source)
+	s, ok := rawS.(*cloudsqladmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
-	}
-
-	if s.BaseURL != "https://sqladmin.googleapis.com" && !strings.HasPrefix(s.BaseURL, "http://127.0.0.1") {
-		return nil, fmt.Errorf("invalid source for %q tool: baseUrl must be `https://sqladmin.googleapis.com`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
@@ -184,9 +179,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		BaseURL:      baseURL,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
+		Source:       s,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
@@ -204,7 +198,7 @@ type Tool struct {
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
-	BaseURL   string           `yaml:"baseURL"`
+	Source    *cloudsqladmin.Source
 	AllParams tools.Parameters `yaml:"allParams"`
 
 	// Polling configuration
@@ -213,7 +207,6 @@ type Tool struct {
 	Multiplier float64
 	MaxRetries int
 
-	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -231,7 +224,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'operation' parameter")
 	}
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/operations/%s", t.BaseURL, project, operationID)
+	client, err := t.Source.GetClient(ctx, string(accessToken))
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
@@ -249,46 +250,35 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		default:
 		}
 
-		req, _ := http.NewRequest(http.MethodGet, urlString, nil)
-
-		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/sqlservice.admin")
+		op, err := service.Operations.Get(project, operationID).Do()
 		if err != nil {
-			return nil, fmt.Errorf("error creating token source: %w", err)
-		}
-		token, err := tokenSource.Token()
-		if err != nil {
-			return nil, fmt.Errorf("error retrieving token: %w", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-		resp, err := t.Client.Do(req)
-		if err != nil {
-			fmt.Printf("error making HTTP request during polling: %s, retrying in %v\n", err, delay)
+			fmt.Printf("error getting operation: %s, retrying in %v\n", err, delay)
 		} else {
-			body, err := io.ReadAll(resp.Body)
-			resp.Body.Close()
-			if err != nil {
-				return nil, fmt.Errorf("error reading response body during polling: %w", err)
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				return nil, fmt.Errorf("unexpected status code during polling: %d, response body: %s", resp.StatusCode, string(body))
-			}
-
-			var data map[string]any
-			if err := json.Unmarshal(body, &data); err == nil {
-				if val, ok := data["status"]; ok {
-					if fmt.Sprintf("%v", val) == "DONE" {
-						if _, ok := data["error"]; ok {
-							return nil, fmt.Errorf("operation finished with error: %s", string(body))
-						}
-
-						if msg, ok := t.generateCloudSQLConnectionMessage(data); ok {
-							return msg, nil
-						}
-						return string(body), nil
+			if op.Status == "DONE" {
+				if op.Error != nil {
+					var errorBytes []byte
+					errorBytes, err = json.Marshal(op.Error)
+					if err != nil {
+						return nil, fmt.Errorf("operation finished with error but could not marshal error object: %w", err)
 					}
+					return nil, fmt.Errorf("operation finished with error: %s", string(errorBytes))
 				}
+
+				var opBytes []byte
+				opBytes, err = op.MarshalJSON()
+				if err != nil {
+					return nil, fmt.Errorf("could not marshal operation: %w", err)
+				}
+
+				var data map[string]any
+				if err := json.Unmarshal(opBytes, &data); err != nil {
+					return nil, fmt.Errorf("could not unmarshal operation: %w", err)
+				}
+
+				if msg, ok := t.generateCloudSQLConnectionMessage(data); ok {
+					return msg, nil
+				}
+				return string(opBytes), nil
 			}
 			fmt.Printf("Operation not complete, retrying in %v\n", delay)
 		}
@@ -324,7 +314,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.Source.UseClientAuthorization()
 }
 
 func (t Tool) generateCloudSQLConnectionMessage(opResponse map[string]any) (string, bool) {
@@ -404,37 +394,28 @@ func (t Tool) generateCloudSQLConnectionMessage(opResponse map[string]any) (stri
 }
 
 func (t Tool) fetchInstanceData(ctx context.Context, project, instance string) (map[string]any, error) {
-	urlString := fmt.Sprintf("%s/v1/projects/%s/instances/%s", t.BaseURL, project, instance)
-	req, _ := http.NewRequest(http.MethodGet, urlString, nil)
-
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/sqlservice.admin")
-	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
-	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := t.Client.Do(req)
+	client, err := t.Source.GetClient(ctx, "")
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code fetching instance data: %d, response body: %s", resp.StatusCode, string(body))
+	resp, err := service.Instances.Get(project, instance).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error getting instance: %w", err)
 	}
 
 	var data map[string]any
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, err
+	var b []byte
+	b, err = resp.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling response: %w", err)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
 	}
 	return data, nil
 }
