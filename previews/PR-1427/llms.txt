@@ -78,6 +78,7 @@ List of reference documentation for resources in Toolbox.
   - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/sources/alloydb-admin/): The "alloydb-admin" source provides a client for the AlloyDB API.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
+  - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/tools/alloydb/): Tools for AlloyDB for PostgreSQL.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1427/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
