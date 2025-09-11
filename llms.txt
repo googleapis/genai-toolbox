@@ -74,6 +74,7 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
+  - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/): The "alloydb-admin" source provides a client for the AlloyDB API.
 - [Tools](https://googleapis.github.io/genai-toolbox/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/resources/tools/bigquery/): Tools that work with BigQuery Sources.
