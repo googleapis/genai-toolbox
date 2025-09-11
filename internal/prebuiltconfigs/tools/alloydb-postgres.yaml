@@ -117,8 +117,21 @@ tools:
               type: string
               description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
               default: "detailed"
+    get_postgres_query_plan:
+        kind: postgres-sql
+        source: alloydb-pg-source
+        description: |
+            "Generate a PostgreSQL EXPLAIN plan in JSON for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Use in production safely for plan inspection, regression checks, and query tuning workflows."
+        statement: |
+            EXPLAIN (FORMAT JSON) {{.query}};
+        templateParameters:
+            - name: query
+              type: string
+              description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
+              required: true
 
 toolsets:
     alloydb-postgres-database-tools:
         - execute_sql
         - list_tables
+        - get_postgres_query_plan
