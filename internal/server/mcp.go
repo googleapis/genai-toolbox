@@ -360,7 +360,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if headerSessionId != "" {
 		protocolVersion = v20250326.PROTOCOL_VERSION
 	}
-	
+
 	// check if client have `MCP-Protocol-Version` header
 	// Only supported for v2025-06-18+.
 	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
