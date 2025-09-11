@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AlloyDB for PostgreSQL on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/tools/alloydb/</link><description>Recent content in AlloyDB for PostgreSQL on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/tools/alloydb/index.xml" rel="self" type="application/rss+xml"/><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/sources/http/">http&lt;/a> source.
+&lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 The tool takes the following input parameters:&lt;/p>
 &lt;table>
  &lt;thead>
@@ -33,5 +33,4 @@ The tool takes the following input parameters:&lt;/p>
 &lt;/table>
 &lt;blockquote>
 &lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the environment&amp;rsquo;s
-&lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a>.&lt;/p></description></item></channel></rss>
+This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1377/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item></channel></rss>
