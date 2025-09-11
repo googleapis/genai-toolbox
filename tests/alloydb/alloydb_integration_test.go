@@ -64,8 +64,7 @@ func getAlloyDBToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"alloydb-admin-source": map[string]any{
-				"kind":    "http",
-				"baseUrl": "https://alloydb.googleapis.com",
+				"kind":    "alloydb-admin",
 			},
 		},
 		"tools" : map[string]any{
@@ -166,12 +165,12 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 		{
 			name:           "list instances non-existent project",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "non-existent-project", "locationId": "%s", "clusterId": "%s"}`, vars["locationId"], vars["clusterId"])),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
 			name:           "list instances non-existent location",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "non-existent-location", "clusterId": "%s"}`, vars["projectId"], vars["clusterId"])),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
 			name:           "list instances non-existent cluster",

@@ -45,10 +45,10 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-instances": alloydblistinstances.Config{
-					Name:         "list-my-instances",
-					Kind:         "alloydb-list-instances",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
+					Name:        "list-my-instances",
+					Kind:        "alloydb-list-instances",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{},
 				},
 			},
@@ -67,56 +67,11 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-instances-auth": alloydblistinstances.Config{
-					Name:         "list-my-instances-auth",
-					Kind:         "alloydb-list-instances",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
+					Name:        "list-my-instances-auth",
+					Kind:        "alloydb-list-instances",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-				},
-			},
-		},
-		{
-			desc: "with base url",
-			in: `
-			tools:
-				list-my-instances-baseurl:
-					kind: alloydb-list-instances
-					source: my-alloydb-admin-source
-					description: some description
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"list-my-instances-baseurl": alloydblistinstances.Config{
-					Name:         "list-my-instances-baseurl",
-					Kind:         "alloydb-list-instances",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					BaseURL:      "https://example.com",
-					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "with auth and base url",
-			in: `
-			tools:
-				list-my-instances-all:
-					kind: alloydb-list-instances
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"list-my-instances-all": alloydblistinstances.Config{
-					Name:         "list-my-instances-all",
-					Kind:         "alloydb-list-instances",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					BaseURL:      "https://example.com",
 				},
 			},
 		},

@@ -19,6 +19,8 @@ sources:
     headers:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
+  alloydb-admin-source:
+    kind: alloydb-admin
 tools:
   alloydb-create-cluster:
     kind: http
@@ -142,9 +144,9 @@ tools:
           type: string
           description: "The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations."
           default: "-"
-  alloydb-list-instances:
+  list_instances:
     kind: alloydb-list-instances
-    source: alloydb-api-source
+    source: alloydb-admin-source
     description: "Lists all AlloyDB instances within a specific cluster."
   alloydb-list-users:
     kind: http
@@ -217,6 +219,6 @@ toolsets:
     - alloydb-operations-get
     - alloydb-create-instance
     - alloydb-list-clusters
-    - alloydb-list-instances
+    - list_instances
     - alloydb-list-users
     - alloydb-create-user
