@@ -82,6 +82,21 @@ intend to run. Common roles include `roles/bigquery.user` (which includes
 permissions to run jobs and read data) or `roles/bigbigquery.dataViewer`.
 Follow this [guide][set-adc] to set up your ADC.
 
+#### Example (ADC)
+
+Initialize a BigQuery source that uses ADC:
+
+```yaml
+sources:
+  my-bigquery-source:
+    kind: "bigquery"
+    project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+```
+
 ### Authentication via User's OAuth Access Token
 
 If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
@@ -97,20 +112,7 @@ identity used has been granted the correct IAM permissions.
 [adc]: <https://cloud.google.com/docs/authentication#adc>
 [set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
-## Example
-
-Initialize a BigQuery source that uses ADC:
-
-```yaml
-sources:
-  my-bigquery-source:
-    kind: "bigquery"
-    project: "my-project-id"
-    # location: "US" # Optional: Specifies the location for query jobs.
-    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
-    #   - "my_dataset_1"
-    #   - "other_project.my_dataset_2"
-```
+#### Example (Client OAuth)
 
 Initialize a BigQuery source that uses the client's access token:
 
@@ -125,6 +127,8 @@ sources:
     #   - "my_dataset_1"
     #   - "other_project.my_dataset_2"
 ```
+
+To connect to Gemini CLI using the client OAuth feature, you can follow this step-by-step [guide](../../samples/bigquery/bigquery_gemini_cli_client_oauth/_index.md).
 
 ## Reference
 
