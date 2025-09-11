@@ -130,6 +130,16 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"health_pulse": map[string]any{
+				"kind":        "looker-health-pulse",
+				"source":      "my-instance",
+				"description": "Checks the health of a Looker instance by running a series of checks on the system.",
+			},
+			"health_analyze": map[string]any{
+				"kind":        "looker-health-analyze",
+				"source":      "my-instance",
+				"description": "Provides analysis of a Looker instance's projects, models, or explores.",
+			},
 		},
 	}
 
@@ -617,6 +627,61 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "health_pulse",
+		map[string]any{
+			"health_pulse": map[string]any{
+				"description":  "Checks the health of a Looker instance by running a series of checks on the system.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The health check to run. Can be either: `check_db_connections`, `check_dashboard_performance`,`check_dashboard_errors`,`check_explore_performance`,`check_schedule_failures`, or `check_legacy_features`",
+						"name":        "action",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "health_analyze",
+		map[string]any{
+			"health_analyze": map[string]any{
+				"description":  "Provides analysis of a Looker instance's projects, models, or explores.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The analysis to run. Can be 'projects', 'models', or 'explores'.",
+						"name":        "action",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Looker project to analyze (optional).",
+						"name":        "project",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Looker model to analyze (optional).",
+						"name":        "model",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Looker explore to analyze (optional).",
+						"name":        "explore",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 
 	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
@@ -651,4 +716,10 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
+
+	wantResult = "\"Project\":\"system__activity\""
+	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
 }
