@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsql_test
+package cloudsql
 
 import (
 	"bytes"
@@ -22,8 +22,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -35,6 +37,19 @@ import (
 var (
 	createUserToolKind = "cloud-sql-create-users"
 )
+
+type createUsersTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *createUsersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
 type userCreateRequest struct {
 	Name     string `json:"name"`
@@ -94,8 +109,25 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &createUsersTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+	t.Cleanup(func() {
+		http.DefaultClient.Transport = originalTransport
+	})
+
 	var args []string
-	toolsFile := getCreateUsersToolsConfig(server.URL)
+	toolsFile := getCreateUsersToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -121,7 +153,7 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 		{
 			name:     "successful built-in user creation",
 			toolName: "create-user",
-			body:     `{"project": "p1", "instance": "i1", "name": "test-user", "password": "password"}`,
+			body:     `{"project": "p1", "instance": "i1", "name": "test-user", "password": "password", "iamUser": false}`,
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
@@ -133,7 +165,7 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 		{
 			name:        "missing password for built-in user",
 			toolName:    "create-user",
-			body:        `{"project": "p1", "instance": "i1", "name": "test-user"}`,
+			body:        `{"project": "p1", "instance": "i1", "name": "test-user", "iamUser": false}`,
 			expectError: true,
 			errorStatus: http.StatusBadRequest,
 		},
@@ -189,21 +221,18 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 	}
 }
 
-func getCreateUsersToolsConfig(baseURL string) map[string]any {
-	httpSource := map[string]any{
-		"kind":    "http",
-		"baseUrl": baseURL,
-	}
-
+func getCreateUsersToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
-			"test-http-source": httpSource,
+			"my-cloud-sql-source": map[string]any{
+				"kind": "cloud-sql-admin",
+			},
 		},
 		"tools": map[string]any{
 			"create-user": map[string]any{
 				"kind":        createUserToolKind,
 				"description": "create a cloud sql user",
-				"source":      "test-http-source",
+				"source":      "my-cloud-sql-source",
 			},
 		},
 	}

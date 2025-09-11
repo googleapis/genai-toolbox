@@ -15,19 +15,16 @@
 package cloudsqlcreateusers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-create-users"
@@ -69,13 +66,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-	s, ok := rawS.(*httpsrc.Source)
+	s, ok := rawS.(*cloudsqladmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
-	}
-
-	if s.BaseURL != "https://sqladmin.googleapis.com" && !strings.HasPrefix(s.BaseURL, "http://127.0.0.1") {
-		return nil, fmt.Errorf("invalid source for %q tool: baseUrl must be `https://sqladmin.googleapis.com`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
@@ -83,7 +76,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameter("instance", "The ID of the instance where the user will be created."),
 		tools.NewStringParameter("name", "The name for the new user. Must be unique within the instance."),
 		tools.NewStringParameterWithRequired("password", "A secure password for the new user. Not required for IAM users.", false),
-		tools.NewBooleanParameterWithDefault("iamUser", false, "Set to true to create a Cloud IAM user."),
+		tools.NewBooleanParameter("iamUser", "Set to true to create a Cloud IAM user."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -99,11 +92,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:         cfg.Name,
 		Kind:         kind,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
+		Source:       s,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
-		BaseURL:      s.BaseURL,
 	}, nil
 }
 
@@ -113,10 +105,9 @@ type Tool struct {
 	Kind         string   `yaml:"kind"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string
 
+	Source      *cloudsqladmin.Source
 	AllParams   tools.Parameters `yaml:"allParams"`
-	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -147,62 +138,44 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	iamUser, _ := paramsMap["iamUser"].(bool)
 
-	reqBody := userCreateRequest{
+	user := &sqladmin.User{
 		Name: name,
 	}
 
 	if iamUser {
-		reqBody.Type = "CLOUD_IAM_USER"
+		user.Type = "CLOUD_IAM_USER"
 	} else {
-		reqBody.Type = "BUILT_IN"
+		user.Type = "BUILT_IN"
 		password, ok := paramsMap["password"].(string)
 		if !ok || password == "" {
 			return nil, fmt.Errorf("missing 'password' parameter for non-IAM user")
 		}
-		reqBody.Password = password
+		user.Password = password
 	}
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/instances/%s/users", t.BaseURL, project, instance)
-
-	reqBodyBytes, err := json.Marshal(reqBody)
+	client, err := t.Source.GetClient(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request body: %w", err)
+		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, urlString, bytes.NewBuffer(reqBodyBytes))
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/sqlservice.admin")
-	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
-	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := t.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
+		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+	resp, err := service.Users.Insert(project, instance, user).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error creating user: %w", err)
 	}
 
 	var data any
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response body: %w", err)
+	var b []byte
+	b, err = resp.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling response: %w", err)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
 	}
 
 	return data, nil
@@ -229,5 +202,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.Source.UseClientAuthorization()
 }
