@@ -9,11 +9,7 @@ description: >
 The `cloud-sql-get-instances` tool retrieves a Cloud SQL instance resource using the Cloud SQL Admin API.
 
 {{< notice info >}}
-This tool uses a `source` of kind `http`, and the `baseUrl` for that source must be `https://sqladmin.googleapis.com/`.
-{{< /notice >}}
-
-{{< notice info >}}
-The toolbox automatically generates a bearer token on behalf of the user with the `https://www.googleapis.com/auth/sqlservice.admin` scope to authenticate requests.
+This tool uses a `source` of kind `cloud-sql-admin`. The source automatically generates a bearer token on behalf of the user with the `https://www.googleapis.com/auth/sqlservice.admin` scope to authenticate requests.
 {{< /notice >}}
 
 ## Example
@@ -23,7 +19,7 @@ tools:
   get-sql-instance:
     kind: cloud-sql-get-instances
     description: "Get a Cloud SQL instance resource."
-    source: http-source
+    source: my-cloud-sql-source
 ```
 
 ## Reference
@@ -32,4 +28,4 @@ tools:
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
 | kind        |  string  |     true     | Must be "cloud-sql-get-instances".                                                                            |
 | description |  string  |     true     | A description of the tool.                                                                                       |
-| source      |  string  |     true     | The name of the `http` source to use. The source's `baseUrl` must be `https://sqladmin.googleapis.com/`.         |
+| source      |  string  |     true     | The name of the `cloud-sql-admin` source to use.                                                                 |

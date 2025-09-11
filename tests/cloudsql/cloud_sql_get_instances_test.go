@@ -22,8 +22,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -35,6 +37,19 @@ import (
 var (
 	getInstancesToolKind = "cloud-sql-get-instances"
 )
+
+type getInstancesTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *getInstancesTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
 type instance struct {
 	Name string `json:"name"`
@@ -49,6 +64,11 @@ type handler struct {
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
+	if !strings.HasPrefix(r.URL.Path, "/v1/projects/") {
+		http.Error(w, "unexpected path", http.StatusBadRequest)
+		return
+	}
 
 	// The format is /v1/projects/{project}/instances/{instance_name}
 	// We only care about the instance_name for the test
@@ -76,12 +96,29 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 	server := httptest.NewServer(h)
 	defer server.Close()
 
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &getInstancesTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+	t.Cleanup(func() {
+		http.DefaultClient.Transport = originalTransport
+	})
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	toolsFile := getToolsConfig(server.URL)
+	toolsFile := getToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -184,26 +221,27 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 	}
 }
 
-func getToolsConfig(baseURL string) map[string]any {
+func getToolsConfig() map[string]any {
 	return map[string]any{
-		"tools": map[string]any{
-			"get-instance-1": map[string]any{
-				"kind":         getInstancesToolKind,
-				"description":  "get instance 1",
-				"source":       "sqladmin",
-				"authRequired": []string{},
+		"sources": map[string]any{
+			"my-cloud-sql-source": map[string]any{
+				"kind": "cloud-sql-admin",
 			},
-			"get-instance-2": map[string]any{
-				"kind":         getInstancesToolKind,
-				"description":  "get instance 2",
-				"source":       "sqladmin",
-				"authRequired": []string{},
+			"my-invalid-cloud-sql-source": map[string]any{
+				"kind":           "cloud-sql-admin",
+				"useClientOAuth": true,
 			},
 		},
-		"sources": map[string]any{
-			"sqladmin": map[string]any{
-				"kind":    "http",
-				"baseUrl": baseURL,
+		"tools": map[string]any{
+			"get-instance-1": map[string]any{
+				"kind":        getInstancesToolKind,
+				"description": "get instance 1",
+				"source":      "my-cloud-sql-source",
+			},
+			"get-instance-2": map[string]any{
+				"kind":        getInstancesToolKind,
+				"description": "get instance 2",
+				"source":      "my-invalid-cloud-sql-source",
 			},
 		},
 	}

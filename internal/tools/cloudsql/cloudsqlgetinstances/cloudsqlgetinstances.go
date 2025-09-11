@@ -18,15 +18,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsource "github.com/googleapis/genai-toolbox/internal/sources/http"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-get-instances"
@@ -69,13 +67,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	s, ok := rawS.(*httpsource.Source)
+	s, ok := rawS.(*cloudsqladmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
-	}
-
-	if s.BaseURL != "https://sqladmin.googleapis.com" && !strings.HasPrefix(s.BaseURL, "http://127.0.0.1") {
-		return nil, fmt.Errorf("invalid source for %q tool: baseUrl must be `https://sqladmin.googleapis.com/`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
@@ -94,26 +88,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
-		BaseURL:     s.BaseURL,
-		Client:      s.Client,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
-		mcpManifest: mcpManifest,
+		Name:         cfg.Name,
+		Kind:         kind,
+		AuthRequired: cfg.AuthRequired,
+		Source:       s,
+		AllParams:    allParameters,
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:  mcpManifest,
 	}, nil
 }
 
 // Tool represents the get-instances tool.
 type Tool struct {
-	Name        string `yaml:"name"`
-	Kind        string `yaml:"kind"`
-	Description string `yaml:"description"`
+	Name         string   `yaml:"name"`
+	Kind         string   `yaml:"kind"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
 
-	BaseURL   string           `yaml:"baseURL"`
-	AllParams tools.Parameters `yaml:"allParams"`
-
-	Client      *http.Client
+	Source      *cloudsqladmin.Source
+	AllParams   tools.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -131,37 +124,28 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'instance' parameter")
 	}
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/instances/%s", t.BaseURL, project, instance)
-
-	req, _ := http.NewRequest(http.MethodGet, urlString, nil)
-
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/sqlservice.admin")
+	client, err := t.Source.GetClient(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
-	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := t.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
+		return nil, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
+	}
+
+	resp, err := service.Instances.Get(project, instance).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error getting instance: %w", err)
 	}
 
 	var data any
-	if err := json.Unmarshal(body, &data); err != nil {
+	var b []byte
+	b, err = resp.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling response: %w", err)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
 		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
 	}
 
@@ -189,5 +173,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.Source.UseClientAuthorization()
 }
