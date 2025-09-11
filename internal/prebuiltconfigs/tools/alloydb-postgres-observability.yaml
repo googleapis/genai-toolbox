@@ -13,7 +13,7 @@
 # limitations under the License.
 
 tools:
-  alloydb-system-metrics:
+  get_system_metrics:
     kind: cloud-monitoring-query-prometheus
     description: |
       Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
@@ -70,7 +70,7 @@ tools:
       33. `alloydb.googleapis.com/instance/postgresql/wait_time`: Total elapsed wait time for each wait event in the instance. `alloydb.googleapis.com/Instance`. `cluster_id`, `instance_id`, `wait_event_type`, `wait_event_name`.
       34. `alloydb.googleapis.com/instance/postgres/transaction_count`: The number of committed and rolled back transactions across all serving nodes of the instance. `alloydb.googleapis.com/Instance`. `cluster_id`, `instance_id`.
 
-  alloydb-query-metrics:
+  get_query_metrics:
     kind: cloud-monitoring-query-prometheus
     description: |
       Fetches query level cloudmonitoring data (timeseries metrics) for queries running in an AlloyDB instance.
@@ -113,5 +113,5 @@ tools:
 
 toolsets:
   alloydb-postgres-cloud-monitoring-tools:
-    - alloydb-system-metrics
-    - alloydb-query-metrics
+    - get_system_metrics
+    - get_query_metrics
