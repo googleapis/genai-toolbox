@@ -4689,15 +4689,11 @@ allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
 client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
-identity used has been granted the correct IAM permissions. Currently,
-this option is only supported by the following BigQuery tools:
+identity used has been granted the correct IAM permissions.
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-[iam-overview]: https://cloud.google.com/bigquery/docs/access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-overview]: <https://cloud.google.com/bigquery/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ## Example
 
