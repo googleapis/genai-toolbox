@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery_test
+package alloydbadmin_test
 
 import (
 	"testing"
@@ -20,11 +20,12 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlBigQuery(t *testing.T) {
+func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -34,17 +35,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			desc: "basic example",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
+				my-alloydb-admin-instance:
+					kind: alloydb-admin
 			`,
-			want: server.SourceConfigs{
-				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
-					Project:        "my-project",
-					Location:       "us",
+			want: map[string]sources.SourceConfig{
+				"my-alloydb-admin-instance": alloydbadmin.Config{
+					Name:                   "my-alloydb-admin-instance",
+					Kind:                   alloydbadmin.SourceKind,
 					UseClientOAuth: false,
 				},
 			},
@@ -53,40 +50,15 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			desc: "use client auth example",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
+				my-alloydb-admin-instance:
+					kind: alloydb-admin
 					useClientOAuth: true
 			`,
-			want: server.SourceConfigs{
-				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
-					Project:        "my-project",
-					Location:       "us",
+			want: map[string]sources.SourceConfig{
+				"my-alloydb-admin-instance": alloydbadmin.Config{
+					Name:                   "my-alloydb-admin-instance",
+					Kind:                   alloydbadmin.SourceKind,
 					UseClientOAuth: true,
-				},
-			},
-		},
-		{
-			desc: "with allowed datasets example",
-			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					allowedDatasets:
-						- my_dataset
-			`,
-			want: server.SourceConfigs{
-				"my-instance": bigquery.Config{
-					Name:            "my-instance",
-					Kind:            bigquery.SourceKind,
-					Project:         "my-project",
-					Location:        "us",
-					AllowedDatasets: []string{"my_dataset"},
 				},
 			},
 		},
@@ -106,7 +78,6 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestFailParseFromYaml(t *testing.T) {
@@ -119,23 +90,20 @@ func TestFailParseFromYaml(t *testing.T) {
 			desc: "extra field",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					foo: bar
+				my-alloydb-admin-instance:
+					kind: alloydb-admin
+					project: test-project
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: bigquery\n   3 | location: us\n   4 | project: my-project",
+			err: "unable to parse source \"my-alloydb-admin-instance\" as \"alloydb-admin\": [2:1] unknown field \"project\"\n   1 | kind: alloydb-admin\n>  2 | project: test-project\n       ^\n",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					location: us
+				my-alloydb-admin-instance:
+					useClientOAuth: true
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "missing 'kind' field for source \"my-alloydb-admin-instance\"",
 		},
 	}
 	for _, tc := range tcs {
