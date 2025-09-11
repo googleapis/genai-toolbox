@@ -1,3 +1,17 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
   alloydb-api-source:
     kind: http
@@ -6,7 +20,7 @@ sources:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
 tools:
-  alloydb-create-cluster:
+  create_cluster:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -48,14 +62,14 @@ tools:
       - name: user
         type: string
         description: "The name for the initial superuser. If not provided, it defaults to 'postgres'. The initial database will always be named 'postgres'."
-  alloydb-operations-get:
+  operations_get:
     kind: alloydb-wait-for-operation
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
     delay: 1s
     maxDelay: 4m
     multiplier: 2
     maxRetries: 10
-  alloydb-create-instance:
+  create_instance:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -114,7 +128,7 @@ tools:
         type: string
         description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
         default: ""
-  alloydb-list-clusters:
+  list_clusters:
       kind: http
       source: alloydb-api-source
       method: GET
@@ -128,7 +142,7 @@ tools:
           type: string
           description: "The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations."
           default: "-"
-  alloydb-list-instances:
+  list_instances:
     kind: http
     source: alloydb-api-source
     method: GET
@@ -146,7 +160,7 @@ tools:
         type: string
         description: "The ID of the cluster to list instances from. Use '-' to get results for all clusters."
         default: "-"
-  alloydb-list-users:
+  list_users:
     kind: http
     source: alloydb-api-source
     method: GET
@@ -163,7 +177,7 @@ tools:
       - name: clusterId
         type: string
         description: "The ID of the cluster to list users from."
-  alloydb-create-user:
+  create_user:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -212,11 +226,11 @@ tools:
         default: "ALLOYDB_BUILT_IN"
         
 toolsets:
-  alloydb-postgres-admin-tools:
-    - alloydb-create-cluster
-    - alloydb-operations-get
-    - alloydb-create-instance
-    - alloydb-list-clusters
-    - alloydb-list-instances
-    - alloydb-list-users
-    - alloydb-create-user
+  alloydb_postgres_admin_tools:
+    - create_cluster
+    - operations_get
+    - create_instance
+    - list_clusters
+    - list_instances
+    - list_users
+    - create_user

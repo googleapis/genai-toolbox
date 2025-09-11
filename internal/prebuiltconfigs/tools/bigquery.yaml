@@ -63,7 +63,7 @@ tools:
     description: Use this tool to list tables.
 
 toolsets:
-  bigquery-database-tools:
+  bigquery_database_tools:
     - analyze_contribution
     - ask_data_insights
     - execute_sql

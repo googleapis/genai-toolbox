@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 sources:
     cloudsql-pg-source:
         kind: cloud-sql-postgres
@@ -118,6 +119,6 @@ tools:
               default: "detailed"
 
 toolsets:
-    cloud-sql-postgres-database-tools:
+    cloud_sql_postgres_database_tools:
         - execute_sql
         - list_tables

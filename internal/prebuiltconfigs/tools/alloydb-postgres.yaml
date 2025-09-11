@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 sources:
     alloydb-pg-source:
         kind: "alloydb-postgres"
@@ -119,6 +120,6 @@ tools:
               default: "detailed"
 
 toolsets:
-    alloydb-postgres-database-tools:
+    alloydb_postgres_database_tools:
         - execute_sql
         - list_tables

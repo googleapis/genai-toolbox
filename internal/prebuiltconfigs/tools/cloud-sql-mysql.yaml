@@ -192,6 +192,6 @@ tools:
         default: "detailed"
 
 toolsets:
-  cloud-sql-mysql-database-tools:
+  cloud_sql_mysql_database_tools:
     - execute_sql
     - list_tables

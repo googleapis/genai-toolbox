@@ -196,6 +196,6 @@ tools:
         default: "detailed"
 
 toolsets:
-  mysql-database-tools:
+  mysql_database_tools:
     - execute_sql
     - list_tables
