@@ -34,6 +34,6 @@ tools:
         description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
 toolsets:
-    postgres-database-tools:
+    postgres_database_tools:
         - execute_sql
         - list_tables
