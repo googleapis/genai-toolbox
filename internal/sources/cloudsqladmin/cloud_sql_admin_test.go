@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery_test
+package cloudsqladmin_test
 
 import (
 	"testing"
@@ -20,11 +20,13 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlBigQuery(t *testing.T) {
+func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
+	t.Parallel()
 	tcs := []struct {
 		desc string
 		in   string
@@ -34,17 +36,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			desc: "basic example",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
+				my-cloud-sql-admin-instance:
+					kind: cloud-sql-admin
 			`,
-			want: server.SourceConfigs{
-				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
-					Project:        "my-project",
-					Location:       "us",
+			want: map[string]sources.SourceConfig{
+				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
+					Name:           "my-cloud-sql-admin-instance",
+					Kind:           cloudsqladmin.SourceKind,
 					UseClientOAuth: false,
 				},
 			},
@@ -53,46 +51,23 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			desc: "use client auth example",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
+				my-cloud-sql-admin-instance:
+					kind: cloud-sql-admin
 					useClientOAuth: true
 			`,
-			want: server.SourceConfigs{
-				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
-					Project:        "my-project",
-					Location:       "us",
+			want: map[string]sources.SourceConfig{
+				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
+					Name:           "my-cloud-sql-admin-instance",
+					Kind:           cloudsqladmin.SourceKind,
 					UseClientOAuth: true,
-				},
-			},
-		},
-		{
-			desc: "with allowed datasets example",
-			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					allowedDatasets:
-						- my_dataset
-			`,
-			want: server.SourceConfigs{
-				"my-instance": bigquery.Config{
-					Name:            "my-instance",
-					Kind:            bigquery.SourceKind,
-					Project:         "my-project",
-					Location:        "us",
-					AllowedDatasets: []string{"my_dataset"},
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
 			got := struct {
 				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
@@ -106,10 +81,10 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestFailParseFromYaml(t *testing.T) {
+	t.Parallel()
 	tcs := []struct {
 		desc string
 		in   string
@@ -119,27 +94,30 @@ func TestFailParseFromYaml(t *testing.T) {
 			desc: "extra field",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					foo: bar
+				my-cloud-sql-admin-instance:
+					kind: cloud-sql-admin
+					project: test-project
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: bigquery\n   3 | location: us\n   4 | project: my-project",
+			err: `unable to parse source "my-cloud-sql-admin-instance" as "cloud-sql-admin": [2:1] unknown field "project"
+   1 | kind: cloud-sql-admin
+>  2 | project: test-project
+       ^
+`,
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
-				my-instance:
-					kind: bigquery
-					location: us
+				my-cloud-sql-admin-instance:
+					useClientOAuth: true
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "missing 'kind' field for source \"my-cloud-sql-admin-instance\"",
 		},
 	}
 	for _, tc := range tcs {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
 			got := struct {
 				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
