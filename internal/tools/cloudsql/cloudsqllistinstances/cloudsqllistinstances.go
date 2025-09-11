@@ -20,13 +20,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	cloudsqladminsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
 )
 
 const kind string = "cloud-sql-list-instances"
@@ -68,13 +66,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-	s, ok := rawS.(*httpsrc.Source)
+	s, ok := rawS.(*cloudsqladminsrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
-	}
-
-	if s.BaseURL != "https://sqladmin.googleapis.com" && !strings.HasPrefix(s.BaseURL, "http://127.0.0.1") {
-		return nil, fmt.Errorf("invalid source for %q tool: baseUrl must be `https://sqladmin.googleapis.com`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
@@ -95,11 +89,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:         cfg.Name,
 		Kind:         kind,
 		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
+		source:       s,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
-		BaseURL:      s.BaseURL,
 	}, nil
 }
 
@@ -109,10 +102,9 @@ type Tool struct {
 	Kind         string   `yaml:"kind"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string
 
 	AllParams   tools.Parameters `yaml:"allParams"`
-	Client      *http.Client
+	source      *cloudsqladminsrc.Source
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -126,23 +118,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/instances", t.BaseURL, project)
+	client, err := t.source.GetClient(ctx, string(accessToken))
+	if err != nil {
+		return nil, err
+	}
+
+	urlString := fmt.Sprintf("%s/v1/projects/%s/instances", t.source.BaseURL, project)
 	req, err := http.NewRequest(http.MethodGet, urlString, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/sqlservice.admin")
-	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
-	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := t.Client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error making HTTP request: %w", err)
 	}
@@ -186,5 +173,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.source.UseClientAuthorization()
 }

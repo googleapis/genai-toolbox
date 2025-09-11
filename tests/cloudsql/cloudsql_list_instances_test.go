@@ -22,8 +22,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -31,6 +33,19 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
 	"github.com/googleapis/genai-toolbox/tests"
 )
+
+type transport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
 func TestListInstance(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -43,12 +58,29 @@ func TestListInstance(t *testing.T) {
 	}))
 	defer server.Close()
 
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &transport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+	t.Cleanup(func() {
+		http.DefaultClient.Transport = originalTransport
+	})
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	toolsFile := getListInstanceToolsConfig(server.URL)
+	toolsFile := getListInstanceToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -132,30 +164,27 @@ func TestListInstance(t *testing.T) {
 	}
 }
 
-func getListInstanceToolsConfig(baseURL string) map[string]any {
+func getListInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind":    "http",
-				"baseUrl": baseURL,
+				"kind": "cloud-sql-admin",
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
-				"kind":    "http",
-				"baseUrl": "http://127.0.0.1:1",
+				"kind":           "cloud-sql-admin",
+				"useClientOAuth": true,
 			},
 		},
 		"tools": map[string]any{
 			"list-instances": map[string]any{
-				"kind":         "cloud-sql-list-instances",
-				"description":  "list instances",
-				"source":       "my-cloud-sql-source",
-				"authRequired": []string{},
+				"kind":        "cloud-sql-list-instances",
+				"description": "list instances",
+				"source":      "my-cloud-sql-source",
 			},
 			"list-instances-fail": map[string]any{
-				"kind":         "cloud-sql-list-instances",
-				"description":  "list instances",
-				"source":       "my-invalid-cloud-sql-source",
-				"authRequired": []string{},
+				"kind":        "cloud-sql-list-instances",
+				"description": "list instances",
+				"source":      "my-invalid-cloud-sql-source",
 			},
 		},
 	}

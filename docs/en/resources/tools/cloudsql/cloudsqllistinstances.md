@@ -9,7 +9,7 @@ The `cloud-sql-list-instances` tool lists all Cloud SQL instances in a specified
 Google Cloud project.
 
 {{< notice info >}}
-The toolbox automatically generates a bearer token on behalf of the user with the `https://www.googleapis.com/auth/sqlservice.admin` scope to authenticate requests.
+This tool uses the `cloud-sql-admin` source, which automatically handles authentication on behalf of the user.
 {{< /notice >}}
 
 ## Configuration
@@ -19,15 +19,14 @@ Here is an example of how to configure the `cloud-sql-list-instances` tool in yo
 
 ```yaml
 sources:
-  my_http_source:
-    kind: http
-    baseUrl: https://sqladmin.googleapis.com
+  my-cloud-sql-admin-source:
+    kind: cloud-sql-admin
 
 tools:
   list_my_instances:
     kind: cloud-sql-list-instances
     description: Use this tool to list all Cloud SQL instances in a project.
-    source: my_http_source
+    source: my-cloud-sql-admin-source
 ```
 
 ## Parameters
@@ -44,4 +43,4 @@ The `cloud-sql-list-instances` tool has one required parameter:
 | ------------ | :-------: | :----------: | ----------------------------------------------------------------------------------- |
 | kind         |   string  |     true     | Must be "cloud-sql-list-instances".                                                 |
 | description  |   string  |     true     | Description of the tool that is passed to the agent.                                |
-| source       |   string  |     true     | The name of the `http` source to use for this tool.                                 |
+| source       |   string  |     true     | The name of the `cloud-sql-admin` source to use for this tool.                      |
