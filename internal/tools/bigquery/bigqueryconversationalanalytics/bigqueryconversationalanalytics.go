@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2"
 )
 
 const kind string = "bigquery-conversational-analytics"
@@ -54,6 +54,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
+	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
@@ -153,6 +154,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
+		TokenSource:        s,
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
@@ -173,6 +175,7 @@ type Tool struct {
 	Project            string
 	Location           string
 	Client             *bigqueryapi.Client
+	TokenSource        compatibleSource
 	manifest           tools.Manifest
 	mcpManifest        tools.McpManifest
 	MaxQueryResultRows int
@@ -193,14 +196,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
-		// Use ADC with cloud-platform scope for Gemini Data Analytics API
-		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		// Get token source with cloud-platform scope for Gemini Data Analytics API
+		tokenSource, err := t.TokenSource.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
 		if err != nil {
-			return nil, fmt.Errorf("failed to get default token source with cloud-platform scope: %w", err)
+			return nil, fmt.Errorf("failed to get token source with cloud-platform scope from BigQuery source: %w", err)
 		}
 		token, err := tokenSource.Token()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get token from ADC: %w", err)
+			return nil, fmt.Errorf("failed to get token: %w", err)
 		}
 		tokenStr = token.AccessToken
 	}

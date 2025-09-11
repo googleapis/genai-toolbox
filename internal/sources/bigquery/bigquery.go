@@ -190,6 +190,16 @@ func (s *Source) BigQueryClientCreator() BigqueryClientCreator {
 	return s.ClientCreator
 }
 
+// BigQueryTokenSourceWithScope creates a token source with a custom scope
+func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	cred, err := google.FindDefaultCredentials(ctx, scope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", scope, err)
+	}
+
+	return cred.TokenSource, nil
+}
+
 func (s *Source) BigQueryAllowedDatasets() []string {
 	if len(s.AllowedDatasets) == 0 {
 		return nil
