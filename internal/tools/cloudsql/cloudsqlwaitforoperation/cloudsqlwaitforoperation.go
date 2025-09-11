@@ -139,10 +139,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: inputSchema,
 	}
 
-	if cfg.BaseURL == "" {
-		cfg.BaseURL = "https://sqladmin.googleapis.com"
-	}
-
 	var delay time.Duration
 	if cfg.Delay == "" {
 		delay = 3 * time.Second
