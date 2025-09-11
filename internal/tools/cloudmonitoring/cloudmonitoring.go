@@ -23,18 +23,9 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	cloudmonitoringsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
 )
-
-var (
-	monitoringEndpoint           = "https://monitoring.googleapis.com"
-)
-
-// SetMonitoringEndpoint sets the monitoring endpoint for testing purposes.
-func SetMonitoringEndpoint(endpoint string) {
-	monitoringEndpoint = endpoint
-}
 
 const kind string = "cloud-monitoring-query-prometheus"
 
@@ -55,8 +46,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name             string   `yaml:"name" validate:"required"`
 	Kind             string   `yaml:"kind" validate:"required"`
+	Source       string            `yaml:"source" validate:"required"`
 	Description      string   `yaml:"description" validate:"required"`
-	QueryDescription string   `yaml:"queryDescription"`
 	AuthRequired     []string `yaml:"authRequired"`
 }
 
@@ -68,6 +59,18 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	// verify source exists
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	}
+
+	// verify the source is compatible
+	s, ok := rawS.(*cloudmonitoringsrc.Source)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloudmonitoring`", kind)
+	}
+
 	// Define the parameters internally instead of from the config file.
 	allParameters := tools.Parameters{
 		tools.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
@@ -79,7 +82,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:        kind,
 		Description: cfg.Description,
 		AllParams:      allParameters,
-		Client:       &http.Client{},
+		BaseURL: s.BaseURL,
+		UserAgent: s.UserAgent,
+		Client:      s.Client,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest()},
 		mcpManifest: tools.McpManifest{Name: cfg.Name, Description: cfg.Description, InputSchema: allParameters.McpManifest()},
 	}, nil
@@ -93,6 +98,8 @@ type Tool struct {
 	Kind        string   `yaml:"kind"`
 	Description string   `yaml:"description"`
 	AllParams      tools.Parameters `yaml:"allParams"`
+	BaseURL string            `yaml:"baseURL"`
+	UserAgent      string
 	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -109,7 +116,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("query parameter not found or not a string")
 	}
 
-	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", monitoringEndpoint, projectID)
+	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", t.BaseURL, projectID)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -120,16 +127,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	q.Add("query", query)
 	req.URL.RawQuery = q.Encode()
 
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/monitoring.read")
-	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
-	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-
-	req.Header.Add("Authorization", "Bearer "+token.AccessToken)
+	req.Header.Set("User-Agent", t.UserAgent)
 
 	resp, err := t.Client.Do(req)
 	if err != nil {

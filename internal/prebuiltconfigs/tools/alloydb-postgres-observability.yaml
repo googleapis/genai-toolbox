@@ -11,10 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+sources:
+  cloud-monitoring-source:
+    kind: cloud-monitoring
 tools:
   get_system_metrics:
     kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
     description: |
       Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
       To use this tool, you must provide the Google Cloud `projectID` and a PromQL `query`.
@@ -72,6 +75,7 @@ tools:
 
   get_query_metrics:
     kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
     description: |
       Fetches query level cloudmonitoring data (timeseries metrics) for queries running in an AlloyDB instance.
       To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.

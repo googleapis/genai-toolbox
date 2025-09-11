@@ -128,6 +128,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"

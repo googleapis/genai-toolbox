@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloud_monitoring_integration_test
+package cloudmonitoring
 
 import (
 	"context"
@@ -51,11 +51,9 @@ func TestTool_Invoke(t *testing.T) {
 		Kind:        "cloud-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
 		AllParams:      tools.Parameters{},
+		BaseURL: server.URL,
 		Client:     &http.Client{},
 	}
-
-	// Set the monitoring endpoint to the mock server
-	cloudmonitoring.SetMonitoringEndpoint(server.URL)
 
 	// Define the test parameters
 	params := tools.ParamValues{
@@ -97,11 +95,9 @@ func TestTool_Invoke_Error(t *testing.T) {
 		Kind:        "clou-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
 		AllParams:      tools.Parameters{},
+		BaseURL: server.URL,
 		Client:     &http.Client{},
 	}
-
-	// Set the monitoring endpoint to the mock server
-	cloudmonitoring.SetMonitoringEndpoint(server.URL)
 
 	// Define the test parameters
 	params := tools.ParamValues{

@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,66 +12,144 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudmonitoring
+package cloudmonitoring_test
 
 import (
-	"context"
-	"net/http"
-	"net/http/httptest"
+	"strings"
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 )
 
-func TestTool_Invoke(t *testing.T) {
-	t.Parallel()
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/projects/test-project/location/global/prometheus/api/v1/query" {
-			t.Errorf("unexpected path: got %q", r.URL.Path)
-		}
-		if r.URL.Query().Get("query") != "up" {
-			t.Errorf("unexpected query: got %q", r.URL.Query().Get("query"))
-		}
-		w.Header().Set("Content-Type", "application/json")
-		if _, err := w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[]}}`)); err != nil {
-			t.Fatalf("w.Write() err = %v", err)
-		}
-	}))
-	defer server.Close()
-
-	tool := Tool{
-		Name:        "cloud-monitoring-query-prometheus",
-		Kind:        "cloud-monitoring-query-prometheus",
-		Description: "a test tool",
-		Client:     &http.Client{},
-		AllParams:      tools.Parameters{},
-	}
-
-	params := tools.ParamValues{
-		{Name: "projectId", Value: "test-project"},
-		{Name: "query", Value: "up"},
-	}
-
-	ctx := context.Background()
-
-	// Another hack to inject the mock server url.
-	monitoringEndpoint = server.URL
-
-	got, err := tool.Invoke(ctx, params, "")
+func TestParseFromYamlCloudMonitoring(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
-		t.Fatalf("Invoke() error = %v", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	want := map[string]any{
-		"status": "success",
-		"data": map[string]any{
-			"resultType": "vector",
-			"result":     []any{},
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					source: my-instance
+					description: some description
+				`,
+			want: server.ToolConfigs{
+				"example_tool": cloudmonitoring.Config{
+					Name:         "example_tool",
+					Kind:         "cloud-monitoring-query-prometheus",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "advanced example",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					source: my-instance
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"example_tool": cloudmonitoring.Config{
+					Name:         "example_tool",
+					Kind:         "cloud-monitoring-query-prometheus",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+				},
+			},
 		},
 	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
+	}
+}
 
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("Invoke() mismatch (-want +got):\n%s", diff)
+func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "Invalid kind",
+			in: `
+			tools:
+				example_tool:
+					kind: invalid-kind
+					source: my-instance
+					description: some description
+			`,
+			err: `unknown tool kind: "invalid-kind"`,
+		},
+		{
+			desc: "missing source",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					description: some description
+			`,
+			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
+		},
+		{
+			desc: "missing description",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					source: my-instance
+			`,
+			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error string: got %q, want substring %q", errStr, tc.err)
+			}
+		})
 	}
 }
