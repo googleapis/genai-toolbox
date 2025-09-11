@@ -304,7 +304,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -392,7 +392,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -480,7 +480,7 @@ func TestLooker(t *testing.T) {
 						"type":     "array",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The filters for the query",
 						"name":                 "filters",
@@ -530,7 +530,7 @@ func TestLooker(t *testing.T) {
 						"type":        "string",
 					},
 					map[string]any{
-						"AdditionalProperties": true,
+						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The visualization config for the query",
 						"name":                 "vis_config",
@@ -624,16 +624,16 @@ func TestLooker(t *testing.T) {
 	wantResult = "{\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
 	tests.RunToolInvokeParametersTest(t, "get_explores", []byte(`{"model": "system__activity"}`), wantResult)
 
-	wantResult = "{\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
+	wantResult = "{\"description\":\"Number of times this content has been viewed via the Looker API\",\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
 	tests.RunToolInvokeParametersTest(t, "get_dimensions", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
-	wantResult = "{\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
+	wantResult = "{\"description\":\"The total number of views via the Looker API\",\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
-	wantResult = "null"
+	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "get_filters", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
-	wantResult = "null"
+	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "get_parameters", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
 	wantResult = "{\"look.count\":"
