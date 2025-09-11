@@ -19,6 +19,8 @@ sources:
     headers:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
+  alloydb-admin-source:
+    kind: alloydb-admin
 tools:
   alloydb-create-cluster:
     kind: http
@@ -128,9 +130,9 @@ tools:
         type: string
         description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
         default: ""
-  alloydb-list-clusters:
+  list_clusters:
       kind: alloydb-list-clusters
-      source: alloydb-api-source
+      source: alloydb-admin-source
       description: "Lists all AlloyDB clusters in a given project and location."
   alloydb-list-instances:
     kind: http
@@ -220,7 +222,7 @@ toolsets:
     - alloydb-create-cluster
     - alloydb-operations-get
     - alloydb-create-instance
-    - alloydb-list-clusters
+    - list_clusters
     - alloydb-list-instances
     - alloydb-list-users
     - alloydb-create-user

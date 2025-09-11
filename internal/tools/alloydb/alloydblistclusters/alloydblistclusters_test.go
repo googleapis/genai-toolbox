@@ -45,10 +45,10 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-clusters": alloydblistclusters.Config{
-					Name:         "list-my-clusters",
-					Kind:         "alloydb-list-clusters",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
+					Name:        "list-my-clusters",
+					Kind:        "alloydb-list-clusters",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{},
 				},
 			},
@@ -67,56 +67,11 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-clusters-auth": alloydblistclusters.Config{
-					Name:         "list-my-clusters-auth",
-					Kind:         "alloydb-list-clusters",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
+					Name:        "list-my-clusters-auth",
+					Kind:        "alloydb-list-clusters",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-				},
-			},
-		},
-		{
-			desc: "with base url",
-			in: `
-			tools:
-				list-my-clusters-baseurl:
-					kind: alloydb-list-clusters
-					source: my-alloydb-admin-source
-					description: some description
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"list-my-clusters-baseurl": alloydblistclusters.Config{
-					Name:         "list-my-clusters-baseurl",
-					Kind:         "alloydb-list-clusters",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					BaseURL:      "https://example.com",
-					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "with auth and base url",
-			in: `
-			tools:
-				list-my-clusters-all:
-					kind: alloydb-list-clusters
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"list-my-clusters-all": alloydblistclusters.Config{
-					Name:         "list-my-clusters-all",
-					Kind:         "alloydb-list-clusters",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					BaseURL:      "https://example.com",
 				},
 			},
 		},

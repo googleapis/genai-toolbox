@@ -16,16 +16,14 @@ package alloydblistclusters
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
+	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+	"google.golang.org/api/alloydb/v1"
+	"google.golang.org/api/option"
 )
 
 const kind string = "alloydb-list-clusters"
@@ -69,9 +67,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("source %q not found", cfg.Source)
 	}
 
-	s, ok := rawS.(*httpsrc.Source)
+	s, ok := rawS.(*alloydbadmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
 	}
 
 	allParameters := tools.Parameters{
@@ -89,19 +87,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: inputSchema,
 	}
 
-	baseURL := cfg.BaseURL
-	if baseURL == "" {
-		baseURL = "https://alloydb.googleapis.com"
-	}
-
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		BaseURL:      baseURL,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
+		Source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
 		mcpManifest:  mcpManifest,
 	}, nil
 }
@@ -111,12 +102,10 @@ type Tool struct {
 	Name         string   `yaml:"name"`
 	Kind         string   `yaml:"kind"`
 	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
-	BaseURL   string           `yaml:"baseURL"`
+	
+	Source    *alloydbadmin.Source
 	AllParams tools.Parameters `yaml:"allParams"`
 
-	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -134,45 +123,26 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
 	}
 
-	name := fmt.Sprintf("projects/%s/locations/%s/clusters", projectId, locationId)
-	urlString := fmt.Sprintf("%s/v1/%s", t.BaseURL, name)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
+	// Get an authenticated HTTP client from the source
+	client, err := t.Source.GetClient(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error creating HTTP request: %w", err)
+		return nil, fmt.Errorf("error getting authorized client: %w", err)
 	}
 
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	// Create a new AlloyDB service client using the authorized client
+	alloydbService, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
+		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
 	}
-	token, err := tokenSource.Token()
+
+	urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
+
+	resp, err := alloydbService.Projects.Locations.Clusters.List(urlString).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := t.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
+		return nil, fmt.Errorf("error getting AlloyDB cluster: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
-	}
-
-	var result any
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, fmt.Errorf("error unmarshaling JSON response: %w", err)
-	}
-
-	return result, nil
+	return resp, nil
 }
 
 // ParseParams parses the parameters for the tool.
@@ -196,5 +166,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.Source.UseClientAuthorization()
 }

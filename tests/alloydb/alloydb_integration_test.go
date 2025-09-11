@@ -62,8 +62,7 @@ func getAlloyDBToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"alloydb-admin-source": map[string]any{
-				"kind":    "http",
-				"baseUrl": "https://alloydb.googleapis.com",
+				"kind":    "alloydb-admin",
 			},
 		},
 		"tools" : map[string]any{
@@ -140,7 +139,7 @@ func runAlloyDBToolGetTest(t *testing.T) {
 						map[string]any{"name": "projectId", "type": "string", "description": "The GCP project ID to list clusters for.", "required": true, "authSources": []any{}},
 						map[string]any{"name": "locationId", "type": "string", "description": "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')", "required": false, "authSources": []any{}},
 					},
-					"authRequired": []any{},
+					"authRequired": nil,
 				},
 			},
 		},
@@ -351,12 +350,12 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 		{
 			name:        "list clusters non-existent location",
 			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "abcd"}`, vars["projectId"])),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
 			name:        "list clusters non-existent project",
 			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"projectId": "non-existent-project", "locationId": "%s"}`, vars["locationId"])),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
 			name:        "list clusters empty project",
