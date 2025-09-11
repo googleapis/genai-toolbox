@@ -15,15 +15,21 @@
 package mysql
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -32,6 +38,7 @@ import (
 var (
 	MySQLSourceKind = "mysql"
 	MySQLToolKind   = "mysql-sql"
+	MySQLListTablesToolKind = "mysql-list-tables"
 	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
 	MySQLHost       = os.Getenv("MYSQL_HOST")
 	MySQLPort       = os.Getenv("MYSQL_PORT")
@@ -61,6 +68,20 @@ func getMySQLVars(t *testing.T) map[string]any {
 		"user":     MySQLUser,
 		"password": MySQLPass,
 	}
+}
+
+func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        MySQLListTablesToolKind,
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	config["tools"] = tools
+	return config
 }
 
 // Copied over from mysql.go
@@ -108,6 +129,8 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	toolsFile = addPrebuiltToolConfig(t, toolsFile)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -131,4 +154,182 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run specific MySQL tool tests
+	runMySQLListTablesTest(t, tableNameParam, tableNameAuth)
+}
+
+func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
+	type tableInfo struct {
+		ObjectName    string `json:"object_name"`
+		SchemaName    string `json:"schema_name"`
+		ObjectDetails string `json:"object_details"`
+	}
+
+	type column struct {
+		DataType        string `json:"data_type"`
+		ColumnName      string `json:"column_name"`
+		ColumnComment   string `json:"column_comment"`
+		ColumnDefault   any    `json:"column_default"`
+		IsNotNullable   int    `json:"is_not_nullable"`
+		OrdinalPosition int    `json:"ordinal_position"`
+	}
+
+	type objectDetails struct {
+		Owner       any      `json:"owner"`
+		Columns     []column `json:"columns"`
+		Comment     string   `json:"comment"`
+		Indexes     []any    `json:"indexes"`
+		Triggers    []any    `json:"triggers"`
+		Constraints []any    `json:"constraints"`
+		ObjectName  string   `json:"object_name"`
+		ObjectType  string   `json:"object_type"`
+		SchemaName  string   `json:"schema_name"`
+	}
+
+	paramTableWant := objectDetails{
+		ObjectName: tableNameParam,
+		SchemaName: MySQLDatabase,
+		ObjectType: "TABLE",
+		Columns: []column{
+			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
+			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
+		},
+		Indexes:     []any{map[string]any{"index_columns": []any{"id"}, "index_name": "PRIMARY", "is_primary": float64(1), "is_unique": float64(1)}},
+		Triggers:    []any{},
+		Constraints: []any{map[string]any{"constraint_columns": []any{"id"}, "constraint_name": "PRIMARY", "constraint_type": "PRIMARY KEY", "foreign_key_referenced_columns": any(nil), "foreign_key_referenced_table": any(nil), "constraint_definition": ""}},
+	}
+
+	authTableWant := objectDetails{
+		ObjectName: tableNameAuth,
+		SchemaName: MySQLDatabase,
+		ObjectType: "TABLE",
+		Columns: []column{
+			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
+			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
+			{DataType: "varchar(255)", ColumnName: "email", OrdinalPosition: 3},
+		},
+		Indexes:     []any{map[string]any{"index_columns": []any{"id"}, "index_name": "PRIMARY", "is_primary": float64(1), "is_unique": float64(1)}},
+		Triggers:    []any{},
+		Constraints: []any{map[string]any{"constraint_columns": []any{"id"}, "constraint_name": "PRIMARY", "constraint_type": "PRIMARY KEY", "foreign_key_referenced_columns": any(nil), "foreign_key_referenced_table": any(nil), "constraint_definition": ""}},
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           any
+		isSimple     bool
+	}{
+		{
+			name:           "invoke list_tables detailed output",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant},
+		},
+		{
+			name:           "invoke list_tables simple output",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{{"name": tableNameAuth}},
+			isSimple:     true,
+		},
+		{
+			name:           "invoke list_tables with multiple table names",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant, paramTableWant},
+		},
+		{
+			name:           "invoke list_tables with one existing and one non-existent table",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant},
+		},
+		{
+			name:           "invoke list_tables with non-existent table",
+			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_tables/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			if tc.isSimple {
+				var tables []tableInfo
+				if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+				}
+				var details []map[string]any
+				for _, table := range tables {
+					var d map[string]any
+					if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
+						t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+					}
+					details = append(details, d)
+				}
+				got = details
+			} else {
+				if resultString == "null" {
+					got = nil
+				} else {
+					var tables []tableInfo
+					if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+						t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+					}
+					var details []objectDetails
+					for _, table := range tables {
+						var d objectDetails
+						if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
+							t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+						}
+						details = append(details, d)
+					}
+					got = details
+				}
+			}
+
+			opts := []cmp.Option{
+				cmpopts.SortSlices(func(a, b objectDetails) bool { return a.ObjectName < b.ObjectName }),
+				cmpopts.SortSlices(func(a, b column) bool { return a.ColumnName < b.ColumnName }),
+				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
+			}
+
+			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
 }
