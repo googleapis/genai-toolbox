@@ -112,13 +112,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-// userCreateRequest is the request body for creating a user.
-type userCreateRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
