@@ -139,7 +139,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	resp, err := alloydbService.Projects.Locations.Clusters.List(urlString).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error getting AlloyDB cluster: %w", err)
+		return nil, fmt.Errorf("error listing AlloyDB clusters: %w", err)
 	}
 
 	return resp, nil
