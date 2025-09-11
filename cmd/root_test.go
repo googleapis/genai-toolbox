@@ -1359,7 +1359,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery-database-tools": tools.ToolsetConfig{
 					Name:      "bigquery-database-tools",
-					ToolNames: []string{"ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
 				},
 			},
 		},
@@ -1369,7 +1369,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"clickhouse-database-tools": tools.ToolsetConfig{
 					Name:      "clickhouse-database-tools",
-					ToolNames: []string{"execute_sql"},
+					ToolNames: []string{"execute_sql", "list_databases"},
 				},
 			},
 		},
