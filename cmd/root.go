@@ -99,6 +99,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher"
