@@ -1,15 +1,15 @@
 ---
-title: "cloud-sql-create-instances"
+title: "cloud-sql-postgres-create-instances"
 type: docs
 weight: 10
 description: >
-  Create a Cloud SQL instance.
+  Create a Cloud SQL for PostgreSQL instance.
 ---
 
-The `cloud-sql-create-instances` tool creates a Cloud SQL instance using the Cloud SQL Admin API.
+The `cloud-sql-postgres-create-instances` tool creates a Cloud SQL for PostgreSQL instance using the Cloud SQL Admin API.
 
 {{< notice info >}}
-This tool uses a `source` of kind `http`, and the `baseUrl` for that source must be `https://sqladmin.googleapis.com/`.
+This tool uses a `source` of kind `cloud-sql-admin`.
 {{< /notice >}}
 
 {{< notice info >}}
@@ -21,8 +21,8 @@ The toolbox automatically generates a bearer token on behalf of the user with th
 ```yaml
 tools:
   create-sql-instance:
-    kind: cloud-sql-create-instances
-    description: "Create a Cloud SQL instance."
+    kind: cloud-sql-postgres-create-instances
+    description: "Create a Cloud SQL for PostgreSQL instance."
     source: http-source
 ```
 
@@ -32,9 +32,9 @@ tools:
 
 | **field**   | **type** | **required** | **description**                                                                                                  |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "cloud-sql-create-instances".                                                                            |
+| kind        |  string  |     true     | Must be "cloud-sql-postgres-create-instances".                                                                   |
 | description |  string  |     true     | A description of the tool.                                                                                       |
-| source      |  string  |     true     | The name of the `http` source to use. The source's `baseUrl` must be `https://sqladmin.googleapis.com/`.         |
+| source      |  string  |     true     | The name of the `cloud-sql-admin` source to use.                                                                 |
 
 ### Tool Inputs
 
@@ -42,6 +42,6 @@ tools:
 | ----------------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | project           |  string  |     true     | The project ID.                                                                                                                                                    |
 | name              |  string  |     true     | The name of the instance.                                                                                                                                          |
-| databaseVersion   |  string  |     true     | The database version. If not specified, defaults to the latest available version for the engine (e.g., POSTGRES_17, MYSQL_8_4, SQLSERVER_2022_STANDARD).             |
+| databaseVersion   |  string  |    false     | The database version for Postgres. If not specified, defaults to the latest available version (e.g., POSTGRES_17).                                                   |
 | rootPassword      |  string  |     true     | The root password for the instance.                                                                                                                                |
 | editionPreset     |  string  |     true     | The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`.             |

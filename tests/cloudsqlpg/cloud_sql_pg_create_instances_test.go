@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsql_test
+package cloudsqlpg
 
 import (
 	"bytes"
@@ -22,67 +22,81 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	"google.golang.org/api/sqladmin/v1"
 )
 
 var (
-	createInstanceToolKind = "cloud-sql-create-instances"
+	createInstanceToolKind = "cloud-sql-postgres-create-instances"
 )
+
+type createInstanceTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *createInstanceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
 type masterHandler struct {
 	t *testing.T
 }
 
 func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var body map[string]any
+	var body sqladmin.DatabaseInstance
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.t.Fatalf("failed to decode request body: %v", err)
 	}
 
-	instanceName, ok := body["name"].(string)
-	if !ok {
+	instanceName := body.Name
+	if instanceName == "" {
 		http.Error(w, "missing instance name", http.StatusBadRequest)
 		return
 	}
 
-	var expectedBody map[string]any
+	var expectedBody sqladmin.DatabaseInstance
 	var response any
 	var statusCode int
 
 	switch instanceName {
 	case "instance1":
-		expectedBody = map[string]any{
-			"project":         "p1",
-			"name":            "instance1",
-			"databaseVersion": "POSTGRES_15",
-			"rootPassword":    "password123",
-			"editionPreset":   "Production",
-			"settings": map[string]any{
-				"availabilityType": "REGIONAL",
-				"edition":          "ENTERPRISE_PLUS",
-				"tier":             "db-perf-optimized-N-8",
+		expectedBody = sqladmin.DatabaseInstance{
+			Project:         "p1",
+			Name:            "instance1",
+			DatabaseVersion: "POSTGRES_15",
+			RootPassword:    "password123",
+			Settings: &sqladmin.Settings{
+				AvailabilityType: "REGIONAL",
+				Edition:          "ENTERPRISE_PLUS",
+				Tier:             "db-perf-optimized-N-8",
 			},
 		}
 		response = map[string]any{"name": "op1", "status": "PENDING"}
 		statusCode = http.StatusOK
 	case "instance2":
-		expectedBody = map[string]any{
-			"project":         "p2",
-			"name":            "instance2",
-			"databaseVersion": "SQLSERVER_2019_STANDARD",
-			"rootPassword":    "password456",
-			"editionPreset":   "Development",
-			"settings": map[string]any{
-				"availabilityType": "ZONAL",
-				"edition":          "ENTERPRISE",
-				"tier":             "db-custom-2-8192",
+		expectedBody = sqladmin.DatabaseInstance{
+			Project:         "p2",
+			Name:            "instance2",
+			DatabaseVersion: "POSTGRES_17",
+			RootPassword:    "password456",
+			Settings: &sqladmin.Settings{
+				AvailabilityType: "ZONAL",
+				Edition:          "ENTERPRISE_PLUS",
+				Tier:             "db-perf-optimized-N-2",
 			},
 		}
 		response = map[string]any{"name": "op2", "status": "RUNNING"}
@@ -92,8 +106,20 @@ func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if diff := cmp.Diff(expectedBody, body); diff != "" {
-		h.t.Errorf("unexpected request body (-want +got):\n%s", diff)
+	if expectedBody.Project != body.Project {
+		h.t.Errorf("unexpected project: got %q, want %q", body.Project, expectedBody.Project)
+	}
+	if expectedBody.Name != body.Name {
+		h.t.Errorf("unexpected name: got %q, want %q", body.Name, expectedBody.Name)
+	}
+	if expectedBody.DatabaseVersion != body.DatabaseVersion {
+		h.t.Errorf("unexpected databaseVersion: got %q, want %q", body.DatabaseVersion, expectedBody.DatabaseVersion)
+	}
+	if expectedBody.RootPassword != body.RootPassword {
+		h.t.Errorf("unexpected rootPassword: got %q, want %q", body.RootPassword, expectedBody.RootPassword)
+	}
+	if diff := cmp.Diff(expectedBody.Settings, body.Settings); diff != "" {
+		h.t.Errorf("unexpected request body settings (-want +got):\n%s", diff)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -111,8 +137,25 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &createInstanceTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+	t.Cleanup(func() {
+		http.DefaultClient.Transport = originalTransport
+	})
+
 	var args []string
-	toolsFile := getCreateInstanceToolsConfig(server.URL)
+	toolsFile := getCreateInstanceToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -144,7 +187,7 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 		{
 			name:     "successful creation - development",
 			toolName: "create-instance-dev",
-			body:     `{"project": "p2", "name": "instance2", "databaseVersion": "SQLSERVER_2019_STANDARD", "rootPassword": "password456", "editionPreset": "Development"}`,
+			body:     `{"project": "p2", "name": "instance2", "rootPassword": "password456", "editionPreset": "Development"}`,
 			want:     `{"name":"op2","status":"RUNNING"}`,
 		},
 		{
@@ -206,26 +249,23 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 	}
 }
 
-func getCreateInstanceToolsConfig(baseURL string) map[string]any {
-	httpSource := map[string]any{
-		"kind":    "http",
-		"baseUrl": baseURL,
-	}
-
+func getCreateInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
-			"test-http-source": httpSource,
+			"my-cloud-sql-source": map[string]any{
+				"kind": "cloud-sql-admin",
+			},
 		},
 		"tools": map[string]any{
 			"create-instance-prod": map[string]any{
 				"kind":        createInstanceToolKind,
 				"description": "create prod instance",
-				"source":      "test-http-source",
+				"source":      "my-cloud-sql-source",
 			},
 			"create-instance-dev": map[string]any{
 				"kind":        createInstanceToolKind,
 				"description": "create dev instance",
-				"source":      "test-http-source",
+				"source":      "my-cloud-sql-source",
 			},
 		},
 	}

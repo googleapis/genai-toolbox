@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlcreateinstances_test
+package cloudsqlpgcreateinstances_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreateinstances"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -39,14 +39,14 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				create-instance-tool:
-					kind: cloud-sql-create-instances
+					kind: cloud-sql-postgres-create-instances
 					description: a test description
 					source: a-source
 			`,
 			want: server.ToolConfigs{
-				"create-instance-tool": cloudsqlcreateinstances.Config{
+				"create-instance-tool": cloudsqlpgcreateinstances.Config{
 					Name:         "create-instance-tool",
-					Kind:         "cloud-sql-create-instances",
+					Kind:         "cloud-sql-postgres-create-instances",
 					Description:  "a test description",
 					Source:       "a-source",
 					AuthRequired: []string{},
