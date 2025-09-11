@@ -1,0 +1,113 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+sources:
+  cloud-monitoring-source:
+    kind: cloud-monitoring
+tools:
+  get_system_metrics:
+    kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
+    description: |
+      Fetches system level cloudmonitoring data (timeseries metrics) for a Postgres instance using a PromQL query. Take projectId and instanceId from the user for which the metrics timeseries data needs to be fetched.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
+
+      Generate PromQL `query` for Postgres system metrics. Use the provided metrics and rules to construct queries, Get the labels like `instance_id` from user intent.
+
+      Defaults:
+      1. Interval: Use a default interval of `5m` for `_over_time` aggregation functions unless a different window is specified by the user.
+
+      PromQL Query Examples:
+      1. Basic Time Series: `avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m])`
+      2. Top K: `topk(30, avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m]))`
+      3. Mean: `avg(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="my-instance","cluster_id"="my-cluster"}[5m]))`
+      4. Minimum: `min(min_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      5. Maximum: `max(max_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      6. Sum: `sum(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      7. Count streams: `count(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      8. Percentile with groupby on instanceid, clusterid: `quantile by ("instance_id","cluster_id")(0.99,avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","cluster_id"="my-cluster","instance_id"="my-instance"}[5m]))`
+
+      Available Metrics List: metricname. description. monitored resource. labels. database_id is actually the instance id and the format is `project_id:instance_id`. 
+      1. `cloudsql.googleapis.com/database/postgresql/new_connection_count`: Count of new connections added to the postgres instance. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      2. `cloudsql.googleapis.com/database/postgresql/backends_in_wait`: Number of backends in wait in postgres instance. `cloudsql_database`. `backend_type`, `wait_event`, `wait_event_type`, `project_id`, `database_id`.
+      3. `cloudsql.googleapis.com/database/postgresql/transaction_count`: Delta count of number of transactions. `cloudsql_database`. `database`, `transaction_type`, `project_id`, `database_id`.
+      4. `cloudsql.googleapis.com/database/memory/components`: Memory stats components in percentage as usage, cache and free memory for the database. `cloudsql_database`. `component`, `project_id`, `database_id`.
+      5. `cloudsql.googleapis.com/database/postgresql/external_sync/max_replica_byte_lag`: Replication lag in bytes for Postgres External Server (ES) replicas. Aggregated across all DBs on the replica. `cloudsql_database`. `project_id`, `database_id`.
+      6. `cloudsql.googleapis.com/database/cpu/utilization`: Current CPU utilization represented as a percentage of the reserved CPU that is currently in use. Values are typically numbers between 0.0 and 1.0 (but might exceed 1.0). Charts display the values as a percentage between 0% and 100% (or more). `cloudsql_database`. `project_id`, `database_id`.
+      7. `cloudsql.googleapis.com/database/disk/bytes_used_by_data_type`: Data utilization in bytes. `cloudsql_database`. `data_type`, `project_id`, `database_id`.
+      8. `cloudsql.googleapis.com/database/disk/read_ops_count`: Delta count of data disk read IO operations. `cloudsql_database`. `project_id`, `database_id`.
+      9. `cloudsql.googleapis.com/database/disk/write_ops_count`: Delta count of data disk write IO operations. `cloudsql_database`. `project_id`, `database_id`.
+      10. `cloudsql.googleapis.com/database/postgresql/num_backends_by_state`: Number of connections to the Cloud SQL PostgreSQL instance, grouped by its state. `cloudsql_database`. `database`, `state`, `project_id`, `database_id`.
+      11. `cloudsql.googleapis.com/database/postgresql/num_backends`: Number of connections to the Cloud SQL PostgreSQL instance. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      12. `cloudsql.googleapis.com/database/network/received_bytes_count`: Delta count of bytes received through the network. `cloudsql_database`. `project_id`, `database_id`.
+      13. `cloudsql.googleapis.com/database/network/sent_bytes_count`: Delta count of bytes sent through the network. `cloudsql_database`. `destination`, `project_id`, `database_id`.
+      14. `cloudsql.googleapis.com/database/postgresql/deadlock_count`: Number of deadlocks detected for this database. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      15. `cloudsql.googleapis.com/database/postgresql/blocks_read_count`: Number of disk blocks read by this database. The source field distingushes actual reads from disk versus reads from buffer cache. `cloudsql_database`. `database`, `source`, `project_id`, `database_id`.
+      16. `cloudsql.googleapis.com/database/postgresql/tuples_processed_count`: Number of tuples(rows) processed for a given database for operations like insert, update or delete. `cloudsql_database`. `operation_type`, `database`, `project_id`, `database_id`.
+      17. `cloudsql.googleapis.com/database/postgresql/tuple_size`: Number of tuples (rows) in the database. `cloudsql_database`. `database`, `tuple_state`, `project_id`, `database_id`.
+      18. `cloudsql.googleapis.com/database/postgresql/vacuum/oldest_transaction_age`: Age of the oldest transaction yet to be vacuumed in the Cloud SQL PostgreSQL instance, measured in number of transactions that have happened since the oldest transaction. `cloudsql_database`. `oldest_transaction_type`, `project_id`, `database_id`.
+      19. `cloudsql.googleapis.com/database/replication/log_archive_success_count`: Number of successful attempts for archiving replication log files. `cloudsql_database`. `project_id`, `database_id`.
+      20. `cloudsql.googleapis.com/database/replication/log_archive_failure_count`: Number of failed attempts for archiving replication log files. `cloudsql_database`. `project_id`, `database_id`.
+      21. `cloudsql.googleapis.com/database/postgresql/transaction_id_utilization`: Current utilization represented as a percentage of transaction IDs consumed by the Cloud SQL PostgreSQL instance. Values are typically numbers between 0.0 and 1.0. Charts display the values as a percentage between 0% and 100% . `cloudsql_database`. `project_id`, `database_id`.
+      22. `cloudsql.googleapis.com/database/postgresql/num_backends_by_application`: Number of connections to the Cloud SQL PostgreSQL instance, grouped by applications. `cloudsql_database`. `application`, `project_id`, `database_id`.
+      23. `cloudsql.googleapis.com/database/postgresql/tuples_fetched_count`: Total number of rows fetched as a result of queries per database in the PostgreSQL instance. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      24. `cloudsql.googleapis.com/database/postgresql/tuples_returned_count`: Total number of rows scanned while processing the queries per database in the PostgreSQL instance. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      25. `cloudsql.googleapis.com/database/postgresql/temp_bytes_written_count`: Total amount of data (in bytes) written to temporary files by the queries per database. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      26. `cloudsql.googleapis.com/database/postgresql/temp_files_written_count`: Total number of temporary files used for writing data while performing algorithms such as join and sort. `cloudsql_database`. `database`, `project_id`, `database_id`.
+
+  get_query_metrics:
+    kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
+    description: |
+      Fetches query level cloudmonitoring data (timeseries metrics) for queries running in Postgres instance using a PromQL query. Take projectID and instanceID from the user for which the metrics timeseries data needs to be fetched.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
+
+      Generate PromQL `query` for Postgres query metrics. Use the provided metrics and rules to construct queries, Get the labels like `instance_id`, `query_hash` from user intent. If query_hash is provided then use the per_query metrics. Query hash and query id are same.
+
+      Defaults:
+      1. Interval: Use a default interval of `5m` for `_over_time` aggregation functions unless a different window is specified by the user.
+
+      PromQL Query Examples:
+      1. Basic Time Series: `avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m])`
+      2. Top K: `topk(30, avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m]))`
+      3. Mean: `avg(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="my-instance","cluster_id"="my-cluster"}[5m]))`
+      4. Minimum: `min(min_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      5. Maximum: `max(max_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      6. Sum: `sum(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      7. Count streams: `count(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      8. Percentile with groupby on instanceid, clusterid: `quantile by ("instance_id","cluster_id")(0.99,avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","cluster_id"="my-cluster","instance_id"="my-instance"}[5m]))`
+
+      Available Metrics List: metricname. description. monitored resource. labels. resource_id label format is `project_id:instance_id` which is actually instance id only. aggregate is the aggregated values for all query stats, Use aggregate metrics if query id is not provided. For perquery metrics do not fetch querystring unless specified by user specifically. Have the aggregation on query hash to avoid fetching the querystring. Do not use latency metrics for anything.
+      1. `cloudsql.googleapis.com/database/postgresql/insights/aggregate/latencies`: Aggregated query latency distribution. `cloudsql_instance_database`. `user`, `client_addr`, `project_id`, `resource_id`.
+      2. `cloudsql.googleapis.com/database/postgresql/insights/aggregate/execution_time`: Accumulated aggregated query execution time since the last sample. `cloudsql_instance_database`. `user`, `client_addr`, `project_id`, `resource_id`.
+      3. `cloudsql.googleapis.com/database/postgresql/insights/aggregate/io_time`: Accumulated aggregated IO time since the last sample. `cloudsql_instance_database`. `user`, `client_addr`, `io_type`, `project_id`, `resource_id`.
+      4. `cloudsql.googleapis.com/database/postgresql/insights/aggregate/lock_time`: Accumulated aggregated lock wait time since the last sample. `cloudsql_instance_database`. `user`, `client_addr`, `lock_type`, `project_id`, `resource_id`.
+      5. `cloudsql.googleapis.com/database/postgresql/insights/aggregate/row_count`: Aggregated number of retrieved or affected rows since the last sample. `cloudsql_instance_database`. `user`, `client_addr`, `project_id`, `resource_id`.
+      6. `cloudsql.googleapis.com/database/postgresql/insights/aggregate/shared_blk_access_count`: Aggregated shared blocks accessed by statement execution. `cloudsql_instance_database`. `user`, `client_addr`, `access_type`, `project_id`, `resource_id`.
+      7. `cloudsql.googleapis.com/database/postgresql/insights/perquery/latencies`: Per query latency distribution. `cloudsql_instance_database`. `user`, `client_addr`, `querystring`, `query_hash`, `project_id`, `resource_id`.
+      8. `cloudsql.googleapis.com/database/postgresql/insights/perquery/execution_time`: Accumulated execution times per user per database per query. `cloudsql_instance_database`. `user`, `client_addr`, `querystring`, `query_hash`, `project_id`, `resource_id`.
+      9. `cloudsql.googleapis.com/database/postgresql/insights/perquery/io_time`: Accumulated IO time since the last sample per query. `cloudsql_instance_database`. `user`, `client_addr`, `io_type`, `querystring`, `query_hash`, `project_id`, `resource_id`.
+      10. `cloudsql.googleapis.com/database/postgresql/insights/perquery/lock_time`: Accumulated lock wait time since the last sample per query. `cloudsql_instance_database`. `user`, `client_addr`, `lock_type`, `querystring`, `query_hash`, `project_id`, `resource_id`.
+      11. `cloudsql.googleapis.com/database/postgresql/insights/perquery/row_count`: The number of retrieved or affected rows since the last sample per query. `cloudsql_instance_database`. `user`, `client_addr`, `querystring`, `query_hash`, `project_id`, `resource_id`.
+      12. `cloudsql.googleapis.com/database/postgresql/insights/perquery/shared_blk_access_count`: Shared blocks accessed by statement execution per query. `cloudsql_instance_database`. `user`, `client_addr`, `access_type`, `querystring`, `query_hash`, `project_id`, `resource_id`.
+      13. `cloudsql.googleapis.com/database/postgresql/insights/pertag/latencies`: Query latency distribution. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `project_id`, `resource_id`.
+      14. `cloudsql.googleapis.com/database/postgresql/insights/pertag/execution_time`: Accumulated execution times since the last sample. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `project_id`, `resource_id`.
+      15. `cloudsql.googleapis.com/database/postgresql/insights/pertag/io_time`: Accumulated IO time since the last sample per tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `io_type`, `tag_hash`, `project_id`, `resource_id`.
+      16. `cloudsql.googleapis.com/database/postgresql/insights/pertag/lock_time`: Accumulated lock wait time since the last sample per tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `lock_type`, `tag_hash`, `project_id`, `resource_id`.
+      17. `cloudsql.googleapis.com/database/postgresql/insights/pertag/shared_blk_access_count`: Shared blocks accessed by statement execution per tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `access_type`, `tag_hash`, `project_id`, `resource_id`.
+      18. `cloudsql.googleapis.com/database/postgresql/insights/pertag/row_count`: The number of retrieved or affected rows since the last sample per tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `project_id`, `resource_id`.
+
+toolsets:
+  cloudsql-postgres-cloud-monitoring-tools:
+    - get_system_metrics
+    - get_query_metrics

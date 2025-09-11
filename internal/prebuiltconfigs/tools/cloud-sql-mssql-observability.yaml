@@ -1,0 +1,76 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+sources:
+  cloud-monitoring-source:
+    kind: cloud-monitoring
+tools:
+  get_system_metrics:
+    kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
+    description: |
+      Fetches system level cloudmonitoring data (timeseries metrics) for a SqlServer instance using a PromQL query. Take projectId and instanceId from the user for which the metrics timeseries data needs to be fetched.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
+
+      Generate PromQL `query` for SqlServer system metrics. Use the provided metrics and rules to construct queries, Get the labels like `instance_id` from user intent.
+
+      Defaults:
+      1. Interval: Use a default interval of `5m` for `_over_time` aggregation functions unless a different window is specified by the user.
+
+      PromQL Query Examples:
+      1. Basic Time Series: `avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m])`
+      2. Top K: `topk(30, avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m]))`
+      3. Mean: `avg(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="my-instance","cluster_id"="my-cluster"}[5m]))`
+      4. Minimum: `min(min_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      5. Maximum: `max(max_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      6. Sum: `sum(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      7. Count streams: `count(avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance","cluster_id"="alloydb-cluster"}[5m]))`
+      8. Percentile with groupby on instanceid, clusterid: `quantile by ("instance_id","cluster_id")(0.99,avg_over_time({"__name__"="alloydb.googleapis.com/instance/cpu/average_utilization","monitored_resource"="alloydb.googleapis.com/Instance","cluster_id"="my-cluster","instance_id"="my-instance"}[5m]))`
+
+      Available Metrics List: metricname. description. monitored resource. labels. database_id is actually the instance id and the format is `project_id:instance_id`. 
+      1. `cloudsql.googleapis.com/database/cpu/utilization`: Current CPU utilization as a percentage of the reserved CPU. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      2. `cloudsql.googleapis.com/database/memory/usage`: RAM usage in bytes, excluding buffer/cache. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      3. `cloudsql.googleapis.com/database/memory/total_usage`: Total RAM usage in bytes, including buffer/cache. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      4. `cloudsql.googleapis.com/database/disk/bytes_used`: Data utilization in bytes. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      5. `cloudsql.googleapis.com/database/disk/quota`: Maximum data disk size in bytes. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      6. `cloudsql.googleapis.com/database/disk/read_ops_count`: Delta count of data disk read IO operations. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      7. `cloudsql.googleapis.com/database/disk/write_ops_count`: Delta count of data disk write IO operations. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      8. `cloudsql.googleapis.com/database/network/received_bytes_count`: Delta count of bytes received through the network. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      9. `cloudsql.googleapis.com/database/network/sent_bytes_count`: Delta count of bytes sent through the network. `cloudsql_database`. `destination`, `database`, `project_id`, `database_id`.
+      10. `cloudsql.googleapis.com/database/sqlserver/memory/buffer_cache_hit_ratio`: Current percentage of pages found in the buffer cache without reading from disk. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      11. `cloudsql.googleapis.com/database/sqlserver/memory/memory_grants_pending`: Current number of processes waiting for a workspace memory grant. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      12. `cloudsql.googleapis.com/database/sqlserver/memory/free_list_stall_count`: Total number of requests that waited for a free page. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      13. `cloudsql.googleapis.com/database/swap/pages_swapped_in_count`: Total count of pages swapped in from disk since the system was booted. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      14. `cloudsql.googleapis.com/database/swap/pages_swapped_out_count`: Total count of pages swapped out to disk since the system was booted. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      15. `cloudsql.googleapis.com/database/sqlserver/memory/checkpoint_page_count`: Total number of pages flushed to disk by a checkpoint. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      16. `cloudsql.googleapis.com/database/sqlserver/memory/lazy_write_count`: Total number of buffers written by the buffer manager's lazy writer. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      17. `cloudsql.googleapis.com/database/sqlserver/memory/page_life_expectancy`: Current number of seconds a page will stay in the buffer pool. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      18. `cloudsql.googleapis.com/database/sqlserver/memory/page_operation_count`: Total number of physical database page reads or writes. `cloudsql_database`. `operation`, `database`, `project_id`, `database_id`.
+      19. `cloudsql.googleapis.com/database/sqlserver/transactions/page_split_count`: Total number of page splits from overflowing index pages. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      20. `cloudsql.googleapis.com/database/sqlserver/transactions/deadlock_count`: Total number of lock requests that resulted in a deadlock. `cloudsql_database`. `locked_resource`, `database`, `project_id`, `database_id`.
+      21. `cloudsql.googleapis.com/database/sqlserver/transactions/transaction_count`: Total number of transactions started. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      22. `cloudsql.googleapis.com/database/sqlserver/transactions/batch_request_count`: Total number of Transact-SQL command batches received. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      23. `cloudsql.googleapis.com/database/sqlserver/transactions/sql_compilation_count`: Total number of SQL compilations. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      24. `cloudsql.googleapis.com/database/sqlserver/transactions/sql_recompilation_count`: Total number of SQL recompilations. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      25. `cloudsql.googleapis.com/database/sqlserver/connections/processes_blocked`: Current number of blocked processes. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      26. `cloudsql.googleapis.com/database/sqlserver/transactions/lock_wait_time`: Total time lock requests were waiting for locks. `cloudsql_database`. `locked_resource`, `database`, `project_id`, `database_id`.
+      27. `cloudsql.googleapis.com/database/sqlserver/transactions/lock_wait_count`: Total number of lock requests that required the caller to wait. `cloudsql_database`. `locked_resource`, `database`, `project_id`, `database_id`.
+      28. `cloudsql.googleapis.com/database/network/connections`: Number of connections to databases on the instance. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      29. `cloudsql.googleapis.com/database/sqlserver/connections/login_attempt_count`: Total number of login attempts since the last server restart. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      30. `cloudsql.googleapis.com/database/sqlserver/connections/logout_count`: Total number of logout operations since the last server restart. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      31. `cloudsql.googleapis.com/database/sqlserver/connections/connection_reset_count`: Total number of logins started from the connection pool since the last server restart. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      32. `cloudsql.googleapis.com/database/sqlserver/transactions/full_scan_count`: Total number of unrestricted full scans (base-table or full-index). `cloudsql_database`. `database`, `project_id`, `database_id`.
+
+toolsets:
+  cloud-sql-mssql-cloud-monitoring-tools:
+    - get_system_metrics
