@@ -44,6 +44,7 @@ import (
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
@@ -106,6 +107,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbaseexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
@@ -122,10 +124,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
