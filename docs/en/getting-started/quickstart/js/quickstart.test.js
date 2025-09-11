@@ -42,7 +42,7 @@ describe(`${ORCH_NAME} Quickstart Agent`, () => {
     console.log = originalLog;
   });
 
-  test("Assert", async () => {
+  test("outputContainsRequiredKeywords", async () => {
     capturedOutput = [];
     await runAgent();
     const actualOutput = capturedOutput.join("\n");
