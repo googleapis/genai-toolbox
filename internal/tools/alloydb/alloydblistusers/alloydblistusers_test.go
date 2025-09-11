@@ -45,10 +45,10 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-users": alloydblistusers.Config{
-					Name:         "list-my-users",
-					Kind:         "alloydb-list-users",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
+					Name:        "list-my-users",
+					Kind:        "alloydb-list-users",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{},
 				},
 			},
@@ -67,56 +67,11 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-users-auth": alloydblistusers.Config{
-					Name:         "list-my-users-auth",
-					Kind:         "alloydb-list-users",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
+					Name:        "list-my-users-auth",
+					Kind:        "alloydb-list-users",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-				},
-			},
-		},
-		{
-			desc: "with base url",
-			in: `
-			tools:
-				list-my-users-baseurl:
-					kind: alloydb-list-users
-					source: my-alloydb-admin-source
-					description: some description
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"list-my-users-baseurl": alloydblistusers.Config{
-					Name:         "list-my-users-baseurl",
-					Kind:         "alloydb-list-users",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					BaseURL:      "https://example.com",
-					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "with auth and base url",
-			in: `
-			tools:
-				list-my-users-all:
-					kind: alloydb-list-users
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"list-my-users-all": alloydblistusers.Config{
-					Name:         "list-my-users-all",
-					Kind:         "alloydb-list-users",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					BaseURL:      "https://example.com",
 				},
 			},
 		},

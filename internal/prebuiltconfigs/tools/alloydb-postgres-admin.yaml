@@ -19,6 +19,8 @@ sources:
     headers:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
+  alloydb-admin-source:
+    kind: alloydb-admin
 tools:
   alloydb-create-cluster:
     kind: http
@@ -160,9 +162,9 @@ tools:
         type: string
         description: "The ID of the cluster to list instances from. Use '-' to get results for all clusters."
         default: "-"
-  alloydb-list-users:
+  list_users:
     kind: alloydb-list-users
-    source: alloydb-api-source
+    source: alloydb-admin-source
     description: "Lists all database users within a specific AlloyDB cluster."
   alloydb-create-user:
     kind: http
@@ -219,5 +221,5 @@ toolsets:
     - alloydb-create-instance
     - alloydb-list-clusters
     - alloydb-list-instances
-    - alloydb-list-users
+    - list_users
     - alloydb-create-user
