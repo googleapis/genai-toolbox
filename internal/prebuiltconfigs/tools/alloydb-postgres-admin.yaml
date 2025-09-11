@@ -226,7 +226,7 @@ tools:
         type: string
         description: "The type of user to create. Valid values are: USER_TYPE_UNSPECIFIED, ALLOYDB_BUILT_IN, ALLOYDB_IAM_USER."
         default: "ALLOYDB_BUILT_IN"
-  alloydb-get-cluster:
+  get_cluster:
     kind: alloydb-get-cluster
     source: alloydb-admin-source
     description: "Retrieves details of a specific AlloyDB cluster."
@@ -240,4 +240,4 @@ toolsets:
     - alloydb-list-instances
     - alloydb-list-users
     - alloydb-create-user
-    - alloydb-get-cluster
+    - get_cluster
