@@ -26,6 +26,8 @@ The `looker-health-analyze` tool performs various analysis tasks on a Looker ins
 | project | string | false | The name of the Looker project to analyze. |
 | model | string | false | The name of the Looker model to analyze. Required for `explores` actions. |
 | explore | string | false | The name of the Looker explore to analyze. Required for the `explores` action. |
+| timeframe | int | false | The timeframe in days to analyze. Defaults to 90. |
+| min_queries | int | false | The minimum number of queries for a model or explore to be considered used. Defaults to 1. |
 
 ## Example
 
