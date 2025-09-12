@@ -54,7 +54,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSource() oauth2.TokenSource
+	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
@@ -145,6 +145,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: parameters.McpManifest(),
 	}
 
+	// Get cloud-platform token source for Gemini Data Analytics API during initialization
+	var bigQueryTokenSourceWithScope oauth2.TokenSource
+	if !s.UseClientAuthorization() {
+		ctx := context.Background()
+		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
+		}
+		bigQueryTokenSourceWithScope = ts
+	}
+
 	// finish tool setup
 	t := Tool{
 		Name:               cfg.Name,
@@ -155,7 +166,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        s.BigQueryTokenSource(),
+		TokenSource:        bigQueryTokenSourceWithScope,
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
@@ -197,13 +208,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
-		// Use ADC
+		// Use cloud-platform token source for Gemini Data Analytics API
 		if t.TokenSource == nil {
-			return nil, fmt.Errorf("ADC is missing a valid token source")
+			return nil, fmt.Errorf("cloud-platform token source is missing")
 		}
 		token, err := t.TokenSource.Token()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get token from ADC: %w", err)
+			return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
 		}
 		tokenStr = token.AccessToken
 	}
