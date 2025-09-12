@@ -128,7 +128,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client), option.WithUserAgent(t.Source.UserAgent))
 	if err != nil {
 		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
