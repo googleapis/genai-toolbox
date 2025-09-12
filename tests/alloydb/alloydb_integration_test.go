@@ -110,6 +110,11 @@ func getAlloyDBToolsConfig() map[string]any {
 				"source":      "alloydb-admin-source",
 				"description": "Lists all AlloyDB instances within a specific cluster.",
 			},
+			"alloydb-get-cluster": map[string]any{
+				"kind":        "alloydb-get-cluster",
+				"source":      "alloydb-admin-source",
+				"description": "Retrieves details of a specific AlloyDB cluster.",
+			},
 		},
 	}
 }
@@ -143,6 +148,7 @@ func TestAlloyDBToolEndpoints(t *testing.T) {
 	runAlloyDBListClustersTest(t, vars)
 	runAlloyDBListUsersTest(t, vars)
 	runAlloyDBListInstancesTest(t, vars)
+	runAlloyDBGetClusterTest(t, vars)
 }
 
 func runAlloyDBToolGetTest(t *testing.T) {
@@ -668,6 +674,104 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 
 				if !reflect.DeepEqual(got, tc.want) {
 					t.Errorf("instance list mismatch:\n got: %v\nwant: %v", got, tc.want)
+				}
+			}
+		})
+	}
+}
+
+func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
+	type ToolResponse struct {
+		Result string `json:"result"`
+	}
+
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		want           map[string]any
+		wantStatusCode int
+	}{
+		{
+			name:        "get cluster success",
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s", "clusterId": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			want: map[string]any{
+				"clusterType": "PRIMARY",
+				"name":        fmt.Sprintf("projects/%s/locations/%s/clusters/%s", vars["projectId"], vars["locationId"], vars["clusterId"]),
+			},
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "get cluster missing project",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"locationId": "%s", "clusterId": "%s"}`, vars["locationId"], vars["clusterId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get cluster missing location",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "clusterId": "%s"}`, vars["projectId"], vars["clusterId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get cluster missing clusterId",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s"}`, vars["projectId"], vars["locationId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get cluster non-existent cluster",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s", "clusterId": "non-existent-cluster"}`, vars["projectId"], vars["locationId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+	}
+
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			api := "http://127.0.0.1:5000/api/tool/alloydb-get-cluster/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+			}
+
+
+			if tc.wantStatusCode == http.StatusOK {
+				var body ToolResponse
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+
+
+				if tc.want != nil {
+					var gotMap map[string]any
+					if err := json.Unmarshal([]byte(body.Result), &gotMap); err != nil {
+						t.Fatalf("failed to unmarshal JSON result into map: %v", err)
+					}
+
+
+					got := make(map[string]any)
+					for key := range tc.want {
+						if value, ok := gotMap[key]; ok {
+							got[key] = value
+						}
+					}
+
+
+					if diff := cmp.Diff(tc.want, got); diff != "" {
+						t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+					}
 				}
 			}
 		})
