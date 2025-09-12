@@ -21,8 +21,8 @@ The toolbox automatically generates a bearer token on behalf of the user with th
 tools:
   create-sql-instance:
     kind: cloud-sql-mssql-create-instance
-       source: cloud-sql-admin-source
-    description: "Create a Cloud SQL for MSSQL instance."
+    source: cloud-sql-admin-source
+    description: "Creates a MSSQL instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 8 GiB RAM (`db-custom-2-8192`) configuration with Non-HA/zonal availability. For the `Production` template, it chooses a 4 vCPU, 26 GiB RAM (`db-custom-4-26624`) configuration with HA/regional availability. The Enterprise edition is used in both cases. The default database version is `SQLSERVER_2022_STANDARD`. The agent should ask the user if they want to use a different version."
 ```
 
 ## Reference
@@ -32,8 +32,8 @@ tools:
 | **field**   | **type** | **required** | **description**                                  |
 | ----------- | :------: | :----------: | ------------------------------------------------ |
 | kind        |  string  |     true     | Must be "cloud-sql-mssql-create-instance".       |
-| description |  string  |     false    | A description of the tool.                       |
 | source      |  string  |     true     | The name of the `cloud-sql-admin` source to use. |
+| description |  string  |     false    | A description of the tool.                       |
 
 ### Tool Inputs
 

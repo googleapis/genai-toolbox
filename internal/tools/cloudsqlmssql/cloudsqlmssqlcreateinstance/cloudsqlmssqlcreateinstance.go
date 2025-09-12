@@ -76,7 +76,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameter("name", "The name of the instance"),
 		tools.NewStringParameterWithDefault("databaseVersion", "SQLSERVER_2022_STANDARD", "The database version for MSSQL. If not specified, defaults to SQLSERVER_2022_STANDARD."),
 		tools.NewStringParameter("rootPassword", "The root password for the instance"),
-		tools.NewStringParameter("editionPreset", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
+		tools.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -144,23 +144,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	settings := &sqladmin.Settings{}
-	logicalEdition := "Development"
-	if strings.EqualFold(editionPreset, "Production") {
-		logicalEdition = "Production"
-	}
-
-	if logicalEdition == "Production" {
+	switch strings.ToLower(editionPreset) {
+	case "production":
 		settings.AvailabilityType = "REGIONAL"
 		settings.Edition = "ENTERPRISE"
 		settings.Tier = "db-custom-4-26624"
 		settings.DataDiskSizeGb = 250
 		settings.DataDiskType = "PD_SSD"
-	} else { // Development
+	case "development":
 		settings.AvailabilityType = "ZONAL"
 		settings.Edition = "ENTERPRISE"
 		settings.Tier = "db-custom-2-8192"
 		settings.DataDiskSizeGb = 100
 		settings.DataDiskType = "PD_SSD"
+	default:
+		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
 	}
 
 	instance := &sqladmin.DatabaseInstance{
@@ -180,6 +178,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
+
+	service.UserAgent = t.Source.UserAgent
 
 	resp, err := service.Instances.Insert(project, instance).Do()
 	if err != nil {
