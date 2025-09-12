@@ -10,6 +10,6 @@ manualLinkTarget: _blank
 <html>
   <head>
     <link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-python"/>
-    <meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-python"/>
+    <meta http-equiv="refresh" content="0;url=hhttps://github.com/googleapis/mcp-toolbox-sdk-python"/>
   </head>
 </html>

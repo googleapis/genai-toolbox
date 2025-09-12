@@ -105,11 +105,6 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		datasetName,
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
-	tableNameForecast := fmt.Sprintf("`%s.%s.forecast_table_%s`",
-		BigqueryProject,
-		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
-	)
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
@@ -125,11 +120,6 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	createDataTypeTableStmt, insertDataTypeTableStmt, dataTypeToolStmt, arrayDataTypeToolStmt, dataTypeTestParams := getBigQueryDataTypeTestInfo(tableNameDataType)
 	teardownTable3 := setupBigQueryTable(t, ctx, client, createDataTypeTableStmt, insertDataTypeTableStmt, datasetName, tableNameDataType, dataTypeTestParams)
 	defer teardownTable3(t)
-
-	// set up data for forecast tool
-	createForecastTableStmt, insertForecastTableStmt, forecastTestParams := getBigQueryForecastToolInfo(tableNameForecast)
-	teardownTable4 := setupBigQueryTable(t, ctx, client, createForecastTableStmt, insertForecastTableStmt, datasetName, tableNameForecast, forecastTestParams)
-	defer teardownTable4(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
@@ -173,7 +163,6 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
-	runBigQueryForecastToolInvokeTest(t, tableNameForecast)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
@@ -229,25 +218,6 @@ func getBigQueryDataTypeTestInfo(tableName string) (string, string, string, stri
 		{Value: int64(3)}, {Value: int64(789)}, {Value: "test"}, {Value: 100.1}, {Value: true},
 	}
 	return createStatement, insertStatement, toolStatement, arrayToolStatement, params
-}
-
-// getBigQueryForecastToolInfo returns statements and params for the forecast tool.
-func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryapi.QueryParameter) {
-	createStatement := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (ts TIMESTAMP, data FLOAT64, id STRING);`, tableName)
-	insertStatement := fmt.Sprintf(`
-		INSERT INTO %s (ts, data, id) VALUES 
-		(?, ?, ?), (?, ?, ?), (?, ?, ?), 
-		(?, ?, ?), (?, ?, ?), (?, ?, ?);`, tableName)
-	params := []bigqueryapi.QueryParameter{
-		{Value: "2025-01-01T00:00:00Z"}, {Value: 10.0}, {Value: "a"},
-		{Value: "2025-01-01T01:00:00Z"}, {Value: 11.0}, {Value: "a"},
-		{Value: "2025-01-01T02:00:00Z"}, {Value: 12.0}, {Value: "a"},
-		{Value: "2025-01-01T00:00:00Z"}, {Value: 20.0}, {Value: "b"},
-		{Value: "2025-01-01T01:00:00Z"}, {Value: 21.0}, {Value: "b"},
-		{Value: "2025-01-01T02:00:00Z"}, {Value: 22.0}, {Value: "b"},
-	}
-	return createStatement, insertStatement, params
 }
 
 // getBigQueryTmplToolStatement returns statements for template parameter test cases for bigquery kind
@@ -348,19 +318,6 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
-		"authRequired": []string{
-			"my-google-auth",
-		},
-	}
-	tools["my-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
-		"source":      "my-instance",
-		"description": "Tool to forecast time series data.",
-	}
-	tools["my-auth-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
-		"source":      "my-instance",
-		"description": "Tool to forecast time series data with auth.",
 		"authRequired": []string{
 			"my-google-auth",
 		},
@@ -662,114 +619,6 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
-			isErr:         true,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
-			}
-		})
-	}
-}
-
-func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
-
-	historyDataTable := strings.ReplaceAll(tableName, "`", "")
-	historyDataQuery := fmt.Sprintf("SELECT ts, data, id FROM %s", tableName)
-
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
-	}{
-		{
-			name:          "invoke my-forecast-tool without required params",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s"}`, historyDataTable))),
-			isErr:         true,
-		},
-		{
-			name:          "invoke my-forecast-tool with table",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-forecast-tool with query and horizon",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data", "horizon": 5}`, historyDataQuery))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-forecast-tool with id_cols",
-			api:           "http://127.0.0.1:5000/api/tool/my-forecast-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data", "id_cols": ["id"]}`, historyDataTable))),
-			want:          `"id"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-auth-forecast-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
-			want:          `"forecast_timestamp"`,
-			isErr:         false,
-		},
-		{
-			name:          "invoke my-auth-forecast-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-forecast-tool/invoke",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			isErr:         true,
 		},
 	}

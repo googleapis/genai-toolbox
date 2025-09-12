@@ -16,7 +16,7 @@ name: tests
 on:
   push:
     branches:
-      - "main"
+    - 'main'
   pull_request:
   pull_request_target:
     types: [labeled]
@@ -35,9 +35,9 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
       fail-fast: false
     permissions:
-      contents: "read"
-      issues: "write"
-      pull-requests: "write"
+      contents: 'read'
+      issues: 'write'
+      pull-requests: 'write'
     steps:
       - name: Remove PR label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
@@ -76,8 +76,6 @@ jobs:
 
       - name: Run tests with coverage
         if: ${{ runner.os == 'Linux' }}
-        env:
-          GOTOOLCHAIN: go1.25.0+auto
         run: |
           source_dir="./internal/sources/*"
           tool_dir="./internal/tools/*"

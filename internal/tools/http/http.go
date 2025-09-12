@@ -94,24 +94,68 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.PathParams, cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
 
-	// Verify no duplicate parameter names
-	err := tools.CheckDuplicateParameters(allParameters)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create Toolbox manifest
-	paramManifest := allParameters.Manifest()
-
+	// Create parameter MCP manifest
+	paramManifest := slices.Concat(
+		cfg.PathParams.Manifest(),
+		cfg.QueryParams.Manifest(),
+		cfg.BodyParams.Manifest(),
+		cfg.HeaderParams.Manifest(),
+	)
 	if paramManifest == nil {
 		paramManifest = make([]tools.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
+	// Verify there are no duplicate parameter names
+	seenNames := make(map[string]bool)
+	for _, param := range paramManifest {
+		if _, exists := seenNames[param.Name]; exists {
+			return nil, fmt.Errorf("parameter name must be unique across queryParams, bodyParams, and headerParams. Duplicate parameter: %s", param.Name)
+		}
+		seenNames[param.Name] = true
+	}
+
+	pathMcpManifest := cfg.PathParams.McpManifest()
+	queryMcpManifest := cfg.QueryParams.McpManifest()
+	bodyMcpManifest := cfg.BodyParams.McpManifest()
+	headerMcpManifest := cfg.HeaderParams.McpManifest()
+
+	// Concatenate parameters for MCP `required` field
+	concatRequiredManifest := slices.Concat(
+		pathMcpManifest.Required,
+		queryMcpManifest.Required,
+		bodyMcpManifest.Required,
+		headerMcpManifest.Required,
+	)
+	if concatRequiredManifest == nil {
+		concatRequiredManifest = []string{}
+	}
+
+	// Concatenate parameters for MCP `properties` field
+	concatPropertiesManifest := make(map[string]tools.ParameterMcpManifest)
+	for name, p := range pathMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+	for name, p := range queryMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+	for name, p := range bodyMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+	for name, p := range headerMcpManifest.Properties {
+		concatPropertiesManifest[name] = p
+	}
+
+	// Create a new McpToolsSchema with all parameters
+	paramMcpManifest := tools.McpToolsSchema{
+		Type:       "object",
+		Properties: concatPropertiesManifest,
+		Required:   concatRequiredManifest,
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
-		InputSchema: allParameters.McpManifest(),
+		InputSchema: paramMcpManifest,
 	}
 
 	// finish tool setup
