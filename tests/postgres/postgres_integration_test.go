@@ -37,14 +37,15 @@ import (
 )
 
 var (
-	PostgresSourceKind         = "postgres"
-	PostgresToolKind           = "postgres-sql"
-	PostgresListTablesToolKind = "postgres-list-tables"
-	PostgresDatabase           = os.Getenv("POSTGRES_DATABASE")
-	PostgresHost               = os.Getenv("POSTGRES_HOST")
-	PostgresPort               = os.Getenv("POSTGRES_PORT")
-	PostgresUser               = os.Getenv("POSTGRES_USER")
-	PostgresPass               = os.Getenv("POSTGRES_PASS")
+	PostgresSourceKind                = "postgres"
+	PostgresToolKind                  = "postgres-sql"
+	PostgresListTablesToolKind        = "postgres-list-tables"
+	PostgresListActiveQueriesToolKind = "postgres-list-active-queries"
+	PostgresDatabase                  = os.Getenv("POSTGRES_DATABASE")
+	PostgresHost                      = os.Getenv("POSTGRES_HOST")
+	PostgresPort                      = os.Getenv("POSTGRES_PORT")
+	PostgresUser                      = os.Getenv("POSTGRES_USER")
+	PostgresPass                      = os.Getenv("POSTGRES_PASS")
 )
 
 func getPostgresVars(t *testing.T) map[string]any {
@@ -80,6 +81,11 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"kind":        PostgresListTablesToolKind,
 		"source":      "my-instance",
 		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        PostgresListActiveQueriesToolKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
 	}
 	config["tools"] = tools
 	return config
@@ -163,6 +169,7 @@ func TestPostgres(t *testing.T) {
 
 	// Run specific Postgres tool tests
 	runPostgresListTablesTest(t, tableNameParam, tableNameAuth)
+	runPostgresListActiveQueriesTest(t)
 }
 
 func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -215,7 +222,7 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 		{
 			name:           "invoke list_tables detailed output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`,tableNameAuth))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
@@ -319,6 +326,73 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 					t.Errorf("Unexpected result: got  %#v, want: %#v", got, want)
 				}
 			}
+		})
+	}
+}
+
+func runPostgresListActiveQueriesTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_active_queries without filter output",
+			api:            "http://127.0.0.1:5000/api/tool/list_active_queries/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke list_active_queries with limit filter output",
+			api:            "http://127.0.0.1:5000/api/tool/list_active_queries/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"limit": 2}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke list_active_queries with single application name filter output",
+			api:            "http://127.0.0.1:5000/api/tool/list_active_queries/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"exclude_application_names": "postgres"}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke list_active_queries with multiple application name filter output",
+			api:            "http://127.0.0.1:5000/api/tool/list_active_queries/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"exclude_application_names": "postgres, admin"}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke list_active_queries with min duration filter output",
+			api:            "http://127.0.0.1:5000/api/tool/list_active_queries/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"min_duration": "1 minute"}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke list_active_queries with all filters output",
+			api:            "http://127.0.0.1:5000/api/tool/list_active_queries/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"min_duration": "1 minute", "limit": 2, "exclude_application_names": "postgres"}`)),
+			wantStatusCode: http.StatusOK,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Intentionally skipping the output data validation, as response depends on currently running queries and can introduce flakiness
 		})
 	}
 }

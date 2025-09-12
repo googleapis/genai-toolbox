@@ -17,18 +17,21 @@ reputation for reliability, feature robustness, and performance.
 
 ## Available Tools
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in PostgreSQL.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in PostgreSQL.
 
-- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in a PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
+- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
 Connect your IDE to PostgreSQL using Toolbox.
 
 ## Requirements
