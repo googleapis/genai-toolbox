@@ -244,7 +244,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			},
 			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
-		ClientIDEnum: "GENAI_TOOLBOX",
+		ClientIdEnum: "GENAI_TOOLBOX",
 	}
 
 	// Call the streaming API
