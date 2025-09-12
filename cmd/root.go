@@ -42,6 +42,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
@@ -54,7 +55,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
@@ -130,6 +133,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
