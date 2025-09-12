@@ -62,6 +62,26 @@ steps:
           postgressql \
           postgresexecutesql
 
+  - id: "alloydb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "ALLOYDB_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
+      - "ALLOYDB_REGION=$_REGION"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "AlloyDB" \
+          alloydb \
+          alloydb
+
   - id: "alloydb-pg"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -548,6 +568,24 @@ steps:
           "Alloydb Wait for Operation" \
           utility \
           utility/alloydbwaitforoperation
+
+  - id: "cloud-sql"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cloud SQL Wait for Operation" \
+          cloudsql \
+          cloudsql
 
   - id: "tidb"
     name: golang:1
