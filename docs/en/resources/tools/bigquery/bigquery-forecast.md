@@ -23,6 +23,15 @@ It's compatible with the following sources:
 - **id_cols** (array of strings, optional): If you are forecasting multiple time series at once (e.g., sales for different products), this parameter takes an array of column names that uniquely identify each series. It defaults to an empty array if not provided.
 - **horizon** (integer, optional): The number of future time steps you want to predict. It defaults to 10 if not specified.
 
+The tool's behavior regarding these parameters is influenced by the `allowedDatasets` restriction on the `bigquery` source:
+
+- **Without `allowedDatasets` restriction:** The tool can use any table or query for the `history_data` parameter.
+
+- **With `allowedDatasets` restriction:** The tool verifies that the `history_data` parameter only accesses tables 
+within the allowed datasets. If `history_data` is a table ID, the tool checks if the table's dataset is in the 
+allowed list. If `history_data` is a query, the tool performs a dry run to analyze the query and rejects it 
+if it accesses any table outside the allowed list.
+
 ## Example
 
 ```yaml
