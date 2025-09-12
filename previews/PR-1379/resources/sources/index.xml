@@ -51,7 +51,46 @@ Execute SQL queries as prepared statements in ClickHouse.&lt;/p>
 ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app">ClickHouse Cloud&lt;/a>) to connect to the database with. The user
 should have appropriate permissions for the operations you plan to perform.&lt;/p>
 &lt;h3 id="network-access">Network Access&lt;/h3>
-&lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>Cloud SQL for MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>Cloud Monitoring</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-monitoring/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-monitoring/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>cloud-monitoring&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/monitoring/api">Google Cloud Monitoring API&lt;/a>. This allows tools to access cloud monitoring metrics explorer and run promql queries.&lt;/p>
+&lt;p>Authentication can be handled in two ways:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-cloud-monitoring&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-monitoring&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-oauth-cloud-monitoring&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-monitoring&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">useClientOAuth&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-monitoring&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>useClientOAuth&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code>false&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>Cloud SQL for MySQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mysql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mysql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/mysql">Cloud SQL for MySQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your MySQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -67,18 +106,9 @@ Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p>
 &lt;/li>
-&lt;/ul>
-&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/">Cloud SQL for MySQL using MCP&lt;/a>&lt;br>
-Connect your IDE to Cloud SQL for MySQL using Toolbox.&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
-&lt;p>By default, this source uses the &lt;a href="https://github.com/GoogleCloudPlatform/cloud-sql-go-connector">Cloud SQL Go Connector&lt;/a> to
-authorize and establish mTLS connections to your Cloud SQL instance. The Go
-connector uses your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize
-your connection to Cloud SQL.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a Cloud SQL for MySQL database.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/postgres">Cloud SQL for PostgreSQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your PostgreSQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -94,18 +124,9 @@ Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
-&lt;/ul>
-&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/">Cloud SQL for Postgres using MCP&lt;/a>&lt;br>
-Connect your IDE to Cloud SQL for Postgres using Toolbox.&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
-&lt;p>By default, this source uses the &lt;a href="https://github.com/GoogleCloudPlatform/cloud-sql-go-connector">Cloud SQL Go Connector&lt;/a> to
-authorize and establish mTLS connections to your Cloud SQL instance. The Go
-connector uses your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize
-your connection to Cloud SQL.&lt;/p></description></item><item><title>Cloud SQL for SQL Server</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mssql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mssql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a PostgreSQL database.&lt;/p></description></item><item><title>Cloud SQL for SQL Server</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mssql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-mssql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/sqlserver">Cloud SQL for SQL Server&lt;/a> is a managed database service that
 helps you set up, maintain, manage, and administer your SQL Server databases on
 Google Cloud.&lt;/p>
@@ -119,7 +140,46 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
-Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/cloud-sql-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google Cloud SQL Admin API&lt;/a>. This allows tools to perform administrative tasks on Cloud SQL instances, such as creating users and databases.&lt;/p>
+&lt;p>Authentication can be handled in two ways:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-cloud-sql-admin&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-sql-admin&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-oauth-cloud-sql-admin&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-sql-admin&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">useClientOAuth&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-sql-admin&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>useClientOAuth&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code>false&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>couchbase&lt;/code> source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
@@ -519,146 +579,15 @@ Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL queries in MySQL.&lt;/p>
 &lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a MySQL database.&lt;/p>
+&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source only uses standard authentication. You will need to &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/user-names.html">create a
-MySQL user&lt;/a> to login to the database with.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-mysql-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">host&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">127.0.0.1&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">port&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">3306&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my_db&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c"># Optional TLS and other driver parameters. For example, enable preferred TLS:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c"># queryParams:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c"># tls: preferred&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">queryTimeout: 30s # Optional&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">query timeout duration&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;style type="text/css">
- 
- .notice {
- --title-color: #fff;
- --title-background-color: #6be;
- --content-color: #444;
- --content-background-color: #e7f2fa;
- }
-
- .notice.info {
- --title-background-color: #fb7;
- --content-background-color: #fec;
- }
-
- .notice.tip {
- --title-background-color: #5a5;
- --content-background-color: #efe;
- }
-
- .notice.warning {
- --title-background-color: #c33;
- --content-background-color: #fee;
- }
-
- 
- @media (prefers-color-scheme:dark) {
- .notice {
- --title-color: #fff;
- --title-background-color: #069;
- --content-color: #ddd;
- --content-background-color: #023;
- }
-
- .notice.info {
- --title-background-color: #a50;
- --content-background-color: #420;
- }
-
- .notice.tip {
- --title-background-color: #363;
- --content-background-color: #121;
- }
-
- .notice.warning {
- --title-background-color: #800;
- --content-background-color: #400;
- }
- }
-
- body.dark .notice {
- --title-color: #fff;
- --title-background-color: #069;
- --content-color: #ddd;
- --content-background-color: #023;
- }
-
- body.dark .notice.info {
- --title-background-color: #a50;
- --content-background-color: #420;
- }
-
- body.dark .notice.tip {
- --title-background-color: #363;
- --content-background-color: #121;
- }
-
- body.dark .notice.warning {
- --title-background-color: #800;
- --content-background-color: #400;
- }
-
- 
- .notice {
- padding: 18px;
- line-height: 24px;
- margin-bottom: 24px;
- border-radius: 4px;
- color: var(--content-color);
- background: var(--content-background-color);
- }
-
- .notice p:last-child {
- margin-bottom: 0
- }
-
- 
- .notice-title {
- margin: -18px -18px 12px;
- padding: 4px 18px;
- border-radius: 4px 4px 0 0;
- font-weight: 700;
- color: var(--title-color);
- background: var(--title-background-color);
- }
-
- 
- .icon-notice {
- display: inline-flex;
- align-self: center;
- margin-right: 8px;
- }
-
- .icon-notice img,
- .icon-notice svg {
- height: 1em;
- width: 1em;
- fill: currentColor;
- }
-
- .icon-notice img,
- .icon-notice.baseline svg {
- top: .125em;
- position: relative;
- }
-&lt;/style>&lt;div class="notice tip" >
- &lt;p class="notice-title">
- &lt;span class="icon-notice baseline">
- &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="300.5 134 300 300">
- &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
-&lt;/svg>
-
- &lt;/span>Tip&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
+MySQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://neo4j.com/docs">Neo4j&lt;/a> is a powerful, open source graph database system with over
 15 years of active development that has earned it a strong reputation for
 reliability, feature robustness, and performance.&lt;/p>
@@ -688,6 +617,10 @@ Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a PostgreSQL database.&lt;/p>
 &lt;/li>
 &lt;/ul>
 &lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
@@ -883,6 +816,45 @@ the &lt;a href="https://valkey.io/topics/quickstart/">official Valkey website&lt
  &lt;td style="text-align: center">integer&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
  &lt;td>Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>AlloyDB Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/alloydb-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/alloydb-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/alloydb/docs/reference/rest">Google AlloyDB API&lt;/a>. This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.&lt;/p>
+&lt;p>Authentication can be handled in two ways:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-alloydb-admin&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloy-admin&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-oauth-alloydb-admin&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">useClientOAuth&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;alloydb-admin&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>useClientOAuth&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code>false&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item></channel></rss>
