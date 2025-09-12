@@ -33,6 +33,9 @@ cluster][alloydb-free-trial].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in AlloyDB Postgres.
 
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
