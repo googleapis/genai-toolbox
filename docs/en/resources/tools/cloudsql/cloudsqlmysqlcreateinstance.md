@@ -24,7 +24,7 @@ tools:
   create_my_mysql_instance:
     kind: cloud-sql-mysql-create-instance
     source: my-cloud-sql-admin-source
-    description: Use this tool to create a new Cloud SQL for MySQL instance.
+    description: "Creates a MySQL instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `MYSQL_8_4`. The agent should ask the user if they want to use a different version."
 ```
 
 ## Parameters
