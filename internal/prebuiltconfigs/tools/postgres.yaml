@@ -32,8 +32,18 @@ tools:
         kind: postgres-list-tables
         source: postgresql-source
         description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+    list_available_extensions:
+        kind: postgres-list-available-extensions
+        source: postgresql-source
+        description: "Discover all PostgreSQL extensions available for installation on this server, returning name, default_version, and description."
+    list_installed_extensions:
+        kind: postgres-list-installed-extensions
+        source: postgresql-source
+        description: "List all installed PostgreSQL extensions with their name, version, schema, owner, and description."
 
 toolsets:
     postgres-database-tools:
         - execute_sql
         - list_tables
+        - list_available_extensions
+        - list_installed_extensions

@@ -102,7 +102,7 @@ const listTablesStatement = `
 				'constraints', COALESCE((SELECT json_agg(json_build_object('constraint_name',cons.constraint_name,'constraint_type',cons.constraint_type,'constraint_definition',cons.constraint_definition,'constraint_columns',cons.constraint_columns,'foreign_key_referenced_table',cons.foreign_key_referenced_table,'foreign_key_referenced_columns',cons.foreign_key_referenced_columns)) FROM constraints_info cons WHERE cons.table_oid = ti.table_oid), '[]'::json),
 				'indexes', COALESCE((SELECT json_agg(json_build_object('index_name',ii.index_name,'index_definition',ii.index_definition,'is_unique',ii.is_unique,'is_primary',ii.is_primary,'index_method',ii.index_method,'index_columns',ii.index_columns)) FROM indexes_info ii WHERE ii.table_oid = ti.table_oid), '[]'::json),
 				'triggers', COALESCE((SELECT json_agg(json_build_object('trigger_name',tri.trigger_name,'trigger_definition',tri.trigger_definition,'trigger_enabled_state',tri.trigger_enabled_state)) FROM triggers_info tri WHERE tri.table_oid = ti.table_oid), '[]'::json)
-			) 
+			)
 		END AS object_details
 	FROM table_info ti ORDER BY ti.schema_name, ti.table_name;
 `
@@ -190,10 +190,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	AllParams    tools.Parameters `yaml:"allParams"`
 
 	Pool        *pgxpool.Pool
 	manifest    tools.Manifest
@@ -208,9 +208,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid 'table_names' parameter; expected a string")
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
-    if outputFormat != "simple" && outputFormat != "detailed" {
-        return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
-    }
+	if outputFormat != "simple" && outputFormat != "detailed" {
+		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
+	}
 
 	results, err := t.Pool.Query(ctx, listTablesStatement, tableNames, outputFormat)
 	if err != nil {

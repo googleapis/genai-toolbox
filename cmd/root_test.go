@@ -1349,7 +1349,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "alloydb-postgres-database-tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_available_extensions", "list_installed_extensions"},
 				},
 			},
 		},
@@ -1379,7 +1379,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud-sql-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "cloud-sql-postgres-database-tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_available_extensions", "list_installed_extensions"},
 				},
 			},
 		},
@@ -1459,7 +1459,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres-database-tools": tools.ToolsetConfig{
 					Name:      "postgres-database-tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_available_extensions", "list_installed_extensions"},
 				},
 			},
 		},
