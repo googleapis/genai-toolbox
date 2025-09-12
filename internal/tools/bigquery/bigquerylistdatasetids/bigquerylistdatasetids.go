@@ -48,6 +48,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -95,15 +96,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
-		UseClientOAuth: s.UseClientAuthorization(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		Client:         s.BigQueryClient(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Name:            cfg.Name,
+		Kind:            kind,
+		Parameters:      parameters,
+		AuthRequired:    cfg.AuthRequired,
+		UseClientOAuth:  s.UseClientAuthorization(),
+		ClientCreator:   s.BigQueryClientCreator(),
+		Client:          s.BigQueryClient(),
+		AllowedDatasets: s.BigQueryAllowedDatasets(),
+		manifest:        tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:     mcpManifest,
 	}
 	return t, nil
 }
@@ -118,14 +120,23 @@ type Tool struct {
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
 
-	Client        *bigqueryapi.Client
-	ClientCreator bigqueryds.BigqueryClientCreator
-	Statement     string
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Client          *bigqueryapi.Client
+	ClientCreator   bigqueryds.BigqueryClientCreator
+	Statement       string
+	AllowedDatasets []string
+	manifest        tools.Manifest
+	mcpManifest     tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	if len(t.AllowedDatasets) > 0 {
+		datasetIds := make([]any, len(t.AllowedDatasets))
+		for i, v := range t.AllowedDatasets {
+			datasetIds[i] = v
+		}
+		return datasetIds, nil
+	}
+
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
@@ -157,14 +168,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("unable to iterate through datasets: %w", err)
 		}
 
-		// Remove leading and trailing quotes
 		id := dataset.DatasetID
-		if len(id) >= 2 && id[0] == '"' && id[len(id)-1] == '"' {
-			id = id[1 : len(id)-1]
-		}
 		datasetIds = append(datasetIds, id)
 	}
-
 	return datasetIds, nil
 }
 
