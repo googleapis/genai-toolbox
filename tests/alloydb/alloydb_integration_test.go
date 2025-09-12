@@ -22,12 +22,12 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"reflect"
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -781,118 +781,181 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-// HTTP handler for mock server
-type handler struct {
-	mu       sync.Mutex
-	response mockResponse
+type mockAlloyDBTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
 }
 
-func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+func (t *mockAlloyDBTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://alloydb.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
-	if h.response.body == "" {
+type mockAlloyDBHandler struct {
+	t      *testing.T
+	idParam string
+}
+
+func (h *mockAlloyDBHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get(h.idParam)
+
+	var response string
+	var statusCode int
+
+	switch id {
+	case "u1-iam-success":
+		response = `{
+			"databaseRoles": ["alloydbiamuser", "alloydbsuperuser"],
+			"name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success",
+			"userType": "ALLOYDB_IAM_USER"
+		}`
+		statusCode = http.StatusOK
+	case "u2-builtin-success":
+		response = `{
+			"databaseRoles": ["alloydbsuperuser"],
+			"name": "projects/p1/locations/l1/clusters/c1/users/u2-builtin-success",
+			"userType": "ALLOYDB_BUILT_IN"
+		}`
+		statusCode = http.StatusOK
+	case "u3-api-failure":
+		response = `{"error":{"message":"user internal api error"}}`
+		statusCode = http.StatusInternalServerError
+	default:
+		http.Error(w, fmt.Sprintf("unhandled %s in mock server: %s", h.idParam, id), http.StatusNotFound)
 		return
 	}
 
-	w.WriteHeader(h.response.statusCode)
-	if _, err := w.Write([]byte(h.response.body)); err != nil {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if _, err := w.Write([]byte(response)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 }
 
-func (h *handler) setResponse(res mockResponse) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	h.response = res
-}
+func setupTestServer(t *testing.T, idParam string) func() {
+	handler := &mockAlloyDBHandler{t: t, idParam: idParam}
+	server := httptest.NewServer(handler)
 
-type mockResponse struct {
-	statusCode int
-	body       string
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &mockAlloyDBTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+
+	return func() {
+		server.Close()
+		http.DefaultClient.Transport = originalTransport
+	}
 }
 
 func TestAlloyDBCreateUser(t *testing.T) {
-	h := &handler{}
-	server := httptest.NewServer(h)
-	defer server.Close()
-
-	toolsFile := getAlloyDBCreateToolsConfig(server.URL)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
-	if err != nil {
-		t.Fatalf("command initialization failed: %v", err)
-	}
+	cleanup := setupTestServer(t, "userId")
 	defer cleanup()
 
-	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
-	defer waitCancel()
-	_, err = testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var args []string
+	toolsFile := getAlloyDBCreateToolsConfig()
+	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
-		t.Fatalf("toolbox server didn't start successfully: %s", err)
+		t.Fatalf("command initialization returned an error: %v", err)
+	}
+	defer cleanupCmd()
+
+	waitCtx, cancelWait := context.WithTimeout(ctx, 10*time.Second)
+	defer cancelWait()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
 	tcs := []struct {
-		name           string
-		requestBody    string
-		wantStatusCode int
-		mockResponse   mockResponse
-		want           map[string]any
+		name        string
+		body        string
+		want        string
+		wantError   string
+		expectError bool
+		errorStatus int
 	}{
 		{
-			name:           "create built-in user with roles success",
-			requestBody:    `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "test-user", "userType": "ALLOYDB_BUILT_IN", "password": "SafePassword!123", "databaseRoles": ["alloydbsuperuser"]}`,
-			wantStatusCode: http.StatusOK,
-			mockResponse: mockResponse{statusCode: http.StatusOK, body: `{"name":"projects/p1/locations/l1/clusters/c1/users/test-user", "userType":"ALLOYDB_BUILT_IN", "databaseRoles":["alloydbsuperuser"]}`},
-			want: map[string]any{"name": "projects/p1/locations/l1/clusters/c1/users/test-user", "userType": "ALLOYDB_BUILT_IN", "databaseRoles": []any{"alloydbsuperuser"}},
+			name: "successful creation IAM user",
+			body: `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
+			want: `{
+				  "databaseRoles": ["alloydbiamuser", "alloydbsuperuser"],
+				  "name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success",
+				  "userType": "ALLOYDB_IAM_USER"
+			}`,
 		},
 		{
-			name:           "create iam user success",
-			requestBody:    `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "iam-user@example.com", "userType": "ALLOYDB_IAM_USER"}`,
-			wantStatusCode: http.StatusOK,
-			mockResponse: mockResponse{statusCode: http.StatusOK, body: `{"name":"projects/p1/locations/l1/clusters/c1/users/iam-user@example.com", "userType":"ALLOYDB_IAM_USER", "databaseRoles":["alloydbiamuser"]}`},
-			want: map[string]any{"name": "projects/p1/locations/l1/clusters/c1/users/iam-user@example.com", "userType": "ALLOYDB_IAM_USER", "databaseRoles": []any{"alloydbiamuser"}},
+			name: "successful creation builtin user",
+			body: `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123"}`,
+			want: `{
+				  "databaseRoles": ["alloydbsuperuser"],
+				  "name": "projects/p1/locations/l1/clusters/c1/users/u2-builtin-success",
+				  "userType": "ALLOYDB_BUILT_IN"
+			}`,
 		},
 		{
-			name:           "create user failure",
-			requestBody:    `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "api-fail-user", "userType": "ALLOYDB_BUILT_IN", "password": "SafePassword!123"}`,
-			wantStatusCode: http.StatusBadRequest,
-			mockResponse:   mockResponse{statusCode: http.StatusInternalServerError, body: `{"error": "some api error"}`},
+			name:        "api failure",
+			body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
+			expectError: true,
+			errorStatus: http.StatusBadRequest,
+			wantError:   "user internal api error", 
 		},
 		{
-			name:           "create built-in user with missing password",
-			requestBody:    `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "bad-user", "userType": "ALLOYDB_BUILT_IN"}`,
-			wantStatusCode: http.StatusBadRequest,
-			mockResponse:   mockResponse{body: ""},
+			name:        "missing projectId",
+			body:        `{"locationId": "l1", "clusterId": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			expectError: true,
+			errorStatus: http.StatusBadRequest,
+			wantError:   `parameter \"projectId\" is required`,
 		},
 		{
-			name:           "create user missing userId",
-			requestBody:    `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userType": "ALLOYDB_BUILT_IN", "password": "pw"}`,
-			wantStatusCode: http.StatusBadRequest,
-			mockResponse:   mockResponse{body: ""},
+			name:        "missing locationId",
+			body:        `{"projectId": "p1", "clusterId": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			expectError: true,
+			errorStatus: http.StatusBadRequest,
+			wantError:   `unhandled userId in mock server: u-fail`,
 		},
 		{
-			name:           "create user missing clusterId",
-			requestBody:    `{"projectId": "p1", "locationId": "l1", "userId": "u1", "userType": "ALLOYDB_BUILT_IN", "password": "pw"}`,
-			wantStatusCode: http.StatusBadRequest,
-			mockResponse:   mockResponse{body: ""},
+			name:        "missing clusterId",
+			body:        `{"projectId": "p1", "locationId": "l1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			expectError: true,
+			errorStatus: http.StatusBadRequest,
+			wantError:   `parameter \"clusterId\" is required`,
 		},
 		{
-			name:           "create user missing projectId",
-			requestBody:    `{"locationId": "l1", "clusterId": "c1", "userId": "u1", "userType": "ALLOYDB_BUILT_IN", "password": "pw"}`,
-			wantStatusCode: http.StatusBadRequest,
-			mockResponse:   mockResponse{body: ""},
+			name:        "missing userId",
+			body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userType": "ALLOYDB_IAM_USER"}`,
+			expectError: true,
+			errorStatus: http.StatusBadRequest,
+			wantError:   `parameter \"userId\" is required`,
+		},
+		{
+			name:        "missing password for builtin user",
+			body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
+			expectError: true,
+			errorStatus: http.StatusBadRequest,
+			wantError:   `password is required when userType is ALLOYDB_BUILT_IN`,
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			h.setResponse(tc.mockResponse)
-
 			api := "http://127.0.0.1:5000/api/tool/alloydb-create-user/invoke"
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.requestBody))
+			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
@@ -903,46 +966,56 @@ func TestAlloyDBCreateUser(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("expected status %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			if tc.expectError {
+				if resp.StatusCode != tc.errorStatus {
+					t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
+				}
+				if tc.wantError != "" && !bytes.Contains(bodyBytes, []byte(tc.wantError)) {
+					t.Fatalf("expected error response to contain %q, but got: %s", tc.wantError, string(bodyBytes))
+				}
+				return
 			}
 
-			if tc.want != nil {
-				var result struct {
-					Result string `json:"result"`
-				}
-				if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-					t.Fatalf("failed to decode response: %v", err)
-				}
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
 
-				var got map[string]any
-				if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
-					t.Fatalf("failed to unmarshal nested result: %v", err)
-				}
+			var result struct {
+				Result string `json:"result"`
+			}
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
+				t.Fatalf("failed to decode response: %v", err)
+			}
 
-				if diff := cmp.Diff(got, tc.want); diff != "" {
-					t.Fatalf("got %v, want %v", got, tc.want)
-				}
+			var got, want map[string]any
+			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
+				t.Fatalf("failed to unmarshal result string: %v. Result: %s", err, result.Result)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatalf("failed to unmarshal want string: %v. Want: %s", err, tc.want)
+			}
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("unexpected result map (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
-func getAlloyDBCreateToolsConfig(baseURL string) map[string]any {
+func getAlloyDBCreateToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
-			"alloydb-admin-source": map[string]any{
-				"kind":    "http",
-				"baseUrl": baseURL,
+			"my-alloydb-source": map[string]any{
+				"kind": "alloydb-admin",
 			},
 		},
 		"tools": map[string]any{
 			"alloydb-create-user": map[string]any{
-				"kind":        AlloyDBCreateUserToolKind,
-				"source":      "alloydb-admin-source",
-				"description": "Creates a new database user in an AlloyDB cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned.",
-				"baseURL":     baseURL,
+				"kind":        "alloydb-create-user",
+				"description": "create user",
+				"source":      "my-alloydb-source",
 			},
 		},
 	}

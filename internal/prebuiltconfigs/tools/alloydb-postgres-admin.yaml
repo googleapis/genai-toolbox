@@ -142,9 +142,9 @@ tools:
     kind: alloydb-list-users
     source: alloydb-admin-source
     description: "Lists all database users within a specific AlloyDB cluster."
-  alloydb-create-user:
+  create_user:
     kind: alloydb-create-user
-    source: alloydb-api-source
+    source: alloydb-admin-source
     description: "Creates a new database user in an AlloyDB cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned."
   get_cluster:
     kind: alloydb-get-cluster
@@ -159,5 +159,5 @@ toolsets:
     - list_clusters
     - list_instances
     - list_users
-    - alloydb-create-user
+    - create_user
     - get_cluster

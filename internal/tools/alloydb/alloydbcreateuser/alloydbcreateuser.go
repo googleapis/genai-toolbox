@@ -15,18 +15,15 @@
 package alloydbcreateuser
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
+    "fmt"
 
-	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+    yaml "github.com/goccy/go-yaml"
+    "github.com/googleapis/genai-toolbox/internal/sources"
+    alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
+    "github.com/googleapis/genai-toolbox/internal/tools"
+    "google.golang.org/api/alloydb/v1"
+    "google.golang.org/api/option"
 )
 
 const kind string = "alloydb-create-user"
@@ -47,12 +44,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the create-user tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL string `yaml:"baseURL"`
+    Name        string   `yaml:"name" validate:"required"`
+    Kind        string   `yaml:"kind" validate:"required"`
+    Source      string   `yaml:"source" validate:"required"`
+    Description string   `yaml:"description" validate:"required"`
+    AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -66,14 +62,14 @@ func (cfg Config) ToolConfigKind() string {
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
+    if !ok {
+        return nil, fmt.Errorf("source %q not found", cfg.Source)
+    }
 
-	s, ok := rawS.(*httpsrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
-	}
+    s, ok := rawS.(*alloydbadmin.Source)
+    if !ok {
+        return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
+    }
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("projectId", "The GCP project ID."),
@@ -94,36 +90,27 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: inputSchema,
 	}
 
-	baseURL := cfg.BaseURL
-	if baseURL == "" {
-		baseURL = "https://alloydb.googleapis.com"
-	}
-
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		BaseURL:      baseURL,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
-	}, nil
+        Name:        cfg.Name,
+        Kind:        kind,
+        Source:      s,
+        AllParams:   allParameters,
+        manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+        mcpManifest: mcpManifest,
+    }, nil
 }
 
 // Tool represents the create-user tool.
 type Tool struct {
 	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+    Kind         string   `yaml:"kind"`
+    Description  string   `yaml:"description"`
 
-	BaseURL   string           `yaml:"baseURL"`
-	AllParams tools.Parameters `yaml:"allParams"`
+    Source    *alloydbadmin.Source
+    AllParams tools.Parameters `yaml:"allParams"`
 
-	Client      *http.Client
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+    manifest    tools.Manifest
+    mcpManifest tools.McpManifest
 }
 
 // Invoke executes the tool's logic.
@@ -154,10 +141,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing 'userType' parameter; expected a non-empty string")
 	}
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/locations/%s/clusters/%s/users?userId=%s", t.BaseURL, projectId, locationId, clusterId, userId)
+	client, err := t.Source.GetClient(ctx, string(accessToken))
+	if err != nil {
+		return nil, fmt.Errorf("error getting authorized client: %w", err)
+	}
 
-	requestBodyMap := map[string]any{
-		"userType": userType,
+	alloydbService, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
+	}
+
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
+
+	// Build the request body using the type-safe User struct.
+	user := &alloydb.User{
+		UserType: userType,
 	}
 
 	if userType == "ALLOYDB_BUILT_IN" {
@@ -165,63 +163,28 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if !ok || password == "" {
 			return nil, fmt.Errorf("password is required when userType is ALLOYDB_BUILT_IN")
 		}
-		requestBodyMap["password"] = password
+		user.Password = password
 	}
 
-	if dbRoles, ok := paramsMap["databaseRoles"].([]any); ok && len(dbRoles) > 0 {
+	if dbRolesRaw, ok := paramsMap["databaseRoles"].([]any); ok && len(dbRolesRaw) > 0 {
 		var roles []string
-		for _, r := range dbRoles {
+		for _, r := range dbRolesRaw {
 			if role, ok := r.(string); ok {
 				roles = append(roles, role)
 			}
 		}
 		if len(roles) > 0 {
-			requestBodyMap["databaseRoles"] = roles
+			user.DatabaseRoles = roles
 		}
 	}
 
-	bodyBytes, err := json.Marshal(requestBodyMap)
+	// The Create API returns a long-running operation.
+	resp, err := alloydbService.Projects.Locations.Clusters.Users.Create(urlString, user).UserId(userId).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request body: %w", err)
+		return nil, fmt.Errorf("error creating AlloyDB user: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlString, bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("error creating HTTP request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, fmt.Errorf("error creating token source: %w", err)
-	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving token: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := t.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(respBody))
-	}
-
-	var result any
-	if err := json.Unmarshal(respBody, &result); err != nil {
-		return nil, fmt.Errorf("error unmarshaling JSON response: %w", err)
-	}
-
-	return result, nil
+	return resp, nil
 }
 
 // ParseParams parses the parameters for the tool.
@@ -245,5 +208,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.Source.UseClientAuthorization()
 }
