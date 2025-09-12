@@ -3197,7 +3197,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>mssql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1433/resources/tools/mssql/mssql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1433/resources/tools/mssql/mssql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mssql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a msSQL database. It is compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>mssql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a SQL server database. It is compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1433/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1433/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
