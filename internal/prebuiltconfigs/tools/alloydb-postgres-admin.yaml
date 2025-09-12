@@ -199,9 +199,8 @@ toolsets:
     - alloydb-create-cluster
     - alloydb-operations-get
     - alloydb-create-instance
-    - alloydb-create-user
-    - get_cluster
     - list_clusters
     - list_instances
     - list_users
     - alloydb-create-user
+    - get_cluster
