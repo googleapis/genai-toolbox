@@ -121,14 +121,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "operation_id"}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	baseURL := cfg.BaseURL
 	if baseURL == "" {

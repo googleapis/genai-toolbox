@@ -210,13 +210,13 @@ func ResolveTemplateParams(templateParams Parameters, originalStatement string, 
 
 // ProcessParameters concatenate templateParameters and parameters from a tool.
 // It returns a list of concatenated parameters, concatenated Toolbox manifest, and concatenated MCP Manifest.
-func ProcessParameters(templateParams Parameters, params Parameters) (Parameters, []ParameterManifest, McpToolsSchema, error) {
+func ProcessParameters(templateParams Parameters, params Parameters) (Parameters, []ParameterManifest, error) {
 	allParameters := slices.Concat(params, templateParams)
 
 	// verify no duplicate parameter names
 	err := CheckDuplicateParameters(allParameters)
 	if err != nil {
-		return nil, nil, McpToolsSchema{}, err
+		return nil, nil, err
 	}
 
 	// create Toolbox manifest
@@ -225,7 +225,7 @@ func ProcessParameters(templateParams Parameters, params Parameters) (Parameters
 		paramManifest = make([]ParameterManifest, 0)
 	}
 
-	return allParameters, paramManifest, allParameters.McpManifest(), nil
+	return allParameters, paramManifest, nil
 }
 
 type Parameter interface {
@@ -238,7 +238,7 @@ type Parameter interface {
 	GetAuthServices() []ParamAuthService
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
-	McpManifest() ParameterMcpManifest
+	McpManifest() (ParameterMcpManifest, []string)
 }
 
 // McpToolsSchema is the representation of input schema for McpManifest.
@@ -368,24 +368,28 @@ func (ps Parameters) Manifest() []ParameterManifest {
 	return rtn
 }
 
-func (ps Parameters) McpManifest() McpToolsSchema {
+func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 	properties := make(map[string]ParameterMcpManifest)
 	required := make([]string, 0)
+	authParam := make(map[string][]string)
 
 	for _, p := range ps {
 		name := p.GetName()
-		properties[name] = p.McpManifest()
+		paramManifest, authParamList := p.McpManifest()
+		properties[name] = paramManifest
 		// parameters that doesn't have a default value are added to the required field
 		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
 			required = append(required, name)
 		}
+		if len(authParamList) > 0 {
+			authParam[name] = authParamList
+		}
 	}
-
 	return McpToolsSchema{
 		Type:       "object",
 		Properties: properties,
 		Required:   required,
-	}
+	}, authParam
 }
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
@@ -437,11 +441,21 @@ func (p *CommonParameter) GetRequired() bool {
 }
 
 // McpManifest returns the MCP manifest for the Parameter.
-func (p *CommonParameter) McpManifest() ParameterMcpManifest {
+func (p *CommonParameter) McpManifest() (ParameterMcpManifest, []string) {
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	return ParameterMcpManifest{
 		Type:        p.Type,
 		Description: p.Desc,
+	}, authServiceNames
+}
+
+// getAuthServiceNames retrieves the list of auth services names
+func getAuthServiceNames(authServices []ParamAuthService) []string {
+	authServiceNames := make([]string, len(authServices))
+	for i, a := range authServices {
+		authServiceNames[i] = a.Name
 	}
+	return authServiceNames
 }
 
 // ParseTypeError is a custom error for incorrectly typed Parameters.
@@ -541,17 +555,14 @@ func (p *StringParameter) GetDefault() any {
 // Manifest returns the manifest for the StringParameter.
 func (p *StringParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
 		Required:     r,
 		Description:  p.Desc,
-		AuthServices: authNames,
+		AuthServices: authServiceNames,
 	}
 }
 
@@ -648,17 +659,14 @@ func (p *IntParameter) GetDefault() any {
 // Manifest returns the manifest for the IntParameter.
 func (p *IntParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
 		Required:     r,
 		Description:  p.Desc,
-		AuthServices: authNames,
+		AuthServices: authServiceNames,
 	}
 }
 
@@ -753,27 +761,25 @@ func (p *FloatParameter) GetDefault() any {
 // Manifest returns the manifest for the FloatParameter.
 func (p *FloatParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
 		Required:     r,
 		Description:  p.Desc,
-		AuthServices: authNames,
+		AuthServices: authServiceNames,
 	}
 }
 
 // McpManifest returns the MCP manifest for the FloatParameter.
 // json schema only allow numeric types of 'integer' and 'number'.
-func (p *FloatParameter) McpManifest() ParameterMcpManifest {
+func (p *FloatParameter) McpManifest() (ParameterMcpManifest, []string) {
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	return ParameterMcpManifest{
 		Type:        "number",
 		Description: p.Desc,
-	}
+	}, authServiceNames
 }
 
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
@@ -856,17 +862,14 @@ func (p *BooleanParameter) GetDefault() any {
 // Manifest returns the manifest for the BooleanParameter.
 func (p *BooleanParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 	return ParameterManifest{
 		Name:         p.Name,
 		Type:         p.Type,
 		Required:     r,
 		Description:  p.Desc,
-		AuthServices: authNames,
+		AuthServices: authServiceNames,
 	}
 }
 
@@ -990,10 +993,7 @@ func (p *ArrayParameter) GetItems() Parameter {
 // Manifest returns the manifest for the ArrayParameter.
 func (p *ArrayParameter) Manifest() ParameterManifest {
 	// only list ParamAuthService names (without fields) in manifest
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	items := p.Items.Manifest()
 	// if required value is true, or there's no default value
 	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
@@ -1003,24 +1003,21 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		Type:         p.Type,
 		Required:     r,
 		Description:  p.Desc,
-		AuthServices: authNames,
+		AuthServices: authServiceNames,
 		Items:        &items,
 	}
 }
 
 // McpManifest returns the MCP manifest for the ArrayParameter.
-func (p *ArrayParameter) McpManifest() ParameterMcpManifest {
+func (p *ArrayParameter) McpManifest() (ParameterMcpManifest, []string) {
 	// only list ParamAuthService names (without fields) in manifest
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
-	items := p.Items.McpManifest()
+	authServiceNames := getAuthServiceNames(p.AuthServices)
+	items, _ := p.Items.McpManifest()
 	return ParameterMcpManifest{
 		Type:        p.Type,
 		Description: p.Desc,
 		Items:       &items,
-	}
+	}, authServiceNames
 }
 
 // MapParameter is a parameter representing a map with string keys. If ValueType is
@@ -1180,10 +1177,7 @@ func (p *MapParameter) GetValueType() string {
 
 // Manifest returns the manifest for the MapParameter.
 func (p *MapParameter) Manifest() ParameterManifest {
-	authNames := make([]string, len(p.AuthServices))
-	for i, a := range p.AuthServices {
-		authNames[i] = a.Name
-	}
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	r := CheckParamRequired(p.GetRequired(), p.GetDefault())
 
 	var additionalProperties any
@@ -1204,13 +1198,14 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		Type:                 "object",
 		Required:             r,
 		Description:          p.Desc,
-		AuthServices:         authNames,
+		AuthServices:         authServiceNames,
 		AdditionalProperties: additionalProperties,
 	}
 }
 
 // McpManifest returns the MCP manifest for the MapParameter.
-func (p *MapParameter) McpManifest() ParameterMcpManifest {
+func (p *MapParameter) McpManifest() (ParameterMcpManifest, []string) {
+	authServiceNames := getAuthServiceNames(p.AuthServices)
 	var additionalProperties any
 	if p.ValueType != "" {
 		_, err := getPrototypeParameter(p.ValueType)
@@ -1228,5 +1223,5 @@ func (p *MapParameter) McpManifest() ParameterMcpManifest {
 		Type:                 "object",
 		Description:          p.Desc,
 		AdditionalProperties: additionalProperties,
-	}
+	}, authServiceNames
 }
