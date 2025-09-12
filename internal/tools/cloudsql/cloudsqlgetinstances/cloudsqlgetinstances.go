@@ -132,6 +132,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
+	service.UserAgent = t.Source.UserAgent
 
 	resp, err := service.Instances.Get(projectId, instanceId).Do()
 	if err != nil {
