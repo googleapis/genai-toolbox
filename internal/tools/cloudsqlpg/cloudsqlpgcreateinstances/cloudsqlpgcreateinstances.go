@@ -16,7 +16,6 @@ package cloudsqlpgcreateinstances
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -48,7 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	Source       string   `yaml:"source" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
@@ -84,9 +83,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	inputSchema := allParameters.McpManifest()
 	inputSchema.Required = []string{"project", "name", "editionPreset", "rootPassword"}
 
+	description := cfg.Description
+	if description == "" {
+		description = "Creates a Postgres instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `POSTGRES_17`. The agent should ask the user if they want to use a different version."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -149,10 +153,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		settings.AvailabilityType = "REGIONAL"
 		settings.Edition = "ENTERPRISE_PLUS"
 		settings.Tier = "db-perf-optimized-N-8"
+		settings.DataDiskSizeGb = 250
+		settings.DataDiskType = "PD_SSD"
 	} else { // Development
 		settings.AvailabilityType = "ZONAL"
 		settings.Edition = "ENTERPRISE_PLUS"
 		settings.Tier = "db-perf-optimized-N-2"
+		settings.DataDiskSizeGb = 100
+		settings.DataDiskType = "PD_SSD"
 	}
 
 	instance := &sqladmin.DatabaseInstance{
@@ -178,17 +186,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error creating instance: %w", err)
 	}
 
-	var data any
-	var b []byte
-	b, err = resp.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling response: %w", err)
-	}
-	if err := json.Unmarshal(b, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
-	}
-
-	return data, nil
+	return resp, nil
 }
 
 // ParseParams parses the parameters for the tool.

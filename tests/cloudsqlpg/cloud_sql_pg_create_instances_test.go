@@ -83,6 +83,8 @@ func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				AvailabilityType: "REGIONAL",
 				Edition:          "ENTERPRISE_PLUS",
 				Tier:             "db-perf-optimized-N-8",
+				DataDiskSizeGb:   250,
+				DataDiskType:     "PD_SSD",
 			},
 		}
 		response = map[string]any{"name": "op1", "status": "PENDING"}
@@ -97,6 +99,8 @@ func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				AvailabilityType: "ZONAL",
 				Edition:          "ENTERPRISE_PLUS",
 				Tier:             "db-perf-optimized-N-2",
+				DataDiskSizeGb:   100,
+				DataDiskType:     "PD_SSD",
 			},
 		}
 		response = map[string]any{"name": "op2", "status": "RUNNING"}
@@ -258,14 +262,12 @@ func getCreateInstanceToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"create-instance-prod": map[string]any{
-				"kind":        createInstanceToolKind,
-				"description": "create prod instance",
-				"source":      "my-cloud-sql-source",
+				"kind":   createInstanceToolKind,
+				"source": "my-cloud-sql-source",
 			},
 			"create-instance-dev": map[string]any{
-				"kind":        createInstanceToolKind,
-				"description": "create dev instance",
-				"source":      "my-cloud-sql-source",
+				"kind":   createInstanceToolKind,
+				"source": "my-cloud-sql-source",
 			},
 		},
 	}
