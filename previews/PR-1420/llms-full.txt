@@ -614,6 +614,11 @@ This guide assumes you have already done the following:
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
+[install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
+[install-pip]: https://pip.pypa.io/en/stable/installation/
+[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+[install-postgres]: https://www.postgresql.org/download/
+
 ### Cloud Setup (Optional)
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
@@ -4492,6 +4497,9 @@ cluster][alloydb-free-trial].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in AlloyDB Postgres.
 
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
@@ -4686,15 +4694,11 @@ allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
 client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
-identity used has been granted the correct IAM permissions. Currently,
-this option is only supported by the following BigQuery tools:
+identity used has been granted the correct IAM permissions.
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-[iam-overview]: https://cloud.google.com/bigquery/docs/access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-overview]: <https://cloud.google.com/bigquery/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ## Example
 
@@ -4896,6 +4900,38 @@ instead of hardcoding your secrets into the configuration file.
 | secure      |  boolean |    false     | Whether to use a secure connection (TLS). Default: false.                         |
 
 
+# Cloud Monitoring
+A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
+
+
+## About
+
+The `cloud-monitoring` source provides a client to interact with the [Google Cloud Monitoring API](https://cloud.google.com/monitoring/api). This allows tools to access cloud monitoring metrics explorer and run promql queries.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-cloud-monitoring:
+        kind: cloud-monitoring
+
+    my-oauth-cloud-monitoring:
+        kind: cloud-monitoring
+        useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+
+
 # Cloud SQL for MySQL
 Cloud SQL for MySQL is a fully-managed database service for MySQL.
 
@@ -4919,6 +4955,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in Cloud SQL for MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a Cloud SQL for MySQL database.
 
 ### Pre-built Configurations
 
@@ -5031,6 +5070,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6025,6 +6067,9 @@ reliability, performance, and ease of use.
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in MySQL.
 
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a MySQL database.
+
 ## Requirements
 
 ### Database User
@@ -6213,6 +6258,9 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -7105,7 +7153,7 @@ AlloyDB AI NL Tool.
 
 
 # AlloyDB for PostgreSQL
-Tools for AlloyDB PostgreSQL.
+Tools for AlloyDB for PostgreSQL.
 
 
 
@@ -7121,6 +7169,11 @@ Tools that work with Bigtable Sources.
 
 # ClickHouse
 Tools for interacting with ClickHouse databases and tables.
+
+
+
+# Cloud SQL
+Tools that work with Cloud SQL. 
 
 
 
