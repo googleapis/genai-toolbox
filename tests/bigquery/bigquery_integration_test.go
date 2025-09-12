@@ -2000,6 +2000,11 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 					}
 					t.Fatalf("unable to send request: %s", err)
 				}
+				if resp.StatusCode == http.StatusServiceUnavailable {
+					t.Logf("Received 503 Service Unavailable (attempt %d/%d), retrying...", i+1, maxRetries)
+					time.Sleep(15 * time.Second)
+					continue
+				}
 				break
 			}
 
