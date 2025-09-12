@@ -614,6 +614,11 @@ This guide assumes you have already done the following:
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
+[install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
+[install-pip]: https://pip.pypa.io/en/stable/installation/
+[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+[install-postgres]: https://www.postgresql.org/download/
+
 ### Cloud Setup (Optional)
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
@@ -7147,6 +7152,11 @@ AlloyDB AI NL Tool.
 
 
 
+# AlloyDB for PostgreSQL
+Tools for AlloyDB for PostgreSQL.
+
+
+
 # BigQuery
 Tools that work with BigQuery Sources.
 
@@ -7163,7 +7173,7 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 # Cloud SQL
-Tools that work with Cloud SQL Control Plane. 
+Tools that work with Cloud SQL. 
 
 
 
