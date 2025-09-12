@@ -82,6 +82,7 @@ List of reference documentation for resources in Toolbox.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
+  - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/dgraph/): Tools that work with Dgraph Sources.
