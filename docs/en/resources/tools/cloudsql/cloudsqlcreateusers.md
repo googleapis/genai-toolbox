@@ -1,9 +1,8 @@
 ---
-title: "cloud-sql-create-users"
+title: cloud-sql-create-users
 type: docs
 weight: 10
-description: >
-  Create a new user in a Cloud SQL instance.
+description: "Create a new user in a Cloud SQL instance.\n"
 ---
 
 The `cloud-sql-create-users` tool creates a new user in a specified Cloud SQL instance. It can create both built-in and IAM users.
@@ -18,15 +17,14 @@ This tool uses a `source` of kind `cloud-sql-admin`.
 tools:
   create-cloud-sql-user:
     kind: cloud-sql-create-users
-    description: "Creates a new user in a Cloud SQL instance."
-    source: my-cloud-sql-source
+    source: my-cloud-sql-admin-source
+    description: "Creates a new user in a Cloud SQL instance.
 ```
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                                                                                  |
-| ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "cloud-sql-create-users".                                                                            |
-| description |  string  |    true      | A description of the tool.                                                                                       |
-| source      |  string  |    true      | The name of the `cloud-sql-admin` source to use.                                                                 |
-| authRequired| []string |    false     | A list of auth services required by the tool.                                                                    |
+| **field**    |  **type** | **required** | **description**                                  |
+| ------------ | :-------: | :----------: | ------------------------------------------------ |
+| kind         |   string  |     true     | Must be "cloud-sql-create-users".                |
+| description  |   string  |     false    | A description of the tool.                       |
+| source       |   string  |     true     | The name of the `cloud-sql-admin` source to use. |

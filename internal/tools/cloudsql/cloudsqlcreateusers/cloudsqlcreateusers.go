@@ -16,7 +16,6 @@ package cloudsqlcreateusers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/goccy/go-yaml"
@@ -48,7 +47,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -82,9 +81,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	inputSchema := allParameters.McpManifest()
 
+	description := cfg.Description
+	if description == "" {
+		description = "Creates a new user in a Cloud SQL instance. Both built-in and IAM users are supported. IAM users require an email account as the user name. IAM is the more secure and recommended way to manage users. The agent should always ask the user what type of user they want to create."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -161,17 +165,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error creating user: %w", err)
 	}
 
-	var data any
-	var b []byte
-	b, err = resp.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling response: %w", err)
-	}
-	if err := json.Unmarshal(b, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
-	}
-
-	return data, nil
+	return resp, nil
 }
 
 // ParseParams parses the parameters for the tool.
