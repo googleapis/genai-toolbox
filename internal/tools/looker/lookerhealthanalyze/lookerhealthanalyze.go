@@ -30,6 +30,9 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
+// =================================================================================================================
+// START MCP SERVER CORE LOGIC
+// =================================================================================================================
 const kind string = "looker-health-analyze"
 
 func init() {
@@ -76,12 +79,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	projectParameter := tools.NewStringParameter("project", "The Looker project to analyze (optional).")
 	modelParameter := tools.NewStringParameter("model", "The Looker model to analyze (optional).")
 	exploreParameter := tools.NewStringParameter("explore", "The Looker explore to analyze (optional).")
+	timeframeParameter := tools.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
+	minQueriesParameter := tools.NewIntParameterWithDefault("min_queries", 0, "The minimum number of queries for a model or explore to be considered used.")
 
 	parameters := tools.Parameters{
 		actionParameter,
 		projectParameter,
 		modelParameter,
 		exploreParameter,
+		timeframeParameter,
+		minQueriesParameter,
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -132,11 +139,22 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
 
-	analyzeTool := &analyzeTool{
-		SdkClient: sdk,
+	paramsMap := params.AsMap()
+	timeframe, _ := paramsMap["timeframe"].(int)
+	if timeframe == 0 {
+		timeframe = 90
+	}
+	minQueries, _ := paramsMap["min_queries"].(int)
+	if minQueries == 0 {
+		minQueries = 1
 	}
 
-	paramsMap := params.AsMap()
+	analyzeTool := &analyzeTool{
+		SdkClient:  sdk,
+		timeframe:  timeframe,
+		minQueries: minQueries,
+	}
+
 	action, ok := paramsMap["action"].(string)
 	if !ok {
 		return nil, fmt.Errorf("action parameter not found")
@@ -166,14 +184,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		result, err := analyzeTool.explores(ctx, modelName, exploreName)
 		if err != nil {
 			return nil, fmt.Errorf("error analyzing explores: %w", err)
-	}
+		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
 	default:
 		return nil, fmt.Errorf("unknown action: %s", action)
 	}
 }
-
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }
@@ -194,8 +211,17 @@ func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
 }
 
+// =================================================================================================================
+// END MCP SERVER CORE LOGIC
+// =================================================================================================================
+
+// =================================================================================================================
+// START LOOKER HEALTH ANALYZE CORE LOGIC
+// =================================================================================================================
 type analyzeTool struct {
-	SdkClient *v4.LookerSDK
+	SdkClient  *v4.LookerSDK
+	timeframe  int
+	minQueries int
 }
 
 func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]interface{}, error) {
@@ -314,9 +340,9 @@ func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error)
 		View:   "history",
 		Fields: &[]string{"history.query_run_count", "query.model"},
 		Filters: &map[string]any{
-			"history.created_date":      "90 days",
+			"history.created_date":      fmt.Sprintf("%d days", t.timeframe),
 			"query.model":               "-system__activity, -i__looker",
-			"history.query_run_count":   ">0",
+			"history.query_run_count":   fmt.Sprintf(">%d", t.minQueries-1),
 			"user.dev_branch_name":      "NULL",
 		},
 		Limit: &limit,
@@ -348,7 +374,7 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 		View:   "history",
 		Fields: &[]string{"query.formatted_fields", "query.filters", "history.query_run_count"},
 		Filters: &map[string]any{
-			"history.created_date":      "90 days",
+			"history.created_date":      fmt.Sprintf("%d days", t.timeframe),
 			"query.model":               strings.ReplaceAll(model, "_", "^_"),
 			"query.view":                strings.ReplaceAll(explore, "_", "^_"),
 			"query.formatted_fields":    "-NULL",
@@ -510,8 +536,8 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 				Filters: &map[string]any{
 					"query.model":  *m.Name,
 					"query.view": *e.Name,
-					"history.created_date": "90 days",
-					"history.query_run_count": ">0",
+					"history.created_date": fmt.Sprintf("%d days", t.timeframe),
+					"history.query_run_count": fmt.Sprintf(">%d", t.minQueries-1),
                     "user.dev_branch_name": "NULL",
 				},
 				Limit: &limit,
@@ -547,3 +573,6 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 	}
 	return results, nil
 }
+// =================================================================================================================
+// END LOOKER HEALTH ANALYZE CORE LOGIC
+// =================================================================================================================

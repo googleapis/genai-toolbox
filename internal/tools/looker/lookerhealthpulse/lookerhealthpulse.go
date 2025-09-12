@@ -29,6 +29,9 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
+// =================================================================================================================
+// START MCP SERVER CORE LOGIC
+// =================================================================================================================
 const kind string = "looker-health-pulse"
 
 func init() {
@@ -175,6 +178,13 @@ func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
 }
 
+// =================================================================================================================
+// END MCP SERVER CORE LOGIC
+// =================================================================================================================
+
+// =================================================================================================================
+// START LOOKER HEALTH PULSE CORE LOGIC
+// =================================================================================================================
 type PulseParams struct {
 	Action string
 	// Optionally add more parameters if needed
@@ -259,7 +269,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 			Filters: &map[string]any{
 				"history.connection_name": *conn.Name,
 				"history.created_date":  "90 days",
-				"user.dev_branch_name": "NULL"
+				"user.dev_branch_name": "NULL",
 			},
 			Limit: &limit,
 		}
@@ -459,3 +469,7 @@ func (t *pulseTool) checkLegacyFeatures(ctx context.Context) (interface{}, error
 	}
 	return legacyFeatures, nil
 }
+
+// =================================================================================================================
+// END LOOKER HEALTH PULSE CORE LOGIC
+// =================================================================================================================
