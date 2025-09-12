@@ -54,7 +54,7 @@ func TestListInstance(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"items": [{"name": "test-instance"}]}`)
+		fmt.Fprintln(w, `{"items": [{"name": "test-instance", "instanceType": "CLOUD_SQL_INSTANCE"}]}`)
 	}))
 	defer server.Close()
 
@@ -106,7 +106,7 @@ func TestListInstance(t *testing.T) {
 			name:     "successful operation",
 			toolName: "list-instances",
 			body:     `{"project": "test-project"}`,
-			want:     `{"items":[{"name":"test-instance"}]}`,
+			want:     `[{"name":"test-instance","instanceType":"CLOUD_SQL_INSTANCE"}]`,
 		},
 		{
 			name:        "failed operation",
@@ -149,7 +149,7 @@ func TestListInstance(t *testing.T) {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
-			var got, want map[string]any
+			var got, want any
 			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
 				t.Fatalf("failed to unmarshal result: %v", err)
 			}
@@ -177,9 +177,8 @@ func getListInstanceToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"list-instances": map[string]any{
-				"kind":        "cloud-sql-list-instances",
-				"description": "list instances",
-				"source":      "my-cloud-sql-source",
+				"kind":   "cloud-sql-list-instances",
+				"source": "my-cloud-sql-source",
 			},
 			"list-instances-fail": map[string]any{
 				"kind":        "cloud-sql-list-instances",

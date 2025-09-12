@@ -48,7 +48,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -79,9 +79,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	inputSchema := allParameters.McpManifest()
 	inputSchema.Required = []string{"project"}
 
+	description := cfg.Description
+	if description == "" {
+		description = "Lists all type of Cloud SQL instances for a project."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -91,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}, nil
 }
@@ -124,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	urlString := fmt.Sprintf("%s/v1/projects/%s/instances", t.source.BaseURL, project)
-	req, err := http.NewRequest(http.MethodGet, urlString, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -144,12 +149,22 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 	}
 
-	var data any
-	if err := json.Unmarshal(body, &data); err != nil {
+	var v struct {
+		Items []struct {
+			Name         string `json:"name"`
+			InstanceType string `json:"instanceType"`
+		} `json:"items"`
+	}
+
+	if err := json.Unmarshal(body, &v); err != nil {
 		return nil, fmt.Errorf("error unmarshaling response body: %w", err)
 	}
 
-	return data, nil
+	if v.Items == nil {
+		return []any{}, nil
+	}
+
+	return v.Items, nil
 }
 
 // ParseParams parses the parameters for the tool.

@@ -25,8 +25,8 @@ sources:
 tools:
   list_my_instances:
     kind: cloud-sql-list-instances
-    description: Use this tool to list all Cloud SQL instances in a project.
     source: my-cloud-sql-admin-source
+    description: Use this tool to list all Cloud SQL instances in a project.
 ```
 
 ## Parameters
@@ -42,5 +42,5 @@ The `cloud-sql-list-instances` tool has one required parameter:
 | **field**    |  **type** | **required** | **description**                                                                     |
 | ------------ | :-------: | :----------: | ----------------------------------------------------------------------------------- |
 | kind         |   string  |     true     | Must be "cloud-sql-list-instances".                                                 |
-| description  |   string  |     true     | Description of the tool that is passed to the agent.                                |
+| description  |   string  |     false     | Description of the tool that is passed to the agent.                                |
 | source       |   string  |     true     | The name of the `cloud-sql-admin` source to use for this tool.                      |
