@@ -1245,6 +1245,10 @@ func TestPrebuiltTools(t *testing.T) {
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1490,6 +1494,46 @@ func TestPrebuiltTools(t *testing.T) {
 				"neo4j-database-tools": tools.ToolsetConfig{
 					Name:      "neo4j-database-tools",
 					ToolNames: []string{"execute_cypher", "get_schema"},
+				},
+			},
+		},
+		{
+			name: "alloydb postgres observability prebuilt tools",
+			in:   alloydbobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb-postgres-cloud-monitoring-tools": tools.ToolsetConfig{
+					Name:      "alloydb-postgres-cloud-monitoring-tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql postgres observability prebuilt tools",
+			in:   cloudsqlpgobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-sql-postgres-cloud-monitoring-tools": tools.ToolsetConfig{
+					Name:      "cloud-sql-postgres-cloud-monitoring-tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql observability prebuilt tools",
+			in:   cloudsqlmysqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-sql-mysql-cloud-monitoring-tools": tools.ToolsetConfig{
+					Name:      "cloud-sql-mysql-cloud-monitoring-tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql observability prebuilt tools",
+			in:   cloudsqlmssqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-sql-mssql-cloud-monitoring-tools": tools.ToolsetConfig{
+					Name:      "cloud-sql-mssql-cloud-monitoring-tools",
+					ToolNames: []string{"get_system_metrics"},
 				},
 			},
 		},

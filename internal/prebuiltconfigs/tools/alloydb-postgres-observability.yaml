@@ -20,7 +20,7 @@ tools:
     source: cloud-monitoring-source
     description: |
       Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
-      To use this tool, you must provide the Google Cloud `projectID` and a PromQL `query`.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
 
       Generate the PromQL `query` for AlloyDB system metrics using the provided metrics and rules. Get labels like `cluster_id` and `instance_id` from the user's intent.
 
