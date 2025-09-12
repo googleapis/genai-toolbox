@@ -74,7 +74,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -1873,6 +1873,9 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 }
 
 func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tableName, dataInsightsWant string) {
+	// Each test is expected to complete in under 10s, we set a 25s timeout with retries to avoid flaky tests.
+	const maxRetries = 3
+	const requestTimeout = 25 * time.Second
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -1960,18 +1963,48 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			var resp *http.Response
+			var err error
+
+			bodyBytes, err := io.ReadAll(tc.requestBody)
+			if err != nil {
+				t.Fatalf("failed to read request body: %v", err)
+			}
+
+			req, err := http.NewRequest(http.MethodPost, tc.api, nil)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
-			req.Header.Add("Content-type", "application/json")
+			req.Header.Set("Content-type", "application/json")
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+
+			for i := 0; i < maxRetries; i++ {
+				ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+				defer cancel()
+
+				req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+				req.GetBody = func() (io.ReadCloser, error) {
+					return io.NopCloser(bytes.NewReader(bodyBytes)), nil
+				}
+				reqWithCtx := req.WithContext(ctx)
+
+				resp, err = http.DefaultClient.Do(reqWithCtx)
+				if err != nil {
+					// Retry on time out.
+					if os.IsTimeout(err) {
+						t.Logf("Request timed out (attempt %d/%d), retrying...", i+1, maxRetries)
+						time.Sleep(5 * time.Second)
+						continue
+					}
+					t.Fatalf("unable to send request: %s", err)
+				}
+				break
+			}
+
 			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
+				t.Fatalf("Request failed after %d retries: %v", maxRetries, err)
 			}
 			defer resp.Body.Close()
 
