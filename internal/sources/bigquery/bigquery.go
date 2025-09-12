@@ -17,18 +17,20 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 	"sync"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -37,7 +39,7 @@ const SourceKind string = "bigquery"
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
 
@@ -57,11 +59,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
-	Project        string `yaml:"project" validate:"required"`
-	Location       string `yaml:"location"`
-	UseClientOAuth bool   `yaml:"useClientOAuth"`
+	Name            string   `yaml:"name" validate:"required"`
+	Kind            string   `yaml:"kind" validate:"required"`
+	Project         string   `yaml:"project" validate:"required"`
+	Location        string   `yaml:"location"`
+	AllowedDatasets []string `yaml:"allowedDatasets"`
+	UseClientOAuth  bool     `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -89,6 +92,37 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		}
 	}
 
+	allowedDatasets := make(map[string]struct{})
+	// Get full id of allowed datasets and verify they exist.
+	if len(r.AllowedDatasets) > 0 {
+		for _, allowed := range r.AllowedDatasets {
+			var projectID, datasetID, allowedFullID string
+			if strings.Contains(allowed, ".") {
+				parts := strings.Split(allowed, ".")
+				if len(parts) != 2 {
+					return nil, fmt.Errorf("invalid allowedDataset format: %q, expected 'project.dataset' or 'dataset'", allowed)
+				}
+				projectID = parts[0]
+				datasetID = parts[1]
+				allowedFullID = allowed
+			} else {
+				projectID = client.Project()
+				datasetID = allowed
+				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
+			}
+
+			dataset := client.DatasetInProject(projectID, datasetID)
+			_, err := dataset.Metadata(ctx)
+			if err != nil {
+				if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+					return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+				}
+				return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
+			}
+			allowedDatasets[allowedFullID] = struct{}{}
+		}
+	}
+
 	s := &Source{
 		Name:               r.Name,
 		Kind:               SourceKind,
@@ -99,6 +133,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		TokenSource:        tokenSource,
 		MaxQueryResultRows: 50,
 		ClientCreator:      clientCreator,
+		AllowedDatasets:    allowedDatasets,
 		UseClientOAuth:     r.UseClientOAuth,
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
@@ -119,6 +154,7 @@ type Source struct {
 	TokenSource        oauth2.TokenSource
 	MaxQueryResultRows int
 	ClientCreator      BigqueryClientCreator
+	AllowedDatasets    map[string]struct{}
 	UseClientOAuth     bool
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 }
@@ -158,6 +194,29 @@ func (s *Source) GetMaxQueryResultRows() int {
 
 func (s *Source) BigQueryClientCreator() BigqueryClientCreator {
 	return s.ClientCreator
+}
+
+func (s *Source) BigQueryAllowedDatasets() []string {
+	if len(s.AllowedDatasets) == 0 {
+		return nil
+	}
+	datasets := make([]string, 0, len(s.AllowedDatasets))
+	for d := range s.AllowedDatasets {
+		datasets = append(datasets, d)
+	}
+	return datasets
+}
+
+// IsDatasetAllowed checks if a given dataset is accessible based on the source's configuration.
+func (s *Source) IsDatasetAllowed(projectID, datasetID string) bool {
+	// If the normalized map is empty, it means no restrictions were configured.
+	if len(s.AllowedDatasets) == 0 {
+		return true
+	}
+
+	targetDataset := fmt.Sprintf("%s.%s", projectID, datasetID)
+	_, ok := s.AllowedDatasets[targetDataset]
+	return ok
 }
 
 func (s *Source) MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
@@ -229,7 +288,7 @@ func initBigQueryConnectionWithOAuthToken(
 	location string,
 	name string,
 	userAgent string,
-	tokenString tools.AccessToken,
+	tokenString string,
 	wantRestService bool,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
@@ -268,13 +327,13 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
-) (func(tools.AccessToken, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
+) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
 	}, nil
 }
