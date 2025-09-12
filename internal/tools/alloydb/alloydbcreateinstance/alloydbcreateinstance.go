@@ -151,7 +151,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
 	}
 
-	parent := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
+	alloydbService.UserAgent = t.Source.UserAgent
+
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
 
 	// Build the request body using the type-safe Instance struct.
 	instance := &alloydb.Instance{
@@ -179,7 +181,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// The Create API returns a long-running operation.
-	resp, err := alloydbService.Projects.Locations.Clusters.Instances.Create(parent, instance).InstanceId(instanceId).Do()
+	resp, err := alloydbService.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceId).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating AlloyDB instance: %w", err)
 	}
