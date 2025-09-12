@@ -42,11 +42,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
-	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistinstances"
-  	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistusers"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistusers"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
