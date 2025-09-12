@@ -45,8 +45,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, error)
+	MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
 	BigQueryProject() string
+	UseClientAuthorization() bool
 }
 
 // validate compatible sources are still compatible
@@ -102,6 +103,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:          kind,
 		Parameters:    parameters,
 		AuthRequired:  cfg.AuthRequired,
+		UseClientOAuth: s.UseClientAuthorization(),
 		MakeCatalogClient: makeCatalogClient,
 		ProjectID:     s.BigQueryProject(),
 		manifest: tools.Manifest{
@@ -115,14 +117,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 type Tool struct {
-	Name          string
-	Kind          string
-	Parameters    tools.Parameters
-	AuthRequired  []string
-	MakeCatalogClient func() (*dataplexapi.CatalogClient, error)
-	ProjectID     string
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Name          		string
+	Kind         		string
+	Parameters    		tools.Parameters
+	AuthRequired  		[]string
+	UseClientOAuth	 	bool
+	MakeCatalogClient 	func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
+	ProjectID     		string
+	manifest      		tools.Manifest
+	mcpManifest   		tools.McpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
@@ -229,7 +232,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		SemanticSearch: true,
 	}
 
-	catalogClient, err := t.MakeCatalogClient()
+	catalogClient, dataplexClientCreator , err := t.MakeCatalogClient()
+
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		catalogClient, err = dataplexClientCreator(tokenStr)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
 	it := catalogClient.SearchEntries(ctx, req)
 	if it == nil {
 		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)

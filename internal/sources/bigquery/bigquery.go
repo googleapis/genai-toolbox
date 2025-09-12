@@ -39,6 +39,8 @@ var _ sources.SourceConfig = Config{}
 
 type BigqueryClientCreator func(tokenString tools.AccessToken, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
+type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
+
 func init() {
 	if !sources.Register(SourceKind, newConfig) {
 		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
@@ -118,7 +120,7 @@ type Source struct {
 	MaxQueryResultRows int
 	ClientCreator      BigqueryClientCreator
 	UseClientOAuth     bool
-	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, error)
+	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 }
 
 func (s *Source) SourceKind() string {
@@ -158,25 +160,27 @@ func (s *Source) BigQueryClientCreator() BigqueryClientCreator {
 	return s.ClientCreator
 }
 
-func (s *Source) MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, error) {
+func (s *Source) MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	return s.makeDataplexCatalogClient
 }
 
-func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer) func() (*dataplexapi.CatalogClient, error) {
+func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer) func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var once sync.Once
 	var client *dataplexapi.CatalogClient
+	var clientCreator DataplexClientCreator
 	var err error
 
-	return func() (*dataplexapi.CatalogClient, error) {
+	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, e := initDataplexConnection(ctx, tracer, s.Name, s.Project)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
 			}
 			client = c
+			clientCreator = cc
 		})
-		return client, err
+		return client, clientCreator, err
 	}
 }
 
@@ -280,23 +284,54 @@ func initDataplexConnection(
 	tracer trace.Tracer,
 	name string,
 	project string,
-) (*dataplexapi.CatalogClient, error) {
+) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+	}
+
+	clientCreator := newDataplexClientCreator(ctx, project, userAgent)
+	return client, clientCreator, nil
+}
+
+func initDataplexConnectionWithOAuthToken(
+	ctx context.Context,
+	project string,
+	userAgent string,
+	tokenString string,
+) (*dataplexapi.CatalogClient, error) {
+	// Construct token source
+	token := &oauth2.Token{
+		AccessToken: string(tokenString),
+	}
+	ts := oauth2.StaticTokenSource(token)
+
+	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+	if err != nil {
 		return nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 	return client, nil
+}
+
+func newDataplexClientCreator(
+	ctx context.Context,
+	project string,
+	userAgent string,
+) func(string) (*dataplexapi.CatalogClient, error) {
+	return func(tokenString string) (*dataplexapi.CatalogClient, error) {
+		return initDataplexConnectionWithOAuthToken(ctx, project, userAgent, tokenString)
+	}
 }
