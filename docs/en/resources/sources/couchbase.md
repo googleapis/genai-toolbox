@@ -22,16 +22,12 @@ allowing tools to execute SQL queries against it.
 sources:
     my-couchbase-instance:
         kind: couchbase
-        connectionString: couchbase://localhost
+        connectionString: couchbase://localhost:8091
         bucket: travel-sample
         scope: inventory
         username: Administrator
         password: password
 ```
-
-{{< notice note >}}
-For more details about alternate addresses and custom ports refer to [Managing Connections](https://docs.couchbase.com/java-sdk/current/howtos/managing-connections.html).
-{{< /notice >}}
 
 ## Reference
 

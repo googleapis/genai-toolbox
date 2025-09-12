@@ -24,10 +24,12 @@ import (
 	"text/template"
 	"time"
 
+	"maps"
+
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -91,11 +93,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Config defines the configuration for the wait-for-operation tool.
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string   `yaml:"baseURL"`
+	Name         string            `yaml:"name" validate:"required"`
+	Kind         string            `yaml:"kind" validate:"required"`
+	Source       string            `yaml:"source" validate:"required"`
+	Description  string            `yaml:"description" validate:"required"`
+	AuthRequired []string          `yaml:"authRequired"`
+	Headers      map[string]string `yaml:"headers"`
 
 	// Polling configuration
 	Delay      string  `yaml:"delay"`
@@ -114,6 +117,15 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	s, ok := srcs[cfg.Source].(*httpsrc.Source)
+	if !ok {
+		return nil, fmt.Errorf("invalid or missing source for %q tool: source kind must be `http`", kind)
+	}
+
+	combinedHeaders := make(map[string]string)
+	maps.Copy(combinedHeaders, s.DefaultHeaders)
+	maps.Copy(combinedHeaders, cfg.Headers)
+
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The project ID"),
 		tools.NewStringParameter("location", "The location ID"),
@@ -128,11 +140,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:        cfg.Name,
 		Description: cfg.Description,
 		InputSchema: inputSchema,
-	}
-
-	baseURL := cfg.BaseURL
-	if baseURL == "" {
-		baseURL = "https://alloydb.googleapis.com"
 	}
 
 	var delay time.Duration
@@ -167,12 +174,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		maxRetries = 10
 	}
 
-	return Tool{
+	return &Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		BaseURL:      baseURL,
+		BaseURL:      s.BaseURL,
+		Headers:      combinedHeaders,
 		AuthRequired: cfg.AuthRequired,
-		Client:       &http.Client{},
+		Client:       s.Client,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
@@ -190,8 +198,9 @@ type Tool struct {
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
-	BaseURL   string           `yaml:"baseURL"`
-	AllParams tools.Parameters `yaml:"allParams"`
+	BaseURL   string            `yaml:"baseURL"`
+	Headers   map[string]string `yaml:"headers"`
+	AllParams tools.Parameters  `yaml:"allParams"`
 
 	// Polling configuration
 	Delay      time.Duration
@@ -205,7 +214,7 @@ type Tool struct {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -242,19 +251,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 
 		req, _ := http.NewRequest(http.MethodGet, urlString, nil)
 
-		// This request is authenticated using Google Application Default Credentials (ADC).
-		// The ADC are discovered automatically from the environment.
-		// For more details, see: https://cloud.google.com/docs/authentication/application-default-credentials
-		// The "cloud-platform" scope provides broad access to Google Cloud services, there is no specific scope for AlloyDB.
-		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
-		if err != nil {
-			return nil, fmt.Errorf("error creating token source: %w", err)
+		for k, v := range t.Headers {
+			req.Header.Set(k, v)
 		}
-		token, err := tokenSource.Token()
-		if err != nil {
-			return nil, fmt.Errorf("error retrieving token: %w", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
 
 		resp, err := t.Client.Do(req)
 		if err != nil {
@@ -281,6 +280,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 						if msg, ok := t.generateAlloyDBConnectionMessage(data); ok {
 							return msg, nil
 						}
+
 						return string(body), nil
 					}
 				}
@@ -298,7 +298,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	return nil, fmt.Errorf("exceeded max retries waiting for operation")
 }
 
-func (t Tool) generateAlloyDBConnectionMessage(opResponse map[string]any) (string, bool) {
+func (t *Tool) generateAlloyDBConnectionMessage(opResponse map[string]any) (string, bool) {
 	responseData, ok := opResponse["response"].(map[string]any)
 	if !ok {
 		return "", false
@@ -355,21 +355,21 @@ func (t Tool) generateAlloyDBConnectionMessage(opResponse map[string]any) (strin
 }
 
 // ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.
-func (t Tool) Manifest() tools.Manifest {
+func (t *Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
 // McpManifest returns the tool's MCP manifest.
-func (t Tool) McpManifest() tools.McpManifest {
+func (t *Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
 // Authorized checks if the tool is authorized.
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return true
+func (t *Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }

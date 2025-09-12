@@ -9,18 +9,6 @@ tools:
     kind: firestore-get-documents
     source: firestore-source
     description: Gets multiple documents from Firestore by their paths
-  firestore-add-documents:
-    kind: firestore-add-documents
-    source: firestore-source
-    description: |
-     Adds a new document to a Firestore collection. Please follow the best practices :
-      1. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
-      2. Integer values can be strings in the documentData: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
-      3. Use returnData sparingly: Only set to true when you need to verify the exact data that was written
-      4. Validate data before sending: Ensure your data matches Firestore's native JSON format
-      5. Handle timestamps properly: Use RFC3339 format for timestamp strings
-      6. Base64 encode binary data: Binary data must be base64 encoded in the bytesValue field
-      7. Consider security rules: Ensure your Firestore security rules allow document creation in the target collection
   firestore-list-collections:
     kind: firestore-list-collections
     source: firestore-source
@@ -47,7 +35,6 @@ tools:
 toolsets:
   firestore-database-tools:
     - firestore-get-documents
-    - firestore-add-documents
     - firestore-list-collections
     - firestore-delete-documents
     - firestore-query-collection

@@ -22,7 +22,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -130,10 +129,9 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 
 	// Run specific Firestore tool tests
 	runFirestoreGetDocumentsTest(t, docPath1, docPath2)
-	runFirestoreQueryCollectionTest(t, testCollectionName)
 	runFirestoreListCollectionsTest(t, testCollectionName, testSubCollectionName, docPath1)
-	runFirestoreAddDocumentsTest(t, testCollectionName)
 	runFirestoreDeleteDocumentsTest(t, docPath3)
+	runFirestoreQueryCollectionTest(t, testCollectionName)
 	runFirestoreGetRulesTest(t)
 	runFirestoreValidateRulesTest(t)
 }
@@ -571,220 +569,11 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"source":      "my-instance",
 			"description": "Validate Firestore security rules",
 		},
-		"firestore-add-docs": map[string]any{
-			"kind":        "firestore-add-documents",
-			"source":      "my-instance",
-			"description": "Add documents to Firestore",
-		},
 	}
 
 	return map[string]any{
 		"sources": sources,
 		"tools":   tools,
-	}
-}
-
-func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
-	invokeTcs := []struct {
-		name            string
-		api             string
-		requestBody     io.Reader
-		wantKeys        []string
-		validateDocData bool
-		expectedDocData map[string]interface{}
-		isErr           bool
-	}{
-		{
-			name: "add document with simple types",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
-				"collectionPath": "%s",
-				"documentData": {
-					"name": {"stringValue": "Test User"},
-					"age": {"integerValue": "42"},
-					"score": {"doubleValue": 99.5},
-					"active": {"booleanValue": true},
-					"notes": {"nullValue": null}
-				}
-			}`, collectionName))),
-			wantKeys: []string{"documentPath", "createTime"},
-			isErr:    false,
-		},
-		{
-			name: "add document with complex types",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
-				"collectionPath": "%s",
-				"documentData": {
-					"location": {
-						"geoPointValue": {
-							"latitude": 37.7749,
-							"longitude": -122.4194
-						}
-					},
-					"timestamp": {
-						"timestampValue": "2025-01-07T10:00:00Z"
-					},
-					"tags": {
-						"arrayValue": {
-							"values": [
-								{"stringValue": "tag1"},
-								{"stringValue": "tag2"}
-							]
-						}
-					},
-					"metadata": {
-						"mapValue": {
-							"fields": {
-								"version": {"integerValue": "1"},
-								"type": {"stringValue": "test"}
-							}
-						}
-					}
-				}
-			}`, collectionName))),
-			wantKeys: []string{"documentPath", "createTime"},
-			isErr:    false,
-		},
-		{
-			name: "add document with returnData",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
-				"collectionPath": "%s",
-				"documentData": {
-					"name": {"stringValue": "Return Test"},
-					"value": {"integerValue": "123"}
-				},
-				"returnData": true
-			}`, collectionName))),
-			wantKeys:        []string{"documentPath", "createTime", "documentData"},
-			validateDocData: true,
-			expectedDocData: map[string]interface{}{
-				"name":  "Return Test",
-				"value": float64(123), // JSON numbers are decoded as float64
-			},
-			isErr: false,
-		},
-		{
-			name: "add document with nested maps and arrays",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
-				"collectionPath": "%s",
-				"documentData": {
-					"company": {
-						"mapValue": {
-							"fields": {
-								"name": {"stringValue": "Tech Corp"},
-								"employees": {
-									"arrayValue": {
-										"values": [
-											{
-												"mapValue": {
-													"fields": {
-														"name": {"stringValue": "John"},
-														"role": {"stringValue": "Developer"}
-													}
-												}
-											},
-											{
-												"mapValue": {
-													"fields": {
-														"name": {"stringValue": "Jane"},
-														"role": {"stringValue": "Manager"}
-													}
-												}
-											}
-										]
-									}
-								}
-							}
-						}
-					}
-				}
-			}`, collectionName))),
-			wantKeys: []string{"documentPath", "createTime"},
-			isErr:    false,
-		},
-		{
-			name:        "missing collectionPath parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"documentData": {"test": {"stringValue": "value"}}}`)),
-			isErr:       true,
-		},
-		{
-			name:        "missing documentData parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collectionPath": "%s"}`, collectionName))),
-			isErr:       true,
-		},
-		{
-			name:        "invalid documentData format",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collectionPath": "%s", "documentData": "not an object"}`, collectionName))),
-			isErr:       true,
-		},
-	}
-
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body: %v", err)
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			// Parse the result string as JSON
-			var resultJSON map[string]interface{}
-			err = json.Unmarshal([]byte(got), &resultJSON)
-			if err != nil {
-				t.Fatalf("error parsing result as JSON: %v", err)
-			}
-
-			// Check if all wanted keys exist
-			for _, key := range tc.wantKeys {
-				if _, exists := resultJSON[key]; !exists {
-					t.Fatalf("expected key %q not found in result: %s", key, got)
-				}
-			}
-
-			// Validate document data if required
-			if tc.validateDocData {
-				docData, ok := resultJSON["documentData"].(map[string]interface{})
-				if !ok {
-					t.Fatalf("documentData is not a map: %v", resultJSON["documentData"])
-				}
-
-				// Use reflect.DeepEqual to compare the document data
-				if !reflect.DeepEqual(docData, tc.expectedDocData) {
-					t.Fatalf("documentData mismatch:\nexpected: %v\nactual: %v", tc.expectedDocData, docData)
-				}
-			}
-		})
 	}
 }
 
@@ -830,56 +619,30 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 		t.Fatalf("Failed to create subcollection document: %v", err)
 	}
 
-	// Return cleanup function that deletes ALL collections and documents in the database
+	// Return cleanup function
 	return func(t *testing.T) {
-		// Helper function to recursively delete all documents in a collection
-		var deleteCollection func(*firestoreapi.CollectionRef) error
-		deleteCollection = func(collection *firestoreapi.CollectionRef) error {
-			// Get all documents in the collection
-			docs, err := collection.Documents(ctx).GetAll()
+		// Delete subcollection documents first
+		subDocs := client.Collection(collectionName).Doc(docID1).Collection(subCollectionName).Documents(ctx)
+		for {
+			doc, err := subDocs.Next()
 			if err != nil {
-				return fmt.Errorf("failed to list documents in collection %s: %w", collection.Path, err)
+				break
 			}
-
-			// Delete each document and its subcollections
-			for _, doc := range docs {
-				// First, get all subcollections of this document
-				subcollections, err := doc.Ref.Collections(ctx).GetAll()
-				if err != nil {
-					return fmt.Errorf("failed to list subcollections of document %s: %w", doc.Ref.Path, err)
-				}
-
-				// Recursively delete each subcollection
-				for _, subcoll := range subcollections {
-					if err := deleteCollection(subcoll); err != nil {
-						return fmt.Errorf("failed to delete subcollection %s: %w", subcoll.Path, err)
-					}
-				}
-
-				// Delete the document itself
-				if _, err := doc.Ref.Delete(ctx); err != nil {
-					return fmt.Errorf("failed to delete document %s: %w", doc.Ref.Path, err)
-				}
-			}
-
-			return nil
-		}
-
-		// Get all root collections in the database
-		rootCollections, err := client.Collections(ctx).GetAll()
-		if err != nil {
-			t.Errorf("Failed to list root collections: %v", err)
-			return
-		}
-
-		// Delete each root collection and all its contents
-		for _, collection := range rootCollections {
-			if err := deleteCollection(collection); err != nil {
-				t.Errorf("Failed to delete collection %s and its contents: %v", collection.ID, err)
+			if _, err := doc.Ref.Delete(ctx); err != nil {
+				t.Errorf("Failed to delete subcollection document: %v", err)
 			}
 		}
 
-		t.Logf("Successfully deleted all collections and documents in the database")
+		// Delete main collection documents
+		if _, err := client.Collection(collectionName).Doc(docID1).Delete(ctx); err != nil {
+			t.Errorf("Failed to delete test document 1: %v", err)
+		}
+		if _, err := client.Collection(collectionName).Doc(docID2).Delete(ctx); err != nil {
+			t.Errorf("Failed to delete test document 2: %v", err)
+		}
+		if _, err := client.Collection(collectionName).Doc(docID3).Delete(ctx); err != nil {
+			t.Errorf("Failed to delete test document 3: %v", err)
+		}
 	}
 }
 
@@ -1148,7 +911,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				"orderBy": "{\"field\": \"age\", \"direction\": \"DESCENDING\"}",
 				"limit": 2
 			}`, collectionName))),
-			wantRegex: `"age":35.*"age":30`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
+			wantRegex: `"age":30.*"age":25`, // Should be ordered by age descending (Charlie=35, Alice=30, Bob=25)
 			isErr:     false,
 		},
 		{

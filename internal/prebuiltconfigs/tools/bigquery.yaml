@@ -9,11 +9,6 @@ tools:
     source: bigquery-source
     description: Use this tool to execute sql statement.
 
-  forecast:
-    kind: bigquery-forecast
-    source: bigquery-source
-    description: Use this tool to forecast time series data.
-
   get_dataset_info:
     kind: bigquery-get-dataset-info
     source: bigquery-source
@@ -37,7 +32,6 @@ tools:
 toolsets:
   bigquery-database-tools:
     - execute_sql
-    - forecast
     - get_dataset_info
     - get_table_info
     - list_dataset_ids

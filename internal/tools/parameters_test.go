@@ -1270,7 +1270,7 @@ func TestParamManifest(t *testing.T) {
 				Required:             true,
 				Description:          "bar",
 				AuthServices:         []string{},
-				AdditionalProperties: map[string]any{"type": "string"},
+				AdditionalProperties: &tools.ParameterManifest{Name: "", Type: "string", Required: true, Description: "", AuthServices: []string{}},
 			},
 		},
 		{
@@ -1282,7 +1282,7 @@ func TestParamManifest(t *testing.T) {
 				Required:             false,
 				Description:          "bar",
 				AuthServices:         []string{},
-				AdditionalProperties: map[string]any{"type": "string"},
+				AdditionalProperties: &tools.ParameterManifest{Name: "", Type: "string", Required: true, Description: "", AuthServices: []string{}},
 			},
 		},
 		{
@@ -1350,7 +1350,7 @@ func TestParamMcpManifest(t *testing.T) {
 			want: tools.ParameterMcpManifest{
 				Type:                 "object",
 				Description:          "bar",
-				AdditionalProperties: map[string]any{"type": "string"},
+				AdditionalProperties: &tools.ParameterMcpManifest{Type: "string", Description: ""},
 			},
 		},
 		{
@@ -1405,7 +1405,7 @@ func TestMcpManifest(t *testing.T) {
 					"foo-map-int": {
 						Type:                 "object",
 						Description:          "a map of ints",
-						AdditionalProperties: map[string]any{"type": "integer"},
+						AdditionalProperties: &tools.ParameterMcpManifest{Type: "integer", Description: ""},
 					},
 					"foo-map-any": {
 						Type:                 "object",

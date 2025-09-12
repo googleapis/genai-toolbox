@@ -12,7 +12,7 @@ aliases:
 ## About
 
 A `looker-get-parameters` tool returns all the parameters from a given explore
-in a given model in the source.
+in a given mode in the source.
 
 It's compatible with the following sources:
 

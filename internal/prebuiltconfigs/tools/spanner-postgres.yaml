@@ -180,22 +180,16 @@ tools:
       SELECT
         TI.TABLE_SCHEMA AS schema_name,
         TI.TABLE_NAME AS object_name,
-        CASE
-          WHEN $2 = 'simple' THEN
-            -- IF format is 'simple', return basic JSON
-                CONCAT('{"name":"', COALESCE(REPLACE(TI.TABLE_NAME, '"', '\"'), ''), '"}')
-          ELSE
-            CONCAT(
-              '{',
-              '"schema_name":"', COALESCE(REPLACE(TI.TABLE_SCHEMA, '"', '\"'), ''), '",',
-              '"object_name":"', COALESCE(REPLACE(TI.TABLE_NAME, '"', '\"'), ''), '",',
-              '"object_type":"', COALESCE(REPLACE(TI.TABLE_TYPE, '"', '\"'), ''), '",',
-              '"columns":[', COALESCE(array_to_string(CI.columns_json_array_elements, ','), ''), '],',
-              '"constraints":[', COALESCE(array_to_string(CONSI.constraints_json_array_elements, ','), ''), '],',
-              '"indexes":[', COALESCE(array_to_string(II.indexes_json_array_elements, ','), ''), ']',
-              '}'
-            )
-        END AS object_details
+        CONCAT(
+          '{',
+          '"schema_name":"', COALESCE(REPLACE(TI.TABLE_SCHEMA, '"', '\"'), ''), '",',
+          '"object_name":"', COALESCE(REPLACE(TI.TABLE_NAME, '"', '\"'), ''), '",',
+          '"object_type":"', COALESCE(REPLACE(TI.TABLE_TYPE, '"', '\"'), ''), '",',
+          '"columns":[', COALESCE(array_to_string(CI.columns_json_array_elements, ','), ''), '],',
+          '"constraints":[', COALESCE(array_to_string(CONSI.constraints_json_array_elements, ','), ''), '],',
+          '"indexes":[', COALESCE(array_to_string(II.indexes_json_array_elements, ','), ''), ']',
+          '}'
+        ) AS object_details
       FROM table_info_cte AS TI
       LEFT JOIN columns_info_cte AS CI
         ON TI.TABLE_SCHEMA = CI.TABLE_SCHEMA AND TI.TABLE_NAME = CI.TABLE_NAME
@@ -209,12 +203,6 @@ tools:
       - name: table_names
         type: string
         description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
-        default: ""
-      - name: output_format
-        type: string
-        description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
-        default: "detailed"
-
 toolsets:
   spanner-postgres-database-tools:
     - execute_sql
