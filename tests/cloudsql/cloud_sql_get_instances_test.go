@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	getInstancesToolKind = "cloud-sql-get-instances"
+	getInstancesToolKind = "cloud-sql-get-instance"
 )
 
 type getInstancesTransport struct {
@@ -144,13 +144,13 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 		{
 			name:     "successful get instance",
 			toolName: "get-instance-1",
-			body:     `{"project": "p1", "instance": "instance-1"}`,
+			body:     `{"projectId": "p1", "instanceId": "instance-1"}`,
 			want:     `{"name":"instance-1","kind":"sql#instance"}`,
 		},
 		{
 			name:        "failed get instance",
 			toolName:    "get-instance-2",
-			body:        `{"project": "p1", "instance": "instance-2"}`,
+			body:        `{"projectId": "p1", "instanceId": "instance-2"}`,
 			expectError: true,
 		},
 	}

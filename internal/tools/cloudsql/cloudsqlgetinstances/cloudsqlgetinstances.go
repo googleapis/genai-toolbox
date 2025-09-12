@@ -27,7 +27,7 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "cloud-sql-get-instances"
+const kind string = "cloud-sql-get-instance"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -73,13 +73,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The project ID"),
-		tools.NewStringParameter("instance", "The instance ID"),
+		tools.NewStringParameter("projectId", "The project ID"),
+		tools.NewStringParameter("instanceId", "The instance ID"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "instance"}
+	inputSchema.Required = []string{"projectId", "instanceId"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -115,13 +115,13 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	project, ok := paramsMap["project"].(string)
+	projectId, ok := paramsMap["projectId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, fmt.Errorf("missing 'projectId' parameter")
 	}
-	instance, ok := paramsMap["instance"].(string)
+	instanceId, ok := paramsMap["instanceId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'instance' parameter")
+		return nil, fmt.Errorf("missing 'instanceId' parameter")
 	}
 
 	client, err := t.Source.GetClient(ctx, string(accessToken))
@@ -134,7 +134,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
-	resp, err := service.Instances.Get(project, instance).Do()
+	resp, err := service.Instances.Get(projectId, instanceId).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error getting instance: %w", err)
 	}
