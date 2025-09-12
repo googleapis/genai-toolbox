@@ -7172,6 +7172,11 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
+# Cloud SQL
+Tools that work with Cloud SQL. 
+
+
+
 # Couchbase
 Tools that work with Couchbase Sources.
 
