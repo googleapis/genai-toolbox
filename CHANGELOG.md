@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.0.0](https://github.com/googleapis/genai-toolbox/compare/v0.14.0...v1.0.0) (2025-09-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **bigquery:** Add `Bearer` parsing to auth token ([#1386](https://github.com/googleapis/genai-toolbox/issues/1386))
+
+### Features
+
+* Add alloydb admin source ([#1369](https://github.com/googleapis/genai-toolbox/issues/1369)) ([33beb71](https://github.com/googleapis/genai-toolbox/commit/33beb7187d2e0f968fc949a00c780073d1bc7cdd))
+* Add cloud monitoring tool ([#1311](https://github.com/googleapis/genai-toolbox/issues/1311)) ([d661f53](https://github.com/googleapis/genai-toolbox/commit/d661f5343f2ad28fbf0481db16440aec823eece6))
+* **clickhouse:** Add list-databases tool ([#1274](https://github.com/googleapis/genai-toolbox/issues/1274)) ([e515d92](https://github.com/googleapis/genai-toolbox/commit/e515d9254f3b8e89f89322d490eb3cedce85d2bb))
+* **observability:** Add cloud sql observability tools ([#1425](https://github.com/googleapis/genai-toolbox/issues/1425)) ([236be89](https://github.com/googleapis/genai-toolbox/commit/236be89961fe423c1ec992d3d1f699f77a6e5b29))
+* **prebuilt/cloud-sql-mysql:** Add env var support for IP Type ([#1232](https://github.com/googleapis/genai-toolbox/issues/1232)) ([#1347](https://github.com/googleapis/genai-toolbox/issues/1347)) ([0cd3f16](https://github.com/googleapis/genai-toolbox/commit/0cd3f16f877f426b45e35625ba0af03789459591))
+* **prebuilt/cloudsql:** Add  list instances tool for cloudsql ([#1310](https://github.com/googleapis/genai-toolbox/issues/1310)) ([0171228](https://github.com/googleapis/genai-toolbox/commit/01712284b480774ffa68930affae290ee2e3fcfd))
+* **prebuilt/cloudsql:** Add cloud-sql-get-instances tool ([#1383](https://github.com/googleapis/genai-toolbox/issues/1383)) ([77919c7](https://github.com/googleapis/genai-toolbox/commit/77919c7d8e4aac16eeb703c0cc61ca774dc4f94e))
+* **prebuilt/cloudsql:** Add create user tool for cloud sql ([#1406](https://github.com/googleapis/genai-toolbox/issues/1406)) ([3a6b517](https://github.com/googleapis/genai-toolbox/commit/3a6b51752f077b225b8c2e2e7308a69a68eec3c0))
+* **prebuiltconfig/mysql:** Add  `queryParams` field in MySQL prebuilt config ([#1318](https://github.com/googleapis/genai-toolbox/issues/1318)) ([4b32c2a](https://github.com/googleapis/genai-toolbox/commit/4b32c2a7701ce5ccc56d019055283e73e7046372))
+* **prebuiltconfig/neo4j:** Add prebuiltconfig support for neo4j ([#1352](https://github.com/googleapis/genai-toolbox/issues/1352)) ([f819e26](https://github.com/googleapis/genai-toolbox/commit/f819e2644315a589ec283494f244c1b8407cae59))
+* **prebuilt:** Update default values for prebuilt tools ([#1355](https://github.com/googleapis/genai-toolbox/issues/1355)) ([70e832b](https://github.com/googleapis/genai-toolbox/commit/70e832bd08a98a95b925e590f31c8d3f2d8b6aa0))
+* **source/bigquery:** Add support for datasets selection ([#1313](https://github.com/googleapis/genai-toolbox/issues/1313)) ([aa39724](https://github.com/googleapis/genai-toolbox/commit/aa3972470fd0f6f5901c5d85dd05f1e2ae973e7b))
+* **source/cloudsqladmin:** Add cloud sql admin source ([#1408](https://github.com/googleapis/genai-toolbox/issues/1408)) ([4f46782](https://github.com/googleapis/genai-toolbox/commit/4f4678292762507494515ce61188cd0310805c40))
+* **tool/cloudsql:** Add cloud sql wait for operation tool with exponential backoff ([#1306](https://github.com/googleapis/genai-toolbox/issues/1306)) ([3aef2bb](https://github.com/googleapis/genai-toolbox/commit/3aef2bb7be8274bb4718739faeaa5f97b50dbf19))
+* **tools/alloydb-get-cluster:** Add get-cluster tool for alloydb ([#1420](https://github.com/googleapis/genai-toolbox/issues/1420)) ([c181dab](https://github.com/googleapis/genai-toolbox/commit/c181dabc91bdc1c24c89a3c7bba0049d9af4cf2b))
+* **tools/alloydb-list-cluster:** Add custom tool kind for AlloyDB list_clusters ([#1319](https://github.com/googleapis/genai-toolbox/issues/1319)) ([d4a9eb0](https://github.com/googleapis/genai-toolbox/commit/d4a9eb0ce217c7969aff61868e53c7dc7757d28d))
+* **tools/alloydb-list-instances:** Add custom tool kind for AlloyDB list_instances ([#1357](https://github.com/googleapis/genai-toolbox/issues/1357)) ([93c1b30](https://github.com/googleapis/genai-toolbox/commit/93c1b30fced113d6721ade9fdcfb92b5ed6c0ad6))
+* **tools/alloydb-list-users:** Add new custom tool kind for AlloyDB list_users ([#1377](https://github.com/googleapis/genai-toolbox/issues/1377)) ([3a8a65c](https://github.com/googleapis/genai-toolbox/commit/3a8a65ceaa92368563e237087c4a38ed7c0d3fd5))
+* **tools/bigquery-analyze-contribution:** Add analyze contribution tool ([#1223](https://github.com/googleapis/genai-toolbox/issues/1223)) ([81d239b](https://github.com/googleapis/genai-toolbox/commit/81d239b053a6978250878a6809905dcc9424909e))
+* **tools/bigquery:** Add `useClientOAuth` to BigQuery prebuilt source config ([#1431](https://github.com/googleapis/genai-toolbox/issues/1431)) ([fe2999a](https://github.com/googleapis/genai-toolbox/commit/fe2999a691ac92b2bf35cb7cfd504df2f3ce84b3))
+* **tools/firestore:** Add firestore-query tool ([#1305](https://github.com/googleapis/genai-toolbox/issues/1305)) ([cce602f](https://github.com/googleapis/genai-toolbox/commit/cce602f28097353f6a3017cec1fa5f75283f111d))
+* **tools/mysql-list-tables:** Add new tool for mysql ([#1287](https://github.com/googleapis/genai-toolbox/issues/1287)) ([6c8460b](https://github.com/googleapis/genai-toolbox/commit/6c8460b0e507315d407c91ba1c821f4820cc1620))
+* **tools/postgres-list-tables:** Add new tool postgres source ([#1284](https://github.com/googleapis/genai-toolbox/issues/1284)) ([71f360d](https://github.com/googleapis/genai-toolbox/commit/71f360d31522f429a646b705ce7d1d11dac4cf68))
+* **yugabytedb:** Add YugabyteDB Source and Tool ([#732](https://github.com/googleapis/genai-toolbox/issues/732)) ([664711f](https://github.com/googleapis/genai-toolbox/commit/664711f4b35409bd1c57af92f625b70a0dc9a4e6))
+
+
+### Bug Fixes
+
+* **bigquery:** Add `Bearer` parsing to auth token ([#1386](https://github.com/googleapis/genai-toolbox/issues/1386)) ([b5f9780](https://github.com/googleapis/genai-toolbox/commit/b5f9780a59e15eca2591dee32f5da42435e03039))
+* Update mcp implementation comments ([#1285](https://github.com/googleapis/genai-toolbox/issues/1285)) ([c761dfa](https://github.com/googleapis/genai-toolbox/commit/c761dfa5aae1bc12ac42eec9bc25607b88d83870))
+
 ## [0.14.0](https://github.com/googleapis/genai-toolbox/compare/v0.13.0...v0.14.0) (2025-09-05)
 
 
