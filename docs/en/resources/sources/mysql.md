@@ -22,6 +22,9 @@ reliability, performance, and ease of use.
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in MySQL.
 
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a MySQL database.
+
 ## Requirements
 
 ### Database User

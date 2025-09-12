@@ -75,6 +75,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.

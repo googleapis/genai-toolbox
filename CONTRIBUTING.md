@@ -89,6 +89,9 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 
 ### Adding a New Tool
 
+> [!NOTE]
+> Please follow the tool naming convention detailed [here](./DEVELOPER.md#tool-naming-conventions).
+
 We recommend looking at an [example tool
 implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
 

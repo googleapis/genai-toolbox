@@ -28,6 +28,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
 
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)  
