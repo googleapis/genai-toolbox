@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestNewLookerAnalyzeConfig(t *testing.T) {
+func TestLookerAnalyzeConfig(t *testing.T) {
 	ctx := context.Background()
 	sourceName := "test-looker-source"
 	mockSource := testutils.NewMockLookerSource(t, sourceName)

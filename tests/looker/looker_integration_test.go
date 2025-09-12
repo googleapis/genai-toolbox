@@ -70,7 +70,8 @@ func TestLooker(t *testing.T) {
 	var args []string
 
 	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
+
+toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
@@ -139,6 +140,11 @@ func TestLooker(t *testing.T) {
 				"kind":        "looker-health-analyze",
 				"source":      "my-instance",
 				"description": "Provides analysis of a Looker instance's projects, models, or explores.",
+			},
+			"health_vacuum": map[string]any{
+				"kind":        "looker-health-vacuum",
+				"source":      "my-instance",
+				"description": "Vacuums unused content from a Looker instance.",
 			},
 		},
 	}
@@ -682,6 +688,58 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "health_vacuum",
+		map[string]any{
+			"health_vacuum": map[string]any{
+				"description":  "Vacuums unused content from a Looker instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The vacuum action to run. Can be 'models', or 'explores'.",
+						"name":        "action",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Looker project to vacuum (optional).",
+						"name":        "project",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Looker model to vacuum (optional).",
+						"name":        "model",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Looker explore to vacuum (optional).",
+						"name":        "explore",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The timeframe in days to analyze.",
+						"name":        "timeframe",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The minimum number of queries for a model or explore to be considered used.",
+						"name":        "min_queries",
+						"required":    false,
+						"type":        "integer",
+					},
+				},
+			},
+		},
+	)
 
 	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
@@ -722,4 +780,7 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"Project\":\"system__activity\""
 	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
+
+	wantResult = "\"Model\":\"system__activity\""
+	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
 }
