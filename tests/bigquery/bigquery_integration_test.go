@@ -1844,7 +1844,6 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 				}
 				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
 			}
-			fmt.Println(resultStr)
 			if tc.isErr && (resultStr == "" || resultStr == "[]") {
 				return
 			}

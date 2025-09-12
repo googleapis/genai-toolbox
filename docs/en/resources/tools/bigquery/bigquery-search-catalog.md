@@ -4,8 +4,6 @@ type: docs
 weight: 1
 description: >
   A "bigquery-search-catalog" tool allows to search for entries based on the provided query.
-aliases:
-- /resources/tools/bigquery-search-catalog
 ---
 
 ## About

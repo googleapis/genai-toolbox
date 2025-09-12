@@ -229,8 +229,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		SemanticSearch: true,
 	}
 
-	fmt.Println("Search query:", req.Query)
-
 	catalogClient, err := t.MakeCatalogClient()
 	it := catalogClient.SearchEntries(ctx, req)
 	if it == nil {
