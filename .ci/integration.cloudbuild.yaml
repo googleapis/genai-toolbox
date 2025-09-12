@@ -71,6 +71,7 @@ steps:
       - "ALLOYDB_PROJECT=$PROJECT_ID"
       - "ALLOYDB_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
       - "ALLOYDB_REGION=$_REGION"
+    secretEnv: ["ALLOYDB_POSTGRES_USER"]
     volumes:
       - name: "go"
         path: "/gopath"
