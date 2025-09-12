@@ -17,6 +17,7 @@ package cassandra
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -34,8 +35,8 @@ var (
 	CassandraToolKind   = "cassandra-cql"
 	Hosts               = os.Getenv("CASSANDRA_HOSTS") //Comma separated string with host IPs (default: []string{"localhost"})
 	Keyspace            = "example_keyspace"
-	Username            = os.Getenv("CASSANDRA_USERNAME")
-	Password            = os.Getenv("CASSANDRA_PASSWORD")
+	Username            = os.Getenv("CASSANDRA_USER")
+	Password            = os.Getenv("CASSANDRA_PASS")
 )
 
 func initCassandraSession() (*gocql.Session, error) {
@@ -138,6 +139,13 @@ func getCassandraVars() map[string]any {
 	}
 }
 
+func dropTable(session *gocql.Session, tableName string) {
+	err := session.Query(fmt.Sprintf("drop table %s", tableName)).Exec()
+	if err != nil {
+		log.Printf("Failed to drop table %s: %v", tableName, err)
+	}
+}
+
 func TestCassandra(t *testing.T) {
 	session, err := initCassandraSession()
 	if err != nil {
@@ -156,23 +164,22 @@ func TestCassandra(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Query(fmt.Sprintf("drop table %s", paramTableName)).Exec()
+	defer dropTable(session, paramTableName)
 
 	err = initTable(tableNameAuth, session)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Query(fmt.Sprintf("drop table %s", tableNameAuth)).Exec()
+	defer dropTable(session, tableNameAuth)
 
 	err = initTable(tableNameTemplateParam, session)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Query(fmt.Sprintf("drop table %s", tableNameTemplateParam)).Exec()
+	defer dropTable(session, tableNameTemplateParam)
 
 	paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt := createParamToolInfo(paramTableName)
 	_, _, authToolStmt := getCassandraAuthToolInfo(tableNameAuth)
-	defer session.Query(fmt.Sprintf("drop table %s", tableNameAuth)).Exec()
 	toolsFile := tests.GetToolsConfig(sourceConfig, CassandraToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 
 	tmplSelectCombined, tmplSelectFilterCombined := getCassandraTmplToolInfo()

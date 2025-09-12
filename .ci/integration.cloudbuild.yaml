@@ -689,7 +689,7 @@ steps:
       - "HOSTS=$HOSTS"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "CASSANDRA_HOSTS=$_CASSANDRA_HOSTS"
-    secretEnv: ["CLIENT_ID", "CASSANDRA_USERNAME", "CASSANDRA_PASSWORD"]
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -785,6 +785,10 @@ availableSecrets:
       env: YUGABYTEDB_USER
     - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
       env: YUGABYTEDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_user/versions/latest
+      env: CASSANDRA_USER
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_pass/versions/latest
+      env: CASSANDRA_PASS
 
 
 options:
@@ -835,4 +839,4 @@ substitutions:
   _YUGABYTEDB_DATABASE: "yugabyte"
   _YUGABYTEDB_PORT: "5433"
   _YUGABYTEDB_LOADBALANCE: "false"
-  _CASSANDRA_HOSTS: "127.0.0.1"
+  _CASSANDRA_HOSTS: 127.0.0.1
