@@ -96,41 +96,14 @@ tools:
       kind: alloydb-list-clusters
       source: alloydb-admin-source
       description: "Lists all AlloyDB clusters in a given project and location."
-  alloydb-list-instances:
-    kind: http
-    source: alloydb-api-source
-    method: GET
-    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/instances
+  list_instances:
+    kind: alloydb-list-instances
+    source: alloydb-admin-source
     description: "Lists all AlloyDB instances within a specific cluster."
-    pathParams:
-      - name: projectId
-        type: string
-        description: "The GCP project ID."
-      - name: locationId
-        type: string
-        description: "The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions."
-        default: "-"
-      - name: clusterId
-        type: string
-        description: "The ID of the cluster to list instances from. Use '-' to get results for all clusters."
-        default: "-"
-  alloydb-list-users:
-    kind: http
-    source: alloydb-api-source
-    method: GET
-    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters/{{.clusterId}}/users
+  list_users:
+    kind: alloydb-list-users
+    source: alloydb-admin-source
     description: "Lists all database users within a specific AlloyDB cluster."
-    pathParams:
-      - name: projectId
-        type: string
-        description: "The GCP project ID."
-      - name: locationId
-        type: string
-        description: "The location of the cluster (e.g., 'us-central1')."
-        default: us-central1
-      - name: clusterId
-        type: string
-        description: "The ID of the cluster to list users from."
   alloydb-create-user:
     kind: http
     source: alloydb-api-source
@@ -178,6 +151,10 @@ tools:
         type: string
         description: "The type of user to create. Valid values are: USER_TYPE_UNSPECIFIED, ALLOYDB_BUILT_IN, ALLOYDB_IAM_USER."
         default: "ALLOYDB_BUILT_IN"
+  get_cluster:
+    kind: alloydb-get-cluster
+    source: alloydb-admin-source
+    description: "Retrieves details of a specific AlloyDB cluster."
         
 toolsets:
   alloydb-postgres-admin-tools:
@@ -185,6 +162,7 @@ toolsets:
     - alloydb-operations-get
     - alloydb-create-instance
     - list_clusters
-    - alloydb-list-instances
-    - alloydb-list-users
+    - list_instances
+    - list_users
     - alloydb-create-user
+    - get_cluster
