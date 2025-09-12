@@ -151,6 +151,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
 	}
 
+	alloydbService.UserAgent = t.Source.UserAgent
+
 	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
 
 	// Build the request body using the type-safe User struct.
