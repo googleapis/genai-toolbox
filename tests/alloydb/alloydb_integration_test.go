@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"reflect"
 	"regexp"
@@ -33,14 +35,16 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+
 )
 
 var (
-	AlloyDBProject  = os.Getenv("ALLOYDB_PROJECT")
-	AlloyDBLocation = os.Getenv("ALLOYDB_REGION")
-	AlloyDBCluster  = os.Getenv("ALLOYDB_CLUSTER")
-	AlloyDBInstance = os.Getenv("ALLOYDB_INSTANCE")
-	AlloyDBUser     = os.Getenv("ALLOYDB_POSTGRES_USER")
+	AlloyDBCreateInstanceToolKind = "alloydb-create-instance"
+	AlloyDBProject                = os.Getenv("ALLOYDB_PROJECT")
+	AlloyDBLocation               = os.Getenv("ALLOYDB_REGION")
+	AlloyDBCluster                = os.Getenv("ALLOYDB_CLUSTER")
+	AlloyDBInstance               = os.Getenv("ALLOYDB_INSTANCE")
+	AlloyDBUser                   = os.Getenv("ALLOYDB_POSTGRES_USER")
 )
 
 func getAlloyDBVars(t *testing.T) map[string]string {
@@ -775,5 +779,230 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 				}
 			}
 		})
+	}
+}
+
+type mockAlloyDBTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *mockAlloyDBTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://alloydb.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
+
+type mockAlloyDBHandler struct {
+	t      *testing.T
+	idParam string
+}
+
+func (h *mockAlloyDBHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get(h.idParam)
+
+	var response string
+	var statusCode int
+
+	switch id {
+	case "i1-success":
+		response = `{
+			"metadata": {
+				"@type": "type.googleapis.com/google.cloud.alloydb.v1.OperationMetadata",
+				"target": "projects/p1/locations/l1/clusters/c1/instances/i1-success",
+				"verb": "create",
+				"requestedCancellation": false,
+				"apiVersion": "v1"
+			},
+			"name": "projects/p1/locations/l1/operations/mock-operation-success"
+		}`
+		statusCode = http.StatusOK
+	case "i2-api-failure":
+		response = `{"error":{"message":"internal api error"}}`
+		statusCode = http.StatusInternalServerError
+	default:
+		http.Error(w, fmt.Sprintf("unhandled %s in mock server: %s", h.idParam, id), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if _, err := w.Write([]byte(response)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func setupTestServer(t *testing.T, idParam string) func() {
+	handler := &mockAlloyDBHandler{t: t, idParam: idParam}
+	server := httptest.NewServer(handler)
+
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &mockAlloyDBTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+
+	return func() {
+		server.Close()
+		http.DefaultClient.Transport = originalTransport
+	}
+}
+
+func TestAlloyDBCreateInstance(t *testing.T) {
+ cleanup := setupTestServer(t, "instanceId")
+ defer cleanup()
+
+ ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+ defer cancel()
+
+ var args []string
+ toolsFile := getAlloyDBCreateToolsConfig()
+ cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
+ if err != nil {
+     t.Fatalf("command initialization returned an error: %v", err)
+ }
+ defer cleanupCmd()
+
+ waitCtx, cancelWait := context.WithTimeout(ctx, 10*time.Second)
+ defer cancelWait()
+ out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+ if err != nil {
+     t.Logf("toolbox command logs: \n%s", out)
+     t.Fatalf("toolbox didn't start successfully: %s", err)
+ }
+
+ tcs := []struct {
+     name        string
+     body        string
+     want        string
+     wantError   string
+     expectError bool
+     errorStatus int
+ }{
+     {
+         name: "successful creation",
+         body: `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "instanceId": "i1-success", "instanceType": "PRIMARY", "displayName": "i1-success"}`,
+         want: `{"metadata":{"@type":"type.googleapis.com/google.cloud.alloydb.v1.OperationMetadata","target":"projects/p1/locations/l1/clusters/c1/instances/i1-success","verb":"create","requestedCancellation":false,"apiVersion":"v1"},"name":"projects/p1/locations/l1/operations/mock-operation-success"}`,
+     },
+     {
+         name:        "api failure",
+         body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "instanceId": "i2-api-failure", "instanceType": "PRIMARY", "displayName": "i1-success"}`,
+         expectError: true,
+         errorStatus: http.StatusBadRequest,
+         wantError:   "internal api error",
+     },
+     {
+         name:        "missing projectId",
+         body:        `{"locationId": "l1", "clusterId": "c1", "instanceId": "i1", "instanceType": "PRIMARY"}`,
+         expectError: true,
+         errorStatus: http.StatusBadRequest,
+         wantError:   `parameter \"projectId\" is required`,
+     },
+     {
+         name:        "missing locationId",
+         body:        `{"projectId": "p1", "clusterId": "c1", "instanceId": "i1", "instanceType": "PRIMARY"}`,
+         expectError: true,
+         errorStatus: http.StatusBadRequest,
+         wantError:   `parameter \"locationId\" is required`,
+     },
+     {
+         name:        "missing clusterId",
+         body:        `{"projectId": "p1", "locationId": "l1", "instanceId": "i1", "instanceType": "PRIMARY"}`,
+         expectError: true,
+         errorStatus: http.StatusBadRequest,
+         wantError:   `parameter \"clusterId\" is required`,
+     },
+     {
+         name:        "missing instanceId",
+         body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "instanceType": "PRIMARY"}`,
+         expectError: true,
+         errorStatus: http.StatusBadRequest,
+         wantError:   `parameter \"instanceId\" is required`,
+     },
+     {
+         name:        "missing instanceType",
+         body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "instanceId": "i1"}`,
+         expectError: true,
+         errorStatus: http.StatusBadRequest,
+         wantError:   `parameter \"instanceType\" is required`,
+     },
+ }
+
+ for _, tc := range tcs {
+     t.Run(tc.name, func(t *testing.T) {
+         api := "http://127.0.0.1:5000/api/tool/alloydb-create-instance/invoke"
+         req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
+         if err != nil {
+             t.Fatalf("unable to create request: %s", err)
+         }
+         req.Header.Add("Content-type", "application/json")
+         resp, err := http.DefaultClient.Do(req)
+         if err != nil {
+             t.Fatalf("unable to send request: %s", err)
+         }
+         defer resp.Body.Close()
+
+         bodyBytes, _ := io.ReadAll(resp.Body)
+
+         if tc.expectError {
+             if resp.StatusCode != tc.errorStatus {
+                 t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
+             }
+             if tc.wantError != "" && !bytes.Contains(bodyBytes, []byte(tc.wantError)) {
+                 t.Fatalf("expected error response to contain %q, but got: %s", tc.wantError, string(bodyBytes))
+             }
+             return
+         }
+
+         if resp.StatusCode != http.StatusOK {
+             t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+         }
+
+         var result struct {
+             Result string `json:"result"`
+         }
+         if err := json.Unmarshal(bodyBytes, &result); err != nil {
+             t.Fatalf("failed to decode response: %v", err)
+         }
+
+         var got, want map[string]any
+         if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
+             t.Fatalf("failed to unmarshal result: %v", err)
+         }
+         if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+             t.Fatalf("failed to unmarshal want: %v", err)
+         }
+
+         if !reflect.DeepEqual(want, got) {
+             t.Errorf("unexpected result:\n- want: %+v\n-  got: %+v", want, got)
+         }
+     })
+ }
+}
+
+func getAlloyDBCreateToolsConfig() map[string]any {
+	return map[string]any{
+		"sources": map[string]any{
+			"my-alloydb-source": map[string]any{
+				"kind": "alloydb-admin",
+			},
+		},
+		"tools": map[string]any{
+			"alloydb-create-instance": map[string]any{
+				"kind":        "alloydb-create-instance",
+				"description": "create instance",
+				"source":      "my-alloydb-source",
+			},
+		},
 	}
 }

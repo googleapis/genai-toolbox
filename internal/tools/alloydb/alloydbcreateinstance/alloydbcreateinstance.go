@@ -1,0 +1,214 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package alloydbcreateinstance
+
+import (
+	"context"
+    "fmt"
+
+    yaml "github.com/goccy/go-yaml"
+    "github.com/googleapis/genai-toolbox/internal/sources"
+    alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
+    "github.com/googleapis/genai-toolbox/internal/tools"
+    "google.golang.org/api/alloydb/v1"
+    "google.golang.org/api/option"
+)
+
+const kind string = "alloydb-create-instance"
+
+func init() {
+	if !tools.Register(kind, newConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
+
+// Configuration for the create-instance tool.
+type Config struct {
+	Name         string            `yaml:"name" validate:"required"`
+	Kind         string            `yaml:"kind" validate:"required"`
+	Source       string            `yaml:"source" validate:"required"`
+	Description  string            `yaml:"description" validate:"required"`
+	AuthRequired []string          `yaml:"authRequired"`
+}
+
+// validate interface
+var _ tools.ToolConfig = Config{}
+
+// ToolConfigKind returns the kind of the tool.
+func (cfg Config) ToolConfigKind() string {
+	return kind
+}
+
+// Initialize initializes the tool from the configuration.
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	rawS, ok := srcs[cfg.Source]
+    if !ok {
+        return nil, fmt.Errorf("source %q not found", cfg.Source)
+    }
+
+    s, ok := rawS.(*alloydbadmin.Source)
+    if !ok {
+        return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
+    }
+
+	allParameters := tools.Parameters{
+		tools.NewStringParameter("projectId", "The GCP project ID."),
+		tools.NewStringParameter("locationId", "The location of the cluster (e.g., 'us-central1')."),
+		tools.NewStringParameter("clusterId", "The ID of the cluster to create the instance in."),
+		tools.NewStringParameter("instanceId", "A unique ID for the new AlloyDB instance."),
+		tools.NewStringParameter("instanceType", "The type of instance to create. Required. Valid values are: PRIMARY, READ_POOL."),
+		tools.NewStringParameter("displayName", "A user-friendly name for the instance."),
+		tools.NewIntParameterWithDefault("nodeCount", 1, "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1."),
+	}
+	paramManifest := allParameters.Manifest()
+
+	inputSchema := allParameters.McpManifest()
+	inputSchema.Required = []string{"projectId", "locationId", "clusterId", "instanceType", "instanceId"}
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: inputSchema,
+	}
+
+	return Tool{
+        Name:        cfg.Name,
+        Kind:        kind,
+        Source:      s,
+        AllParams:   allParameters,
+        manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+        mcpManifest: mcpManifest,
+    }, nil
+}
+
+// Tool represents the create-instance tool.
+type Tool struct {
+    Name         string   `yaml:"name"`
+    Kind         string   `yaml:"kind"`
+    Description  string   `yaml:"description"`
+
+    Source    *alloydbadmin.Source
+    AllParams tools.Parameters `yaml:"allParams"`
+
+    manifest    tools.Manifest
+    mcpManifest tools.McpManifest
+}
+
+// Invoke executes the tool's logic.
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	paramsMap := params.AsMap()
+	projectId, ok := paramsMap["projectId"].(string)
+    if !ok || projectId == "" {
+        return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a non-empty string")
+    }
+
+	locationId, ok := paramsMap["locationId"].(string)
+    if !ok {
+        return nil, fmt.Errorf("iinvalid or missing 'locationId' parameter; expected a non-empty string")
+    }
+
+    clusterId, ok := paramsMap["clusterId"].(string)
+    if !ok || clusterId == "" {
+        return nil, fmt.Errorf("invalid or missing 'clusterId' parameter; expected a non-empty string")
+    }
+
+    instanceId, ok := paramsMap["instanceId"].(string)
+    if !ok || instanceId == "" {
+        return nil, fmt.Errorf("invalid or missing 'instanceId' parameter; expected a non-empty string")
+    }
+
+	instanceType, ok := paramsMap["instanceType"].(string)
+	if !ok || instanceType == "" {
+		return nil, fmt.Errorf("invalid or missing 'instanceType' parameter; expected a non-empty string")
+	}
+
+	client, err := t.Source.GetClient(ctx, string(accessToken))
+	if err != nil {
+		return nil, fmt.Errorf("error getting authorized client: %w", err)
+	}
+
+	alloydbService, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
+	}
+
+	alloydbService.UserAgent = t.Source.UserAgent
+
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
+
+	// Build the request body using the type-safe Instance struct.
+	instance := &alloydb.Instance{
+		InstanceType: instanceType,
+		NetworkConfig: &alloydb.InstanceNetworkConfig{
+			EnablePublicIp: true,
+		},
+		DatabaseFlags: map[string]string{
+			"password.enforce_complexity": "on",
+		},
+	}
+
+	if displayName, ok := paramsMap["displayName"].(string); ok && displayName != "" {
+		instance.DisplayName = displayName
+	}
+
+	if instanceType == "READ_POOL" {
+		nodeCount, ok := paramsMap["nodeCount"].(int64) 
+		if !ok {
+			return nil, fmt.Errorf("invalid 'nodeCount' parameter; expected an integer (int64) for READ_POOL")
+		}
+		instance.ReadPoolConfig = &alloydb.ReadPoolConfig{
+			NodeCount: nodeCount,
+		}
+	}
+
+	// The Create API returns a long-running operation.
+	resp, err := alloydbService.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceId).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error creating AlloyDB instance: %w", err)
+	}
+
+	return resp, nil
+}
+
+// ParseParams parses the parameters for the tool.
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.AllParams, data, claims)
+}
+
+// Manifest returns the tool's manifest.
+func (t Tool) Manifest() tools.Manifest {
+	return t.manifest
+}
+
+// McpManifest returns the tool's MCP manifest.
+func (t Tool) McpManifest() tools.McpManifest {
+	return t.mcpManifest
+}
+
+// Authorized checks if the tool is authorized.
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return true
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+    return t.Source.UseClientAuthorization()
+}
