@@ -144,6 +144,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: parameters.McpManifest(),
 	}
 
+	// Get cloud-platform token source for Gemini Data Analytics API during initialization
+	var bigQueryTokenSourceWithScope oauth2.TokenSource
+	if !s.UseClientAuthorization() {
+		ctx := context.Background()
+		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
+		}
+		bigQueryTokenSourceWithScope = ts
+	}
+
 	// finish tool setup
 	t := Tool{
 		Name:               cfg.Name,
@@ -154,7 +165,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        s,
+		TokenSource:        bigQueryTokenSourceWithScope,
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
@@ -175,7 +186,7 @@ type Tool struct {
 	Project            string
 	Location           string
 	Client             *bigqueryapi.Client
-	TokenSource        compatibleSource
+	TokenSource        oauth2.TokenSource
 	manifest           tools.Manifest
 	mcpManifest        tools.McpManifest
 	MaxQueryResultRows int
@@ -196,14 +207,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
-		// Get token source with cloud-platform scope for Gemini Data Analytics API
-		tokenSource, err := t.TokenSource.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get token source with cloud-platform scope from BigQuery source: %w", err)
+		// Use cloud-platform token source for Gemini Data Analytics API
+		if t.TokenSource == nil {
+			return nil, fmt.Errorf("cloud-platform token source is missing")
 		}
-		token, err := tokenSource.Token()
+		token, err := t.TokenSource.Token()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get token: %w", err)
+			return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
 		}
 		tokenStr = token.AccessToken
 	}
