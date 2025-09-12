@@ -193,6 +193,10 @@ tools:
     kind: alloydb-get-cluster
     source: alloydb-admin-source
     description: "Retrieves details of a specific AlloyDB cluster."
+  get_user:
+    kind: alloydb-get-user
+    source: alloydb-admin-source
+    description: "Retrieves details of a specific AlloyDB user."
         
 toolsets:
   alloydb-postgres-admin-tools:
@@ -204,3 +208,4 @@ toolsets:
     - list_users
     - alloydb-create-user
     - get_cluster
+    - get_user
