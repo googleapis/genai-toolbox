@@ -16,7 +16,6 @@ package cloudsqlgetinstances
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -139,17 +138,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error getting instance: %w", err)
 	}
 
-	var data any
-	var b []byte
-	b, err = resp.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling response: %w", err)
-	}
-	if err := json.Unmarshal(b, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
-	}
-
-	return data, nil
+	return resp, nil
 }
 
 // ParseParams parses the parameters for the tool.
