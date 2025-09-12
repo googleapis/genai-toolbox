@@ -71,9 +71,9 @@ tools:
     maxDelay: 4m
     multiplier: 2
     maxRetries: 10
-  alloydb-create-instance:
+  create_instance:
     kind: alloydb-create-instance
-    source: alloydb-api-source
+    source: alloydb-admin-source
     description: "Creates a new AlloyDB instance (PRIMARY, READ_POOL, or SECONDARY) within a cluster. This is a long-running operation. Take all parameters from user in one go. This will return operation id to be used by get operations tool."    
   list_clusters:
       kind: alloydb-list-clusters
@@ -143,7 +143,7 @@ toolsets:
   alloydb-postgres-admin-tools:
     - alloydb-create-cluster
     - alloydb-operations-get
-    - alloydb-create-instance
+    - create_instance
     - list_clusters
     - list_instances
     - list_users

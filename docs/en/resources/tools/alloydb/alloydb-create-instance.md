@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-The `alloydb-create-instance` tool creates a new AlloyDB instance (PRIMARY or READ_POOL) within a specified cluster. It is compatible with [http](../../sources/http.md) source.
+The `alloydb-create-instance` tool creates a new AlloyDB instance (PRIMARY or READ_POOL) within a specified cluster. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
 This tool provisions a new instance with a **public IP address**.
 
   **Permissions & APIs Required:**
@@ -31,20 +31,19 @@ The tool takes the following input parameters:
 | `displayName` | string | A user-friendly name for the instance. | Yes |
 | `nodeCount` | int | The number of nodes for a read pool. Required only if `instanceType` is `READ_POOL`. Default: `1`| No |
 > **Note**
-> This tool authenticates using the environment's
-[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
+> This tool authenticates using the credentials configured in its [alloydb-admin](../../sources/alloydb-admin.md) source which can be either [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) or client-side OAuth.
 ## Example
 
 ```yaml
 tools:
-  alloydb_create_instance:
+  create_instance:
     kind: alloydb-create-instance
-    source: http-source
+    source: alloydb-admin-source
     description: Use this tool to create a new AlloyDB instance within a specified cluster.
 ```
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be alloydb-create-instance.                                                                  |                                               |
-| source      |                   string                   | true         | The name of a http source.                                                                       |
+| source      |                   string                   | true         | The name of an alloydb-admin source.                                                                       |
 | description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |

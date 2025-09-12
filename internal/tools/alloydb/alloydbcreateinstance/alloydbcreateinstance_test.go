@@ -25,115 +25,70 @@ import (
 )
 
 func TestParseFromYaml(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	tcs := []struct {
-		desc string
-		in   string
-		want server.ToolConfigs
-	}{
-		{
-			desc: "basic example",
-			in: `
-			tools:
-				create-my-instance:
-					kind: alloydb-create-instance
-					source: my-alloydb-admin-source
-					description: some description
-			`,
-			want: server.ToolConfigs{
-				"create-my-instance": alloydbcreateinstance.Config{
-					Name:         "create-my-instance",
-					Kind:         "alloydb-create-instance",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "with auth required",
-			in: `
-			tools:
-				create-my-instance-auth:
-					kind: alloydb-create-instance
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired: 
-						- my-google-auth-service
-						- other-auth-service
-			`,
-			want: server.ToolConfigs{
-				"create-my-instance-auth": alloydbcreateinstance.Config{
-					Name:         "create-my-instance-auth",
-					Kind:         "alloydb-create-instance",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-				},
-			},
-		},
-		{
-			desc: "with base url",
-			in: `
-			tools:
-				create-my-instance-baseurl:
-					kind: alloydb-create-instance
-					source: my-alloydb-admin-source
-					description: some description
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"create-my-instance-baseurl": alloydbcreateinstance.Config{
-					Name:         "create-my-instance-baseurl",
-					Kind:         "alloydb-create-instance",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					BaseURL:      "https://example.com",
-					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "with auth and base url",
-			in: `
-			tools:
-				create-my-instance-all:
-					kind: alloydb-create-instance
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired: 
-						- my-google-auth-service
-						- other-auth-service
-					baseURL: "https://example.com"
-			`,
-			want: server.ToolConfigs{
-				"create-my-instance-all": alloydbcreateinstance.Config{
-					Name:         "create-my-instance-all",
-					Kind:         "alloydb-create-instance",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					BaseURL:      "https://example.com",
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
-				t.Fatalf("incorrect parse: diff %v", diff)
-			}
-		})
-	}
+    ctx, err := testutils.ContextWithNewLogger()
+    if err != nil {
+        t.Fatalf("unexpected error: %s", err)
+    }
+    tcs := []struct {
+        desc string
+        in   string
+        want server.ToolConfigs
+    }{
+        {
+            desc: "basic example",
+            in: `
+            tools:
+                create-my-instance:
+                    kind: alloydb-create-instance
+                    source: my-alloydb-admin-source
+                    description: some description
+            `,
+            want: server.ToolConfigs{
+                "create-my-instance": alloydbcreateinstance.Config{
+                    Name:         "create-my-instance",
+                    Kind:         "alloydb-create-instance",
+                    Source:       "my-alloydb-admin-source",
+                    Description:  "some description",
+                    AuthRequired: []string{},
+                },
+            },
+        },
+        {
+            desc: "with auth required",
+            in: `
+            tools:
+                create-my-instance-auth:
+                    kind: alloydb-create-instance
+                    source: my-alloydb-admin-source
+                    description: some description
+                    authRequired: 
+                        - my-google-auth-service
+                        - other-auth-service
+            `,
+            want: server.ToolConfigs{
+                "create-my-instance-auth": alloydbcreateinstance.Config{
+                    Name:         "create-my-instance-auth",
+                    Kind:         "alloydb-create-instance",
+                    Source:       "my-alloydb-admin-source",
+                    Description:  "some description",
+                    AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+                },
+            },
+        },
+    }
+    for _, tc := range tcs {
+        t.Run(tc.desc, func(t *testing.T) {
+            got := struct {
+                Tools server.ToolConfigs `yaml:"tools"`
+            }{}
+            // Parse contents
+            err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+            if err != nil {
+                t.Fatalf("unable to unmarshal: %s", err)
+            }
+            if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+                t.Fatalf("incorrect parse: diff %v", diff)
+            }
+        })
+    }
 }
