@@ -305,7 +305,7 @@ steps:
           "Cloud SQL MySQL" \
           cloudsqlmysql \
           mysql
-          
+
   - id: "mysql"
     name: golang:1
     waitFor: ["compile-test-binary"]
