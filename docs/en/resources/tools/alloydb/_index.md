@@ -3,5 +3,5 @@ title: "AlloyDB for PostgreSQL"
 type: docs
 weight: 1
 description: > 
-  Tools for AlloyDB PostgreSQL.
+  Tools for AlloyDB for PostgreSQL.
 ---
