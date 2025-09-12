@@ -98,7 +98,7 @@ type CAPayload struct {
 	Project       string        `json:"project"`
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
-	ClientIDEnum  string        `json:"client_id_enum"`
+	ClientIDEnum  string        `json:"clientIdEnum"`
 }
 
 // validate compatible sources are still compatible
