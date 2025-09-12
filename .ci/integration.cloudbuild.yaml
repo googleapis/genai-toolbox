@@ -69,6 +69,7 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "ALLOYDB_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
       - "ALLOYDB_REGION=$_REGION"
     volumes:
       - name: "go"
