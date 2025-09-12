@@ -636,6 +636,11 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 			"my-google-auth",
 		},
 	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-client-auth-source",
+		"description": "Tool to search the BiqQuery catalog",
+	}
 	config["tools"] = tools
 	return config
 }
@@ -2106,6 +2111,13 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -2166,6 +2178,21 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
 		},
 	}
 	for _, tc := range invokeTcs {
