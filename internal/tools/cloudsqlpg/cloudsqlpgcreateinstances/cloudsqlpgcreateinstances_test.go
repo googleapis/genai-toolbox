@@ -39,14 +39,14 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				create-instance-tool:
-					kind: cloud-sql-postgres-create-instances
+					kind: cloud-sql-postgres-create-instance
 					description: a test description
 					source: a-source
 			`,
 			want: server.ToolConfigs{
 				"create-instance-tool": cloudsqlpgcreateinstances.Config{
 					Name:         "create-instance-tool",
-					Kind:         "cloud-sql-postgres-create-instances",
+					Kind:         "cloud-sql-postgres-create-instance",
 					Description:  "a test description",
 					Source:       "a-source",
 					AuthRequired: []string{},

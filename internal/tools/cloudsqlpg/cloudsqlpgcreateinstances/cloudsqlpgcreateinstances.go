@@ -27,7 +27,7 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "cloud-sql-postgres-create-instances"
+const kind string = "cloud-sql-postgres-create-instance"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

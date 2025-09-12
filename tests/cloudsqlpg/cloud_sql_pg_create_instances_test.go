@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	createInstanceToolKind = "cloud-sql-postgres-create-instances"
+	createInstanceToolKind = "cloud-sql-postgres-create-instance"
 )
 
 type createInstanceTransport struct {
