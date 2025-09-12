@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -163,7 +164,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		sourcesMap[name] = s
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
+	sourceNames := make([]string, 0, len(sourcesMap))
+	for name := range sourcesMap {
+		sourceNames = append(sourceNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources: %s", len(sourcesMap), strings.Join(sourceNames, ", ")))
 
 	// initialize and validate the auth services from configs
 	authServicesMap := make(map[string]auth.AuthService)
@@ -187,7 +192,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		authServicesMap[name] = a
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices.", len(authServicesMap)))
+	authServiceNames := make([]string, 0, len(authServicesMap))
+	for name := range authServicesMap {
+		authServiceNames = append(authServiceNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices: %s", len(authServicesMap), strings.Join(authServiceNames, ", ")))
 
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
@@ -211,7 +220,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		toolsMap[name] = t
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+	toolNames := make([]string, 0, len(toolsMap))
+	for name := range toolsMap {
+		toolNames = append(toolNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -244,7 +257,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		toolsetsMap[name] = t
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
+	toolsetNames := make([]string, 0, len(toolsetsMap))
+	for name := range toolsetsMap {
+		if name == "" {
+			toolsetNames = append(toolsetNames, "default")
+		} else {
+			toolsetNames = append(toolsetNames, name)
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
 
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
 }
