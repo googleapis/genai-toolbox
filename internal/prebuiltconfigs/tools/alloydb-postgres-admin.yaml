@@ -1,3 +1,17 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
   alloydb-api-source:
     kind: http
@@ -5,6 +19,8 @@ sources:
     headers:
       Authorization: Bearer ${API_KEY}
       Content-Type: application/json
+  alloydb-admin-source:
+    kind: alloydb-admin
 tools:
   alloydb-create-cluster:
     kind: http
@@ -114,20 +130,10 @@ tools:
         type: string
         description: "The full resource name of the primary cluster for a SECONDARY instance. Required only if instanceType is SECONDARY. Otherwise don't ask"
         default: ""
-  alloydb-list-clusters:
-      kind: http
-      source: alloydb-api-source
-      method: GET
-      path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters
+  list_clusters:
+      kind: alloydb-list-clusters
+      source: alloydb-admin-source
       description: "Lists all AlloyDB clusters in a given project and location."
-      pathParams:
-        - name: projectId
-          type: string
-          description: "The GCP project ID to list clusters for."
-        - name: locationId
-          type: string
-          description: "The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations."
-          default: "-"
   alloydb-list-instances:
     kind: http
     source: alloydb-api-source
@@ -216,7 +222,7 @@ toolsets:
     - alloydb-create-cluster
     - alloydb-operations-get
     - alloydb-create-instance
-    - alloydb-list-clusters
+    - list_clusters
     - alloydb-list-instances
     - alloydb-list-users
     - alloydb-create-user
