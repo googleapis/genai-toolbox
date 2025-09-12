@@ -102,9 +102,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 
 	state := stateNormal
 	expectingTable := false
-	var lastTableKeyword string
-	var lastToken string
-	var statementVerb string
+	var lastTableKeyword, lastToken, statementVerb string
 	runes := []rune(sql)
 
 	for i := 0; i < len(runes); {
