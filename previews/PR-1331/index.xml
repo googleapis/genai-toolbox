@@ -32,8 +32,8 @@ layer.&lt;/p>
 application end user natural language questions. Natural language streamlines
 the development of generative AI applications by transferring the complexity
 of converting natural language to SQL from the application layer to the
-database layer.&lt;/p></description></item><item><title>alloydb-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydbcreatecluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydbcreatecluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/http/">http&lt;/a> source.
+database layer.&lt;/p></description></item><item><title>alloydb-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-create-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-create-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> within the specified VPC network.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
