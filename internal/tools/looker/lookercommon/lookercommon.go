@@ -18,7 +18,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
+	"unsafe"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -261,4 +263,41 @@ func ProcessQueryArgs(ctx context.Context, params tools.ParamValues) (*v4.WriteQ
 		Limit:         &limit,
 	}
 	return &wq, nil
+}
+
+type QueryApiClientContext struct {
+	Name            string            `json:"name"`
+	Attributes      map[string]string `json:"attributes,omitempty"`
+	ExtraAttributes map[string]string `json:"extra_attributes,omitempty"`
+}
+
+type RenderOptions struct {
+	Format string `json:"format"`
+}
+
+type RequestRunInlineQuery2 struct {
+	Query             v4.WriteQuery         `json:"query"`
+	RenderOpts        RenderOptions         `json:"render_options"`
+	QueryApiClientCtx QueryApiClientContext `json:"query_api_client_context"`
+}
+
+func RunInlineQuery2(l *v4.LookerSDK, request RequestRunInlineQuery2, options *rtl.ApiSettings) (string, error) {
+	var result string
+	sdk := reflect.ValueOf(l).Elem()
+	session := sdk.FieldByName("session")
+	session = reflect.NewAt(session.Type(), unsafe.Pointer(session.UnsafeAddr())).Elem()
+	do := session.MethodByName("Do")
+	args := make([]reflect.Value, 7)
+	//err := l.session.Do(&result, "POST", "4.0", "/queries/run_inline", nil, request, options)
+	args[0] = reflect.ValueOf(&result)
+	args[1] = reflect.ValueOf("POST")
+	args[2] = reflect.ValueOf("/4.0")
+	args[3] = reflect.ValueOf("/queries/run_inline")
+	args[4] = reflect.MakeMap(reflect.MapOf(reflect.TypeFor[string](), reflect.TypeFor[any]()))
+	args[5] = reflect.ValueOf(request)
+	args[6] = reflect.ValueOf(options)
+	out := do.Call(args)
+	err, _ := out[0].Interface().(error)
+	return result, err
+
 }
