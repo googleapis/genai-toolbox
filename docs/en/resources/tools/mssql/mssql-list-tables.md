@@ -3,14 +3,14 @@ title: "mssql-list-tables"
 type: docs
 weight: 1
 description: >
-  The "mssql-list-tables" tool lists schema information for all or specified tables in a msSQL database.
+  The "mssql-list-tables" tool lists schema information for all or specified tables in a SQL server database.
 aliases:
 - /resources/tools/mssql-list-tables
 ---
 
 ## About
 
-The `mssql-list-tables` tool retrieves schema information for all or specified tables in a msSQL database. It is compatible with any of the following sources:
+The `mssql-list-tables` tool retrieves schema information for all or specified tables in a SQL server database. It is compatible with any of the following sources:
 
 - [cloud-sql-mssql](../../sources/cloud-sql-mssql.md)
 - [mssql](../../sources/mssql.md)
