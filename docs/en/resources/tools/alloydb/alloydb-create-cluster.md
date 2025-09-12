@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-The `alloydb-create-cluster` tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with [http](../../sources/http.md) source.
+The `alloydb-create-cluster` tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
 This tool provisions a cluster with a **private IP address** within the specified VPC network.
 
   **Permissions & APIs Required:**
@@ -30,20 +30,19 @@ The tool takes the following input parameters:
 | `network` | string | The name of the VPC network to connect the cluster to. Default: `default`. | No |
 | `user` | string | The name for the initial superuser. Default: `postgres`. | No |
 > **Note**
-> This tool authenticates using the environment's
-[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
+> This tool authenticates using the credentials configured in its [alloydb-admin](../../sources/alloydb-admin.md) source which can be either [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) or client-side OAuth.
 ## Example
 
 ```yaml
 tools:
-  alloydb_create_cluster:
+  create_cluster:
     kind: alloydb-create-cluster
-    source: http-source
+    source: alloydb-admin-source
     description: Use this tool to create a new AlloyDB cluster in a given project and location.
 ```
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be alloydb-create-cluster.                                                                  |                                               |
-| source      |                   string                   |     true     | The name of a http source.                                                                       |
+| source      |                   string                   |     true     | The name of an alloydb-admin source.                                                                       |
 | description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |

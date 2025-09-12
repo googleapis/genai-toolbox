@@ -22,9 +22,9 @@ sources:
   alloydb-admin-source:
     kind: alloydb-admin
 tools:
-  alloydb-create-cluster:
+  create_cluster:
     kind: alloydb-create-cluster
-    source: alloydb-api-source
+    source: alloydb-admin-source
     description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
   alloydb-operations-get:
     kind: alloydb-wait-for-operation
@@ -158,7 +158,7 @@ tools:
         
 toolsets:
   alloydb-postgres-admin-tools:
-    - alloydb-create-cluster
+    - create_cluster
     - alloydb-operations-get
     - alloydb-create-instance
     - list_clusters
