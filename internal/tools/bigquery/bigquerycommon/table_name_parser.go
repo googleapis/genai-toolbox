@@ -211,21 +211,17 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 
 				if len(parts) == 1 {
 					keyword := strings.ToLower(parts[0])
-					if keyword == "call" {
+					switch keyword {
+					case "call":
 						return 0, fmt.Errorf("CALL is not allowed when dataset restrictions are in place, as the called procedure's contents cannot be safely analyzed")
-					}
-					if lastToken == "execute" && keyword == "immediate" {
-						return 0, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place, as its contents cannot be safely analyzed")
-					}
-
-					// The statementVerb is set by the first DML/DDL keyword and is used to identify context.
-					if keyword == "procedure" || keyword == "function" {
+					case "immediate":
+						if lastToken == "execute" {
+							return 0, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place, as its contents cannot be safely analyzed")
+						}
+					case "procedure", "function":
 						if lastToken == "create" || lastToken == "create or replace" {
 							return 0, fmt.Errorf("unanalyzable statements like '%s %s' are not allowed", strings.ToUpper(lastToken), strings.ToUpper(keyword))
 						}
-					}
-
-					switch keyword {
 					case verbCreate, verbAlter, verbDrop, verbSelect, verbInsert, verbUpdate, verbDelete, verbMerge:
 						if statementVerb == "" {
 							statementVerb = keyword
