@@ -59,11 +59,16 @@ type instance struct {
 type handler struct {
 	mu        sync.Mutex
 	instances map[string]*instance
+	t         *testing.T
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
+	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
+		h.t.Errorf("User-Agent header not found")
+	}
 
 	if !strings.HasPrefix(r.URL.Path, "/v1/projects/") {
 		http.Error(w, "unexpected path", http.StatusBadRequest)
@@ -92,6 +97,7 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 		instances: map[string]*instance{
 			"instance-1": {Name: "instance-1", Kind: "sql#instance"},
 		},
+		t: t,
 	}
 	server := httptest.NewServer(h)
 	defer server.Close()

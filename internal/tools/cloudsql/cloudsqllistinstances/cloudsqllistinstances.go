@@ -16,10 +16,7 @@ package cloudsqllistinstances
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -123,48 +120,34 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
 
-	client, err := t.source.GetClient(ctx, string(accessToken))
+	service, err := t.source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("%s/v1/projects/%s/instances", t.source.BaseURL, project)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
+	resp, err := service.Instances.List(project).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
+		return nil, fmt.Errorf("error listing instances: %w", err)
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
-	}
-
-	var v struct {
-		Items []struct {
-			Name         string `json:"name"`
-			InstanceType string `json:"instanceType"`
-		} `json:"items"`
-	}
-
-	if err := json.Unmarshal(body, &v); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response body: %w", err)
-	}
-
-	if v.Items == nil {
+	if resp.Items == nil {
 		return []any{}, nil
 	}
 
-	return v.Items, nil
+	type instanceInfo struct {
+		Name         string `json:"name"`
+		InstanceType string `json:"instanceType"`
+	}
+
+	var instances []instanceInfo
+	for _, item := range resp.Items {
+		instances = append(instances, instanceInfo{
+			Name:         item.Name,
+			InstanceType: item.InstanceType,
+		})
+	}
+
+	return instances, nil
 }
 
 // ParseParams parses the parameters for the tool.

@@ -27,8 +27,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/option"
-	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-wait-for-operation"
@@ -93,7 +91,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 	BaseURL      string   `yaml:"baseURL"`
 
@@ -133,9 +131,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	inputSchema := allParameters.McpManifest()
 	inputSchema.Required = []string{"project", "operation"}
 
+	description := cfg.Description
+	if description == "" {
+		description = "This will poll on operations API until the operation is done. For checking operation status we need projectId and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -219,14 +222,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'operation' parameter")
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
-	}
-
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
@@ -389,13 +387,9 @@ func (t Tool) generateCloudSQLConnectionMessage(opResponse map[string]any) (stri
 }
 
 func (t Tool) fetchInstanceData(ctx context.Context, project, instance string) (map[string]any, error) {
-	client, err := t.Source.GetClient(ctx, "")
+	service, err := t.Source.GetService(ctx, "")
 	if err != nil {
 		return nil, err
-	}
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
 	resp, err := service.Instances.Get(project, instance).Do()

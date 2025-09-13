@@ -49,6 +49,9 @@ func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func TestListInstance(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
+			t.Errorf("User-Agent header not found")
+		}
 		if r.URL.Path != "/v1/projects/test-project/instances" {
 			http.Error(w, fmt.Sprintf("unexpected path: got %q", r.URL.Path), http.StatusBadRequest)
 			return
