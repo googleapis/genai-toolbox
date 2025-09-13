@@ -64,6 +64,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `get_table_info`: Gets table metadata.
     *   `list_dataset_ids`: Lists datasets.
     *   `list_table_ids`: Lists tables.
+    *   `search_catalog`: Search for entries based on the provided query.
 
 ## Cloud SQL for MySQL
 
