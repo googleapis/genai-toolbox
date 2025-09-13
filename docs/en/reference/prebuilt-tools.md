@@ -45,6 +45,15 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `alloydb-list-users`: Lists all database users within an AlloyDB cluster.
     *   `alloydb-create-user`: Creates a new database user in an AlloyDB cluster.
 
+## AlloyDB Postgres Observability
+
+*   `--prebuilt` value: `alloydb-postgres-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for an AlloyDB instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in an AlloyDB instance using a PromQL query.
+
 ## BigQuery
 
 *   `--prebuilt` value: `bigquery`
@@ -84,6 +93,15 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
 
+## Cloud SQL for MySQL Observability
+
+*   `--prebuilt` value: `cloud-sql-mysql-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a MySQL instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in a MySQL instance using a PromQL query.
+
 ## Cloud SQL for PostgreSQL
 
 *   `--prebuilt` value: `cloud-sql-postgres`
@@ -101,6 +119,15 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for PostgreSQL Observability
+
+*   `--prebuilt` value: `cloud-sql-postgres-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a Postgres instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in Postgres instance using a PromQL query.
 
 ## Cloud SQL for SQL Server
 
@@ -120,6 +147,14 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for SQL Server Observability
+
+*   `--prebuilt` value: `cloud-sql-mssql-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a SQL Server instance using a PromQL query.
 
 ## Dataplex
 
