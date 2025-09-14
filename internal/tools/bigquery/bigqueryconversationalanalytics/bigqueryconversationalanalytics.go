@@ -98,6 +98,7 @@ type CAPayload struct {
 	Project       string        `json:"project"`
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
+	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
 // validate compatible sources are still compatible
@@ -254,6 +255,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			},
 			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
+		ClientIdEnum: "GENAI_TOOLBOX",
 	}
 
 	// Call the streaming API
