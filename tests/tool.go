@@ -792,7 +792,7 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 		t.Fatalf("unexpected error during marshaling of body")
 	}
 
-	resp, _ := runRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
+	resp, _ := RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
 	if resp.StatusCode != 200 {
 		t.Fatalf("response status code is not 200")
 	}
@@ -817,7 +817,7 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 		t.Fatalf("unexpected error during marshaling of notifications body")
 	}
 
-	_, _ = runRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
+	_, _ = RunRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
 	return sessionId
 }
 
@@ -1089,7 +1089,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				headers[key] = value
 			}
 
-			httpResponse, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
+			httpResponse, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
 
 			// Check status code
 			if httpResponse.StatusCode != tc.wantStatusCode {
@@ -1105,7 +1105,8 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	}
 }
 
-func runRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
+// RunRequest is a helper function to send HTTP requests and return the response
+func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
