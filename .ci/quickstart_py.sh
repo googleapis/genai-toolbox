@@ -15,11 +15,9 @@
 #!/bin/bash
 
 set -e
-set -u
 
 TABLE_NAME="hotels_python"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
-TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 
 install_system_packages() {
@@ -32,7 +30,8 @@ install_system_packages() {
 }
 
 start_cloud_sql_proxy() {
-  wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
+  CLOUD_SQL_PROXY_VERSION=$(grep "cloud-sql-proxy" .ci/quickstart_dependencies.txt | awk '{print $2}')
+  wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/{CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
   PROXY_PID=$!
@@ -40,16 +39,14 @@ start_cloud_sql_proxy() {
 }
 
 setup_toolbox() {
-  mkdir -p "${TOOLBOX_SETUP_DIR}"
-  echo "${TOOLS_YAML_CONTENT}" > "${TOOLBOX_SETUP_DIR}/tools.yaml"
-  if [ ! -f "${TOOLBOX_SETUP_DIR}/tools.yaml" ]; then echo "Failed to create tools.yaml"; exit 1; fi
-  curl -L "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -o "${TOOLBOX_SETUP_DIR}/toolbox"
-  chmod +x "${TOOLBOX_SETUP_DIR}/toolbox"
-  if [ ! -f "${TOOLBOX_SETUP_DIR}/toolbox" ]; then echo "Failed to download toolbox"; exit 1; fi
-  cd "${TOOLBOX_SETUP_DIR}"
-  ./toolbox --tools-file ./tools.yaml &
+  TOOLBOX_YAML="/tools.yaml"
+  echo "${TOOLS_YAML_CONTENT}" > "$TOOLBOX_YAML"
+  if [ ! -f "$TOOLBOX_YAML" ]; then echo "Failed to create tools.yaml"; exit 1; fi
+  curl -L "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -o "/toolbox"
+  chmod +x "/toolbox"
+  if [ ! -f "/toolbox" ]; then echo "Failed to download toolbox"; exit 1; fi
+  /toolbox --tools-file "$TOOLBOX_YAML" &
   TOOLBOX_PID=$!
-  cd "/workspace"
   sleep 2
 }
 
@@ -81,12 +78,11 @@ run_orch_test() {
     echo "--- Running tests for $orch_name ---"
     cd ..
     ORCH_NAME="$orch_name" pytest
-    rm -rvf "$VENV_DIR"
+    rm -rf "$VENV_DIR"
   )
 }
 
 # Main script execution
-install_system_packages
 start_cloud_sql_proxy
 
 export PGHOST=127.0.0.1
@@ -95,10 +91,6 @@ export PGPASSWORD="$DB_PASSWORD"
 export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 setup_toolbox
-
-if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
-  exit 1
-fi
 
 if [[ ! -f "$SQL_FILE" ]]; then
   exit 1
