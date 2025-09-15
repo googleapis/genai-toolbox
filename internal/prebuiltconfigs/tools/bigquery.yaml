@@ -17,6 +17,7 @@ sources:
     kind: "bigquery"
     project: ${BIGQUERY_PROJECT}
     location: ${BIGQUERY_LOCATION:}
+    useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
 
 tools:
   analyze_contribution:

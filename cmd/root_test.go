@@ -1244,6 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 
 	// Set environment variables
@@ -1319,6 +1320,8 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
 
+	t.Setenv("SQLITE_DATABASE", "test.db")
+
 	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
 	t.Setenv("NEO4J_DATABASE", "neo4j")
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
@@ -1337,9 +1340,9 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "alloydb postgres admin prebuilt tools",
 			in:   alloydb_admin_config,
 			wantToolset: server.ToolsetConfigs{
-				"alloydb_postgres_admin_tools": tools.ToolsetConfig{
-					Name:      "alloydb_postgres_admin_tools",
-					ToolNames: []string{"create_cluster", "operations_get", "create_instance", "list_clusters", "list_instances", "list_users", "create_user"},
+				"alloydb-postgres-admin-tools": tools.ToolsetConfig{
+					Name:      "alloydb-postgres-admin-tools",
+					ToolNames: []string{"alloydb-create-cluster", "alloydb-operations-get", "alloydb-create-instance", "list_clusters", "list_instances", "list_users", "alloydb-create-user", "get_cluster"},
 				},
 			},
 		},
@@ -1367,9 +1370,9 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "clickhouse prebuilt tools",
 			in:   clickhouse_config,
 			wantToolset: server.ToolsetConfigs{
-				"clickhouse_database_tools": tools.ToolsetConfig{
-					Name:      "clickhouse_database_tools",
-					ToolNames: []string{"execute_sql"},
+				"clickhouse-database-tools": tools.ToolsetConfig{
+					Name:      "clickhouse-database-tools",
+					ToolNames: []string{"execute_sql", "list_databases"},
 				},
 			},
 		},
@@ -1480,6 +1483,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "spanner_postgres_database_tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "sqlite prebuilt tools",
+			in:   sqlite_config,
+			wantToolset: server.ToolsetConfigs{
+				"sqlite_database_tools": tools.ToolsetConfig{
+					Name:      "sqlite_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
