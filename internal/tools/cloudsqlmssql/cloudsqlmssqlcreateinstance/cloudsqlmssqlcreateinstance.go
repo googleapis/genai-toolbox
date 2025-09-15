@@ -23,7 +23,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
@@ -143,7 +142,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'editionPreset' parameter")
 	}
 
-	settings := &sqladmin.Settings{}
+	settings := sqladmin.Settings{}
 	switch strings.ToLower(editionPreset) {
 	case "production":
 		settings.AvailabilityType = "REGIONAL"
@@ -161,27 +160,20 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
 	}
 
-	instance := &sqladmin.DatabaseInstance{
+	instance := sqladmin.DatabaseInstance{
 		Name:            name,
 		DatabaseVersion: dbVersion,
 		RootPassword:    rootPassword,
-		Settings:        settings,
+		Settings:        &settings,
 		Project:         project,
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
 
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client), option.WithUserAgent(t.Source.UserAgent))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
-	}
-
-	service.UserAgent = t.Source.UserAgent
-
-	resp, err := service.Instances.Insert(project, instance).Do()
+	resp, err := service.Instances.Insert(project, &instance).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating instance: %w", err)
 	}

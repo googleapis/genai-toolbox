@@ -57,6 +57,9 @@ type masterHandler struct {
 }
 
 func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
+		h.t.Errorf("User-Agent header not found")
+	}
 	var body sqladmin.DatabaseInstance
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.t.Fatalf("failed to decode request body: %v", err)

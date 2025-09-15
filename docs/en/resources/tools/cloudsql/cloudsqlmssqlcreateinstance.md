@@ -2,17 +2,13 @@
 title: cloud-sql-mssql-create-instance
 type: docs
 weight: 10
-description: "Create a Cloud SQL for MSSQL instance.\n"
+description: "Create a Cloud SQL for MSSQL instance."
 ---
 
 The `cloud-sql-mssql-create-instance` tool creates a Cloud SQL for MSSQL instance using the Cloud SQL Admin API.
 
-{{< notice info >}}
+{{< notice info dd>}}
 This tool uses a `source` of kind `cloud-sql-admin`.
-{{< /notice >}}
-
-{{< notice info >}}
-The toolbox automatically generates a bearer token on behalf of the user with the `https://www.googleapis.com/auth/sqlservice.admin` scope to authenticate requests.
 {{< /notice >}}
 
 ## Example
@@ -33,7 +29,7 @@ tools:
 | ----------- | :------: | :----------: | ------------------------------------------------ |
 | kind        |  string  |     true     | Must be "cloud-sql-mssql-create-instance".       |
 | source      |  string  |     true     | The name of the `cloud-sql-admin` source to use. |
-| description |  string  |     false    | A description of the tool.                       |
+| description |  string  |    false     | A description of the tool.                       |
 
 ### Tool Inputs
 
@@ -41,7 +37,6 @@ tools:
 | --------------- | :------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | project         |  string  |     true     | The project ID.                                                                                                                                          |
 | name            |  string  |     true     | The name of the instance.                                                                                                                                |
-| region          |  string  |     true     | The region of the instance.                                                                                                                              |
-| databaseVersion |  string  |     false    | The database version for MSSQL. If not specified, defaults to the latest available version (e.g., SQLSERVER_2022_STANDARD).                              |
+| databaseVersion |  string  |    false     | The database version for MSSQL. If not specified, defaults to the latest available version (e.g., SQLSERVER_2022_STANDARD).                              |
 | rootPassword    |  string  |     true     | The root password for the instance.                                                                                                                      |
-| editionPreset   |  string  |     true     | The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`. |
+| editionPreset   |  string  |    false     | The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`. |
