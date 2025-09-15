@@ -1340,8 +1340,8 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "alloydb postgres admin prebuilt tools",
 			in:   alloydb_admin_config,
 			wantToolset: server.ToolsetConfigs{
-				"alloydb-postgres-admin-tools": tools.ToolsetConfig{
-					Name:      "alloydb-postgres-admin-tools",
+				"alloydb_postgres_admin_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_admin_tools",
 					ToolNames: []string{"create_cluster", "wait_for_operation", "create_instance", "list_clusters", "list_instances", "list_users", "create_user", "get_cluster"},
 				},
 			},
@@ -1370,8 +1370,8 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "clickhouse prebuilt tools",
 			in:   clickhouse_config,
 			wantToolset: server.ToolsetConfigs{
-				"clickhouse-database-tools": tools.ToolsetConfig{
-					Name:      "clickhouse-database-tools",
+				"clickhouse_database_tools": tools.ToolsetConfig{
+					Name:      "clickhouse_database_tools",
 					ToolNames: []string{"execute_sql", "list_databases"},
 				},
 			},

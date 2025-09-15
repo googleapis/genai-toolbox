@@ -195,7 +195,7 @@ tools:
     description: "Retrieves details of a specific AlloyDB cluster."
         
 toolsets:
-  alloydb-postgres-admin-tools:
+  alloydb_postgres_admin_tools:
     - create_cluster
     - wait_for_operation
     - create_instance
