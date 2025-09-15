@@ -614,6 +614,11 @@ This guide assumes you have already done the following:
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
+[install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
+[install-pip]: https://pip.pypa.io/en/stable/installation/
+[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+[install-postgres]: https://www.postgresql.org/download/
+
 ### Cloud Setup (Optional)
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
@@ -3076,6 +3081,259 @@ Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs w
 {{< /notice >}}
 
 
+# SQLite using MCP
+Connect your IDE to SQLite using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like SQLite. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a SQLite instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a SQLite database file.](https://www.sqlite.org/download.html)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "servers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to SQLite using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+
+The following tools are available to the LLM:
+
+1.  **list_tables**: lists tables and descriptions
+1.  **execute_sql**: execute any SQL statement
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
 # Connect via MCP Client
 How to connect to Toolbox from a MCP Client.
 
@@ -4492,6 +4750,9 @@ cluster][alloydb-free-trial].
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in AlloyDB Postgres.
 
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
@@ -4686,15 +4947,11 @@ allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
 client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
-identity used has been granted the correct IAM permissions. Currently,
-this option is only supported by the following BigQuery tools:
+identity used has been granted the correct IAM permissions.
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-[iam-overview]: https://cloud.google.com/bigquery/docs/access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-overview]: <https://cloud.google.com/bigquery/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ## Example
 
@@ -4706,6 +4963,9 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -4717,16 +4977,20 @@ sources:
     project: "my-project-id"
     useClientOAuth: true
     # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 ## Reference
 
-| **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
-|----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
-| project        |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                               |
-| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
-| useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
+| **field**       | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind            |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| project         |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| location        |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
+| allowedDatasets | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
+| useClientOAuth  |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 
 # Bigtable
@@ -4889,6 +5153,38 @@ instead of hardcoding your secrets into the configuration file.
 | secure      |  boolean |    false     | Whether to use a secure connection (TLS). Default: false.                         |
 
 
+# Cloud Monitoring
+A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
+
+
+## About
+
+The `cloud-monitoring` source provides a client to interact with the [Google Cloud Monitoring API](https://cloud.google.com/monitoring/api). This allows tools to access cloud monitoring metrics explorer and run promql queries.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-cloud-monitoring:
+        kind: cloud-monitoring
+
+    my-oauth-cloud-monitoring:
+        kind: cloud-monitoring
+        useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+
+
 # Cloud SQL for MySQL
 Cloud SQL for MySQL is a fully-managed database service for MySQL.
 
@@ -4912,6 +5208,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in Cloud SQL for MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a Cloud SQL for MySQL database.
 
 ### Pre-built Configurations
 
@@ -5024,6 +5323,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -5250,6 +5552,38 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                       |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
+
+
+# Cloud SQL Admin
+A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
+
+
+## About
+
+The `cloud-sql-admin` source provides a client to interact with the [Google Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api/v1). This allows tools to perform administrative tasks on Cloud SQL instances, such as creating users and databases.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-cloud-sql-admin:
+        kind: cloud-sql-admin
+
+    my-oauth-cloud-sql-admin:
+        kind: cloud-sql-admin
+        useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
 # couchbase
@@ -5986,6 +6320,9 @@ reliability, performance, and ease of use.
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in MySQL.
 
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a MySQL database.
+
 ## Requirements
 
 ### Database User
@@ -6174,6 +6511,9 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+  List tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6475,6 +6815,14 @@ SQLite has the following notable characteristics:
 
 - [`sqlite-sql`](../tools/sqlite/sqlite-sql.md)  
   Run SQL queries against a local SQLite database.
+  
+- [`sqlite-execute-sql`](../tools/sqlite/sqlite-execute-sql.md)  
+  Run parameterized SQL statements in SQlite.
+
+### Pre-built Configurations
+
+- [SQLite using MCP](../../how-to/connect-ide/sqlite_mcp.md)  
+Connect your IDE to SQlite using Toolbox.
 
 ## Requirements
 
@@ -6771,6 +7119,36 @@ sources:
 | failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
 
 
+# AlloyDB Admin
+The "alloydb-admin" source provides a client for the AlloyDB API.
+
+
+## About
+
+The `alloydb-admin` source provides a client to interact with the [Google AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-alloydb-admin:
+        kind: alloy-admin
+
+    my-oauth-alloydb-admin:
+        kind: alloydb-admin
+        useClientOAuth: true
+```
+
+## Reference
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+
 # Tools
 Tools define actions an agent can take -- such as reading and writing to a source.
 
@@ -7035,6 +7413,11 @@ AlloyDB AI NL Tool.
 
 
 
+# AlloyDB for PostgreSQL
+Tools for AlloyDB for PostgreSQL.
+
+
+
 # BigQuery
 Tools that work with BigQuery Sources.
 
@@ -7047,6 +7430,11 @@ Tools that work with Bigtable Sources.
 
 # ClickHouse
 Tools for interacting with ClickHouse databases and tables.
+
+
+
+# Cloud SQL
+Tools that work with Cloud SQL. 
 
 
 
@@ -9130,10 +9518,9 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
-     or "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9162,6 +9549,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `bigquery`
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
+    *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
     *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
@@ -9186,6 +9574,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9201,8 +9591,9 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
-    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9221,6 +9612,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -9246,7 +9638,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
-    *   `FIRESTORE_DATABASE`: The Firestore database ID.
+    *   `FIRESTORE_DATABASE`: (Optional) The Firestore database ID. Defaults to "(default)".
 *   **Permissions:**
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
@@ -9339,6 +9731,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
+    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db connection string.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
@@ -9373,6 +9766,17 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
+    *   `list_tables`: Lists tables in the database.
+
+## SQLite
+
+*   `--prebuilt` value: `sqlite`
+*   **Environment Variables:**
+    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g., `./sample.db`).
+*   **Permissions:**
+    *   File system read/write permissions for the specified database file.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
 
 ## Neo4j
