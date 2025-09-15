@@ -31,7 +31,7 @@ install_system_packages() {
 
 start_cloud_sql_proxy() {
   CLOUD_SQL_PROXY_VERSION=$(grep "cloud-sql-proxy" .ci/quickstart_dependencies.txt | awk '{print $2}')
-  wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/{CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
+  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/${CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
   PROXY_PID=$!

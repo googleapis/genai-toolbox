@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS $TABLE_NAME;
-
 CREATE TABLE $TABLE_NAME (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR NOT NULL,
@@ -22,3 +20,5 @@ VALUES
   (8, 'Holiday Inn Basel', 'Basel', 'Upper Midscale', '2024-04-24', '2024-04-09', B'0'),
   (9, 'Courtyard Zurich', 'Zurich', 'Upscale', '2024-04-03', '2024-04-13', B'0'),
   (10, 'Comfort Inn Bern', 'Bern', 'Midscale', '2024-04-04', '2024-04-16', B'0');
+
+TRUNCATE TABLE IF EXISTS $TABLE_NAME;
