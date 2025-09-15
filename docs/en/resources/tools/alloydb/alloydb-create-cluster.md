@@ -44,5 +44,5 @@ tools:
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |                   string                   |     true     | Must be alloydb-create-cluster.                                                                  |                                               |
-| source      |                   string                   |     true     | The name of an alloydb-admin source.                                                                       |
+| source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                                       |
 | description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
