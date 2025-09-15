@@ -12,6 +12,8 @@ from google.genai.types import (
 
 from toolbox_core import ToolboxClient
 
+project = os.environ.get("GCP_PROJECT", "project-id")
+
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
   cancellations. When the user searches for a hotel, mention it's name, id,
@@ -40,7 +42,7 @@ async def main():
         # provided wrapper packages, which handle framework-specific boilerplate.
         toolbox_tools = await toolbox_client.load_toolset("my-toolset")
         genai_client = genai.Client(
-            vertexai=True, project=os.environ.get("GCP_PROJECT"), location="us-central1"
+            vertexai=True, project=project, location="us-central1"
         )
 
         genai_tools = [
@@ -111,6 +113,4 @@ async def main():
             else:
                 print(response.text)
 
-if __name__ == "__main__":
-    asyncio.run(main())
-    
+asyncio.run(main())
