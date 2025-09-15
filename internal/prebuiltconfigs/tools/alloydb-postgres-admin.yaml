@@ -25,15 +25,15 @@ tools:
   create_cluster:
     kind: alloydb-create-cluster
     source: alloydb-admin-source
-    description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
-  alloydb-operations-get:
+    description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go." 
+  wait_for_operation:
     kind: alloydb-wait-for-operation
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
     delay: 1s
     maxDelay: 4m
     multiplier: 2
     maxRetries: 10
-  alloydb-create-instance:
+  create_instance:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -104,7 +104,7 @@ tools:
     kind: alloydb-list-users
     source: alloydb-admin-source
     description: "Lists all database users within a specific AlloyDB cluster."
-  alloydb-create-user:
+  create_user:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -157,12 +157,12 @@ tools:
     description: "Retrieves details of a specific AlloyDB cluster."
         
 toolsets:
-  alloydb-postgres-admin-tools:
+  alloydb_postgres_admin_tools:
     - create_cluster
-    - alloydb-operations-get
-    - alloydb-create-instance
+    - wait_for_operation
+    - create_instance
     - list_clusters
     - list_instances
     - list_users
-    - alloydb-create-user
+    - create_user
     - get_cluster
