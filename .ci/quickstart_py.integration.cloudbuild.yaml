@@ -23,10 +23,12 @@ substitutions:
   _GCP_PROJECT_NUMBER: "your-project-number"
 
 steps:
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'run-psql-commands'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:537.0.0'
+    id: 'run-all-python-quickstart-samples'
     entrypoint: 'bash'
     args:
+      # The '-c' flag tells bash to execute the following string as a command.
+      # The 'set -ex' enables debug output and exits on error for easier troubleshooting.
       - -c
       - |
         set -ex
@@ -49,7 +51,7 @@ availableSecrets:
   - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
     env: 'DB_PASSWORD'
 
-timeout: 1800s
+timeout: 1000s
 
 options:
   logging: CLOUD_LOGGING_ONLY

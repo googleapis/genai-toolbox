@@ -30,7 +30,6 @@ def golden_keywords():
 class TestExecution:
     """Test framework execution and output validation."""
 
-
     @pytest.fixture(scope="function")
     def script_output(self, capsys):
         """Run the quickstart function and return its output."""
