@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"text/template"
@@ -26,8 +25,10 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"golang.org/x/oauth2/google"
+	"google.golang.org/api/alloydb/v1"
+	"google.golang.org/api/option"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -93,6 +94,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 	BaseURL      string   `yaml:"baseURL"`
@@ -114,25 +116,29 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	rawS, ok := srcs[cfg.Source]
+	if !ok {
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	}
+
+	s, ok := rawS.(*alloydbadmin.Source)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
+	}
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The project ID"),
-		tools.NewStringParameter("location", "The location ID"),
-		tools.NewStringParameter("operation_id", "The operation ID"),
+		tools.NewStringParameter("projectId", "The project ID"),
+		tools.NewStringParameter("locationId", "The location ID"),
+		tools.NewStringParameter("operationId", "The operation ID"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "operation_id"}
+	inputSchema.Required = []string{"projectId", "locationId", "operationId"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
 		InputSchema: inputSchema,
-	}
-
-	baseURL := cfg.BaseURL
-	if baseURL == "" {
-		baseURL = "https://alloydb.googleapis.com"
 	}
 
 	var delay time.Duration
@@ -170,9 +176,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		BaseURL:      baseURL,
 		AuthRequired: cfg.AuthRequired,
-		Client:       &http.Client{},
+		Source:       s,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
@@ -190,7 +195,7 @@ type Tool struct {
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
-	BaseURL   string           `yaml:"baseURL"`
+	Source    *alloydbadmin.Source
 	AllParams tools.Parameters `yaml:"allParams"`
 
 	// Polling configuration
@@ -208,24 +213,33 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	project, ok := paramsMap["project"].(string)
+	projectId, ok := paramsMap["projectId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, fmt.Errorf("missing 'projectId' parameter")
 	}
-	location, ok := paramsMap["location"].(string)
+	locationId, ok := paramsMap["locationId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'location' parameter")
+		return nil, fmt.Errorf("missing 'locationId' parameter")
 	}
-	operationID, ok := paramsMap["operation_id"].(string)
+	operationId, ok := paramsMap["operationId"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'operation_id' parameter")
+		return nil, fmt.Errorf("missing 'operationId' parameter")
 	}
 
-	name := fmt.Sprintf("projects/%s/locations/%s/operations/%s", project, location, operationID)
-	urlString := fmt.Sprintf("%s/v1beta/%s", t.BaseURL, name)
+	client, err := t.Source.GetClient(ctx, string(accessToken))
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new AlloyDB service: %w", err)
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
+
+	name := fmt.Sprintf("projects/%s/locations/%s/operations/%s", projectId, locationId, operationId)
 
 	delay := t.Delay
 	maxDelay := t.MaxDelay
@@ -240,50 +254,35 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		default:
 		}
 
-		req, _ := http.NewRequest(http.MethodGet, urlString, nil)
-
-		// This request is authenticated using Google Application Default Credentials (ADC).
-		// The ADC are discovered automatically from the environment.
-		// For more details, see: https://cloud.google.com/docs/authentication/application-default-credentials
-		// The "cloud-platform" scope provides broad access to Google Cloud services, there is no specific scope for AlloyDB.
-		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		op, err := service.Projects.Locations.Operations.Get(name).Do()
 		if err != nil {
-			return nil, fmt.Errorf("error creating token source: %w", err)
-		}
-		token, err := tokenSource.Token()
-		if err != nil {
-			return nil, fmt.Errorf("error retrieving token: %w", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-		resp, err := t.Client.Do(req)
-		if err != nil {
-			fmt.Printf("error making HTTP request during polling: %s, retrying in %v\n", err, delay)
+			fmt.Printf("error getting operation: %s, retrying in %v\n", err, delay)
 		} else {
-			body, err := io.ReadAll(resp.Body)
-			resp.Body.Close()
-			if err != nil {
-				return nil, fmt.Errorf("error reading response body during polling: %w", err)
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				return nil, fmt.Errorf("unexpected status code during polling: %d, response body: %s", resp.StatusCode, string(body))
-			}
-
-			var data map[string]any
-			if err := json.Unmarshal(body, &data); err == nil {
-				if val, ok := data["done"]; ok {
-					if fmt.Sprintf("%v", val) == "true" {
-						if _, ok := data["error"]; ok {
-							return nil, fmt.Errorf("operation finished with error: %s", string(body))
-						}
-
-						if msg, ok := t.generateAlloyDBConnectionMessage(data); ok {
-							return msg, nil
-						}
-						return string(body), nil
+			if op.Done {
+				if op.Error != nil {
+					var errorBytes []byte
+					errorBytes, err = json.Marshal(op.Error)
+					if err != nil {
+						return nil, fmt.Errorf("operation finished with error but could not marshal error object: %w", err)
 					}
+					return nil, fmt.Errorf("operation finished with error: %s", string(errorBytes))
 				}
+
+				var opBytes []byte
+				opBytes, err = op.MarshalJSON()
+				if err != nil {
+					return nil, fmt.Errorf("could not marshal operation: %w", err)
+				}
+
+				var data map[string]any
+				if err := json.Unmarshal(opBytes, &data); err != nil {
+					return nil, fmt.Errorf("could not unmarshal operation: %w", err)
+				}
+
+				if msg, ok := t.generateAlloyDBConnectionMessage(data); ok {
+					return msg, nil
+				}
+				return string(opBytes), nil
 			}
 			fmt.Printf("Operation not complete, retrying in %v\n", delay)
 		}
@@ -375,5 +374,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.Source.UseClientAuthorization()
 }
