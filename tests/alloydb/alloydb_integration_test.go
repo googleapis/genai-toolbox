@@ -800,6 +800,10 @@ type mockAlloyDBHandler struct {
 }
 
 func (h *mockAlloyDBHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
+		h.t.Errorf("User-Agent header not found")
+	}
+
 	id := r.URL.Query().Get(h.idParam)
 
 	var response string
