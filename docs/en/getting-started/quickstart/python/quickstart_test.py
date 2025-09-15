@@ -6,11 +6,8 @@ import sys
 import importlib.util
 
 ORCH_NAME = os.environ.get("ORCH_NAME")
-orch_dir = Path(__file__).parent / ORCH_NAME
-quickstart_path = orch_dir / "quickstart.py"
-spec = importlib.util.spec_from_file_location("quickstart", str(quickstart_path))
-quickstart = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(quickstart)
+module_path = f"python.{ORCH_NAME}.quickstart"
+quickstart = importlib.import_module(module_path)
 
 
 @pytest.fixture(scope="module")

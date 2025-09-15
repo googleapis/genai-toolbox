@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 sources:
   firestore-source:
     kind: firestore
@@ -18,11 +19,11 @@ sources:
     database: ${FIRESTORE_DATABASE:}
 
 tools:
-  firestore-get-documents:
+  get_documents:
     kind: firestore-get-documents
     source: firestore-source
     description: Gets multiple documents from Firestore by their paths
-  firestore-add-documents:
+  add_documents:
     kind: firestore-add-documents
     source: firestore-source
     description: |
@@ -34,7 +35,7 @@ tools:
        5. Handle timestamps properly: Use RFC3339 format for timestamp strings
        6. Base64 encode binary data: Binary data must be base64 encoded in the bytesValue field
        7. Consider security rules: Ensure your Firestore security rules allow document creation in the target collection
-  firestore-update-document:
+  update_document:
     kind: firestore-update-document
     source: firestore-source
     description: |
@@ -46,36 +47,36 @@ tools:
        5. Use returnData sparingly: Only set to true when you need to verify the exact data after the update
        6. Handle timestamps properly: Use RFC3339 format for timestamp strings
        7. Consider security rules: Ensure your Firestore security rules allow document updates
-  firestore-list-collections:
+  list_collections:
     kind: firestore-list-collections
     source: firestore-source
     description: List Firestore collections for a given parent path
-  firestore-delete-documents:
+  delete_documents:
     kind: firestore-delete-documents
     source: firestore-source
     description: Delete multiple documents from Firestore
-  firestore-query-collection:
+  query_collection:
     kind: firestore-query-collection
     source: firestore-source
     description: |
       Retrieves one or more Firestore documents from a collection in a database in the current project by a collection with a full document path.
       Use this if you know the exact path of a collection and the filtering clause you would like for the document.
-  firestore-get-rules:
+  get_rules:
     kind: firestore-get-rules
     source: firestore-source
     description: Retrieves the active Firestore security rules for the current project
-  firestore-validate-rules:
+  validate_rules:
     kind: firestore-validate-rules
     source: firestore-source
     description: Checks the provided Firestore Rules source for syntax and validation errors. Provide the source code to validate.
 
 toolsets:
-  firestore-database-tools:
-    - firestore-get-documents
-    - firestore-add-documents
-    - firestore-update-document
-    - firestore-list-collections
-    - firestore-delete-documents
-    - firestore-query-collection
-    - firestore-get-rules
-    - firestore-validate-rules
+  firestore_database_tools:
+    - get_documents
+    - add_documents
+    - update_document
+    - list_collections
+    - delete_documents
+    - query_collection
+    - get_rules
+    - validate_rules
