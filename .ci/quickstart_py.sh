@@ -23,8 +23,7 @@ DEPS_FILE=".ci/quickstart_dependencies.json"
 
 install_system_packages() {
   apt-get update
-  JQ_VERSION=$(jq -r '.apt.jq' "$DEPS_FILE")
-  apt-get install -y "jq=${JQ_VERSION}"
+  apt-get install -y jq
 
   mapfile -t install_list < <(jq -r '.apt | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
 
