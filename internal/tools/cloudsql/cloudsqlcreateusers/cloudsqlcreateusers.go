@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlgetinstances
+package cloudsqlcreateusers
 
 import (
 	"context"
 	"fmt"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "cloud-sql-get-instance"
+const kind string = "cloud-sql-create-users"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -40,12 +41,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Config defines the configuration for the get-instances tool.
+// Config defines the configuration for the create-user tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
-	Description  string   `yaml:"description"`
 	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -63,24 +64,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-
 	s, ok := rawS.(*cloudsqladmin.Source)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The project ID"),
-		tools.NewStringParameter("instanceId", "The instance ID"),
+		tools.NewStringParameter("project", "The project ID"),
+		tools.NewStringParameter("instance", "The ID of the instance where the user will be created."),
+		tools.NewStringParameter("name", "The name for the new user. Must be unique within the instance."),
+		tools.NewStringParameterWithRequired("password", "A secure password for the new user. Not required for IAM users.", false),
+		tools.NewBooleanParameter("iamUser", "Set to true to create a Cloud IAM user."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "instanceId"}
 
 	description := cfg.Description
 	if description == "" {
-		description = "Gets a particular cloud sql instance."
+		description = "Creates a new user in a Cloud SQL instance. Both built-in and IAM users are supported. IAM users require an email account as the user name. IAM is the more secure and recommended way to manage users. The agent should always ask the user what type of user they want to create. For more information, see https://cloud.google.com/sql/docs/postgres/add-manage-iam-users"
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -100,7 +102,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// Tool represents the get-instances tool.
+// Tool represents the create-user tool.
 type Tool struct {
 	Name         string   `yaml:"name"`
 	Kind         string   `yaml:"kind"`
@@ -117,13 +119,34 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'projectId' parameter")
+		return nil, fmt.Errorf("missing 'project' parameter")
 	}
-	instanceId, ok := paramsMap["instanceId"].(string)
+	instance, ok := paramsMap["instance"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'instanceId' parameter")
+		return nil, fmt.Errorf("missing 'instance' parameter")
+	}
+	name, ok := paramsMap["name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'name' parameter")
+	}
+
+	iamUser, _ := paramsMap["iamUser"].(bool)
+
+	user := sqladmin.User{
+		Name: name,
+	}
+
+	if iamUser {
+		user.Type = "CLOUD_IAM_USER"
+	} else {
+		user.Type = "BUILT_IN"
+		password, ok := paramsMap["password"].(string)
+		if !ok || password == "" {
+			return nil, fmt.Errorf("missing 'password' parameter for non-IAM user")
+		}
+		user.Password = password
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -131,9 +154,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	resp, err := service.Instances.Get(projectId, instanceId).Do()
+	resp, err := service.Users.Insert(project, instance, &user).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error getting instance: %w", err)
+		return nil, fmt.Errorf("error creating user: %w", err)
 	}
 
 	return resp, nil
