@@ -204,6 +204,8 @@
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_IP_TYPE&lt;/code>: The IP type i.e. &amp;ldquo;Public
+or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -499,6 +501,26 @@
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface for Spanner.&lt;/li>
 &lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL interface for Spanner.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="sqlite">SQLite&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>sqlite&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>SQLITE_DATABASE&lt;/code>: The path to the SQLite database file (e.g., &lt;code>./sample.db&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>File system read/write permissions for the specified database file.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
