@@ -22,8 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/option"
-	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-get-instance"
@@ -46,7 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	Source       string   `yaml:"source" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
@@ -80,9 +78,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	inputSchema := allParameters.McpManifest()
 	inputSchema.Required = []string{"projectId", "instanceId"}
 
+	description := cfg.Description
+	if description == "" {
+		description = "Gets a particular cloud sql instance."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -123,16 +126,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'instanceId' parameter")
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
-
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
-	}
-	service.UserAgent = t.Source.UserAgent
 
 	resp, err := service.Instances.Get(projectId, instanceId).Do()
 	if err != nil {
