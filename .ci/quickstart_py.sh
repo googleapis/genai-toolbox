@@ -21,7 +21,7 @@ QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 DEPS_FILE=".ci/quickstart_dependencies.json"
 
-install_apt_packages() {
+install_system_packages() {
   apt-get update
   JQ_VERSION=$(jq -r '.apt.jq' "$DEPS_FILE")
   apt-get install -y "jq=${JQ_VERSION}"
