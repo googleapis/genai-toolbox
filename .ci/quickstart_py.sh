@@ -23,7 +23,12 @@ TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 
 install_system_packages() {
-  apt-get update && apt-get install -y postgresql-client python3-venv curl wget gettext-base
+  apt-get update && apt-get install -y \
+    postgresql-client \
+    python3-venv \
+    curl \
+    wget \
+    gettext-base 
 }
 
 start_cloud_sql_proxy() {
@@ -51,12 +56,13 @@ setup_toolbox() {
 cleanup_all() {
   echo "--- Final cleanup: Shutting down processes and dropping table ---"
   kill $TOOLBOX_PID || true
-  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS $TABLE_NAME;"
+  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS ${TABLE_NAME};"
   kill $PROXY_PID || true
 }
 trap cleanup_all EXIT
 
 setup_orch_table() {
+  export TABLE_NAME
   envsubst < "$SQL_FILE" | psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME"
 }
 
@@ -68,15 +74,15 @@ run_orch_test() {
   (
     set -e
     cd "$orch_dir"
-    VENV_DIR=".venv"
+    local VENV_DIR=".venv"
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
     pip install -r requirements.txt
-    echo "Running tests for $orch_name..."
+    echo "--- Running tests for $orch_name ---"
     cd ..
     ORCH_NAME="$orch_name" pytest
     rm -rvf "$VENV_DIR"
-    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "TRUNCATE TABLE $TABLE_NAME;"
+    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "TRUNCATE TABLE ${TABLE_NAME};"
   )
 }
 
