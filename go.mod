@@ -52,7 +52,7 @@ require (
 	golang.org/x/oauth2 v0.31.0
 	google.golang.org/api v0.249.0
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1
-	modernc.org/sqlite v1.38.2
+	modernc.org/sqlite v1.39.0
 )
 
 require (
