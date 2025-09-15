@@ -97,6 +97,7 @@ fi
 
 if [[ -f "$SQL_FILE" ]]; then
   setup_orch_table
+fi
 
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
