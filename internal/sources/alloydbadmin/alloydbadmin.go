@@ -24,10 +24,31 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 	alloydbrestapi "google.golang.org/api/alloydb/v1"
 )
 
 const SourceKind string = "alloydb-admin"
+
+type userAgentRoundTripper struct {
+	userAgent string
+	next      http.RoundTripper
+}
+
+func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	newReq := *req
+	newReq.Header = make(http.Header)
+	for k, v := range req.Header {
+		newReq.Header[k] = v
+	}
+	ua := newReq.Header.Get("User-Agent")
+	if ua == "" {
+		newReq.Header.Set("User-Agent", rt.userAgent)
+	} else {
+		newReq.Header.Set("User-Agent", rt.userAgent+" "+ua)
+	}
+	return rt.next.RoundTrip(&newReq)
+}
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -64,14 +85,24 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	var client *http.Client
 	if r.UseClientOAuth {
-		client = nil
+		client = &http.Client{
+			Transport: &userAgentRoundTripper{
+				userAgent: ua,
+				next:      http.DefaultTransport,
+			},
+		}
 	} else {
 		// Use Application Default Credentials
 		creds, err := google.FindDefaultCredentials(ctx, alloydbrestapi.CloudPlatformScope)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find default credentials: %w", err)
 		}
-		client = oauth2.NewClient(ctx, creds.TokenSource)
+		baseClient := oauth2.NewClient(ctx, creds.TokenSource)
+		baseClient.Transport = &userAgentRoundTripper{
+			userAgent: ua,
+			next:      baseClient.Transport,
+		}
+		client = baseClient
 	}
 
 	s := &Source{
@@ -79,7 +110,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Kind:           SourceKind,
 		BaseURL:        "https://alloydb.googleapis.com",
 		Client:         client,
-		UserAgent:      ua,
 		UseClientOAuth: r.UseClientOAuth,
 	}
 
@@ -93,7 +123,6 @@ type Source struct {
 	Kind           string `yaml:"kind"`
 	BaseURL        string
 	Client         *http.Client
-	UserAgent      string
 	UseClientOAuth bool
 }
 
@@ -110,6 +139,18 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
 	}
 	return s.Client, nil
+}
+
+func (s *Source) GetService(ctx context.Context, accessToken string) (*alloydbrestapi.Service, error) {
+	client, err := s.GetClient(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+	service, err := alloydbrestapi.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new alloydb service: %w", err)
+	}
+	return service, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {
