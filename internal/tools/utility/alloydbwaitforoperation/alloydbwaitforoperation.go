@@ -27,8 +27,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/alloydb/v1"
-	"google.golang.org/api/option"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -226,14 +224,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'operationId' parameter")
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
-	}
-
-	service, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new AlloyDB service: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
