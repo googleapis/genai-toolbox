@@ -620,14 +620,16 @@ the tables and update any that needs revision.</li><li><strong>Construct the val
 </span></span></span><span class=line><span class=cl><span class=s2>&#34;&#34;&#34;</span></span></span></code></pre></div></div><div class=notebook-code><div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>run_queries</span><span class=p>(</span><span class=n>pool</span><span class=p>):</span>
 </span></span><span class=line><span class=cl>  <span class=k>async</span> <span class=k>with</span> <span class=n>pool</span><span class=o>.</span><span class=n>connect</span><span class=p>()</span> <span class=k>as</span> <span class=n>db_conn</span><span class=p>:</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=c1># Update context that needs revision</span>
-</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>query</span> <span class=ow>in</span> <span class=n>update_context_queries</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>      <span class=k>await</span> <span class=n>db_conn</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>sqlalchemy</span><span class=o>.</span><span class=n>text</span><span class=p>(</span><span class=n>query</span><span class=p>))</span>
-</span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>    <span class=c1># Verify the generated context for the tables</span>
 </span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>query</span> <span class=ow>in</span> <span class=n>verify_context_queries</span><span class=p>:</span>
 </span></span><span class=line><span class=cl>      <span class=n>response</span> <span class=o>=</span> <span class=k>await</span> <span class=n>db_conn</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>sqlalchemy</span><span class=o>.</span><span class=n>text</span><span class=p>(</span><span class=n>query</span><span class=p>))</span>
 </span></span><span class=line><span class=cl>      <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;Verify the context:&#34;</span><span class=p>,</span> <span class=n>response</span><span class=o>.</span><span class=n>mappings</span><span class=p>()</span><span class=o>.</span><span class=n>all</span><span class=p>())</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      
+</span></span><span class=line><span class=cl>    <span class=c1># Update context that needs revision</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>query</span> <span class=ow>in</span> <span class=n>update_context_queries</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>      <span class=k>await</span> <span class=n>db_conn</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>sqlalchemy</span><span class=o>.</span><span class=n>text</span><span class=p>(</span><span class=n>query</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>      
 </span></span><span class=line><span class=cl>    <span class=c1># The resulting context entries in the alloydb_ai_nl.generated_schema_context_view </span>
 </span></span><span class=line><span class=cl>    <span class=c1># view are applied to the corresponding schema objects, and the comments are overwritten.</span>
