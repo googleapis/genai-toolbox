@@ -24,6 +24,8 @@ DEPS_FILE=".ci/quickstart_dependencies.json"
 install_system_packages() {
   apt-get update
   apt-get install -y jq
+  GETTEXT_VERSION=$(apt-cache policy gettext-base | grep Candidate | awk '{print $2}')
+  echo "Available gettext-base version: $GETTEXT_VERSION"
 
   mapfile -t install_list < <(jq -r '.apt | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
 
