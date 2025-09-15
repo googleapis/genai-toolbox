@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4jexecutecypher
+package sqliteexecutesql
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	"github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher/classifier"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-const kind string = "neo4j-execute-cypher"
+const kind string = "sqlite-execute-sql"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -44,21 +44,19 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Neo4jDriver() neo4j.DriverWithContext
-	Neo4jDatabase() string
+	SQLiteDB() *sql.DB
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &neo4jsc.Source{}
+var _ compatibleSource = &sqlite.Source{}
 
-var compatibleSources = [...]string{neo4jsc.SourceKind}
+var compatibleSources = [...]string{sqlite.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
-	ReadOnly     bool     `yaml:"readOnly"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -77,14 +75,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// verify the source is compatible
-	var s compatibleSource
-	s, ok = rawS.(compatibleSource)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	cypherParameter := tools.NewStringParameter("cypher", "The cypher to execute.")
-	parameters := tools.Parameters{cypherParameter}
+	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	parameters := tools.Parameters{sqlParameter}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -98,10 +95,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		ReadOnly:     cfg.ReadOnly,
-		Driver:       s.Neo4jDriver(),
-		Database:     s.Neo4jDatabase(),
-		classifier:   classifier.NewQueryClassifier(),
+		DB:           s.SQLiteDB(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -114,60 +108,92 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
-	Parameters   tools.Parameters `yaml:"parameters"`
 	AuthRequired []string         `yaml:"authRequired"`
-	ReadOnly     bool             `yaml:"readOnly"`
-	Database     string
-	Driver       neo4j.DriverWithContext
-	classifier   *classifier.QueryClassifier
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Parameters   tools.Parameters `yaml:"parameters"`
+
+	DB          *sql.DB
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
-	paramsMap := params.AsMap()
-	cypherStr, ok := paramsMap["cypher"].(string)
+	sql, ok := params.AsMap()["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["cypher"])
+		return nil, fmt.Errorf("missing or invalid 'sql' parameter")
+	}
+	if sql == "" {
+		return nil, fmt.Errorf("sql parameter cannot be empty")
 	}
 
-	if cypherStr == "" {
-		return nil, fmt.Errorf("parameter 'cypher' must be a non-empty string")
+	// Log the query executed for debugging.
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
-	// validate the cypher query before executing
-	cf := t.classifier.Classify(cypherStr)
-	if cf.Error != nil {
-		return nil, cf.Error
-	}
-
-	if cf.Type == classifier.WriteQuery && t.ReadOnly {
-		return nil, fmt.Errorf("this tool is read-only and cannot execute write queries")
-	}
-
-	config := neo4j.ExecuteQueryWithDatabase(t.Database)
-	results, err := neo4j.ExecuteQuery(ctx, t.Driver, cypherStr, nil,
-		neo4j.EagerResultTransformer, config)
+	results, err := t.DB.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
+	cols, err := results.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	// The sqlite driver does not support ColumnTypes, so we can't get the
+	// underlying database type of the columns. We'll have to rely on the
+	// generic `any` type and then handle the JSON data separately.
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+	defer results.Close()
+
 	var out []any
-	keys := results.Keys
-	records := results.Records
-	for _, record := range records {
+	for results.Next() {
+		err := results.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
 		vMap := make(map[string]any)
-		for col, value := range record.Values {
-			vMap[keys[col]] = helpers.ConvertValue(value)
+		for i, name := range cols {
+			val := rawValues[i]
+			if val == nil {
+				vMap[name] = nil
+				continue
+			}
+
+			// Handle JSON data
+			if jsonString, ok := val.(string); ok {
+				var unmarshaledData any
+				if json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
+					vMap[name] = unmarshaledData
+					continue
+				}
+			}
+			vMap[name] = val
 		}
 		out = append(out, vMap)
+	}
+
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
+
+	if len(out) == 0 {
+		return nil, nil
 	}
 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claimsMap)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
