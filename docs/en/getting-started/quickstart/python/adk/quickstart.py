@@ -10,7 +10,7 @@ import os
 
 # TODO(developer): replace this with your Google API key
 
-os.environ['GOOGLE_API_KEY']
+os.environ['GOOGLE_API_KEY'] = 'your-api-key'
 
 async def main():
   with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
