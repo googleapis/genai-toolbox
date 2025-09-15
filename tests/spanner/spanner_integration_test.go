@@ -133,6 +133,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
+	toolsFile = addSpannerListTablesConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -174,6 +175,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
+	runSpannerListTablesTest(t, tableNameParam, tableNameAuth, tableNameTemplateParam)
 }
 
 // getSpannerToolInfo returns statements and param for my-tool for spanner-sql kind
@@ -299,6 +301,24 @@ func addSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]an
 		"description": "Tool to access information schema.",
 		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
 	}
+	config["tools"] = tools
+	return config
+}
+
+// addSpannerListTablesConfig adds the spanner-list-tables tool configuration
+func addSpannerListTablesConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	
+	// Add spanner-list-tables tool
+	tools["list-tables-tool"] = map[string]any{
+		"kind":        "spanner-list-tables",
+		"source":      "my-instance",
+		"description": "Lists tables with their schema information",
+	}
+	
 	config["tools"] = tools
 	return config
 }
@@ -523,6 +543,119 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
+		})
+	}
+}
+
+
+// Helper function to verify table list results
+func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTables []string, expectedSimpleFormat bool) {
+	// Parse the result
+	result, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+	
+	var tables []interface{}
+	err := json.Unmarshal([]byte(result), &tables)
+	if err != nil {
+		t.Fatalf("unable to parse result as JSON array: %s", err)
+	}
+	
+	// If we expect specific tables, verify they exist
+	if len(expectedTables) > 0 {
+		tableNames := make(map[string]bool)
+		requiredKeys := []string{"schema_name", "object_name", "object_type", "columns", "constraints", "indexes"}
+		if expectedSimpleFormat {
+			requiredKeys = []string{"name"}
+		}
+
+		for _, table := range tables {
+			tableMap, ok := table.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			
+			// Parse object_details JSON string into map[string]interface{}
+			if objectDetailsStr, ok := tableMap["object_details"].(string); ok {
+				var objectDetails map[string]interface{}
+				if err := json.Unmarshal([]byte(objectDetailsStr), &objectDetails); err != nil {
+					t.Errorf("failed to parse object_details JSON: %v for %v", err, objectDetailsStr)
+					continue
+				}
+
+				for _, reqKey := range requiredKeys {
+					if _, hasKey := objectDetails[reqKey]; !hasKey {
+						t.Errorf("missing required key '%s', for object_details: %v",reqKey, objectDetails)
+					}
+				}
+			}
+
+			if name, ok := tableMap["object_name"].(string); ok {
+				tableNames[name] = true
+			}
+		}
+		
+		for _, expected := range expectedTables {
+			if !tableNames[expected] {
+				t.Errorf("expected table %s not found in results", expected)
+			}
+		}
+	}
+}
+
+// runSpannerListTablesTest tests the spanner-list-tables tool
+func runSpannerListTablesTest(t *testing.T, tableNameParam, tableNameAuth, tableNameTemplateParam string) {
+	invokeTcs := []struct {
+		name               string
+		requestBody        io.Reader
+		expectedTables     []string // empty means don't check specific tables
+		useSimpleFormat    bool
+	}{
+		{
+			name:               "list all tables with detailed format",
+			requestBody:        bytes.NewBuffer([]byte(`{}`)),
+			expectedTables:     []string{tableNameParam, tableNameAuth, tableNameTemplateParam},
+		},
+		{
+			name:               "list tables with simple format",
+			requestBody:        bytes.NewBuffer([]byte(`{"output_format": "simple"}`)),
+			expectedTables:     []string{tableNameParam, tableNameAuth, tableNameTemplateParam},
+			useSimpleFormat:    true,
+		},
+		{
+			name:               "list specific tables",
+			requestBody:        bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
+			expectedTables:     []string{tableNameParam, tableNameAuth},
+		},
+		{
+			name:               "list non-existent table",
+			requestBody:        bytes.NewBuffer([]byte(`{"table_names": "non_existent_table_xyz"}`)),
+			expectedTables:     []string{},
+		},
+	}
+	
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Use RunRequest helper function from tests package
+			url := "http://127.0.0.1:5000/api/tool/list-tables-tool/invoke"
+			headers := map[string]string{}
+			
+			resp, respBody := tests.RunRequest(t, http.MethodPost, url, tc.requestBody, headers)
+			
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+
+			// Check response body
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+
+			verifyTableListResult(t, body, tc.expectedTables, tc.useSimpleFormat)
 		})
 	}
 }
