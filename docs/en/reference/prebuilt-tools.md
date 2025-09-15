@@ -75,6 +75,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -265,6 +267,17 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
+    *   `list_tables`: Lists tables in the database.
+
+## SQLite
+
+*   `--prebuilt` value: `sqlite`
+*   **Environment Variables:**
+    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g., `./sample.db`).
+*   **Permissions:**
+    *   File system read/write permissions for the specified database file.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
 
 ## Neo4j
