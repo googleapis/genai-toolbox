@@ -19,18 +19,22 @@ set -e
 TABLE_NAME="hotels_python"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 SQL_FILE=".ci/setup_hotels_sample.sql"
+DEPS_FILE=".ci/quickstart_dependencies.json"
 
-install_system_packages() {
-  apt-get update && apt-get install -y \
-    postgresql-client \
-    python3-venv \
-    curl \
-    wget \
-    gettext-base 
+install_apt_packages() {
+  apt-get update
+  JQ_VERSION=$(jq -r '.apt.jq' "$DEPS_FILE")
+  apt-get install -y "jq=${JQ_VERSION}"
+
+  mapfile -t install_list < <(jq -r '.apt | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
+
+  if (( ${#install_list[@]} > 0 )); then
+    apt-get install -y "${install_list[@]}"
+  fi
 }
 
 start_cloud_sql_proxy() {
-  CLOUD_SQL_PROXY_VERSION=$(grep "cloud-sql-proxy" .ci/quickstart_dependencies.txt | awk '{print $2}')
+  CLOUD_SQL_PROXY_VERSION=$(jq -r '.cloud_sql_proxy' "$DEPS_FILE")
   wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/${CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
@@ -83,6 +87,7 @@ run_orch_test() {
 }
 
 # Main script execution
+install_system_packages
 start_cloud_sql_proxy
 
 export PGHOST=127.0.0.1

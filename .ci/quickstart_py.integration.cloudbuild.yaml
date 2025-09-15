@@ -23,7 +23,7 @@ substitutions:
   _GCP_PROJECT_NUMBER: "your-project-number"
 
 steps:
-  - name: 'python:3.13'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:537.0.0'
     id: 'run-all-python-quickstart-samples'
     entrypoint: 'bash'
     args:
