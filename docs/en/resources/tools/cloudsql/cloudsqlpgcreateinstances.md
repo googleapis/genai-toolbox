@@ -2,17 +2,13 @@
 title: cloud-sql-postgres-create-instance
 type: docs
 weight: 10
-description: "Create a Cloud SQL for PostgreSQL instance.\n"
+description: "Create a Cloud SQL for PostgreSQL instance."
 ---
 
 The `cloud-sql-postgres-create-instance` tool creates a Cloud SQL for PostgreSQL instance using the Cloud SQL Admin API.
 
 {{< notice info >}}
 This tool uses a `source` of kind `cloud-sql-admin`.
-{{< /notice >}}
-
-{{< notice info >}}
-The toolbox automatically generates a bearer token on behalf of the user with the `https://www.googleapis.com/auth/sqlservice.admin` scope to authenticate requests.
 {{< /notice >}}
 
 ## Example
