@@ -1,8 +1,8 @@
 ---
-title: Cloud SQL Create MySQL Instance
+title: cloud-sql-mysql-create-instance
 type: docs
 weight: 2
-description: Create a Cloud SQL for MySQL instance.
+description: "Create a Cloud SQL for MySQL instance."
 ---
 
 The `cloud-sql-mysql-create-instance` tool creates a new Cloud SQL for MySQL instance in a specified Google Cloud project.
@@ -37,7 +37,7 @@ The `cloud-sql-mysql-create-instance` tool has the following parameters:
 | name            |  string  |     true     | The name of the instance to create.                                                                             |
 | databaseVersion |  string  |     false    | The database version for MySQL. If not specified, defaults to the latest available version (e.g., `MYSQL_8_4`). |
 | rootPassword    |  string  |     true     | The root password for the instance.                                                                             |
-| editionPreset   |  string  |     true     | The edition of the instance. Can be `Production` or `Development`. Defaults to `Development`.                   |
+| editionPreset   |  string  |     false    | The edition of the instance. Can be `Production` or `Development`. Defaults to `Development`.                   |
 
 ## Reference
 
