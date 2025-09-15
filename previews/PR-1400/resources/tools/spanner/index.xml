@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Spanner on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/</link><description>Recent content in Spanner on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/index.xml" rel="self" type="application/rss+xml"/><item><title>spanner-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/spanner-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/spanner-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>spanner-execute-sql&lt;/code> tool executes a SQL statement against a Spanner
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>spanner-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">spanner-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-spanner-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;spanner-execute-sql&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>readOnly&lt;/td>
+ &lt;td style="text-align: center">bool&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>When set to &lt;code>true&lt;/code>, the &lt;code>statement&lt;/code> is run as a read-only transaction. Default: &lt;code>false&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>spanner-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/spanner-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/spanner-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>spanner-sql&lt;/code> tool executes a pre-defined SQL statement (either &lt;code>googlesql&lt;/code> or
+&lt;code>postgresql&lt;/code>) against a Cloud Spanner database. It&amp;rsquo;s compatible with any of the
+following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h3 id="googlesql">GoogleSQL&lt;/h3>
+&lt;p>For the &lt;code>googlesql&lt;/code> dialect, the specified SQL statement is executed as a &lt;a href="https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax">data
+manipulation language (DML)&lt;/a> statements, and specified parameters will
+inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>spanner-list-tables&lt;/code> tool retrieves comprehensive schema information about
+tables in a Cloud Spanner database. It automatically adapts to the database
+dialect (GoogleSQL or PostgreSQL) and returns detailed metadata including
+columns, constraints, and indexes. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1400/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>This tool is read-only and executes pre-defined SQL queries against the
+&lt;code>INFORMATION_SCHEMA&lt;/code> tables to gather metadata. The tool automatically detects
+the database dialect from the source configuration and uses the appropriate SQL
+syntax.&lt;/p></description></item></channel></rss>
