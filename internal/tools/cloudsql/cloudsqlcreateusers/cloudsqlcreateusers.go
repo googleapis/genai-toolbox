@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
@@ -135,7 +134,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	iamUser, _ := paramsMap["iamUser"].(bool)
 
-	user := &sqladmin.User{
+	user := sqladmin.User{
 		Name: name,
 	}
 
@@ -150,19 +149,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		user.Password = password
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
 
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
-	}
-
-	service.UserAgent = t.Source.UserAgent
-
-	resp, err := service.Users.Insert(project, instance, user).Do()
+	resp, err := service.Users.Insert(project, instance, &user).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %w", err)
 	}
