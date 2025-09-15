@@ -1490,8 +1490,8 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "sqlite prebuilt tools",
 			in:   sqlite_config,
 			wantToolset: server.ToolsetConfigs{
-				"sqlite-database-tools": tools.ToolsetConfig{
-					Name:      "sqlite-database-tools",
+				"sqlite_database_tools": tools.ToolsetConfig{
+					Name:      "sqlite_database_tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},

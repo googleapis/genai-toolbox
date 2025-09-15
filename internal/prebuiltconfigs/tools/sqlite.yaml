@@ -107,6 +107,6 @@ tools:
         description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
         default: ""
 toolsets:
-  sqlite-database-tools:
+  sqlite_database_tools:
     - execute_sql
     - list_tables
