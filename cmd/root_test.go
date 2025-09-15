@@ -1244,6 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 
 	// Set environment variables
@@ -1318,6 +1319,8 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
+	t.Setenv("SQLITE_DATABASE", "test.db")
 
 	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
 	t.Setenv("NEO4J_DATABASE", "neo4j")
@@ -1480,6 +1483,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner-postgres-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-postgres-database-tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "sqlite prebuilt tools",
+			in:   sqlite_config,
+			wantToolset: server.ToolsetConfigs{
+				"sqlite_database_tools": tools.ToolsetConfig{
+					Name:      "sqlite_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
