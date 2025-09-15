@@ -527,7 +527,7 @@ exponential backoff.&lt;/p>
  &lt;tr>
  &lt;td>description&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
  &lt;td>A description of the tool.&lt;/td>
  &lt;/tr>
  &lt;tr>
