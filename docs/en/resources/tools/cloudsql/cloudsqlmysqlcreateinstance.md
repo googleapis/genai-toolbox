@@ -8,7 +8,7 @@ description: Create a Cloud SQL for MySQL instance.
 The `cloud-sql-mysql-create-instance` tool creates a new Cloud SQL for MySQL instance in a specified Google Cloud project.
 
 {{< notice info >}}
-This tool uses the `cloud-sql-admin` source, which automatically handles authentication on behalf of the user.
+This tool uses the `cloud-sql-admin` source.
 {{< /notice >}}
 
 ## Configuration
@@ -44,5 +44,5 @@ The `cloud-sql-mysql-create-instance` tool has the following parameters:
 | **field**   | **type** | **required** | **description**                                                |
 | ----------- | :------: | :----------: | -------------------------------------------------------------- |
 | kind        |  string  |     true     | Must be `cloud-sql-mysql-create-instance`.                     |
-| description |  string  |     false    | A description of the tool that is passed to the agent.         |
 | source      |  string  |     true     | The name of the `cloud-sql-admin` source to use for this tool. |
+| description |  string  |     false    | A description of the tool that is passed to the agent.         |
