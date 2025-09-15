@@ -23,8 +23,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"google.golang.org/api/alloydb/v1"
-	"google.golang.org/api/option"
 )
 
 const kind string = "alloydb-get-user"
@@ -133,21 +131,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid 'userId' parameter; expected a string")
 	}
 
-	// Get an authenticated HTTP client from the source
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting authorized client: %w", err)
-	}
-
-	// Create a new AlloyDB service client using the authorized client
-	alloydbService, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
+		return nil, err
 	}
 
 	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", projectId, locationId, clusterId, userId)
 
-	resp, err := alloydbService.Projects.Locations.Clusters.Users.Get(urlString).Do()
+	resp, err := service.Projects.Locations.Clusters.Users.Get(urlString).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error getting AlloyDB user: %w", err)
 	}
