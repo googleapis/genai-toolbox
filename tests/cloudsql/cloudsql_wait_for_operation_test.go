@@ -75,11 +75,16 @@ type cloudsqlHandler struct {
 	mu         sync.Mutex
 	operations map[string]*cloudsqlOperation
 	instances  map[string]*cloudsqlInstance
+	t          *testing.T
 }
 
 func (h *cloudsqlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
+	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
+		h.t.Errorf("User-Agent header not found")
+	}
 
 	if match, _ := regexp.MatchString("/v1/projects/p1/operations/.*", r.URL.Path); match {
 		parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
@@ -139,6 +144,7 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 		instances: map[string]*cloudsqlInstance{
 			"i1": {Region: "r1", DatabaseVersion: "POSTGRES_13"},
 		},
+		t: t,
 	}
 	server := httptest.NewServer(h)
 	defer server.Close()
