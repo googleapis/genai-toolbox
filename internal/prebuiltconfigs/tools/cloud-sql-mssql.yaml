@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 sources:
     cloudsql-mssql-source:
         kind: cloud-sql-mssql
@@ -289,6 +290,6 @@ tools:
               default: "detailed"
 
 toolsets:
-    cloud-sql-mssql-database-tools:
+    cloud_sql_mssql_database_tools:
         - execute_sql
         - list_tables
