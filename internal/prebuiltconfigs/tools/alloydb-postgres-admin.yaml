@@ -22,7 +22,7 @@ sources:
   alloydb-admin-source:
     kind: alloydb-admin
 tools:
-  alloydb-create-cluster:
+  create_cluster:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -64,7 +64,7 @@ tools:
       - name: user
         type: string
         description: "The name for the initial superuser. If not provided, it defaults to 'postgres'. The initial database will always be named 'postgres'."
-  get_operation:
+  wait_for_operation:
     kind: alloydb-wait-for-operation
     source: alloydb-admin-source
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
@@ -72,7 +72,7 @@ tools:
     maxDelay: 4m
     multiplier: 2
     maxRetries: 10
-  alloydb-create-instance:
+  create_instance:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -143,7 +143,7 @@ tools:
     kind: alloydb-list-users
     source: alloydb-admin-source
     description: "Lists all database users within a specific AlloyDB cluster."
-  alloydb-create-user:
+  create_user:
     kind: http
     source: alloydb-api-source
     method: POST
@@ -196,12 +196,12 @@ tools:
     description: "Retrieves details of a specific AlloyDB cluster."
         
 toolsets:
-  alloydb-postgres-admin-tools:
-    - alloydb-create-cluster
-    - get_operation
-    - alloydb-create-instance
+  alloydb_postgres_admin_tools:
+    - create_cluster
+    - wait_for_operation
+    - create_instance
     - list_clusters
     - list_instances
     - list_users
-    - alloydb-create-user
+    - create_user
     - get_cluster

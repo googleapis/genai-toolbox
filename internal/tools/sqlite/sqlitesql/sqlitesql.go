@@ -17,6 +17,7 @@ package sqlitesql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -150,45 +151,50 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to get column names: %w", err)
 	}
 
+	// The sqlite driver does not support ColumnTypes, so we can't get the
+	// underlying database type of the columns. We'll have to rely on the
+	// generic `any` type and then handle the JSON data separately.
+	rawValues := make([]any, len(cols))
 	values := make([]any, len(cols))
-	valuePtrs := make([]any, len(cols))
-	for i := range values {
-		valuePtrs[i] = &values[i]
+	for i := range rawValues {
+		values[i] = &rawValues[i]
 	}
 
 	// Prepare the result slice
-	var result []any
-	// Iterate through the rows
+	var out []any
 	for rows.Next() {
-		// Scan the row into the value pointers
-		if err := rows.Scan(valuePtrs...); err != nil {
+		if err := rows.Scan(values...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
 
 		// Create a map for this row
-		rowMap := make(map[string]interface{})
-		for i, col := range cols {
-			val := values[i]
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			val := rawValues[i]
 			// Handle nil values
 			if val == nil {
-				rowMap[col] = nil
+				vMap[name] = nil
 				continue
 			}
+			// Handle JSON data
+			if jsonString, ok := val.(string); ok {
+				var unmarshaledData any
+				if json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
+					vMap[name] = unmarshaledData
+					continue
+				}
+			}
 			// Store the value in the map
-			rowMap[col] = val
+			vMap[name] = val
 		}
-		result = append(result, rowMap)
-	}
-
-	if err = rows.Close(); err != nil {
-		return nil, fmt.Errorf("unable to close rows: %w", err)
+		out = append(out, vMap)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	return result, nil
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
