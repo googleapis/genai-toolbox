@@ -5528,7 +5528,18 @@ local development:&lt;/p>
 &lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials (ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1435/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1435/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1435/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1435/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>spanner-list-tables&lt;/code> tool retrieves comprehensive schema information about
+tables in a Cloud Spanner database. It automatically adapts to the database
+dialect (GoogleSQL or PostgreSQL) and returns detailed metadata including
+columns, constraints, and indexes. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1435/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>This tool is read-only and executes pre-defined SQL queries against the
+&lt;code>INFORMATION_SCHEMA&lt;/code> tables to gather metadata. The tool automatically detects
+the database dialect from the source configuration and uses the appropriate SQL
+syntax.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1435/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1435/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>Set the PROJECT_ID environment variable:&lt;/p>
@@ -6198,7 +6209,7 @@ exponential backoff.&lt;/p>
  &lt;tr>
  &lt;td>description&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
  &lt;td>A description of the tool.&lt;/td>
  &lt;/tr>
  &lt;tr>
