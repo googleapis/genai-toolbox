@@ -171,22 +171,6 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 	}
 }
 
-//type QueryApiClientContext struct {
-//	Name            string            `json:"name"`
-//	Attributes      map[string]string `json:"attributes,omitempty"`
-//	ExtraAttributes map[string]string `json:"extra_attributes,omitempty"`
-//}
-//
-//type RenderOptions struct {
-//	Format string `json:"format"`
-//}
-//
-//type RequestRunInlineQuery2 struct {
-//	Query             v4.WriteQuery         `json:"query"`
-//	RenderOpts        RenderOptions         `json:"render_options"`
-//	QueryApiClientCtx QueryApiClientContext `json:"query_api_client_context"`
-//}
-
 func TestRequestRunInlineQuery2(t *testing.T) {
 	fields := make([]string, 1)
 	fields[0] = "foo.bar"
