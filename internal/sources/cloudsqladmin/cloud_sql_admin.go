@@ -106,11 +106,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		client = baseClient
 	}
 
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
+	}
+
 	s := &Source{
 		Name:           r.Name,
 		Kind:           SourceKind,
 		BaseURL:        "https://sqladmin.googleapis.com",
-		Client:         client,
+		Service:        service,
 		UseClientOAuth: r.UseClientOAuth,
 	}
 	return s, nil
@@ -122,7 +127,7 @@ type Source struct {
 	Name           string `yaml:"name"`
 	Kind           string `yaml:"kind"`
 	BaseURL        string
-	Client         *http.Client
+	Service        *sqladmin.Service
 	UseClientOAuth bool
 }
 
@@ -130,27 +135,17 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
-	if s.UseClientOAuth {
-		if accessToken == "" {
-			return nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
-		}
-		token := &oauth2.Token{AccessToken: accessToken}
-		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
-	}
-	return s.Client, nil
-}
-
 func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.Service, error) {
-	client, err := s.GetClient(ctx, accessToken)
-	if err != nil {
-		return nil, err
+	if s.UseClientOAuth {
+		token := &oauth2.Token{AccessToken: accessToken}
+		client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+		service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
+		}
+		return service, nil
 	}
-	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
-	}
-	return service, nil
+	return s.Service, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {
