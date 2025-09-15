@@ -691,12 +691,9 @@ setup, database administration, and required resources.&lt;/p>
 &lt;/ul>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/sqlite/sqlite-sql/">&lt;code>sqlite-sql&lt;/code>&lt;/a>&lt;br>
-Run SQL queries against a local SQLite database.&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-file">Database File&lt;/h3>
-&lt;p>You need a SQLite database file. This can be:&lt;/p></description></item><item><title>TiDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/tidb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/tidb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/sqlite/sqlite-sql/">&lt;code>sqlite-sql&lt;/code>&lt;/a>&lt;br>
+Run SQL queries against a local SQLite database.&lt;/p></description></item><item><title>TiDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/tidb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/tidb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
