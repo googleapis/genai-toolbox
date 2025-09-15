@@ -23,7 +23,7 @@ TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 
 install_system_packages() {
-  apt-get update && apt-get install -y postgresql-client python3-venv curl wget
+  apt-get update && apt-get install -y postgresql-client python3-venv curl wget gettext-base
 }
 
 start_cloud_sql_proxy() {
