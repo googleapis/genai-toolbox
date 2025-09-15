@@ -20,7 +20,7 @@ set -u
 TABLE_NAME="hotels_python"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 TOOLBOX_SETUP_DIR="/workspace/toolbox_setup"
-SQL_FILE="$(dirname "$0")/setup_hotels_sample.sql"
+SQL_FILE=".ci/setup_hotels_sample.sql"
 
 install_system_packages() {
   apt-get update && apt-get install -y postgresql-client python3-venv curl wget
@@ -94,6 +94,9 @@ setup_toolbox
 if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
   exit 1
 fi
+
+if [[ -f "$SQL_FILE" ]]; then
+  setup_orch_table
 
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
