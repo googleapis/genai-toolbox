@@ -23,7 +23,6 @@ import (
     alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
     "github.com/googleapis/genai-toolbox/internal/tools"
     "google.golang.org/api/alloydb/v1"
-    "google.golang.org/api/option"
 )
 
 const kind string = "alloydb-create-instance"
@@ -141,14 +140,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing 'instanceType' parameter; expected a non-empty string")
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting authorized client: %w", err)
-	}
-
-	alloydbService, err := alloydb.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("error creating AlloyDB service: %w", err)
+		return nil, err
 	}
 
 	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
@@ -179,7 +173,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// The Create API returns a long-running operation.
-	resp, err := alloydbService.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceId).Do()
+	resp, err := service.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceId).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating AlloyDB instance: %w", err)
 	}
