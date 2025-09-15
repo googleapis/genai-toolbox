@@ -56,7 +56,6 @@ setup_toolbox() {
 cleanup_all() {
   echo "--- Final cleanup: Shutting down processes and dropping table ---"
   kill $TOOLBOX_PID || true
-  psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "DROP TABLE IF EXISTS ${TABLE_NAME};"
   kill $PROXY_PID || true
 }
 trap cleanup_all EXIT
@@ -73,6 +72,7 @@ run_orch_test() {
   orch_name=$(basename "$orch_dir")
   (
     set -e
+    setup_orch_table
     cd "$orch_dir"
     local VENV_DIR=".venv"
     python3 -m venv "$VENV_DIR"
@@ -82,7 +82,6 @@ run_orch_test() {
     cd ..
     ORCH_NAME="$orch_name" pytest
     rm -rvf "$VENV_DIR"
-    psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -c "TRUNCATE TABLE ${TABLE_NAME};"
   )
 }
 
@@ -101,8 +100,8 @@ if [ ! -d "$QUICKSTART_PYTHON_DIR" ]; then
   exit 1
 fi
 
-if [[ -f "$SQL_FILE" ]]; then
-  setup_orch_table
+if [[ ! -f "$SQL_FILE" ]]; then
+  exit 1
 fi
 
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
