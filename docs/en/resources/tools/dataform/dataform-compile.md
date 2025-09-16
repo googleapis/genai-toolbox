@@ -14,7 +14,19 @@ A `dataform-compile` tool runs the `dataform compile` command on a local Datafor
 
 It is a standalone tool and **is not** compatible with any sources.
 
-`dataform-compile` takes a single required `project_dir` parameter at invocation time, which is the path to the local Dataform project directory you want to compile. The tool will execute `dataform compile --json` in that directory and return the resulting JSON object.
+At invocation time, the tool executes `dataform compile --json` in the specified project directory and returns the resulting JSON object from the CLI.
+
+---
+
+## Tool Input
+
+These are the parameters you provide in the JSON payload when invoking the tool.
+
+| **Parameter** | **Type** | **Required** | **Description** |
+|---|:---:|:---:|---|
+| `project_dir` | string | true | The absolute or relative path to the local Dataform project directory. The server process must have read access to this path. |
+
+---
 
 ## Requirements
 
@@ -26,6 +38,7 @@ You can typically install the CLI via `npm`:
 ```bash
 npm install -g @dataform/cli
 ```
+
 See the [official Dataform documentation](https://www.google.com/search?q=https://cloud.google.com/dataform/docs/install-dataform-cli) for more details.
 
 ## Example
