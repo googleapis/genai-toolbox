@@ -73,7 +73,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The project ID"),
 		tools.NewStringParameter("name", "The name of the instance"),
-		tools.NewStringParameterWithDefault("databaseVersion", "SQLSERVER_2022_STANDARD", "The database version for MSSQL. If not specified, defaults to SQLSERVER_2022_STANDARD."),
+		tools.NewStringParameterWithDefault("databaseVersion", "SQLSERVER_2022_STANDARD", "The database version for SQL Server. If not specified, defaults to SQLSERVER_2022_STANDARD."),
 		tools.NewStringParameter("rootPassword", "The root password for the instance"),
 		tools.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
 	}
@@ -84,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	description := cfg.Description
 	if description == "" {
-		description = "Creates a MSSQL instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 8 GiB RAM (`db-custom-2-8192`) configuration with Non-HA/zonal availability. For the `Production` template, it chooses a 4 vCPU, 26 GiB RAM (`db-custom-4-26624`) configuration with HA/regional availability. The Enterprise edition is used in both cases. The default database version is `SQLSERVER_2022_STANDARD`. The agent should ask the user if they want to use a different version."
+		description = "Creates a SQL Server instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 8 GiB RAM (`db-custom-2-8192`) configuration with Non-HA/zonal availability. For the `Production` template, it chooses a 4 vCPU, 26 GiB RAM (`db-custom-4-26624`) configuration with HA/regional availability. The Enterprise edition is used in both cases. The default database version is `SQLSERVER_2022_STANDARD`. The agent should ask the user if they want to use a different version."
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -123,23 +123,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, fmt.Errorf("error casting 'project' parameter: %s", paramsMap["project"])
 	}
 	name, ok := paramsMap["name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'name' parameter")
+		return nil, fmt.Errorf("error casting 'name' parameter: %s", paramsMap["name"])
 	}
 	dbVersion, ok := paramsMap["databaseVersion"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'databaseVersion' parameter")
+		return nil, fmt.Errorf("error casting 'databaseVersion' parameter: %s", paramsMap["databaseVersion"])
 	}
 	rootPassword, ok := paramsMap["rootPassword"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'rootPassword' parameter")
+		return nil, fmt.Errorf("error casting 'rootPassword' parameter: %s", paramsMap["rootPassword"])
 	}
 	editionPreset, ok := paramsMap["editionPreset"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'editionPreset' parameter")
+		return nil, fmt.Errorf("error casting 'editionPreset' parameter: %s", paramsMap["editionPreset"])
 	}
 
 	settings := sqladmin.Settings{}
