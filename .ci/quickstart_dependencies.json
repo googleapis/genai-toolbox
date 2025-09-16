@@ -4,7 +4,8 @@
     "python3-venv": "3.11.2-1+b1",
     "wget": "1.21.3-1+deb12u1",
     "gettext-base": "0.21-12",
-    "jq": "1.6-2.1"
+    "jq": "1.6-2.1",
+    "netcat": "1.10-41.1"
   },
   "cloud_sql_proxy": "v2.10.0"
 }

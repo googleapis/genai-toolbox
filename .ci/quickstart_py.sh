@@ -22,6 +22,7 @@ SQL_FILE=".ci/setup_hotels_sample.sql"
 DEPS_FILE=".ci/quickstart_dependencies.json"
 
 # Initialize process IDs to empty at the top of the script
+PROXY_PID=""
 TOOLBOX_PID=""
 
 install_system_packages() {
@@ -66,7 +67,7 @@ setup_toolbox() {
 
 setup_orch_table() {
   export TABLE_NAME
-  envsubst < "$SQL_FILE" | psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -v ON_ERROR_STOP=1
+  envsubst < "$SQL_FILE" | psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME"
 }
 
 run_orch_test() {
@@ -93,14 +94,18 @@ cleanup_all() {
   if [ -n "$TOOLBOX_PID" ]; then
     kill $TOOLBOX_PID || true
   fi
+  if [ -n "$PROXY_PID" ]; then
+    kill $PROXY_PID || true
+  fi
 }
 trap cleanup_all EXIT
 
 # Main script execution
 install_system_packages
+start_cloud_sql_proxy
 
-export PGHOST="$CLOUD_SQL_PUBLIC_IP"
-export PGPORT=5432   
+export PGHOST=127.0.0.1
+export PGPORT=5432
 export PGPASSWORD="$DB_PASSWORD"
 export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
