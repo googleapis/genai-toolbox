@@ -71,13 +71,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID to list clusters for."),
-		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		tools.NewStringParameter("project", "The GCP project ID to list clusters for."),
+		tools.NewStringParameterWithDefault("location", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId"}
+	inputSchema.Required = []string{"project", "location"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -112,13 +112,13 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
+	location, ok := paramsMap["location"].(string)
     if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -126,7 +126,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s", project, location)
 
 	resp, err := service.Projects.Locations.Clusters.List(urlString).Do()
 	if err != nil {

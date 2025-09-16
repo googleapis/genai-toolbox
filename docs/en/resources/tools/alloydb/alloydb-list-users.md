@@ -15,9 +15,9 @@ The tool takes the following input parameters:
 	
 | Parameter  | Type   | Description                                                                              | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `projectId`  | string | The GCP project ID to list users for.                                                 | Yes      |
-| `clusterId` | string | The ID of the cluster to list users from.                                                | Yes      |
-| `locationId` | string | The location of the cluster (e.g., 'us-central1'). | Yes       |
+| `project`  | string | The GCP project ID to list users for.                                                 | Yes      |
+| `cluster` | string | The ID of the cluster to list users from.                                                | Yes      |
+| `location` | string | The location of the cluster (e.g., 'us-central1'). | Yes       |
 > **Note**
 > This tool authenticates using the credentials configured in its [alloydb-admin](../../sources/alloydb-admin.md) source which can be either [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) or client-side OAuth.
 
