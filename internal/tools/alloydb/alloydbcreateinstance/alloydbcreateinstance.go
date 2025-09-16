@@ -74,18 +74,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameter("project", "The GCP project ID."),
 		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
 		tools.NewStringParameter("cluster", "The ID of the cluster to create the instance in."),
-		tools.NewStringParameter("instanceId", "A unique ID for the new AlloyDB instance."),
-		tools.NewStringParameter("instanceType", "The type of instance to create. Required. Valid values are: PRIMARY, READ_POOL."),
+		tools.NewStringParameter("instance", "A unique ID for the new AlloyDB instance."),
+		tools.NewStringParameterWithDefault("instanceType", "PRIMARY", "The type of instance to create. Valid values are: PRIMARY and READ_POOL. Default is PRIMARY"),
 		tools.NewStringParameter("displayName", "A user-friendly name for the instance."),
 		tools.NewIntParameterWithDefault("nodeCount", 1, "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "cluster", "instanceId", "instanceType"}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance", "instanceType"}
+
+	description := cfg.Description
+	if description == "" {
+		description = "Creates a new AlloyDB instance (PRIMARY or READ_POOL) within a cluster. This is a long-running operation. This will return operation id to be used by get operations tool."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -94,7 +100,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
         Kind:        kind,
         Source:      s,
         AllParams:   allParameters,
-        manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+        manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
         mcpManifest: mcpManifest,
     }, nil
 }
@@ -130,14 +136,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
         return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
     }
 
-    instanceId, ok := paramsMap["instanceId"].(string)
-    if !ok || instanceId == "" {
-        return nil, fmt.Errorf("invalid or missing 'instanceId' parameter; expected a non-empty string")
+    instanceID, ok := paramsMap["instance"].(string)
+    if !ok || instanceID == "" {
+        return nil, fmt.Errorf("invalid or missing 'instance' parameter; expected a non-empty string")
     }
 
 	instanceType, ok := paramsMap["instanceType"].(string)
-	if !ok || instanceType == "" {
-		return nil, fmt.Errorf("invalid or missing 'instanceType' parameter; expected a non-empty string")
+	if !ok || (instanceType != "READ_POOL" && instanceType != "PRIMARY") {
+		return nil, fmt.Errorf("invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -173,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// The Create API returns a long-running operation.
-	resp, err := service.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceId).Do()
+	resp, err := service.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceID).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating AlloyDB instance: %w", err)
 	}
