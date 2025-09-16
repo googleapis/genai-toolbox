@@ -30,6 +30,7 @@ steps:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
+      - 'CLOUD_SQL_PUBLIC_IP=${_CLOUD_SQL_PUBLIC_IP}'
     secretEnv: ['TOOLS_YAML_CONTENT', 'GOOGLE_API_KEY', 'DB_PASSWORD']
 
 availableSecrets:

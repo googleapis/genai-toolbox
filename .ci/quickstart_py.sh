@@ -21,6 +21,9 @@ QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 DEPS_FILE=".ci/quickstart_dependencies.json"
 
+# Initialize process IDs to empty at the top of the script
+TOOLBOX_PID=""
+
 install_system_packages() {
   apt-get update
   apt-get install -y jq
@@ -38,16 +41,24 @@ start_cloud_sql_proxy() {
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
   PROXY_PID=$!
-  sleep 5
+
+  for i in {1..30}; do
+    if nc -z 127.0.0.1 5432; then
+      echo "Cloud SQL Proxy is up and running."
+      return
+    fi
+  done
+
+  echo "Cloud SQL Proxy failed to start within the timeout period."
+  exit 1
 }
 
 setup_toolbox() {
   TOOLBOX_YAML="/tools.yaml"
   echo "${TOOLS_YAML_CONTENT}" > "$TOOLBOX_YAML"
   if [ ! -f "$TOOLBOX_YAML" ]; then echo "Failed to create tools.yaml"; exit 1; fi
-  curl -L "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -o "/toolbox"
+  wget "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -O "/toolbox"
   chmod +x "/toolbox"
-  if [ ! -f "/toolbox" ]; then echo "Failed to download toolbox"; exit 1; fi
   /toolbox --tools-file "$TOOLBOX_YAML" &
   TOOLBOX_PID=$!
   sleep 2
@@ -55,7 +66,7 @@ setup_toolbox() {
 
 setup_orch_table() {
   export TABLE_NAME
-  envsubst < "$SQL_FILE" | psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME"
+  envsubst < "$SQL_FILE" | psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME" -v ON_ERROR_STOP=1
 }
 
 run_orch_test() {
@@ -79,8 +90,12 @@ run_orch_test() {
 
 cleanup_all() {
   echo "--- Final cleanup: Shutting down processes and dropping table ---"
-  kill $TOOLBOX_PID || true
-  kill $PROXY_PID || true
+  if [ -n "$TOOLBOX_PID" ]; then
+    kill $TOOLBOX_PID || true
+  fi
+  if [ -n "$PROXY_PID" ]; then
+    kill $PROXY_PID || true
+  fi
 }
 trap cleanup_all EXIT
 
@@ -88,16 +103,10 @@ trap cleanup_all EXIT
 install_system_packages
 start_cloud_sql_proxy
 
-export PGHOST=127.0.0.1
-export PGPORT=5432
 export PGPASSWORD="$DB_PASSWORD"
 export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 setup_toolbox
-
-if [[ ! -f "$SQL_FILE" ]]; then
-  exit 1
-fi
 
 for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
