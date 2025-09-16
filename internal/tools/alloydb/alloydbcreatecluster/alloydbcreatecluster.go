@@ -90,7 +90,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
     mcpManifest := tools.McpManifest{
         Name:        cfg.Name,
-        Description: cfg.Description,
+        Description: description,
         InputSchema: inputSchema,
     }
 
@@ -99,7 +99,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
         Kind:        kind,
         Source:      s,
         AllParams:   allParameters,
-        manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+        manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
         mcpManifest: mcpManifest,
     }, nil
 }

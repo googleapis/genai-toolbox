@@ -28,7 +28,7 @@ The tool takes the following input parameters:
 | Parameter | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
 | `project`  | string | The GCP project ID where the cluster will be created. | Yes |
-| `location` | string | The GCP location where the cluster will be created. | Yes |
+| `location` | string | The GCP location where the cluster will be created. Default: `us-central1`. If quota is exhausted then use other regions. | No |
 | `cluster`  | string | A unique identifier for the new AlloyDB cluster. | Yes |
 | `password` | string | A secure password for the initial user. | Yes |
 | `network`  | string | The name of the VPC network to connect the cluster to. Default: `default`. | No |
