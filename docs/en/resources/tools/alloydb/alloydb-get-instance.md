@@ -14,10 +14,10 @@ The `alloydb-get-instance` tool retrieves detailed information for a single, spe
 	
 | Parameter  | Type   | Description                                                                              | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `projectId`  | string | The GCP project ID to get instance for.                                                 | Yes      |
-| `locationId` | string | The location of the instance (e.g., 'us-central1'). | Yes      |
-| `clusterId` | string | The ID of the cluster. | Yes      |
-| `instanceId` | string | The ID of the instance to retrieve. | Yes      |
+| `project`  | string | The GCP project ID to get instance for.                                                 | Yes      |
+| `location` | string | The location of the instance (e.g., 'us-central1'). | Yes      |
+| `cluster` | string | The ID of the cluster. | Yes      |
+| `instance` | string | The ID of the instance to retrieve. | Yes      |
 > **Note**
 > This tool authenticates using the credentials configured in its [alloydb-admin](../../sources/alloydb-admin.md) source which can be either [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) or client-side OAuth.
 

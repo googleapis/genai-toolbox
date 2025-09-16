@@ -71,15 +71,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID."),
-		tools.NewStringParameter("locationId", "The location of the instance (e.g., 'us-central1')."),
-		tools.NewStringParameter("clusterId", "The ID of the cluster."),
-		tools.NewStringParameter("instanceId", "The ID of the instance."),
+		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("location", "The location of the instance (e.g., 'us-central1')."),
+		tools.NewStringParameter("cluster", "The ID of the cluster."),
+		tools.NewStringParameter("instance", "The ID of the instance."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId", "clusterId", "instanceId"}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -113,21 +113,21 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
+	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
 	}
-	clusterId, ok := paramsMap["clusterId"].(string)
+	cluster, ok := paramsMap["cluster"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'clusterId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
 	}
-	instanceId, ok := paramsMap["instanceId"].(string)
+	instance, ok := paramsMap["instance"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'instanceId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid 'instance' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -135,7 +135,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", projectId, locationId, clusterId, instanceId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, location, cluster, instance)
 
 	resp, err := service.Projects.Locations.Clusters.Instances.Get(urlString).Do()
 	if err != nil {

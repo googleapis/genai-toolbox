@@ -789,7 +789,7 @@ func runAlloyDBGetInstanceTest(t *testing.T, vars map[string]string) {
 	}{
 		{
 			name:        "get instance success",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s", "clusterId": "%s", "instanceId": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"], vars["instanceId"])),
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"], vars["instanceId"])),
 			want: map[string]any{
 				"instanceType": "PRIMARY",
 				"name":         fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", vars["projectId"], vars["locationId"], vars["clusterId"], vars["instanceId"]),
@@ -798,27 +798,27 @@ func runAlloyDBGetInstanceTest(t *testing.T, vars map[string]string) {
 		},
 		{
 			name:           "get instance missing project",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"locationId": "%s", "clusterId": "%s", "instanceId": "%s"}`, vars["locationId"], vars["clusterId"], vars["instanceId"])),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"location": "%s", "cluster": "%s", "instance": "%s"}`, vars["locationId"], vars["clusterId"], vars["instanceId"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "get instance missing location",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "clusterId": "%s", "instanceId": "%s"}`, vars["projectId"], vars["clusterId"], vars["instanceId"])),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "cluster": "%s", "instance": "%s"}`, vars["projectId"], vars["clusterId"], vars["instanceId"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "get instance missing clusterId",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s", "instanceId": "%s"}`, vars["projectId"], vars["locationId"], vars["instanceId"])),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "instance": "%s"}`, vars["projectId"], vars["locationId"], vars["instanceId"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "get instance missing instanceId",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s", "clusterId": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "get instance non-existent instance",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"projectId": "%s", "locationId": "%s", "clusterId": "%s", "instanceId": "non-existent-instance"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "non-existent-instance"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 	}
