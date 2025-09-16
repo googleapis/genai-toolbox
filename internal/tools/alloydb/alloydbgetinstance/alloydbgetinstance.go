@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistinstances
+package alloydbgetinstance
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "alloydb-list-instances"
+const kind string = "alloydb-get-instance"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -40,7 +40,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Configuration for the list-instances tool.
+// Configuration for the get-instance tool.
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
 	Kind         string            `yaml:"kind" validate:"required"`
@@ -71,18 +71,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID to list instances for."),
-		tools.NewStringParameterWithDefault("location", "-", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')"),
-		tools.NewStringParameterWithDefault("cluster", "-", "Optional: The ID of the cluster to list instances from. Use '-' to get results for all clusters.(Default: '-')"),
+		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("location", "The location of the instance (e.g., 'us-central1')."),
+		tools.NewStringParameter("cluster", "The ID of the cluster."),
+		tools.NewStringParameter("instance", "The ID of the instance."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project"}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance"}
 
 	description := cfg.Description
 	if description == "" {
-		description = "Lists all AlloyDB instances in a given project, location and cluster."
+		description = "Retrieves details about a specific AlloyDB instance."
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -101,14 +102,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// Tool represents the list-instances tool.
+// Tool represents the get-instance tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
+
 	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AllParams tools.Parameters
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -123,12 +123,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
 	location, ok := paramsMap["location"].(string)
-    if !ok {
+	if !ok {
 		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
 	}
 	cluster, ok := paramsMap["cluster"].(string)
-    if !ok {
+	if !ok {
 		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
+	}
+	instance, ok := paramsMap["instance"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'instance' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -136,11 +140,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, location, cluster, instance)
 
-	resp, err := service.Projects.Locations.Clusters.Instances.List(urlString).Do()
+	resp, err := service.Projects.Locations.Clusters.Instances.Get(urlString).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error listing AlloyDB instances: %w", err)
+		return nil, fmt.Errorf("error getting AlloyDB instance: %w", err)
 	}
 
 	return resp, nil

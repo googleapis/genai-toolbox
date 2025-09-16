@@ -1,36 +1,36 @@
 ---
-title: "alloydb-list-users"
+title: "alloydb-get-user"
 type: docs
 weight: 1
 description: >
-  The "alloydb-list-users" tool lists all database users within an AlloyDB cluster.
+  The "alloydb-get-user" tool retrieves details for a specific AlloyDB user.
 aliases:
-- /resources/tools/alloydb-list-users
+- /resources/tools/alloydb-get-user
 ---
 
 ## About
 
-The `alloydb-list-users` tool lists all database users within an AlloyDB cluster. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
-The tool takes the following input parameters:
+The `alloydb-get-user` tool retrieves detailed information for a single, specified AlloyDB user. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
 	
 | Parameter  | Type   | Description                                                                              | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `project`  | string | The GCP project ID to list users for.                                                    | Yes      |
-| `cluster`  | string | The ID of the cluster to list users from.                                                | Yes      |
+| `project`  | string | The GCP project ID to get user for.                                                      | Yes      |
 | `location` | string | The location of the cluster (e.g., 'us-central1').                                       | Yes      |
+| `cluster`  | string | The ID of the cluster to retrieve the user from.                                         | Yes      |
+| `user`     | string | The ID of the user to retrieve.                                                          | Yes      |
 
 ## Example
 
 ```yaml
 tools:
-  list_users:
-    kind: alloydb-list-users
-    source: alloydb-admin-source
-    description: Use this tool to list all database users within an AlloyDB cluster
+  get_specific_user:
+    kind: alloydb-get-user
+    source: my-alloydb-admin-source
+    description: Use this tool to retrieve details for a specific AlloyDB user.
 ```
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be alloydb-list-users.                                                                  |
+| kind        |                   string                   |     true     | Must be alloydb-get-user.                                                                  |  
 | source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                                       |
 | description |                   string                   |     false    | Description of the tool that is passed to the agent.                                             |
