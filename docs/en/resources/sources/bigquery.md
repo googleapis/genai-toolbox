@@ -36,6 +36,9 @@ avoiding full table scans or complex filters.
 
 ## Available Tools
 
+- [`bigquery-analyze-contribution`](../tools/bigquery/bigquery-analyze-contribution.md)
+  Performs contribution analysis, also called key driver analysis in BigQuery.
+
 - [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
   Allows conversational interaction with a BigQuery source.
 
