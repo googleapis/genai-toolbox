@@ -27,7 +27,7 @@ TOOLBOX_PID=""
 
 install_system_packages() {
   apt-get update
-  apt-get install -y jq netcat-openbsd
+  apt-get install -y jq
 
   mapfile -t install_list < <(jq -r '.python | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
 
@@ -48,6 +48,7 @@ start_cloud_sql_proxy() {
       echo "Cloud SQL Proxy is up and running."
       return
     fi
+    sleep 1
   done
 
   echo "Cloud SQL Proxy failed to start within the timeout period."
