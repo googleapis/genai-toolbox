@@ -93,7 +93,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 
 	// Polling configuration
@@ -132,9 +132,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	inputSchema := allParameters.McpManifest()
 	inputSchema.Required = []string{"project", "location", "operation"}
 
+	description := cfg.Description
+	if description == "" {
+		description = "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -176,7 +181,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		Source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 		Delay:        delay,
 		MaxDelay:     maxDelay,
@@ -266,14 +271,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 					return nil, fmt.Errorf("could not marshal operation: %w", err)
 				}
 
-				var data map[string]any
-				if err := json.Unmarshal(opBytes, &data); err != nil {
-					return nil, fmt.Errorf("could not unmarshal operation: %w", err)
-				}
-
-				if msg, ok := t.generateAlloyDBConnectionMessage(data); ok {
+				if msg, ok := t.generateAlloyDBConnectionMessage(map[string]any{"response": op.Response}); ok {
 					return msg, nil
 				}
+				
 				return string(opBytes), nil
 			}
 			fmt.Printf("Operation not complete, retrying in %v\n", delay)
@@ -289,12 +290,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return nil, fmt.Errorf("exceeded max retries waiting for operation")
 }
 
-func (t Tool) generateAlloyDBConnectionMessage(opResponse map[string]any) (string, bool) {
-	responseData, ok := opResponse["response"].(map[string]any)
-	if !ok {
-		return "", false
-	}
-
+func (t Tool) generateAlloyDBConnectionMessage(responseData map[string]any) (string, bool) {
 	resourceName, ok := responseData["name"].(string)
 	if !ok {
 		return "", false

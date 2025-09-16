@@ -15,7 +15,7 @@ exponential backoff. It is compatible with [alloydb-admin](../../sources/alloydb
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
 | `project`  | string | The GCP project ID.                                  | Yes      |
 | `location` | string | The location of the operation (e.g., 'us-central1'). | Yes      |
-| `operation` | string | The ID of the operation to wait for.                | Yes      | 
+| `operation`| string | The ID of the operation to wait for.                 | Yes      | 
 
 {{< notice info >}}
 This tool is intended for developer assistant workflows with human-in-the-loop
@@ -42,7 +42,7 @@ tools:
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
 | kind        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
 | source      |  string  |     true     | The name of a `alloydb-admin` source to use for authentication.                                                |
-| description |  string  |    true      | A description of the tool.                                                                                       |
+| description |  string  |    false     | A description of the tool.                                                                                       |
 | delay       | duration |    false     | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |
 | maxDelay    | duration |    false     | The maximum delay between polling requests (e.g., `4m`). Defaults to 4 minutes.                                  |
 | multiplier  |  float   |    false     | The multiplier for the polling delay. The delay is multiplied by this value after each request. Defaults to 2.0. |
