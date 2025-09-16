@@ -5,7 +5,7 @@
     "wget": "1.21.3-1+deb12u1",
     "gettext-base": "0.21-12",
     "jq": "1.6-2.1",
-    "netcat-openbsd": "1.229-1"
+    "netcat-openbsd": null
   },
   "cloud_sql_proxy": "v2.10.0"
 }
