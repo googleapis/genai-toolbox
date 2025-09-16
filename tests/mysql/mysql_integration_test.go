@@ -32,6 +32,7 @@ import (
 var (
 	MySQLSourceKind = "mysql"
 	MySQLToolKind   = "mysql-sql"
+	MySQLListTableFragmentationKind = "mysql-list-table-fragmentation"
 	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
 	MySQLHost       = os.Getenv("MYSQL_HOST")
 	MySQLPort       = os.Getenv("MYSQL_PORT")
@@ -137,7 +138,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	// Run specific MySQL tool tests
 	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
-	runMySQLListTableFragmentationTest()
+	// runMySQLListTableFragmentationTest()
 }
 
 func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -314,4 +315,16 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		})
 	}
 >>>>>>> 66966adc08 (init file set)
+}
+
+func runMySQLListTableFragmentationTest(t *testing.T) {
+	type tableFragmentationDetails struct {
+		TableSchema     string `json:"table_schema"`
+		TableName       string `json:"table_name"`
+		DataSize        any    `json:"data_size"`
+		IndexSize       any `json:"index_size"`
+		DataFree  any `json:"data_free"`
+		FragmentationPercentage any `json:"fragmentation_percentage"`
+	}
+
 }

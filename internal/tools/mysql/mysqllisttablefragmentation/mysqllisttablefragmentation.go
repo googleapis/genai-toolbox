@@ -42,8 +42,8 @@ const listTableFragmentationStatement = `
 		information_schema.tables
 	WHERE
 		table_schema NOT IN ('sys', 'performance_schema', 'mysql', 'information_schema')
-		AND (? IS NULL OR table_schema = ?)
-		AND (? IS NULL OR table_name = ?)
+		AND (COALESCE(?, '') = '' OR table_schema = ?)
+		AND (COALESCE(?, '') = '' OR table_name = ?)
 		AND data_free >= ?
 	ORDER BY fragmentation_percentage DESC
 	LIMIT ?;
