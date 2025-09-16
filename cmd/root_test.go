@@ -1389,7 +1389,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1419,7 +1419,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1499,7 +1499,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},

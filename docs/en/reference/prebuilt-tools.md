@@ -28,6 +28,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## AlloyDB Postgres Admin
 
@@ -120,6 +126,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -274,6 +286,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Spanner (GoogleSQL dialect)
 
