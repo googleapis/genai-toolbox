@@ -26,10 +26,13 @@ var expectedToolSources = []string{
 	"alloydb-postgres",
 	"bigquery",
 	"clickhouse",
+	"cloud-sql-mssql-admin",
 	"cloud-sql-mssql-observability",
 	"cloud-sql-mssql",
+	"cloud-sql-mysql-admin",
 	"cloud-sql-mysql-observability",
 	"cloud-sql-mysql",
+	"cloud-sql-postgres-admin",
 	"cloud-sql-postgres-observability",
 	"cloud-sql-postgres",
 	"dataplex",
@@ -96,6 +99,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	clickhouse_config, _ := Get("clickhouse")
 	cloudsqlpg_observability_config, _ := Get("cloud-sql-postgres-observability")
 	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
+	cloudsqlpg_admin_config, _ := Get("cloud-sql-postgres-admin")
+	cloudsqlmysql_admin_config, _ := Get("cloud-sql-mysql-admin")
+	cloudsqlmssql_admin_config, _ := Get("cloud-sql-mssql-admin")
 	cloudsqlmysql_observability_config, _ := Get("cloud-sql-mysql-observability")
 	cloudsqlmysql_config, _ := Get("cloud-sql-mysql")
 	cloudsqlmssql_observability_config, _ := Get("cloud-sql-mssql-observability")
@@ -131,6 +137,12 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(cloudsqlpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql pg prebuilt tools yaml")
 	}
+	if len(cloudsqlpg_admin_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud sql pg admin prebuilt tools yaml")
+	}
+	if len(cloudsqlmysql_admin_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud sql mysql admin prebuilt tools yaml")
+	}
 	if len(cloudsqlmysql_observability_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql mysql observability prebuilt tools yaml")
 	}
@@ -139,6 +151,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(cloudsqlmssql_observability_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql mssql observability prebuilt tools yaml")
+	}
+	if len(cloudsqlmssql_admin_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud sql mssql admin prebuilt tools yaml")
 	}
 	if len(cloudsqlmssql_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch cloud sql mssql prebuilt tools yaml")
