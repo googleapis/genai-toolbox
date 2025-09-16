@@ -22,9 +22,9 @@ The tool takes the following input parameters:
 
 | Parameter | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
-| `projectId` | string | The GCP project ID where the cluster exists. | Yes |
-| `locationId` | string | The GCP location where the cluster exists (e.g., `us-central1`). | Yes |
-| `clusterId` | string | The ID of the existing cluster where the user will be created. | Yes |
+| `project` | string | The GCP project ID where the cluster exists. | Yes |
+| `location` | string | The GCP location where the cluster exists (e.g., `us-central1`). | Yes |
+| `cluster` | string | The ID of the existing cluster where the user will be created. | Yes |
 | `userId` | string | The name for the new user. Must be unique within the cluster. | Yes |
 | `userType`| string | The type of user. Valid values: `ALLOYDB_BUILT_IN`, `ALLOYDB_IAM_USER`. Default: `ALLOYDB_BUILT_IN`. | No |
 | `password` | string | A secure password for the user. Required only if `userType` is `ALLOYDB_BUILT_IN`. | No |

@@ -1081,16 +1081,16 @@ func TestAlloyDBCreateUser(t *testing.T) {
 	}
 
 	tcs := []struct {
-		name        string
-		body        string
-		want        string
-		wantError   string
-		expectError bool
-		errorStatus int
+		name           string
+		body           string
+		want           string
+		wantError      string
+		wantStatusCode int
+		isErr          bool
 	}{
 		{
 			name: "successful creation IAM user",
-			body: `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
+			body: `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
 			want: `{
 				  "databaseRoles": ["alloydbiamuser", "alloydbsuperuser"],
 				  "name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success",
@@ -1099,7 +1099,7 @@ func TestAlloyDBCreateUser(t *testing.T) {
 		},
 		{
 			name: "successful creation builtin user",
-			body: `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123"}`,
+			body: `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123"}`,
 			want: `{
 				  "databaseRoles": ["alloydbsuperuser"],
 				  "name": "projects/p1/locations/l1/clusters/c1/users/u2-builtin-success",
@@ -1108,44 +1108,44 @@ func TestAlloyDBCreateUser(t *testing.T) {
 		},
 		{
 			name:        "api failure",
-			body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
+			isErr: true,
+			wantStatusCode: http.StatusBadRequest,
 			wantError:   "user internal api error", 
 		},
 		{
-			name:        "missing projectId",
-			body:        `{"locationId": "l1", "clusterId": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
-			wantError:   `parameter \"projectId\" is required`,
+			name:        "missing project",
+			body:        `{"location": "l1", "cluster": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			isErr: true,
+			wantStatusCode: http.StatusBadRequest,
+			wantError:   `parameter \"project\" is required`,
 		},
 		{
-			name:        "missing locationId",
-			body:        `{"projectId": "p1", "clusterId": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
-			wantError:   `unhandled userId in mock server: u-fail`,
+			name:        "missing location",
+			body:        `{"project": "p1", "cluster": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			isErr: true,
+			wantStatusCode: http.StatusBadRequest,
+			wantError:   `parameter \"location\" is required`,
 		},
 		{
-			name:        "missing clusterId",
-			body:        `{"projectId": "p1", "locationId": "l1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
-			wantError:   `parameter \"clusterId\" is required`,
+			name:        "missing cluster",
+			body:        `{"project": "p1", "location": "l1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			isErr: true,
+			wantStatusCode: http.StatusBadRequest,
+			wantError:   `parameter \"cluster\" is required`,
 		},
 		{
 			name:        "missing userId",
-			body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userType": "ALLOYDB_IAM_USER"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userType": "ALLOYDB_IAM_USER"}`,
+			isErr: true,
+			wantStatusCode: http.StatusBadRequest,
 			wantError:   `parameter \"userId\" is required`,
 		},
 		{
 			name:        "missing password for builtin user",
-			body:        `{"projectId": "p1", "locationId": "l1", "clusterId": "c1", "userId": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
+			isErr: true,
+			wantStatusCode: http.StatusBadRequest,
 			wantError:   `password is required when userType is ALLOYDB_BUILT_IN`,
 		},
 	}
@@ -1166,9 +1166,9 @@ func TestAlloyDBCreateUser(t *testing.T) {
 
 			bodyBytes, _ := io.ReadAll(resp.Body)
 
-			if tc.expectError {
-				if resp.StatusCode != tc.errorStatus {
-					t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
+			if tc.isErr {
+				if resp.StatusCode != tc.wantStatusCode {
+					t.Fatalf("expected status %d but got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
 				}
 				if tc.wantError != "" && !bytes.Contains(bodyBytes, []byte(tc.wantError)) {
 					t.Fatalf("expected error response to contain %q, but got: %s", tc.wantError, string(bodyBytes))

@@ -71,9 +71,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
     }
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID."),
-		tools.NewStringParameterWithDefault("locationId", "us-central1", "The location of the cluster (e.g., 'us-central1')."),
-		tools.NewStringParameter("clusterId", "The ID of the cluster where the user will be created."),
+		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		tools.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
 		tools.NewStringParameter("userId", "The name for the new user. Must be unique within the cluster."),
 		tools.NewStringParameterWithDefault("password", "", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType."),
 		tools.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", tools.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
@@ -82,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId", "clusterId", "userId"}
+	inputSchema.Required = []string{"project", "location", "cluster", "userId"}
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
@@ -115,19 +115,19 @@ type Tool struct {
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	projectId, ok := paramsMap["projectId"].(string)
-	if !ok || projectId == "" {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a non-empty string")
+	project, ok := paramsMap["project"].(string)
+	if !ok || project == "" {
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
 	}
 
-	locationId, ok := paramsMap["locationId"].(string)
-	if !ok || locationId == "" {
-		return nil, fmt.Errorf("invalid or missing 'locationId' parameter; expected a non-empty string")
+	location, ok := paramsMap["location"].(string)
+	if !ok || location == "" {
+		return nil, fmt.Errorf("invalid or missing 'location' parameter; expected a non-empty string")
 	}
 
-	clusterId, ok := paramsMap["clusterId"].(string)
-	if !ok || clusterId == "" {
-		return nil, fmt.Errorf("invalid or missing 'clusterId' parameter; expected a non-empty string")
+	cluster, ok := paramsMap["cluster"].(string)
+	if !ok || cluster == "" {
+		return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
 	}
 
 	userId, ok := paramsMap["userId"].(string)
@@ -145,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
 
 	// Build the request body using the type-safe User struct.
 	user := &alloydb.User{
