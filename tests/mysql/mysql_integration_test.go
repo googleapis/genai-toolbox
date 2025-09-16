@@ -407,6 +407,14 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			wantStatusCode:      http.StatusOK,
 			want:                []queryListDetails{singleQueryWanted},
 		},
+		{
+			name:                "invoke list_active_queries when 2 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 2}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 3,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted,singleQueryWanted},
+		},
 	}
 
 	var wg sync.WaitGroup

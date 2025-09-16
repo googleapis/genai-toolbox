@@ -148,9 +148,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewIntParameterWithDefault("limit", 100, "Optional: The maximum number of rows to return."),
 	}
 
-	// sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
-	// parameters := tools.Parameters{sqlParameter}
-
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
 		Description: cfg.Description,
