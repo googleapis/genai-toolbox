@@ -139,19 +139,19 @@ exponential backoff. It is compatible with &lt;a href="https://googleapis.github
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the operation (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>operationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>operation&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the operation to wait for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
