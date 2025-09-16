@@ -372,17 +372,13 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	tableNames, ok := paramsMap["table_names"].(string)
-	if !ok {
-		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", tableNames)
-	}
 	outputFormat, _ := paramsMap["output_format"].(string)
     if outputFormat != "simple" && outputFormat != "detailed" {
         return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
     }
 
 	namedArgs := []any{
-        sql.Named("table_names", tableNames),
+        sql.Named("table_names", paramsMap["table_names"]),
         sql.Named("output_format", outputFormat),
     }
 

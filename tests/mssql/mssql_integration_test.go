@@ -20,7 +20,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -138,7 +137,6 @@ func TestMSSQLToolEndpoints(t *testing.T) {
 	toolsFile = tests.AddMSSQLExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMSSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MSSQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
-
 	toolsFile = addPrebuiltToolConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -215,82 +213,68 @@ func runMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 	invokeTcs := []struct {
 		name           string
 		api            string
-		requestBody    io.Reader
+		requestBody    string
 		wantStatusCode int
 		want           string
 	}{
 		{
 			name:           "invoke list_tables detailed output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth))),
+			requestBody:    fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
 		{
 			name:           "invoke list_tables simple output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
+			requestBody:    fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 		{
 			name:           "invoke list_tables with invalid output format",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
+			requestBody:    fmt.Sprintf(`{"table_names": "", "output_format": "abcd"}`),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
+			requestBody:    fmt.Sprintf(`{"table_names": 12345, "output_format": "detailed"}`),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
+			requestBody:    fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
 			name:           "invoke list_tables with non-existent table",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
+			requestBody:    fmt.Sprintf(`{"table_names": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
 			want:           `null`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
+			requestBody:    fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, respBytes := tests.RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer([]byte(tc.requestBody)), nil)
 
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(respBytes))
 			}
 
 			if tc.wantStatusCode == http.StatusOK {
 				var bodyWrapper map[string]json.RawMessage
-				respBytes, err := io.ReadAll(resp.Body)
-				if err != nil {
-					t.Fatalf("error reading response body: %s", err)
-				}
 
 				if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
 					t.Fatalf("error parsing response wrapper: %s, body: %s", err, string(respBytes))

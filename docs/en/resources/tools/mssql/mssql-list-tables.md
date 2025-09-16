@@ -15,14 +15,12 @@ The `mssql-list-tables` tool retrieves schema information for all or specified t
 - [cloud-sql-mssql](../../sources/cloud-sql-mssql.md)
 - [mssql](../../sources/mssql.md)
 
-`mssql-list-tables` lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to `simple` which will return only the table names or `detailed` which is the default.
+`mssql-list-tables` lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned).
 
 The tool takes the following input parameters:
 
-| Parameter  | Type   | Description                                                                              | Required |
-| :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `table_names`  | string | Filters by a comma-separated list of names. By default, it lists all tables in user schemas. Default: `""`                                                 | No      |
-| `output_format` | string | Indicate the output format of table schema. `simple` will return only the table names, `detailed` will return the full table information. Default: `detailed`. | No       |
+- **`table_names`** (string, optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas. Default: `""`.
+- **`output_format`** (string, optional): Indicate the output format of table schema. `simple` will return only the table names, `detailed` will return the full table information. Default: `detailed`.
 
 ## Example
 
