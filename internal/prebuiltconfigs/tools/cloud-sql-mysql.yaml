@@ -30,7 +30,7 @@ tools:
   list_active_queries:
     kind: mysql-list-active-queries
     source: cloud-sql-mysql-source
-    description: "From Shu as well"
+    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
   list_tables:
     kind: mysql-list-tables
     source: cloud-sql-mysql-source
