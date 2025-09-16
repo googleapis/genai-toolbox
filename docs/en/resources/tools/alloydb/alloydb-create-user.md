@@ -23,12 +23,12 @@ The tool takes the following input parameters:
 | Parameter | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
 | `project`       | string        | The GCP project ID where the cluster exists.                                                         | Yes |
-| `location`      | string        | The GCP location where the cluster exists (e.g., `us-central1`). Default: `us-central1`.             | No  |
-| `cluster`       | string        | The ID of the existing cluster where the user will be created.                                       | Yes |
-| `user`          | string        | The name for the new user. Must be unique within the cluster.                                        | Yes |
-| `userType`      | string        | The type of user. Valid values: `ALLOYDB_BUILT_IN` and `ALLOYDB_IAM_USER`. `ALLOYDB_IAM_USER` is recommended.                          | Yes  |
-| `password`      | string        | A secure password for the user. Required only if `userType` is `ALLOYDB_BUILT_IN`.                   | No  |
-| `databaseRoles` | array(string) | Optional. A list of database roles to grant to the new user (e.g., `pg_read_all_data`).              | No  |
+| `cluster`       | string        | The ID of the existing cluster where the user will be created.                                                        | Yes |
+| `location`      | string        | The GCP location where the cluster exists (e.g., `us-central1`).                                                 | Yes |
+| `user`          | string        | The name for the new user. Must be unique within the cluster.                                                        | Yes |
+| `userType`      | string        | The type of user. Valid values: `ALLOYDB_BUILT_IN` and `ALLOYDB_IAM_USER`. `ALLOYDB_IAM_USER` is recommended.          | Yes |
+| `password`      | string        | A secure password for the user. Required only if `userType` is `ALLOYDB_BUILT_IN`.                                          | No  |
+| `databaseRoles` | array(string) | Optional. A list of database roles to grant to the new user (e.g., `pg_read_all_data`).                                     | No  |
 
 ## Example
 

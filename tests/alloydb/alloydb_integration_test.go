@@ -1126,6 +1126,12 @@ func TestAlloyDBCreateUser(t *testing.T) {
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
+			name:        "missing location",
+			body:        `{"project": "p1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			want:        `parameter \"location\" is required`,
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name:        "missing user",
 			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userType": "ALLOYDB_IAM_USER"}`,
 			want:        `parameter \"user\" is required`,
