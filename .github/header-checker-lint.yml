@@ -14,7 +14,7 @@
 
 allowedCopyrightHolders:
   - 'Google LLC'
-  - 'Oracle and/or its affiliates'
+  - 'Oracle'
 
 allowedLicenses:
   - 'Apache-2.0'
