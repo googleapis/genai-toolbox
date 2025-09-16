@@ -19,10 +19,6 @@ This tool provisions a new instance with a **public IP address**.
   2. The user or service account executing the tool has the following IAM roles:
      - `roles/alloydb.admin`: To create and manage AlloyDB instances.
 
-{{< notice info >}}
-This tool uses a `source` of kind `alloydb-admin`.
-{{< /notice >}}
-
 The tool takes the following input parameters:
 
 | Parameter | Type | Description | Required |
