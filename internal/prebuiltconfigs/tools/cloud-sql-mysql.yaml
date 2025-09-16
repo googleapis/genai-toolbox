@@ -46,6 +46,10 @@ tools:
     kind: mysql-list-tables
     source: cloud-sql-mysql-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+  list_table_fragmentation:
+    kind: mysql-list-table-fragmentation
+    source: cloud-sql-mysql-source
+    description: "some"
 
 toolsets:
   cloud_sql_mysql_database_tools:
@@ -53,3 +57,4 @@ toolsets:
     - list_tables
     - get_query_plan
     - list_active_queries
+    - list_table_fragmentation
