@@ -97,11 +97,6 @@ func TestDataformCompileTool(t *testing.T) {
 	nonExistentDir := filepath.Join(os.TempDir(), "non-existent-dir-for-test-12345")
 	os.Remove(nonExistentDir)
 
-	// Helper to create JSON-safe paths (handles Windows backslashes)
-	jsonSafePath := func(p string) string {
-		return strings.ReplaceAll(p, `\`, `\\`)
-	}
-
 	testCases := []struct {
 		name       string
 		reqBody    string
@@ -110,9 +105,9 @@ func TestDataformCompileTool(t *testing.T) {
 	}{
 		{
 			name:       "success case",
-			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, jsonSafePath(projectDir)),
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, projectDir),
 			wantStatus: http.StatusOK,
-			wantBody:   `test_col`,
+			wantBody:   "test_col",
 		},
 		{
 			name:       "missing parameter",
@@ -122,7 +117,7 @@ func TestDataformCompileTool(t *testing.T) {
 		},
 		{
 			name:       "non-existent directory",
-			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, jsonSafePath(nonExistentDir)),
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, nonExistentDir),
 			wantStatus: http.StatusBadRequest,
 			wantBody:   "error executing dataform compile",
 		},

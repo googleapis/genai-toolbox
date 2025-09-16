@@ -41,7 +41,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Config is the configuration for the dataform-compile tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -51,12 +50,10 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of the tool.
 func (cfg Config) ToolConfigKind() string {
 	return kind
 }
 
-// Initialize creates a new Tool instance from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project_dir", "The Dataform project directory."),
@@ -84,7 +81,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 var _ tools.Tool = Tool{}
 
-// Tool represents the dataform-compile tool.
 type Tool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
@@ -94,7 +90,6 @@ type Tool struct {
 	mcpManifest  tools.McpManifest
 }
 
-// Invoke executes the dataform compile command.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
@@ -112,27 +107,22 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return strings.TrimSpace(string(output)), nil
 }
 
-// ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.AllParams, data, claims)
 }
 
-// Manifest returns the manifest for the tool.
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-// McpManifest returns the MCP manifest for the tool.
 func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-// Authorized checks if the tool is authorized.
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-// RequiresClientAuthorization returns whether the tool requires client authorization.
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
 }
