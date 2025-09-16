@@ -1,5 +1,5 @@
 ---
-title: Cloud SQL List Databases
+title: cloud-sql-list-databases
 type: docs
 weight: 1
 description: List Cloud SQL databases in an instance.
