@@ -13,9 +13,9 @@ exponential backoff. It is compatible with [alloydb-admin](../../sources/alloydb
 
 | Parameter  | Type   | Description                                                                              | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `projectId`  | string | The GCP project ID.                                  | Yes      |
-| `locationId` | string | The location of the operation (e.g., 'us-central1'). | Yes      |
-| `operationId` | string | The ID of the operation to wait for.                | Yes      | 
+| `project`  | string | The GCP project ID.                                  | Yes      |
+| `location` | string | The location of the operation (e.g., 'us-central1'). | Yes      |
+| `operation` | string | The ID of the operation to wait for.                | Yes      | 
 
 {{< notice info >}}
 This tool is intended for developer assistant workflows with human-in-the-loop

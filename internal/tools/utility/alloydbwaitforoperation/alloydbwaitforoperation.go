@@ -123,14 +123,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
 	}
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The project ID"),
-		tools.NewStringParameter("locationId", "The location ID"),
-		tools.NewStringParameter("operationId", "The operation ID"),
+		tools.NewStringParameter("project", "The project ID"),
+		tools.NewStringParameter("location", "The location ID"),
+		tools.NewStringParameter("operation", "The operation ID"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId", "operationId"}
+	inputSchema.Required = []string{"project", "location", "operation"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -210,17 +210,17 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'projectId' parameter")
+		return nil, fmt.Errorf("missing 'project' parameter")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
+	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'locationId' parameter")
+		return nil, fmt.Errorf("missing 'location' parameter")
 	}
-	operationId, ok := paramsMap["operationId"].(string)
+	operation, ok := paramsMap["operation"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'operationId' parameter")
+		return nil, fmt.Errorf("missing 'operation' parameter")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -231,7 +231,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
 
-	name := fmt.Sprintf("projects/%s/locations/%s/operations/%s", projectId, locationId, operationId)
+	name := fmt.Sprintf("projects/%s/locations/%s/operations/%s", project, location, operation)
 
 	delay := t.Delay
 	maxDelay := t.MaxDelay

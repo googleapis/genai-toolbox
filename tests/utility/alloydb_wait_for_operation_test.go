@@ -77,7 +77,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.t.Errorf("User-Agent header not found")
 	}
 
-	// The format is projects/{project}/locations/{location}/operations/{operation_id}
+	// The format is projects/{project}/locations/{location}/operations/{operation}
 	// The tool will call something like /v1/projects/p1/locations/l1/operations/op1
 	if match, _ := regexp.MatchString("/v1/projects/.*/locations/.*/operations/.*", r.URL.Path); match {
 		parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
@@ -164,13 +164,13 @@ func TestWaitToolEndpoints(t *testing.T) {
 		{
 			name:     "successful operation",
 			toolName: "wait-for-op1",
-			body:     `{"projectId": "p1", "locationId": "l1", "operationId": "op1"}`,
+			body:     `{"project": "p1", "location": "l1", "operation": "op1"}`,
 			want:     `{"name":"op1","done":true,"response":"success"}`,
 		},
 		{
 			name:        "failed operation",
 			toolName:    "wait-for-op2",
-			body:        `{"projectId": "p1", "locationId": "l1", "operationId": "op2"}`,
+			body:        `{"project": "p1", "location": "l1", "operation": "op2"}`,
 			expectError: true,
 		},
 	}
