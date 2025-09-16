@@ -43,4 +43,3 @@ tools:
 | :---- | :---- | :---- | :---- |
 | kind | string | true | Must be "dataform-compile". |
 | description | string | true | Description of the tool that is passed to the LLM. |
-| authRequired | \[\]string | false | (Optional) A list of auth service names. If provided, the tool will only be invoked if the user is authenticated with one of these services. |
