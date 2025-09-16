@@ -46,7 +46,7 @@ type Config struct {
     Name        string   `yaml:"name" validate:"required"`
     Kind        string   `yaml:"kind" validate:"required"`
     Source      string   `yaml:"source" validate:"required"`
-    Description string   `yaml:"description" validate:"required"`
+    Description string   `yaml:"description"`
     AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -72,8 +72,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
     allParameters := tools.Parameters{
         tools.NewStringParameter("project", "The GCP project ID."),
-        tools.NewStringParameter("location", "The location to create the cluster in."),
-        tools.NewStringParameter("clusterId", "A unique ID for the AlloyDB cluster."),
+        tools.NewStringParameterWithDefault("location", "us-central1", "The location to create the cluster in. The default value is us-central1. If quota is exhausted then use other regions."),
+        tools.NewStringParameter("cluster", "A unique ID for the AlloyDB cluster."),
         tools.NewStringParameter("password", "A secure password for the initial user."),
         tools.NewStringParameterWithDefault("network", "default", "The name of the VPC network to connect the cluster to (e.g., 'default')."),
         tools.NewStringParameterWithDefault("user", "postgres", "The name for the initial superuser. Defaults to 'postgres' if not provided."),
@@ -81,7 +81,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
     paramManifest := allParameters.Manifest()
 
     inputSchema := allParameters.McpManifest()
-    inputSchema.Required = []string{"project", "location", "clusterId", "password"}
+    inputSchema.Required = []string{"project", "cluster", "password"}
+
+    description := cfg.Description
+	if description == "" {
+		description = "Creates a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool."
+	}
+
     mcpManifest := tools.McpManifest{
         Name:        cfg.Name,
         Description: cfg.Description,
@@ -121,12 +127,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
     location, ok := paramsMap["location"].(string)
     if !ok {
-        return nil, fmt.Errorf("invalid or missing 'location' parameter; expected a non-empty string")
+        return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
     }
 
-    clusterId, ok := paramsMap["clusterId"].(string)
-    if !ok || clusterId == "" {
-        return nil, fmt.Errorf("invalid or missing 'clusterId' parameter; expected a non-empty string")
+    clusterID, ok := paramsMap["cluster"].(string)
+    if !ok || clusterID == "" {
+        return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
     }
 
     password, ok := paramsMap["password"].(string)
@@ -163,7 +169,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
     }
 
     // The Create API returns a long-running operation.
-    resp, err := service.Projects.Locations.Clusters.Create(urlString, clusterBody).ClusterId(clusterId).Do()
+    resp, err := service.Projects.Locations.Clusters.Create(urlString, clusterBody).ClusterId(clusterID).Do()
     if err != nil {
         return nil, fmt.Errorf("error creating AlloyDB cluster: %w", err)
     }

@@ -1078,49 +1078,37 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 		name        string
 		body        string
 		want        string
-		wantError   string
-		isErr bool
 		wantStatusCode int
 	}{
 		{
 			name: "successful creation",
-			body: `{"project": "p1", "location": "l1", "clusterId": "c1-success", "password": "p1"}`,
+			body: `{"project": "p1", "location": "l1", "cluster": "c1-success", "password": "p1"}`,
 			want: `{"name":"projects/p1/locations/l1/operations/mock-operation-success", "metadata": {"verb": "create", "target": "projects/p1/locations/l1/clusters/c1-success"}}`,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:        "api failure",
-			body:        `{"project": "p1", "location": "l1", "clusterId": "c2-api-failure", "password": "p1"}`,
-			isErr: true,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c2-api-failure", "password": "p1"}`,
+			want:        "internal api error",
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   "internal api error",
 		},
 		{
 			name:        "missing project",
-			body:        `{"location": "l1", "clusterId": "c1", "password": "p1"}`,
-			isErr: true,
+			body:        `{"location": "l1", "cluster": "c1", "password": "p1"}`,
+			want:        `parameter \"project\" is required`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"project\" is required`,
-		},
-		{
-			name:        "missing location",
-			body:        `{"project": "p1", "clusterId": "c1", "password": "p1"}`,
-			isErr: true,
-			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"location\" is required`,
 		},
 		{
 			name:        "missing cluster",
 			body:        `{"project": "p1", "location": "l1", "password": "p1"}`,
-			isErr: true,
+			want:        `parameter \"cluster\" is required`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"clusterId\" is required`,
 		},
 		{
 			name:        "missing password",
-			body:        `{"project": "p1", "location": "l1", "clusterId": "c1"}`,
-			isErr: true,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1"}`,
+			want:        `parameter \"password\" is required`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"password\" is required`,
 		},
 	}
 
@@ -1140,12 +1128,9 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 
 			bodyBytes, _ := io.ReadAll(resp.Body)
 
-			if tc.isErr {
-				if resp.StatusCode != tc.wantStatusCode {
-					t.Fatalf("expected status %d but got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
-				}
-				if tc.wantError != "" && !bytes.Contains(bodyBytes, []byte(tc.wantError)) {
-					t.Fatalf("expected error response to contain %q, but got: %s", tc.wantError, string(bodyBytes))
+			if tc.wantStatusCode != http.StatusOK {
+				if tc.want != "" && !bytes.Contains(bodyBytes, []byte(tc.want)) {
+					t.Fatalf("expected error response to contain %q, but got: %s", tc.want, string(bodyBytes))
 				}
 				return
 			}
