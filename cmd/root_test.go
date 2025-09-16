@@ -1463,7 +1463,7 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "mysql prebuilt tools",
 			in:   mysql_config,
 			wantToolset: server.ToolsetConfigs{
-				"mysql-database-tools": tools.ToolsetConfig{
+				"mysql_database_tools": tools.ToolsetConfig{
 					Name:      "mysql-database-tools",
 					ToolNames: []string{"execute_sql", "list_active_queries", "list_tables"},
 				},

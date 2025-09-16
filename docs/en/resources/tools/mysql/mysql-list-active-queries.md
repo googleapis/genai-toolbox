@@ -15,7 +15,7 @@ A `mysql-list-active-queries` tool retrieves information about active queries in
 - [cloud-sql-mysql](../../sources/cloud-sql-mysql.md)
 - [mysql](../../sources/mysql.md)
 
-`mysql-list-active-queries` outputs detailed information as JSON for current active queriesi, ordered by execution time in descending order.
+`mysql-list-active-queries` outputs detailed information as JSON for current active queries, ordered by execution time in descending order.
 This tool takes 2 optional input parameters:
 
 - `min_duration_secs` (optional): Only show queries running for at least this long in seconds, default `0`.
@@ -26,7 +26,7 @@ This tool takes 2 optional input parameters:
 ```yaml
 tools:
   list_active_queries:
-    kind: mysql-execute-sql
+    kind: mysql-list-active-queries
     source: my-mysql-instance
     description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
 ```
@@ -46,7 +46,7 @@ The response is a json array with the following fields:
   "user": "the user who issued this query",
   "trx_rows_locked": "the approximate number of rows locked by the owning transaction",
   "trx_rows_modified": "the approximate number of rows modified by the owning transaction",
-  "DB": "the default database for the owning connection"
+  "db": "the default database for the owning connection"
 }
 ```
 

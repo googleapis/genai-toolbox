@@ -413,7 +413,7 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 3,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails{singleQueryWanted,singleQueryWanted},
+			want:                []queryListDetails{singleQueryWanted, singleQueryWanted},
 		},
 	}
 
