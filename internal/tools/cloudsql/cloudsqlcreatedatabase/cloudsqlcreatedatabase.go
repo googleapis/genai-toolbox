@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistinstances
+package cloudsqlcreatedatabase
 
 import (
 	"context"
 	"fmt"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "alloydb-list-instances"
+const kind string = "cloud-sql-create-database"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -40,14 +41,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Configuration for the list-instances tool.
+// Config defines the configuration for the create-database tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL      string            `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -62,27 +62,26 @@ func (cfg Config) ToolConfigKind() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-
-	s, ok := rawS.(*alloydbadmin.Source)
+	s, ok := rawS.(*cloudsqladmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID to list instances for."),
-		tools.NewStringParameterWithDefault("location", "-", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')"),
-		tools.NewStringParameterWithDefault("cluster", "-", "Optional: The ID of the cluster to list instances from. Use '-' to get results for all clusters.(Default: '-')"),
+		tools.NewStringParameter("project", "The project ID"),
+		tools.NewStringParameter("instance", "The ID of the instance where the database will be created."),
+		tools.NewStringParameter("name", "The name for the new database. Must be unique within the instance."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project"}
+	inputSchema.Required = []string{"project", "instance", "name"}
 
 	description := cfg.Description
 	if description == "" {
-		description = "Lists all AlloyDB instances in a given project, location and cluster."
+		description = "Creates a new database in a Cloud SQL instance."
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -94,22 +93,23 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
+		AuthRequired: cfg.AuthRequired,
 		Source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}, nil
 }
 
-// Tool represents the list-instances tool.
+// Tool represents the create-database tool.
 type Tool struct {
 	Name         string   `yaml:"name"`
 	Kind         string   `yaml:"kind"`
 	Description  string   `yaml:"description"`
-	
-	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AuthRequired []string `yaml:"authRequired"`
 
+	Source      *cloudsqladmin.Source
+	AllParams   tools.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -120,15 +120,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
+		return nil, fmt.Errorf("missing 'project' parameter")
 	}
-	location, ok := paramsMap["location"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+	instance, ok := paramsMap["instance"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'instance' parameter")
 	}
-	cluster, ok := paramsMap["cluster"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
+	name, ok := paramsMap["name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'name' parameter")
+	}
+
+	database := sqladmin.Database{
+		Name:     name,
+		Project:  project,
+		Instance: instance,
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -136,11 +142,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
-
-	resp, err := service.Projects.Locations.Clusters.Instances.List(urlString).Do()
+	resp, err := service.Databases.Insert(project, instance, &database).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error listing AlloyDB instances: %w", err)
+		return nil, fmt.Errorf("error creating database: %w", err)
 	}
 
 	return resp, nil
