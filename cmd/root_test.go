@@ -1234,11 +1234,8 @@ func TestPrebuiltTools(t *testing.T) {
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
-	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
-	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
-	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
@@ -1249,6 +1246,10 @@ func TestPrebuiltTools(t *testing.T) {
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1346,36 +1347,6 @@ func TestPrebuiltTools(t *testing.T) {
 				"alloydb_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_admin_tools",
 					ToolNames: []string{"create_cluster", "wait_for_operation", "create_instance", "list_clusters", "list_instances", "list_users", "create_user", "get_cluster", "get_instance", "get_user"},
-				},
-			},
-		},
-		{
-			name: "cloudsql pg admin prebuilt tools",
-			in:   cloudsqlpg_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
-					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
-				},
-			},
-		},
-		{
-			name: "cloudsql mysql admin prebuilt tools",
-			in:   cloudsqlmysql_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
-					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
-				},
-			},
-		},
-		{
-			name: "cloudsql mssql admin prebuilt tools",
-			in:   cloudsqlmssql_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
-					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 			},
 		},
@@ -1536,6 +1507,46 @@ func TestPrebuiltTools(t *testing.T) {
 				"neo4j_database_tools": tools.ToolsetConfig{
 					Name:      "neo4j_database_tools",
 					ToolNames: []string{"execute_cypher", "get_schema"},
+				},
+			},
+		},
+		{
+			name: "alloydb postgres observability prebuilt tools",
+			in:   alloydbobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql postgres observability prebuilt tools",
+			in:   cloudsqlpgobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql observability prebuilt tools",
+			in:   cloudsqlmysqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql observability prebuilt tools",
+			in:   cloudsqlmssqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics"},
 				},
 			},
 		},
