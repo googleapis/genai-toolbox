@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistclusters
+package cloudsqllistdatabases
 
 import (
 	"context"
 	"fmt"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
+	cloudsqladminsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "alloydb-list-clusters"
+const kind string = "cloud-sql-list-databases"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -40,14 +40,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Configuration for the list-clusters tool.
+// Config defines the configuration for the list-databases tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL      string            `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -62,48 +61,53 @@ func (cfg Config) ToolConfigKind() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
+		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-
-	s, ok := rawS.(*alloydbadmin.Source)
+	s, ok := rawS.(*cloudsqladminsrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID to list clusters for."),
-		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		tools.NewStringParameter("project", "The project ID"),
+		tools.NewStringParameter("instance", "The instance ID"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId"}
+	inputSchema.Required = []string{"project", "instance"}
+
+	description := cfg.Description
+	if description == "" {
+		description = "Lists all databases for a Cloud SQL instance."
+	}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
+		AuthRequired: cfg.AuthRequired,
 		Source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
+		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}, nil
 }
 
-// Tool represents the list-clusters tool.
+// Tool represents the list-databases tool.
 type Tool struct {
 	Name         string   `yaml:"name"`
 	Kind         string   `yaml:"kind"`
 	Description  string   `yaml:"description"`
-	
-	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AuthRequired []string `yaml:"authRequired"`
 
+	AllParams   tools.Parameters `yaml:"allParams"`
+	Source      *cloudsqladminsrc.Source
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -112,13 +116,13 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("missing 'project' parameter")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+	instance, ok := paramsMap["instance"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'instance' parameter")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -126,14 +130,31 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
-
-	resp, err := service.Projects.Locations.Clusters.List(urlString).Do()
+	resp, err := service.Databases.List(project, instance).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error listing AlloyDB clusters: %w", err)
+		return nil, fmt.Errorf("error listing databases: %w", err)
 	}
 
-	return resp, nil
+	if resp.Items == nil {
+		return []any{}, nil
+	}
+
+	type databaseInfo struct {
+		Name      string `json:"name"`
+		Charset   string `json:"charset"`
+		Collation string `json:"collation"`
+	}
+
+	var databases []databaseInfo
+	for _, item := range resp.Items {
+		databases = append(databases, databaseInfo{
+			Name:      item.Name,
+			Charset:   item.Charset,
+			Collation: item.Collation,
+		})
+	}
+
+	return databases, nil
 }
 
 // ParseParams parses the parameters for the tool.
