@@ -4,7 +4,7 @@ linkTitle: "AlloyDB"
 type: docs
 weight: 1
 description: >
-  AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for 
+  AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for
   demanding transactional workloads.
 
 ---
@@ -24,24 +24,27 @@ cluster][alloydb-free-trial].
 
 ## Available Tools
 
-- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
+- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)
   Use natural language queries on AlloyDB, powered by AlloyDB AI.
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in AlloyDB Postgres.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in AlloyDB Postgres.
 
-- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in an AlloyDB for PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
+- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
 Connect your IDE to AlloyDB using Toolbox.
 
-- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)  
+- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)
 Create your AlloyDB database with MCP Toolbox.
 
 ## Requirements
