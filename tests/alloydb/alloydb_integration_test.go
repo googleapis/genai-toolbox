@@ -1080,12 +1080,12 @@ func TestAlloyDBCreateInstance(t *testing.T) {
  }
 
  tcs := []struct {
-     name        string
-     body        string
-     want        string
-     wantError   string
-     expectError bool
-     errorStatus int
+     name           string
+     body           string
+     want           string
+     wantError      string
+	 wantStatusCode int
+     isErr          bool
  }{
      {
          name: "successful creation",
@@ -1095,43 +1095,43 @@ func TestAlloyDBCreateInstance(t *testing.T) {
      {
          name:        "api failure",
          body:        `{"project": "p1", "location": "l1", "cluster": "c1", "instanceId": "i2-api-failure", "instanceType": "PRIMARY", "displayName": "i1-success"}`,
-         expectError: true,
-         errorStatus: http.StatusBadRequest,
+         isErr: true,
+         wantStatusCode: http.StatusBadRequest,
          wantError:   "internal api error",
      },
      {
          name:        "missing project",
          body:        `{"location": "l1", "cluster": "c1", "instanceId": "i1", "instanceType": "PRIMARY"}`,
-         expectError: true,
-         errorStatus: http.StatusBadRequest,
+         isErr: true,
+         wantStatusCode: http.StatusBadRequest,
          wantError:   `parameter \"project\" is required`,
      },
      {
          name:        "missing location",
          body:        `{"project": "p1", "cluster": "c1", "instanceId": "i1", "instanceType": "PRIMARY"}`,
-         expectError: true,
-         errorStatus: http.StatusBadRequest,
+         isErr: true,
+         wantStatusCode: http.StatusBadRequest,
          wantError:   `parameter \"location\" is required`,
      },
      {
          name:        "missing cluster",
          body:        `{"project": "p1", "location": "l1", "instanceId": "i1", "instanceType": "PRIMARY"}`,
-         expectError: true,
-         errorStatus: http.StatusBadRequest,
+         isErr: true,
+         wantStatusCode: http.StatusBadRequest,
          wantError:   `parameter \"cluster\" is required`,
      },
      {
          name:        "missing instanceId",
          body:        `{"project": "p1", "location": "l1", "cluster": "c1", "instanceType": "PRIMARY"}`,
-         expectError: true,
-         errorStatus: http.StatusBadRequest,
+         isErr: true,
+         wantStatusCode: http.StatusBadRequest,
          wantError:   `parameter \"instanceId\" is required`,
      },
      {
          name:        "missing instanceType",
          body:        `{"project": "p1", "location": "l1", "cluster": "c1", "instanceId": "i1"}`,
-         expectError: true,
-         errorStatus: http.StatusBadRequest,
+         isErr: true,
+         wantStatusCode: http.StatusBadRequest,
          wantError:   `parameter \"instanceType\" is required`,
      },
  }
@@ -1152,9 +1152,9 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 
          bodyBytes, _ := io.ReadAll(resp.Body)
 
-         if tc.expectError {
-             if resp.StatusCode != tc.errorStatus {
-                 t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
+         if tc.isErr {
+             if resp.StatusCode != tc.wantStatusCode {
+                 t.Fatalf("expected status %d but got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
              }
              if tc.wantError != "" && !bytes.Contains(bodyBytes, []byte(tc.wantError)) {
                  t.Fatalf("expected error response to contain %q, but got: %s", tc.wantError, string(bodyBytes))
