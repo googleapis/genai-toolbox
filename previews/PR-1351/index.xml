@@ -3739,6 +3739,12 @@ PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -3849,6 +3855,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4058,6 +4070,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
