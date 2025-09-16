@@ -24,10 +24,8 @@ DEPS_FILE=".ci/quickstart_dependencies.json"
 install_system_packages() {
   apt-get update
   apt-get install -y jq
-  GETTEXT_VERSION=$(apt-cache policy gettext-base | grep Candidate | awk '{print $2}')
-  echo "Available gettext-base version: $GETTEXT_VERSION"
 
-  mapfile -t install_list < <(jq -r '.apt | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
+  mapfile -t install_list < <(jq -r '.python | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
 
   if (( ${#install_list[@]} > 0 )); then
     apt-get install -y "${install_list[@]}"
@@ -55,18 +53,10 @@ setup_toolbox() {
   sleep 2
 }
 
-cleanup_all() {
-  echo "--- Final cleanup: Shutting down processes and dropping table ---"
-  kill $TOOLBOX_PID || true
-  kill $PROXY_PID || true
-}
-trap cleanup_all EXIT
-
 setup_orch_table() {
   export TABLE_NAME
   envsubst < "$SQL_FILE" | psql -h "$PGHOST" -p "$PGPORT" -U "$DB_USER" -d "$DATABASE_NAME"
 }
-
 
 run_orch_test() {
   local orch_dir="$1"
@@ -86,6 +76,13 @@ run_orch_test() {
     rm -rf "$VENV_DIR"
   )
 }
+
+cleanup_all() {
+  echo "--- Final cleanup: Shutting down processes and dropping table ---"
+  kill $TOOLBOX_PID || true
+  kill $PROXY_PID || true
+}
+trap cleanup_all EXIT
 
 # Main script execution
 install_system_packages
