@@ -27,13 +27,13 @@ The tool takes the following input parameters:
 
 | Parameter | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
-| `project` | string | The GCP project ID where the cluster exists. | Yes |
-| `location` | string | The GCP location where the cluster exists (e.g., `us-central1`). Default: `us-central1` | No |
-| `cluster` | string | The ID of the existing cluster to add this instance to. | Yes |
-| `instance` | string | A unique identifier for the new AlloyDB instance. | Yes |
-| `instanceType`| string | The type of instance. Valid values are: `PRIMARY` and `READ_POOL`. Default: `PRIMARY` | No |
-| `displayName` | string | A user-friendly name for the instance. | Yes |
-| `nodeCount` | int | The number of nodes for a read pool. Required only if `instanceType` is `READ_POOL`. Default: `1`| No |
+| `project`     | string | The GCP project ID where the cluster exists.                                                      | Yes |
+| `location`    | string | The GCP location where the cluster exists (e.g., `us-central1`). Default: `us-central1`           | No  |
+| `cluster`     | string | The ID of the existing cluster to add this instance to.                                           | Yes |
+| `instance`    | string | A unique identifier for the new AlloyDB instance.                                                 | Yes |
+| `instanceType`| string | The type of instance. Valid values are: `PRIMARY` and `READ_POOL`. Default: `PRIMARY`             | No  |
+| `displayName` | string | A user-friendly name for the instance.                                                            | Yes |
+| `nodeCount`   | int    | The number of nodes for a read pool. Required only if `instanceType` is `READ_POOL`. Default: `1` | No  |
 ## Example
 
 ```yaml
@@ -46,6 +46,6 @@ tools:
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be alloydb-create-instance.                                                                  |                                               |
-| source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                                       |
+| kind        |                   string                   |     true     | Must be alloydb-create-instance.                                                                 |
+| source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                           |
 | description |                   string                   |     false    | Description of the tool that is passed to the agent.                                             |
