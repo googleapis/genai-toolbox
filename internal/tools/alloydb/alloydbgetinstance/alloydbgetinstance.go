@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistclusters
+package alloydbgetinstance
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "alloydb-list-clusters"
+const kind string = "alloydb-get-instance"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -40,7 +40,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Configuration for the list-clusters tool.
+// Configuration for the get-instance tool.
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
 	Kind         string            `yaml:"kind" validate:"required"`
@@ -71,13 +71,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID to list clusters for."),
-		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("location", "The location of the instance (e.g., 'us-central1')."),
+		tools.NewStringParameter("cluster", "The ID of the cluster."),
+		tools.NewStringParameter("instance", "The ID of the instance."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId"}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -95,14 +97,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// Tool represents the list-clusters tool.
+// Tool represents the get-instance tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
+
 	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AllParams tools.Parameters
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -112,13 +113,21 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+	location, ok := paramsMap["location"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+	}
+	cluster, ok := paramsMap["cluster"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
+	}
+	instance, ok := paramsMap["instance"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'instance' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -126,11 +135,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, location, cluster, instance)
 
-	resp, err := service.Projects.Locations.Clusters.List(urlString).Do()
+	resp, err := service.Projects.Locations.Clusters.Instances.Get(urlString).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error listing AlloyDB clusters: %w", err)
+		return nil, fmt.Errorf("error getting AlloyDB instance: %w", err)
 	}
 
 	return resp, nil
