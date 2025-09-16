@@ -179,7 +179,7 @@ func runAlloyDBToolGetTest(t *testing.T) {
 						map[string]any{"name": "project", "type": "string", "description": "The GCP project ID to list clusters for.", "required": true, "authSources": []any{}},
 						map[string]any{"name": "location", "type": "string", "description": "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')", "required": false, "authSources": []any{}},
 					},
-					"authRequired": nil,
+					"authRequired": []any{},
 				},
 			},
 		},

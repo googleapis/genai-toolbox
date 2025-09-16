@@ -45,7 +45,7 @@ type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
 	Kind         string            `yaml:"kind" validate:"required"`
 	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
+	Description  string            `yaml:"description"`
 	AuthRequired []string          `yaml:"authRequired"`
 	BaseURL      string            `yaml:"baseURL"`
 }
@@ -80,9 +80,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	inputSchema := allParameters.McpManifest()
 	inputSchema.Required = []string{"project", "location", "cluster"}
 
+	description := cfg.Description
+	if description == "" {
+		description = "Lists all AlloyDB users in a given project, location and cluster."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -91,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:         kind,
 		Source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
+		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}, nil
 }
