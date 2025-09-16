@@ -29,7 +29,7 @@ tools:
 | ----------- | :------: | :----------: | ------------------------------------------------ |
 | kind        |  string  |     true     | Must be "cloud-sql-postgres-create-instance".    |
 | source      |  string  |     true     | The name of the `cloud-sql-admin` source to use. |
-| description |  string  |     true     | A description of the tool.                       |
+| description |  string  |     false    | A description of the tool.                       |
 
 ### Tool Inputs
 
