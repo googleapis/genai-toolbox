@@ -66,6 +66,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
     *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
 *   **Tools:**
+    *   `analyze_contribution`: Use this tool to perform contribution analysis, also called key driver analysis.
     *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
     *   `forecast`: Use this tool to forecast time series data.
