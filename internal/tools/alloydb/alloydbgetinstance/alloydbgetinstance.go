@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlcreateusers
+package alloydbgetinstance
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
+	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "cloud-sql-create-users"
+const kind string = "alloydb-get-instance"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -41,13 +40,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Config defines the configuration for the create-user tool.
+// Configuration for the get-instance tool.
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string            `yaml:"name" validate:"required"`
+	Kind         string            `yaml:"kind" validate:"required"`
+	Source       string            `yaml:"source" validate:"required"`
+	Description  string            `yaml:"description" validate:"required"`
+	AuthRequired []string          `yaml:"authRequired"`
+	BaseURL      string            `yaml:"baseURL"`
 }
 
 // validate interface
@@ -62,55 +62,49 @@ func (cfg Config) ToolConfigKind() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+		return nil, fmt.Errorf("source %q not found", cfg.Source)
 	}
-	s, ok := rawS.(*cloudsqladmin.Source)
+
+	s, ok := rawS.(*alloydbadmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The project ID"),
-		tools.NewStringParameter("instance", "The ID of the instance where the user will be created."),
-		tools.NewStringParameter("name", "The name for the new user. Must be unique within the instance."),
-		tools.NewStringParameterWithRequired("password", "A secure password for the new user. Not required for IAM users.", false),
-		tools.NewBooleanParameter("iamUser", "Set to true to create a Cloud IAM user."),
+		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("location", "The location of the instance (e.g., 'us-central1')."),
+		tools.NewStringParameter("cluster", "The ID of the cluster."),
+		tools.NewStringParameter("instance", "The ID of the instance."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-
-	description := cfg.Description
-	if description == "" {
-		description = "Creates a new user in a Cloud SQL instance. Both built-in and IAM users are supported. IAM users require an email account as the user name. IAM is the more secure and recommended way to manage users. The agent should always ask the user what type of user they want to create. For more information, see https://cloud.google.com/sql/docs/postgres/add-manage-iam-users"
-	}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: description,
+		Description: cfg.Description,
 		InputSchema: inputSchema,
 	}
 
 	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
 		Source:       s,
 		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
 		mcpManifest:  mcpManifest,
 	}, nil
 }
 
-// Tool represents the create-user tool.
+// Tool represents the get-instance tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
 
-	Source      *cloudsqladmin.Source
-	AllParams   tools.Parameters `yaml:"allParams"`
+	Source    *alloydbadmin.Source
+	AllParams tools.Parameters
+
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -121,32 +115,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
+	}
+	location, ok := paramsMap["location"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+	}
+	cluster, ok := paramsMap["cluster"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
 	}
 	instance, ok := paramsMap["instance"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'instance' parameter")
-	}
-	name, ok := paramsMap["name"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing 'name' parameter")
-	}
-
-	iamUser, _ := paramsMap["iamUser"].(bool)
-
-	user := sqladmin.User{
-		Name: name,
-	}
-
-	if iamUser {
-		user.Type = "CLOUD_IAM_USER"
-	} else {
-		user.Type = "BUILT_IN"
-		password, ok := paramsMap["password"].(string)
-		if !ok || password == "" {
-			return nil, fmt.Errorf("missing 'password' parameter for non-IAM user")
-		}
-		user.Password = password
+		return nil, fmt.Errorf("invalid 'instance' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -154,9 +135,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	resp, err := service.Users.Insert(project, instance, &user).Do()
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, location, cluster, instance)
+
+	resp, err := service.Projects.Locations.Clusters.Instances.Get(urlString).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error creating user: %w", err)
+		return nil, fmt.Errorf("error getting AlloyDB instance: %w", err)
 	}
 
 	return resp, nil

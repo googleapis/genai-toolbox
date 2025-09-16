@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsql
+package cloudsqlpg
 
 import (
 	"bytes"
@@ -32,18 +32,19 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	"google.golang.org/api/sqladmin/v1"
 )
 
 var (
-	createUserToolKind = "cloud-sql-create-users"
+	createInstanceToolKind = "cloud-sql-postgres-create-instance"
 )
 
-type createUsersTransport struct {
+type createInstanceTransport struct {
 	transport http.RoundTripper
 	url       *url.URL
 }
 
-func (t *createUsersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *createInstanceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
 		req.URL.Scheme = t.url.Scheme
 		req.URL.Host = t.url.Host
@@ -51,51 +52,81 @@ func (t *createUsersTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return t.transport.RoundTrip(req)
 }
 
-type userCreateRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
-type masterCreateUserHandler struct {
+type masterHandler struct {
 	t *testing.T
 }
 
-func (h *masterCreateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
+func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !strings.HasPrefix(r.Header.Get("User-Agent"), "genai-toolbox/") {
+		h.t.Errorf("unexpected User-Agent: got %q", r.Header.Get("User-Agent"))
 	}
-
-	var body userCreateRequest
+	var body sqladmin.DatabaseInstance
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.t.Fatalf("failed to decode request body: %v", err)
 	}
 
-	var expectedBody userCreateRequest
-	var response any
-	var statusCode int
-
-	switch body.Name {
-	case "test-user":
-		expectedBody = userCreateRequest{Name: "test-user", Password: "password", Type: "BUILT_IN"}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	case "iam-user":
-		expectedBody = userCreateRequest{Name: "iam-user", Type: "CLOUD_IAM_USER"}
-		response = map[string]any{"name": "op2", "status": "PENDING"}
-		statusCode = http.StatusOK
-	default:
-		http.Error(w, fmt.Sprintf("unhandled user name: %s", body.Name), http.StatusInternalServerError)
+	instanceName := body.Name
+	if instanceName == "" {
+		http.Error(w, "missing instance name", http.StatusBadRequest)
 		return
 	}
 
-	// For IAM user, password is not expected
-	if body.Type == "CLOUD_IAM_USER" {
-		expectedBody.Password = ""
+	var expectedBody sqladmin.DatabaseInstance
+	var response any
+	var statusCode int
+
+	switch instanceName {
+	case "instance1":
+		expectedBody = sqladmin.DatabaseInstance{
+			Project:         "p1",
+			Name:            "instance1",
+			DatabaseVersion: "POSTGRES_15",
+			RootPassword:    "password123",
+			Settings: &sqladmin.Settings{
+				AvailabilityType: "REGIONAL",
+				Edition:          "ENTERPRISE_PLUS",
+				Tier:             "db-perf-optimized-N-8",
+				DataDiskSizeGb:   250,
+				DataDiskType:     "PD_SSD",
+			},
+		}
+		response = map[string]any{"name": "op1", "status": "PENDING"}
+		statusCode = http.StatusOK
+	case "instance2":
+		expectedBody = sqladmin.DatabaseInstance{
+			Project:         "p2",
+			Name:            "instance2",
+			DatabaseVersion: "POSTGRES_17",
+			RootPassword:    "password456",
+			Settings: &sqladmin.Settings{
+				AvailabilityType: "ZONAL",
+				Edition:          "ENTERPRISE_PLUS",
+				Tier:             "db-perf-optimized-N-2",
+				DataDiskSizeGb:   100,
+				DataDiskType:     "PD_SSD",
+			},
+		}
+		response = map[string]any{"name": "op2", "status": "RUNNING"}
+		statusCode = http.StatusOK
+	default:
+		http.Error(w, fmt.Sprintf("unhandled instance name: %s", instanceName), http.StatusInternalServerError)
+		return
 	}
 
-	if diff := cmp.Diff(expectedBody, body); diff != "" {
-		h.t.Errorf("unexpected request body (-want +got):\n%s", diff)
+	if expectedBody.Project != body.Project {
+		h.t.Errorf("unexpected project: got %q, want %q", body.Project, expectedBody.Project)
+	}
+	if expectedBody.Name != body.Name {
+		h.t.Errorf("unexpected name: got %q, want %q", body.Name, expectedBody.Name)
+	}
+	if expectedBody.DatabaseVersion != body.DatabaseVersion {
+		h.t.Errorf("unexpected databaseVersion: got %q, want %q", body.DatabaseVersion, expectedBody.DatabaseVersion)
+	}
+	if expectedBody.RootPassword != body.RootPassword {
+		h.t.Errorf("unexpected rootPassword: got %q, want %q", body.RootPassword, expectedBody.RootPassword)
+	}
+	if diff := cmp.Diff(expectedBody.Settings, body.Settings); diff != "" {
+		h.t.Errorf("unexpected request body settings (-want +got):\n%s", diff)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -105,11 +136,11 @@ func (h *masterCreateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func TestCreateUsersToolEndpoints(t *testing.T) {
+func TestCreateInstanceToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	handler := &masterCreateUserHandler{t: t}
+	handler := &masterHandler{t: t}
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
@@ -122,7 +153,7 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 	if originalTransport == nil {
 		originalTransport = http.DefaultTransport
 	}
-	http.DefaultClient.Transport = &createUsersTransport{
+	http.DefaultClient.Transport = &createInstanceTransport{
 		transport: originalTransport,
 		url:       serverURL,
 	}
@@ -131,14 +162,14 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 	})
 
 	var args []string
-	toolsFile := getCreateUsersToolsConfig()
+	toolsFile := getCreateInstanceToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
@@ -155,21 +186,21 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 		errorStatus int
 	}{
 		{
-			name:     "successful built-in user creation",
-			toolName: "create-user",
-			body:     `{"project": "p1", "instance": "i1", "name": "test-user", "password": "password", "iamUser": false}`,
+			name:     "successful creation - production",
+			toolName: "create-instance-prod",
+			body:     `{"project": "p1", "name": "instance1", "databaseVersion": "POSTGRES_15", "rootPassword": "password123", "editionPreset": "Production"}`,
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:     "successful iam user creation",
-			toolName: "create-user",
-			body:     `{"project": "p1", "instance": "i1", "name": "iam-user", "iamUser": true}`,
-			want:     `{"name":"op2","status":"PENDING"}`,
+			name:     "successful creation - development",
+			toolName: "create-instance-dev",
+			body:     `{"project": "p2", "name": "instance2", "rootPassword": "password456", "editionPreset": "Development"}`,
+			want:     `{"name":"op2","status":"RUNNING"}`,
 		},
 		{
-			name:        "missing password for built-in user",
-			toolName:    "create-user",
-			body:        `{"project": "p1", "instance": "i1", "name": "test-user", "iamUser": false}`,
+			name:        "missing required parameter",
+			toolName:    "create-instance-prod",
+			body:        `{"name": "instance1"}`,
 			expectError: true,
 			errorStatus: http.StatusBadRequest,
 		},
@@ -225,7 +256,7 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 	}
 }
 
-func getCreateUsersToolsConfig() map[string]any {
+func getCreateInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
@@ -233,8 +264,12 @@ func getCreateUsersToolsConfig() map[string]any {
 			},
 		},
 		"tools": map[string]any{
-			"create-user": map[string]any{
-				"kind":   createUserToolKind,
+			"create-instance-prod": map[string]any{
+				"kind":   createInstanceToolKind,
+				"source": "my-cloud-sql-source",
+			},
+			"create-instance-dev": map[string]any{
+				"kind":   createInstanceToolKind,
 				"source": "my-cloud-sql-source",
 			},
 		},
