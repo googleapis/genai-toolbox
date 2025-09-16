@@ -26,13 +26,13 @@ The tool takes the following input parameters:
 
 | Parameter | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
-| `project` | string | The GCP project ID where the cluster exists. | Yes |
-| `location` | string | The GCP location where the cluster exists (e.g., `us-central1`). Default: `us-central1`. | No |
-| `cluster` | string | The ID of the existing cluster where the user will be created. | Yes |
-| `user`    | string | The name for the new user. Must be unique within the cluster. | Yes |
-| `userType`| string | The type of user. Valid values: `ALLOYDB_BUILT_IN`, `ALLOYDB_IAM_USER`. Default: `ALLOYDB_BUILT_IN`. | No |
-| `password` | string | A secure password for the user. Required only if `userType` is `ALLOYDB_BUILT_IN`. | No |
-| `databaseRoles` | array(string) | Optional. A list of database roles to grant to the new user (e.g., `pg_read_all_data`). | No |
+| `project`       | string        | The GCP project ID where the cluster exists.                                                         | Yes |
+| `location`      | string        | The GCP location where the cluster exists (e.g., `us-central1`). Default: `us-central1`.             | No  |
+| `cluster`       | string        | The ID of the existing cluster where the user will be created.                                       | Yes |
+| `user`          | string        | The name for the new user. Must be unique within the cluster.                                        | Yes |
+| `userType`      | string        | The type of user. Valid values: `ALLOYDB_BUILT_IN`, `ALLOYDB_IAM_USER`. Default: `ALLOYDB_BUILT_IN`. | No  |
+| `password`      | string        | A secure password for the user. Required only if `userType` is `ALLOYDB_BUILT_IN`.                   | No  |
+| `databaseRoles` | array(string) | Optional. A list of database roles to grant to the new user (e.g., `pg_read_all_data`).              | No  |
 
 ## Example
 
@@ -46,6 +46,6 @@ tools:
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be alloydb-create-user.                                                                  |                                               |
-| source      |                   string                   |     true     | The name of an `alloydb-admin` source. |
+| kind        |                   string                   |     true     | Must be alloydb-create-user.                                                                     |
+| source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                           |
 | description |                   string                   |     false    | Description of the tool that is passed to the agent.                                             |
