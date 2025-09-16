@@ -19,10 +19,6 @@ This tool provisions a cluster with a **private IP address** within the specifie
   2. The user or service account executing the tool has the following IAM roles:
      - `roles/alloydb.admin`: To create and manage the AlloyDB cluster.
 
-{{< notice info >}}
-This tool uses a `source` of kind `alloydb-admin`.
-{{< /notice >}}
-
 The tool takes the following input parameters:
 
 | Parameter | Type | Description | Required |
