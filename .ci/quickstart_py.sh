@@ -93,15 +93,14 @@ cleanup_all() {
   if [ -n "$TOOLBOX_PID" ]; then
     kill $TOOLBOX_PID || true
   fi
-  if [ -n "$PROXY_PID" ]; then
-    kill $PROXY_PID || true
-  fi
 }
 trap cleanup_all EXIT
 
 # Main script execution
 install_system_packages
 
+export PGHOST="$CLOUD_SQL_PUBLIC_IP"
+export PGPORT=5432   
 export PGPASSWORD="$DB_PASSWORD"
 export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
