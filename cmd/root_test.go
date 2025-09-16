@@ -1234,8 +1234,11 @@ func TestPrebuiltTools(t *testing.T) {
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
+	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
+	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
+	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
@@ -1347,6 +1350,36 @@ func TestPrebuiltTools(t *testing.T) {
 				"alloydb_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_admin_tools",
 					ToolNames: []string{"create_cluster", "wait_for_operation", "create_instance", "list_clusters", "list_instances", "list_users", "create_user", "get_cluster", "get_instance", "get_user"},
+				},
+			},
+		},
+		{
+			name: "cloudsql pg admin prebuilt tools",
+			in:   cloudsqlpg_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql admin prebuilt tools",
+			in:   cloudsqlmysql_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql admin prebuilt tools",
+			in:   cloudsqlmssql_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 			},
 		},
