@@ -1110,6 +1110,12 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
+			name:           "missing location",
+			body:           `{"project": "p1", "cluster": "c1", "instance": "i1", "instanceType": "PRIMARY"}`,
+			want:           `parameter \"location\" is required`,
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name:           "missing instance",
 			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "instanceType": "PRIMARY"}`,
 			want:           `parameter \"instance\" is required`,

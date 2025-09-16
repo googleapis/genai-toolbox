@@ -72,7 +72,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The GCP project ID."),
-		tools.NewStringParameterWithDefault("location", "us-central1", "The location of the cluster (e.g., 'us-central1'). Default is us-central1."),
+		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
 		tools.NewStringParameter("cluster", "The ID of the cluster to create the instance in."),
 		tools.NewStringParameter("instance", "A unique ID for the new AlloyDB instance."),
 		tools.NewStringParameterWithDefault("instanceType", "PRIMARY", "The type of instance to create. Valid values are: PRIMARY and READ_POOL. Default is PRIMARY"),
@@ -82,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "cluster", "instance", "instanceType"}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance", "instanceType"}
 
 	description := cfg.Description
 	if description == "" {
@@ -127,8 +127,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
     }
 
 	location, ok := paramsMap["location"].(string)
-    if !ok {
-        return nil, fmt.Errorf("iinvalid 'location' parameter; expected a non-empty string")
+    if !ok || location == "" {
+        return nil, fmt.Errorf("invalid or missing 'location' parameter; expected a non-empty string")
     }
 
     cluster, ok := paramsMap["cluster"].(string)
