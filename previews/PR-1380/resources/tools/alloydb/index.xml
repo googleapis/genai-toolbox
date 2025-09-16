@@ -261,8 +261,8 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;tr>
  &lt;td style="text-align: left">&lt;code>userType&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The type of user. Valid values: &lt;code>ALLOYDB_BUILT_IN&lt;/code>, &lt;code>ALLOYDB_IAM_USER&lt;/code>. Default: &lt;code>ALLOYDB_BUILT_IN&lt;/code>.&lt;/td>
- &lt;td style="text-align: left">No&lt;/td>
+ &lt;td style="text-align: left">The type of user. Valid values: &lt;code>ALLOYDB_BUILT_IN&lt;/code> and &lt;code>ALLOYDB_IAM_USER&lt;/code>. &lt;code>ALLOYDB_IAM_USER&lt;/code> is recommended.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td style="text-align: left">&lt;code>password&lt;/code>&lt;/td>
