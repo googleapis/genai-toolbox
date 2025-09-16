@@ -71,8 +71,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
     }
 
     allParameters := tools.Parameters{
-        tools.NewStringParameter("projectId", "The GCP project ID."),
-        tools.NewStringParameter("locationId", "The location to create the cluster in."),
+        tools.NewStringParameter("project", "The GCP project ID."),
+        tools.NewStringParameter("location", "The location to create the cluster in."),
         tools.NewStringParameter("clusterId", "A unique ID for the AlloyDB cluster."),
         tools.NewStringParameter("password", "A secure password for the initial user."),
         tools.NewStringParameterWithDefault("network", "default", "The name of the VPC network to connect the cluster to (e.g., 'default')."),
@@ -81,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
     paramManifest := allParameters.Manifest()
 
     inputSchema := allParameters.McpManifest()
-    inputSchema.Required = []string{"projectId", "locationId", "clusterId", "password"}
+    inputSchema.Required = []string{"project", "location", "clusterId", "password"}
     mcpManifest := tools.McpManifest{
         Name:        cfg.Name,
         Description: cfg.Description,
@@ -114,14 +114,14 @@ type Tool struct {
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
     paramsMap := params.AsMap()
-    projectId, ok := paramsMap["projectId"].(string)
-    if !ok || projectId == "" {
-        return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a non-empty string")
+    project, ok := paramsMap["project"].(string)
+    if !ok || project == "" {
+        return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
     }
 
-    locationId, ok := paramsMap["locationId"].(string)
+    location, ok := paramsMap["location"].(string)
     if !ok {
-        return nil, fmt.Errorf("iinvalid or missing 'locationId' parameter; expected a non-empty string")
+        return nil, fmt.Errorf("invalid or missing 'location' parameter; expected a non-empty string")
     }
 
     clusterId, ok := paramsMap["clusterId"].(string)
@@ -149,12 +149,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-    urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
+    urlString := fmt.Sprintf("projects/%s/locations/%s", project, location)
 
     // Build the request body using the type-safe Cluster struct.
-    cluster := alloydb.Cluster{
+    clusterBody := &alloydb.Cluster{
         NetworkConfig: &alloydb.NetworkConfig{
-            Network: fmt.Sprintf("projects/%s/global/networks/%s", projectId, network),
+            Network: fmt.Sprintf("projects/%s/global/networks/%s", project, network),
         },
         InitialUser: &alloydb.UserPassword{
             User:     user,
@@ -163,7 +163,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
     }
 
     // The Create API returns a long-running operation.
-    resp, err := service.Projects.Locations.Clusters.Create(urlString, &cluster).ClusterId(clusterId).Do()
+    resp, err := service.Projects.Locations.Clusters.Create(urlString, clusterBody).ClusterId(clusterId).Do()
     if err != nil {
         return nil, fmt.Errorf("error creating AlloyDB cluster: %w", err)
     }
