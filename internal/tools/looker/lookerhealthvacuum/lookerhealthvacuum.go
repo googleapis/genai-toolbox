@@ -55,6 +55,7 @@ type Config struct {
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
+	Parameters   map[string]any `yaml:"parameters"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -75,9 +76,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	actionParameter := tools.NewStringParameterWithRequired("action", "The vacuum action to run. Can be 'models', or 'explores'.", true)
-	projectParameter := tools.NewStringParameter("project", "The Looker project to vacuum (optional).")
-	modelParameter := tools.NewStringParameter("model", "The Looker model to vacuum (optional).")
-	exploreParameter := tools.NewStringParameter("explore", "The Looker explore to vacuum (optional).")
+	projectParameter := tools.NewStringParameterWithDefault("project","", "The Looker project to vacuum (optional).")
+	modelParameter := tools.NewStringParameterWithDefault("model","", "The Looker model to vacuum (optional).")
+	exploreParameter := tools.NewStringParameterWithDefault("explore","", "The Looker explore to vacuum (optional).")
 timeframeParameter := tools.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
 minQueriesParameter := tools.NewIntParameterWithDefault("min_queries", 1, "The minimum number of queries for a model or explore to be considered used.")
 
