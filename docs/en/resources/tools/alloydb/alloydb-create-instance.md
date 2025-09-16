@@ -23,9 +23,9 @@ The tool takes the following input parameters:
 
 | Parameter | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
-| `projectId` | string | The GCP project ID where the cluster exists. | Yes |
-| `locationId` | string | The GCP location where the cluster exists (e.g., `us-central1`). | Yes |
-| `clusterId` | string | The ID of the existing cluster to add this instance to. | Yes |
+| `project` | string | The GCP project ID where the cluster exists. | Yes |
+| `location` | string | The GCP location where the cluster exists (e.g., `us-central1`). | Yes |
+| `cluster` | string | The ID of the existing cluster to add this instance to. | Yes |
 | `instanceId` | string | A unique identifier for the new AlloyDB instance. | Yes |
 | `instanceType`| string | The type of instance. Valid values are: `PRIMARY`, `READ_POOL`. | Yes |
 | `displayName` | string | A user-friendly name for the instance. | Yes |
