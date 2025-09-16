@@ -1467,7 +1467,7 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "mysql-database-tools",
 					ToolNames: []string{"execute_sql", "list_active_queries", "list_tables"},
 				},
-			}
+			},
 		},
 		{
 			name: "mssql prebuilt tools",

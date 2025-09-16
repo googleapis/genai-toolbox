@@ -166,7 +166,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	case cloudsqlmysql.SourceKind:
 		statement = listActiveQueriesStatementCloudSQLMySQL
 	default:
-		return nil, fmt.Errorf("Unsupported source kind kind: %q", sourceKind)
+		return nil, fmt.Errorf("unsupported source kind kind: %q", sourceKind)
 	}
 	// finish tool setup
 	t := Tool{
@@ -203,7 +203,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("invalid 'min_duration_secs' parameter; expected an integer")
 	}
-	limit, ok := paramsMap["limit"].(int);
+	limit, ok := paramsMap["limit"].(int)
 	if !ok {
 		return nil, fmt.Errorf("invalid 'limit' parameter; expected an integer")
 	}
@@ -215,7 +215,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, t.statement)
 
-	results, err := t.Pool.QueryContext(ctx, t.statement, duration, duration, limit);
+	results, err := t.Pool.QueryContext(ctx, t.statement, duration, duration, limit)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

@@ -25,9 +25,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
-	"sync"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -37,15 +37,15 @@ import (
 )
 
 var (
-	MySQLSourceKind = "mysql"
-	MySQLToolKind   = "mysql-sql"
+	MySQLSourceKind            = "mysql"
+	MySQLToolKind              = "mysql-sql"
 	MySQLListActiveQueriesKind = "mysql-list-active-queries"
-	MySQLListTablesToolKind = "mysql-list-tables"
-	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
-	MySQLHost       = os.Getenv("MYSQL_HOST")
-	MySQLPort       = os.Getenv("MYSQL_PORT")
-	MySQLUser       = os.Getenv("MYSQL_USER")
-	MySQLPass       = os.Getenv("MYSQL_PASS")
+	MySQLListTablesToolKind    = "mysql-list-tables"
+	MySQLDatabase              = os.Getenv("MYSQL_DATABASE")
+	MySQLHost                  = os.Getenv("MYSQL_HOST")
+	MySQLPort                  = os.Getenv("MYSQL_PORT")
+	MySQLUser                  = os.Getenv("MYSQL_USER")
+	MySQLPass                  = os.Getenv("MYSQL_PASS")
 )
 
 func getMySQLVars(t *testing.T) map[string]any {
@@ -164,7 +164,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 
 	// Run specific MySQL tool tests
 	runMySQLListTablesTest(t, tableNameParam, tableNameAuth)
-	runMySQLListActiveQueriesTest(t, ctx, pool);
+	runMySQLListActiveQueriesTest(t, ctx, pool)
 }
 
 func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -227,7 +227,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		requestBody    io.Reader
 		wantStatusCode int
 		want           any
-		isSimple     bool
+		isSimple       bool
 	}{
 		{
 			name:           "invoke list_tables detailed output",
@@ -240,7 +240,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{{"name": tableNameAuth}},
-			isSimple:     true,
+			isSimple:       true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
@@ -284,7 +284,9 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 				return
 			}
 
-			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
 			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
 				t.Fatalf("error decoding response wrapper: %v", err)
 			}
@@ -344,42 +346,42 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 
 func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.DB) {
 	type queryListDetails struct {
-		ProcessId       any     `json:"process_id"`
-		Query           string  `json:"query"`
-		TrxStarted      any     `json:"trx_started"`
-		TrxDuration     any     `json:"trx_duration_seconds"`
-		TrxWaitDuration any     `json:"trx_wait_duration_seconds"`
-		QueryTime       any     `json:"query_time"`
-		TrxState        string  `json:"trx_state"`
-		ProcessState    string  `json:"process_state"`
-		User            string  `json:"user"`
-		TrxRowsLocked   any     `json:"trx_rows_locked"`
-		TrxRowsModified any     `json:"trx_rows_modified"`
-		Db              string  `json:"db"`
+		ProcessId       any    `json:"process_id"`
+		Query           string `json:"query"`
+		TrxStarted      any    `json:"trx_started"`
+		TrxDuration     any    `json:"trx_duration_seconds"`
+		TrxWaitDuration any    `json:"trx_wait_duration_seconds"`
+		QueryTime       any    `json:"query_time"`
+		TrxState        string `json:"trx_state"`
+		ProcessState    string `json:"process_state"`
+		User            string `json:"user"`
+		TrxRowsLocked   any    `json:"trx_rows_locked"`
+		TrxRowsModified any    `json:"trx_rows_modified"`
+		Db              string `json:"db"`
 	}
 
 	singleQueryWanted := queryListDetails{
-		ProcessId: any(nil),
-		Query: "SELECT sleep(10)",
-		TrxStarted: any(nil),
-		TrxDuration: any(nil),
+		ProcessId:       any(nil),
+		Query:           "SELECT sleep(10)",
+		TrxStarted:      any(nil),
+		TrxDuration:     any(nil),
 		TrxWaitDuration: any(nil),
-		QueryTime: any(nil),
-		TrxState: "",
-		ProcessState: "User sleep",
-		User: "",
-		TrxRowsLocked: any(nil),
+		QueryTime:       any(nil),
+		TrxState:        "",
+		ProcessState:    "User sleep",
+		User:            "",
+		TrxRowsLocked:   any(nil),
 		TrxRowsModified: any(nil),
-		Db: "",
+		Db:              "",
 	}
 
 	invokeTcs := []struct {
-		name                    string
-		requestBody             io.Reader
-		clientSleepSecs         int
-		waitSecsBeforeCheck     int
-		wantStatusCode          int
-		want                    any
+		name                string
+		requestBody         io.Reader
+		clientSleepSecs     int
+		waitSecsBeforeCheck int
+		wantStatusCode      int
+		want                any
 	}{
 		{
 			name:                "invoke list_active_queries when the system is idle",
@@ -418,7 +420,8 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 
 					err := pool.PingContext(ctx)
 					if err != nil {
-						t.Fatalf("unable to connect to test database: %s", err)
+						t.Errorf("unable to connect to test database: %s", err)
+						return
 					}
 					_, err = pool.ExecContext(ctx, fmt.Sprintf("SELECT sleep(%d);", tc.clientSleepSecs))
 					if err != nil {
@@ -452,7 +455,9 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 				return
 			}
 
-			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
 			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
 				t.Fatalf("error decoding response wrapper: %v", err)
 			}
@@ -470,7 +475,8 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			got = details
 
 			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b queryListDetails) bool {
-						return a.Query == b.Query && a.ProcessState == b.ProcessState })); diff != "" {
+				return a.Query == b.Query && a.ProcessState == b.ProcessState
+			})); diff != "" {
 				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
 			}
 		})
