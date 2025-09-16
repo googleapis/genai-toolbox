@@ -262,3 +262,25 @@ func ProcessQueryArgs(ctx context.Context, params tools.ParamValues) (*v4.WriteQ
 	}
 	return &wq, nil
 }
+
+type QueryApiClientContext struct {
+	Name            string            `json:"name"`
+	Attributes      map[string]string `json:"attributes,omitempty"`
+	ExtraAttributes map[string]string `json:"extra_attributes,omitempty"`
+}
+
+type RenderOptions struct {
+	Format string `json:"format"`
+}
+
+type RequestRunInlineQuery2 struct {
+	Query             v4.WriteQuery         `json:"query"`
+	RenderOpts        RenderOptions         `json:"render_options"`
+	QueryApiClientCtx QueryApiClientContext `json:"query_api_client_context"`
+}
+
+func RunInlineQuery2(l *v4.LookerSDK, request RequestRunInlineQuery2, options *rtl.ApiSettings) (string, error) {
+	var result string
+	err := l.AuthSession.Do(&result, "POST", "/4.0", "/queries/run_inline", nil, request, options)
+	return result, err
+}

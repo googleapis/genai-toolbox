@@ -12,20 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlcreateusers
+package cloudsqlpgcreateinstances
 
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "cloud-sql-create-users"
+const kind string = "cloud-sql-postgres-create-instance"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -41,12 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Config defines the configuration for the create-user tool.
+// Config defines the configuration for the create-instances tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
+	Source       string   `yaml:"source" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -71,18 +72,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The project ID"),
-		tools.NewStringParameter("instance", "The ID of the instance where the user will be created."),
-		tools.NewStringParameter("name", "The name for the new user. Must be unique within the instance."),
-		tools.NewStringParameterWithRequired("password", "A secure password for the new user. Not required for IAM users.", false),
-		tools.NewBooleanParameter("iamUser", "Set to true to create a Cloud IAM user."),
+		tools.NewStringParameter("name", "The name of the instance"),
+		tools.NewStringParameterWithDefault("databaseVersion", "POSTGRES_17", "The database version for Postgres. If not specified, defaults to the latest available version (e.g., POSTGRES_17)."),
+		tools.NewStringParameter("rootPassword", "The root password for the instance"),
+		tools.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
+	inputSchema.Required = []string{"project", "name", "editionPreset", "rootPassword"}
 
 	description := cfg.Description
 	if description == "" {
-		description = "Creates a new user in a Cloud SQL instance. Both built-in and IAM users are supported. IAM users require an email account as the user name. IAM is the more secure and recommended way to manage users. The agent should always ask the user what type of user they want to create. For more information, see https://cloud.google.com/sql/docs/postgres/add-manage-iam-users"
+		description = "Creates a Postgres instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `POSTGRES_17`. The agent should ask the user if they want to use a different version."
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -102,7 +104,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// Tool represents the create-user tool.
+// Tool represents the create-instances tool.
 type Tool struct {
 	Name         string   `yaml:"name"`
 	Kind         string   `yaml:"kind"`
@@ -123,30 +125,47 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
-	instance, ok := paramsMap["instance"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing 'instance' parameter")
-	}
 	name, ok := paramsMap["name"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'name' parameter")
 	}
-
-	iamUser, _ := paramsMap["iamUser"].(bool)
-
-	user := sqladmin.User{
-		Name: name,
+	dbVersion, ok := paramsMap["databaseVersion"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'databaseVersion' parameter")
+	}
+	rootPassword, ok := paramsMap["rootPassword"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'rootPassword' parameter")
+	}
+	editionPreset, ok := paramsMap["editionPreset"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'editionPreset' parameter")
 	}
 
-	if iamUser {
-		user.Type = "CLOUD_IAM_USER"
-	} else {
-		user.Type = "BUILT_IN"
-		password, ok := paramsMap["password"].(string)
-		if !ok || password == "" {
-			return nil, fmt.Errorf("missing 'password' parameter for non-IAM user")
-		}
-		user.Password = password
+	settings := sqladmin.Settings{}
+	switch strings.ToLower(editionPreset) {
+	case "production":
+		settings.AvailabilityType = "REGIONAL"
+		settings.Edition = "ENTERPRISE_PLUS"
+		settings.Tier = "db-perf-optimized-N-8"
+		settings.DataDiskSizeGb = 250
+		settings.DataDiskType = "PD_SSD"
+	case "development":
+		settings.AvailabilityType = "ZONAL"
+		settings.Edition = "ENTERPRISE_PLUS"
+		settings.Tier = "db-perf-optimized-N-2"
+		settings.DataDiskSizeGb = 100
+		settings.DataDiskType = "PD_SSD"
+	default:
+		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
+	}
+
+	instance := sqladmin.DatabaseInstance{
+		Name:            name,
+		DatabaseVersion: dbVersion,
+		RootPassword:    rootPassword,
+		Settings:        &settings,
+		Project:         project,
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -154,9 +173,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	resp, err := service.Users.Insert(project, instance, &user).Do()
+	resp, err := service.Instances.Insert(project, &instance).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error creating user: %w", err)
+		return nil, fmt.Errorf("error creating instance: %w", err)
 	}
 
 	return resp, nil
