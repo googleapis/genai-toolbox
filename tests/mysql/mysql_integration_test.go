@@ -157,6 +157,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 
 	// Run specific MySQL tool tests
 	runMySQLListTablesTest(t, tableNameParam, tableNameAuth)
+	runMySQLListActiveQueriesTest(t, ctx, pool);
 }
 
 func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -330,6 +331,124 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
 				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
 			}
+		})
+	}
+}
+
+func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.DB) {
+	type queryListDetails struct {
+		ProcessId       any     `json:"process_id"`
+		Query           string  `json:"query"`
+		TrxStarted      any     `json:"trx_started"`
+		TrxDuration     any     `json:"trx_duration_seconds"`
+		TrxWaitDuration any     `json:"trx_wait_duration_seconds"`
+		QueryTime       any     `json:"query_time"`
+		TrxState        string  `json:"trx_state"`
+		ProcessState    string  `json:"process_state"`
+		User            string  `json:"user"`
+		TrxRowsLocked   any     `json:"trx_rows_locked"`
+		TrxRowsModified any     `json:"trx_rows_modified"`
+		Db              string  `json:"db"`
+	}
+
+	singleQueryWanted := queryListDetails{
+		ProcessId: any(nil),
+		Query: "sleep(100);",
+		TrxStarted: any(nil),
+		TrxDuration: any(nil),
+		TrxWaitDuration: any(nil),
+		QueryTime: any(nil),
+		TrxState: "",
+		ProcessState: "",
+		User: "",
+		TrxRowsLocked: any(nil),
+		TrxRowsModified: any(nil),
+		Db: "",
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		sleep          int
+		wantStatusCode int
+		want           any
+	}{
+		{
+			name:           "invoke list_active_queries when the system is idle",
+			requestBody:    nil,
+			sleep:          0,
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
+			requestBody:    nil,
+			sleep:          0,
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
+			requestBody:    bytes.NewBufferString(`{"min_duration_secs": "5"}`),
+			sleep:          0,
+			wantStatusCode: http.StatusOK,
+			want:           []queryListDetails{singleQueryWanted},
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []queryListDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+			}
+			got = details
+			if got != nil {
+				t.Errorf("omg")
+			}
+
+			/*
+			opts := []cmp.Option{
+				cmpopts.SortSlices(func(a, b objectDetails) bool { return a.ObjectName < b.ObjectName }),
+				cmpopts.SortSlices(func(a, b column) bool { return a.ColumnName < b.ColumnName }),
+				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
+			}
+
+			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+			*/
 		})
 	}
 }
