@@ -101,7 +101,6 @@ trap cleanup_all EXIT
 
 # Main script execution
 install_system_packages
-start_cloud_sql_proxy
 
 export PGPASSWORD="$DB_PASSWORD"
 export GOOGLE_API_KEY="$GOOGLE_API_KEY"
