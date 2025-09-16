@@ -131,9 +131,22 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		Body:         *wq,
 		ResultFormat: "json",
 	}
-	resp, err := sdk.RunInlineQuery(req, t.ApiSettings)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: *wq,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	resp, err := lookercommon.RunInlineQuery2(sdk, req2, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making query request: %s", err)
+		logger.DebugContext(ctx, "error querying with new endpoint, trying again with original", err)
+		resp, err = sdk.RunInlineQuery(req, t.ApiSettings)
+		if err != nil {
+			return nil, fmt.Errorf("error making query request: %s", err)
+		}
 	}
 	logger.DebugContext(ctx, "resp = ", resp)
 

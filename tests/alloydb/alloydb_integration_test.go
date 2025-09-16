@@ -118,6 +118,16 @@ func getAlloyDBToolsConfig() map[string]any {
 				"source":      "alloydb-admin-source",
 				"description": "Retrieves details of a specific AlloyDB cluster.",
 			},
+			"alloydb-get-instance": map[string]any{
+				"kind":        "alloydb-get-instance",
+				"source":      "alloydb-admin-source",
+				"description": "Retrieves details of a specific AlloyDB instance.",
+			},
+			"alloydb-get-user": map[string]any{
+				"kind":        "alloydb-get-user",
+				"source":      "alloydb-admin-source",
+				"description": "Retrieves details of a specific AlloyDB user.",
+			},
 		},
 	}
 }
@@ -152,6 +162,8 @@ func TestAlloyDBToolEndpoints(t *testing.T) {
 	runAlloyDBListUsersTest(t, vars)
 	runAlloyDBListInstancesTest(t, vars)
 	runAlloyDBGetClusterTest(t, vars)
+	runAlloyDBGetInstanceTest(t, vars)
+	runAlloyDBGetUserTest(t, vars)
 }
 
 func runAlloyDBToolGetTest(t *testing.T) {
@@ -688,7 +700,6 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 		Result string `json:"result"`
 	}
 
-
 	invokeTcs := []struct {
 		name           string
 		requestBody    io.Reader
@@ -726,7 +737,6 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 		},
 	}
 
-
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			api := "http://127.0.0.1:5000/api/tool/alloydb-get-cluster/invoke"
@@ -736,19 +746,16 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
 			defer resp.Body.Close()
 
-
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
 			}
-
 
 			if tc.wantStatusCode == http.StatusOK {
 				var body ToolResponse
@@ -756,13 +763,11 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 					t.Fatalf("error parsing response body: %v", err)
 				}
 
-
 				if tc.want != nil {
 					var gotMap map[string]any
 					if err := json.Unmarshal([]byte(body.Result), &gotMap); err != nil {
 						t.Fatalf("failed to unmarshal JSON result into map: %v", err)
 					}
-
 
 					got := make(map[string]any)
 					for key := range tc.want {
@@ -771,6 +776,195 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 						}
 					}
 
+					if diff := cmp.Diff(tc.want, got); diff != "" {
+						t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+					}
+				}
+			}
+		})
+	}
+}
+
+func runAlloyDBGetInstanceTest(t *testing.T, vars map[string]string) {
+	type ToolResponse struct {
+		Result string `json:"result"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		want           map[string]any
+		wantStatusCode int
+	}{
+		{
+			name:        "get instance success",
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"], vars["instanceId"])),
+			want: map[string]any{
+				"instanceType": "PRIMARY",
+				"name":         fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", vars["projectId"], vars["locationId"], vars["clusterId"], vars["instanceId"]),
+			},
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "get instance missing project",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"location": "%s", "cluster": "%s", "instance": "%s"}`, vars["locationId"], vars["clusterId"], vars["instanceId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get instance missing location",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "cluster": "%s", "instance": "%s"}`, vars["projectId"], vars["clusterId"], vars["instanceId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get instance missing clusterId",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "instance": "%s"}`, vars["projectId"], vars["locationId"], vars["instanceId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get instance missing instanceId",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get instance non-existent instance",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "non-existent-instance"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			api := "http://127.0.0.1:5000/api/tool/alloydb-get-instance/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+			}
+
+			if tc.wantStatusCode == http.StatusOK {
+				var body ToolResponse
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+
+				if tc.want != nil {
+					var gotMap map[string]any
+					if err := json.Unmarshal([]byte(body.Result), &gotMap); err != nil {
+						t.Fatalf("failed to unmarshal JSON result into map: %v", err)
+					}
+
+					got := make(map[string]any)
+					for key := range tc.want {
+						if value, ok := gotMap[key]; ok {
+							got[key] = value
+						}
+					}
+
+					if diff := cmp.Diff(tc.want, got); diff != "" {
+						t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+					}
+				}
+			}
+		})
+	}
+}
+
+func runAlloyDBGetUserTest(t *testing.T, vars map[string]string) {
+	type ToolResponse struct {
+		Result string `json:"result"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		want           map[string]any
+		wantStatusCode int
+	}{
+		{
+			name:        "get user success",
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "user": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"], vars["user"])),
+			want: map[string]any{
+				"name": fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["projectId"], vars["locationId"], vars["clusterId"], vars["user"]),
+				"userType": "ALLOYDB_BUILT_IN",
+			},
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "get user missing project",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"location": "%s", "cluster": "%s", "user": "%s"}`, vars["locationId"], vars["clusterId"], vars["user"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get user missing location",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "cluster": "%s", "user": "%s"}`, vars["projectId"], vars["clusterId"], vars["user"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get user missing cluster",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "user": "%s"}`, vars["projectId"], vars["locationId"], vars["user"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get user missing user",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "get non-existent user",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "user": "non-existent-user"}`, vars["projectId"], vars["locationId"], vars["clusterId"])),
+			wantStatusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			api := "http://127.0.0.1:5000/api/tool/alloydb-get-user/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+			}
+
+			if tc.wantStatusCode == http.StatusOK {
+				var body ToolResponse
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+
+				if tc.want != nil {
+					var gotMap map[string]any
+					if err := json.Unmarshal([]byte(body.Result), &gotMap); err != nil {
+						t.Fatalf("failed to unmarshal JSON result into map: %v", err)
+					}
+
+					got := make(map[string]any)
+					for key := range tc.want {
+						if value, ok := gotMap[key]; ok {
+							got[key] = value
+						}
+					}
 
 					if diff := cmp.Diff(tc.want, got); diff != "" {
 						t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
