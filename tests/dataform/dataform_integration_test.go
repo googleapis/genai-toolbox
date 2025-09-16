@@ -1,0 +1,161 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package dataformcompile
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/tests"
+)
+
+// setupTestProject creates a minimal dataform project using the 'dataform init' CLI.
+// It returns the path to the directory and a cleanup function.
+func setupTestProject(t *testing.T) (string, func()) {
+	tmpDir, err := os.MkdirTemp("", "dataform-project-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	cleanup := func() {
+		os.RemoveAll(tmpDir)
+	}
+
+	cmd := exec.Command("dataform", "init", tmpDir, "test-project-id", "US")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		cleanup()
+		t.Fatalf("Failed to run 'dataform init': %v\nOutput: %s", err, string(output))
+	}
+
+	definitionsDir := filepath.Join(tmpDir, "definitions")
+	exampleSQLX := `config { type: "table" } SELECT 1 AS test_col`
+	err = os.WriteFile(filepath.Join(definitionsDir, "example.sqlx"), []byte(exampleSQLX), 0644)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to write example.sqlx: %v", err)
+	}
+
+	return tmpDir, cleanup
+}
+
+func TestDataformCompileTool(t *testing.T) {
+	if _, err := exec.LookPath("dataform"); err != nil {
+		t.Skip("dataform CLI not found in $PATH, skipping integration test")
+	}
+
+	projectDir, cleanupProject := setupTestProject(t)
+	defer cleanupProject()
+
+	toolConfig := map[string]any{
+		"tools": map[string]any{
+			"my-dataform-compiler": map[string]any{
+				"kind":        "dataform-compile",
+				"description": "Tool to compile dataform projects",
+			},
+		},
+		"sources": map[string]any{}, // No source needed for this tool
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	cmd, cleanupServer, err := tests.StartCmd(ctx, toolConfig)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanupServer()
+
+	waitCtx, cancelWait := context.WithTimeout(ctx, 30*time.Second)
+	defer cancelWait()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	nonExistentDir := filepath.Join(os.TempDir(), "non-existent-dir-for-test-12345")
+	os.Remove(nonExistentDir)
+
+	// Helper to create JSON-safe paths (handles Windows backslashes)
+	jsonSafePath := func(p string) string {
+		return strings.ReplaceAll(p, `\`, `\\`)
+	}
+
+	testCases := []struct {
+		name       string
+		reqBody    string
+		wantStatus int
+		wantBody   string // Substring to check for in the response
+	}{
+		{
+			name:       "success case",
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, jsonSafePath(projectDir)),
+			wantStatus: http.StatusOK,
+			wantBody:   `test_col`,
+		},
+		{
+			name:       "missing parameter",
+			reqBody:    `{}`,
+			wantStatus: http.StatusBadRequest,
+			wantBody:   "parameter \\\"project_dir\\\" is required",
+		},
+		{
+			name:       "non-existent directory",
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, jsonSafePath(nonExistentDir)),
+			wantStatus: http.StatusBadRequest,
+			wantBody:   "error executing dataform compile",
+		},
+	}
+
+	api := "http://127.0.0.1:5000/api/tool/my-dataform-compiler/invoke"
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest("POST", api, strings.NewReader(tc.reqBody))
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unable to read response: %s", err)
+			}
+
+			if resp.StatusCode != tc.wantStatus {
+				t.Fatalf("unexpected status: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))
+			}
+
+			if tc.wantBody != "" && !strings.Contains(string(bodyBytes), tc.wantBody) {
+				t.Fatalf("expected body to contain %q, got: %s", tc.wantBody, string(bodyBytes))
+			}
+		})
+	}
+}

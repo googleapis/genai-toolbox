@@ -103,7 +103,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing required parameter 'project_dir'")
 	}
 
-	cmd := exec.CommandContext(ctx, "dataform", "compile", projectDir)
+	cmd := exec.CommandContext(ctx, "dataform", "compile", projectDir, "--json")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("error executing dataform compile: %w\nOutput: %s", err, string(output))
