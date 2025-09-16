@@ -15,7 +15,6 @@
 allowedCopyrightHolders:
   - 'Google LLC'
   - 'Oracle'
-
 allowedLicenses:
   - 'Apache-2.0'
 sourceFileExtensions:
@@ -24,3 +23,5 @@ sourceFileExtensions:
   - 'yml'
 ignoreFiles:
   - 'docs/en/getting-started/quickstart/**'
+  - '**/*oracle*'
+
