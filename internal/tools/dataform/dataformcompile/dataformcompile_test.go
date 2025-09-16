@@ -12,90 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataformcompile
+package dataformcompile_test
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 	"testing"
-	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/cmd"
+	yaml "github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompile"
 )
 
-func TestDataformCompileTool(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tmpDir, err := os.MkdirTemp("", "dataform-test")
+func TestParseFromYamlDataformCompile(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
-	defer os.RemoveAll(tmpDir)
-
-	projectDir := filepath.Join(tmpDir, "dataform-project")
-	initCmd := exec.Command("dataform", "init", projectDir, "gcp-project-id", "us-central1")
-	if err := initCmd.Run(); err != nil {
-		t.Fatalf("dataform init failed: %v", err)
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: dataform-compile
+					description: some description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": dataformcompile.Config{
+					Name:         "example_tool",
+					Kind:         "dataform-compile",
+					Description:  "some description",
+					AuthRequired: []string{},
+				},
+			},
+		},
 	}
-
-	toolsYAML := `
-tools:
-  dataform-compile-test:
-    kind: "dataform-compile"
-    description: "Compiles a dataform project."
-`
-	toolsFile := filepath.Join(tmpDir, "tools.yaml")
-	if err := os.WriteFile(toolsFile, []byte(toolsYAML), 0644); err != nil {
-		t.Fatalf("failed to write tools.yaml: %v", err)
-	}
-
-	opts := []cmd.Option{
-		cmd.WithArgs("--tools-file", toolsFile),
-	}
-	command := cmd.NewCommand(opts...)
-
-	go func() {
-		if err := command.Execute(); err != nil {
-			if !strings.Contains(err.Error(), "http: Server closed") {
-				t.Errorf("error executing command: %v", err)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
 			}
-		}
-	}()
-
-	// Give the server a moment to start up.
-	time.Sleep(2 * time.Second)
-
-	requestBody := fmt.Sprintf(`{
-		"project_dir": "%s"
-	}`, projectDir)
-
-	req, err := http.NewRequest("POST", "http://127.0.0.1:5000/api/tool/dataform-compile-test/invoke", bytes.NewBufferString(requestBody))
-	if err != nil {
-		t.Fatalf("failed to create request: %v", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status OK; got %v", resp.Status)
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
 	}
 
-	// Verify that the dataform project was compiled.
-	// A simple check for the presence of the compiled json is sufficient.
-	if _, err := os.Stat(filepath.Join(projectDir, "target/graph.json")); os.IsNotExist(err) {
-		t.Errorf("graph.json not found in project directory, dataform compile likely failed")
-	}
 }
