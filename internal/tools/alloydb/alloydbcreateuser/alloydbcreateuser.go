@@ -46,7 +46,7 @@ type Config struct {
     Name        string   `yaml:"name" validate:"required"`
     Kind        string   `yaml:"kind" validate:"required"`
     Source      string   `yaml:"source" validate:"required"`
-    Description string   `yaml:"description" validate:"required"`
+    Description string   `yaml:"description"`
     AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -72,9 +72,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The GCP project ID."),
-		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		tools.NewStringParameterWithDefault("location", "us-central1", "The location of the cluster (e.g., 'us-central1'). Default to 'us-central1' if not specified."),
 		tools.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
-		tools.NewStringParameter("userId", "The name for the new user. Must be unique within the cluster."),
+		tools.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
 		tools.NewStringParameterWithDefault("password", "", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType."),
 		tools.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", tools.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
 		tools.NewStringParameterWithDefault("userType", "ALLOYDB_BUILT_IN", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN, ALLOYDB_IAM_USER."),
@@ -82,10 +82,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "cluster", "userId"}
+	inputSchema.Required = []string{"project", "cluster", "user"}
+
+	description := cfg.Description
+	if description == "" {
+		description = "Creates a new AlloyDB user within a cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned."
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description,
 		InputSchema: inputSchema,
 	}
 
@@ -94,7 +100,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
         Kind:        kind,
         Source:      s,
         AllParams:   allParameters,
-        manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+        manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
         mcpManifest: mcpManifest,
     }, nil
 }
@@ -121,8 +127,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	location, ok := paramsMap["location"].(string)
-	if !ok || location == "" {
-		return nil, fmt.Errorf("invalid or missing 'location' parameter; expected a non-empty string")
+	if !ok {
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a non-empty string")
 	}
 
 	cluster, ok := paramsMap["cluster"].(string)
@@ -130,9 +136,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
 	}
 
-	userId, ok := paramsMap["userId"].(string)
-	if !ok || userId == "" {
-		return nil, fmt.Errorf("invalid or missing 'userId' parameter; expected a non-empty string")
+	userID, ok := paramsMap["user"].(string)
+	if !ok || userID == "" {
+		return nil, fmt.Errorf("invalid or missing 'user' parameter; expected a non-empty string")
 	}
 
 	userType, ok := paramsMap["userType"].(string)
@@ -173,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// The Create API returns a long-running operation.
-	resp, err := service.Projects.Locations.Clusters.Users.Create(urlString, user).UserId(userId).Do()
+	resp, err := service.Projects.Locations.Clusters.Users.Create(urlString, user).UserId(userID).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating AlloyDB user: %w", err)
 	}

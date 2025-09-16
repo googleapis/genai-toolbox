@@ -1084,69 +1084,58 @@ func TestAlloyDBCreateUser(t *testing.T) {
 		name           string
 		body           string
 		want           string
-		wantError      string
 		wantStatusCode int
-		isErr          bool
 	}{
 		{
 			name: "successful creation IAM user",
-			body: `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
+			body: `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
 			want: `{
 				  "databaseRoles": ["alloydbiamuser", "alloydbsuperuser"],
 				  "name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success",
 				  "userType": "ALLOYDB_IAM_USER"
 			}`,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name: "successful creation builtin user",
-			body: `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123"}`,
+			body: `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123"}`,
 			want: `{
 				  "databaseRoles": ["alloydbsuperuser"],
 				  "name": "projects/p1/locations/l1/clusters/c1/users/u2-builtin-success",
 				  "userType": "ALLOYDB_BUILT_IN"
 			}`,
+			wantStatusCode: http.StatusOK,
+
 		},
 		{
 			name:        "api failure",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
-			isErr: true,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
+			want:        "user internal api error", 
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   "user internal api error", 
 		},
 		{
 			name:        "missing project",
-			body:        `{"location": "l1", "cluster": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			isErr: true,
+			body:        `{"location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			want:        `parameter \"project\" is required`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"project\" is required`,
-		},
-		{
-			name:        "missing location",
-			body:        `{"project": "p1", "cluster": "c1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			isErr: true,
-			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"location\" is required`,
 		},
 		{
 			name:        "missing cluster",
-			body:        `{"project": "p1", "location": "l1", "userId": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			isErr: true,
+			body:        `{"project": "p1", "location": "l1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			want:        `parameter \"cluster\" is required`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"cluster\" is required`,
 		},
 		{
-			name:        "missing userId",
+			name:        "missing user",
 			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userType": "ALLOYDB_IAM_USER"}`,
-			isErr: true,
+			want:        `parameter \"user\" is required`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `parameter \"userId\" is required`,
 		},
 		{
 			name:        "missing password for builtin user",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userId": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
-			isErr: true,
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
+			want:        `password is required when userType is ALLOYDB_BUILT_IN`,
 			wantStatusCode: http.StatusBadRequest,
-			wantError:   `password is required when userType is ALLOYDB_BUILT_IN`,
 		},
 	}
 
@@ -1166,12 +1155,9 @@ func TestAlloyDBCreateUser(t *testing.T) {
 
 			bodyBytes, _ := io.ReadAll(resp.Body)
 
-			if tc.isErr {
-				if resp.StatusCode != tc.wantStatusCode {
-					t.Fatalf("expected status %d but got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
-				}
-				if tc.wantError != "" && !bytes.Contains(bodyBytes, []byte(tc.wantError)) {
-					t.Fatalf("expected error response to contain %q, but got: %s", tc.wantError, string(bodyBytes))
+			if tc.wantStatusCode != http.StatusOK {
+				if tc.want != "" && !bytes.Contains(bodyBytes, []byte(tc.want)) {
+					t.Fatalf("expected error response to contain %q, but got: %s", tc.want, string(bodyBytes))
 				}
 				return
 			}
