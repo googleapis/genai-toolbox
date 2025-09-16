@@ -1,3 +1,4 @@
+
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydblistclusters
+package alloydbgetuser
 
 import (
 	"context"
@@ -24,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "alloydb-list-clusters"
+const kind string = "alloydb-get-user"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -40,7 +41,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-// Configuration for the list-clusters tool.
+// Configuration for the get-user tool.
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
 	Kind         string            `yaml:"kind" validate:"required"`
@@ -71,13 +72,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID to list clusters for."),
-		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		tools.NewStringParameter("project", "The GCP project ID."),
+		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		tools.NewStringParameter("cluster", "The ID of the cluster."),
+		tools.NewStringParameter("user", "The ID of the user."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId"}
+	inputSchema.Required = []string{"project", "location", "cluster", "user"}
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
@@ -95,14 +98,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// Tool represents the list-clusters tool.
+// Tool represents the get-user tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
+
 	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AllParams tools.Parameters
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -112,13 +114,21 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+	location, ok := paramsMap["location"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+	}
+	cluster, ok := paramsMap["cluster"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
+	}
+	user, ok := paramsMap["user"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'user' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -126,11 +136,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", project, location, cluster, user)
 
-	resp, err := service.Projects.Locations.Clusters.List(urlString).Do()
+	resp, err := service.Projects.Locations.Clusters.Users.Get(urlString).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error listing AlloyDB clusters: %w", err)
+		return nil, fmt.Errorf("error getting AlloyDB user: %w", err)
 	}
 
 	return resp, nil

@@ -236,7 +236,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("table_names", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
+		tools.NewStringParameterWithDefault("table_names", "", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
 		tools.NewStringParameterWithDefault("output_format", "detailed", "Optional: Use 'simple' for names only or 'detailed' for full info."),
 	}
 	paramManifest := allParameters.Manifest()
@@ -280,7 +280,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	tableNames, ok := paramsMap["table_names"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", tableNames)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", tableNames)
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
     if outputFormat != "simple" && outputFormat != "detailed" {
