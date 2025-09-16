@@ -78,8 +78,8 @@ run_orch_test() {
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
     pip install -r requirements.txt
-    echo "--- Running tests for $orch_name ---"
     cd ..
+    echo "--- Running tests for $orch_name ---"
     ORCH_NAME="$orch_name" pytest
     rm -rvf "$VENV_DIR"
   )
