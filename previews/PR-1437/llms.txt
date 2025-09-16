@@ -46,7 +46,7 @@ List of reference documentation for resources in Toolbox.
 - [AuthServices](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/authservices/): AuthServices represent services that handle authentication and authorization.
   - [Google Sign-In](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/authservices/google/): Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
 - [Sources](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/sources/): Sources represent your different data sources that a tool can interact with.
-  - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for  demanding transactional workloads.
+  - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for demanding transactional workloads.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/sources/bigquery/): BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/sources/bigtable/): Bigtable is a low-latency NoSQL database service for machine learning, operational analytics, and user-facing operations. It's a wide-column, key-value store that can scale to billions of rows and thousands of columns. With Bigtable, you can replicate your data to regions across the world for high availability and data resiliency.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/sources/clickhouse/): ClickHouse is an open-source, OLTP database.
@@ -82,8 +82,8 @@ List of reference documentation for resources in Toolbox.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
+  - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
-  - [CloudMonitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1437/resources/tools/dgraph/): Tools that work with Dgraph Sources.
