@@ -82,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "cluster", "user", "userType"}
+	inputSchema.Required = []string{"project", "location", "cluster", "user", "userType"}
 
 	description := cfg.Description
 	if description == "" {
