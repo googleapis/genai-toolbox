@@ -45,25 +45,25 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to get user for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to retrieve the user from.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>userId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>user&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the user to retrieve.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
