@@ -44,6 +44,7 @@ import (
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistusers"
