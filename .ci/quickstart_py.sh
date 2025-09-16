@@ -28,7 +28,6 @@ TOOLBOX_PID=""
 install_system_packages() {
   apt-get update
   apt-get install -y jq netcat-openbsd
-  which netcat-openbsd
 
   mapfile -t install_list < <(jq -r '.python | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
 
