@@ -34,7 +34,7 @@ to a database by following these instructions][csql-mysql-quickstart].
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
 
-- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)  
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
   List table fragmentation in MySQL tables.
 
 ### Pre-built Configurations

@@ -53,7 +53,7 @@ tools:
   list_table_fragmentation:
     kind: mysql-list-table-fragmentation
     source: cloud-sql-mysql-source
-    description: "some"
+    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 
 toolsets:
   mysql_database_tools:
