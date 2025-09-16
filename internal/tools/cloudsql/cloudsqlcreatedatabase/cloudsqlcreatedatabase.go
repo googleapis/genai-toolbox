@@ -90,7 +90,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: inputSchema,
 	}
 
-	return &Tool{
+	return Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
 		AuthRequired: cfg.AuthRequired,
@@ -115,7 +115,7 @@ type Tool struct {
 }
 
 // Invoke executes the tool's logic.
-func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -151,25 +151,25 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken
 }
 
 // ParseParams parses the parameters for the tool.
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.
-func (t *Tool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
 // McpManifest returns the tool's MCP manifest.
-func (t *Tool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
 // Authorized checks if the tool is authorized.
-func (t *Tool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t *Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization() bool {
 	return t.Source.UseClientAuthorization()
 }

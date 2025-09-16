@@ -24,8 +24,16 @@ tools:
 
 ## Reference
 
-| **field**    |  **type** | **required** | **description**                                  |
-| ------------ | :-------: | :----------: | ------------------------------------------------ |
-| kind         |   string  |     true     | Must be "cloud-sql-create-database".             |
-| source       |   string  |     true     | The name of the `cloud-sql-admin` source to use. |
-| description  |   string  |     false    | A description of the tool.                       |
+| **field**   | **type** | **required** | **description**                                  |
+| ----------- | :------: | :----------: | ------------------------------------------------ |
+| kind        |  string  |     true     | Must be "cloud-sql-create-database".             |
+| source      |  string  |     true     | The name of the `cloud-sql-admin` source to use. |
+| description |  string  |     false    | A description of the tool.                       |
+
+## Input Parameters
+
+| **parameter** | **type** | **required** | **description**                                                    |
+| ------------- | :------: | :----------: | ------------------------------------------------------------------ |
+| project       |  string  |     true     | The project ID.                                                    |
+| instance      |  string  |     true     | The ID of the instance where the database will be created.         |
+| name          |  string  |     true     | The name for the new database. Must be unique within the instance. |
