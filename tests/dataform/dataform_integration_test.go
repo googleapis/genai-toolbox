@@ -17,7 +17,6 @@ package dataformcompile
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -67,20 +66,19 @@ func TestDataformCompileTool(t *testing.T) {
 	projectDir, cleanupProject := setupTestProject(t)
 	defer cleanupProject()
 
-	toolConfig := map[string]any{
+	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-dataform-compiler": map[string]any{
 				"kind":        "dataform-compile",
 				"description": "Tool to compile dataform projects",
 			},
 		},
-		"sources": map[string]any{}, // No source needed for this tool
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd, cleanupServer, err := tests.StartCmd(ctx, toolConfig)
+	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -127,22 +125,7 @@ func TestDataformCompileTool(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest("POST", api, strings.NewReader(tc.reqBody))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Set("Content-Type", "application/json")
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			bodyBytes, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unable to read response: %s", err)
-			}
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, api, strings.NewReader(tc.reqBody), nil)
 
 			if resp.StatusCode != tc.wantStatus {
 				t.Fatalf("unexpected status: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))

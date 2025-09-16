@@ -200,8 +200,6 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "DATAFORM_PROJECT=$PROJECT_ID"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"

@@ -16,17 +16,8 @@ It is a standalone tool and **is not** compatible with any sources.
 
 At invocation time, the tool executes `dataform compile --json` in the specified project directory and returns the resulting JSON object from the CLI.
 
----
-
-## Tool Input
-
-These are the parameters you provide in the JSON payload when invoking the tool.
-
-| **Parameter** | **Type** | **Required** | **Description** |
-|---|:---:|:---:|---|
-| `project_dir` | string | true | The absolute or relative path to the local Dataform project directory. The server process must have read access to this path. |
-
----
+`dataform-compile` takes the following parameter: 
+- `project_dir` (string): The absolute or relative path to the local Dataform project directory. The server process must have read access to this path.
 
 ## Requirements
 
@@ -51,7 +42,6 @@ tools:
 ```
 
 ## Reference
-
 | field | type | required | description |
 | :---- | :---- | :---- | :---- |
 | kind | string | true | Must be "dataform-compile". |

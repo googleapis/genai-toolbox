@@ -95,7 +95,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	projectDir, ok := paramsMap["project_dir"].(string)
 	if !ok || projectDir == "" {
-		return nil, fmt.Errorf("missing required parameter 'project_dir'")
+		return nil, fmt.Errorf("error casting 'project_dir' to string or invalid value")
 	}
 
 	cmd := exec.CommandContext(ctx, "dataform", "compile", projectDir, "--json")
