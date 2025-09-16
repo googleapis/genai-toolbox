@@ -17,6 +17,7 @@ steps:
     waitFor: ['-']
     script: |
         #!/usr/bin/env bash
+        set -e
         export VERSION=$(cat ./cmd/version.txt)
         docker buildx create --name container-builder --driver docker-container --bootstrap --use
 
@@ -25,6 +26,41 @@ steps:
           export TAGS="$TAGS -t ${_DOCKER_URI}:latest"
         fi
         docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse HEAD) $TAGS --push .
+
+  - id: "generate-token"
+    name: "gcr.io/cloud-builders/gcloud"
+    waitFor: ['-']
+    script: |
+      #!/usr/bin/env bash
+      set -e
+      gcloud auth print-identity-token --audiences=sigstore > /workspace/token
+
+  - id: "get-docker-digest"
+    name: "gcr.io/cloud-builders/gcloud"
+    waitFor:
+      - "build-docker"
+    script: |
+      #!/usr/bin/env bash
+      set -e
+      export VERSION=$(cat ./cmd/version.txt)
+      IMAGE_DIGEST=$(\
+        gcloud container images describe ${_DOCKER_URI}:$VERSION \
+        --format='get(image_summary.fully_qualified_digest)'\
+      )
+      echo $IMAGE_DIGEST > /workspace/image_digest
+
+  - id: "sign-docker"
+    name: "gcr.io/projectsigstore/cosign"
+    waitFor:
+      - "get-docker-digest"
+      - "generate-token"
+    env:
+      - 'SIGSTORE_NO_CACHE=true'
+    script: |
+      #!/busybox/sh
+      set -e
+      IMAGE_DIGEST=$(cat /workspace/image_digest)
+      cosign sign --identity-token=$(cat /workspace/token) $IMAGE_DIGEST -y
 
   - id: "install-dependencies"
     name: golang:1
@@ -52,14 +88,31 @@ steps:
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
           go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.linux.amd64
 
+  - id: "sign-linux-amd64"
+    name: "gcr.io/projectsigstore/cosign"
+    waitFor:
+      - "build-linux-amd64"
+      - "generate-token"
+    env:
+      - 'SIGSTORE_NO_CACHE=true'
+    script: |
+      #!/busybox/sh
+      set -e
+      cosign sign-blob --identity-token=$(cat /workspace/token) --bundle=toolbox.linux.amd64.sig ./toolbox.linux.amd64 -y
+
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
-      - "build-linux-amd64"
+      - "sign-linux-amd64"
     script: |
         #!/usr/bin/env bash
+        set -e
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+        
+        gcloud storage cp toolbox.linux.amd64
+        gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+
+        gcloud storage cp toolbox.linux.amd64.sig gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox.sig
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -76,14 +129,30 @@ steps:
         CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
           go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.arm64
 
+  - id: "sign-darwin-arm64"
+    name: "gcr.io/projectsigstore/cosign"
+    waitFor:
+      - "build-darwin-arm64"
+      - "generate-token"
+    env:
+      - 'SIGSTORE_NO_CACHE=true'
+    script: |
+      #!/busybox/sh
+      set -e
+      cosign sign-blob --identity-token=$(cat /workspace/token) --bundle=toolbox.darwin.arm64.sig ./toolbox.darwin.arm64 -y
+
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
-      - "build-darwin-arm64"
+      - "sign-darwin-arm6s64"
     script: |
         #!/usr/bin/env bash
+        set -e
         export VERSION=v$(cat ./cmd/version.txt)
+
         gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+
+        gcloud storage cp toolbox.darwin.arm64.sig gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox.sig
 
   - id: "build-darwin-amd64"
     name: golang:1
@@ -100,14 +169,30 @@ steps:
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
           go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.amd64
 
+  - id: "sign-darwin-amd64"
+    name: "gcr.io/projectsigstore/cosign"
+    waitFor:
+      - "build-darwin-amd64"
+      - "generate-token"
+    env:
+      - 'SIGSTORE_NO_CACHE=true'
+    script: |
+      #!/busybox/sh
+      set -e
+      cosign sign-blob --identity-token=$(cat /workspace/token) --bundle=toolbox.darwin.amd64.sig ./toolbox.darwin.amd64 -y
+
   - id: "store-darwin-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
-      - "build-darwin-amd64"
+      - "sign-darwin-amd64"
     script: |
         #!/usr/bin/env bash
+        set -e
         export VERSION=v$(cat ./cmd/version.txt)
+
         gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
+
+        gcloud storage cp toolbox.darwin.amd64.sig gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox.sig
 
   - id: "build-windows-amd64"
     name: golang:1
@@ -124,14 +209,30 @@ steps:
         CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
           go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.windows.amd64
 
+  - id: "sign-windows-amd64"
+    name: "gcr.io/projectsigstore/cosign"
+    waitFor:
+      - "build-windows-amd64"
+      - "generate-token"
+    env:
+      - 'SIGSTORE_NO_CACHE=true'
+    script: |
+      #!/busybox/sh
+      set -e
+      cosign sign-blob --identity-token=$(cat /workspace/token) --bundle=toolbox.windows.amd64.sig ./toolbox.windows.amd64 -y
+
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
-      - "build-windows-amd64"
+      - "sign-windows-amd64"
     script: |
         #!/usr/bin/env bash
+        set -e
         export VERSION=v$(cat ./cmd/version.txt)
+
         gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
+
+        gcloud storage cp toolbox.windows.amd64.sig gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe.sig
 
 options:
   automapSubstitutions: true
