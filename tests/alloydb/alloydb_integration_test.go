@@ -1132,9 +1132,21 @@ func TestAlloyDBCreateUser(t *testing.T) {
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
+			name:        "missing userType",
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail"}`,
+			want:        `parameter \"userType\" is required`,
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name:        "missing password for builtin user",
 			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
 			want:        `password is required when userType is ALLOYDB_BUILT_IN`,
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:        "invalid userType",
+			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "invalid"}`,
+			want:        `invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'`,	
 			wantStatusCode: http.StatusBadRequest,
 		},
 	}

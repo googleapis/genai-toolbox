@@ -75,18 +75,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameterWithDefault("location", "us-central1", "The location of the cluster (e.g., 'us-central1'). Default to 'us-central1' if not specified."),
 		tools.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
 		tools.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
-		tools.NewStringParameterWithDefault("password", "", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType."),
+		tools.NewStringParameterWithRequired("password", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType.", false),
 		tools.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", tools.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
-		tools.NewStringParameterWithDefault("userType", "ALLOYDB_BUILT_IN", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN, ALLOYDB_IAM_USER."),
+		tools.NewStringParameter("userType", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN and ALLOYDB_IAM_USER. ALLOYDB_IAM_USER is recommended."),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "cluster", "user"}
+	inputSchema.Required = []string{"project", "cluster", "user", "userType"}
 
 	description := cfg.Description
 	if description == "" {
-		description = "Creates a new AlloyDB user within a cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned."
+		description = "Creates a new AlloyDB user within a cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned. Always ask the user for the type of user to create. ALLOYDB_IAM_USER is recommended."
 	}
 
 	mcpManifest := tools.McpManifest{
@@ -142,8 +142,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	userType, ok := paramsMap["userType"].(string)
-	if !ok || userType == "" {
-		return nil, fmt.Errorf("invalid or missing 'userType' parameter; expected a non-empty string")
+	if !ok || (userType != "ALLOYDB_BUILT_IN" && userType != "ALLOYDB_IAM_USER") {
+		return nil, fmt.Errorf("invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))

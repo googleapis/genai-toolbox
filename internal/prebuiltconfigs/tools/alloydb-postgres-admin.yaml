@@ -145,7 +145,7 @@ tools:
   create_user:
     kind: alloydb-create-user
     source: alloydb-admin-source
-    description: "Creates a new database user in an AlloyDB cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned."
+    description: "Creates a new database user in an AlloyDB cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned. Always ask the user for the type of user to create. ALLOYDB_IAM_USER is recommended."
   get_cluster:
     kind: alloydb-get-cluster
     source: alloydb-admin-source
