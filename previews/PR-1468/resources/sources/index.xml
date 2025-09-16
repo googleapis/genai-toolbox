@@ -8,15 +8,15 @@ cluster&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/alloydbainl/alloydb-ai-nl/">&lt;code>alloydb-ai-nl&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/alloydbainl/alloydb-ai-nl/">&lt;code>alloydb-ai-nl&lt;/code>&lt;/a>
 Use natural language queries on AlloyDB, powered by AlloyDB AI.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>
 Execute SQL queries as prepared statements in AlloyDB Postgres.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL statements in AlloyDB Postgres.&lt;/p></description></item><item><title>BigQuery</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/sources/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/sources/bigquery/</guid><description>&lt;h1 id="bigquery-source">BigQuery Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/bigquery/docs">BigQuery&lt;/a> is Google Cloud&amp;rsquo;s fully managed, petabyte-scale,
 and cost-effective analytics data warehouse that lets you run analytics
@@ -117,15 +117,15 @@ to a database by following these instructions&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>
 Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>
 List tables in a PostgreSQL database.&lt;/p></description></item><item><title>Cloud SQL for SQL Server</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/sources/cloud-sql-mssql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/sources/cloud-sql-mssql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/sqlserver">Cloud SQL for SQL Server&lt;/a> is a managed database service that
 helps you set up, maintain, manage, and administer your SQL Server databases on
@@ -611,21 +611,25 @@ reputation for reliability, feature robustness, and performance.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>
 Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>
 List tables in a PostgreSQL database.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1468/resources/tools/postgres/postgres-list-active-queries/">&lt;code>postgres-list-active-queries&lt;/code>&lt;/a>
+List active queries in a PostgreSQL database.&lt;/p>
 &lt;/li>
 &lt;/ul>
 &lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/">PostgreSQL using MCP&lt;/a>&lt;br>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/">PostgreSQL using MCP&lt;/a>
 Connect your IDE to PostgreSQL using Toolbox.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
