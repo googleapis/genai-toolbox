@@ -1234,8 +1234,11 @@ func TestPrebuiltTools(t *testing.T) {
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
+	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
 	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
+	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
+	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
@@ -1347,12 +1350,42 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
+			name: "cloudsql pg admin prebuilt tools",
+			in:   cloudsqlpg_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql admin prebuilt tools",
+			in:   cloudsqlmysql_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql admin prebuilt tools",
+			in:   cloudsqlmssql_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+				},
+			},
+		},
+		{
 			name: "alloydb prebuilt tools",
 			in:   alloydb_config,
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1382,7 +1415,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1462,7 +1495,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
