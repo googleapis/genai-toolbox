@@ -89,6 +89,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
+    *   `get_query_plan`: Provides information about how MySQL executes a SQL statement.
     *   `list_tables`: Lists tables in the database.
 
 ## Cloud SQL for PostgreSQL
@@ -219,6 +220,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
+    *   `get_query_plan`: Provides information about how MySQL executes a SQL statement.
     *   `list_tables`: Lists tables in the database.
 
 ## OceanBase
