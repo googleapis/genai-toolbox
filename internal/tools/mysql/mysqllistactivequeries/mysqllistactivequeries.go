@@ -33,26 +33,33 @@ const kind string = "mysql-list-active-queries"
 const listActiveQueriesStatementMySQL = `
 	SELECT
 		p.id AS processlist_id,
-		IFNULL(p.info,t.trx_query) AS query,
+		substring(IFNULL(p.info, t.trx_query), 1, 100) AS query,
 		t.trx_started AS trx_started,
 		(UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_started)) AS trx_duration_seconds,
 		(UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_wait_started)) AS trx_wait_duration_seconds,
 		p.time AS query_time,
 		t.trx_state AS trx_state,
 		p.state AS process_state,
-		IF(p.host IS NULL OR p.host = '', p.user,concat(p.user, '@', SUBSTRING_INDEX(p.host, ':', 1))) AS user,
+		IF(p.host IS NULL OR p.host = '', p.user, concat(p.user, '@', SUBSTRING_INDEX(p.host, ':', 1))) AS user,
 		t.trx_rows_locked AS trx_rows_locked,
 		t.trx_rows_modified AS trx_rows_modified,
 		p.db AS db
 	FROM
-		information_schema.innodb_trx t
-		INNER JOIN
 		information_schema.processlist p
+		LEFT OUTER JOIN
+		information_schema.innodb_trx t
 		ON p.id = t.trx_mysql_thread_id
 	WHERE
 		(? IS NULL OR p.time >= ?)
+		AND
+		p.id != CONNECTION_ID()
+		AND
+		Command NOT IN ('Binlog Dump', 'Binlog Dump GTID', 'Connect', 'Connect Out', 'Register Slave')
+		AND
+		User NOT IN ('system user', 'event_scheduler')
+		AND (t.trx_id is NOT NULL OR command != 'Sleep')
 	ORDER BY
-		p.time DESC, t.trx_started
+		t.trx_started
 	LIMIT ?;
 `
 

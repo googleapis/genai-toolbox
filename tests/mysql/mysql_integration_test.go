@@ -27,6 +27,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"sync"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -38,6 +39,7 @@ import (
 var (
 	MySQLSourceKind = "mysql"
 	MySQLToolKind   = "mysql-sql"
+	MySQLListActiveQueriesKind = "mysql-list-active-queries"
 	MySQLListTablesToolKind = "mysql-list-tables"
 	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
 	MySQLHost       = os.Getenv("MYSQL_HOST")
@@ -79,6 +81,11 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"kind":        MySQLListTablesToolKind,
 		"source":      "my-instance",
 		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        MySQLListActiveQueriesKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
 	}
 	config["tools"] = tools
 	return config
@@ -353,13 +360,13 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 
 	singleQueryWanted := queryListDetails{
 		ProcessId: any(nil),
-		Query: "sleep(100);",
+		Query: "SELECT sleep(10)",
 		TrxStarted: any(nil),
 		TrxDuration: any(nil),
 		TrxWaitDuration: any(nil),
 		QueryTime: any(nil),
 		TrxState: "",
-		ProcessState: "",
+		ProcessState: "User sleep",
 		User: "",
 		TrxRowsLocked: any(nil),
 		TrxRowsModified: any(nil),
@@ -367,36 +374,63 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 	}
 
 	invokeTcs := []struct {
-		name           string
-		requestBody    io.Reader
-		sleep          int
-		wantStatusCode int
-		want           any
+		name                    string
+		requestBody             io.Reader
+		clientSleepSecs         int
+		waitSecsBeforeCheck     int
+		wantStatusCode          int
+		want                    any
 	}{
 		{
-			name:           "invoke list_active_queries when the system is idle",
-			requestBody:    nil,
-			sleep:          0,
-			wantStatusCode: http.StatusOK,
-			want:           nil,
+			name:                "invoke list_active_queries when the system is idle",
+			requestBody:         bytes.NewBufferString(`{}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 0,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
 		},
 		{
-			name:           "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
-			requestBody:    nil,
-			sleep:          0,
-			wantStatusCode: http.StatusOK,
-			want:           nil,
+			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 100}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 1,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
 		},
 		{
-			name:           "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
-			requestBody:    bytes.NewBufferString(`{"min_duration_secs": "5"}`),
-			sleep:          0,
-			wantStatusCode: http.StatusOK,
-			want:           []queryListDetails{singleQueryWanted},
+			name:                "invoke list_active_queries when 1 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 5}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 5,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted},
 		},
 	}
+
+	var wg sync.WaitGroup
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.clientSleepSecs > 0 {
+				wg.Add(1)
+
+				go func() {
+					defer wg.Done()
+
+					err := pool.PingContext(ctx)
+					if err != nil {
+						t.Fatalf("unable to connect to test database: %s", err)
+					}
+					_, err = pool.ExecContext(ctx, fmt.Sprintf("SELECT sleep(%d);", tc.clientSleepSecs))
+					if err != nil {
+						t.Errorf("Executing 'SELECT sleep' failed: %s", err)
+					}
+				}()
+			}
+
+			if tc.waitSecsBeforeCheck > 0 {
+				time.Sleep(time.Duration(tc.waitSecsBeforeCheck) * time.Second)
+			}
+
 			const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
 			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
 			if err != nil {
@@ -434,21 +468,12 @@ func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
 			}
 			got = details
-			if got != nil {
-				t.Errorf("omg")
-			}
 
-			/*
-			opts := []cmp.Option{
-				cmpopts.SortSlices(func(a, b objectDetails) bool { return a.ObjectName < b.ObjectName }),
-				cmpopts.SortSlices(func(a, b column) bool { return a.ColumnName < b.ColumnName }),
-				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
-			}
-
-			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b queryListDetails) bool {
+						return a.Query == b.Query && a.ProcessState == b.ProcessState })); diff != "" {
 				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
 			}
-			*/
 		})
 	}
+	wg.Wait()
 }
