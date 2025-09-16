@@ -1,0 +1,111 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+sources:
+  cloud-monitoring-source:
+    kind: cloud-monitoring
+tools:
+  get_system_metrics:
+    kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
+    description: |
+      Fetches system level cloudmonitoring data (timeseries metrics) for a MySQL instance using a PromQL query. Take projectId and instanceId from the user for which the metrics timeseries data needs to be fetched.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
+
+      Generate PromQL `query` for MySQL system metrics. Use the provided metrics and rules to construct queries, Get the labels like `instance_id` from user intent.
+
+      Defaults:
+      1. Interval: Use a default interval of `5m` for `_over_time` aggregation functions unless a different window is specified by the user.
+
+      PromQL Query Examples:
+      1. Basic Time Series: `avg_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m])`
+      2. Top K: `topk(30, avg_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+      3. Mean: `avg(avg_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+      4. Minimum: `min(min_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+      5. Maximum: `max(max_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+      6. Sum: `sum(avg_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+      7. Count streams: `count(avg_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+      8. Percentile with groupby on database_id: `quantile by ("database_id")(0.99,avg_over_time({"__name__"="cloudsql.googleapis.com/database/cpu/utilization","monitored_resource"="cloudsql_database","project_id"="my-projectId","database_id"="my-projectId:my-instanceId"}[5m]))`
+
+      Available Metrics List: metricname. description. monitored resource. labels. database_id is actually the instance id and the format is `project_id:instance_id`. 
+      1. `cloudsql.googleapis.com/database/cpu/utilization`: Current CPU utilization as a percentage of reserved CPU. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      2. `cloudsql.googleapis.com/database/network/connections`: Number of connections to the database instance. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      3. `cloudsql.googleapis.com/database/network/received_bytes_count`: Delta count of bytes received through the network. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      4. `cloudsql.googleapis.com/database/network/sent_bytes_count`: Delta count of bytes sent through the network. `cloudsql_database`. `destination`, `database`, `project_id`, `database_id`.
+      5. `cloudsql.googleapis.com/database/memory/components`: Memory usage for components like usage, cache, and free memory. `cloudsql_database`. `component`, `database`, `project_id`, `database_id`.
+      6. `cloudsql.googleapis.com/database/disk/bytes_used_by_data_type`: Data utilization in bytes. `cloudsql_database`. `data_type`, `database`, `project_id`, `database_id`.
+      7. `cloudsql.googleapis.com/database/disk/read_ops_count`: Delta count of data disk read IO operations. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      8. `cloudsql.googleapis.com/database/disk/write_ops_count`: Delta count of data disk write IO operations. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      9. `cloudsql.googleapis.com/database/mysql/queries`: Delta count of statements executed by the server. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      10. `cloudsql.googleapis.com/database/mysql/questions`: Delta count of statements sent by the client. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      11. `cloudsql.googleapis.com/database/mysql/received_bytes_count`: Delta count of bytes received by MySQL process. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      12. `cloudsql.googleapis.com/database/mysql/sent_bytes_count`: Delta count of bytes sent by MySQL process. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      13. `cloudsql.googleapis.com/database/mysql/innodb_buffer_pool_pages_dirty`: Number of unflushed pages in the InnoDB buffer pool. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      14. `cloudsql.googleapis.com/database/mysql/innodb_buffer_pool_pages_free`: Number of unused pages in the InnoDB buffer pool. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      15. `cloudsql.googleapis.com/database/mysql/innodb_buffer_pool_pages_total`: Total number of pages in the InnoDB buffer pool. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      16. `cloudsql.googleapis.com/database/mysql/innodb_data_fsyncs`: Delta count of InnoDB fsync() calls. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      17. `cloudsql.googleapis.com/database/mysql/innodb_os_log_fsyncs`: Delta count of InnoDB fsync() calls to the log file. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      18. `cloudsql.googleapis.com/database/mysql/innodb_pages_read`: Delta count of InnoDB pages read. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      19. `cloudsql.googleapis.com/database/mysql/innodb_pages_written`: Delta count of InnoDB pages written. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      20. `cloudsql.googleapis.com/database/mysql/open_tables`: The number of tables that are currently open. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      21. `cloudsql.googleapis.com/database/mysql/opened_table_count`: The number of tables opened since the last sample. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      22. `cloudsql.googleapis.com/database/mysql/open_table_definitions`: The number of table definitions currently cached. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      23. `cloudsql.googleapis.com/database/mysql/opened_table_definitions_count`: The number of table definitions cached since the last sample. `cloudsql_database`. `database`, `project_id`, `database_id`.
+      24. `cloudsql.googleapis.com/database/mysql/innodb/dictionary_memory`: Memory allocated for the InnoDB dictionary cache. `cloudsql_database`. `database`, `project_id`, `database_id`.
+
+  get_query_metrics:
+    kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
+    description: |
+      Fetches query level cloudmonitoring data (timeseries metrics) for queries running in Mysql instance using a PromQL query. Take projectID and instanceID from the user for which the metrics timeseries data needs to be fetched.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
+
+      Generate PromQL `query` for Mysql query metrics. Use the provided metrics and rules to construct queries, Get the labels like `instance_id`, `query_hash` from user intent. If query_hash is provided then use the per_query metrics. Query hash and query id are same.
+
+      Defaults:
+      1. Interval: Use a default interval of `5m` for `_over_time` aggregation functions unless a different window is specified by the user.
+
+      PromQL Query Examples:
+      1. Basic Time Series: `avg_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m])`
+      2. Top K: `topk(30, avg_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+      3. Mean: `avg(avg_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+      4. Minimum: `min(min_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+      5. Maximum: `max(max_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+      6. Sum: `sum(avg_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+      7. Count streams: `count(avg_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+      8. Percentile with groupby on resource_id, database: `quantile by ("resource_id","database")(0.99,avg_over_time({"__name__"="dbinsights.googleapis.com/aggregate/execution_time","monitored_resource"="cloudsql_instance_database","project_id"="my-projectId","resource_id"="my-projectId:my-instanceId"}[5m]))`
+
+      Available Metrics List: metricname. description. monitored resource. labels. resource_id label format is `project_id:instance_id` which is actually instance id only. aggregate is the aggregated values for all query stats, Use aggregate metrics if query id is not provided. For perquery metrics do not fetch querystring unless specified by user specifically. Have the aggregation on query hash to avoid fetching the querystring. Do not use latency metrics for anything.
+      1. `dbinsights.googleapis.com/aggregate/latencies`: Cumulative query latency distribution per user and database. `cloudsql_instance_database`. `user`, `client_addr`, `database`, `project_id`, `resource_id`.
+      2. `dbinsights.googleapis.com/aggregate/execution_time`: Cumulative query execution time per user and database. `cloudsql_instance_database`. `user`, `client_addr`, `database`, `project_id`, `resource_id`.
+      3. `dbinsights.googleapis.com/aggregate/execution_count`: Total number of query executions per user and database. `cloudsql_instance_database`. `user`, `client_addr`, `database`, `project_id`, `resource_id`.
+      4. `dbinsights.googleapis.com/aggregate/lock_time`: Cumulative lock wait time per user and database. `cloudsql_instance_database`. `user`, `client_addr`, `lock_type`, `database`, `project_id`, `resource_id`.
+      5. `dbinsights.googleapis.com/aggregate/io_time`: Cumulative IO wait time per user and database. `cloudsql_instance_database`. `user`, `client_addr`, `database`, `project_id`, `resource_id`.
+      6. `dbinsights.googleapis.com/aggregate/row_count`: Total number of rows affected during query execution. `cloudsql_instance_database`. `user`, `client_addr`, `row_status`, `database`, `project_id`, `resource_id`.
+      7. `dbinsights.googleapis.com/perquery/latencies`: Cumulative query latency distribution per user, database, and query. `cloudsql_instance_database`. `querystring`, `user`, `client_addr`, `query_hash`, `database`, `project_id`, `resource_id`.
+      8. `dbinsights.googleapis.com/perquery/execution_time`: Cumulative query execution time per user, database, and query. `cloudsql_instance_database`. `querystring`, `user`, `client_addr`, `query_hash`, `database`, `project_id`, `resource_id`.
+      9. `dbinsights.googleapis.com/perquery/execution_count`: Total number of query executions per user, database, and query. `cloudsql_instance_database`. `querystring`, `user`, `client_addr`, `query_hash`, `database`, `project_id`, `resource_id`.
+      10. `dbinsights.googleapis.com/perquery/lock_time`: Cumulative lock wait time per user, database, and query. `cloudsql_instance_database`. `querystring`, `user`, `client_addr`, `lock_type`, `query_hash`, `database`, `project_id`, `resource_id`.
+      11. `dbinsights.googleapis.com/perquery/io_time`: Cumulative io wait time per user, database, and query. `cloudsql_instance_database`. `querystring`, `user`, `client_addr`, `query_hash`, `database`, `project_id`, `resource_id`.
+      12. `dbinsights.googleapis.com/perquery/row_count`: Total number of rows affected during query execution. `cloudsql_instance_database`. `querystring`, `user`, `client_addr`, `query_hash`, `row_status`, `database`, `project_id`, `resource_id`.
+      13. `dbinsights.googleapis.com/pertag/latencies`: Cumulative query latency distribution per user, database, and tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `database`, `project_id`, `resource_id`.
+      14. `dbinsights.googleapis.com/pertag/execution_time`: Cumulative query execution time per user, database, and tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `database`, `project_id`, `resource_id`.
+      15. `dbinsights.googleapis.com/pertag/execution_count`: Total number of query executions per user, database, and tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `database`, `project_id`, `resource_id`.
+      16. `dbinsights.googleapis.com/pertag/lock_time`: Cumulative lock wait time per user, database and tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `lock_type`, `tag_hash`, `database`, `project_id`, `resource_id`.
+      17. `dbinsights.googleapis.com/pertag/io_time`: Cumulative IO wait time per user, database and tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `database`, `project_id`, `resource_id`.
+      18. `dbinsights.googleapis.com/pertag/row_count`: Total number of rows affected during query execution. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `row_status`, `database`, `project_id`, `resource_id`.
+
+toolsets:
+  cloud-sql-mysql-cloud-monitoring-tools:
+    - get_system_metrics
+    - get_query_metrics

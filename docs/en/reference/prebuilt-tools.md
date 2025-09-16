@@ -28,6 +28,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## AlloyDB Postgres Admin
 
@@ -57,6 +63,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
     *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
 *   **Tools:**
+    *   `analyze_contribution`: Use this tool to perform contribution analysis, also called key driver analysis.
     *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
     *   `forecast`: Use this tool to forecast time series data.
@@ -101,6 +108,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Cloud SQL for SQL Server
 
@@ -238,6 +251,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Spanner (GoogleSQL dialect)
 
@@ -267,6 +286,17 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
+    *   `list_tables`: Lists tables in the database.
+
+## SQLite
+
+*   `--prebuilt` value: `sqlite`
+*   **Environment Variables:**
+    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g., `./sample.db`).
+*   **Permissions:**
+    *   File system read/write permissions for the specified database file.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
 
 ## Neo4j

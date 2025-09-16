@@ -33,6 +33,6 @@ tools:
     description: Use this tool to list all databases in ClickHouse.
 
 toolsets:
-  clickhouse-database-tools:
+  clickhouse_database_tools:
     - execute_sql
     - list_databases

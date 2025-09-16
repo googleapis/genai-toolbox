@@ -15,6 +15,11 @@
 // Package types contains the shared data structures for Neo4j schema representation.
 package types
 
+// ValueType interface representing a Neo4j value.
+type ValueType interface {
+	String() string
+}
+
 // SchemaInfo represents the complete database schema.
 type SchemaInfo struct {
 	NodeLabels    []NodeLabel    `json:"nodeLabels"`

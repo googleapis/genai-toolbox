@@ -17,6 +17,7 @@ sources:
     kind: "bigquery"
     project: ${BIGQUERY_PROJECT}
     location: ${BIGQUERY_LOCATION:}
+    useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
 
 tools:
   analyze_contribution:
@@ -63,7 +64,7 @@ tools:
     description: Use this tool to list tables.
 
 toolsets:
-  bigquery-database-tools:
+  bigquery_database_tools:
     - analyze_contribution
     - ask_data_insights
     - execute_sql

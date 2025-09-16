@@ -33,6 +33,6 @@ tools:
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
 toolsets:
-  cloud-sql-mysql-database-tools:
+  cloud_sql_mysql_database_tools:
     - execute_sql
     - list_tables
