@@ -23,17 +23,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/goccy/go-yaml"
-	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jmoiron/sqlx"
 )
 
 // GetToolsConfig returns a mock tools config file
-func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, paramToolStatement2, arrayToolStatement, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -50,9 +46,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"statement":   "SELECT 1",
+				"statement":   "SELECT 1;",
 			},
-			"my-tool": map[string]any{
+			"my-param-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -70,30 +66,16 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 					},
 				},
 			},
-			"my-tool-by-id": map[string]any{
+			"my-param-tool2": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
-				"statement":   idParamToolStmt,
+				"statement":   paramToolStatement2,
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
 						"type":        "integer",
 						"description": "user ID",
-					},
-				},
-			},
-			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"description": "Tool to test invocation with params.",
-				"statement":   nameParamToolStmt,
-				"parameters": []any{
-					map[string]any{
-						"name":        "name",
-						"type":        "string",
-						"description": "user name",
-						"required":    false,
 					},
 				},
 			},
@@ -149,7 +131,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
-				"statement":   "SELECT 1",
+				"statement":   "SELECT 1;",
 				"authRequired": []string{
 					"my-google-auth",
 				},
@@ -320,16 +302,15 @@ func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
-// GetPostgresSQLParamToolInfo returns statements and param for my-tool postgres-sql kind
-func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// GetPostgresSQLParamToolInfo returns statements and param for my-param-tool postgres-sql kind
+func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1), ($2), ($3), ($4);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2;", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = $1;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetPostgresSQLAuthToolInfo returns statements and param of my-auth-tool for postgres-sql kind
@@ -348,16 +329,15 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMSSQLParamToolInfo returns statements and param for my-tool mssql-sql kind
-func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// GetMSSQLParamToolInfo returns statements and param for my-param-tool mssql-sql kind
+func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (@alice), (@jane), (@sid), (@nil);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id OR name = @p2;", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = @id;", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = @name;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = @id;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(@idArray) OR name = ANY(@p2);", tableName)
 	params := []any{sql.Named("alice", "Alice"), sql.Named("jane", "Jane"), sql.Named("sid", "Sid"), sql.Named("nil", nil)}
-	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetMSSQLAuthToolInfo returns statements and param of my-auth-tool for mssql-sql kind
@@ -376,16 +356,15 @@ func GetMSSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
-// GetMySQLParamToolInfo returns statements and param for my-tool mysql-sql kind
-func GetMySQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+// GetMySQLParamToolInfo returns statements and param for my-param-tool mysql-sql kind
+func GetMySQLParamToolInfo(tableName string) (string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
-	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?;", tableName)
+	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
 }
 
 // GetMySQLAuthToolInfo returns statements and param of my-auth-tool for mysql-sql kind
@@ -404,31 +383,35 @@ func GetMySQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
+func GetNonSpannerInvokeParamWant() (string, string, string) {
+	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
+	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`
+	return invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
+}
+
 // GetPostgresWants return the expected wants for postgres
-func GetPostgresWants() (string, string, string, string) {
+func GetPostgresWants() (string, string, string) {
 	select1Want := "[{\"?column?\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
-	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
+	return select1Want, failInvocationWant, createTableStatement
 }
 
 // GetMSSQLWants return the expected wants for mssql
-func GetMSSQLWants() (string, string, string, string) {
+func GetMSSQLWants() (string, string, string) {
 	select1Want := "[{\"\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(MAX))"`
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"\":1}"}]}}`
-	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
+	return select1Want, failInvocationWant, createTableStatement
 }
 
 // GetMySQLWants return the expected wants for mysql
-func GetMySQLWants() (string, string, string, string) {
+func GetMySQLWants() (string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
-	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
+	return select1Want, failInvocationWant, createTableStatement
 }
 
 // SetupPostgresSQLTable creates and inserts data into a table of tool
@@ -519,15 +502,13 @@ func SetupMySQLTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 }
 
 // GetRedisWants return the expected wants for redis
-func GetRedisValkeyWants() (string, string, string, string, string, string, string) {
+func GetRedisValkeyWants() (string, string, string, string, string) {
 	select1Want := "[\"PONG\"]"
-	mcpMyFailToolWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
+	failInvocationWant := `unknown command 'SELEC 1;', with args beginning with: \""}]}}`
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
-	invokeIdNullWant := `[{"id":"4","name":""}]`
-	nullWant := `["null"]`
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"\"PONG\""}]}}`
-	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
-	return select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpSelect1Want, mcpInvokeParamWant
+	invokeParamWantNull := `[{"id":"4","name":""}]`
+	mcpInvokeParamWant := `{"jsonrpc":"2.0","id":"my-param-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
+	return select1Want, failInvocationWant, invokeParamWant, invokeParamWantNull, mcpInvokeParamWant
 }
 
 func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
@@ -548,7 +529,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				"description": "Simple tool to test end to end functionality.",
 				"commands":    [][]string{{"PING"}},
 			},
-			"my-tool": map[string]any{
+			"my-param-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -566,7 +547,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 					},
 				},
 			},
-			"my-tool-by-id": map[string]any{
+			"my-param-tool2": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
@@ -576,20 +557,6 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 						"name":        "id",
 						"type":        "integer",
 						"description": "user ID",
-					},
-				},
-			},
-			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
-				"source":      "my-instance",
-				"description": "Tool to test invocation with params.",
-				"commands":    [][]string{{"GET", "null"}},
-				"parameters": []any{
-					map[string]any{
-						"name":        "name",
-						"type":        "string",
-						"description": "user name",
-						"required":    false,
 					},
 				},
 			},
@@ -615,8 +582,7 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
-				// statement to auto-fill authenticated parameter
-				"commands": [][]string{{"HGETALL", "$email"}},
+				"commands":    [][]string{{"HGETALL", "row1"}},
 				"parameters": []map[string]any{
 					{
 						"name":        "email",
@@ -648,114 +614,8 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 			},
 		},
 	}
+
 	return toolsFile
 }
 
-// TestCloudSQLMySQL_IPTypeParsingFromYAML verifies the IPType field parsing from YAML
-// for the cloud-sql-mysql source, mimicking the structure of tests in cloudsql_mysql_test.go.
-func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
-	tcs := []struct {
-		desc string
-		in   string
-		want server.SourceConfigs
-	}{
-		{
-			desc: "IPType Defaulting to Public",
-			in: `
-			sources:
-				my-mysql-instance:
-					kind: cloud-sql-mysql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			`,
-			want: server.SourceConfigs{
-				"my-mysql-instance": cloudsqlmysql.Config{
-					Name:     "my-mysql-instance",
-					Kind:     cloudsqlmysql.SourceKind,
-					Project:  "my-project",
-					Region:   "my-region",
-					Instance: "my-instance",
-					IPType:   "public", // Default value
-					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
-				},
-			},
-		},
-		{
-			desc: "IPType Explicit Public",
-			in: `
-			sources:
-				my-mysql-instance:
-					kind: cloud-sql-mysql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: Public
-					database: my_db
-					user: my_user
-					password: my_pass
-			`,
-			want: server.SourceConfigs{
-				"my-mysql-instance": cloudsqlmysql.Config{
-					Name:     "my-mysql-instance",
-					Kind:     cloudsqlmysql.SourceKind,
-					Project:  "my-project",
-					Region:   "my-region",
-					Instance: "my-instance",
-					IPType:   "public",
-					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
-				},
-			},
-		},
-		{
-			desc: "IPType Explicit Private",
-			in: `
-			sources:
-				my-mysql-instance:
-					kind: cloud-sql-mysql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: private 
-					database: my_db
-					user: my_user
-					password: my_pass
-			`,
-			want: server.SourceConfigs{
-				"my-mysql-instance": cloudsqlmysql.Config{
-					Name:     "my-mysql-instance",
-					Kind:     cloudsqlmysql.SourceKind,
-					Project:  "my-project",
-					Region:   "my-region",
-					Instance: "my-instance",
-					IPType:   "private",
-					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: diff (-want +got):\n%s", cmp.Diff(tc.want, got.Sources))
-			}
-		})
-	}
-}
+
