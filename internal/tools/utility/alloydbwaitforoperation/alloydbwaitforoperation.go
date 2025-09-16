@@ -95,7 +95,6 @@ type Config struct {
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string   `yaml:"baseURL"`
 
 	// Polling configuration
 	Delay      string  `yaml:"delay"`
