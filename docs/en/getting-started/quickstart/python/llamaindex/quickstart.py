@@ -13,7 +13,7 @@ from llama_index.llms.google_genai import GoogleGenAI
 
 from toolbox_llamaindex import ToolboxClient
 
-project = os.environ.get("GCP_PROJECT", "project-id")
+project = os.environ.get("GCP_PROJECT") or "project-id"
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and

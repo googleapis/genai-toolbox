@@ -12,7 +12,7 @@ from google.genai.types import (
 
 from toolbox_core import ToolboxClient
 
-project = os.environ.get("GCP_PROJECT", "project-id")
+project = os.environ.get("GCP_PROJECT") or "project-id"
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
