@@ -4714,15 +4714,15 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The GCP location where the cluster exists (e.g., &lt;code>us-central1&lt;/code>). Default: &lt;code>us-central1&lt;/code>.&lt;/td>
- &lt;td style="text-align: left">No&lt;/td>
- &lt;/tr>
- &lt;tr>
  &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the existing cluster where the user will be created.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The GCP location where the cluster exists (e.g., &lt;code>us-central1&lt;/code>).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
