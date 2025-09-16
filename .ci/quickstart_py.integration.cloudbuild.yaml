@@ -41,16 +41,6 @@ availableSecrets:
   - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
     env: 'DB_PASSWORD'
 
-substitutions:
-  _GCP_PROJECT: "your-project-id"
-  _CLOUD_SQL_INSTANCE: "project-id:region:instance-name"
-  _DATABASE_NAME: "db-name"
-  _DB_USER: "db-user"
-  _TOOLS_YAML_SECRET: "tools yaml secret"
-  _API_KEY_SECRET: "api key secret"
-  _DB_PASS_SECRET: "db pass secret"
-  _GCP_PROJECT_NUMBER: "your-project-number"
-
 timeout: 1000s
 
 options:

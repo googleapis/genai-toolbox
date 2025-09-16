@@ -1,15 +1,5 @@
 TRUNCATE TABLE $TABLE_NAME;
 
-CREATE TABLE $TABLE_NAME (
-  id            INTEGER NOT NULL PRIMARY KEY,
-  name          VARCHAR NOT NULL,
-  location      VARCHAR NOT NULL,
-  price_tier    VARCHAR NOT NULL,
-  checkin_date  DATE    NOT NULL,
-  checkout_date DATE    NOT NULL,
-  booked        BIT     NOT NULL
-);
-
 INSERT INTO $TABLE_NAME (id, name, location, price_tier, checkin_date, checkout_date, booked)
 VALUES
   (1, 'Hilton Basel', 'Basel', 'Luxury', '2024-04-22', '2024-04-20', B'0'),
