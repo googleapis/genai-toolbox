@@ -31,6 +31,10 @@ tools:
     kind: mysql-execute-sql
     source: mysql-source
     description: Use this tool to execute SQL.
+  list_active_queries:
+    kind: mysql-list-active-queries
+    source: mysql-source
+    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
   get_query_plan:
     kind: mysql-sql
     source: mysql-source
@@ -50,5 +54,6 @@ tools:
 toolsets:
   mysql_database_tools:
     - execute_sql
-    - get_query_plan
     - list_tables
+    - get_query_plan
+    - list_active_queries
