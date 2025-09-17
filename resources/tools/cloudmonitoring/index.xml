@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Cloud Monitoring on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/cloudmonitoring/</link><description>Recent content in Cloud Monitoring on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/resources/tools/cloudmonitoring/index.xml" rel="self" type="application/rss+xml"/><item><title>cloud-monitoring-query-prometheus</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/cloudmonitoring/cloud-monitoring-query-prometheus/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/cloudmonitoring/cloud-monitoring-query-prometheus/</guid><description>&lt;p>The &lt;code>cloud-monitoring-query-prometheus&lt;/code> tool fetches timeseries metrics data from Google Cloud Monitoring for a project using a given prometheus query.&lt;/p>
+&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>cloud-monitoring-query-prometheus&lt;/code> tool allows you to query all metrics available in Google Cloud Monitoring using the Prometheus Query Language (PromQL).
+It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-monitoring/">cloud-monitoring&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;p>To use this tool, you need to have the following IAM role on your Google Cloud project:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>roles/monitoring.viewer&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="arguments">Arguments&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Name&lt;/th>
+ &lt;th>Type&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>The Google Cloud project ID.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>query&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>The Prometheus query to execute.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="use-cases">Use Cases&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Ad-hoc analysis:&lt;/strong> Quickly investigate performance issues by executing direct promql queries for a database instance.&lt;/li>
+&lt;li>&lt;strong>Prebuilt Configs:&lt;/strong> Use the already added prebuilt tools mentioned in prebuilt-tools.md to query the databases system/query level metrics.&lt;/li>
+&lt;/ul>
+&lt;p>Here are some common use cases for the &lt;code>cloud-monitoring-query-prometheus&lt;/code> tool:&lt;/p></description></item></channel></rss>
