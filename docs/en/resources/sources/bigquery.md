@@ -36,6 +36,9 @@ avoiding full table scans or complex filters.
 
 ## Available Tools
 
+- [`bigquery-analyze-contribution`](../tools/bigquery/bigquery-analyze-contribution.md)
+  Performs contribution analysis, also called key driver analysis in BigQuery.
+
 - [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
   Allows conversational interaction with a BigQuery source.
 
@@ -59,6 +62,9 @@ avoiding full table scans or complex filters.
 
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
   Run SQL queries directly against BigQuery datasets.
+
+- [`bigquery-search-catalog`](../tools/bigquery/bigquery-search_catalog.md)
+  List all entries in Dataplex Catalog (e.g. tables, views, models) that matches given user query.
 
 ### Pre-built Configurations
 
