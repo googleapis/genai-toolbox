@@ -12,27 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-substitutions:
-  _GCP_PROJECT: "your-project-id"
-  _CLOUD_SQL_INSTANCE: "project-id:region:instance-name"
-  _DATABASE_NAME: "db-name"
-  _DB_USER: "db-user"
-  _TOOLS_YAML_SECRET: "tools yaml secret"
-  _API_KEY_SECRET: "api key secret"
-  _DB_PASS_SECRET: "db pass secret"
-  _GCP_PROJECT_NUMBER: "your-project-number"
-
 steps:
   - name: 'golang:1.25.1'
-    id: 'run-go-tests'
+    id: 'go-quickstart-test'
     entrypoint: 'bash'
     args:
+      # The '-c' flag tells bash to execute the following string as a command.
+      # The 'set -ex' enables debug output and exits on error for easier troubleshooting.
       - -c
       - |
         set -ex
         export VERSION=$(cat ./cmd/version.txt)
-        chmod +x .ci/quickstart_go.sh
-        .ci/quickstart_go.sh
+        chmod +x .ci/run_go_quickstart_tests.sh
+        .ci/run_go_quickstart_tests.sh
     env:
       - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
       - 'GCP_PROJECT=${_GCP_PROJECT}'
@@ -42,14 +34,14 @@ steps:
 
 availableSecrets:
   secretManager:
-  - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/latest
+  - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/7
     env: 'TOOLS_YAML_CONTENT'
   - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
     env: 'GOOGLE_API_KEY'
   - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
     env: 'DB_PASSWORD'
 
-timeout: 1800s
+timeout: 1000s
 
 options:
   logging: CLOUD_LOGGING_ONLY
