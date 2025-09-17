@@ -319,7 +319,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 >>>>>>> 66966adc08 (init file set)
 }
 
-func runMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameAuth string) {
+func RunMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameAuth string) {
 	type tableFragmentationDetails struct {
 		TableSchema             string `json:"table_schema"`
 		TableName               string `json:"table_name"`
