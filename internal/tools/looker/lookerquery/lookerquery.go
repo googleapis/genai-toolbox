@@ -128,6 +128,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
 	resp, err := lookercommon.RunInlineQuery(ctx, sdk, wq, "json", t.ApiSettings)
+	if err != nil {
+		return nil, fmt.Errorf("error making query request: %s", err)
+	}
+
 	logger.DebugContext(ctx, "resp = ", resp)
 
 	var data []any

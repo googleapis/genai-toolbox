@@ -307,9 +307,6 @@ func RunInlineQuery(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, f
 	if err != nil {
 		logger.DebugContext(ctx, "error querying with new endpoint, trying again with original", err)
 		resp, err = sdk.RunInlineQuery(req, options)
-		if err != nil {
-			return "", fmt.Errorf("error making query request: %s", err)
-		}
 	}
 	return resp, err
 }
