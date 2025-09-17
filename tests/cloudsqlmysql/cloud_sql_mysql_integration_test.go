@@ -130,6 +130,7 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLMySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddMySQLPrebuiltToolConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -154,6 +155,10 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run specific MySQL tool tests
+	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth)
+	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 }
 
 // Test connection with different IP type
