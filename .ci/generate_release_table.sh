@@ -20,9 +20,9 @@ DESCRIPTIONS=(
 )
 
 # Write the table header
-ROW_FMT="| %-105s | %-120s | %-67s |\n"
-output_string+=$(printf "$ROW_FMT" "**OS/Architecture**" "**Description**" "**SHA256 Hash**")$'\n'
-output_string+=$(printf "$ROW_FMT" "$(printf -- '-%0.s' {1..105})" "$(printf -- '-%0.s' {1..120})" "$(printf -- '-%0.s' {1..67})")$'\n'
+ROW_FMT="| %-105s | %-120s | %-67s | %-108s |\n"
+output_string+=$(printf "$ROW_FMT" "**OS/Architecture**" "**Description**" "**SHA256 Hash**" "**Signature**")$'\n'
+output_string+=$(printf "$ROW_FMT" "$(printf -- '-%0.s' {1..105})" "$(printf -- '-%0.s' {1..120})" "$(printf -- '-%0.s' {1..67})" "$(printf -- '-%0.s' {1..67})")$'\n'
 
 
 # Loop through all files matching the pattern "toolbox.*.*"
@@ -43,16 +43,19 @@ do
         URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
     fi
 
+    # Generate the signature URL and link
+    SIG_URL="${URL}.sig"
+    SIG_LINK="[.sig]($SIG_URL)"
+
     curl "$URL" --fail --output toolbox || exit 1
 
     # Calculate the SHA256 checksum of the file
     SHA256=$(shasum -a 256 toolbox | awk '{print $1}')
 
     # Write the table row
-    output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256")$'\n'
+    output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256" "$SIG_LINK")$'\n'
 
     rm toolbox
 done
 
 printf "$output_string\n"
-
