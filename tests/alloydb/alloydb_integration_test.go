@@ -177,8 +177,8 @@ func TestAlloyDBToolEndpoints(t *testing.T) {
 
 	// Run tool-specific invoke tests
 	runAlloyDBListClustersTest(t, vars)
-	runAlloyDBListUsersTest(t, vars)
 	runAlloyDBListInstancesTest(t, vars)
+	runAlloyDBListUsersTest(t, vars)
 	runAlloyDBGetClusterTest(t, vars)
 	runAlloyDBGetInstanceTest(t, vars)
 	runAlloyDBGetUserTest(t, vars)
@@ -392,40 +392,40 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:        "list clusters for all locations",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "-"}`, vars["project"])),
-			want:        wantForAllLocations,
+			name:           "list clusters for all locations",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "-"}`, vars["project"])),
+			want:           wantForAllLocations,
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:        "list clusters specific location",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "us-central1"}`, vars["project"])),
-			want:        wantForSpecificLocation,
+			name:           "list clusters specific location",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "us-central1"}`, vars["project"])),
+			want:           wantForSpecificLocation,
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:        "list clusters missing project",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"location": "%s"}`, vars["location"])),
+			name:           "list clusters missing project",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"location": "%s"}`, vars["location"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "list clusters non-existent location",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "abcd"}`, vars["project"])),
+			name:           "list clusters non-existent location",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "abcd"}`, vars["project"])),
 			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
-			name:        "list clusters non-existent project",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "non-existent-project", "location": "%s"}`, vars["location"])),
+			name:           "list clusters non-existent project",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "non-existent-project", "location": "%s"}`, vars["location"])),
 			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
-			name:        "list clusters empty project",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "", "location": "%s"}`, vars["location"])),
+			name:           "list clusters empty project",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "", "location": "%s"}`, vars["location"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "list clusters empty location",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": ""}`, vars["project"])),
+			name:           "list clusters empty location",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": ""}`, vars["project"])),
 			wantStatusCode: http.StatusBadRequest,
 		},
 	}
@@ -724,12 +724,12 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:        "get cluster success",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
-			want: map[string]any{
-				"clusterType": "PRIMARY",
-				"name":        fmt.Sprintf("projects/%s/locations/%s/clusters/%s", vars["project"], vars["location"], vars["cluster"]),
-			},
+			name:           "get cluster success",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
+			want:           map[string]any{
+								"clusterType": "PRIMARY",
+								"name":        fmt.Sprintf("projects/%s/locations/%s/clusters/%s", vars["project"], vars["location"], vars["cluster"]),
+							},
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -814,12 +814,12 @@ func runAlloyDBGetInstanceTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:        "get instance success",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["instance"])),
-			want: map[string]any{
-				"instanceType": "PRIMARY",
-				"name":         fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", vars["project"], vars["location"], vars["cluster"], vars["instance"]),
-			},
+			name:           "get instance success",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["instance"])),
+			want:           map[string]any{
+								"instanceType": "PRIMARY",
+								"name":         fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", vars["project"], vars["location"], vars["cluster"], vars["instance"]),
+							},
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -909,12 +909,12 @@ func runAlloyDBGetUserTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:        "get user success",
-			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "user": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["user"])),
-			want: map[string]any{
-				"name": fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], vars["user"]),
-				"userType": "ALLOYDB_BUILT_IN",
-			},
+			name:           "get user success",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "user": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["user"])),
+			want:           map[string]any{
+								"name": fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], vars["user"]),
+								"userType": "ALLOYDB_BUILT_IN",
+							},
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -1050,7 +1050,7 @@ func (h *mockAlloyDBHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		statusCode = http.StatusInternalServerError
 	case "u1-iam-success":
 		response = `{
-			"databaseRoles": ["alloydbiamuser", "alloydbsuperuser"],
+			"databaseRoles": ["alloydbiamuser"],
 			"name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success",
 			"userType": "ALLOYDB_IAM_USER"
 		}`
@@ -1131,33 +1131,33 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 		wantStatusCode int
 	}{
 		{
-			name: "successful creation",
-			body: `{"project": "p1", "location": "l1", "cluster": "c1-success", "password": "p1"}`,
-			want: `{"name":"projects/p1/locations/l1/operations/mock-operation-success", "metadata": {"verb": "create", "target": "projects/p1/locations/l1/clusters/c1-success"}}`,
+			name:           "successful creation",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1-success", "password": "p1"}`,
+			want:           `{"name":"projects/p1/locations/l1/operations/mock-operation-success", "metadata": {"verb": "create", "target": "projects/p1/locations/l1/clusters/c1-success"}}`,
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:        "api failure",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c2-api-failure", "password": "p1"}`,
-			want:        "internal api error",
+			name:           "api failure",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c2-api-failure", "password": "p1"}`,
+			want:           "internal api error",
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing project",
-			body:        `{"location": "l1", "cluster": "c1", "password": "p1"}`,
-			want:        `parameter \"project\" is required`,
+			name:           "missing project",
+			body:           `{"location": "l1", "cluster": "c1", "password": "p1"}`,
+			want:           `parameter \"project\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing cluster",
-			body:        `{"project": "p1", "location": "l1", "password": "p1"}`,
-			want:        `parameter \"cluster\" is required`,
+			name:           "missing cluster",
+			body:           `{"project": "p1", "location": "l1", "password": "p1"}`,
+			want:           `parameter \"cluster\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing password",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1"}`,
-			want:        `parameter \"password\" is required`,
+			name:           "missing password",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1"}`,
+			want:           `parameter \"password\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 	}
@@ -1367,72 +1367,63 @@ func TestAlloyDBCreateUser(t *testing.T) {
 		wantStatusCode int
 	}{
 		{
-			name: "successful creation IAM user",
-			body: `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
-			want: `{
-				  "databaseRoles": ["alloydbiamuser", "alloydbsuperuser"],
-				  "name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success",
-				  "userType": "ALLOYDB_IAM_USER"
-			}`,
+			name:           "successful creation IAM user",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
+			want:           `{"databaseRoles": ["alloydbiamuser"], "name": "projects/p1/locations/l1/clusters/c1/users/u1-iam-success", "userType": "ALLOYDB_IAM_USER"}`,
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name: "successful creation builtin user",
-			body: `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123"}`,
-			want: `{
-				  "databaseRoles": ["alloydbsuperuser"],
-				  "name": "projects/p1/locations/l1/clusters/c1/users/u2-builtin-success",
-				  "userType": "ALLOYDB_BUILT_IN"
-			}`,
+			name:           "successful creation builtin user",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u2-builtin-success", "userType": "ALLOYDB_BUILT_IN", "password": "pass123", "databaseRoles": ["alloydbsuperuser"]}`,
+			want:           `{"databaseRoles": ["alloydbsuperuser"], "name": "projects/p1/locations/l1/clusters/c1/users/u2-builtin-success", "userType": "ALLOYDB_BUILT_IN"}`,
 			wantStatusCode: http.StatusOK,
-
 		},
 		{
-			name:        "api failure",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
-			want:        "user internal api error", 
+			name:           "api failure",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u3-api-failure", "userType": "ALLOYDB_IAM_USER"}`,
+			want:           "user internal api error",
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing project",
-			body:        `{"location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			want:        `parameter \"project\" is required`,
+			name:           "missing project",
+			body:           `{"location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			want:           `parameter \"project\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing cluster",
-			body:        `{"project": "p1", "location": "l1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			want:        `parameter \"cluster\" is required`,
+			name:           "missing cluster",
+			body:           `{"project": "p1", "location": "l1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			want:           `parameter \"cluster\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing location",
-			body:        `{"project": "p1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
-			want:        `parameter \"location\" is required`,
+			name:           "missing location",
+			body:           `{"project": "p1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_IAM_USER"}`,
+			want:           `parameter \"location\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing user",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "userType": "ALLOYDB_IAM_USER"}`,
-			want:        `parameter \"user\" is required`,
+			name:           "missing user",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "userType": "ALLOYDB_IAM_USER"}`,
+			want:           `parameter \"user\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing userType",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail"}`,
-			want:        `parameter \"userType\" is required`,
+			name:           "missing userType",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail"}`,
+			want:           `parameter \"userType\" is required`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "missing password for builtin user",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
-			want:        `password is required when userType is ALLOYDB_BUILT_IN`,
+			name:           "missing password for builtin user",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "ALLOYDB_BUILT_IN"}`,
+			want:           `password is required when userType is ALLOYDB_BUILT_IN`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:        "invalid userType",
-			body:        `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "invalid"}`,
-			want:        `invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'`,	
+			name:           "invalid userType",
+			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "user": "u-fail", "userType": "invalid"}`,
+			want:           `invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 	}

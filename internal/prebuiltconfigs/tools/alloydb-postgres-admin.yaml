@@ -19,11 +19,9 @@ tools:
   create_cluster:
     kind: alloydb-create-cluster
     source: alloydb-admin-source
-    description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go." 
   wait_for_operation:
     kind: alloydb-wait-for-operation
     source: alloydb-admin-source
-    description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
     delay: 1s
     maxDelay: 4m
     multiplier: 2
@@ -31,35 +29,27 @@ tools:
   create_instance:
     kind: alloydb-create-instance
     source: alloydb-admin-source
-    description: "Creates a new AlloyDB instance (PRIMARY, READ_POOL, or SECONDARY) within a cluster. This is a long-running operation. Take all parameters from user in one go. This will return operation id to be used by get operations tool."    
   list_clusters:
       kind: alloydb-list-clusters
       source: alloydb-admin-source
-      description: "Lists all AlloyDB clusters in a given project and location."
   list_instances:
     kind: alloydb-list-instances
     source: alloydb-admin-source
-    description: "Lists all AlloyDB instances within a specific cluster."
   list_users:
     kind: alloydb-list-users
     source: alloydb-admin-source
-    description: "Lists all database users within a specific AlloyDB cluster."
   create_user:
     kind: alloydb-create-user
     source: alloydb-admin-source
-    description: "Creates a new database user in an AlloyDB cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned. Always ask the user for the type of user to create. ALLOYDB_IAM_USER is recommended."
   get_cluster:
     kind: alloydb-get-cluster
     source: alloydb-admin-source
-    description: "Retrieves details of a specific AlloyDB cluster."
   get_instance:
     kind: alloydb-get-instance
     source: alloydb-admin-source
-    description: "Retrieves details of a specific AlloyDB instance."
   get_user:
     kind: alloydb-get-user
     source: alloydb-admin-source
-    description: "Retrieves details of a specific AlloyDB user."
         
 toolsets:
   alloydb_postgres_admin_tools:

@@ -82,11 +82,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "cluster", "instance", "instanceType"}
+	inputSchema.Required = []string{"project", "location", "cluster", "instance"}
 
 	description := cfg.Description
 	if description == "" {
-		description = "Creates a new AlloyDB instance (PRIMARY or READ_POOL) within a cluster. This is a long-running operation. This will return operation id to be used by get operations tool."
+		description = "Creates a new AlloyDB instance (PRIMARY or READ_POOL) within a cluster. This is a long-running operation. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
 	}
 
 	mcpManifest := tools.McpManifest{
