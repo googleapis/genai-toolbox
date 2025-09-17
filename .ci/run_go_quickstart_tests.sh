@@ -32,10 +32,9 @@ install_system_packages() {
   # Define the jq filter
   jq_filter='
     .go
-    | to_entries
+    | keys_unsorted
     | .[]
-    | select(.key != "jq" and .value != null)
-    | "\(.key)=\(.value)"
+    | select(. != "jq")
   '
 
   # Process the file with the filter and load the results into an array
@@ -45,6 +44,7 @@ install_system_packages() {
     apt-get install -y "${install_list[@]}"
   fi
 }
+
 
 start_cloud_sql_proxy() {
   CLOUD_SQL_PROXY_VERSION=$(jq -r '.cloud_sql_proxy' "$DEPS_FILE")
