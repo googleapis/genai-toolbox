@@ -92,9 +92,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
 	parameters := tools.Parameters{prompt, datasetIds, projectIds, types, pageSize}
 
+	description := "Use this tool to find tables, views, models, routines or connections."
+	if cfg.Description != "" {
+		description = cfg.Description
+	}
+
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: cfg.Description,
+		Description: description, 
 		InputSchema: parameters.McpManifest(),
 	}
 
