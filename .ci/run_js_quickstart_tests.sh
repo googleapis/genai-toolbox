@@ -90,19 +90,25 @@ run_orch_test() {
     set -e
     echo "--- Preparing environment for $orch_name ---"
     setup_orch_table
+
+    # Go into the specific framework directory to install dependencies
     cd "$orch_dir"
     if [ -f "package.json" ]; then
       echo "Installing dependencies for $orch_name..."
       npm install
     fi
+
+    # Go back to the parent directory ('js/') to run the test
     cd ..
+
+    # Export the framework name as an environment variable and run the test
     echo "--- Running tests for $orch_name ---"
     export ORCH_NAME="$orch_name"
     node --test quickstart.test.js
-    
-    echo "--- Cleaning environment---"
-    cd "$orch_dir"
-    rm -rf node_modules
+
+    # Clean up the installed dependencies directly without changing directories
+    echo "--- Cleaning environment for $orch_name ---"
+    rm -rf "${orch_name}/node_modules"
   )
 }
 
